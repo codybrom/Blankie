@@ -19,13 +19,6 @@ extension AudioManager {
     // Load built-in sounds
     loadBuiltInSounds()
 
-    // Load custom sounds if available
-    if modelContext != nil {
-      Task { @MainActor in
-        self.loadCustomSounds()
-      }
-    }
-
     // Load the saved default sound order after built-in sounds are loaded
     // (Custom sounds will update the order when they're loaded)
     if let savedOrder = UserDefaults.standard.stringArray(forKey: "defaultSoundOrder") {

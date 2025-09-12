@@ -65,8 +65,8 @@ class AudioManager: ObservableObject {
       // Initialize NowPlayingManager on MainActor
       self.nowPlayingManager = NowPlayingManager()
 
-      // Longer delay to allow app to fully launch first
-      try? await Task.sleep(nanoseconds: 500_000_000)  // 0.5 seconds
+      // Allow app to fully launch before setting up delayed components
+      await Task.yield()
 
       print("🎵 AudioManager: About to setupMediaControls() (delayed)")
       self.setupMediaControls()

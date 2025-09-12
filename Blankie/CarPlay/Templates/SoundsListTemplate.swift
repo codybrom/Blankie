@@ -12,6 +12,7 @@
 
   enum SoundsListTemplate {
 
+    @MainActor
     static func createTemplate() -> CPListTemplate {
       let template = CPListTemplate(
         title: "Sounds",
@@ -25,7 +26,20 @@
       return template
     }
 
+    @MainActor
     static func updateTemplate(_ template: CPListTemplate) {
+      // Safety check for initialization
+      guard !AudioManager.shared.sounds.isEmpty else {
+        print("🚗 SoundsListTemplate: No sounds loaded yet")
+        let loadingItem = CPListItem(text: "Loading sounds...", detailText: nil)
+        let section = CPListSection(items: [loadingItem])
+        template.updateSections([section])
+        return
+      }
+
+      // Load custom sounds lazily when CarPlay UI is actually being used
+      AudioManager.shared.loadCustomSoundsLazily()
+
       var sections: [CPListSection] = []
 
       // Get all sounds and sort alphabetically

@@ -152,10 +152,33 @@ import SwiftUI
       _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-      // Initialize core app systems early for CarPlay compatibility
+      print("📱 IOSAppDelegate: didFinishLaunchingWithOptions")
+
+      // Initialize core app systems synchronously for CarPlay compatibility
+      // This MUST complete before CarPlay can connect
       #if CARPLAY_ENABLED
+        print("🚗 IOSAppDelegate: Performing synchronous CarPlay initialization...")
+
+        // Create model container synchronously
+        let modelContainer = AppSetup.createModelContainer()
+
+        // Set model contexts synchronously - both are needed for CarPlay
+        AudioManager.shared.setModelContext(modelContainer.mainContext)
+        PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
+
+        print("🚗 IOSAppDelegate: Model context initialized")
+
+        // Load sounds synchronously
+        if AudioManager.shared.sounds.isEmpty {
+          AudioManager.shared.loadSounds()
+          print(
+            "🚗 IOSAppDelegate: Sounds loaded synchronously: \(AudioManager.shared.sounds.count) sounds"
+          )
+        }
+
+        // Async initialization for less critical components
         Task { @MainActor in
-          await initializeAppCore()
+          await initializeAppCoreAsync()
         }
       #endif
 
@@ -164,23 +187,12 @@ import SwiftUI
 
     #if CARPLAY_ENABLED
       @MainActor
-      private func initializeAppCore() async {
-        // Initialize SwiftData model container early for CarPlay
-        let modelContainer = AppSetup.createModelContainer()
-        AudioManager.shared.setModelContext(modelContainer.mainContext)
-        PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
+      private func initializeAppCoreAsync() async {
+        // Load custom sounds with proper SwiftData coordination
+        print("🚗 IOSAppDelegate: Loading custom sounds...")
+        await AudioManager.shared.loadCustomSoundsWhenReady()
 
-        // Load sounds early (only if not already loaded)
-        if AudioManager.shared.sounds.isEmpty {
-          AudioManager.shared.loadSounds()
-        }
-
-        // Initialize PresetManager if needed
-        if PresetManager.shared.isLoading {
-          await PresetManager.shared.initializePresetManager()
-        }
-
-        print("🚗 App core initialized for CarPlay compatibility")
+        print("🚗 IOSAppDelegate: Async app core initialization complete")
       }
     #endif
 

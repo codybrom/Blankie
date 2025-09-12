@@ -47,8 +47,8 @@ struct DropzoneModifier: ViewModifier {
       ) { providers in
         // Don't handle text-based drags (those are for sound reordering)
         let hasTextOnly = providers.allSatisfy { provider in
-          provider.registeredTypeIdentifiers.contains("public.utf8-plain-text") &&
-          !provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
+          provider.registeredTypeIdentifiers.contains("public.utf8-plain-text")
+            && !provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
         }
 
         if hasTextOnly {
@@ -101,8 +101,9 @@ struct DropzoneModifier: ViewModifier {
   private func handleDroppedURL(_ url: URL) {
     if isAudioFile(url) {
       dropzoneManager.setFileURL(url)
-      // Add a small delay to ensure state is updated before presenting sheet
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+      // Allow state to update before presenting sheet
+      Task { @MainActor in
+        await Task.yield()
         dropzoneManager.showSheet()
       }
     }

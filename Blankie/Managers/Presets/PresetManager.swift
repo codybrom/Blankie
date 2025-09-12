@@ -457,12 +457,14 @@ extension PresetManager {
     Task { @MainActor in
       if wasPlaying {
         AudioManager.shared.pauseAll()
-        try? await Task.sleep(nanoseconds: 300_000_000)
+        // Allow audio system to process pause before applying new sounds
+        await Task.yield()
       }
 
       applySoundStates(targetStates)
 
-      try? await Task.sleep(nanoseconds: 100_000_000)
+      // Allow sound states to be applied before autoplay
+      await Task.yield()
 
       let shouldAutoPlay = !isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch
       if shouldAutoPlay && targetStates.contains(where: { $0.isSelected }) {
@@ -821,34 +823,47 @@ extension PresetManager {
   @MainActor
   func cacheThumbnail(for preset: Preset) async {
     #if os(iOS)
-    guard let artworkId = preset.artworkId else { return }
+      guard let artworkId = preset.artworkId else { return }
 
-    // Load the full artwork
-    guard let artworkData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
-          let fullImage = UIImage(data: artworkData) else { return }
-
-    // Generate a thumbnail for CarPlay (44x44 points)
-    let thumbnailSize = CGSize(width: 44, height: 44)
-
-    UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, UIScreen.main.scale)
-    fullImage.draw(in: CGRect(origin: .zero, size: thumbnailSize))
-    let thumbnail = UIGraphicsGetImageFromCurrentImageContext()
-    UIGraphicsEndImageContext()
-
-    // Cache the thumbnail in app group UserDefaults for CarPlay access
-    if let thumbnail = thumbnail,
-       let thumbnailData = thumbnail.pngData() {
+      // Check if thumbnail is already cached
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
-      userDefaults.set(thumbnailData, forKey: thumbnailKey)
-      print("🖼️ PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
-    }
+      if userDefaults.data(forKey: thumbnailKey) != nil {
+        return  // Already cached
+      }
+
+      // Load the full artwork
+      guard let artworkData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
+        let fullImage = UIImage(data: artworkData)
+      else { return }
+
+      // Generate a thumbnail for CarPlay (44x44 points)
+      let thumbnailSize = CGSize(width: 44, height: 44)
+
+      UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, UIScreen.main.scale)
+      fullImage.draw(in: CGRect(origin: .zero, size: thumbnailSize))
+      let thumbnail = UIGraphicsGetImageFromCurrentImageContext()
+      UIGraphicsEndImageContext()
+
+      // Cache the thumbnail in app group UserDefaults for CarPlay access
+      if let thumbnail = thumbnail,
+        let thumbnailData = thumbnail.pngData()
+      {
+        userDefaults.set(thumbnailData, forKey: thumbnailKey)
+        print("🖼️ PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
+      }
     #endif
   }
 
   /// Cache thumbnails for all presets
   @MainActor
   func cacheAllThumbnails() async {
+    // Don't cache if we're still loading
+    guard !isLoading else {
+      print("⚠️ PresetManager: Skipping thumbnail cache - still loading")
+      return
+    }
+
     for preset in presets {
       await cacheThumbnail(for: preset)
     }

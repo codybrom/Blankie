@@ -27,6 +27,12 @@
     }
 
     static func updateTemplate(_ template: CPGridTemplate) {
+      // Safety check for initialization
+      guard !AudioManager.shared.sounds.isEmpty else {
+        print("🚗 QuickMixGridTemplate: No sounds loaded yet")
+        return
+      }
+
       // Update grid buttons with current state
       let updatedButtons = createGridButtons()
       template.updateGridButtons(updatedButtons)

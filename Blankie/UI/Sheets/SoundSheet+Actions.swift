@@ -54,8 +54,8 @@ extension SoundSheet {
       switch result {
       case .success(let customSound):
         // Add the new sound to current preset after AudioManager loads it
-        // Use a delay to ensure the sound is loaded into AudioManager first
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        Task { @MainActor in
+          await Task.yield()  // Allow AudioManager to process the new sound
           addNewSoundToCurrentPreset(fileName: customSound.fileName)
         }
         dismiss()

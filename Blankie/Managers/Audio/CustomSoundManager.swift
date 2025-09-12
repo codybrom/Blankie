@@ -228,7 +228,10 @@ class CustomSoundManager {
       let descriptor = FetchDescriptor<CustomSoundData>(sortBy: [SortDescriptor(\.dateAdded)])
       return try modelContext.fetch(descriptor)
     } catch {
-      print("❌ CustomSoundManager: Failed to fetch custom sounds: \(error)")
+      print(
+        "❌ CustomSoundManager: Failed to fetch custom sounds, SwiftData may not be ready: \(error)")
+      // During CarPlay cold start, SwiftData may not be ready for queries yet
+      // Return empty array and let lazy loading handle it later
       return []
     }
   }

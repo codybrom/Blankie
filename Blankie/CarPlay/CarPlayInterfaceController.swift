@@ -35,12 +35,23 @@
     }
 
     func setInterfaceController(_ controller: CPInterfaceController) {
+      print("🚗 CarPlay: Setting interface controller...")
       interfaceController = controller
       isConnected = true
 
+      // Create a loading template while we initialize
+      let loadingTemplate = createLoadingTemplate()
+      controller.setRootTemplate(loadingTemplate, animated: false) { _, error in
+        if let error = error {
+          print("❌ CarPlay: Failed to set loading template: \(error)")
+        }
+      }
+
       // Ensure app is properly initialized before setting up CarPlay interface
       Task { @MainActor in
+        print("🚗 CarPlay: Starting app initialization...")
         await ensureAppInitialization()
+        print("🚗 CarPlay: App initialization complete, setting up interface...")
         setupTabBarInterface()
       }
 
@@ -77,9 +88,19 @@
 
     @MainActor
     private func ensureAppInitialization() async {
+      print("🚗 CarPlay: Checking initialization state...")
+
+      // Allow run loop cycle for app delegate initialization if needed
+      // This helps prevent race conditions on real devices
+      if AudioManager.shared.modelContext == nil {
+        print("🚗 CarPlay: Model context not ready, yielding...")
+        await Task.yield()
+      }
+
       // Double-check that core managers are initialized
       // This is critical for CarPlay-only launches after force quit
       if AudioManager.shared.modelContext == nil {
+        print("🚗 CarPlay: Creating model container...")
         let modelContainer = AppSetup.createModelContainer()
         AudioManager.shared.setModelContext(modelContainer.mainContext)
         PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
@@ -88,19 +109,33 @@
 
       // Load sounds if not already loaded
       if AudioManager.shared.sounds.isEmpty {
+        print("🚗 CarPlay: Loading sounds...")
         AudioManager.shared.loadSounds()
-        print("🚗 CarPlay: Loaded sounds")
+
+        // Allow time for sounds to actually load
+        await Task.yield()
+
+        if AudioManager.shared.sounds.isEmpty {
+          print("⚠️ CarPlay: Sounds still empty after waiting!")
+        } else {
+          print("🚗 CarPlay: Loaded \(AudioManager.shared.sounds.count) sounds")
+        }
       }
 
       // Initialize PresetManager if needed
       if PresetManager.shared.isLoading {
+        print("🚗 CarPlay: Waiting for PresetManager...")
         await PresetManager.shared.initializePresetManager()
-        print("🚗 CarPlay: Initialized PresetManager")
+        print(
+          "🚗 CarPlay: Initialized PresetManager with \(PresetManager.shared.presets.count) presets")
       }
+
+      print("🚗 CarPlay: App initialization complete")
     }
 
     // MARK: - Interface Setup
 
+    @MainActor
     private func setupTabBarInterface() {
       guard let interfaceController = interfaceController else { return }
 
@@ -133,7 +168,9 @@
 
     func updateSoundsTemplate() {
       guard let soundsTemplate = soundsTemplate else { return }
-      SoundsListTemplate.updateTemplate(soundsTemplate)
+      Task { @MainActor in
+        SoundsListTemplate.updateTemplate(soundsTemplate)
+      }
     }
 
     func updateAllTemplates() {
@@ -192,6 +229,32 @@
           self?.updatePresetsTemplate()
         }
         .store(in: &cancellables)
+    }
+
+    // MARK: - Helper Methods
+
+    private func createLoadingTemplate() -> CPListTemplate {
+      let item = CPListItem(text: "Loading Blankie...", detailText: "Please wait")
+      let section = CPListSection(items: [item])
+      let template = CPListTemplate(title: "Blankie", sections: [section])
+      return template
+    }
+
+    private func showErrorTemplate(error: Error) {
+      guard let interfaceController = interfaceController else { return }
+
+      let errorItem = CPListItem(
+        text: "Failed to Load",
+        detailText: "Please restart the app and try again"
+      )
+      let section = CPListSection(items: [errorItem])
+      let errorTemplate = CPListTemplate(title: "Error", sections: [section])
+
+      interfaceController.setRootTemplate(errorTemplate, animated: true) { _, error in
+        if let error = error {
+          print("❌ CarPlay: Failed to set error template: \(error)")
+        }
+      }
     }
   }
 

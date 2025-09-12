@@ -29,13 +29,6 @@ class PresetArtworkManager: ObservableObject {
   private var modelContext: ModelContext?
   private var imageCache: [UUID: PlatformImage] = [:]
 
-  private init() {
-    // Migrate existing artwork on initialization
-    Task {
-      await migrateExistingArtwork()
-    }
-  }
-
   func setModelContext(_ context: ModelContext) {
     self.modelContext = context
   }
@@ -132,6 +125,9 @@ class PresetArtworkManager: ObservableObject {
       return nil
     }
 
+    // Run migration lazily when artwork is first accessed
+    migrateExistingArtworkIfNeeded()
+
     let descriptor = FetchDescriptor<PresetArtwork>(
       predicate: #Predicate { $0.id == id }
     )
@@ -187,7 +183,6 @@ class PresetArtworkManager: ObservableObject {
       }
     }.value
   }
-
 
   /// Delete artwork for a preset
   func deleteArtwork(for presetId: UUID) async throws {
@@ -314,29 +309,38 @@ class PresetArtworkManager: ObservableObject {
     }
   }
 
+  private var hasMigrationRun = false
+
   /// Migrate existing artwork records to have proper imageType values
-  private func migrateExistingArtwork() async {
-    guard let context = modelContext else { return }
+  /// Only runs when artwork is actually being accessed, not during cold start
+  private func migrateExistingArtworkIfNeeded() {
+    guard !hasMigrationRun,
+      let context = modelContext
+    else { return }
 
-    do {
-      // Find all PresetArtwork records (whether they have imageType or not)
-      let descriptor = FetchDescriptor<PresetArtwork>()
-      let allArtwork = try context.fetch(descriptor)
+    hasMigrationRun = true
 
-      var migratedCount = 0
-      for artwork in allArtwork where artwork.imageType.isEmpty {
-        // If imageType is empty/nil, set it to artwork
-        artwork.imageType = PresetImageType.artwork.rawValue
-        artwork.updatedAt = Date()
-        migratedCount += 1
+    Task {
+      do {
+        let descriptor = FetchDescriptor<PresetArtwork>()
+        let allArtwork = try context.fetch(descriptor)
+
+        var migratedCount = 0
+        for artwork in allArtwork where artwork.imageType.isEmpty {
+          artwork.imageType = PresetImageType.artwork.rawValue
+          artwork.updatedAt = Date()
+          migratedCount += 1
+        }
+
+        if migratedCount > 0 {
+          try context.save()
+          print(
+            "📸 PresetArtworkManager: Migrated \(migratedCount) artwork records to have imageType")
+        }
+      } catch {
+        print("📸 PresetArtworkManager: Lazy migration failed: \(error)")
+        hasMigrationRun = false  // Allow retry later
       }
-
-      if migratedCount > 0 {
-        try context.save()
-        print("📸 PresetArtworkManager: Migrated \(migratedCount) artwork records to have imageType")
-      }
-    } catch {
-      print("📸 PresetArtworkManager: Migration failed: \(error)")
     }
   }
 }

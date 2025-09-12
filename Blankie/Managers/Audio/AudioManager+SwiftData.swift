@@ -17,14 +17,38 @@ extension AudioManager {
     self.modelContext = context
     CustomSoundManager.shared.setModelContext(context)
     setupCustomSoundObservers()
+  }
 
-    // Load custom sounds - they need to be loaded after built-in sounds
-    Task { @MainActor in
-      loadCustomSounds()
-
-      // Initialize PresetManager after custom sounds are loaded
-      await PresetManager.shared.initializePresetManager()
+  /// Load custom sounds after initialization is complete
+  /// This should be called after the app is fully initialized, not during startup
+  @MainActor
+  func loadCustomSoundsWhenReady() async {
+    guard modelContext != nil else {
+      print("⚠️ AudioManager: Model context not ready for custom sounds")
+      return
     }
+
+    // Allow one run loop cycle for SwiftData internal initialization
+    await Task.yield()
+
+    // Load custom sounds now that SwiftData has had a cycle to initialize
+    print("🎵 AudioManager: Loading custom sounds for preset compatibility")
+    loadCustomSounds()
+
+    // Initialize PresetManager with custom sounds loaded
+    await PresetManager.shared.initializePresetManager()
+  }
+
+  /// Load custom sounds lazily when actually needed
+  @MainActor
+  func loadCustomSoundsLazily() {
+    guard modelContext != nil, sounds.filter({ $0.isCustom }).isEmpty else {
+      return  // Already loaded or no context
+    }
+
+    // During CarPlay cold start, completely avoid SwiftData queries
+    // Custom sounds will be loaded during proper initialization sequence
+    print("🎵 AudioManager: Skipping lazy custom sound loading - will load during initialization")
   }
 
   func setupCustomSoundObservers() {

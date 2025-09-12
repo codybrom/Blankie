@@ -64,8 +64,9 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
             self.resetSoundPosition()  // Apply randomization if enabled
             self.play()
           } else {
-            // If playback isn't active yet, wait a bit for auto-start to kick in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            // If playback isn't active yet, wait for auto-start to kick in
+            Task { @MainActor [weak self] in
+              await Task.yield()  // Allow auto-start to process
               guard let self = self,
                 AudioManager.shared.isGloballyPlaying
               else { return }

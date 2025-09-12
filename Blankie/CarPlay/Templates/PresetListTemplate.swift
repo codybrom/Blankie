@@ -26,6 +26,15 @@
     }
 
     static func updateTemplate(_ template: CPListTemplate) {
+      // Safety check for initialization
+      guard !PresetManager.shared.isLoading else {
+        print("🚗 PresetListTemplate: PresetManager still loading, showing loading state")
+        let loadingItem = CPListItem(text: "Loading presets...", detailText: nil)
+        let section = CPListSection(items: [loadingItem])
+        template.updateSections([section])
+        return
+      }
+
       let customPresets = PresetManager.shared.presets.filter { !$0.isDefault }
       let defaultPreset = PresetManager.shared.presets.first { $0.isDefault }
 
