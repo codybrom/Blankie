@@ -632,6 +632,13 @@ extension PresetImporter {
       currentPresets.append(preset)
       presetManager.setPresets(currentPresets)
 
+      // Cache thumbnail for CarPlay if artwork exists
+      if preset.artworkId != nil {
+        Task {
+          await presetManager.cacheThumbnail(for: preset)
+        }
+      }
+
       // Save presets to persist the import
       presetManager.savePresets()
 

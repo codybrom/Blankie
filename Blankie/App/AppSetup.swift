@@ -52,6 +52,13 @@ struct AppSetup {
     Task {
       await PresetArtworkManager.shared.warmCache()
     }
+
+    // Cache thumbnails for CarPlay
+    #if os(iOS)
+      Task {
+        await PresetManager.shared.cacheAllThumbnails()
+      }
+    #endif
   }
 
 }

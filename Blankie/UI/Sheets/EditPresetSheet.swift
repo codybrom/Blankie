@@ -343,6 +343,11 @@ extension EditPresetSheet {
           savePresetsDirectly()
         }
       }
+
+      // Cache thumbnail for CarPlay if artwork exists
+      if updatedPreset.artworkId != nil {
+        await presetManager.cacheThumbnail(for: updatedPreset)
+      }
     }
   }
 

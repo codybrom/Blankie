@@ -232,6 +232,11 @@ extension CreatePresetSheet {
         presetManager.updateCustomPresetStatus()
         presetManager.savePresets()
 
+        // Cache thumbnail for CarPlay if artwork was added
+        if newPreset.artworkId != nil {
+          await presetManager.cacheThumbnail(for: newPreset)
+        }
+
         try presetManager.applyPreset(newPreset)
         isPresented = false
       } catch {
