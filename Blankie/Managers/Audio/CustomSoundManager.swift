@@ -292,6 +292,16 @@ class CustomSoundManager {
   func saveContext() throws {
     try modelContext?.save()
   }
+
+  // MARK: - Internal Helper
+
+  @MainActor
+  func withModelContext<T>(_ operation: (ModelContext) throws -> T) throws -> T {
+    guard let modelContext = modelContext else {
+      throw CustomSoundError.databaseError
+    }
+    return try operation(modelContext)
+  }
 }
 
 // MARK: - Errors

@@ -9,18 +9,25 @@
 
   import CarPlay
   import Foundation
+  import SwiftData
 
   class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 
     private var interfaceController: CPInterfaceController?
 
+    override init() {
+      super.init()
+      print("🚗 CarPlaySceneDelegate: INIT CALLED!")
+    }
+
     func templateApplicationScene(
       _ scene: CPTemplateApplicationScene,
       didConnect interfaceController: CPInterfaceController
     ) {
-      print("🚗 CarPlay: Connected!")
+      print("🚗 CarPlay: Scene delegate didConnect called!")
       self.interfaceController = interfaceController
 
+      // Set up CarPlay interface - the shared controller handles initialization
       CarPlayInterfaceController.shared.setInterfaceController(interfaceController)
     }
 

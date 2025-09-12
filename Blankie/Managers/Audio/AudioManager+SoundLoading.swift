@@ -132,6 +132,45 @@ extension AudioManager {
     }
   }
 
+  /// Load specific custom sounds by their IDs
+  @MainActor
+  func loadCustomSoundsByIds(_ ids: Set<UUID>) {
+    print("🎵 AudioManager: Loading \(ids.count) specific custom sounds")
+
+    // Get only the requested custom sounds from the database
+    let allCustomSounds = CustomSoundManager.shared.getAllCustomSounds()
+    let customSoundData = allCustomSounds.filter { ids.contains($0.id) }
+
+    // Remove any existing custom sounds with these IDs to avoid duplicates
+    sounds.removeAll { sound in
+      guard sound.isCustom, let customId = sound.customSoundDataID else { return false }
+      return ids.contains(customId)
+    }
+
+    // Create Sound objects for each custom sound
+    let customSounds = customSoundData.enumerated().compactMap { (index, data) -> Sound? in
+      createCustomSound(from: data, index: sounds.count + index)
+    }
+
+    // Add custom sounds to the array
+    sounds.append(contentsOf: customSounds)
+    print("🎵 AudioManager: Loaded \(customSounds.count) specific custom sounds")
+
+    // Update default sound order if needed
+    let newCustomFileNames = customSounds.map(\.fileName)
+    var orderUpdated = false
+    for fileName in newCustomFileNames where !defaultSoundOrder.contains(fileName) {
+      defaultSoundOrder.append(fileName)
+      orderUpdated = true
+    }
+    if orderUpdated {
+      UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+    }
+
+    // Re-setup observers for the new sounds
+    setupSoundObservers()
+  }
+
   @MainActor
   func loadCustomSounds() {
     print("🎵 AudioManager: Loading custom sounds")
@@ -150,6 +189,9 @@ extension AudioManager {
     // Add custom sounds to the array
     sounds.append(contentsOf: customSounds)
     print("🎵 AudioManager: Loaded \(customSounds.count) custom sounds")
+
+    // Clean up orphaned custom sound UUIDs from defaultSoundOrder
+    cleanupOrphanedSoundOrder()
 
     // Add new custom sounds to default sound order
     let newCustomFileNames = customSounds.map(\.fileName)
@@ -304,6 +346,37 @@ extension AudioManager {
           print("🔄 AudioManager: Migrated isHidden for '\(legacyFileName)' -> '\(newFileName)'")
         }
       }
+    }
+  }
+
+  /// Removes orphaned UUID entries from defaultSoundOrder that no longer have corresponding sounds
+  private func cleanupOrphanedSoundOrder() {
+    let validSoundFileNames = Set(sounds.map(\.fileName))
+    let originalCount = defaultSoundOrder.count
+
+    // Filter out any entries that look like UUIDs and don't have corresponding sounds
+    defaultSoundOrder = defaultSoundOrder.filter { fileName in
+      // Check if this is a valid sound fileName
+      if validSoundFileNames.contains(fileName) {
+        return true
+      }
+
+      // Check if it looks like a UUID (8-4-4-4-12 format)
+      let uuidPattern = #"^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$"#
+      if fileName.range(of: uuidPattern, options: [.regularExpression, .caseInsensitive]) != nil {
+        print("🧹 AudioManager: Removing orphaned UUID from defaultSoundOrder: \(fileName)")
+        return false
+      }
+
+      // Keep non-UUID entries that might be valid sound names
+      return true
+    }
+
+    if defaultSoundOrder.count != originalCount {
+      UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+      print(
+        "🧹 AudioManager: Cleaned up \(originalCount - defaultSoundOrder.count) orphaned entries from defaultSoundOrder"
+      )
     }
   }
 }

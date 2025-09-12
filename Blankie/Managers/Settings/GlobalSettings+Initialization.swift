@@ -11,15 +11,15 @@ import SwiftUI
 extension GlobalSettings {
   func loadBasicSettings() {
     // Initialize properties directly
-    let savedVolume = UserDefaults.standard.double(forKey: UserDefaultsKeys.volume)
+    let savedVolume = UserDefaults.shared.double(forKey: UserDefaultsKeys.volume)
     volume = savedVolume == 0 ? 1.0 : savedVolume
 
     appearance =
-      UserDefaults.standard.string(forKey: UserDefaultsKeys.appearance)
+      UserDefaults.shared.string(forKey: UserDefaultsKeys.appearance)
       .flatMap { AppearanceMode(rawValue: $0) } ?? .system
 
     // Load saved accent color
-    if let colorString = UserDefaults.standard.string(forKey: UserDefaultsKeys.accentColor) {
+    if let colorString = UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor) {
       customAccentColor = Color(fromString: colorString)
     } else {
       customAccentColor = nil
@@ -27,17 +27,17 @@ extension GlobalSettings {
 
     // Default to false for autoPlayOnLaunch if not set (safer default)
     autoPlayOnLaunch =
-      UserDefaults.standard.object(forKey: UserDefaultsKeys.autoPlayOnLaunch) as? Bool ?? false
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.autoPlayOnLaunch) as? Bool ?? false
 
     // Hide inactive sounds preference
-    hideInactiveSounds = UserDefaults.standard.bool(forKey: UserDefaultsKeys.hideInactiveSounds)
+    hideInactiveSounds = UserDefaults.shared.bool(forKey: UserDefaultsKeys.hideInactiveSounds)
 
     // Show labels preference (default to true)
     showSoundNames =
-      UserDefaults.standard.object(forKey: UserDefaultsKeys.showSoundNames) as? Bool ?? true
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showSoundNames) as? Bool ?? true
 
     // Icon size preference (default to medium)
-    if let savedSize = UserDefaults.standard.string(forKey: UserDefaultsKeys.iconSize),
+    if let savedSize = UserDefaults.shared.string(forKey: UserDefaultsKeys.iconSize),
       let size = IconSize(rawValue: savedSize)
     {
       iconSize = size
@@ -46,19 +46,19 @@ extension GlobalSettings {
     }
 
     // Show list view preference (default to false - grid view)
-    showingListView = UserDefaults.standard.bool(forKey: UserDefaultsKeys.showingListView)
+    showingListView = UserDefaults.shared.bool(forKey: UserDefaultsKeys.showingListView)
 
     // Show progress border preference (default to false)
     showProgressBorder =
-      UserDefaults.standard.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? false
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? false
 
     // Lock portrait orientation on iOS preference (default to false)
     lockPortraitOrientationiOS =
-      UserDefaults.standard.object(forKey: UserDefaultsKeys.lockPortraitOrientationiOS) as? Bool
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.lockPortraitOrientationiOS) as? Bool
       ?? false
 
     // Load Quick Mix sound file names (default to original 8 sounds)
-    if let savedQuickMixSounds = UserDefaults.standard.array(
+    if let savedQuickMixSounds = UserDefaults.shared.array(
       forKey: UserDefaultsKeys.quickMixSoundFileNames) as? [String]
     {
       quickMixSoundFileNames = savedQuickMixSounds
@@ -69,11 +69,11 @@ extension GlobalSettings {
   func loadPlatformSettings() {
     // Load platform-specific preferences
     enableSpatialAudio =
-      UserDefaults.standard.object(forKey: UserDefaultsKeys.enableSpatialAudio) as? Bool ?? false
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.enableSpatialAudio) as? Bool ?? false
     mixWithOthers =
-      UserDefaults.standard.object(forKey: UserDefaultsKeys.mixWithOthers) as? Bool ?? false
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.mixWithOthers) as? Bool ?? false
     volumeWithOtherAudio =
-      UserDefaults.standard.object(forKey: UserDefaultsKeys.volumeWithOtherAudio) as? Double ?? 0.5
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.volumeWithOtherAudio) as? Double ?? 0.5
   }
 
   func loadLanguageSettings() {
@@ -84,7 +84,7 @@ extension GlobalSettings {
     availableLanguages = Language.getAvailableLanguages()
 
     // Finally, try to set the saved language preference
-    let savedLanguageCode = UserDefaults.standard.string(forKey: UserDefaultsKeys.language)
+    let savedLanguageCode = UserDefaults.shared.string(forKey: UserDefaultsKeys.language)
     if let code = savedLanguageCode,
       let savedLanguage = availableLanguages.first(where: { $0.code == code })
     {
@@ -94,13 +94,13 @@ extension GlobalSettings {
 
   func migrateLegacySettings() {
     // Migration: Convert old alwaysStartPaused setting to new autoPlayOnLaunch setting
-    if let oldValue = UserDefaults.standard.object(forKey: "alwaysStartPaused") as? Bool {
+    if let oldValue = UserDefaults.shared.object(forKey: "alwaysStartPaused") as? Bool {
       print(
         "🔄 GlobalSettings: Migrating alwaysStartPaused(\(oldValue)) to autoPlayOnLaunch(\(!oldValue))"
       )
       autoPlayOnLaunch = !oldValue  // Flip the logic
-      UserDefaults.standard.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunch)
-      UserDefaults.standard.removeObject(forKey: "alwaysStartPaused")  // Remove old key
+      UserDefaults.shared.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunch)
+      UserDefaults.shared.removeObject(forKey: "alwaysStartPaused")  // Remove old key
     }
   }
 }

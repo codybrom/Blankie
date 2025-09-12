@@ -32,7 +32,7 @@ extension EditPresetSheet {
             applyChangesInstantly()
           }
       }
-      
+
       // Sounds field
       #if os(iOS)
         Button {

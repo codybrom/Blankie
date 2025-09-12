@@ -188,6 +188,7 @@ class PresetArtworkManager: ObservableObject {
     }.value
   }
 
+
   /// Delete artwork for a preset
   func deleteArtwork(for presetId: UUID) async throws {
     guard let context = modelContext else {

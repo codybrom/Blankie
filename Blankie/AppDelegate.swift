@@ -152,8 +152,50 @@ import SwiftUI
       _ application: UIApplication,
       didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-      // Setup background modes, notifications, etc.
+      // Initialize core app systems early for CarPlay compatibility
+      #if CARPLAY_ENABLED
+        Task { @MainActor in
+          await initializeAppCore()
+        }
+      #endif
+
       return true
+    }
+
+    #if CARPLAY_ENABLED
+      @MainActor
+      private func initializeAppCore() async {
+        // Initialize SwiftData model container early for CarPlay
+        let modelContainer = AppSetup.createModelContainer()
+        AudioManager.shared.setModelContext(modelContainer.mainContext)
+        PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
+
+        // Load sounds early (only if not already loaded)
+        if AudioManager.shared.sounds.isEmpty {
+          AudioManager.shared.loadSounds()
+        }
+
+        // Initialize PresetManager if needed
+        if PresetManager.shared.isLoading {
+          await PresetManager.shared.initializePresetManager()
+        }
+
+        print("🚗 App core initialized for CarPlay compatibility")
+      }
+    #endif
+
+    func applicationDidBecomeActive(_ application: UIApplication) {
+      #if CARPLAY_ENABLED
+        // Re-establish CarPlay connection if needed after app becomes active
+        // This is crucial for CarPlay apps that were force quit
+        if CarPlayInterfaceController.shared.isConnected {
+          // If we think we're connected but the interface might be stale,
+          // trigger a refresh to ensure proper state
+          Task { @MainActor in
+            CarPlayInterfaceController.shared.updateAllTemplates()
+          }
+        }
+      #endif
     }
 
     func application(

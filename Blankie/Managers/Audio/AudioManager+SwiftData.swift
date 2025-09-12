@@ -17,6 +17,8 @@ extension AudioManager {
     self.modelContext = context
     CustomSoundManager.shared.setModelContext(context)
     setupCustomSoundObservers()
+
+    // Load custom sounds - they need to be loaded after built-in sounds
     Task { @MainActor in
       loadCustomSounds()
 

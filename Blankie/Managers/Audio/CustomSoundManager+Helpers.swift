@@ -13,8 +13,15 @@ import UniformTypeIdentifiers
 
 extension CustomSoundManager {
   func getCustomSoundsDirectoryURL() -> URL? {
-    let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-    return documentsPath?.appendingPathComponent(customSoundsDirectory)
+    // Use app group container if available, otherwise fall back to documents directory
+    if let appGroupURL = AppGroupConfiguration.documentsURL {
+      return appGroupURL.appendingPathComponent(customSoundsDirectory)
+    } else {
+      // Fallback to documents directory
+      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        .first
+      return documentsPath?.appendingPathComponent(customSoundsDirectory)
+    }
   }
 
   func isSupportedAudioFormat(_ extension: String) -> Bool {

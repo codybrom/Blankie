@@ -38,28 +38,10 @@
       interfaceController = controller
       isConnected = true
 
-      // Ensure sounds and presets are loaded for CarPlay
-      Task {
-        await MainActor.run {
-          // Set up SwiftData model context if not already set
-          if AudioManager.shared.modelContext == nil {
-            let modelContainer = AppSetup.createModelContainer()
-            AudioManager.shared.setModelContext(modelContainer.mainContext)
-            PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
-          }
-
-          // Load sounds if not already loaded (this will now include custom sounds)
-          if AudioManager.shared.sounds.isEmpty {
-            AudioManager.shared.loadSounds()
-          }
-        }
-
-        // Initialize PresetManager
-        await PresetManager.shared.initializePresetManager()
-
-        await MainActor.run {
-          setupTabBarInterface()
-        }
+      // Ensure app is properly initialized before setting up CarPlay interface
+      Task { @MainActor in
+        await ensureAppInitialization()
+        setupTabBarInterface()
       }
 
       NotificationCenter.default.post(
@@ -89,6 +71,32 @@
         object: nil,
         userInfo: ["isConnected": false]
       )
+    }
+
+    // MARK: - App Initialization
+
+    @MainActor
+    private func ensureAppInitialization() async {
+      // Double-check that core managers are initialized
+      // This is critical for CarPlay-only launches after force quit
+      if AudioManager.shared.modelContext == nil {
+        let modelContainer = AppSetup.createModelContainer()
+        AudioManager.shared.setModelContext(modelContainer.mainContext)
+        PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
+        print("🚗 CarPlay: Initialized SwiftData model context")
+      }
+
+      // Load sounds if not already loaded
+      if AudioManager.shared.sounds.isEmpty {
+        AudioManager.shared.loadSounds()
+        print("🚗 CarPlay: Loaded sounds")
+      }
+
+      // Initialize PresetManager if needed
+      if PresetManager.shared.isLoading {
+        await PresetManager.shared.initializePresetManager()
+        print("🚗 CarPlay: Initialized PresetManager")
+      }
     }
 
     // MARK: - Interface Setup

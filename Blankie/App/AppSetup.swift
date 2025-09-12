@@ -15,7 +15,23 @@ struct AppSetup {
   /// Initialize SwiftData container
   static func createModelContainer() -> ModelContainer {
     do {
-      let container = try ModelContainer(for: CustomSoundData.self, PresetArtwork.self)
+      // Ensure app group directories exist
+      AppGroupConfiguration.setupDirectories()
+
+      // Create model configuration with app group URL
+      var modelConfiguration: ModelConfiguration
+      if let storeURL = AppGroupConfiguration.dataStoreURL {
+        modelConfiguration = ModelConfiguration(url: storeURL)
+        print("🗄️ AppSetup: Using app group store at: \(storeURL.path)")
+      } else {
+        modelConfiguration = ModelConfiguration()
+        print("⚠️ AppSetup: App group not available, using default store location")
+      }
+
+      let container = try ModelContainer(
+        for: CustomSoundData.self, PresetArtwork.self,
+        configurations: modelConfiguration
+      )
       print("🗄️ AppSetup: Successfully created SwiftData model container")
       return container
     } catch {

@@ -57,6 +57,11 @@ class PresetManager: ObservableObject {
 
     print("🎛️ PresetManager: --- Begin Preset Loading After Sound Setup ---")
     await loadPresets()
+
+    // Cache thumbnails for CarPlay after presets are loaded
+    print("🖼️ PresetManager: Caching thumbnails for CarPlay...")
+    await cacheAllThumbnails()
+
     isInitializing = false
     print("🎛️ PresetManager: --- End Preset Loading After Sound Setup ---\n")
   }
@@ -815,14 +820,30 @@ extension PresetManager {
   /// Cache a small thumbnail for quick access
   @MainActor
   func cacheThumbnail(for preset: Preset) async {
-    // Thumbnail caching should be handled by SwiftUI's image caching system
-    // or by the PresetArtworkManager directly, not through UserDefaults
-    // This avoids the need for UIKit image manipulation
+    #if os(iOS)
+    guard let artworkId = preset.artworkId else { return }
 
-    // Simply ensure the artwork is pre-cached if it exists
-    if let artworkId = preset.artworkId {
-      _ = await PresetArtworkManager.shared.loadArtwork(id: artworkId)
+    // Load the full artwork
+    guard let artworkData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
+          let fullImage = UIImage(data: artworkData) else { return }
+
+    // Generate a thumbnail for CarPlay (44x44 points)
+    let thumbnailSize = CGSize(width: 44, height: 44)
+
+    UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, UIScreen.main.scale)
+    fullImage.draw(in: CGRect(origin: .zero, size: thumbnailSize))
+    let thumbnail = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    // Cache the thumbnail in app group UserDefaults for CarPlay access
+    if let thumbnail = thumbnail,
+       let thumbnailData = thumbnail.pngData() {
+      let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
+      let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
+      userDefaults.set(thumbnailData, forKey: thumbnailKey)
+      print("🖼️ PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
     }
+    #endif
   }
 
   /// Cache thumbnails for all presets

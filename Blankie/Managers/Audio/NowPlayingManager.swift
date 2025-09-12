@@ -193,14 +193,15 @@ final class NowPlayingManager {
     print("🎨 NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)")
 
     // Load artwork on background thread to prevent UI blocking
-    let artworkData = await Task.detached {
-      if let image = await PresetArtworkManager.shared.loadArtwork(id: artworkId) {
+    let artworkData: Data? = await Task.detached {
+      // Get the data directly from PresetArtworkManager instead of converting image
+      let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
+      if let imageData = imageData {
         print(
-          "🎨 NowPlayingManager: ✅ Loaded artwork from SwiftData (\(image.pngData()?.count ?? 0) bytes)"
+          "🎨 NowPlayingManager: ✅ Loaded artwork from SwiftData (\(imageData.count) bytes)"
         )
-        return image.pngData()
       }
-      return nil
+      return imageData
     }.value
 
     // Update UI on main thread

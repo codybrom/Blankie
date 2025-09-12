@@ -300,6 +300,30 @@ class PresetImporter {
   }
 }
 
+// MARK: - CustomSoundMetadata Extension
+
+extension CustomSoundMetadata {
+  init(
+    id: UUID,
+    fileName: String,
+    originalFileName: String,
+    title: String,
+    systemIconName: String?,
+    lufsValue: Double?,
+    sha256Hash: String?,
+    credits: SoundCredits?
+  ) {
+    self.id = id
+    self.fileName = fileName
+    self.originalFileName = originalFileName
+    self.title = title
+    self.systemIconName = systemIconName
+    self.lufsValue = lufsValue
+    self.sha256Hash = sha256Hash
+    self.credits = credits
+  }
+}
+
 // MARK: - Sound Import Extension
 
 extension PresetImporter {
@@ -313,11 +337,14 @@ extension PresetImporter {
       return [:]  // No custom sounds to import
     }
 
-    // Read sounds metadata
+    // Read sounds metadata and customizations
     let customSounds = try readSoundsMetadata(from: soundsDir)
     guard !customSounds.isEmpty else {
       return [:]
     }
+
+    // Also read customizations to get icon info
+    let customizations = try readCustomizations(from: soundsDir)
 
     // Import each custom sound
     var importedCount = 0
@@ -337,7 +364,7 @@ extension PresetImporter {
       // Import new sound
       let soundFileURL = soundsDir.appendingPathComponent(soundMetadata.fileName)
       let importedId = try await importNewSound(
-        soundMetadata, soundFileURL, preset, &importedCount)
+        soundMetadata, soundFileURL, preset, &importedCount, customizations: customizations)
       idMapping[soundMetadata.id] = importedId
     }
 
@@ -353,6 +380,22 @@ extension PresetImporter {
     let metadataData = try Data(contentsOf: metadataURL)
     let soundsManifest = try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
     return soundsManifest.customSounds
+  }
+
+  private func readCustomizations(from soundsDir: URL) throws -> [SoundCustomization] {
+    let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
+    guard FileManager.default.fileExists(atPath: metadataURL.path) else {
+      return []
+    }
+
+    do {
+      let metadataData = try Data(contentsOf: metadataURL)
+      let soundsManifest = try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
+      return soundsManifest.builtInCustomizations
+    } catch {
+      // Return empty array if no customizations found
+      return []
+    }
   }
 
   @MainActor
@@ -384,54 +427,92 @@ extension PresetImporter {
     _ soundMetadata: CustomSoundMetadata,
     _ soundFileURL: URL,
     _ preset: Preset,
-    _ importedCount: inout Int
+    _ importedCount: inout Int,
+    customizations: [SoundCustomization] = []
   ) async throws -> UUID {
     guard FileManager.default.fileExists(atPath: soundFileURL.path) else {
       throw ImportError.soundImportFailed(soundMetadata.title)
     }
 
-    do {
-      // Create custom sound data from metadata
-      let customSoundData = createCustomSoundData(from: soundMetadata, preset: preset)
+    // Extract the UUID from the filename if it's different from metadata ID
+    let fileNameWithoutExt = (soundFileURL.lastPathComponent as NSString).deletingPathExtension
+    let actualId: UUID
+    if let uuidFromFilename = UUID(uuidString: fileNameWithoutExt),
+      uuidFromFilename != soundMetadata.id
+    {
+      print(
+        "⚠️ PresetImporter: Filename UUID \(uuidFromFilename) differs from metadata ID \(soundMetadata.id), using filename UUID"
+      )
+      actualId = uuidFromFilename
+    } else {
+      actualId = soundMetadata.id
+    }
 
-      // Import the sound
-      let result = await CustomSoundManager.shared.importSound(
-        from: soundFileURL,
-        title: customSoundData.title,
-        iconName: customSoundData.systemIconName,
-        randomizeStartPosition: customSoundData.randomizeStartPosition
+    do {
+      // Find icon from customizations if available
+      let fileNameWithoutExtension = (soundMetadata.fileName as NSString).deletingPathExtension
+      let iconFromCustomization = customizations.first(where: {
+        $0.fileName == fileNameWithoutExtension
+      })?.customIconName
+
+      // Create a modified metadata with the correct ID
+      let correctedMetadata = CustomSoundMetadata(
+        id: actualId,
+        fileName: soundMetadata.fileName,
+        originalFileName: soundMetadata.originalFileName,
+        title: soundMetadata.title,
+        systemIconName: soundMetadata.systemIconName,
+        lufsValue: soundMetadata.lufsValue,
+        sha256Hash: soundMetadata.sha256Hash,
+        credits: soundMetadata.credits
       )
 
-      let importedSound: CustomSoundData
+      // Use the new import method that doesn't re-analyze LUFS
+      let result = await CustomSoundManager.shared.importSoundWithMetadata(
+        from: soundFileURL,
+        metadata: correctedMetadata,
+        credits: soundMetadata.credits,
+        iconOverride: iconFromCustomization
+      )
+
       switch result {
-      case .success(let sound):
-        importedSound = sound
+      case .success:
+        break
       case .failure(let error):
         print("❌ PresetImporter: Failed to import sound: \(error)")
-        throw ImportError.soundImportFailed(customSoundData.title)
+        throw ImportError.soundImportFailed(soundMetadata.title)
       }
 
       // Update progress
       importedCount += 1
 
-      return importedSound.id
+      return actualId  // Return the actual ID we used
 
     } catch {
       throw ImportError.soundImportFailed(soundMetadata.title)
     }
   }
 
-  private func createCustomSoundData(from soundMetadata: CustomSoundMetadata, preset: Preset)
+  private func createCustomSoundData(
+    from soundMetadata: CustomSoundMetadata, preset: Preset,
+    customizations: [SoundCustomization] = []
+  )
     -> CustomSoundData
   {
     // Extract file info from metadata
     let fileNameWithoutExtension = (soundMetadata.fileName as NSString).deletingPathExtension
     let fileExtension = (soundMetadata.fileName as NSString).pathExtension
 
+    // Try to find icon from customizations first
+    let iconName =
+      customizations.first(where: { $0.fileName == fileNameWithoutExtension })?.customIconName
+      ?? soundMetadata.systemIconName
+      ?? "waveform.circle"  // Default icon for older imports
+
     // Create CustomSoundData from metadata - PRESERVING THE ORIGINAL ID
     let customSoundData = CustomSoundData(
       title: soundMetadata.title,
-      systemIconName: "speaker.wave.3.fill",  // Default icon for imported sounds
+      systemIconName: iconName,
       fileName: fileNameWithoutExtension,
       fileExtension: fileExtension,
       originalFileName: soundMetadata.originalFileName,
@@ -535,8 +616,16 @@ extension PresetImporter {
       let presetManager = PresetManager.shared
       let audioManager = AudioManager.shared
 
-      // Force reload of all custom sounds to ensure all imported sounds are available
-      audioManager.loadCustomSounds()
+      // Only load the custom sounds that are in this preset
+      let customSoundIds = preset.soundStates
+        .compactMap { state -> UUID? in
+          // Check if the fileName is a UUID (custom sound)
+          return UUID(uuidString: state.fileName)
+        }
+
+      if !customSoundIds.isEmpty {
+        audioManager.loadCustomSoundsByIds(Set(customSoundIds))
+      }
 
       // Add to presets
       var currentPresets = presetManager.presets

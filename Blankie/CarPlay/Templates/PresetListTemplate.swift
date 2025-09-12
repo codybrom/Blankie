@@ -176,13 +176,19 @@
       // Check if we have a cached thumbnail for this preset
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
 
-      if let thumbnailData = UserDefaults.standard.data(forKey: thumbnailKey),
+      // Use app group UserDefaults for sharing between app and CarPlay
+      let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
+
+      if let thumbnailData = userDefaults.data(forKey: thumbnailKey),
         let image = UIImage(data: thumbnailData)
       {
         return image
       }
 
-      // No cached thumbnail available
+      // For CarPlay, we rely on pre-cached thumbnails from the main app
+      // Thumbnails should be cached by the main app when presets are created/modified
+
+      // Return nil if no cached thumbnail is available
       return nil
     }
 

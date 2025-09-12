@@ -24,6 +24,10 @@ struct BlankieApp: App {
     // Reset defaults if running UI tests
     UITestingHelper.resetAllDefaults()
 
+    // Migrate existing data to app group if needed
+    UserDefaults.migrateToAppGroup()
+    SwiftDataMigration.migrateToAppGroup()
+
     modelContainer = AppSetup.createModelContainer()
     appSetup = AppSetup(modelContainer: modelContainer)
   }

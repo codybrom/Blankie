@@ -58,6 +58,7 @@ struct CustomSoundMetadata: Codable, Identifiable {
   let fileName: String
   let originalFileName: String
   let title: String
+  let systemIconName: String?  // Made optional for backwards compatibility
   let lufsValue: Double?
   let sha256Hash: String?
   let credits: SoundCredits?
@@ -68,6 +69,7 @@ struct CustomSoundMetadata: Codable, Identifiable {
     self.fileName = "\(customSoundData.fileName).\(customSoundData.fileExtension)"
     self.originalFileName = customSoundData.originalFileName ?? customSoundData.fileName
     self.title = customSoundData.title
+    self.systemIconName = customSoundData.systemIconName
     self.lufsValue =
       customSoundData.detectedLUFS != nil ? Double(customSoundData.detectedLUFS!) : nil
     self.sha256Hash = customSoundData.sha256Hash
