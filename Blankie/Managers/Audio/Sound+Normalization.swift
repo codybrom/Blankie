@@ -12,6 +12,10 @@ import Foundation
 extension Sound {
 
   func updateVolume() {
+    // Skip volume calculations during app initialization when no player exists
+    guard player != nil else {
+      return
+    }
     let scaledVol = scaledVolume(volume)
     var effectiveVolume = scaledVol * Float(GlobalSettings.shared.volume)
 
@@ -47,11 +51,7 @@ extension Sound {
       }
     }
 
-    print(
-      "🔊 Sound: Volume calculation for '\(fileName)' - base: \(volume), normalized: \(normalizationSettings.normalizeAudio), adjustment: \(normalizationSettings.volumeAdjustment), final: \(effectiveVolume)"
-    )
-
-    // Update volume immediately
+    // Only log volume calculations if they actually change the player volume
     if player?.volume != effectiveVolume {
       player?.volume = effectiveVolume
       print("🔊 Sound: Set player volume for '\(fileName)' to \(effectiveVolume)")
@@ -63,9 +63,8 @@ extension Sound {
         guard let self = self else { return }
         print("🔊 Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)")
       }
-    } else {
-      print("🔊 Sound: Volume already at \(effectiveVolume) for '\(fileName)'")
     }
+    // Remove "Volume already at" logging - too verbose for production
   }
 
   private func scaledVolume(_ linear: Float) -> Float {

@@ -16,6 +16,7 @@ final class NowPlayingManager {
 
   private var isSetup = false
   private var currentArtworkId: UUID?
+  private var updateTimer: Timer?
 
   init() {
     // Don't setup immediately to avoid triggering audio session
@@ -37,6 +38,24 @@ final class NowPlayingManager {
 
   func updateInfo(
     presetName: String? = nil, creatorName: String? = nil, artworkId: UUID? = nil, isPlaying: Bool
+  ) {
+    // Debounce rapid successive updates during initialization
+    updateTimer?.invalidate()
+    updateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
+      Task { @MainActor in
+        self?.performNowPlayingUpdate(
+          presetName: presetName, creatorName: creatorName, artworkId: artworkId,
+          isPlaying: isPlaying
+        )
+      }
+    }
+  }
+
+  private func performNowPlayingUpdate(
+    presetName: String?,
+    creatorName: String?,
+    artworkId: UUID?,
+    isPlaying: Bool
   ) {
     setupNowPlaying()
 

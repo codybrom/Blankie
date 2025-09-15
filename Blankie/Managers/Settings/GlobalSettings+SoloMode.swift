@@ -11,15 +11,15 @@ extension GlobalSettings {
   @MainActor
   func saveSoloModeSound(fileName: String?) {
     if let fileName = fileName {
-      UserDefaults.standard.set(fileName, forKey: UserDefaultsKeys.soloModeSoundFileName)
+      UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.soloModeSoundFileName)
       print("💾 GlobalSettings: Saved solo mode sound: \(fileName)")
     } else {
-      UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.soloModeSoundFileName)
+      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.soloModeSoundFileName)
       print("💾 GlobalSettings: Cleared solo mode sound")
     }
   }
 
   func getSavedSoloModeFileName() -> String? {
-    return UserDefaults.standard.string(forKey: UserDefaultsKeys.soloModeSoundFileName)
+    return UserDefaults.shared.string(forKey: UserDefaultsKeys.soloModeSoundFileName)
   }
 }

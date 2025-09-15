@@ -37,8 +37,7 @@
         return
       }
 
-      // Load custom sounds lazily when CarPlay UI is actually being used
-      AudioManager.shared.loadCustomSoundsLazily()
+      // Custom sounds should already be loaded during app initialization
 
       var sections: [CPListSection] = []
 

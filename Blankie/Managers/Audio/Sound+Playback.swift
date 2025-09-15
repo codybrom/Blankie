@@ -247,9 +247,9 @@ extension Sound {
     volume = 0.75
 
     // Clear user defaults
-    UserDefaults.standard.removeObject(forKey: "\(fileName)_isSelected")
-    UserDefaults.standard.removeObject(forKey: "\(fileName)_volume")
-    UserDefaults.standard.removeObject(forKey: "\(fileName)_isHidden")
+    UserDefaults.shared.removeObject(forKey: "\(fileName)_isSelected")
+    UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
+    UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
 
     print("✅ Sound: Reset complete for '\(fileName)'")
     isResetting = false

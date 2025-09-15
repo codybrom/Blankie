@@ -8,47 +8,66 @@
 import Combine
 import Foundation
 import SwiftData
+import SwiftUI
 
 extension AudioManager {
   // MARK: - SwiftData Integration
 
   /// Set up the model context for accessing custom sounds
+  /// CRITICAL: Must be called on @MainActor to prevent SwiftData actor violations
+  @MainActor
   func setModelContext(_ context: ModelContext) {
     self.modelContext = context
     CustomSoundManager.shared.setModelContext(context)
     setupCustomSoundObservers()
   }
 
-  /// Load custom sounds after initialization is complete
-  /// This should be called after the app is fully initialized, not during startup
+  /// Load all sounds (built-in + custom) after initialization is complete
+  /// This ensures PresetManager gets complete sound data
   @MainActor
   func loadCustomSoundsWhenReady() async {
+    // Load built-in sounds first if not already loaded
+    if sounds.isEmpty {
+      print("🎵 AudioManager: Loading built-in sounds first...")
+      loadSounds()
+    }
+
     guard modelContext != nil else {
-      print("⚠️ AudioManager: Model context not ready for custom sounds")
+      print("⚠️ AudioManager: Model context not ready - built-in sounds only")
+      // Initialize PresetManager with built-in sounds only
+      await PresetManager.shared.initializePresetManager()
       return
     }
 
-    // Allow one run loop cycle for SwiftData internal initialization
-    await Task.yield()
+    // Check if protected data is available (critical for CarPlay cold starts)
+    await waitForProtectedDataAvailability()
 
-    // Load custom sounds now that SwiftData has had a cycle to initialize
-    print("🎵 AudioManager: Loading custom sounds for preset compatibility")
+    // Load custom sounds to complete the sound library
+    print("🎵 AudioManager: Loading custom sounds with SwiftData coordination...")
     loadCustomSounds()
 
-    // Initialize PresetManager with custom sounds loaded
+    // Initialize PresetManager with ALL sounds loaded
     await PresetManager.shared.initializePresetManager()
   }
 
-  /// Load custom sounds lazily when actually needed
+  /// Wait for protected data to become available before accessing SwiftData
+  /// This prevents crashes during CarPlay cold start on locked devices
   @MainActor
-  func loadCustomSoundsLazily() {
-    guard modelContext != nil, sounds.filter({ $0.isCustom }).isEmpty else {
-      return  // Already loaded or no context
+  private func waitForProtectedDataAvailability() async {
+    guard !UIApplication.shared.isProtectedDataAvailable else {
+      print("✅ AudioManager: Protected data already available")
+      return
     }
 
-    // During CarPlay cold start, completely avoid SwiftData queries
-    // Custom sounds will be loaded during proper initialization sequence
-    print("🎵 AudioManager: Skipping lazy custom sound loading - will load during initialization")
+    print("⚠️ AudioManager: Protected data not available, waiting...")
+
+    // Use AsyncStream for Swift 6 compliance
+    for await _ in NotificationCenter.default.notifications(
+      named: UIApplication.protectedDataDidBecomeAvailableNotification)
+    {
+      print("✅ AudioManager: Protected data became available")
+      break
+    }
   }
 
   func setupCustomSoundObservers() {

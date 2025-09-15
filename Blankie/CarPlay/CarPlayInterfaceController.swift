@@ -39,15 +39,7 @@
       interfaceController = controller
       isConnected = true
 
-      // Create a loading template while we initialize
-      let loadingTemplate = createLoadingTemplate()
-      controller.setRootTemplate(loadingTemplate, animated: false) { _, error in
-        if let error = error {
-          print("❌ CarPlay: Failed to set loading template: \(error)")
-        }
-      }
-
-      // Ensure app is properly initialized before setting up CarPlay interface
+      // Initialize app and setup interface directly (no loading template)
       Task { @MainActor in
         print("🚗 CarPlay: Starting app initialization...")
         await ensureAppInitialization()
@@ -88,47 +80,31 @@
 
     @MainActor
     private func ensureAppInitialization() async {
+      // CRITICAL: All SwiftData operations MUST happen on @MainActor
+      // This prevents actor violations that cause EXC_BREAKPOINT crashes
       print("🚗 CarPlay: Checking initialization state...")
+      print(
+        "🚗 CarPlay: Protected data: \(UIApplication.shared.isProtectedDataAvailable)"
+      )
 
-      // Allow run loop cycle for app delegate initialization if needed
-      // This helps prevent race conditions on real devices
-      if AudioManager.shared.modelContext == nil {
-        print("🚗 CarPlay: Model context not ready, yielding...")
-        await Task.yield()
+      // Ensure shared model container is initialized
+      // This is critical for CarPlay-only launches after force quit
+      if !SharedModelContainer.shared.isInitialized {
+        print("🚗 CarPlay: Initializing shared model container...")
+        SharedModelContainer.shared.initialize()
       }
 
-      // Double-check that core managers are initialized
-      // This is critical for CarPlay-only launches after force quit
+      // Set up manager contexts if not already done
       if AudioManager.shared.modelContext == nil {
-        print("🚗 CarPlay: Creating model container...")
-        let modelContainer = AppSetup.createModelContainer()
-        AudioManager.shared.setModelContext(modelContainer.mainContext)
-        PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
+        print("🚗 CarPlay: Setting up manager contexts...")
+        AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+        PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
         print("🚗 CarPlay: Initialized SwiftData model context")
       }
 
-      // Load sounds if not already loaded
-      if AudioManager.shared.sounds.isEmpty {
-        print("🚗 CarPlay: Loading sounds...")
-        AudioManager.shared.loadSounds()
-
-        // Allow time for sounds to actually load
-        await Task.yield()
-
-        if AudioManager.shared.sounds.isEmpty {
-          print("⚠️ CarPlay: Sounds still empty after waiting!")
-        } else {
-          print("🚗 CarPlay: Loaded \(AudioManager.shared.sounds.count) sounds")
-        }
-      }
-
-      // Initialize PresetManager if needed
-      if PresetManager.shared.isLoading {
-        print("🚗 CarPlay: Waiting for PresetManager...")
-        await PresetManager.shared.initializePresetManager()
-        print(
-          "🚗 CarPlay: Initialized PresetManager with \(PresetManager.shared.presets.count) presets")
-      }
+      // Load ALL sounds (built-in + custom) together to prevent race conditions
+      print("🚗 CarPlay: Loading all sounds and initializing PresetManager...")
+      await AudioManager.shared.loadCustomSoundsWhenReady()
 
       print("🚗 CarPlay: App initialization complete")
     }
@@ -232,13 +208,6 @@
     }
 
     // MARK: - Helper Methods
-
-    private func createLoadingTemplate() -> CPListTemplate {
-      let item = CPListItem(text: "Loading Blankie...", detailText: "Please wait")
-      let section = CPListSection(items: [item])
-      let template = CPListTemplate(title: "Blankie", sections: [section])
-      return template
-    }
 
     private func showErrorTemplate(error: Error) {
       guard let interfaceController = interfaceController else { return }

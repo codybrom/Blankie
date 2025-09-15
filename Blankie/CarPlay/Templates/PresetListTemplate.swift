@@ -85,6 +85,9 @@
               }
             }
 
+            // Allow audio system to process mode exits before applying new preset
+            await Task.yield()
+
             try await PresetManager.shared.applyPreset(preset)
             await MainActor.run {
               // Ensure playback starts
@@ -133,6 +136,9 @@
                 AudioManager.shared.exitQuickMix()
               }
             }
+
+            // Allow audio system to process mode exits before applying new preset
+            await Task.yield()
 
             try await PresetManager.shared.applyPreset(preset)
             await MainActor.run {
@@ -297,6 +303,9 @@
                 AudioManager.shared.exitQuickMix()
               }
             }
+
+            // Allow audio system to process mode exits before applying new preset
+            await Task.yield()
 
             try await PresetManager.shared.applyPreset(preset)
             await MainActor.run {

@@ -243,10 +243,20 @@ class SoundCustomizationManager: ObservableObject {
 
   // MARK: - Persistence
 
+  private var saveTimer: Timer?
+
   private func saveCustomizationsInternal() {
+    // Debounce saves to avoid excessive UserDefaults writes during initialization
+    saveTimer?.invalidate()
+    saveTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+      self?.performSave()
+    }
+  }
+
+  private func performSave() {
     do {
       let data = try JSONEncoder().encode(Array(customizations.values))
-      UserDefaults.standard.set(data, forKey: userDefaultsKey)
+      UserDefaults.shared.set(data, forKey: userDefaultsKey)
       print("✅ SoundCustomizationManager: Saved \(customizations.count) customizations")
     } catch {
       print("❌ SoundCustomizationManager: Failed to save customizations: \(error)")
@@ -254,7 +264,8 @@ class SoundCustomizationManager: ObservableObject {
   }
 
   private func loadCustomizations() {
-    guard let data = UserDefaults.standard.data(forKey: userDefaultsKey) else {
+
+    guard let data = UserDefaults.shared.data(forKey: userDefaultsKey) else {
       print("📦 SoundCustomizationManager: No saved customizations found")
       return
     }

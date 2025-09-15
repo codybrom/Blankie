@@ -29,6 +29,7 @@ class PresetArtworkManager: ObservableObject {
   private var modelContext: ModelContext?
   private var imageCache: [UUID: PlatformImage] = [:]
 
+  @MainActor
   func setModelContext(_ context: ModelContext) {
     self.modelContext = context
   }

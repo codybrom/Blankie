@@ -134,16 +134,12 @@ extension CustomSoundManager {
     let fileName = "\(customSound.fileName).\(customSound.fileExtension)"
     let soundURL = documentsPath.appendingPathComponent(fileName)
 
-    print("🔍 CustomSoundManager: Looking for custom sound file: \(fileName)")
-    print("🔍 CustomSoundManager: Expected path: \(soundURL.path)")
-
-    // Verify the file exists
+    // Verify the file exists (no verbose logging during startup)
     if FileManager.default.fileExists(atPath: soundURL.path) {
-      print("✅ CustomSoundManager: Custom sound file found at: \(soundURL.path)")
       return soundURL
     }
 
-    print("❌ CustomSoundManager: Custom sound file not found at expected path: \(soundURL.path)")
+    print("❌ CustomSoundManager: Custom sound file not found: \(fileName) at \(soundURL.path)")
 
     // Debug: List files in the CustomSounds directory
     do {

@@ -21,7 +21,14 @@ struct Language: Hashable, Identifiable, Equatable {
     self.icon = icon
   }
 
+  private static var _cachedSystemLanguage: Language?
+
   static var system: Language {
+    // Cache the system language to avoid repeated detection
+    if let cached = _cachedSystemLanguage {
+      return cached
+    }
+
     // Read the system's actual language preference
     let systemLanguageCode = Locale.preferredLanguages.first ?? "en"
 
@@ -41,10 +48,13 @@ struct Language: Hashable, Identifiable, Equatable {
 
     print("🌐 System language: code=\(languageCode), name=\(languageName)")
 
-    return Language(
+    let systemLanguage = Language(
       code: "system",
       displayName: displayName,
       icon: "globe")
+
+    _cachedSystemLanguage = systemLanguage
+    return systemLanguage
   }
 
   static func == (lhs: Language, rhs: Language) -> Bool {

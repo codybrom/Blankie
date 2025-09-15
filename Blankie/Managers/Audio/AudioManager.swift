@@ -72,10 +72,11 @@ class AudioManager: ObservableObject {
       self.setupMediaControls()
       print("🎵 AudioManager: About to setupNotificationObservers() (delayed)")
       self.setupNotificationObservers()
-      print("🎵 AudioManager: About to setupSoundObservers() (delayed)")
-      self.setupSoundObservers()
 
       self.isInitializing = false
+
+      print("🎵 AudioManager: About to setupSoundObservers() (after initialization)")
+      self.setupSoundObservers()
 
       // Analyze custom sounds that might be missing profiles
       Task {

@@ -629,8 +629,22 @@ extension PresetManager {
 
   @MainActor
   func savePresets() {
+    // Skip saving during initialization - nothing has actually changed
+    guard !isInitializing else {
+      print("🎛️ PresetManager: Skipping save during initialization")
+      return
+    }
+
     print("\n🎛️ PresetManager: --- Begin Saving Presets ---")
 
+    updateCurrentPresetBeforeSave()
+    performActualSave()
+
+    print("🎛️ PresetManager: --- End Saving Presets ---\n")
+  }
+
+  @MainActor
+  private func updateCurrentPresetBeforeSave() {
     // Update current preset's state before saving
     if let currentPreset = currentPreset,
       let index = presets.firstIndex(where: { $0.id == currentPreset.id })
@@ -673,7 +687,10 @@ extension PresetManager {
           print("    * \(state.fileName) (Volume: \(state.volume))")
         }
     }
+  }
 
+  @MainActor
+  private func performActualSave() {
     let defaultPreset = presets.first { $0.isDefault }
     let customPresets = presets.filter { !$0.isDefault }
 
@@ -689,8 +706,6 @@ extension PresetManager {
     Task {
       await cacheAllThumbnails()
     }
-
-    print("🎛️ PresetManager: --- End Saving Presets ---\n")
   }
 
   /// Migrates preset sound names from old format (with file extensions) to new format (without extensions)
@@ -797,10 +812,12 @@ extension PresetManager {
       }
 
       // Assign sequential order values to all custom presets
-      for (index, preset) in sortedCustomPresets.enumerated() {
+      for (index, preset) in sortedCustomPresets.enumerated() where preset.order != index {
         var updatedPreset = preset
         updatedPreset.order = index
-        print("🎛️ PresetManager: Assigning order \(index) to preset '\(preset.name)'")
+        print(
+          "🎛️ PresetManager: Updating order for '\(preset.name)' from \(preset.order ?? -1) to \(index)"
+        )
 
         if let presetIndex = updatedPresets.firstIndex(where: { $0.id == preset.id }) {
           updatedPresets[presetIndex] = updatedPreset

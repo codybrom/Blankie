@@ -9,7 +9,7 @@ import Foundation
 
 extension AudioManager {
   func loadSavedState() {
-    guard let state = UserDefaults.standard.array(forKey: "soundState") as? [[String: Any]] else {
+    guard let state = UserDefaults.shared.array(forKey: "soundState") as? [[String: Any]] else {
       return
     }
     for savedState in state {
@@ -18,8 +18,16 @@ extension AudioManager {
       else {
         continue
       }
-      sound.isSelected = savedState["isSelected"] as? Bool ?? false
-      sound.volume = savedState["volume"] as? Float ?? 1.0
+      // Only update if values have actually changed to avoid unnecessary processing
+      let savedIsSelected = savedState["isSelected"] as? Bool ?? false
+      let savedVolume = savedState["volume"] as? Float ?? 1.0
+
+      if sound.isSelected != savedIsSelected {
+        sound.isSelected = savedIsSelected
+      }
+      if sound.volume != savedVolume {
+        sound.volume = savedVolume
+      }
     }
   }
 
@@ -38,12 +46,12 @@ extension AudioManager {
         "volume": sound.volume,
       ]
     }
-    UserDefaults.standard.set(state, forKey: "soundState")
+    UserDefaults.shared.set(state, forKey: "soundState")
   }
 
   func updateDefaultSoundOrder(from source: IndexSet, to destination: Int) {
     defaultSoundOrder.move(fromOffsets: source, toOffset: destination)
-    UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+    UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
     objectWillChange.send()
     print("🎵 AudioManager: Updated default sound order - moved from \(source) to \(destination)")
   }

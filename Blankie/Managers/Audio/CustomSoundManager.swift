@@ -23,6 +23,7 @@ class CustomSoundManager {
 
   // MARK: - Setup
 
+  @MainActor
   func setModelContext(_ context: ModelContext) {
     self.modelContext = context
   }
@@ -221,17 +222,22 @@ class CustomSoundManager {
   @MainActor
   func getAllCustomSounds() -> [CustomSoundData] {
     guard let modelContext = modelContext else {
+      print("⚠️ CustomSoundManager: No model context available")
       return []
     }
 
+    // Validate that SwiftData is ready before attempting query
+    // If SwiftData hits an internal assertion (EXC_BREAKPOINT), it means the container
+    // wasn't properly initialized or we have actor violations
     do {
       let descriptor = FetchDescriptor<CustomSoundData>(sortBy: [SortDescriptor(\.dateAdded)])
-      return try modelContext.fetch(descriptor)
+      let results = try modelContext.fetch(descriptor)
+      print("✅ CustomSoundManager: Successfully fetched \(results.count) custom sounds")
+      return results
     } catch {
-      print(
-        "❌ CustomSoundManager: Failed to fetch custom sounds, SwiftData may not be ready: \(error)")
-      // During CarPlay cold start, SwiftData may not be ready for queries yet
-      // Return empty array and let lazy loading handle it later
+      print("❌ CustomSoundManager: SwiftData fetch failed: \(error)")
+      print("❌ CustomSoundManager: This indicates SwiftData container issues or actor violations")
+      // Return empty array to allow app to continue functioning
       return []
     }
   }

@@ -11,28 +11,20 @@ import SwiftUI
         ^ (presetManager.currentPreset?.soundOrder?.hashValue ?? 0)
         ^ soundsUpdateTrigger.hashValue
 
-      print("🔍 FilteredSounds: Current hash: \(currentHash), Last hash: \(lastFilterHash)")
-      print("🔍 FilteredSounds: soundsUpdateTrigger: \(soundsUpdateTrigger)")
-
       // Only recompute if dependencies changed
       if currentHash != lastFilterHash {
-        print("🔍 FilteredSounds: Hash changed, recomputing...")
-        return computeFilteredSounds(currentHash: currentHash)
+        let newFilteredSounds = filterSounds()
+
+        // Update cache outside view computation to avoid SwiftUI warnings
+        Task { @MainActor in
+          self.lastFilterHash = currentHash
+          self.cachedFilteredSounds = newFilteredSounds
+        }
+
+        return newFilteredSounds
       }
 
-      print("🔍 FilteredSounds: Using cached results")
       return cachedFilteredSounds
-    }
-
-    private func computeFilteredSounds(currentHash: Int) -> [Sound] {
-      let filteredSounds = filterSounds()
-
-      DispatchQueue.main.async {
-        self.lastFilterHash = currentHash
-        self.cachedFilteredSounds = filteredSounds
-      }
-
-      return filteredSounds
     }
 
     private func filterSounds() -> [Sound] {

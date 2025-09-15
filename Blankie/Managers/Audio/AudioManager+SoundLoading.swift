@@ -21,7 +21,7 @@ extension AudioManager {
 
     // Load the saved default sound order after built-in sounds are loaded
     // (Custom sounds will update the order when they're loaded)
-    if let savedOrder = UserDefaults.standard.stringArray(forKey: "defaultSoundOrder") {
+    if let savedOrder = UserDefaults.shared.stringArray(forKey: "defaultSoundOrder") {
       defaultSoundOrder = savedOrder
       print("🎵 AudioManager: Loaded default sound order with \(savedOrder.count) sounds")
 
@@ -32,13 +32,13 @@ extension AudioManager {
 
       if !newSounds.isEmpty {
         defaultSoundOrder.append(contentsOf: newSounds)
-        UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+        UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
         print("🎵 AudioManager: Added \(newSounds.count) new sounds to default order")
       }
     } else {
       // Initialize with default order (all sounds in their loaded order)
       defaultSoundOrder = sounds.map(\.fileName)
-      UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+      UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
       print(
         "🎵 AudioManager: Initialized default sound order with \(defaultSoundOrder.count) sounds")
     }
@@ -157,7 +157,7 @@ extension AudioManager {
       orderUpdated = true
     }
     if orderUpdated {
-      UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+      UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
     }
 
     // Re-setup observers for the new sounds
@@ -171,8 +171,8 @@ extension AudioManager {
     // Get all custom sounds from the database
     let customSoundData = CustomSoundManager.shared.getAllCustomSounds()
 
-    // Stop and remove existing custom sounds
-    stopAndRemoveCustomSounds()
+    // Stop and remove existing custom sounds, preserving their state
+    let savedCustomSoundState = stopAndRemoveCustomSounds()
 
     // Create Sound objects for each custom sound
     let customSounds = customSoundData.enumerated().compactMap { (index, data) -> Sound? in
@@ -181,6 +181,16 @@ extension AudioManager {
 
     // Add custom sounds to the array
     sounds.append(contentsOf: customSounds)
+
+    // Restore the saved selection and volume state
+    for sound in customSounds {
+      if let savedState = savedCustomSoundState[sound.fileName] {
+        sound.isSelected = savedState.isSelected
+        sound.volume = savedState.volume
+        print("🔄 AudioManager: Restored state for '\(sound.fileName)' - selected: \(savedState.isSelected), volume: \(savedState.volume)")
+      }
+    }
+
     print("🎵 AudioManager: Loaded \(customSounds.count) custom sounds")
 
     // Clean up orphaned custom sound UUIDs from defaultSoundOrder
@@ -194,7 +204,7 @@ extension AudioManager {
       orderUpdated = true
     }
     if orderUpdated {
-      UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+      UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
       print("🎵 AudioManager: Updated default sound order with new custom sounds")
     }
 
@@ -207,13 +217,21 @@ extension AudioManager {
     }
   }
 
-  private func stopAndRemoveCustomSounds() {
+  private func stopAndRemoveCustomSounds() -> [String: (isSelected: Bool, volume: Float)] {
     let customSoundsToRemove = sounds.filter { $0.isCustom }
-    for sound in customSoundsToRemove where sound.isSelected {
-      sound.pause(immediate: true)
-      sound.isSelected = false
+    var savedState: [String: (isSelected: Bool, volume: Float)] = [:]
+
+    for sound in customSoundsToRemove {
+      // Save the current state before removal
+      savedState[sound.fileName] = (isSelected: sound.isSelected, volume: sound.volume)
+
+      if sound.isSelected {
+        sound.pause(immediate: true)
+      }
     }
     sounds.removeAll(where: { $0.isCustom })
+
+    return savedState
   }
 
   private func createCustomSound(from data: CustomSoundData, index: Int) -> Sound? {
@@ -303,7 +321,7 @@ extension AudioManager {
 
   /// Migrates user preferences from old format (with file extensions) to new format (without extensions)
   private func migrateUserPreferences(for sounds: [Sound]) {
-    let userDefaults = UserDefaults.standard
+    let userDefaults = UserDefaults.shared
     let legacyExtensions = ["mp3", "m4a", "wav", "aiff"]
 
     for sound in sounds {
@@ -366,7 +384,7 @@ extension AudioManager {
     }
 
     if defaultSoundOrder.count != originalCount {
-      UserDefaults.standard.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+      UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
       print(
         "🧹 AudioManager: Cleaned up \(originalCount - defaultSoundOrder.count) orphaned entries from defaultSoundOrder"
       )

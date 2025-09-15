@@ -159,12 +159,14 @@ import SwiftUI
       #if CARPLAY_ENABLED
         print("🚗 IOSAppDelegate: Performing synchronous CarPlay initialization...")
 
-        // Create model container synchronously
-        let modelContainer = AppSetup.createModelContainer()
+        // Use the shared model container (don't create a duplicate!)
+        if !SharedModelContainer.shared.isInitialized {
+          SharedModelContainer.shared.initialize()
+        }
 
         // Set model contexts synchronously - both are needed for CarPlay
-        AudioManager.shared.setModelContext(modelContainer.mainContext)
-        PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
+        AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+        PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
 
         print("🚗 IOSAppDelegate: Model context initialized")
 

@@ -46,7 +46,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
   @Published var isSelected = false {
     didSet {
-      UserDefaults.standard.set(isSelected, forKey: "\(fileName)_isSelected")
+      UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
       print("🔊 Sound: \(fileName) -  isSelected set to \(isSelected)")
 
       // If sound was just selected, start playing it immediately when playback becomes active
@@ -127,7 +127,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
           return
         }
 
-        UserDefaults.standard.set(self.volume, forKey: "\(self.fileName)_volume")
+        UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
         print("🔊 Sound: \(self.fileName) final volume saved as \(self.volume)")
       }
     }
@@ -175,14 +175,8 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
     super.init()
 
-    // Restore saved volume
-    self.volume = UserDefaults.standard.float(forKey: "\(fileName)_volume")
-    if self.volume == 0 {
-      self.volume = 0.75
-    }
-
-    // Restore selected state
-    self.isSelected = UserDefaults.standard.bool(forKey: "\(fileName)_isSelected")
+    // Volume and selection state will be restored by AudioManager.loadSavedState()
+    // Don't load from UserDefaults here to avoid duplicate work
 
     // Observe "All Sounds" volume changes
     globalSettingsObserver = GlobalSettings.shared.$volume

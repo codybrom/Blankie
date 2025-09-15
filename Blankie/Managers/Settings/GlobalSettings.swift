@@ -18,6 +18,14 @@ enum IconSize: String, CaseIterable {
   var label: String { rawValue }
 }
 
+extension UserDefaults {
+  /// Shared UserDefaults instance for app group
+  /// Falls back to standard UserDefaults if app group is not available
+  static var shared: UserDefaults {
+    AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
+  }
+}
+
 enum UserDefaultsKeys {
   static let volume = "globalVolume"
   static let appearance = "appearanceMode"

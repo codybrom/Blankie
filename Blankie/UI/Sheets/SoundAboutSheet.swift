@@ -78,6 +78,7 @@ struct SoundAboutSheet: View {
   private var detailsSection: some View {
     SoundDetailsSection(sound: sound)
   }
+  @MainActor
   private func loadEditableCredits() {
     // Load existing credits for custom sounds
     if sound.isCustom {
@@ -114,6 +115,7 @@ struct SoundAboutSheet: View {
     }
   }
 
+  @MainActor
   private func saveCredits() {
     // Save credits to CustomSoundData
     if sound.isCustom,

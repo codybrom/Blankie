@@ -23,9 +23,9 @@ class TimerManager: ObservableObject {
 
   private init() {
     // Load saved duration or use defaults
-    self.selectedHours = UserDefaults.standard.object(forKey: "timerLastSelectedHours") as? Int ?? 0
+    self.selectedHours = UserDefaults.shared.object(forKey: "timerLastSelectedHours") as? Int ?? 0
     self.selectedMinutes =
-      UserDefaults.standard.object(forKey: "timerLastSelectedMinutes") as? Int ?? 30
+      UserDefaults.shared.object(forKey: "timerLastSelectedMinutes") as? Int ?? 30
   }
 
   func startTimer(duration: TimeInterval) {
@@ -37,8 +37,8 @@ class TimerManager: ObservableObject {
     isTimerActive = true
 
     // Save the user's selection for next time
-    UserDefaults.standard.set(selectedHours, forKey: "timerLastSelectedHours")
-    UserDefaults.standard.set(selectedMinutes, forKey: "timerLastSelectedMinutes")
+    UserDefaults.shared.set(selectedHours, forKey: "timerLastSelectedHours")
+    UserDefaults.shared.set(selectedMinutes, forKey: "timerLastSelectedMinutes")
 
     timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
       self?.updateTimer()

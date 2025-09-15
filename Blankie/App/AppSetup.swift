@@ -8,6 +8,49 @@
 import SwiftData
 import SwiftUI
 
+/// Shared SwiftData container management to ensure single container per process
+@MainActor
+class SharedModelContainer {
+  static let shared = SharedModelContainer()
+  private var containerInstance: ModelContainer?
+
+  private init() {}
+
+  var container: ModelContainer {
+    guard let containerInstance = containerInstance else {
+      fatalError("❌ SharedModelContainer: Container not initialized. Call initialize() first.")
+    }
+    return containerInstance
+  }
+
+  var mainContext: ModelContext {
+    return container.mainContext
+  }
+
+  func initialize() {
+    guard containerInstance == nil else {
+      print("⚠️ SharedModelContainer: Already initialized, skipping duplicate initialization")
+      return
+    }
+
+    print("🗄️ SharedModelContainer: Creating SwiftData model container...")
+    containerInstance = AppSetup.createModelContainer()
+
+    // Validate that the container is properly initialized
+    guard let container = containerInstance else {
+      fatalError("❌ SharedModelContainer: Container creation returned nil")
+    }
+
+    // Additional validation: ensure mainContext is accessible
+    _ = container.mainContext  // This will fail fast if there are issues
+    print("✅ SharedModelContainer: Successfully initialized and validated shared container")
+  }
+
+  var isInitialized: Bool {
+    return containerInstance != nil
+  }
+}
+
 /// Handles shared app initialization and setup
 struct AppSetup {
   let modelContainer: ModelContainer
@@ -39,10 +82,11 @@ struct AppSetup {
     }
   }
 
-  /// Setup all managers with model context
+  /// Setup all managers with model context from the shared container
   @MainActor
   func setupManagers() {
-    // Pass model context to AudioManager for custom sounds
+    // Use the shared model container from the app initialization
+    // This ensures we have only ONE container for the entire process
     AudioManager.shared.setModelContext(modelContainer.mainContext)
 
     // Pass model context to PresetArtworkManager
