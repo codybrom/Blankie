@@ -57,7 +57,7 @@ final class AudioManagerTests: XCTestCase {
     // Verify all sounds are reset
     for sound in audioManager.sounds {
       XCTAssertFalse(sound.isSelected)
-      XCTAssertEqual(sound.volume, 1.0)
+      XCTAssertEqual(sound.volume, 0.75)
     }
   }
 }

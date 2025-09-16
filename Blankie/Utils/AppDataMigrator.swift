@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 /// Unified migration system for all app data (UserDefaults + SwiftData + App Group)
-struct AppDataMigrator {
+enum AppDataMigrator {
   private static let migrationCompletedKey = "unifiedMigrationCompleted"
 
   /// Perform one-time migration of all app data
@@ -75,7 +75,7 @@ struct AppDataMigrator {
     var migratedCount = 0
     for key in keysToMigrate {
       if let value = standardDefaults.object(forKey: key),
-        groupDefaults.object(forKey: key) == nil
+         groupDefaults.object(forKey: key) == nil
       {
         groupDefaults.set(value, forKey: key)
         migratedCount += 1
@@ -203,7 +203,8 @@ struct AppDataMigrator {
     // Migrate all files
     do {
       let files = try fileManager.contentsOfDirectory(
-        at: oldCustomSoundsURL, includingPropertiesForKeys: nil)
+        at: oldCustomSoundsURL, includingPropertiesForKeys: nil
+      )
 
       for file in files {
         let destination = newCustomSoundsURL.appendingPathComponent(file.lastPathComponent)
@@ -223,8 +224,22 @@ struct AppDataMigrator {
 
   /// Migrate UserDefaults from standard to shared container
   private static func migrateUserDefaultsToShared() {
-    // Define all keys that should be migrated
-    let keysToMigrate = [
+    let keysToMigrate = getUserDefaultsKeysToMigrate()
+    var migratedCount = 0
+
+    // Migrate primary keys
+    migratedCount += migrateKeys(keysToMigrate)
+
+    // Migrate individual sound settings
+    migratedCount += migrateSoundSettings()
+
+    print(
+      "✅ AppDataMigrator: UserDefaults migration completed - migrated \(migratedCount) settings")
+  }
+
+  /// Get list of keys that need to be migrated
+  private static func getUserDefaultsKeysToMigrate() -> [String] {
+    return [
       // GlobalSettings keys
       UserDefaultsKeys.volume,
       UserDefaultsKeys.appearance,
@@ -259,20 +274,32 @@ struct AppDataMigrator {
       "savedPresets",
       "lastActivePresetID",
     ]
+  }
 
+  /// Migrate a list of keys from standard to shared UserDefaults
+  private static func migrateKeys(_ keys: [String]) -> Int {
     var migratedCount = 0
 
-    // Migrate each key
-    for key in keysToMigrate {
+    for key in keys {
       if let value = UserDefaults.standard.object(forKey: key) {
-        UserDefaults.shared.set(value, forKey: key)
+        // Only migrate if not already present in shared (preserve existing data)
+        if UserDefaults.shared.object(forKey: key) == nil {
+          UserDefaults.shared.set(value, forKey: key)
+          migratedCount += 1
+          print("🔄 AppDataMigrator: Migrated '\(key)'")
+        } else {
+          print("⏭️ AppDataMigrator: Skipped '\(key)' - already exists in shared")
+        }
         UserDefaults.standard.removeObject(forKey: key)
-        migratedCount += 1
-        print("🔄 AppDataMigrator: Migrated '\(key)'")
       }
     }
 
-    // Migrate individual sound settings (volume, selection, hidden state)
+    return migratedCount
+  }
+
+  /// Migrate individual sound settings (volume, selection, hidden state)
+  private static func migrateSoundSettings() -> Int {
+    var migratedCount = 0
     let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
     let soundKeys = allKeys.filter { key in
       key.hasSuffix("_volume") || key.hasSuffix("_isSelected") || key.hasSuffix("_isHidden")
@@ -280,13 +307,15 @@ struct AppDataMigrator {
 
     for soundKey in soundKeys {
       if let value = UserDefaults.standard.object(forKey: soundKey) {
-        UserDefaults.shared.set(value, forKey: soundKey)
+        // Only migrate if not already present in shared (preserve existing data)
+        if UserDefaults.shared.object(forKey: soundKey) == nil {
+          UserDefaults.shared.set(value, forKey: soundKey)
+          migratedCount += 1
+        }
         UserDefaults.standard.removeObject(forKey: soundKey)
-        migratedCount += 1
       }
     }
 
-    print(
-      "✅ AppDataMigrator: UserDefaults migration completed - migrated \(migratedCount) settings")
+    return migratedCount
   }
 }

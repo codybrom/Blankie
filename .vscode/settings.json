@@ -1,6 +1,6 @@
 {
   "[swift]": {
-    "editor.defaultFormatter": "vknabel.vscode-apple-swift-format",
+    "editor.defaultFormatter": "vknabel.vscode-swiftformat",
     "editor.formatOnSave": true
   },
   "astro.content-intellisense": true,
@@ -66,6 +66,6 @@
     "MD033": false,
     "MD041": false
   },
-  "swift.diagnostics": true,
+  "swift.outputChannelLogLevel": "info",
   "swift.sourcekit-lsp.disable": true
 }

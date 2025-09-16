@@ -84,7 +84,7 @@ import SwiftUI
           .keyboardShortcut("?", modifiers: [.command, .shift])
 
           SettingsLink {
-            Text("Preferences...", comment: "Preferences menu item")
+            Text("Preferences", comment: "Preferences menu item")
           }
           .keyboardShortcut(",", modifiers: .command)
 

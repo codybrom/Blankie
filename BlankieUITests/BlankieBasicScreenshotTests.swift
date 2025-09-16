@@ -77,7 +77,7 @@ final class BlankieBasicScreenshotTests: XCTestCase {
     // Now take screenshots in all languages and appearances
     print("\n=== Starting screenshot capture phase ===")
 
-    for (appearanceIndex, isDark) in [false, true].enumerated() {
+    for isDark in [false, true] {
       let appearanceName = isDark ? "Dark" : "Light"
       print("\n--- Capturing \(appearanceName) mode screenshots ---")
 
