@@ -2,7 +2,7 @@
   "recommendations": [
     "DavidAnson.vscode-markdownlint",
     "streetsidesoftware.code-spell-checker",
-    "vknabel.vscode-apple-swift-format",
+    "vknabel.vscode-swiftformat",
     "astro-build.astro-vscode"
   ]
 }
