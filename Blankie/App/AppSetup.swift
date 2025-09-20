@@ -5,6 +5,7 @@
 //  Created by Cody Bromley on 6/17/25.
 //
 
+import Foundation
 import SwiftData
 import SwiftUI
 
@@ -42,7 +43,7 @@ class SharedModelContainer {
     }
 
     // Additional validation: ensure mainContext is accessible
-    _ = container.mainContext  // This will fail fast if there are issues
+    _ = container.mainContext // This will fail fast if there are issues
     print("✅ SharedModelContainer: Successfully initialized and validated shared container")
   }
 
@@ -64,8 +65,20 @@ struct AppSetup {
       // Create model configuration with app group URL
       var modelConfiguration: ModelConfiguration
       if let storeURL = AppGroupConfiguration.dataStoreURL {
-        modelConfiguration = ModelConfiguration(url: storeURL)
-        print("🗄️ AppSetup: Using app group store at: \(storeURL.path)")
+        // Configure file protection for CarPlay compatibility
+        // This allows data access even when the device is locked
+        let configuration = ModelConfiguration(
+          url: storeURL,
+          allowsSave: true,
+          isStoredInMemoryOnly: false,
+          isAutosaveEnabled: true
+        )
+
+        // Set file protection attributes for the store directory
+        try setCarPlayCompatibleFileProtection(for: storeURL)
+
+        modelConfiguration = configuration
+        print("🗄️ AppSetup: Using app group store with CarPlay protection at: \(storeURL.path)")
       } else {
         modelConfiguration = ModelConfiguration()
         print("⚠️ AppSetup: App group not available, using default store location")
@@ -80,6 +93,20 @@ struct AppSetup {
     } catch {
       fatalError("❌ AppSetup: Failed to create SwiftData model container: \(error)")
     }
+  }
+
+  /// Configure file protection for CarPlay compatibility
+  private static func setCarPlayCompatibleFileProtection(for storeURL: URL) throws {
+    let storeDirectory = storeURL.deletingLastPathComponent()
+
+    // Set file protection to allow access before first unlock
+    // This is essential for CarPlay when the device is locked
+    let attributes: [FileAttributeKey: Any] = [
+      .protectionKey: FileProtectionType.completeUntilFirstUserAuthentication,
+    ]
+
+    try FileManager.default.setAttributes(attributes, ofItemAtPath: storeDirectory.path)
+    print("🚗 AppSetup: Set CarPlay-compatible file protection for store directory")
   }
 
   /// Setup all managers with model context from the shared container
@@ -104,5 +131,4 @@ struct AppSetup {
       }
     #endif
   }
-
 }

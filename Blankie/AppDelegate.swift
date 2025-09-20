@@ -9,8 +9,7 @@ import SwiftUI
 
 #if os(macOS)
   final class MacAppDelegate: NSObject, NSApplicationDelegate {
-
-    func applicationDidFinishLaunching(_ notification: Notification) {
+    func applicationDidFinishLaunching(_: Notification) {
       configureWindowAppearance()
       setupNotificationObservers()
       applySavedLanguagePreference()
@@ -47,7 +46,7 @@ import SwiftUI
 
     private func applySavedLanguagePreference() {
       if let languageCode = UserDefaults.standard.string(forKey: "languagePreference"),
-        languageCode != "system"
+         languageCode != "system"
       {
         print("🌐 AppDelegate: Applying saved language \(languageCode) at launch")
         UserDefaults.standard.set([languageCode], forKey: "AppleLanguages")
@@ -106,12 +105,12 @@ import SwiftUI
       }
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-      return false  // Prevent app from quitting when last window closes
+    func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
+      return false // Prevent app from quitting when last window closes
     }
 
     // Handle language change
-    @objc private func languageDidChange(_ notification: Notification) {
+    @objc private func languageDidChange(_: Notification) {
       print("🌐 AppDelegate: Received language change notification")
       // The language has already been changed in UserDefaults by the Language.applyLanguage method
 
@@ -120,7 +119,7 @@ import SwiftUI
     }
 
     // Handle locale change
-    @objc private func localeDidChange(_ notification: Notification) {
+    @objc private func localeDidChange(_: Notification) {
       print("🌐 AppDelegate: Locale changed, refreshing localized content")
       refreshAppLocalization()
     }
@@ -144,15 +143,17 @@ import SwiftUI
       }
     }
   }
+
 #elseif os(iOS) || os(visionOS)
   import UIKit
 
   final class IOSAppDelegate: NSObject, UIApplicationDelegate {
     func application(
       _ application: UIApplication,
-      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+      didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
       print("📱 IOSAppDelegate: didFinishLaunchingWithOptions")
+      print("📱 IOSAppDelegate: Protected data available: \(application.isProtectedDataAvailable)")
 
       // Initialize core app systems synchronously for CarPlay compatibility
       // This MUST complete before CarPlay can connect
@@ -170,7 +171,8 @@ import SwiftUI
 
         print("🚗 IOSAppDelegate: Model context initialized")
 
-        // Load sounds synchronously
+        // Load sounds synchronously - this works even when device is locked
+        // because we've configured file protection appropriately
         if AudioManager.shared.sounds.isEmpty {
           AudioManager.shared.loadSounds()
           print(
@@ -198,7 +200,7 @@ import SwiftUI
       }
     #endif
 
-    func applicationDidBecomeActive(_ application: UIApplication) {
+    func applicationDidBecomeActive(_: UIApplication) {
       #if CARPLAY_ENABLED
         // Re-establish CarPlay connection if needed after app becomes active
         // This is crucial for CarPlay apps that were force quit
@@ -213,8 +215,8 @@ import SwiftUI
     }
 
     func application(
-      _ application: UIApplication,
-      supportedInterfaceOrientationsFor window: UIWindow?
+      _: UIApplication,
+      supportedInterfaceOrientationsFor _: UIWindow?
     ) -> UIInterfaceOrientationMask {
       #if os(iOS)
         if GlobalSettings.shared.lockPortraitOrientationiOS {
@@ -226,6 +228,5 @@ import SwiftUI
         return .all
       #endif
     }
-
   }
 #endif

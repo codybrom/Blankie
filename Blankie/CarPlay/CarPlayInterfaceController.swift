@@ -83,9 +83,14 @@
       // CRITICAL: All SwiftData operations MUST happen on @MainActor
       // This prevents actor violations that cause EXC_BREAKPOINT crashes
       print("🚗 CarPlay: Checking initialization state...")
-      print(
-        "🚗 CarPlay: Protected data: \(UIApplication.shared.isProtectedDataAvailable)"
-      )
+      let isProtectedDataAvailable = UIApplication.shared.isProtectedDataAvailable
+      print("🚗 CarPlay: Protected data available: \(isProtectedDataAvailable)")
+
+      // Wait for protected data to become available if device is locked
+      if !isProtectedDataAvailable {
+        print("🚗 CarPlay: Device is locked, waiting for data protection to unlock...")
+        await waitForProtectedDataAvailability()
+      }
 
       // Ensure shared model container is initialized
       // This is critical for CarPlay-only launches after force quit
@@ -107,6 +112,39 @@
       await AudioManager.shared.loadCustomSoundsWhenReady()
 
       print("🚗 CarPlay: App initialization complete")
+    }
+
+    /// Wait for protected data to become available (when device unlocks)
+    @MainActor
+    private func waitForProtectedDataAvailability() async {
+      guard !UIApplication.shared.isProtectedDataAvailable else { return }
+
+      print("🚗 CarPlay: Waiting for device unlock...")
+
+      return await withCheckedContinuation { continuation in
+        let observer = NotificationCenter.default.addObserver(
+          forName: UIApplication.protectedDataDidBecomeAvailableNotification,
+          object: nil,
+          queue: .main
+        ) { _ in
+          print("🚗 CarPlay: Protected data now available - device unlocked!")
+          continuation.resume()
+        }
+
+        // Clean up observer after 30 seconds to prevent hanging
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+          NotificationCenter.default.removeObserver(observer)
+          print("🚗 CarPlay: Timeout waiting for unlock, proceeding anyway...")
+          continuation.resume()
+        }
+
+        // Double-check if data became available while setting up observer
+        if UIApplication.shared.isProtectedDataAvailable {
+          NotificationCenter.default.removeObserver(observer)
+          print("🚗 CarPlay: Data became available while setting up observer")
+          continuation.resume()
+        }
+      }
     }
 
     // MARK: - Interface Setup
