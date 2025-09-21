@@ -10,7 +10,6 @@ import SwiftData
 import SwiftUI
 
 /// Shared SwiftData container management to ensure single container per process
-@MainActor
 class SharedModelContainer {
   static let shared = SharedModelContainer()
   private var containerInstance: ModelContainer?
@@ -24,6 +23,7 @@ class SharedModelContainer {
     return containerInstance
   }
 
+  @MainActor
   var mainContext: ModelContext {
     return container.mainContext
   }
@@ -38,13 +38,11 @@ class SharedModelContainer {
     containerInstance = AppSetup.createModelContainer()
 
     // Validate that the container is properly initialized
-    guard let container = containerInstance else {
+    guard containerInstance != nil else {
       fatalError("❌ SharedModelContainer: Container creation returned nil")
     }
 
-    // Additional validation: ensure mainContext is accessible
-    _ = container.mainContext // This will fail fast if there are issues
-    print("✅ SharedModelContainer: Successfully initialized and validated shared container")
+    print("✅ SharedModelContainer: Successfully initialized shared container")
   }
 
   var isInitialized: Bool {
@@ -80,6 +78,7 @@ struct AppSetup {
         for: CustomSoundData.self, PresetArtwork.self,
         configurations: modelConfiguration
       )
+
       print("🗄️ AppSetup: Successfully created SwiftData model container")
       return container
     } catch {
@@ -115,11 +114,9 @@ struct AppSetup {
     // Set protection on any related files that SwiftData might create
     let directoryContents = try? FileManager.default.contentsOfDirectory(atPath: storeDirectory.path)
     if let contents = directoryContents {
-      for filename in contents {
-        if filename.hasPrefix("default.store") || filename.contains(".sqlite") {
-          let filePath = storeDirectory.appendingPathComponent(filename).path
-          try? FileManager.default.setAttributes(attributes, ofItemAtPath: filePath)
-        }
+      for filename in contents where filename.hasPrefix("default.store") || filename.contains(".sqlite") {
+        let filePath = storeDirectory.appendingPathComponent(filename).path
+        try? FileManager.default.setAttributes(attributes, ofItemAtPath: filePath)
       }
     }
   }

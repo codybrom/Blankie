@@ -7,12 +7,12 @@
 
 #if CARPLAY_ENABLED
 
-  import CarPlay
+  @preconcurrency import CarPlay
   import Combine
   import SwiftData
   import SwiftUI
 
-  class CarPlayInterfaceController: ObservableObject {
+  class CarPlayInterfaceController: NSObject, ObservableObject, CPNowPlayingTemplateObserver {
     static let shared = CarPlayInterfaceController()
 
     @Published private(set) var isConnected = false
@@ -23,27 +23,37 @@
     private var presetsTemplate: CPListTemplate?
     private var quickMixTemplate: CPGridTemplate?
     private var soundsTemplate: CPListTemplate?
+    var currentEditTemplate: CPListTemplate?
+
+    // Public getter for interfaceController to allow access from methods
+    var currentInterfaceController: CPInterfaceController? {
+      return interfaceController
+    }
 
     // Quick Mix sounds (persisted from GlobalSettings)
     var quickMixSoundFileNames: [String] {
       return GlobalSettings.shared.quickMixSoundFileNames
     }
 
-    private init() {
+    override private init() {
+      super.init()
       observeAudioManagerChanges()
       observePresetManagerChanges()
     }
 
+    @MainActor
     func setInterfaceController(_ controller: CPInterfaceController) {
       print("🚗 CarPlay: Setting interface controller...")
       interfaceController = controller
       isConnected = true
 
-      // Initialize app and setup interface directly (no loading template)
+      // Initialize app and setup interface
       Task { @MainActor in
         print("🚗 CarPlay: Starting app initialization...")
-        await ensureAppInitialization()
-        print("🚗 CarPlay: App initialization complete, setting up interface...")
+
+        await initializeCarPlayApp()
+
+        print("🚗 CarPlay: Setting up interface...")
         setupTabBarInterface()
       }
 
@@ -78,10 +88,9 @@
 
     // MARK: - App Initialization
 
+    /// Initialize CarPlay app
     @MainActor
-    private func ensureAppInitialization() async {
-      // CRITICAL: All SwiftData operations MUST happen on @MainActor
-      // This prevents actor violations that cause EXC_BREAKPOINT crashes
+    private func initializeCarPlayApp() async {
       print("🚗 CarPlay: Checking initialization state...")
       let isProtectedDataAvailable = UIApplication.shared.isProtectedDataAvailable
       print("🚗 CarPlay: Protected data available: \(isProtectedDataAvailable)")
@@ -92,8 +101,7 @@
         await waitForProtectedDataAvailability()
       }
 
-      // Ensure shared model container is initialized
-      // This is critical for CarPlay-only launches after force quit
+      // Ensure the shared container is initialized
       if !SharedModelContainer.shared.isInitialized {
         print("🚗 CarPlay: Initializing shared model container...")
         SharedModelContainer.shared.initialize()
@@ -102,16 +110,16 @@
       // Set up manager contexts if not already done
       if AudioManager.shared.modelContext == nil {
         print("🚗 CarPlay: Setting up manager contexts...")
-        AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
-        PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
-        print("🚗 CarPlay: Initialized SwiftData model context")
+        let context = SharedModelContainer.shared.mainContext
+        AudioManager.shared.setModelContext(context)
+        PresetArtworkManager.shared.setModelContext(context)
       }
 
-      // Load ALL sounds (built-in + custom) together to prevent race conditions
-      print("🚗 CarPlay: Loading all sounds and initializing PresetManager...")
+      // Load all sounds
+      print("🚗 CarPlay: Loading sounds...")
       await AudioManager.shared.loadCustomSoundsWhenReady()
 
-      print("🚗 CarPlay: App initialization complete")
+      print("✅ CarPlay: App initialization complete")
     }
 
     /// Wait for protected data to become available (when device unlocks)
@@ -122,28 +130,67 @@
       print("🚗 CarPlay: Waiting for device unlock...")
 
       return await withCheckedContinuation { continuation in
-        let observer = NotificationCenter.default.addObserver(
+        let observerWrapper = ObserverWrapper()
+
+        observerWrapper.observer = NotificationCenter.default.addObserver(
           forName: UIApplication.protectedDataDidBecomeAvailableNotification,
           object: nil,
           queue: .main
         ) { _ in
-          print("🚗 CarPlay: Protected data now available - device unlocked!")
-          continuation.resume()
+          observerWrapper.handleNotification {
+            print("🚗 CarPlay: Protected data now available - device unlocked!")
+            continuation.resume()
+          }
         }
 
         // Clean up observer after 30 seconds to prevent hanging
         DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
-          NotificationCenter.default.removeObserver(observer)
-          print("🚗 CarPlay: Timeout waiting for unlock, proceeding anyway...")
-          continuation.resume()
+          observerWrapper.handleTimeout {
+            print("🚗 CarPlay: Timeout waiting for unlock, proceeding anyway...")
+            continuation.resume()
+          }
         }
 
         // Double-check if data became available while setting up observer
         if UIApplication.shared.isProtectedDataAvailable {
-          NotificationCenter.default.removeObserver(observer)
-          print("🚗 CarPlay: Data became available while setting up observer")
-          continuation.resume()
+          observerWrapper.handleImmediate {
+            print("🚗 CarPlay: Data became available while setting up observer")
+            continuation.resume()
+          }
         }
+      }
+    }
+
+    // Helper class to avoid capturing mutable variables
+    private final class ObserverWrapper {
+      var observer: NSObjectProtocol?
+      var hasResumed = false
+
+      func handleNotification(completion: () -> Void) {
+        guard !hasResumed else { return }
+        hasResumed = true
+        if let observer = observer {
+          NotificationCenter.default.removeObserver(observer)
+        }
+        completion()
+      }
+
+      func handleTimeout(completion: () -> Void) {
+        guard !hasResumed else { return }
+        hasResumed = true
+        if let observer = observer {
+          NotificationCenter.default.removeObserver(observer)
+        }
+        completion()
+      }
+
+      func handleImmediate(completion: () -> Void) {
+        guard !hasResumed else { return }
+        hasResumed = true
+        if let observer = observer {
+          NotificationCenter.default.removeObserver(observer)
+        }
+        completion()
       }
     }
 
@@ -158,14 +205,32 @@
       quickMixTemplate = QuickMixGridTemplate.createTemplate()
       soundsTemplate = SoundsListTemplate.createTemplate()
 
+      // Validate that templates were created successfully
+      guard let presetsTemplate = presetsTemplate,
+            let quickMixTemplate = quickMixTemplate,
+            let soundsTemplate = soundsTemplate
+      else {
+        print("❌ CarPlay: Failed to create one or more templates")
+        return
+      }
+
+      // Setup Now Playing template with edit functionality
+      setupNowPlayingTemplate()
+
       // Create tab bar with all three tabs
       let tabBar = CPTabBarTemplate(templates: [
-        presetsTemplate!,
-        quickMixTemplate!,
-        soundsTemplate!,
+        presetsTemplate,
+        quickMixTemplate,
+        soundsTemplate,
       ])
 
-      interfaceController.setRootTemplate(tabBar, animated: false, completion: nil)
+      interfaceController.setRootTemplate(tabBar, animated: true, completion: { success, error in
+        if success {
+          print("✅ CarPlay: Successfully set tab bar interface")
+        } else {
+          print("❌ CarPlay: Failed to set tab bar interface: \(error?.localizedDescription ?? "unknown error")")
+        }
+      })
     }
 
     // MARK: - Template Updates
@@ -193,6 +258,25 @@
       updateSoundsTemplate()
     }
 
+    /// Reinitialize CarPlay interface if needed (e.g., after app becomes active)
+    @MainActor
+    func reinitializeIfNeeded() {
+      guard isConnected, let interfaceController = interfaceController else { return }
+
+      // Check if the current root template exists
+      if interfaceController.rootTemplate is CPTabBarTemplate {
+        // Just update existing templates
+        updateAllTemplates()
+      } else {
+        print("🚗 CarPlay: Root template is not tab bar, reinitializing interface...")
+
+        Task { @MainActor in
+          await initializeCarPlayApp()
+          setupTabBarInterface()
+        }
+      }
+    }
+
     // MARK: - Navigation
 
     func showNowPlaying() {
@@ -201,6 +285,12 @@
         animated: true,
         completion: nil
       )
+    }
+
+    /// Show edit sounds interface (accessible from sounds tab)
+    @MainActor
+    func showEditInterface() {
+      showEditSoundsInterface()
     }
 
     // MARK: - Observers
@@ -216,8 +306,11 @@
       // Observe solo mode changes
       AudioManager.shared.$soloModeSound
         .sink { [weak self] _ in
-          self?.updateSoundsTemplate()
-          self?.updateQuickMixTemplate()
+          Task { @MainActor in
+            self?.updateSoundsTemplate()
+            self?.updateQuickMixTemplate()
+            self?.updateNowPlayingButtons()
+          }
         }
         .store(in: &cancellables)
 
@@ -233,7 +326,10 @@
       // Observe current preset
       PresetManager.shared.$currentPreset
         .sink { [weak self] _ in
-          self?.updatePresetsTemplate()
+          Task { @MainActor in
+            self?.updatePresetsTemplate()
+            self?.updateNowPlayingButtons()
+          }
         }
         .store(in: &cancellables)
 
@@ -245,24 +341,22 @@
         .store(in: &cancellables)
     }
 
-    // MARK: - Helper Methods
+    // MARK: - Edit Functionality
 
-    private func showErrorTemplate(error: Error) {
-      guard let interfaceController = interfaceController else { return }
+    // Note: All edit functionality has been moved to CarPlayPresetEditController.swift
+    // The showEditSoundsInterface() method is implemented there as an extension
 
-      let errorItem = CPListItem(
-        text: "Failed to Load",
-        detailText: "Please restart the app and try again"
-      )
-      let section = CPListSection(items: [errorItem])
-      let errorTemplate = CPListTemplate(title: "Error", sections: [section])
+    // MARK: - CPNowPlayingTemplateObserver
 
-      interfaceController.setRootTemplate(errorTemplate, animated: true) { _, error in
-        if let error = error {
-          print("❌ CarPlay: Failed to set error template: \(error)")
-        }
-      }
+    func nowPlayingTemplateUpNextButtonTapped(_: CPNowPlayingTemplate) {
+      // Not used - we're using custom buttons instead
     }
+
+    func nowPlayingTemplateAlbumArtistButtonTapped(_: CPNowPlayingTemplate) {
+      // Not used - we're using custom buttons instead
+    }
+
+    // MARK: - Helper Methods
   }
 
   // MARK: - Notification Names

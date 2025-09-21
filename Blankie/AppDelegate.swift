@@ -203,12 +203,11 @@ import SwiftUI
     func applicationDidBecomeActive(_: UIApplication) {
       #if CARPLAY_ENABLED
         // Re-establish CarPlay connection if needed after app becomes active
-        // This is crucial for CarPlay apps that were force quit
+        // This is crucial for CarPlay apps that were force quit or when device was locked
         if CarPlayInterfaceController.shared.isConnected {
-          // If we think we're connected but the interface might be stale,
-          // trigger a refresh to ensure proper state
+          print("🚗 IOSAppDelegate: App became active with CarPlay connected, checking interface state...")
           Task { @MainActor in
-            CarPlayInterfaceController.shared.updateAllTemplates()
+            CarPlayInterfaceController.shared.reinitializeIfNeeded()
           }
         }
       #endif

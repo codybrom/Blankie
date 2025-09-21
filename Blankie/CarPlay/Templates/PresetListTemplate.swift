@@ -11,7 +11,6 @@
   import SwiftUI
 
   enum PresetListTemplate {
-
     static func createTemplate() -> CPListTemplate {
       let template = CPListTemplate(
         title: "Presets",
@@ -195,7 +194,7 @@
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
 
       if let thumbnailData = userDefaults.data(forKey: thumbnailKey),
-        let image = UIImage(data: thumbnailData)
+         let image = UIImage(data: thumbnailData)
       {
         return image
       }
@@ -209,7 +208,7 @@
 
     private static func addRecentSection(to sections: inout [CPListSection]) {
       if let currentPreset = PresetManager.shared.currentPreset,
-        !currentPreset.isDefault
+         !currentPreset.isDefault
       {
         let recentItem = createPresetListItem(currentPreset)
         sections.append(
