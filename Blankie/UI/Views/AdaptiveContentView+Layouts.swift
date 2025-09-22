@@ -59,7 +59,7 @@ import SwiftUI
           columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2),
           spacing: 16
         ) {
-          ForEach(Array(filteredSounds.enumerated()), id: \.element.id) { index, sound in
+          ForEach(Array(filteredSounds.enumerated()), id: \.offset) { index, sound in
             GridSoundButtonWrapper(
               sound: sound,
               index: index,
@@ -70,6 +70,7 @@ import SwiftUI
                 moveGridItems(from: fromIndex, to: toIndex)
               }
             )
+            .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
           }
         }
         .padding()
@@ -113,7 +114,7 @@ import SwiftUI
         List {
           ForEach(filteredSounds) { sound in
             soundRow(for: sound)
-              .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)")
+              .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
               .listRowInsets(EdgeInsets(top: 12, leading: 20, bottom: 8, trailing: 20))
               .listRowSeparator(.hidden)
               .listRowBackground(Color.clear)
@@ -137,7 +138,7 @@ import SwiftUI
         .scrollContentBackground(.hidden)
         .environment(\.editMode, $editMode)
         .padding(.top, 8)
-        .id("\(globalSettings.showSoundNames)")
+        .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
       }
       .overlay(alignment: .bottom) {
         if editMode == .active {
@@ -242,7 +243,7 @@ import SwiftUI
         print("📱 GridView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
 
         // Validate indices
-        guard sourceIndex < displayedSounds.count && destinationIndex < displayedSounds.count else {
+        guard sourceIndex < displayedSounds.count, destinationIndex < displayedSounds.count else {
           print("❌ GridView: Invalid indices - source: \(sourceIndex), destination: \(destinationIndex), count: \(displayedSounds.count)")
           return
         }
@@ -286,7 +287,7 @@ import SwiftUI
         print("📱 GridView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
 
         // Validate indices
-        guard sourceIndex < displayedSounds.count && destinationIndex < displayedSounds.count else {
+        guard sourceIndex < displayedSounds.count, destinationIndex < displayedSounds.count else {
           print("❌ GridView: Invalid indices - source: \(sourceIndex), destination: \(destinationIndex), count: \(displayedSounds.count)")
           return
         }

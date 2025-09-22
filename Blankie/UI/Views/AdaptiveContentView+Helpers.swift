@@ -4,22 +4,30 @@ import SwiftUI
   extension AdaptiveContentView {
     // Calculate filtered sounds based on current preset and hideInactiveSounds preference
     var filteredSounds: [Sound] {
-      // Create hash of dependencies to detect changes
-      let currentHash =
-        audioManager.getVisibleSounds().count.hashValue ^ hideInactiveSounds.hashValue
-        ^ editMode.hashValue ^ (presetManager.currentPreset?.id.hashValue ?? 0)
-        ^ (presetManager.currentPreset?.soundOrder?.hashValue ?? 0)
-        ^ soundsUpdateTrigger.hashValue
+      // Create hash of dependencies to detect changes - include more comprehensive dependencies
+      let visibleSounds = audioManager.getVisibleSounds()
+      let soundFileNames = visibleSounds.map { $0.fileName }.joined()
+      let presetSoundStates = presetManager.currentPreset?.soundStates.map { "\($0.fileName)-\($0.isSelected)-\($0.volume)" }.joined() ?? ""
+
+      let currentHash = [
+        visibleSounds.count.hashValue,
+        hideInactiveSounds.hashValue,
+        editMode.hashValue,
+        presetManager.currentPreset?.id.hashValue ?? 0,
+        presetManager.currentPreset?.soundOrder?.hashValue ?? 0,
+        soundsUpdateTrigger.hashValue,
+        soundFileNames.hashValue,
+        presetSoundStates.hashValue,
+        audioManager.sounds.count.hashValue, // Track total sound count for imports
+      ].reduce(0) { $0 ^ $1 }
 
       // Only recompute if dependencies changed
       if currentHash != lastFilterHash {
         let newFilteredSounds = filterSounds()
 
-        // Update cache outside view computation to avoid SwiftUI warnings
-        Task { @MainActor in
-          self.lastFilterHash = currentHash
-          self.cachedFilteredSounds = newFilteredSounds
-        }
+        // Update cache synchronously to avoid race conditions
+        lastFilterHash = currentHash
+        cachedFilteredSounds = newFilteredSounds
 
         return newFilteredSounds
       }
@@ -36,7 +44,7 @@ import SwiftUI
           // For default preset, show all sounds
           if currentPreset.isDefault {
             // Apply hideInactiveSounds filter for default preset (but not in edit mode)
-            if hideInactiveSounds && editMode == .inactive {
+            if hideInactiveSounds, editMode == .inactive {
               return sound.isSelected
             } else {
               return true
@@ -49,7 +57,7 @@ import SwiftUI
             }
 
             // If sound is in preset, apply hideInactiveSounds filter (but not in edit mode)
-            if hideInactiveSounds && editMode == .inactive {
+            if hideInactiveSounds, editMode == .inactive {
               return sound.isSelected
             } else {
               return true
@@ -57,7 +65,7 @@ import SwiftUI
           }
         } else {
           // No current preset - show all sounds with hideInactiveSounds filter (but not in edit mode)
-          if hideInactiveSounds && editMode == .inactive {
+          if hideInactiveSounds, editMode == .inactive {
             return sound.isSelected
           } else {
             return true
@@ -67,8 +75,8 @@ import SwiftUI
 
       // Sort filtered sounds according to preset order or default sound order
       if let currentPreset = presetManager.currentPreset,
-        !currentPreset.isDefault,
-        let soundOrder = currentPreset.soundOrder
+         !currentPreset.isDefault,
+         let soundOrder = currentPreset.soundOrder
       {
         // Use preset's sound order for custom presets
         print("🔍 FilteredSounds: Using preset order: \(soundOrder)")
@@ -102,7 +110,7 @@ import SwiftUI
     @ViewBuilder
     var presetBackgroundView: some View {
       if let preset = presetManager.currentPreset,
-        preset.showBackgroundImage ?? false
+         preset.showBackgroundImage ?? false
       {
         GeometryReader { geometry in
           if let image = backgroundImage {
@@ -114,14 +122,14 @@ import SwiftUI
               .opacity(preset.backgroundOpacity ?? 0.65)
               .clipped()
               .overlay(
-                Color.black.opacity(0.2)  // Add slight darkening for better UI contrast
+                Color.black.opacity(0.2) // Add slight darkening for better UI contrast
               )
           }
         }
         .ignoresSafeArea()
         .task(
           id:
-            "\(preset.id)-\(preset.artworkId?.uuidString ?? "")-\(preset.backgroundImageId?.uuidString ?? "")-\(preset.useArtworkAsBackground ?? false)"
+          "\(preset.id)-\(preset.artworkId?.uuidString ?? "")-\(preset.backgroundImageId?.uuidString ?? "")-\(preset.useArtworkAsBackground ?? false)"
         ) {
           Task { @MainActor in
             self.lastPresetId = preset.id
@@ -168,11 +176,11 @@ import SwiftUI
           DispatchQueue.main.async {
             self.lastScreenWidth = screenWidth
             let spacing: CGFloat = 16
-            let padding: CGFloat = 32  // 16 on each side
+            let padding: CGFloat = 32 // 16 on each side
             self.cachedColumnWidth = (screenWidth - padding - spacing) / 2
           }
           let spacing: CGFloat = 16
-          let padding: CGFloat = 32  // 16 on each side
+          let padding: CGFloat = 32 // 16 on each side
           return (screenWidth - padding - spacing) / 2
         }
         return cachedColumnWidth
@@ -182,8 +190,8 @@ import SwiftUI
     // Calculate offset for dodging animation
     func calculateDodgeOffset(for index: Int) -> CGSize {
       guard let draggedIndex = draggedIndex,
-        let hoveredIndex = hoveredIndex,
-        draggedIndex != index
+            let hoveredIndex = hoveredIndex,
+            draggedIndex != index
       else {
         return .zero
       }

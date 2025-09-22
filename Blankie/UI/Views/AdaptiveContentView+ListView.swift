@@ -29,7 +29,7 @@ import SwiftUI
             !audioManager.isGloballyPlaying || !sound.isSelected
               ? .clear
               : (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
-                .opacity(0.2)
+              .opacity(0.2)
           )
           .frame(width: 50, height: 50)
 
@@ -82,7 +82,7 @@ import SwiftUI
             get: { Double(sound.volume) },
             set: { sound.volume = Float($0) }
           ),
-          in: 0...1
+          in: 0 ... 1
         )
         .tint(
           sound.isSelected
@@ -104,7 +104,7 @@ import SwiftUI
       return List {
         ForEach(filteredSounds) { sound in
           soundRow(for: sound)
-            .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)")
+            .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
             .listRowInsets(EdgeInsets(top: 12, leading: 20, bottom: 8, trailing: 20))
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
@@ -142,7 +142,8 @@ import SwiftUI
               }) {
                 Label(
                   editMode == .active ? "Done Reordering" : "Reorder",
-                  systemImage: editMode == .active ? "checkmark" : "arrow.up.arrow.down")
+                  systemImage: editMode == .active ? "checkmark" : "arrow.up.arrow.down"
+                )
               }
             }
         }
@@ -154,7 +155,7 @@ import SwiftUI
       .environment(\.editMode, $editMode)
       .transition(.opacity)
       .padding(.top, 8)
-      .id("\(globalSettings.showSoundNames)")
+      .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
     }
 
     private func moveItems(from source: IndexSet, to destination: Int) {
@@ -246,7 +247,7 @@ import SwiftUI
     private func getSoundAuthor(for sound: Sound) -> String? {
       // Check if it's a custom sound first
       if isCustomSound(sound) {
-        return "You"  // Custom sounds are created by the user
+        return "You" // Custom sounds are created by the user
       }
 
       // For built-in sounds, get author from credits
@@ -268,6 +269,5 @@ import SwiftUI
     private func soundRow(for sound: Sound) -> some View {
       SoundRowView(sound: sound, globalSettings: globalSettings, audioManager: audioManager)
     }
-
   }
 #endif

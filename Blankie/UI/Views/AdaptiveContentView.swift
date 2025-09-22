@@ -61,12 +61,14 @@ private struct AnimationTrigger: Equatable {
       }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
-          .interactiveDismissDisabled()  // Prevent accidental dismissal
+          .interactiveDismissDisabled() // Prevent accidental dismissal
           .onAppear {
             print("🎵 AdaptiveContentView: SoundSheet appeared for '\(sound.title)'")
           }
           .onDisappear {
             print("🎵 AdaptiveContentView: SoundSheet disappeared for '\(sound.title)'")
+            // Trigger refresh when sound edit is closed in case sound properties changed
+            soundsUpdateTrigger += 1
           }
       }
       .onChange(of: soundToEdit) { oldValue, newValue in
@@ -90,6 +92,11 @@ private struct AnimationTrigger: Equatable {
       }
       .sheet(isPresented: $showingSoundManagement) {
         SoundManagementView()
+          .onDisappear {
+            // Trigger refresh when sound management is closed in case sounds were imported
+            print("🔄 AdaptiveContentView: SoundManagementView closed, triggering refresh")
+            soundsUpdateTrigger += 1
+          }
       }
       .sheet(isPresented: $showingTimer) {
         TimerSheetView()
@@ -97,10 +104,43 @@ private struct AnimationTrigger: Equatable {
       }
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
+          .onDisappear {
+            // Trigger refresh when preset edit is closed in case preset was modified
+            print("🔄 AdaptiveContentView: EditPresetSheet closed, triggering refresh")
+            soundsUpdateTrigger += 1
+          }
       }
       .modifier(AudioErrorHandler())
       .onAppear {
         showingListView = globalSettings.showingListView
+      }
+      // Listen for changes that should trigger view updates
+      .onChange(of: audioManager.sounds.count) { oldValue, newValue in
+        // Sound imported or removed
+        print("🔄 AdaptiveContentView: Sound count changed from \(oldValue) to \(newValue)")
+        soundsUpdateTrigger += 1
+      }
+      .onChange(of: presetManager.currentPreset?.id) { oldValue, newValue in
+        // Preset switched
+        print("🔄 AdaptiveContentView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")")
+        soundsUpdateTrigger += 1
+      }
+      .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
+        // Preset content changed (sounds added/removed)
+        if let oldCount = oldValue, let newCount = newValue, oldCount != newCount {
+          print("🔄 AdaptiveContentView: Preset sound count changed from \(oldCount) to \(newCount)")
+          soundsUpdateTrigger += 1
+        }
+      }
+      .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))) { _ in
+        // Custom sound was imported
+        print("🔄 AdaptiveContentView: Received CustomSoundImported notification")
+        soundsUpdateTrigger += 1
+      }
+      .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) { _ in
+        // Preset was updated
+        print("🔄 AdaptiveContentView: Received PresetUpdated notification")
+        soundsUpdateTrigger += 1
       }
     }
 
@@ -159,8 +199,8 @@ private struct AnimationTrigger: Equatable {
             }
             ToolbarItem(placement: .navigationBarTrailing) {
               if let currentPreset = presetManager.currentPreset,
-                !currentPreset.isDefault,
-                !audioManager.isQuickMix
+                 !currentPreset.isDefault,
+                 !audioManager.isQuickMix
               {
                 Button {
                   presetToEdit = currentPreset
@@ -184,7 +224,7 @@ private struct AnimationTrigger: Equatable {
     private var mainContentView: some View {
       Group {
         if let soloSound = audioManager.soloModeSound, soundToEdit == nil,
-          audioManager.previewModeSound == nil
+           audioManager.previewModeSound == nil
         {
           // Solo mode view (only when no SoundSheet is presented and not in preview mode)
           soloModeView(for: soloSound)
@@ -194,7 +234,7 @@ private struct AnimationTrigger: Equatable {
               )
             }
         } else if let soloSound = audioManager.soloModeSound,
-          soundToEdit != nil || audioManager.previewModeSound != nil
+                  soundToEdit != nil || audioManager.previewModeSound != nil
         {
           // Solo mode is active but SoundSheet is open or in preview mode, maintain normal layout
           Group {
