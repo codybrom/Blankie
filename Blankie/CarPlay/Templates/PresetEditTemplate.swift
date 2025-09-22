@@ -38,8 +38,9 @@
 
       // Get only sounds that are part of the current preset
       let presetSounds = AudioManager.shared.sounds.filter { sound in
-        // Check if this sound is in the current preset by checking the sound order
-        currentPreset.soundOrder?.contains(sound.fileName) ?? false
+        // Check if this sound is saved in the preset's sound states
+        // This includes sounds that might be turned off but are part of the preset
+        currentPreset.soundStates.contains { $0.fileName == sound.fileName }
       }
 
       guard !presetSounds.isEmpty else {
@@ -67,12 +68,17 @@
 
     private static func createSoundEditItem(_ sound: Sound) -> CPListItem {
       let isSelected = sound.isSelected
-      let volumeText = "\(Int(sound.volume * 100))%"
+      let volumeText = "\(Int(sound.volume * 100))% Volume"
 
       let item = CPListItem(
         text: sound.title,
-        detailText: isSelected ? "ON • \(volumeText)" : "OFF"
+        detailText: isSelected ? "Playing • \(volumeText)" : "Stopped"
       )
+
+      // Set icon with playing/stopped state
+      if let image = createSoundIcon(for: sound, isPlaying: isSelected) {
+        item.setImage(image)
+      }
 
       // Always show disclosure indicator since we can adjust volume or turn on/off
       item.accessoryType = .disclosureIndicator
@@ -92,6 +98,69 @@
       }
 
       return item
+    }
+
+    private static func createSoundIcon(for sound: Sound, isPlaying: Bool) -> UIImage? {
+      let size = CGSize(width: 40, height: 40)
+      let renderer = UIGraphicsImageRenderer(size: size)
+
+      return renderer.image { _ in
+        // Get the color for this sound
+        let soundColor = getIconColor(for: sound)
+
+        if isPlaying {
+          // Draw colored circle background when playing
+          soundColor.withAlphaComponent(0.3).setFill()
+          let circle = UIBezierPath(ovalIn: CGRect(origin: .zero, size: size))
+          circle.fill()
+        }
+        // No background when stopped
+
+        // Draw icon
+        let iconName = sound.systemIconName
+        let icon = UIImage(systemName: iconName) ?? UIImage(systemName: "speaker.wave.2")!
+
+        // Configure icon size
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+        let configuredIcon = icon.withConfiguration(iconConfig)
+
+        let iconSize = CGSize(width: 28, height: 28)
+        let iconRect = CGRect(
+          x: (size.width - iconSize.width) / 2,
+          y: (size.height - iconSize.height) / 2,
+          width: iconSize.width,
+          height: iconSize.height
+        )
+
+        // Apply icon color
+        let iconColor: UIColor
+        if isPlaying {
+          // Use sound's color when playing
+          iconColor = soundColor
+        } else {
+          // Use disabled gray when stopped
+          iconColor = UIColor.systemGray
+        }
+
+        // Draw the icon with the proper color
+        let coloredIcon = configuredIcon.withTintColor(iconColor, renderingMode: .alwaysOriginal)
+        coloredIcon.draw(in: iconRect)
+      }
+    }
+
+    private static func getIconColor(for sound: Sound) -> UIColor {
+      // First priority: sound's custom color
+      if let customColor = sound.customColor {
+        return UIColor(customColor)
+      }
+
+      // Second priority: user's theme color
+      if let themeColor = GlobalSettings.shared.customAccentColor {
+        return UIColor(themeColor)
+      }
+
+      // Default: system tint color
+      return UIColor.tintColor
     }
 
     // MARK: - Volume Adjustment Template
@@ -158,16 +227,19 @@
         )
 
         if isCurrentVolume {
-          item.accessoryType = .disclosureIndicator
-        }
-
-        item.handler = { _, completion in
-          Task { @MainActor in
-            sound.volume = volume
-            AudioManager.shared.updateHasSelectedSounds()
-            PresetManager.shared.savePresets()
-            CarPlayInterfaceController.shared.popAndRefreshEditTemplate()
-            completion()
+          // Disable the current volume selection
+          item.isEnabled = false
+          // Don't set a handler for disabled items
+          item.handler = nil
+        } else {
+          item.handler = { _, completion in
+            Task { @MainActor in
+              sound.volume = volume
+              AudioManager.shared.updateHasSelectedSounds()
+              PresetManager.shared.savePresets()
+              CarPlayInterfaceController.shared.popAndRefreshEditTemplate()
+              completion()
+            }
           }
         }
 

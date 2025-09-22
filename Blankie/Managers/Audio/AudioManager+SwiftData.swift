@@ -17,7 +17,7 @@ extension AudioManager {
   /// CRITICAL: Must be called on @MainActor to prevent SwiftData actor violations
   @MainActor
   func setModelContext(_ context: ModelContext) {
-    self.modelContext = context
+    modelContext = context
     CustomSoundManager.shared.setModelContext(context)
     setupCustomSoundObservers()
   }
@@ -39,8 +39,11 @@ extension AudioManager {
       return
     }
 
-    // Check if protected data is available (critical for CarPlay cold starts)
-    await waitForProtectedDataAvailability()
+    // For CarPlay, try to load custom sounds even if protected data isn't available
+    // This allows CarPlay to function when the device is locked
+    if !UIApplication.shared.isProtectedDataAvailable {
+      print("⚠️ AudioManager: Protected data not available, attempting to load custom sounds anyway for CarPlay")
+    }
 
     // Load custom sounds to complete the sound library
     print("🎵 AudioManager: Loading custom sounds with SwiftData coordination...")
@@ -90,7 +93,7 @@ extension AudioManager {
   @MainActor
   private func addNewSoundToCurrentPreset() {
     guard let currentPreset = PresetManager.shared.currentPreset,
-      !currentPreset.isDefault
+          !currentPreset.isDefault
     else {
       print("🎛️ AudioManager: No current custom preset to add new sound to")
       return

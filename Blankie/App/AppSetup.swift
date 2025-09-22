@@ -63,12 +63,15 @@ struct AppSetup {
       // Create model configuration with app group URL
       var modelConfiguration: ModelConfiguration
       if let storeURL = AppGroupConfiguration.dataStoreURL {
-        // Set file protection attributes for the store directory BEFORE creating configuration
-        try setCarPlayCompatibleFileProtection(for: storeURL)
+        let storeDirectory = storeURL.deletingLastPathComponent()
 
-        // Configure SwiftData to use the app group URL with CarPlay-compatible file protection
+        // Create directory with no file protection
+        let attributes: [FileAttributeKey: Any] = [.protectionKey: FileProtectionType.none]
+        try FileManager.default.createDirectory(at: storeDirectory, withIntermediateDirectories: true, attributes: attributes)
+
+        // Configure SwiftData to use the app group URL
         modelConfiguration = ModelConfiguration(url: storeURL)
-        print("🗄️ AppSetup: Using app group store with CarPlay protection at: \(storeURL.path)")
+        print("🗄️ AppSetup: Using app group store at: \(storeURL.path)")
       } else {
         modelConfiguration = ModelConfiguration()
         print("⚠️ AppSetup: App group not available, using default store location")
@@ -83,41 +86,6 @@ struct AppSetup {
       return container
     } catch {
       fatalError("❌ AppSetup: Failed to create SwiftData model container: \(error)")
-    }
-  }
-
-  /// Configure file protection for CarPlay compatibility
-  private static func setCarPlayCompatibleFileProtection(for storeURL: URL) throws {
-    let storeDirectory = storeURL.deletingLastPathComponent()
-
-    // Ensure the directory exists first
-    try FileManager.default.createDirectory(at: storeDirectory, withIntermediateDirectories: true, attributes: nil)
-
-    // Set file protection to allow access before first unlock
-    // This is essential for CarPlay when the device is locked
-    let attributes: [FileAttributeKey: Any] = [
-      .protectionKey: FileProtectionType.completeUntilFirstUserAuthentication,
-    ]
-
-    // Set protection on the store directory
-    try FileManager.default.setAttributes(attributes, ofItemAtPath: storeDirectory.path)
-    print("🚗 AppSetup: Set CarPlay-compatible file protection for store directory: \(storeDirectory.path)")
-
-    // Also attempt to set protection on the database file itself if it exists
-    // This is helpful for existing databases
-    let databasePath = storeURL.path
-    if FileManager.default.fileExists(atPath: databasePath) {
-      try FileManager.default.setAttributes(attributes, ofItemAtPath: databasePath)
-      print("🚗 AppSetup: Set CarPlay-compatible file protection for existing database file")
-    }
-
-    // Set protection on any related files that SwiftData might create
-    let directoryContents = try? FileManager.default.contentsOfDirectory(atPath: storeDirectory.path)
-    if let contents = directoryContents {
-      for filename in contents where filename.hasPrefix("default.store") || filename.contains(".sqlite") {
-        let filePath = storeDirectory.appendingPathComponent(filename).path
-        try? FileManager.default.setAttributes(attributes, ofItemAtPath: filePath)
-      }
     }
   }
 

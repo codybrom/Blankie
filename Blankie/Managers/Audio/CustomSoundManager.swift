@@ -25,7 +25,7 @@ class CustomSoundManager {
 
   @MainActor
   func setModelContext(_ context: ModelContext) {
-    self.modelContext = context
+    modelContext = context
   }
 
   private func setupCustomSoundsDirectory() {
@@ -39,6 +39,16 @@ class CustomSoundManager {
         print("❌ CustomSoundManager: Failed to create custom sounds directory: \(error)")
         ErrorReporter.shared.report(error)
       }
+    }
+
+    // Remove file protection for accessibility
+    do {
+      let attributes: [FileAttributeKey: Any] = [
+        .protectionKey: FileProtectionType.none,
+      ]
+      try FileManager.default.setAttributes(attributes, ofItemAtPath: directoryURL.path)
+    } catch {
+      print("⚠️ CustomSoundManager: Could not set file protection: \(error)")
     }
   }
 
@@ -77,7 +87,8 @@ class CustomSoundManager {
     do {
       try await validateImportableAudioFile(at: sourceURL)
       let copiedURL = try copyFileForImport(
-        sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension)
+        sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension
+      )
       let importData = SoundImportData(
         sourceURL: sourceURL, copiedURL: copiedURL, title: title, iconName: iconName,
         uniqueFileName: uniqueFileName, fileExtension: fileExtension,
@@ -96,7 +107,7 @@ class CustomSoundManager {
 
   private func validateImportableAudioFile(at sourceURL: URL) async throws {
     let validationResult = try await validateAudioFile(at: sourceURL)
-    if case .failure(let error) = validationResult {
+    if case let .failure(error) = validationResult {
       throw (error as? CustomSoundError) ?? CustomSoundError.invalidAudioFile(error)
     }
   }
@@ -121,7 +132,7 @@ class CustomSoundManager {
     let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: importData.copiedURL)
     let lufsResult =
       analysis.lufs != nil
-      ? (lufs: analysis.lufs!, normalizationFactor: analysis.normalizationFactor) : nil
+        ? (lufs: analysis.lufs!, normalizationFactor: analysis.normalizationFactor) : nil
 
     // Create and store playback profile for efficient runtime use
     if let profile = PlaybackProfile.from(analysis: analysis, filename: importData.uniqueFileName) {
@@ -158,7 +169,7 @@ class CustomSoundManager {
 
   @MainActor
   private func saveCustomSoundToDatabase(_ customSound: CustomSoundData) throws {
-    guard let modelContext = self.modelContext else {
+    guard let modelContext = modelContext else {
       throw CustomSoundError.databaseError
     }
     modelContext.insert(customSound)
@@ -185,7 +196,8 @@ class CustomSoundManager {
         throw CustomSoundError.invalidAudioFile(
           NSError(
             domain: "CustomSoundManager", code: -1,
-            userInfo: [NSLocalizedDescriptionKey: "Source file not found"])
+            userInfo: [NSLocalizedDescriptionKey: "Source file not found"]
+          )
         )
       }
 
@@ -333,7 +345,7 @@ enum CustomSoundError: Error, LocalizedError, Sendable {
       return "Audio file is too large. Maximum size is 50MB."
     case .durationTooLong:
       return "Audio file is too long. Maximum duration is 120 minutes."
-    case .invalidAudioFile(let error):
+    case let .invalidAudioFile(error):
       return "Invalid audio file: \(error.localizedDescription)"
     case .databaseError:
       return "Failed to access the database."

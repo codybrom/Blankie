@@ -132,7 +132,7 @@ extension AudioManager {
       // Play all sounds that should be playing according to the preset
       for sound in sounds where sound.isSelected {
         // Skip the solo sound since it's already playing if it should be
-        if sound.id == soloSound.id && soloShouldContinuePlaying {
+        if sound.id == soloSound.id, soloShouldContinuePlaying {
           continue
         }
         sound.play()
@@ -272,7 +272,7 @@ extension AudioManager {
         sound.updateVolume()
 
         // Restore playback state: if it was playing before and should still be playing
-        if originalState.isPlaying && isGloballyPlaying {
+        if originalState.isPlaying, isGloballyPlaying {
           if sound.player?.isPlaying != true {
             print("🎵 AudioManager: Resuming '\(sound.title)' - was playing before preview")
             sound.play()

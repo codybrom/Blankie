@@ -22,6 +22,7 @@ class PresetManager: ObservableObject {
       )
     }
   }
+
   @Published private(set) var hasCustomPresets: Bool = false
   @Published private(set) var isLoading: Bool = true
   @Published private(set) var error: Error?
@@ -37,7 +38,7 @@ class PresetManager: ObservableObject {
       .debounce(for: .milliseconds(800), scheduler: RunLoop.main)
       .sink { [weak self] _ in
         Task { @MainActor in
-          self?.updateCurrentPresetState()  // Remove await
+          self?.updateCurrentPresetState() // Remove await
         }
       }
       .store(in: &cancellables)
@@ -109,13 +110,11 @@ extension PresetManager {
     // This should be handled by SwiftUI's .onChange(of: scenePhase) in the app's main view
     // Rather than using UIKit notifications directly
   }
-
 }
 
 // MARK: - Preset CRUD Operations
 
 extension PresetManager {
-
   @MainActor
   func updatePreset(_ preset: Preset, newName: String) {
     print("\n🎛️ PresetManager: Updating preset '\(preset.name)' to '\(newName)'")
@@ -202,7 +201,6 @@ extension PresetManager {
     savePresets()
     print("🎛️ PresetManager: --- End Delete Preset ---\n")
   }
-
 }
 
 // MARK: - Preset State Management
@@ -226,7 +224,8 @@ extension PresetManager {
 
     let (newStates, currentSoundOrder) = generateUpdatedPresetData(for: preset)
     updatePresetIfChanged(
-      preset: preset, newStates: newStates, currentSoundOrder: currentSoundOrder)
+      preset: preset, newStates: newStates, currentSoundOrder: currentSoundOrder
+    )
   }
 
   /// Get recently used presets for caching
@@ -277,15 +276,14 @@ extension PresetManager {
   }
 
   @MainActor
-  func applyPreset(_ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false) throws
-  {
+  func applyPreset(_ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false) throws {
     logPresetApplication(preset)
 
     guard preset.validate() else {
       throw PresetError.invalidPreset
     }
 
-    if preset.id == currentPreset?.id && !isInitialLoad && !forceReapply {
+    if preset.id == currentPreset?.id, !isInitialLoad, !forceReapply {
       handleAlreadyActivePreset(preset)
       return
     }
@@ -412,13 +410,11 @@ extension PresetManager {
       print("❌ PresetManager: Failed to find preset in array!")
     }
   }
-
 }
 
 // MARK: - Application Helpers
 
 extension PresetManager {
-
   @MainActor func handleAlreadyActivePreset(_ preset: Preset) {
     print("🎛️ PresetManager: Preset already active, but still updating Now Playing info")
     print(
@@ -467,7 +463,7 @@ extension PresetManager {
       await Task.yield()
 
       let shouldAutoPlay = !isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch
-      if shouldAutoPlay && targetStates.contains(where: { $0.isSelected }) {
+      if shouldAutoPlay, targetStates.contains(where: { $0.isSelected }) {
         AudioManager.shared.setGlobalPlaybackState(true)
       }
     }
@@ -516,7 +512,7 @@ extension PresetManager {
     let activeStates = preset.soundStates.filter { $0.isSelected }
     if !activeStates.isEmpty {
       print("  - Active Sounds:")
-      activeStates.forEach { state in
+      for state in activeStates {
         print("    * \(state.fileName) (Volume: \(state.volume))")
       }
     }
@@ -534,20 +530,38 @@ extension PresetManager {
       }
   }
 
+  @MainActor
   func applySoundStates(_ targetStates: [PresetState]) {
     // Get the file names of sounds that should be in this preset
     let presetSoundFileNames = Set(targetStates.map(\.fileName))
 
+    // Handle solo mode if active
+    if let soloSound = AudioManager.shared.soloModeSound {
+      // Check if the solo sound is part of this preset
+      let soloSoundInPreset = presetSoundFileNames.contains(soloSound.fileName)
+
+      if soloSoundInPreset {
+        // Solo sound is part of the preset - keep it playing without restart
+        // Just exit solo mode, the sound will continue playing
+        AudioManager.shared.exitSoloModeWithoutResuming()
+      } else {
+        // Solo sound is NOT part of the preset - must stop it
+        soloSound.isSelected = false
+        soloSound.pause()
+        AudioManager.shared.exitSoloModeWithoutResuming()
+      }
+    }
+
     // First, disable all sounds that are NOT in this preset
-    AudioManager.shared.sounds.forEach { sound in
-      if !presetSoundFileNames.contains(sound.fileName) && sound.isSelected {
+    for sound in AudioManager.shared.sounds {
+      if !presetSoundFileNames.contains(sound.fileName), sound.isSelected {
         print("  - Disabling '\(sound.fileName)' (not in preset)")
         sound.isSelected = false
       }
     }
 
     // Then, apply the states for sounds that ARE in this preset
-    targetStates.forEach { state in
+    for state in targetStates {
       if let sound = AudioManager.shared.sounds.first(where: { $0.fileName == state.fileName }) {
         let selectionChanged = sound.isSelected != state.isSelected
         let volumeChanged = sound.volume != state.volume
@@ -567,7 +581,6 @@ extension PresetManager {
       }
     }
   }
-
 }
 
 // MARK: - Persistence
@@ -647,7 +660,7 @@ extension PresetManager {
   private func updateCurrentPresetBeforeSave() {
     // Update current preset's state before saving
     if let currentPreset = currentPreset,
-      let index = presets.firstIndex(where: { $0.id == currentPreset.id })
+       let index = presets.firstIndex(where: { $0.id == currentPreset.id })
     {
       // Get the preset from the array to preserve any updates (like order)
       var updatedPreset = presets[index]
@@ -801,10 +814,10 @@ extension PresetManager {
           return order1 < order2
         }
         // Put presets with order before those without
-        if preset1.order != nil && preset2.order == nil {
+        if preset1.order != nil, preset2.order == nil {
           return true
         }
-        if preset1.order == nil && preset2.order != nil {
+        if preset1.order == nil, preset2.order != nil {
           return false
         }
         // Fall back to name comparison
@@ -846,12 +859,12 @@ extension PresetManager {
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
       if userDefaults.data(forKey: thumbnailKey) != nil {
-        return  // Already cached
+        return // Already cached
       }
 
       // Load the full artwork
       guard let artworkData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
-        let fullImage = UIImage(data: artworkData)
+            let fullImage = UIImage(data: artworkData)
       else { return }
 
       // Generate a thumbnail for CarPlay (44x44 points)
@@ -864,7 +877,7 @@ extension PresetManager {
 
       // Cache the thumbnail in app group UserDefaults for CarPlay access
       if let thumbnail = thumbnail,
-        let thumbnailData = thumbnail.pngData()
+         let thumbnailData = thumbnail.pngData()
       {
         userDefaults.set(thumbnailData, forKey: thumbnailKey)
         print("🖼️ PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
@@ -887,7 +900,7 @@ extension PresetManager {
   }
 
   /// Remove cached thumbnail when preset is deleted
-  func removeThumbnail(for presetId: UUID) {
+  func removeThumbnail(for _: UUID) {
     // Let PresetArtworkManager handle its own cache cleanup
     // No need for manual UserDefaults cleanup
   }

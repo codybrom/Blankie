@@ -11,7 +11,6 @@
   import SwiftUI
 
   enum SoundsListTemplate {
-
     @MainActor
     static func createTemplate() -> CPListTemplate {
       let template = CPListTemplate(
@@ -57,7 +56,7 @@
           sections.append(
             CPListSection(
               items: soundItems,
-              header: nil,  // No header for cleaner look
+              header: nil, // No header for cleaner look
               sectionIndexTitle: key
             )
           )
@@ -98,16 +97,19 @@
 
     @MainActor
     private static func playSoundInSoloMode(_ sound: Sound) {
-      // Toggle solo mode for this sound
-      AudioManager.shared.toggleSoloMode(for: sound)
+      // If this sound is already in solo mode, just show Now Playing
+      if AudioManager.shared.soloModeSound?.id == sound.id {
+        // Just navigate to Now Playing screen without changing playback
+        CarPlayInterfaceController.shared.showNowPlaying()
+      } else {
+        // Switch to solo mode for a different sound
+        AudioManager.shared.enterSoloMode(for: sound)
+        // Show Now Playing when starting a new solo sound
+        CarPlayInterfaceController.shared.showNowPlaying()
+      }
 
       // Update interface
       CarPlayInterfaceController.shared.updateAllTemplates()
-
-      // Show Now Playing if we started playing
-      if AudioManager.shared.soloModeSound != nil {
-        CarPlayInterfaceController.shared.showNowPlaying()
-      }
     }
   }
 

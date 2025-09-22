@@ -95,10 +95,10 @@
       let isProtectedDataAvailable = UIApplication.shared.isProtectedDataAvailable
       print("🚗 CarPlay: Protected data available: \(isProtectedDataAvailable)")
 
-      // Wait for protected data to become available if device is locked
+      // CarPlay should work even when device is locked
+      // Skip waiting for protected data - CarPlay needs to function while driving
       if !isProtectedDataAvailable {
-        print("🚗 CarPlay: Device is locked, waiting for data protection to unlock...")
-        await waitForProtectedDataAvailability()
+        print("🚗 CarPlay: Device is locked, but proceeding anyway for CarPlay functionality")
       }
 
       // Ensure the shared container is initialized
@@ -162,7 +162,7 @@
     }
 
     // Helper class to avoid capturing mutable variables
-    private final class ObserverWrapper {
+    private final class ObserverWrapper: @unchecked Sendable {
       var observer: NSObjectProtocol?
       var hasResumed = false
 
