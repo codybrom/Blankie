@@ -8,7 +8,9 @@
 import SwiftUI
 
 #if os(iOS) || os(visionOS)
+
   // MARK: - UI Components Extension
+
   extension AdaptiveContentView {
     // MARK: - Status Banners
 
@@ -170,7 +172,8 @@ import SwiftUI
           .sensoryFeedback(
             .selection,
             trigger: audioManager.isQuickMix
-              ? audioManager.isQuickMix : showingListView)
+              ? audioManager.isQuickMix : showingListView
+          )
           Spacer()
 
           // Play/Pause button
@@ -244,15 +247,15 @@ import SwiftUI
         }
 
         Button(action: {
-          showingViewSettings = true
+          showingSoundManagement = true
         }) {
-          Label("View Settings", systemImage: "slider.horizontal.3")
+          Label("Settings", systemImage: "waveform")
         }
 
         Button(action: {
-          showingSoundManagement = true
+          showingViewSettings = true
         }) {
-          Label("Sound Settings", systemImage: "waveform")
+          Label("Appearance", systemImage: "slider.horizontal.3")
         }
 
         Button(action: {
@@ -261,7 +264,7 @@ import SwiftUI
           }
         }) {
           Label(
-            editMode == .active ? "Done Reordering" : "Reorder Sounds",
+            editMode == .active ? "Done Reordering" : "Reorder",
             systemImage: editMode == .active ? "checkmark.circle" : "arrow.up.arrow.down"
           )
         }

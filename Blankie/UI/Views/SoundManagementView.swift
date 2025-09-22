@@ -25,20 +25,20 @@ struct SoundManagementView: View {
   @State private var customSoundsExpanded = true
 
   private var builtInSounds: [Sound] {
-    audioManager.sounds.filter { !$0.isCustom }
+    audioManager.sounds.filter { !$0.isCustom }.sorted { $0.title < $1.title }
   }
 
   private var customSounds: [Sound] {
-    audioManager.sounds.filter { $0.isCustom }
+    audioManager.sounds.filter { $0.isCustom }.sorted { $0.title < $1.title }
   }
 
   var body: some View {
     NavigationStack {
       mainContentView
-        .navigationTitle("Sounds")
-        #if os(iOS) || os(visionOS)
-          .navigationBarTitleDisplayMode(.inline)
-        #endif
+        .navigationTitle("Settings")
+      #if os(iOS) || os(visionOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
             Button("Done") {
@@ -209,22 +209,22 @@ struct SoundManagementView: View {
 
   private func deleteSound(_ sound: Sound) {
     guard sound.isCustom,
-      let customSoundDataID = sound.customSoundDataID,
-      let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID)
+          let customSoundDataID = sound.customSoundDataID,
+          let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID)
     else {
       return
     }
 
     let result = CustomSoundManager.shared.deleteCustomSound(customSoundData)
 
-    if case .failure(let error) = result {
+    if case let .failure(error) = result {
       print("❌ SoundManagementView: Failed to delete custom sound: \(error)")
     }
   }
 
   private func handleFileImport(_ result: Result<[URL], Error>) {
     switch result {
-    case .success(let urls):
+    case let .success(urls):
       guard let url = urls.first else { return }
 
       // Check if it's a .blankie preset file
@@ -237,7 +237,7 @@ struct SoundManagementView: View {
       // Otherwise, it's an audio file for custom sound
       selectedFileURL = url
       showingImportSheet = true
-    case .failure(let error):
+    case let .failure(error):
       print("❌ SoundManagementView: File import failed: \(error)")
     }
   }
@@ -319,7 +319,7 @@ private struct PlaybackSettingsSection: View {
               get: { globalSettings.volumeWithOtherAudio },
               set: { globalSettings.setVolumeWithOtherAudio($0) }
             ),
-            in: 0.0...1.0
+            in: 0.0 ... 1.0
           )
           .tint(globalSettings.customAccentColor ?? .accentColor)
 

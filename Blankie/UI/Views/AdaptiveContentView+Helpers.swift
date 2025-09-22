@@ -4,35 +4,7 @@ import SwiftUI
   extension AdaptiveContentView {
     // Calculate filtered sounds based on current preset and hideInactiveSounds preference
     var filteredSounds: [Sound] {
-      // Create hash of dependencies to detect changes - include more comprehensive dependencies
-      let visibleSounds = audioManager.getVisibleSounds()
-      let soundFileNames = visibleSounds.map { $0.fileName }.joined()
-      let presetSoundStates = presetManager.currentPreset?.soundStates.map { "\($0.fileName)-\($0.isSelected)-\($0.volume)" }.joined() ?? ""
-
-      let currentHash = [
-        visibleSounds.count.hashValue,
-        hideInactiveSounds.hashValue,
-        editMode.hashValue,
-        presetManager.currentPreset?.id.hashValue ?? 0,
-        presetManager.currentPreset?.soundOrder?.hashValue ?? 0,
-        soundsUpdateTrigger.hashValue,
-        soundFileNames.hashValue,
-        presetSoundStates.hashValue,
-        audioManager.sounds.count.hashValue, // Track total sound count for imports
-      ].reduce(0) { $0 ^ $1 }
-
-      // Only recompute if dependencies changed
-      if currentHash != lastFilterHash {
-        let newFilteredSounds = filterSounds()
-
-        // Update cache synchronously to avoid race conditions
-        lastFilterHash = currentHash
-        cachedFilteredSounds = newFilteredSounds
-
-        return newFilteredSounds
-      }
-
-      return cachedFilteredSounds
+      return filterSounds()
     }
 
     private func filterSounds() -> [Sound] {
