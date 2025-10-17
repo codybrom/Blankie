@@ -102,7 +102,7 @@
       "id": "Bokeh",
       "displayName": "Bokeh Dreams",
       "description": "Soft bokeh light effects",
-      "category": "artistic",
+      "category": "abstract",
       "videoFile": "Bokeh.mov",
       "previewFile": "Bokeh.jpg",
       "squarePreviewFile": "BokehSquare.jpg",
@@ -312,14 +312,9 @@
       "icon": "sparkles"
     },
     {
-      "id": "artistic",
-      "displayName": "Artistic",
-      "icon": "paintpalette.fill"
-    },
-    {
       "id": "retro",
       "displayName": "Retro",
-      "icon": "retarrowshape.turn.up.backward.fill"
+      "icon": "clock.arrow.trianglehead.counterclockwise.rotate.90"
     },
     {
       "id": "texture",

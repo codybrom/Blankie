@@ -2356,6 +2356,9 @@
     "Done Reordering" : {
 
     },
+    "Downloading video..." : {
+
+    },
     "Drag sounds to reorder" : {
 
     },
@@ -2622,6 +2625,9 @@
 
     },
     "Exit Solo Mode" : {
+
+    },
+    "Failed to load video" : {
 
     },
     "File Size" : {
@@ -3641,6 +3647,9 @@
         }
       }
     },
+    "Loading video..." : {
+
+    },
     "Lock Screen" : {
       "comment" : "Settings section header for lock screen options"
     },
@@ -4572,6 +4581,9 @@
         }
       }
     },
+    "Preparing download..." : {
+
+    },
     "Preset Information" : {
 
     },
@@ -5228,6 +5240,12 @@
           }
         }
       }
+    },
+    "Remove Download" : {
+
+    },
+    "Remove Downloaded Video?" : {
+
     },
     "Rename Preset" : {
       "comment" : "Tooltip for rename preset button",
@@ -6562,6 +6580,12 @@
       }
     },
     "Theme Color" : {
+
+    },
+    "This video is currently selected for your lock screen. Removing it will also unselect it. You can download it again later." : {
+
+    },
+    "This will free up space on your device. You can download it again later." : {
 
     },
     "Timer" : {

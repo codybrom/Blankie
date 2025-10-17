@@ -129,6 +129,22 @@
       let loopURL = AnimatedArtworkFileStore.absoluteURL(for: loopPath)
       guard FileManager.default.fileExists(atPath: loopURL.path) else {
         print("[DEBUG] File does not exist at loopURL: \(loopURL)")
+
+        // If the file is missing but we have a bundled identifier, try to re-download it
+        if let bundledId = animatedArtwork.bundledIdentifier {
+          print("[DEBUG] Attempting to re-download missing ODR resource: \(bundledId)")
+          Task { @MainActor in
+            do {
+              _ = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
+              print("[DEBUG] Successfully re-downloaded ODR resource: \(bundledId)")
+              // Trigger a refresh of the animated artwork
+              self.updateAnimatedArtwork(for: preset)
+            } catch {
+              print("[DEBUG] Failed to re-download ODR resource \(bundledId): \(error)")
+            }
+          }
+        }
+
         return nil
       }
 

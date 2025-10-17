@@ -122,6 +122,12 @@ struct Preset: Codable, Identifiable, Equatable {
       return false
     }
 
+    // Note: Animated artwork validation is not included here because:
+    // - ODR resources may be purged by the system
+    // - Files can be re-downloaded on demand
+    // - Missing animated artwork should not prevent preset from being valid
+    // Instead, animated artwork availability is checked at presentation time
+
     return true
   }
 }

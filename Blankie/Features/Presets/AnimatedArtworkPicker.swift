@@ -100,10 +100,10 @@ import SwiftUI
       defer { isProcessing = false }
 
       do {
-        guard let videoURL = Bundle.main.url(forResource: asset.videoResourceName, withExtension: asset.videoExtension) else {
-          throw AnimatedArtworkError.missingBundledAsset(asset.videoResourceName)
-        }
+        // Request the video file from ODR (downloads if needed)
+        let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
 
+        // Preview images remain bundled for fast gallery display
         guard let previewURL = Bundle.main.url(forResource: asset.previewResourceName, withExtension: asset.previewExtension) else {
           throw AnimatedArtworkError.missingBundledAsset(asset.previewResourceName)
         }
@@ -170,6 +170,13 @@ import SwiftUI
     @State private var previewingAsset: BundledAnimatedLoop?
     @State private var selectedCategory: String?
 
+    private func handleUncache(asset: BundledAnimatedLoop) {
+      // If uncaching the currently selected video, unselect it
+      if selectedIdentifier == asset.id {
+        onClear()
+      }
+    }
+
     var categories: [ArtworkCategory] {
       guard let url = Bundle.main.url(forResource: "AnimatedArtwork", withExtension: "json"),
             let data = try? Data(contentsOf: url),
@@ -182,8 +189,20 @@ import SwiftUI
 
     var filteredAssets: [BundledAnimatedLoop] {
       let all = BundledAnimatedLoop.allCases
-      guard let category = selectedCategory else { return all }
-      return all.filter { $0.category == category }
+      let filtered = selectedCategory == nil ? all : all.filter { $0.category == selectedCategory }
+
+      // Sort so selected item is always first
+      guard let selectedId = selectedIdentifier else { return filtered }
+      return filtered.sorted { asset1, asset2 in
+        let isAsset1Selected = asset1.id == selectedId
+        let isAsset2Selected = asset2.id == selectedId
+
+        if isAsset1Selected { return true }
+        if isAsset2Selected { return false }
+
+        // Maintain original order for non-selected items
+        return false
+      }
     }
 
     var body: some View {
@@ -221,6 +240,9 @@ import SwiftUI
                   isSelected: selectedIdentifier == asset.id,
                   onTap: {
                     previewingAsset = asset
+                  },
+                  onUncache: {
+                    handleUncache(asset: asset)
                   }
                 )
               }
@@ -252,6 +274,9 @@ import SwiftUI
             },
             onDismiss: {
               previewingAsset = nil
+            },
+            onDelete: {
+              handleUncache(asset: asset)
             }
           )
         }
@@ -286,6 +311,26 @@ import SwiftUI
     let asset: BundledAnimatedLoop
     let isSelected: Bool
     let onTap: () -> Void
+    let onUncache: () -> Void
+
+    @StateObject private var odrManager = OnDemandResourceManager.shared
+    @State private var showingUncacheConfirmation = false
+
+    var resourceState: ResourceState {
+      // Return the actual ODR state - this accurately reflects whether
+      // the video needs to be downloaded from Apple's servers
+      return odrManager.getResourceState(asset.id)
+    }
+
+    var isCached: Bool {
+      // Can only uncache if the resource is actually in ODR storage
+      // (not just selected/copied to Documents)
+      let actualODRState = odrManager.getResourceState(asset.id)
+      if case .available = actualODRState {
+        return true
+      }
+      return false
+    }
 
     var body: some View {
       Button(action: onTap) {
@@ -303,6 +348,16 @@ import SwiftUI
                 RoundedRectangle(cornerRadius: 12)
                   .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
               )
+          }
+
+          // Download state indicator overlay (top left)
+          VStack {
+            HStack {
+              downloadStateIndicator
+                .padding(8)
+              Spacer()
+            }
+            Spacer()
           }
 
           // Credit overlay at bottom
@@ -347,6 +402,75 @@ import SwiftUI
         }
       }
       .buttonStyle(.plain)
+      .contextMenu {
+        if isCached {
+          Button(role: .destructive) {
+            showingUncacheConfirmation = true
+          } label: {
+            Label("Remove Download", systemImage: "trash")
+          }
+        }
+      }
+      .alert("Remove Downloaded Video?", isPresented: $showingUncacheConfirmation) {
+        Button("Remove Download", role: .destructive) {
+          odrManager.releaseResource(asset.id)
+          onUncache()
+        }
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        if isSelected {
+          Text("This video is currently selected for your lock screen. Removing it will also unselect it. You can download it again later.")
+        } else {
+          Text("This will free up space on your device. You can download it again later.")
+        }
+      }
+    }
+
+    @ViewBuilder
+    private var downloadStateIndicator: some View {
+      switch resourceState {
+      case .notDownloaded:
+        Image(systemName: "icloud.and.arrow.down")
+          .font(.caption)
+          .foregroundColor(.white)
+          .padding(6)
+          .background(Color.blue.opacity(0.8))
+          .clipShape(Circle())
+          .shadow(radius: 2)
+
+      case let .downloading(progress):
+        ZStack {
+          Circle()
+            .stroke(Color.white.opacity(0.3), lineWidth: 2)
+            .frame(width: 24, height: 24)
+
+          Circle()
+            .trim(from: 0, to: progress)
+            .stroke(Color.white, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            .frame(width: 24, height: 24)
+            .rotationEffect(.degrees(-90))
+
+          Text("\(Int(progress * 100))")
+            .font(.system(size: 8, weight: .semibold))
+            .foregroundColor(.white)
+        }
+        .padding(6)
+        .background(Color.blue.opacity(0.8))
+        .clipShape(Circle())
+        .shadow(radius: 2)
+
+      case .available:
+        EmptyView()
+
+      case .failed:
+        Image(systemName: "exclamationmark.triangle.fill")
+          .font(.caption)
+          .foregroundColor(.white)
+          .padding(6)
+          .background(Color.red.opacity(0.8))
+          .clipShape(Circle())
+          .shadow(radius: 2)
+      }
     }
   }
 
@@ -377,9 +501,25 @@ import SwiftUI
     let asset: BundledAnimatedLoop
     let onSelect: () -> Void
     let onDismiss: () -> Void
+    let onDelete: () -> Void
 
     @State private var player: AVPlayer?
     @State private var showInfo = false
+    @State private var isLoading = true
+    @State private var loadError: String?
+    @State private var showingDeleteConfirmation = false
+    @StateObject private var odrManager = OnDemandResourceManager.shared
+
+    var resourceState: ResourceState {
+      odrManager.getResourceState(asset.id)
+    }
+
+    var isCached: Bool {
+      if case .available = resourceState {
+        return true
+      }
+      return false
+    }
 
     var body: some View {
       ZStack {
@@ -389,6 +529,72 @@ import SwiftUI
           VideoPlayer(player: player)
             .ignoresSafeArea()
             .disabled(true)
+        }
+
+        // Loading indicator while downloading/loading
+        if isLoading {
+          VStack(spacing: 16) {
+            switch resourceState {
+            case .notDownloaded:
+              ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(1.5)
+
+              Text("Preparing download...")
+                .foregroundColor(.white)
+                .font(.subheadline)
+
+            case let .downloading(progress):
+              ZStack {
+                Circle()
+                  .stroke(Color.white.opacity(0.3), lineWidth: 4)
+                  .frame(width: 80, height: 80)
+
+                Circle()
+                  .trim(from: 0, to: progress)
+                  .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                  .frame(width: 80, height: 80)
+                  .rotationEffect(.degrees(-90))
+                  .animation(.linear(duration: 0.2), value: progress)
+
+                Text("\(Int(progress * 100))%")
+                  .font(.title3)
+                  .fontWeight(.semibold)
+                  .foregroundColor(.white)
+              }
+
+              Text("Downloading video...")
+                .foregroundColor(.white)
+                .font(.subheadline)
+
+            case .available:
+              // Video is available but player not ready yet
+              ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(1.5)
+
+              Text("Loading video...")
+                .foregroundColor(.white)
+                .font(.subheadline)
+
+            case let .failed(error):
+              VStack(spacing: 12) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                  .font(.largeTitle)
+                  .foregroundColor(.red)
+
+                Text("Failed to load video")
+                  .foregroundColor(.white)
+                  .font(.headline)
+
+                Text(error.localizedDescription)
+                  .foregroundColor(.secondary)
+                  .font(.caption)
+                  .multilineTextAlignment(.center)
+                  .padding(.horizontal, 32)
+              }
+            }
+          }
         }
 
         VStack {
@@ -404,6 +610,18 @@ import SwiftUI
             .padding()
 
             Spacer()
+
+            if isCached {
+              Button {
+                showingDeleteConfirmation = true
+              } label: {
+                Image(systemName: "trash.circle.fill")
+                  .font(.title)
+                  .foregroundColor(.white)
+                  .shadow(radius: 4)
+              }
+              .padding()
+            }
 
             Button {
               withAnimation {
@@ -440,9 +658,12 @@ import SwiftUI
                     .font(.caption)
                 }
 
-                if !asset.credit.source.isEmpty {
-                  Label(asset.credit.source, systemImage: "link")
-                    .font(.caption)
+                if !asset.credit.source.isEmpty, let url = URL(string: asset.credit.source) {
+                  Link(destination: url) {
+                    Label(asset.credit.source, systemImage: "link")
+                      .font(.caption)
+                      .foregroundColor(.accentColor)
+                  }
                 }
 
                 if !asset.credit.license.isEmpty {
@@ -483,28 +704,53 @@ import SwiftUI
         player?.pause()
         player = nil
       }
+      .alert("Remove Downloaded Video?", isPresented: $showingDeleteConfirmation) {
+        Button("Remove Download", role: .destructive) {
+          odrManager.releaseResource(asset.id)
+          onDelete()
+          onDismiss()
+        }
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        Text("This will free up space on your device. You can download it again later.")
+      }
     }
 
     private func setupPlayer() {
-      guard let videoURL = Bundle.main.url(forResource: asset.videoResourceName, withExtension: asset.videoExtension) else {
-        return
+      Task {
+        do {
+          // Request the video file from ODR (downloads if needed)
+          let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
+
+          await MainActor.run {
+            let player = AVPlayer(url: videoURL)
+            player.isMuted = true
+            self.player = player
+
+            // Loop the video
+            NotificationCenter.default.addObserver(
+              forName: .AVPlayerItemDidPlayToEndTime,
+              object: player.currentItem,
+              queue: .main
+            ) { _ in
+              player.seek(to: .zero)
+              player.play()
+            }
+
+            player.play()
+
+            // Hide loading indicator once player is ready
+            self.isLoading = false
+          }
+        } catch {
+          // Handle download failure - show error UI
+          await MainActor.run {
+            self.loadError = error.localizedDescription
+            self.isLoading = false
+          }
+          print("Failed to load video for preview: \(error)")
+        }
       }
-
-      let player = AVPlayer(url: videoURL)
-      player.isMuted = true
-      self.player = player
-
-      // Loop the video
-      NotificationCenter.default.addObserver(
-        forName: .AVPlayerItemDidPlayToEndTime,
-        object: player.currentItem,
-        queue: .main
-      ) { _ in
-        player.seek(to: .zero)
-        player.play()
-      }
-
-      player.play()
     }
   }
 

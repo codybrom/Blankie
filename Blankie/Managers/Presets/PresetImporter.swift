@@ -594,36 +594,62 @@ extension PresetImporter {
   private func importBundledAnimation(bundledId: String, animated: AnimatedArtworkRef, for preset: inout Preset) throws {
     print("📦 Import: Restoring bundled animation '\(bundledId)' from app bundle")
 
-    let resourceName: String
-    switch bundledId {
-    case "RainLoop": resourceName = "RainLoop"
-    case "CityLoop": resourceName = "CityLoop"
-    case "StreamLoop": resourceName = "StreamLoop"
-    default:
-      print("⚠️ Import: Unknown bundled animation identifier '\(bundledId)', skipping")
-      return
+    // Capture the preset ID to look it up later
+    let presetId = preset.id
+
+    // Schedule the ODR download asynchronously - don't block import
+    Task { @MainActor in
+      do {
+        // Request the video file from ODR (downloads if needed)
+        let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
+        print("📦 Import: Successfully downloaded ODR resource '\(bundledId)'")
+
+        // Get preview images from bundle (these are always available, not part of ODR)
+        guard let previewURL = Bundle.main.url(forResource: bundledId, withExtension: "jpg"),
+              let squarePreviewURL = Bundle.main.url(forResource: "\(bundledId)Square", withExtension: "jpg")
+        else {
+          print("⚠️ Import: Failed to find preview images for '\(bundledId)'")
+          return
+        }
+
+        // Copy files to Documents
+        let assetId = UUID()
+        let loopRel = AnimatedArtworkFileStore.makeRelativeLoopPath(for: assetId, fileExtension: "mov")
+        let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: assetId, fileExtension: "jpg")
+        let squarePreviewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: assetId, fileExtension: "jpg", suffix: "Square")
+
+        _ = try? AnimatedArtworkFileStore.copyItem(at: videoURL, to: loopRel)
+        _ = try? AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
+        _ = try? AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
+
+        // Update the preset's animated artwork reference
+        var updatedAnimated = animated
+        updatedAnimated.loopPath = loopRel
+        updatedAnimated.previewPath = previewRel
+        updatedAnimated.squarePreviewPath = squarePreviewRel
+
+        // Update the preset in PresetManager using the captured preset ID
+        if let index = PresetManager.shared.presets.firstIndex(where: { $0.id == presetId }) {
+          var updatedPreset = PresetManager.shared.presets[index]
+          updatedPreset.animatedArtwork = updatedAnimated
+          PresetManager.shared.updatePresetAtIndex(index, with: updatedPreset)
+          PresetManager.shared.savePresets()
+          print("📦 Import: Successfully restored bundled animation '\(bundledId)'")
+        }
+
+      } catch {
+        print("⚠️ Import: Failed to download ODR resource '\(bundledId)': \(error)")
+        // Don't throw - preset can still be used without animated artwork
+      }
     }
 
-    guard let videoURL = Bundle.main.url(forResource: resourceName, withExtension: "mov"),
-          let previewURL = Bundle.main.url(forResource: resourceName, withExtension: "jpg")
-    else {
-      print("⚠️ Import: Failed to find bundled animation resources for '\(bundledId)'")
-      return
-    }
-
-    let assetId = UUID()
-    let loopRel = AnimatedArtworkFileStore.makeRelativeLoopPath(for: assetId, fileExtension: "mov")
-    let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: assetId, fileExtension: "jpg")
-
-    _ = try? AnimatedArtworkFileStore.copyItem(at: videoURL, to: loopRel)
-    _ = try? AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
-
+    // Set up the animated artwork reference with the bundled identifier
+    // The actual files will be downloaded and copied asynchronously
     var updatedAnimated = animated
-    updatedAnimated.loopPath = loopRel
-    updatedAnimated.previewPath = previewRel
+    updatedAnimated.bundledIdentifier = bundledId
     preset.animatedArtwork = updatedAnimated
 
-    print("📦 Import: Successfully restored bundled animation '\(bundledId)'")
+    print("📦 Import: Scheduled download for bundled animation '\(bundledId)'")
   }
 
   private func importCustomAnimation(
