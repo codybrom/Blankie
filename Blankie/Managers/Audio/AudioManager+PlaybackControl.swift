@@ -23,13 +23,13 @@ extension AudioManager {
     print("🎵 AudioManager: Resetting all sounds")
 
     // First pause all sounds immediately
-    sounds.forEach { sound in
+    for sound in sounds {
       print("  - Stopping '\(sound.fileName)'")
       sound.pause(immediate: true)
     }
     setGlobalPlaybackState(false)
     // Reset all sounds
-    sounds.forEach { sound in
+    for sound in sounds {
       sound.volume = 0.75
       sound.isSelected = false
     }
@@ -45,10 +45,14 @@ extension AudioManager {
   }
 
   public func updateNowPlayingInfoForPreset(
-    presetName: String? = nil, creatorName: String? = nil, artworkId: UUID? = nil
+    preset: Preset? = nil,
+    presetName: String? = nil,
+    creatorName: String? = nil,
+    artworkId: UUID? = nil
   ) {
     Task { @MainActor in
       nowPlayingManager.updateInfo(
+        preset: preset,
         presetName: presetName,
         creatorName: creatorName,
         artworkId: artworkId,
@@ -85,6 +89,7 @@ extension AudioManager {
         }
         let currentPreset = PresetManager.shared.currentPreset
         self.nowPlayingManager.updateInfo(
+          preset: currentPreset,
           presetName: currentPreset?.name,
           creatorName: currentPreset?.creatorName,
           artworkId: currentPreset?.artworkId,
@@ -139,7 +144,7 @@ extension AudioManager {
       let duration = sound.player?.duration ?? 0
       let isPaused = sound.player != nil && !wasPlaying && currentTime > 0 && currentTime < duration
 
-      if !wasPlaying && !isPaused {
+      if !wasPlaying, !isPaused {
         // Sound is truly stopped/new/finished, reset position (respecting randomization)
         sound.resetSoundPosition()
       }
@@ -154,24 +159,22 @@ extension AudioManager {
     Task { @MainActor in
       let currentPreset = PresetManager.shared.currentPreset
       self.nowPlayingManager.updateInfo(
+        preset: currentPreset,
         presetName: currentPreset?.name,
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId,
         isPlaying: true
       )
     }
-
   }
 
   func pauseAll() {
     print("🎵 AudioManager: Pausing all sounds")
     print("  - Current global play state: \(isGloballyPlaying)")
 
-    sounds.forEach { sound in
-      if sound.isSelected {
-        print("  - Pausing '\(sound.fileName)'")
-        sound.pause()
-      }
+    for sound in sounds where sound.isSelected {
+      print("  - Pausing '\(sound.fileName)'")
+      sound.pause()
     }
 
     #if os(iOS) || os(visionOS)
@@ -195,17 +198,17 @@ extension AudioManager {
     }
 
     print(
-      "🎵 AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
+      "🎵 AudioManager: Setting playback state to \(playing) - Current global state: \(isGloballyPlaying)"
     )
 
     // Update state first
-    self.isGloballyPlaying = playing
+    isGloballyPlaying = playing
 
     // Then handle playback
     if playing {
-      self.playSelected()
+      playSelected()
     } else {
-      self.pauseAll()
+      pauseAll()
     }
 
     // Always update Now Playing info with full preset details
@@ -219,6 +222,7 @@ extension AudioManager {
       // Normal mode - include full preset details
       let currentPreset = PresetManager.shared.currentPreset
       nowPlayingManager.updateInfo(
+        preset: currentPreset,
         presetName: currentPreset?.name,
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId,
@@ -231,13 +235,12 @@ extension AudioManager {
 
   func updatePlayingSounds() {
     // Stop any sounds that are playing but shouldn't be
-    sounds.forEach { sound in
-      if !sound.isSelected && sound.player?.isPlaying == true {
+    for sound in sounds {
+      if !sound.isSelected, sound.player?.isPlaying == true {
         print(
           "🎵 AudioManager: Stopping deselected sound '\(sound.fileName)' that was still playing")
         sound.pause(immediate: true)
       }
     }
   }
-
 }

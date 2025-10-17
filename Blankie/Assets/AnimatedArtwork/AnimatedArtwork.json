@@ -1,0 +1,335 @@
+{
+  "artworks": [
+    {
+      "id": "RainLoop",
+      "displayName": "Gentle Rain",
+      "description": "Gentle raindrops collect on a window",
+      "category": "nature",
+      "videoFile": "RainLoop.mov",
+      "previewFile": "RainLoop.jpg",
+      "squarePreviewFile": "RainLoopSquare.jpg",
+      "credit": {
+        "artist": "Melike Baran",
+        "source": "https://www.pexels.com/video/rainy-window-view-with-city-background-34257501/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "CityLoop",
+      "displayName": "City Life",
+      "description": "People and traffic in urban motion",
+      "category": "urban",
+      "videoFile": "CityLoop.mov",
+      "previewFile": "CityLoop.jpg",
+      "squarePreviewFile": "CityLoopSquare.jpg",
+      "credit": {
+        "artist": "ubeyonroad",
+        "source": "https://www.pexels.com/video/busy-new-york-city-intersection-aerial-view-34118769/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "StreamLoop",
+      "displayName": "Stream",
+      "description": "Water flowing through a rocky forest stream",
+      "category": "nature",
+      "videoFile": "StreamLoop.mov",
+      "previewFile": "StreamLoop.jpg",
+      "squarePreviewFile": "StreamLoopSquare.jpg",
+      "credit": {
+        "artist": "Ruvim Miksanskiy",
+        "source": "https://www.pexels.com/video/a-rocky-river-in-the-forest-5896379/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Abstract1",
+      "displayName": "Abstract Motion",
+      "description": "Abstract black and white motion",
+      "category": "abstract",
+      "videoFile": "Abstract1.mov",
+      "previewFile": "Abstract1.jpg",
+      "squarePreviewFile": "Abstract1Square.jpg",
+      "credit": {
+        "artist": "Nikita Ryumshin",
+        "source": "https://www.pexels.com/video/black-and-white-striped-figure-moving-10994871/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Abstract2",
+      "displayName": "Abstract Substance",
+      "description": "Dynamic flowing forms",
+      "category": "abstract",
+      "videoFile": "Abstract2.mov",
+      "previewFile": "Abstract2.jpg",
+      "squarePreviewFile": "Abstract2Square.jpg",
+      "credit": {
+        "artist": "Nikita Ryumshin",
+        "source": "https://www.pexels.com/video/dark-substance-moving-around-10994873/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Abstract3",
+      "displayName": "Abstract Waves",
+      "description": "Black and white fluid waves",
+      "category": "abstract",
+      "videoFile": "Abstract3.mov",
+      "previewFile": "Abstract3.jpg",
+      "squarePreviewFile": "Abstract3Square.jpg",
+      "credit": {
+        "artist": "Graphicfresh Studio",
+        "source": "https://www.pexels.com/video/fluid-abstract-waves-in-black-and-white-design-29859068/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Abstract4",
+      "displayName": "Abstract Swirl",
+      "description": "Soft light swirling motion",
+      "category": "abstract",
+      "videoFile": "Abstract4.mov",
+      "previewFile": "Abstract4.jpg",
+      "squarePreviewFile": "Abstract4Square.jpg",
+      "credit": {
+        "artist": "Graphicfresh Studio",
+        "source": "https://www.pexels.com/video/elegant-abstract-white-swirling-motion-29859066/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Bokeh",
+      "displayName": "Bokeh Dreams",
+      "description": "Soft bokeh light effects",
+      "category": "artistic",
+      "videoFile": "Bokeh.mov",
+      "previewFile": "Bokeh.jpg",
+      "squarePreviewFile": "BokehSquare.jpg",
+      "credit": {
+        "artist": "ROMAN ODINTSOV",
+        "source": "https://www.pexels.com/video/out-of-focus-lights-in-the-dark-6543345/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "GoldenWaves",
+      "displayName": "Golden Waves",
+      "description": "Golden sunshine on ocean waves",
+      "category": "abstract",
+      "videoFile": "GoldenWaves.mov",
+      "previewFile": "GoldenWaves.jpg",
+      "squarePreviewFile": "GoldenWavesSquare.jpg",
+      "credit": {
+        "artist": "Larkkid Dung",
+        "source": "https://www.pexels.com/video/golden-sunlight-reflecting-on-ocean-waves-34201826/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "GrassWaves",
+      "displayName": "Grass Waves",
+      "description": "Lush green grass blowing in the wind",
+      "category": "nature",
+      "videoFile": "GrassWaves.mov",
+      "previewFile": "GrassWaves.jpg",
+      "squarePreviewFile": "GrassWavesSquare.jpg",
+      "credit": {
+        "artist": "정규송 Nui MALAMA",
+        "source": "https://www.pexels.com/video/lush-green-grass-blowing-in-the-wind-32157392/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "LavaLamp",
+      "displayName": "Lava Lamp",
+      "description": "Close up of a lava lamp",
+      "category": "retro",
+      "videoFile": "LavaLamp.mov",
+      "previewFile": "LavaLamp.jpg",
+      "squarePreviewFile": "LavaLampSquare.jpg",
+      "credit": {
+        "artist": "Javon Swaby",
+        "source": "https://www.pexels.com/video/close-up-of-a-lava-lamp-9113173/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "LinenDark",
+      "displayName": "Dark Linen",
+      "description": "Close up of grey fabric",
+      "category": "texture",
+      "videoFile": "LinenDark.mov",
+      "previewFile": "LinenDark.jpg",
+      "squarePreviewFile": "LinenDarkSquare.jpg",
+      "credit": {
+        "artist": "Hanna Pad",
+        "source": "https://www.pexels.com/video/close-up-of-a-grey-fabric-7946221/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "LinenLight",
+      "displayName": "Light Linen",
+      "description": "Gentle light fabric movement",
+      "category": "texture",
+      "videoFile": "LinenLight.mov",
+      "previewFile": "LinenLight.jpg",
+      "squarePreviewFile": "LinenLightSquare.jpg",
+      "credit": {
+        "artist": "Hanna Pad",
+        "source": "https://www.pexels.com/video/a-moving-cloth-7945835/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "NeonDrive",
+      "displayName": "Neon Drive",
+      "description": "Retro neon highway animation",
+      "category": "retro",
+      "videoFile": "NeonDrive.mov",
+      "previewFile": "NeonDrive.jpg",
+      "squarePreviewFile": "NeonDriveSquare.jpg",
+      "credit": {
+        "artist": "Nicola Narracci",
+        "source": "https://www.pexels.com/video/futuristic-neon-retro-wave-animation-28603089/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "PaperPentagons",
+      "displayName": "Paper Pentagons",
+      "description": "Colorful geometric animation",
+      "category": "geometric",
+      "videoFile": "PaperPentagons.mov",
+      "previewFile": "PaperPentagons.jpg",
+      "squarePreviewFile": "PaperPentagonsSquare.jpg",
+      "credit": {
+        "artist": "Nicola Narracci",
+        "source": "https://www.pexels.com/video/colorful-geometric-abstract-animation-17529601/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Pillows",
+      "displayName": "Soft Pillows",
+      "description": "Cozy pillow textures",
+      "category": "texture",
+      "videoFile": "Pillows.mov",
+      "previewFile": "Pillows.jpg",
+      "squarePreviewFile": "PillowsSquare.jpg",
+      "credit": {
+        "artist": "Nikita Ryumshin",
+        "source": "https://www.pexels.com/video/a-red-and-white-mattress-with-a-red-and-white-pattern-7874762/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "RecordPlayer",
+      "displayName": "Record Player",
+      "description": "Close up of a vinyl record spinning",
+      "category": "retro",
+      "videoFile": "RecordPlayer.mov",
+      "previewFile": "RecordPlayer.jpg",
+      "squarePreviewFile": "RecordPlayerSquare.jpg",
+      "credit": {
+        "artist": "Matthias Groeneveld",
+        "source": "https://www.pexels.com/video/close-up-view-of-a-vinyl-record-spinning-on-a-turntable-15365453/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Squares",
+      "displayName": "Organizing Squares",
+      "description": "Animated squares sort and organize themselves",
+      "category": "geometric",
+      "videoFile": "Squares.mov",
+      "previewFile": "Squares.jpg",
+      "squarePreviewFile": "SquaresSquare.jpg",
+      "credit": {
+        "artist": "Linus Zoll for Google DeepMind",
+        "source": "https://www.pexels.com/video/an-artist-s-animation-of-artificial-intelligence-ai-this-video-represents-the-role-of-ai-in-computer-optimisation-for-reduced-energy-consumption-it-was-created-by-linus-zoll-as-part-of-18069095/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Swirl",
+      "displayName": "Water Whirl",
+      "description": "Swirling water patterns",
+      "category": "nature",
+      "videoFile": "Swirl.mov",
+      "previewFile": "Swirl.jpg",
+      "squarePreviewFile": "SwirlSquare.jpg",
+      "credit": {
+        "artist": "cottonbro studio",
+        "source": "https://www.pexels.com/video/close-up-shot-of-a-whirlpool-9667988/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "Beach",
+      "displayName": "Beach Waves",
+      "description": "Overhead view of waves crashing on a sandy beach",
+      "category": "nature",
+      "videoFile": "Beach.mov",
+      "previewFile": "Beach.jpg",
+      "squarePreviewFile": "BeachSquare.jpg",
+      "credit": {
+        "artist": "Ruvim Miksanskiy",
+        "source": "https://www.pexels.com/video/top-view-of-beach-waves-crashing-on-seashore-4183071/",
+        "license": "Pexels License"
+      }
+    },
+    {
+      "id": "OceanWaves",
+      "displayName": "Ocean Waves",
+      "description": "Birds eye view of waves rolling in the ocean",
+      "category": "nature",
+      "videoFile": "OceanWaves.mov",
+      "previewFile": "OceanWaves.jpg",
+      "squarePreviewFile": "OceanWavesSquare.jpg",
+      "credit": {
+        "artist": "Ruvim Miksanskiy",
+        "source": "https://www.pexels.com/video/bird-s-eye-view-of-ocean-waves-1918465/",
+        "license": "Pexels License"
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "nature",
+      "displayName": "Nature",
+      "icon": "leaf.fill"
+    },
+    {
+      "id": "urban",
+      "displayName": "Urban",
+      "icon": "building.2.fill"
+    },
+    {
+      "id": "abstract",
+      "displayName": "Abstract",
+      "icon": "sparkles"
+    },
+    {
+      "id": "artistic",
+      "displayName": "Artistic",
+      "icon": "paintpalette.fill"
+    },
+    {
+      "id": "retro",
+      "displayName": "Retro",
+      "icon": "retarrowshape.turn.up.backward.fill"
+    },
+    {
+      "id": "texture",
+      "displayName": "Texture",
+      "icon": "square.grid.3x3.fill"
+    },
+    {
+      "id": "geometric",
+      "displayName": "Geometric",
+      "icon": "triangle.fill"
+    }
+  ]
+}

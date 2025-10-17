@@ -8,6 +8,37 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+struct AnimatedArtworkRef: Codable, Equatable, Hashable {
+  enum Source: String, Codable, CaseIterable {
+    case auto
+    case bundled
+    case custom
+  }
+
+  var source: Source
+  var loopPath: String?
+  var previewPath: String? // 3:4 portrait preview
+  var squarePreviewPath: String? // 1:1 square preview (used as static artwork fallback)
+  var preferredAspect: String?
+  var bundledIdentifier: String?
+
+  init(
+    source: Source,
+    loopPath: String? = nil,
+    previewPath: String? = nil,
+    squarePreviewPath: String? = nil,
+    preferredAspect: String? = nil,
+    bundledIdentifier: String? = nil
+  ) {
+    self.source = source
+    self.loopPath = loopPath
+    self.previewPath = previewPath
+    self.squarePreviewPath = squarePreviewPath
+    self.preferredAspect = preferredAspect
+    self.bundledIdentifier = bundledIdentifier
+  }
+}
+
 struct Preset: Codable, Identifiable, Equatable {
   let id: UUID
   var name: String
@@ -17,12 +48,16 @@ struct Preset: Codable, Identifiable, Equatable {
   var lastModifiedVersion: String?
   var soundOrder: [String]?
   var creatorName: String?
-  var artworkId: UUID?  // Reference to PresetArtwork in SwiftData
+  var artworkId: UUID? // Reference to PresetArtwork in SwiftData
+
+  // Animated artwork
+  var animatedArtwork: AnimatedArtworkRef?
+  var staticArtworkPath: String?
 
   // Background customization
   var showBackgroundImage: Bool?
   var useArtworkAsBackground: Bool?
-  var backgroundImageId: UUID?  // Reference to PresetArtwork for background
+  var backgroundImageId: UUID? // Reference to PresetArtwork for background
   var backgroundBlurRadius: Double?
   var backgroundOpacity: Double?
 
@@ -31,7 +66,7 @@ struct Preset: Codable, Identifiable, Equatable {
 
   // Import metadata - tracks if this preset was imported
   var isImported: Bool?
-  var originalId: UUID?  // Original ID from imported preset for duplicate detection
+  var originalId: UUID? // Original ID from imported preset for duplicate detection
 
   /// Display name for the preset (shows "All Blankie Sounds" for default preset)
   var displayName: String {
@@ -48,6 +83,8 @@ struct Preset: Codable, Identifiable, Equatable {
       && lhs.isDefault == rhs.isDefault && lhs.createdVersion == rhs.createdVersion
       && lhs.lastModifiedVersion == rhs.lastModifiedVersion && lhs.soundOrder == rhs.soundOrder
       && lhs.creatorName == rhs.creatorName && lhs.artworkId == rhs.artworkId
+      && lhs.animatedArtwork == rhs.animatedArtwork
+      && lhs.staticArtworkPath == rhs.staticArtworkPath
       && lhs.showBackgroundImage == rhs.showBackgroundImage
       && lhs.useArtworkAsBackground == rhs.useArtworkAsBackground
       && lhs.backgroundImageId == rhs.backgroundImageId
@@ -90,6 +127,7 @@ struct Preset: Codable, Identifiable, Equatable {
 }
 
 // MARK: - Transferable
+
 extension UTType {
   static let blankiePreset = UTType(exportedAs: "com.codybrom.blankie.preset")
 }

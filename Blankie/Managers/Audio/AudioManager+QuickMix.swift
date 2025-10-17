@@ -95,7 +95,7 @@ extension AudioManager {
       state.sound.volume = state.volume
 
       // Resume playing if it was selected before
-      if state.isSelected && isGloballyPlaying {
+      if state.isSelected, isGloballyPlaying {
         state.sound.play()
       }
     }
@@ -116,6 +116,7 @@ extension AudioManager {
 
       // Update Now Playing info with restored preset
       nowPlayingManager.updateInfo(
+        preset: savedPreset,
         presetName: savedPreset.name,
         creatorName: savedPreset.creatorName,
         artworkId: savedPreset.artworkId,

@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Foundation
 import SwiftUI
 
 class PresetManager: ObservableObject {
@@ -16,6 +17,7 @@ class PresetManager: ObservableObject {
   @Published var currentPreset: Preset? {
     didSet {
       AudioManager.shared.updateNowPlayingInfoForPreset(
+        preset: currentPreset,
         presetName: currentPreset?.activeTitle,
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId
@@ -155,6 +157,8 @@ extension PresetManager {
       return
     }
 
+    cleanupAnimatedArtworkFiles(for: preset)
+
     let wasCurrentPreset = (currentPreset?.id == preset.id)
 
     presets.removeAll { $0.id == preset.id }
@@ -273,6 +277,14 @@ extension PresetManager {
         savePresets()
       }
     }
+  }
+
+  private func cleanupAnimatedArtworkFiles(for preset: Preset) {
+    AnimatedArtworkFileStore.removeItemIfExists(relativePath: preset.animatedArtwork?.loopPath)
+    if preset.animatedArtwork?.previewPath != preset.staticArtworkPath {
+      AnimatedArtworkFileStore.removeItemIfExists(relativePath: preset.animatedArtwork?.previewPath)
+    }
+    AnimatedArtworkFileStore.removeItemIfExists(relativePath: preset.staticArtworkPath)
   }
 
   @MainActor
@@ -421,6 +433,7 @@ extension PresetManager {
       "🎨 PresetManager: Artwork ID: \(preset.artworkId != nil ? "✅ \(preset.artworkId!)" : "❌ None")"
     )
     AudioManager.shared.updateNowPlayingInfoForPreset(
+      preset: preset,
       presetName: preset.activeTitle,
       creatorName: preset.creatorName,
       artworkId: preset.artworkId
@@ -440,6 +453,7 @@ extension PresetManager {
       "🎨 PresetManager: Updating Now Playing with artwork ID: \(preset.artworkId != nil ? "✅ \(preset.artworkId!)" : "❌ None")"
     )
     AudioManager.shared.updateNowPlayingInfoForPreset(
+      preset: preset,
       presetName: preset.activeTitle,
       creatorName: preset.creatorName,
       artworkId: preset.artworkId
@@ -499,7 +513,19 @@ extension PresetManager {
       isDefault: true,
       createdVersion: currentVersion,
       lastModifiedVersion: currentVersion,
-      soundOrder: AudioManager.shared.sounds.map(\.fileName)
+      soundOrder: AudioManager.shared.sounds.map(\.fileName),
+      creatorName: nil,
+      artworkId: nil,
+      animatedArtwork: nil,
+      staticArtworkPath: nil,
+      showBackgroundImage: nil,
+      useArtworkAsBackground: nil,
+      backgroundImageId: nil,
+      backgroundBlurRadius: nil,
+      backgroundOpacity: nil,
+      order: nil,
+      isImported: nil,
+      originalId: nil
     )
   }
 

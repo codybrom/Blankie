@@ -75,7 +75,6 @@ extension GlobalSettings {
     showProgressBorder = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showProgressBorder)
     logCurrentSettings()
-
   }
 
   @MainActor
@@ -89,6 +88,13 @@ extension GlobalSettings {
   func setQuickMixSoundFileNames(_ value: [String]) {
     quickMixSoundFileNames = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.quickMixSoundFileNames)
+    logCurrentSettings()
+  }
+
+  @MainActor
+  func setLockScreenBackgroundEnabled(_ value: Bool) {
+    lockScreenBackgroundEnabled = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.lockScreenBackgroundEnabled)
     logCurrentSettings()
   }
 

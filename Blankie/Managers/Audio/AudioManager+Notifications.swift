@@ -10,6 +10,7 @@ import Combine
 import SwiftUI
 
 // MARK: - Notification Observers
+
 extension AudioManager {
   func setupNotificationObservers() {
     #if os(iOS) || os(visionOS)
@@ -90,12 +91,14 @@ extension AudioManager {
 
       AudioSessionManager.shared.reactivateForForeground(
         mixWithOthers: GlobalSettings.shared.mixWithOthers,
-        isPlaying: isGloballyPlaying)
+        isPlaying: isGloballyPlaying
+      )
 
       if isGloballyPlaying {
         Task { @MainActor in
           let currentPreset = PresetManager.shared.currentPreset
           nowPlayingManager.updateInfo(
+            preset: currentPreset,
             presetName: currentPreset?.name,
             creatorName: currentPreset?.creatorName,
             artworkId: currentPreset?.artworkId,
@@ -117,8 +120,8 @@ extension AudioManager {
 
     private func handleAudioInterruption(_ notification: Notification) {
       guard let userInfo = notification.userInfo,
-        let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-        let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+            let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+            let type = AVAudioSession.InterruptionType(rawValue: typeValue)
       else {
         return
       }
@@ -183,8 +186,8 @@ extension AudioManager {
 
     private func handleAudioRouteChange(_ notification: Notification) {
       guard let userInfo = notification.userInfo,
-        let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
-        let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
+            let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+            let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
       else {
         return
       }

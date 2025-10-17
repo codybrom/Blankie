@@ -18,6 +18,7 @@ extension GlobalSettings {
     print("  - Enable Spatial Audio: \(enableSpatialAudio)")
     print("  - Mix With Others: \(mixWithOthers)")
     print("  - Volume With Other Audio: \(volumeWithOtherAudio)")
+    print("  - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)")
     print("  - Language: \(language.code)")
     print("  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))")
   }

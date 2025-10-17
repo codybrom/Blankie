@@ -1,58 +1,39 @@
 {
   "fill" : {
-    "automatic-gradient" : "srgb:0.00000,0.32852,0.57488,1.00000"
+    "automatic-gradient" : "display-p3:0.00490,0.02248,0.24917,1.00000"
   },
   "groups" : [
     {
       "blend-mode-specializations" : [
         {
-          "appearance" : "dark",
+          "appearance" : "tinted",
           "value" : "plus-lighter"
         }
       ],
-      "blur-material" : null,
-      "hidden" : false,
+      "blur-material" : 0.5,
       "layers" : [
         {
           "blend-mode-specializations" : [
             {
-              "value" : "soft-light"
+              "value" : "lighten"
             },
             {
               "appearance" : "dark",
-              "value" : "normal"
-            },
-            {
-              "appearance" : "tinted",
-              "value" : "normal"
+              "value" : "plus-lighter"
             }
           ],
-          "fill-specializations" : [
-            {
-              "value" : {
-                "solid" : "extended-gray:1.00000,1.00000"
-              }
-            },
-            {
-              "appearance" : "dark",
-              "value" : {
-                "solid" : "extended-gray:1.00000,1.00000"
-              }
-            },
+          "image-name" : "Ellipse 3.svg",
+          "name" : "Ellipse 3",
+          "opacity-specializations" : [
             {
               "appearance" : "tinted",
-              "value" : {
-                "solid" : "extended-gray:0.00000,1.00000"
-              }
+              "value" : 1
             }
           ],
-          "hidden" : false,
-          "image-name" : "path2.svg",
-          "name" : "path2",
           "position" : {
             "scale" : 1,
             "translation-in-points" : [
-              0,
+              -5,
               0
             ]
           }
@@ -60,10 +41,10 @@
       ],
       "lighting" : "combined",
       "position" : {
-        "scale" : 0.75,
+        "scale" : 0.81,
         "translation-in-points" : [
-          28,
-          1.6015625
+          0,
+          0
         ]
       },
       "shadow" : {
@@ -73,73 +54,76 @@
       "specular" : true,
       "translucency" : {
         "enabled" : true,
-        "value" : 0.2
+        "value" : 0.5
       }
     },
     {
-      "blend-mode" : "screen",
-      "blur-material" : null,
-      "hidden" : false,
+      "blend-mode-specializations" : [
+        {
+          "appearance" : "dark",
+          "value" : "screen"
+        }
+      ],
+      "blur-material" : 0.5,
       "layers" : [
         {
-          "blend-mode-specializations" : [
-            {
-              "value" : "plus-lighter"
-            },
-            {
-              "appearance" : "dark",
-              "value" : "soft-light"
-            },
-            {
-              "appearance" : "tinted",
-              "value" : "normal"
-            }
-          ],
           "fill-specializations" : [
             {
               "value" : {
                 "linear-gradient" : [
-                  "display-p3:0.36875,0.66484,0.97472,1.00000",
-                  "display-p3:0.97527,0.83540,0.27629,1.00000"
+                  "display-p3:1.00000,0.82745,0.00000,1.00000",
+                  "display-p3:0.27549,0.32269,0.96420,1.00000"
                 ]
               }
             },
             {
-              "appearance" : "tinted",
+              "appearance" : "dark",
               "value" : {
-                "solid" : "extended-gray:1.00000,1.00000"
+                "automatic-gradient" : "srgb:1.00000,0.82745,0.00000,1.00000"
               }
             }
           ],
-          "glass" : true,
-          "hidden" : false,
           "image-name" : "Path-1.svg",
           "name" : "Path-1",
+          "opacity-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : 0.8
+            }
+          ],
           "position" : {
-            "scale" : 0.75,
+            "scale" : 1,
             "translation-in-points" : [
-              28,
-              -12.5
+              34,
+              0
             ]
           }
         }
       ],
       "lighting" : "individual",
       "position" : {
-        "scale" : 1,
+        "scale" : 0.81,
         "translation-in-points" : [
           0,
-          14.1015625
+          0
         ]
       },
       "shadow" : {
-        "kind" : "layer-color",
-        "opacity" : 1
+        "kind" : "neutral",
+        "opacity" : 0.5
       },
-      "specular" : true,
+      "specular-specializations" : [
+        {
+          "value" : false
+        },
+        {
+          "appearance" : "dark",
+          "value" : true
+        }
+      ],
       "translucency" : {
         "enabled" : true,
-        "value" : 0.2
+        "value" : 0.5
       }
     }
   ],

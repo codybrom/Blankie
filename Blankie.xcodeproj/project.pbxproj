@@ -38,9 +38,22 @@
 		F9ED70DE2D3229AD00240F13 /* BlankieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlankieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F9D3E0A22EA066C800F4E5A5 /* Exceptions for "Blankie" folder in "Blankie" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets/AnimatedArtwork/README.md,
+			);
+			target = F913505E2D233A43003C85BE /* Blankie */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F9BC93262D41457D00E450FC /* Blankie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F9D3E0A22EA066C800F4E5A5 /* Exceptions for "Blankie" folder in "Blankie" target */,
+			);
 			path = Blankie;
 			sourceTree = "<group>";
 		};
@@ -268,6 +281,7 @@
 				"# Update xcconfig using a temp file",
 				"sed \"s/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = $buildNumber/\" \"${CONFIG_PATH}\" > \"${TEMP_CONFIG}\"",
 				"cp \"${TEMP_CONFIG}\" \"${CONFIG_PATH}\"",
+				"",
 				"",
 				"",
 			);

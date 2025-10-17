@@ -18,20 +18,30 @@ struct SettingsView: View {
           }
         }
 
+        Section(
+          header: Text("Lock Screen", comment: "Settings section header for lock screen options")
+        ) {
+          Toggle(isOn: Binding(
+            get: { globalSettings.lockScreenBackgroundEnabled },
+            set: { globalSettings.setLockScreenBackgroundEnabled($0) }
+          )) {
+            Text("Animated Background", comment: "Toggle for lock-screen animated artwork")
+          }
+        }
       }
       .navigationTitle("Settings")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
-      .toolbar {
-        ToolbarItem(placement: .primaryAction) {
-          Button {
-            dismiss()
-          } label: {
-            Text("Done", comment: "Settings done button")
+        .toolbar {
+          ToolbarItem(placement: .primaryAction) {
+            Button {
+              dismiss()
+            } label: {
+              Text("Done", comment: "Settings done button")
+            }
           }
         }
-      }
     }
   }
 }

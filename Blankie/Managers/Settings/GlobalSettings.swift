@@ -43,6 +43,7 @@ enum UserDefaultsKeys {
   static let showProgressBorder = "showProgressBorder"
   static let lockPortraitOrientationiOS = "lockPortraitOrientationiOS"
   static let quickMixSoundFileNames = "quickMixSoundFileNames"
+  static let lockScreenBackgroundEnabled = "lockScreenBackgroundEnabled"
 }
 
 class GlobalSettings: ObservableObject {
@@ -62,11 +63,12 @@ class GlobalSettings: ObservableObject {
   @Published var lockPortraitOrientationiOS: Bool
   @Published var quickMixSoundFileNames: [String]
   @Published var availableLanguages: [Language] = []
+  @Published var lockScreenBackgroundEnabled: Bool
 
   // Platform-specific settings
   @Published var enableSpatialAudio: Bool = false
   @Published var mixWithOthers: Bool = false
-  @Published var volumeWithOtherAudio: Double = 0.5  // 0.0 = silent, 1.0 = full volume
+  @Published var volumeWithOtherAudio: Double = 0.5 // 0.0 = silent, 1.0 = full volume
 
   var observers = Set<AnyCancellable>()
   var volumeDebounceTimer: Timer?
@@ -89,6 +91,7 @@ class GlobalSettings: ObservableObject {
       "wind", "stream", "birds", "coffee-shop",
     ]
     availableLanguages = []
+    lockScreenBackgroundEnabled = true
 
     // Then load actual values from UserDefaults
     loadBasicSettings()
@@ -106,5 +109,4 @@ class GlobalSettings: ObservableObject {
     debouncedSaveVolume(volume)
     logCurrentSettings()
   }
-
 }

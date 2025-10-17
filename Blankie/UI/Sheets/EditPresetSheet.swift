@@ -60,6 +60,8 @@ struct EditPresetSheet: View {
   @State var showingSoundSelection = false
   @State var artworkData: Data?
   @State var artworkId: UUID?
+  @State var animatedArtwork: AnimatedArtworkRef?
+  @State var staticArtworkPath: String?
   @State var showingImagePicker = false
   @State var presetToDelete: Preset?
   @State var showBackgroundImage: Bool = false
@@ -278,6 +280,8 @@ extension EditPresetSheet {
     creatorName = preset.creatorName ?? ""
     selectedSounds = Set(preset.soundStates.map(\.fileName))
     artworkId = preset.artworkId
+    animatedArtwork = preset.animatedArtwork
+    staticArtworkPath = preset.staticArtworkPath
     showBackgroundImage = preset.showBackgroundImage ?? true
     // Default to using artwork as background
     useArtworkAsBackground = preset.useArtworkAsBackground ?? true
@@ -378,6 +382,8 @@ extension EditPresetSheet {
     updatedPreset.backgroundImageId = backgroundImageId
     updatedPreset.backgroundBlurRadius = backgroundBlurRadius
     updatedPreset.backgroundOpacity = backgroundOpacity
+    updatedPreset.animatedArtwork = animatedArtwork
+    updatedPreset.staticArtworkPath = staticArtworkPath
     updatedPreset.lastModifiedVersion = currentVersion
 
     return updatedPreset

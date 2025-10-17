@@ -344,6 +344,7 @@ extension AboutView {
       ))
 
       let knownAlternates: [(key: String, displayName: String)] = [
+        ("BlankieAltIcon", NSLocalizedString("Alternative", comment: "Alternative app icon option")),
         ("BlankieClassicIcon", NSLocalizedString("Classic", comment: "Classic app icon option")),
         ("BetaIcon", NSLocalizedString("Beta", comment: "Beta app icon option")),
       ]

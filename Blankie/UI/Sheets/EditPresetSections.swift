@@ -9,6 +9,7 @@ import PhotosUI
 import SwiftUI
 
 // MARK: - Default Preset Section
+
 extension EditPresetSheet {
   var defaultPresetSection: some View {
     Section("Preset Information") {
@@ -21,6 +22,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Core Section (Name and Sounds)
+
 extension EditPresetSheet {
   var coreSection: some View {
     Section {
@@ -52,7 +54,8 @@ extension EditPresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds)
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds
+          )
         ) {
           LabeledContent("Sounds") {
             Text("\(selectedSounds.count) Selected")
@@ -68,6 +71,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Now Playing Section (Creator & Artwork)
+
 extension EditPresetSheet {
   var nowPlayingSection: some View {
     Section("Now Playing") {
@@ -104,6 +108,12 @@ extension EditPresetSheet {
           .buttonStyle(.plain)
         }
       }
+
+      AnimatedArtworkPicker(
+        artwork: $animatedArtwork,
+        staticArtworkPath: $staticArtworkPath,
+        onChange: applyChangesInstantly
+      )
     }
     .onChange(of: artworkData) { _, _ in
       applyChangesInstantly()
@@ -112,6 +122,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Error Section
+
 extension EditPresetSheet {
   @ViewBuilder
   var errorSection: some View {
@@ -125,6 +136,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Basic Info Section (deprecated - use nowPlayingSection)
+
 extension EditPresetSheet {
   var basicInfoSection: some View {
     nowPlayingSection
@@ -132,6 +144,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Creator Section (deprecated - now part of nowPlayingInfoSection)
+
 extension EditPresetSheet {
   var creatorSection: some View {
     EmptyView()
@@ -139,6 +152,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Artwork Section (deprecated - now part of nowPlayingInfoSection)
+
 extension EditPresetSheet {
   var artworkSection: some View {
     EmptyView()
@@ -146,6 +160,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Artwork Preview
+
 extension EditPresetSheet {
   @ViewBuilder
   var artworkPreview: some View {
@@ -175,6 +190,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Sounds Section
+
 extension EditPresetSheet {
   var soundsSection: some View {
     Section {
@@ -196,7 +212,8 @@ extension EditPresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds)
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds
+          )
         ) {
           LabeledContent("Sounds") {
             Text("\(selectedSounds.count) Selected")
@@ -212,6 +229,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Background Section
+
 extension EditPresetSheet {
   var backgroundSection: some View {
     Section("Background") {
@@ -330,8 +348,8 @@ extension EditPresetSheet {
           get: {
             // Convert opacity value to closest option
             switch backgroundOpacity {
-            case 0..<0.5: return 0.3
-            case 0.5..<0.85: return 0.65
+            case 0 ..< 0.5: return 0.3
+            case 0.5 ..< 0.85: return 0.65
             default: return 1.0
             }
           },
@@ -351,8 +369,8 @@ extension EditPresetSheet {
 
   private var backgroundResetRow: some View {
     Button {
-      backgroundBlurRadius = 15.0  // Medium blur
-      backgroundOpacity = 0.65  // Medium opacity
+      backgroundBlurRadius = 15.0 // Medium blur
+      backgroundOpacity = 0.65 // Medium opacity
     } label: {
       Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
         .font(.caption)
@@ -390,6 +408,7 @@ extension EditPresetSheet {
 }
 
 // MARK: - Delete Section
+
 extension EditPresetSheet {
   @ViewBuilder
   var deleteSection: some View {

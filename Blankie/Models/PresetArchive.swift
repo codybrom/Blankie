@@ -31,10 +31,10 @@ struct ArchiveManifest: Codable {
   let compatibility: ArchiveCompatibility
 
   init(blankieVersion: String) {
-    self.version = "1.0"
+    version = "1.0"
     self.blankieVersion = blankieVersion
-    self.createdDate = Date()
-    self.compatibility = ArchiveCompatibility()
+    createdDate = Date()
+    compatibility = ArchiveCompatibility()
   }
 }
 
@@ -43,8 +43,8 @@ struct ArchiveCompatibility: Codable {
   let requiredFeatures: [String]
 
   init() {
-    self.minimumBlankieVersion = "1.1.0"
-    self.requiredFeatures = []
+    minimumBlankieVersion = "1.1.0"
+    requiredFeatures = []
   }
 
   func isCompatible(with currentVersion: String) -> Bool {
@@ -58,21 +58,21 @@ struct CustomSoundMetadata: Codable, Identifiable {
   let fileName: String
   let originalFileName: String
   let title: String
-  let systemIconName: String?  // Made optional for backwards compatibility
+  let systemIconName: String? // Made optional for backwards compatibility
   let lufsValue: Double?
   let sha256Hash: String?
   let credits: SoundCredits?
 
   init(from customSoundData: CustomSoundData) {
-    self.id = customSoundData.id
+    id = customSoundData.id
     // Use the existing fileName to match what Sound objects reference
-    self.fileName = "\(customSoundData.fileName).\(customSoundData.fileExtension)"
-    self.originalFileName = customSoundData.originalFileName ?? customSoundData.fileName
-    self.title = customSoundData.title
-    self.systemIconName = customSoundData.systemIconName
-    self.lufsValue =
+    fileName = "\(customSoundData.fileName).\(customSoundData.fileExtension)"
+    originalFileName = customSoundData.originalFileName ?? customSoundData.fileName
+    title = customSoundData.title
+    systemIconName = customSoundData.systemIconName
+    lufsValue =
       customSoundData.detectedLUFS != nil ? Double(customSoundData.detectedLUFS!) : nil
-    self.sha256Hash = customSoundData.sha256Hash
+    sha256Hash = customSoundData.sha256Hash
 
     // Create credits from custom sound data
     var credits: SoundCredits?
@@ -108,6 +108,8 @@ extension PresetArchive {
   static let soundsMetadataFileName = "metadata.json"
   static let artworkFileName = "artwork.jpg"
   static let backgroundFileName = "background.jpg"
+  static let animatedLoopBaseName = "animatedLoop"
+  static let animatedPreviewFileName = "animatedPreview.jpg"
 
   func soundFileName(for customSoundId: UUID) -> String {
     guard let sound = customSounds.first(where: { $0.id == customSoundId }) else {

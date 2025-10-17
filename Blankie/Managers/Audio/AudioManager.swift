@@ -17,7 +17,7 @@ class AudioManager: ObservableObject {
   var onReset: (() -> Void)?
 
   @Published var sounds: [Sound] = []
-  @Published var defaultSoundOrder: [String] = []  // Order of sounds in default view
+  @Published var defaultSoundOrder: [String] = [] // Order of sounds in default view
   @Published var isGloballyPlaying: Bool = false
   @Published var soloModeSound: Sound?
   @Published var hasSelectedSounds: Bool = false
@@ -40,6 +40,7 @@ class AudioManager: ObservableObject {
     let isSelected: Bool
     let volume: Float
   }
+
   var quickMixOriginalStates: [QuickMixState] = []
   var preQuickMixPreset: Preset?
 
@@ -85,7 +86,7 @@ class AudioManager: ObservableObject {
 
       // Restore solo mode if it was saved
       if let savedSoloFileName = GlobalSettings.shared.getSavedSoloModeFileName(),
-        let soloSound = self.sounds.first(where: { $0.fileName == savedSoloFileName })
+         let soloSound = self.sounds.first(where: { $0.fileName == savedSoloFileName })
       {
         print("🎵 AudioManager: Restoring solo mode for '\(soloSound.title)'")
         self.enterSoloMode(for: soloSound)
@@ -101,6 +102,7 @@ class AudioManager: ObservableObject {
           // Update Now Playing info with full preset details
           let currentPreset = PresetManager.shared.currentPreset
           self.nowPlayingManager.updateInfo(
+            preset: currentPreset,
             presetName: currentPreset?.name,
             creatorName: currentPreset?.creatorName,
             artworkId: currentPreset?.artworkId,
@@ -112,6 +114,7 @@ class AudioManager: ObservableObject {
         self.isGloballyPlaying = false
         let currentPreset = PresetManager.shared.currentPreset
         self.nowPlayingManager.updateInfo(
+          preset: currentPreset,
           presetName: currentPreset?.name,
           creatorName: currentPreset?.creatorName,
           artworkId: currentPreset?.artworkId,

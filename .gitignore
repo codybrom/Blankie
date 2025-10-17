@@ -84,3 +84,5 @@ notes/carplay/*
 notes/widgetkit/*
 notes/WidgetKitNotes/*
 notes/Widget*
+.swift-module-cache
+.clang-module-cache

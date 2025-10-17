@@ -144,6 +144,7 @@ extension AudioManager {
     // Update Now Playing info with full preset details
     let currentPreset = PresetManager.shared.currentPreset
     nowPlayingManager.updateInfo(
+      preset: currentPreset,
       presetName: currentPreset?.name,
       creatorName: currentPreset?.creatorName,
       artworkId: currentPreset?.artworkId,

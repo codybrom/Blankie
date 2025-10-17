@@ -10,7 +10,6 @@ import SwiftData
 import SwiftUI
 
 class PresetExporter {
-
   static let shared = PresetExporter()
 
   private init() {}
@@ -27,9 +26,9 @@ class PresetExporter {
         return "Failed to create preset archive"
       case .missingArtwork:
         return "Missing artwork file"
-      case .missingCustomSound(let soundName):
+      case let .missingCustomSound(soundName):
         return "Missing custom sound: \(soundName)"
-      case .fileSystemError(let message):
+      case let .fileSystemError(message):
         return "File system error: \(message)"
       }
     }
@@ -70,7 +69,8 @@ class PresetExporter {
     try await writePreset(archive.preset, to: archiveDir)
     try await writeArtwork(for: preset, to: archiveDir)
     try await writeCustomSounds(
-      customSounds, withCustomizations: soundCustomizations, to: archiveDir)
+      customSounds, withCustomizations: soundCustomizations, to: archiveDir
+    )
 
     // Create zip file
     try await createZipFile(from: archiveDir, to: archiveZip)
@@ -116,24 +116,90 @@ class PresetExporter {
   }
 
   private func writeArtwork(for preset: Preset, to archiveDir: URL) async throws {
-    // Write preset artwork if exists
-    if let artworkId = preset.artworkId {
-      // Get raw artwork data directly (already JPEG compressed)
-      if let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId) {
-        let artworkURL = archiveDir.appendingPathComponent(PresetArchive.artworkFileName)
-        try imageData.write(to: artworkURL)
-      }
+    let didWriteStaticArtwork = try await writeStaticArtwork(for: preset, to: archiveDir)
+    try await writeBackgroundImage(for: preset, to: archiveDir)
+    try await writeCustomAnimatedArtwork(for: preset, to: archiveDir, didWriteStaticArtwork: didWriteStaticArtwork)
+  }
+
+  private func writeStaticArtwork(for preset: Preset, to archiveDir: URL) async throws -> Bool {
+    if let artworkId = preset.artworkId,
+       let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
+    {
+      let artworkURL = archiveDir.appendingPathComponent(PresetArchive.artworkFileName)
+      try imageData.write(to: artworkURL)
+      return true
+    } else if let staticPath = preset.staticArtworkPath,
+              AnimatedArtworkFileStore.fileExists(at: staticPath)
+    {
+      let sourceURL = AnimatedArtworkFileStore.absoluteURL(for: staticPath)
+      let destination = archiveDir.appendingPathComponent(PresetArchive.artworkFileName)
+      try? FileManager.default.removeItem(at: destination)
+      try FileManager.default.copyItem(at: sourceURL, to: destination)
+      return true
+    }
+    return false
+  }
+
+  private func writeBackgroundImage(for preset: Preset, to archiveDir: URL) async throws {
+    guard let backgroundId = preset.backgroundImageId,
+          !(preset.useArtworkAsBackground ?? false),
+          let imageData = await PresetArtworkManager.shared.loadArtworkData(id: backgroundId)
+    else {
+      return
     }
 
-    // Write background image if exists and not using artwork as background
-    if let backgroundId = preset.backgroundImageId,
-      !(preset.useArtworkAsBackground ?? false)
+    let backgroundURL = archiveDir.appendingPathComponent(PresetArchive.backgroundFileName)
+    try imageData.write(to: backgroundURL)
+  }
+
+  private func writeCustomAnimatedArtwork(
+    for preset: Preset, to archiveDir: URL, didWriteStaticArtwork: Bool
+  ) async throws {
+    // Only export custom animations (bundled animations are referenced by identifier)
+    guard let animated = preset.animatedArtwork,
+          animated.source == .custom,
+          let loopPath = animated.loopPath,
+          AnimatedArtworkFileStore.fileExists(at: loopPath)
+    else {
+      return
+    }
+
+    try writeAnimatedLoop(loopPath: loopPath, to: archiveDir)
+    try writeAnimatedPreview(
+      animated: animated,
+      to: archiveDir,
+      staticPath: preset.staticArtworkPath,
+      didWriteStaticArtwork: didWriteStaticArtwork
+    )
+  }
+
+  private func writeAnimatedLoop(loopPath: String, to archiveDir: URL) throws {
+    let loopURL = AnimatedArtworkFileStore.absoluteURL(for: loopPath)
+    let loopExtension = loopURL.pathExtension.isEmpty ? "mov" : loopURL.pathExtension
+    let destination = archiveDir.appendingPathComponent(
+      "\(PresetArchive.animatedLoopBaseName).\(loopExtension)")
+    try? FileManager.default.removeItem(at: destination)
+    try FileManager.default.copyItem(at: loopURL, to: destination)
+  }
+
+  private func writeAnimatedPreview(
+    animated: AnimatedArtworkRef, to archiveDir: URL, staticPath: String?, didWriteStaticArtwork: Bool
+  ) throws {
+    let destinationPreview = archiveDir.appendingPathComponent(PresetArchive.animatedPreviewFileName)
+
+    if let previewPath = animated.previewPath,
+       AnimatedArtworkFileStore.fileExists(at: previewPath)
     {
-      // Get raw background data directly (already JPEG compressed)
-      if let imageData = await PresetArtworkManager.shared.loadArtworkData(id: backgroundId) {
-        let backgroundURL = archiveDir.appendingPathComponent(PresetArchive.backgroundFileName)
-        try imageData.write(to: backgroundURL)
-      }
+      let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
+      try? FileManager.default.removeItem(at: destinationPreview)
+      try FileManager.default.copyItem(at: previewURL, to: destinationPreview)
+    } else if !didWriteStaticArtwork,
+              let staticPath,
+              AnimatedArtworkFileStore.fileExists(at: staticPath)
+    {
+      let previewURL = AnimatedArtworkFileStore.absoluteURL(for: staticPath)
+      try? FileManager.default.removeItem(at: destinationPreview)
+      try FileManager.default.copyItem(at: previewURL, to: destinationPreview)
     }
   }
 
@@ -151,7 +217,8 @@ class PresetExporter {
 
     // Write unified sounds metadata including customizations
     let soundsManifest = SoundsManifest(
-      customSounds: customSounds, builtInCustomizations: customizations)
+      customSounds: customSounds, builtInCustomizations: customizations
+    )
     let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
     let metadataData = try JSONEncoder().encode(soundsManifest)
     try metadataData.write(to: metadataURL)

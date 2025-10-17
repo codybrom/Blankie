@@ -6,20 +6,59 @@
 //
 
 import AVFoundation
+import Combine
 import MediaPlayer
 import SwiftUI
+#if os(iOS)
+  import UIKit
+#endif
 
 /// Manages Now Playing info for media playback controls
 @MainActor
 final class NowPlayingManager {
-  private var nowPlayingInfo: [String: Any] = [:]
+  var nowPlayingInfo: [String: Any] = [:]
 
   private var isSetup = false
-  private var currentArtworkId: UUID?
+  var currentArtworkId: UUID?
+  var currentStaticArtworkPath: String?
+  var staticArtworkTask: Task<Void, Never>?
+  #if os(iOS)
+    var currentAnimatedLoopPath: String?
+    var currentAnimatedPreviewPath: String?
+  #endif
   private var updateTimer: Timer?
+  private var cancellables = Set<AnyCancellable>()
 
   init() {
     // Don't setup immediately to avoid triggering audio session
+    GlobalSettings.shared.$lockScreenBackgroundEnabled
+      .receive(on: RunLoop.main)
+      .sink { [weak self] _ in
+        self?.republishCurrentPreset()
+      }
+      .store(in: &cancellables)
+
+    #if os(iOS)
+      NotificationCenter.default.addObserver(
+        self,
+        selector: #selector(animatedArtworkConditionChanged),
+        name: UIAccessibility.reduceMotionStatusDidChangeNotification,
+        object: nil
+      )
+      NotificationCenter.default.addObserver(
+        self,
+        selector: #selector(animatedArtworkConditionChanged),
+        name: Notification.Name.NSProcessInfoPowerStateDidChange,
+        object: nil
+      )
+    #endif
+  }
+
+  deinit {
+    staticArtworkTask?.cancel()
+    updateTimer?.invalidate()
+    cancellables.removeAll()
+    NotificationCenter.default.removeObserver(self)
   }
 
   private func setupNowPlaying() {
@@ -29,7 +68,7 @@ final class NowPlayingManager {
 
     nowPlayingInfo[MPMediaItemPropertyTitle] = "Ambient Sounds"
     nowPlayingInfo[MPMediaItemPropertyArtist] = "Blankie"
-    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 0.0  // Start as paused
+    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 0.0 // Start as paused
 
     if let artwork = loadArtwork() {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
@@ -37,14 +76,18 @@ final class NowPlayingManager {
   }
 
   func updateInfo(
-    presetName: String? = nil, creatorName: String? = nil, artworkId: UUID? = nil, isPlaying: Bool
+    preset: Preset? = nil,
+    presetName: String? = nil,
+    creatorName: String? = nil,
+    artworkId: UUID? = nil,
+    isPlaying: Bool
   ) {
     // Debounce rapid successive updates during initialization
     updateTimer?.invalidate()
     updateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
       Task { @MainActor in
         self?.performNowPlayingUpdate(
-          presetName: presetName, creatorName: creatorName, artworkId: artworkId,
+          preset: preset, presetName: presetName, creatorName: creatorName, artworkId: artworkId,
           isPlaying: isPlaying
         )
       }
@@ -52,6 +95,7 @@ final class NowPlayingManager {
   }
 
   private func performNowPlayingUpdate(
+    preset: Preset?,
     presetName: String?,
     creatorName: String?,
     artworkId: UUID?,
@@ -59,27 +103,20 @@ final class NowPlayingManager {
   ) {
     setupNowPlaying()
 
-    let displayInfo = getDisplayInfo(presetName: presetName, creatorName: creatorName)
+    let resolvedPresetName = preset?.name ?? presetName
+    let resolvedCreatorName = preset?.creatorName ?? creatorName
+
+    let displayInfo = getDisplayInfo(presetName: resolvedPresetName, creatorName: resolvedCreatorName)
     print(
       "🎵 NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )
 
     updateBasicInfo(displayInfo: displayInfo)
-    updateAlbumAndDuration(creatorName: creatorName)
+    updateAlbumAndDuration(creatorName: resolvedCreatorName)
     updatePlaybackRate(isPlaying: isPlaying)
 
-    // Only load artwork if it's different from currently loaded
-    if artworkId != currentArtworkId {
-      currentArtworkId = artworkId
-      if let artworkId = artworkId {
-        Task {
-          await loadAndUpdateArtwork(artworkId: artworkId)
-        }
-      } else {
-        // No artwork
-        updateArtwork(artworkData: nil)
-      }
-    }
+    loadStaticArtwork(from: preset, fallbackArtworkId: artworkId)
+    updateAnimatedArtwork(for: preset)
 
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
   }
@@ -153,23 +190,19 @@ final class NowPlayingManager {
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
   }
 
-  private func updateArtwork(artworkData: Data?) {
-    print(
-      "🎨 NowPlayingManager: Processing artwork data: \(artworkData != nil ? "✅ \(artworkData!.count) bytes" : "❌ None")"
+  func republishCurrentPreset() {
+    let preset = PresetManager.shared.currentPreset
+    updateInfo(
+      preset: preset,
+      presetName: preset?.name,
+      creatorName: preset?.creatorName,
+      artworkId: preset?.artworkId,
+      isPlaying: AudioManager.shared.isGloballyPlaying
     )
-    if let customArtwork = loadCustomArtwork(from: artworkData) {
-      print("🎨 NowPlayingManager: ✅ Custom artwork loaded successfully")
-      nowPlayingInfo[MPMediaItemPropertyArtwork] = customArtwork
-    } else if let defaultArtwork = loadArtwork() {
-      print("🎨 NowPlayingManager: Using default artwork")
-      nowPlayingInfo[MPMediaItemPropertyArtwork] = defaultArtwork
-    } else {
-      print("🎨 NowPlayingManager: ❌ No artwork available")
-    }
   }
 
   func updatePlaybackState(isPlaying: Bool) {
-    setupNowPlaying()  // Ensure setup is done before updating
+    setupNowPlaying() // Ensure setup is done before updating
 
     // Ensure nowPlayingInfo dictionary exists
     if nowPlayingInfo.isEmpty {
@@ -181,7 +214,7 @@ final class NowPlayingManager {
     // Update playback state
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = 0
-    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 0  // Infinite for ambient sounds
+    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 0 // Infinite for ambient sounds
 
     // Update the now playing info
     print(
@@ -205,31 +238,12 @@ final class NowPlayingManager {
 
   func clear() {
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-  }
-
-  /// Load artwork from SwiftData and update Now Playing info
-  private func loadAndUpdateArtwork(artworkId: UUID) async {
-    print("🎨 NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)")
-
-    // Load artwork on background thread to prevent UI blocking
-    let artworkData: Data? = await Task.detached {
-      // Get the data directly from PresetArtworkManager instead of converting image
-      let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
-      if let imageData = imageData {
-        print(
-          "🎨 NowPlayingManager: ✅ Loaded artwork from SwiftData (\(imageData.count) bytes)"
-        )
-      }
-      return imageData
-    }.value
-
-    // Update UI on main thread
-    await MainActor.run {
-      if artworkData == nil {
-        print("🎨 NowPlayingManager: ⚠️ No artwork found in SwiftData")
-      }
-      updateArtwork(artworkData: artworkData)
-      MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-    }
+    staticArtworkTask?.cancel()
+    staticArtworkTask = nil
+    currentArtworkId = nil
+    currentStaticArtworkPath = nil
+    #if os(iOS)
+      removeAnimatedArtwork()
+    #endif
   }
 }

@@ -19,6 +19,9 @@ struct CreatePresetSheet: View {
   @State private var artworkData: Data?
   @State private var showingImagePicker = false
   @State private var showingImageCropper = false
+  @State private var animatedArtwork: AnimatedArtworkRef?
+  @State private var staticArtworkPath: String?
+  @State private var didCreatePreset = false
   #if os(iOS) || os(visionOS)
     @State private var selectedImage: UIImage?
   #endif
@@ -37,6 +40,7 @@ struct CreatePresetSheet: View {
         errorSection
         creatorSection
         artworkSection
+        animatedArtworkSection
         soundsSection
       }
       .navigationTitle("New Preset")
@@ -50,19 +54,19 @@ struct CreatePresetSheet: View {
         )
       #else
         .formStyle(.grouped)
-        .frame(minWidth: 400, idealWidth: 500, minHeight: 300)
-        .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") { isPresented = false }
+          .frame(minWidth: 400, idealWidth: 500, minHeight: 300)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button("Cancel") { isPresented = false }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Create") { createPreset() }
+                .keyboardShortcut(.return)
+                .disabled(presetName.isEmpty || selectedSounds.isEmpty)
+            }
           }
-          ToolbarItem(placement: .confirmationAction) {
-            Button("Create") { createPreset() }
-            .keyboardShortcut(.return)
-            .disabled(presetName.isEmpty || selectedSounds.isEmpty)
-          }
-        }
       #endif
-      .onAppear(perform: setupDefaultSelection)
+          .onAppear(perform: setupDefaultSelection)
       #if os(iOS) || os(visionOS)
         .sheet(isPresented: $showingSoundSelection) {
           NavigationStack {
@@ -91,6 +95,9 @@ struct CreatePresetSheet: View {
           handleMacOSImageImport(result)
         }
       #endif
+    }
+    .onDisappear {
+      cleanupAnimatedArtworkIfNeeded()
     }
   }
 }
@@ -151,6 +158,21 @@ extension CreatePresetSheet {
     }
   }
 
+  var animatedArtworkSection: some View {
+    Section {
+      AnimatedArtworkPicker(
+        artwork: $animatedArtwork,
+        staticArtworkPath: $staticArtworkPath,
+        onChange: {}
+      )
+    } header: {
+      Text("Animated Artwork")
+    } footer: {
+      Text("Loops play on the Lock Screen (iOS 26+)")
+        .font(.caption)
+    }
+  }
+
   @ViewBuilder
   var artworkPreview: some View {
     if let artworkData = artworkData {
@@ -197,7 +219,8 @@ extension CreatePresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds)
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds
+          )
         ) {
           HStack {
             Text("Sounds")
@@ -238,6 +261,9 @@ extension CreatePresetSheet {
         }
 
         try presetManager.applyPreset(newPreset)
+        await MainActor.run {
+          didCreatePreset = true
+        }
         isPresented = false
       } catch {
         await MainActor.run {
@@ -252,14 +278,14 @@ extension CreatePresetSheet {
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     let selectedSoundStates =
       orderedSounds
-      .filter { selectedSounds.contains($0.fileName) }
-      .map { sound in
-        PresetState(
-          fileName: sound.fileName,
-          isSelected: sound.isSelected,
-          volume: sound.volume
-        )
-      }
+        .filter { selectedSounds.contains($0.fileName) }
+        .map { sound in
+          PresetState(
+            fileName: sound.fileName,
+            isSelected: sound.isSelected,
+            volume: sound.volume
+          )
+        }
 
     let presetId = UUID()
     let artworkId = await saveArtworkIfPresent(for: presetId)
@@ -277,6 +303,8 @@ extension CreatePresetSheet {
       soundOrder: nil,
       creatorName: creatorName.isEmpty ? nil : creatorName,
       artworkId: artworkId,
+      animatedArtwork: animatedArtwork,
+      staticArtworkPath: staticArtworkPath,
       showBackgroundImage: nil,
       useArtworkAsBackground: nil,
       backgroundImageId: nil,
@@ -297,7 +325,8 @@ extension CreatePresetSheet {
 
     do {
       let artworkId = try await PresetArtworkManager.shared.saveArtwork(
-        data, for: presetId, type: .artwork)
+        data, for: presetId, type: .artwork
+      )
       print("🎨 CreatePresetSheet: Saved artwork with ID: \(artworkId)")
       return artworkId
     } catch {
@@ -305,14 +334,24 @@ extension CreatePresetSheet {
       return nil
     }
   }
+
+  private func cleanupAnimatedArtworkIfNeeded() {
+    guard !didCreatePreset else { return }
+    AnimatedArtworkFileStore.removeItemIfExists(relativePath: animatedArtwork?.loopPath)
+    if animatedArtwork?.previewPath != staticArtworkPath {
+      AnimatedArtworkFileStore.removeItemIfExists(relativePath: animatedArtwork?.previewPath)
+    }
+    AnimatedArtworkFileStore.removeItemIfExists(relativePath: staticArtworkPath)
+  }
 }
 
 // MARK: - macOS Image Handling
+
 #if os(macOS)
-  extension CreatePresetSheet {
-    fileprivate func handleMacOSImageImport(_ result: Result<[URL], Error>) {
+  fileprivate extension CreatePresetSheet {
+    func handleMacOSImageImport(_ result: Result<[URL], Error>) {
       switch result {
-      case .success(let urls):
+      case let .success(urls):
         guard let url = urls.first else { return }
 
         let accessing = url.startAccessingSecurityScopedResource()
@@ -337,12 +376,12 @@ extension CreatePresetSheet {
         } catch {
           print("❌ macOS Image Picker: Failed to load image: \(error)")
         }
-      case .failure(let error):
+      case let .failure(error):
         print("❌ macOS Image Picker: Image picker error: \(error)")
       }
     }
 
-    fileprivate func cropToSquareMacOS(image: NSImage) -> NSImage {
+    func cropToSquareMacOS(image: NSImage) -> NSImage {
       let size = min(image.size.width, image.size.height)
       let offsetX = (image.size.width - size) / 2
       let offsetY = (image.size.height - size) / 2
