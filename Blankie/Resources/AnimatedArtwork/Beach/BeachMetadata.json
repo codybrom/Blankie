@@ -1,0 +1,11 @@
+{
+  "id": "Beach",
+  "displayName": "Beach Waves",
+  "description": "Overhead view of waves crashing on a sandy beach",
+  "category": "nature",
+  "credit": {
+    "artist": "Ruvim Miksanskiy",
+    "source": "https://www.pexels.com/video/top-view-of-beach-waves-crashing-on-seashore-4183071/",
+    "license": "Pexels License"
+  }
+}

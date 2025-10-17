@@ -1,0 +1,11 @@
+{
+  "id": "Squares",
+  "displayName": "Organizing Squares",
+  "description": "Animated squares sort and organize themselves",
+  "category": "geometric",
+  "credit": {
+    "artist": "Linus Zoll for Google DeepMind",
+    "source": "https://www.pexels.com/video/an-artist-s-animation-of-artificial-intelligence-ai-this-video-represents-the-role-of-ai-in-computer-optimisation-for-reduced-energy-consumption-it-was-created-by-linus-zoll-as-part-of-18069095/",
+    "license": "Pexels License"
+  }
+}

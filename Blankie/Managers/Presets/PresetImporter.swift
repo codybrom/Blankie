@@ -605,8 +605,8 @@ extension PresetImporter {
         print("📦 Import: Successfully downloaded ODR resource '\(bundledId)'")
 
         // Get preview images from bundle (these are always available, not part of ODR)
-        guard let previewURL = Bundle.main.url(forResource: bundledId, withExtension: "jpg"),
-              let squarePreviewURL = Bundle.main.url(forResource: "\(bundledId)Square", withExtension: "jpg")
+        guard let previewURL = Bundle.main.url(forResource: "\(bundledId)/\(bundledId)", withExtension: "jpg"),
+              let squarePreviewURL = Bundle.main.url(forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
         else {
           print("⚠️ Import: Failed to find preview images for '\(bundledId)'")
           return

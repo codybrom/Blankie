@@ -41,15 +41,20 @@ final class OnDemandResourceManager: ObservableObject {
   /// Current state of each resource
   @Published private(set) var resourceStates: [String: ResourceState] = [:]
 
-  /// Active resource requests being managed
-  private var activeRequests: [String: NSBundleResourceRequest] = [:]
+  #if !os(macOS)
+    /// Active resource requests being managed (iOS only - macOS doesn't support ODR)
+    private var activeRequests: [String: NSBundleResourceRequest] = [:]
 
-  /// Queue for serializing ODR operations
-  private let odrQueue = DispatchQueue(label: "com.codybrom.blankie.odr", qos: .userInitiated)
+    /// Queue for serializing ODR operations
+    private let odrQueue = DispatchQueue(label: "com.codybrom.blankie.odr", qos: .userInitiated)
+  #endif
 
   private init() {
     // Check which resources are already available
     checkAvailableResources()
+
+    // Log migration info for users upgrading from previous version
+    logger.info("OnDemandResourceManager initialized. Users upgrading from older versions may need to re-download videos due to restructured resource paths.")
   }
 
   // MARK: - Public API
@@ -58,81 +63,89 @@ final class OnDemandResourceManager: ObservableObject {
   /// - Parameter resourceId: The identifier matching the ODR tag
   /// - Returns: URL to the video file if available
   func requestVideoResource(_ resourceId: String) async throws -> URL {
-    // Check if already available in bundle (development/simulator)
+    // Check if already available in bundle (development/simulator/macOS)
     if let url = getLocalResourceURL(for: resourceId), FileManager.default.fileExists(atPath: url.path) {
       logger.debug("Resource \(resourceId) already available locally")
       resourceStates[resourceId] = .available
       return url
     }
 
-    // Update state to downloading
-    resourceStates[resourceId] = .downloading(progress: 0.0)
+    #if os(macOS)
+      // macOS doesn't support ODR - if file isn't in bundle, it's not available
+      logger.error("Resource \(resourceId) not found in bundle (macOS doesn't support ODR)")
+      resourceStates[resourceId] = .failed(ODRError.resourceNotFound(resourceId))
+      throw ODRError.resourceNotFound(resourceId)
+    #else
+      // iOS: Use ODR to download if not in bundle
+      // Update state to downloading
+      resourceStates[resourceId] = .downloading(progress: 0.0)
 
-    // Create resource request with the tag
-    let request = NSBundleResourceRequest(tags: [resourceId])
+      // Create resource request with the tag
+      let request = NSBundleResourceRequest(tags: [resourceId])
 
-    // Store the active request
-    activeRequests[resourceId] = request
+      // Store the active request
+      activeRequests[resourceId] = request
 
-    // Set up progress tracking with KVO
-    request.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
+      // Set up progress tracking with KVO
+      request.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
 
-    // Track progress using polling
-    let progressTask = Task { @MainActor in
-      while !Task.isCancelled {
-        let currentProgress = request.progress.fractionCompleted
-        // Update the download progress
-        if case .downloading = self.resourceStates[resourceId] {
-          self.resourceStates[resourceId] = .downloading(progress: currentProgress)
-        } else {
-          // State changed, stop tracking
-          break
+      // Track progress using polling
+      let progressTask = Task { @MainActor in
+        while !Task.isCancelled {
+          let currentProgress = request.progress.fractionCompleted
+          // Update the download progress
+          if case .downloading = self.resourceStates[resourceId] {
+            self.resourceStates[resourceId] = .downloading(progress: currentProgress)
+          } else {
+            // State changed, stop tracking
+            break
+          }
+          // Poll every 0.1 seconds
+          try? await Task.sleep(nanoseconds: 100_000_000)
         }
-        // Poll every 0.1 seconds
-        try? await Task.sleep(nanoseconds: 100_000_000)
-      }
-    }
-
-    do {
-      logger.info("Requesting ODR resource: \(resourceId)")
-
-      // Begin accessing the resource
-      try await request.beginAccessingResources()
-
-      // Cancel progress tracking
-      progressTask.cancel()
-
-      // Resource is now available
-      logger.info("Successfully downloaded ODR resource: \(resourceId)")
-      resourceStates[resourceId] = .available
-
-      // Get the URL to the downloaded resource
-      guard let url = getLocalResourceURL(for: resourceId) else {
-        throw ODRError.resourceNotFound(resourceId)
       }
 
-      return url
+      do {
+        logger.info("Requesting ODR resource: \(resourceId)")
 
-    } catch {
-      // Cancel progress tracking
-      progressTask.cancel()
+        // Begin accessing the resource
+        try await request.beginAccessingResources()
 
-      logger.warning("ODR download failed for \(resourceId), checking if bundled locally: \(error.localizedDescription)")
+        // Cancel progress tracking
+        progressTask.cancel()
 
-      // ODR failed - check if the resource is bundled locally (development/simulator)
-      if let url = getLocalResourceURL(for: resourceId), FileManager.default.fileExists(atPath: url.path) {
-        logger.info("Resource \(resourceId) found in local bundle, using as fallback")
+        // Resource is now available
+        logger.info("Successfully downloaded ODR resource: \(resourceId)")
         resourceStates[resourceId] = .available
-        activeRequests.removeValue(forKey: resourceId)
-        return url
-      }
 
-      // Neither ODR nor local bundle worked
-      logger.error("Resource \(resourceId) not available via ODR or local bundle")
-      resourceStates[resourceId] = .failed(error)
-      activeRequests.removeValue(forKey: resourceId)
-      throw ODRError.downloadFailed(resourceId, error)
-    }
+        // Get the URL to the downloaded resource
+        guard let url = getLocalResourceURL(for: resourceId) else {
+          throw ODRError.resourceNotFound(resourceId)
+        }
+
+        return url
+
+      } catch {
+        // Cancel progress tracking
+        progressTask.cancel()
+
+        logger.warning("ODR download failed for \(resourceId), checking if bundled locally: \(error.localizedDescription)")
+
+        // ODR failed - check if the resource is bundled locally (development/simulator)
+        if let url = getLocalResourceURL(for: resourceId), FileManager.default.fileExists(atPath: url.path) {
+          logger.info("Resource \(resourceId) found in local bundle, using as fallback")
+          resourceStates[resourceId] = .available
+          activeRequests.removeValue(forKey: resourceId)
+          return url
+        }
+
+        // Neither ODR nor local bundle worked
+        logger.error("Resource \(resourceId) not available via ODR or local bundle")
+        resourceStates[resourceId] = .failed(error)
+        activeRequests.removeValue(forKey: resourceId)
+        throw ODRError.downloadFailed(resourceId, error)
+      }
+    #endif
   }
 
   /// Preload multiple resources in the background
@@ -156,24 +169,34 @@ final class OnDemandResourceManager: ObservableObject {
   /// Release a resource to free up disk space
   /// - Parameter resourceId: The identifier of the resource to release
   func releaseResource(_ resourceId: String) {
-    guard let request = activeRequests[resourceId] else { return }
+    #if !os(macOS)
+      guard let request = activeRequests[resourceId] else { return }
 
-    logger.info("Releasing ODR resource: \(resourceId)")
-    request.endAccessingResources()
-    activeRequests.removeValue(forKey: resourceId)
-    resourceStates[resourceId] = .notDownloaded
+      logger.info("Releasing ODR resource: \(resourceId)")
+      request.endAccessingResources()
+      activeRequests.removeValue(forKey: resourceId)
+      resourceStates[resourceId] = .notDownloaded
+    #else
+      // macOS doesn't use ODR, so nothing to release
+      logger.debug("Release resource called on macOS (no-op)")
+    #endif
   }
 
   /// Release all resources
   func releaseAllResources() {
-    logger.info("Releasing all ODR resources (\(self.activeRequests.count) active)")
+    #if !os(macOS)
+      logger.info("Releasing all ODR resources (\(self.activeRequests.count) active)")
 
-    for (resourceId, request) in self.activeRequests {
-      request.endAccessingResources()
-      self.resourceStates[resourceId] = .notDownloaded
-    }
+      for (resourceId, request) in self.activeRequests {
+        request.endAccessingResources()
+        self.resourceStates[resourceId] = .notDownloaded
+      }
 
-    self.activeRequests.removeAll()
+      self.activeRequests.removeAll()
+    #else
+      // macOS doesn't use ODR, so nothing to release
+      logger.debug("Release all resources called on macOS (no-op)")
+    #endif
   }
 
   /// Check if a resource is currently available locally in ODR storage
@@ -215,27 +238,43 @@ final class OnDemandResourceManager: ObservableObject {
   // MARK: - Private Helpers
 
   private func getLocalResourceURL(for resourceId: String) -> URL? {
-    // The resource name is the ID with .mov extension
+    // Files are copied flat to bundle root with unique names
     return Bundle.main.url(forResource: resourceId, withExtension: "mov")
   }
 
   private func checkAvailableResources() {
-    // Get all artwork IDs from the config
-    guard let url = Bundle.main.url(forResource: "AnimatedArtwork", withExtension: "json"),
-          let data = try? Data(contentsOf: url),
-          let config = try? JSONDecoder().decode(ODRArtworkConfig.self, from: data)
-    else {
+    // Files are copied flat to bundle root, scan for metadata files
+    guard let resourceURL = Bundle.main.resourceURL else {
+      logger.warning("Failed to find bundle resource directory")
       return
     }
 
+    guard let contents = try? FileManager.default.contentsOfDirectory(
+      at: resourceURL,
+      includingPropertiesForKeys: [.isRegularFileKey],
+      options: [.skipsHiddenFiles]
+    ) else {
+      logger.warning("Failed to read bundle resource contents")
+      return
+    }
+
+    // Find all *Metadata.json files to discover resource IDs
+    let metadataFiles = contents.filter { $0.lastPathComponent.hasSuffix("Metadata.json") }
+
     // Check which resources are already available
     var availableCount = 0
-    for artwork in config.artworks {
-      if isResourceAvailable(artwork.id) {
-        resourceStates[artwork.id] = .available
+    for metadataURL in metadataFiles {
+      // Extract resource ID from filename (e.g., "RainLoopMetadata.json" -> "RainLoop")
+      let filename = metadataURL.deletingPathExtension().lastPathComponent
+      guard let artworkId = filename.components(separatedBy: "Metadata").first else {
+        continue
+      }
+
+      if isResourceAvailable(artworkId) {
+        resourceStates[artworkId] = .available
         availableCount += 1
       } else {
-        resourceStates[artwork.id] = .notDownloaded
+        resourceStates[artworkId] = .notDownloaded
       }
     }
 
@@ -261,11 +300,4 @@ enum ODRError: LocalizedError {
 
 // MARK: - Supporting Types
 
-/// Simplified config structure for ODR management
-private struct ODRArtworkConfig: Codable {
-  let artworks: [ArtworkInfo]
-
-  struct ArtworkInfo: Codable {
-    let id: String
-  }
-}
+// (No additional types needed - artwork discovery is dynamic)

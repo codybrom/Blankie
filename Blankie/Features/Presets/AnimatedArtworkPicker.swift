@@ -105,11 +105,13 @@ import SwiftUI
 
         // Preview images remain bundled for fast gallery display
         guard let previewURL = Bundle.main.url(forResource: asset.previewResourceName, withExtension: asset.previewExtension) else {
-          throw AnimatedArtworkError.missingBundledAsset(asset.previewResourceName)
+          throw AnimatedArtworkError.missingBundledAsset("\(asset.id)/preview")
         }
 
-        guard let squarePreviewURL = Bundle.main.url(forResource: asset.squarePreviewResourceName, withExtension: asset.squarePreviewExtension) else {
-          throw AnimatedArtworkError.missingBundledAsset(asset.squarePreviewResourceName)
+        guard let squarePreviewURL = Bundle.main.url(
+          forResource: asset.squarePreviewResourceName, withExtension: asset.squarePreviewExtension
+        ) else {
+          throw AnimatedArtworkError.missingBundledAsset("\(asset.id)/preview-square")
         }
 
         // Clean up old files
@@ -178,13 +180,7 @@ import SwiftUI
     }
 
     var categories: [ArtworkCategory] {
-      guard let url = Bundle.main.url(forResource: "AnimatedArtwork", withExtension: "json"),
-            let data = try? Data(contentsOf: url),
-            let config = try? JSONDecoder().decode(AnimatedArtworkConfig.self, from: data)
-      else {
-        return []
-      }
-      return config.categories
+      return ArtworkCategory.allCategories
     }
 
     var filteredAssets: [BundledAnimatedLoop] {
@@ -685,14 +681,25 @@ import SwiftUI
           Button {
             onSelect()
           } label: {
-            Text("Choose", comment: "Button to select animated artwork")
-              .font(.headline)
-              .foregroundColor(.white)
-              .frame(maxWidth: .infinity)
-              .padding()
-              .background(Color.accentColor)
-              .cornerRadius(12)
+            if case .downloading = resourceState {
+              Text("Downloading...", comment: "Button label while video is downloading")
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.gray)
+                .cornerRadius(12)
+            } else {
+              Text("Choose", comment: "Button to select animated artwork")
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(isCached ? Color.accentColor : Color.gray)
+                .cornerRadius(12)
+            }
           }
+          .disabled(!isCached)
           .padding(.horizontal, 32)
           .padding(.bottom, 32)
         }
@@ -770,9 +777,6 @@ import SwiftUI
     let displayName: String
     let description: String
     let category: String
-    let videoFile: String
-    let previewFile: String
-    let squarePreviewFile: String
     let credit: ArtworkCredit
 
     struct ArtworkCredit: Codable {
@@ -781,55 +785,74 @@ import SwiftUI
       let license: String
     }
 
-    var videoResourceName: String {
-      videoFile.replacingOccurrences(of: ".mov", with: "")
-    }
-
+    // Files are copied flat to bundle root with unique names
+    var videoResourceName: String { id }
     var videoExtension: String { "mov" }
-    var previewResourceName: String {
-      previewFile.replacingOccurrences(of: ".jpg", with: "")
-    }
-
+    var previewResourceName: String { id }
     var previewExtension: String { "jpg" }
-    var squarePreviewResourceName: String {
-      squarePreviewFile.replacingOccurrences(of: ".jpg", with: "")
-    }
-
+    var squarePreviewResourceName: String { "\(id)Square" }
     var squarePreviewExtension: String { "jpg" }
 
     static var allCases: [BundledAnimatedLoop] {
-      guard let url = Bundle.main.url(forResource: "AnimatedArtwork", withExtension: "json") else {
-        print("⚠️ Failed to find AnimatedArtwork.json in bundle")
+      // Files are copied flat to bundle root, not in AnimatedArtwork subfolder
+      guard let resourceURL = Bundle.main.resourceURL else {
+        print("⚠️ Failed to find bundle resource directory")
         return []
       }
 
-      guard let data = try? Data(contentsOf: url) else {
-        print("⚠️ Failed to read AnimatedArtwork.json from \(url)")
+      guard let contents = try? FileManager.default.contentsOfDirectory(
+        at: resourceURL,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+      ) else {
+        print("⚠️ Failed to read bundle resource contents")
         return []
       }
 
-      guard let config = try? JSONDecoder().decode(AnimatedArtworkConfig.self, from: data) else {
-        print("⚠️ Failed to decode AnimatedArtwork.json")
-        if let jsonString = String(data: data, encoding: .utf8) {
-          print("JSON content preview: \(jsonString.prefix(200))")
+      var artworks: [BundledAnimatedLoop] = []
+
+      // Find all *Metadata.json files
+      let metadataFiles = contents.filter { $0.lastPathComponent.hasSuffix("Metadata.json") }
+
+      for metadataURL in metadataFiles {
+        guard let data = try? Data(contentsOf: metadataURL),
+              let artwork = try? JSONDecoder().decode(BundledAnimatedLoop.self, from: data)
+        else {
+          print("⚠️ Failed to load metadata from \(metadataURL.lastPathComponent)")
+          continue
         }
-        return []
+
+        artworks.append(artwork)
       }
 
-      print("✅ Loaded \(config.artworks.count) artworks from AnimatedArtwork.json")
-      return config.artworks
+      print("✅ Loaded \(artworks.count) artworks from bundle resources")
+      return artworks.sorted { $0.id < $1.id } // Sort alphabetically by ID
     }
-  }
-
-  struct AnimatedArtworkConfig: Codable {
-    let artworks: [BundledAnimatedLoop]
-    let categories: [ArtworkCategory]
   }
 
   struct ArtworkCategory: Codable {
     let id: String
     let displayName: String
     let icon: String
+
+    static var allCategories: [ArtworkCategory] {
+      // Files are copied flat to bundle root, not in AnimatedArtwork subfolder
+      guard let categoriesURL = Bundle.main.url(
+        forResource: "categories",
+        withExtension: "json"
+      ),
+        let data = try? Data(contentsOf: categoriesURL),
+        let config = try? JSONDecoder().decode(CategoriesConfig.self, from: data)
+      else {
+        print("⚠️ Failed to load categories.json")
+        return []
+      }
+      return config.categories
+    }
+  }
+
+  private struct CategoriesConfig: Codable {
+    let categories: [ArtworkCategory]
   }
 #else
   struct AnimatedArtworkPicker: View {

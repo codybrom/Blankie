@@ -39,34 +39,31 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F9D3E0A22EA066C800F4E5A5 /* Exceptions for "Blankie" folder in "Blankie" target */ = {
+		F97812B62EA2EF1E00580F1A /* Exceptions for "Blankie" folder in "Blankie" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			assetTagsByRelativePath = {
-				Assets/AnimatedArtwork/Abstract1.mov = (Abstract1, );
-				Assets/AnimatedArtwork/Abstract2.mov = (Abstract2, );
-				Assets/AnimatedArtwork/Abstract3.mov = (Abstract3, );
-				Assets/AnimatedArtwork/Abstract4.mov = (Abstract4, );
-				Assets/AnimatedArtwork/Beach.mov = (Beach, );
-				Assets/AnimatedArtwork/Bokeh.mov = (Bokeh, );
-				Assets/AnimatedArtwork/CityLoop.mov = (CityLoop, );
-				Assets/AnimatedArtwork/GoldenWaves.mov = (GoldenWaves, );
-				Assets/AnimatedArtwork/GrassWaves.mov = (GrassWaves, );
-				Assets/AnimatedArtwork/LavaLamp.mov = (LavaLamp, );
-				Assets/AnimatedArtwork/LinenDark.mov = (LinenDark, );
-				Assets/AnimatedArtwork/LinenLight.mov = (LinenLight, );
-				Assets/AnimatedArtwork/NeonDrive.mov = (NeonDrive, );
-				Assets/AnimatedArtwork/OceanWaves.mov = (OceanWaves, );
-				Assets/AnimatedArtwork/PaperPentagons.mov = (PaperPentagons, );
-				Assets/AnimatedArtwork/Pillows.mov = (Pillows, );
-				Assets/AnimatedArtwork/RainLoop.mov = (RainLoop, );
-				Assets/AnimatedArtwork/RecordPlayer.mov = (RecordPlayer, );
-				Assets/AnimatedArtwork/Squares.mov = (Squares, );
-				Assets/AnimatedArtwork/StreamLoop.mov = (StreamLoop, );
-				Assets/AnimatedArtwork/Swirl.mov = (Swirl, );
+				Resources/AnimatedArtwork/Abstract1/Abstract1.mov = (Abstract1, );
+				Resources/AnimatedArtwork/Abstract2/Abstract2.mov = (Abstract2, );
+				Resources/AnimatedArtwork/Abstract3/Abstract3.mov = (Abstract3, );
+				Resources/AnimatedArtwork/Abstract4/Abstract4.mov = (Abstract4, );
+				Resources/AnimatedArtwork/Beach/Beach.mov = (Beach, );
+				Resources/AnimatedArtwork/Bokeh/Bokeh.mov = (Bokeh, );
+				Resources/AnimatedArtwork/CityLoop/CityLoop.mov = (CityLoop, );
+				Resources/AnimatedArtwork/GoldenWaves/GoldenWaves.mov = (GoldenWaves, );
+				Resources/AnimatedArtwork/GrassWaves/GrassWaves.mov = (GrassWaves, );
+				Resources/AnimatedArtwork/LavaLamp/LavaLamp.mov = (LavaLamp, );
+				Resources/AnimatedArtwork/LinenDark/LinenDark.mov = (LinenDark, );
+				Resources/AnimatedArtwork/LinenLight/LinenLight.mov = (LinenLight, );
+				Resources/AnimatedArtwork/NeonDrive/NeonDrive.mov = (NeonDrive, );
+				Resources/AnimatedArtwork/OceanWaves/OceanWaves.mov = (OceanWaves, );
+				Resources/AnimatedArtwork/PaperPentagons/PaperPentagons.mov = (PaperPentagons, );
+				Resources/AnimatedArtwork/Pillows/Pillows.mov = (Pillows, );
+				Resources/AnimatedArtwork/RainLoop/RainLoop.mov = (RainLoop, );
+				Resources/AnimatedArtwork/RecordPlayer/RecordPlayer.mov = (RecordPlayer, );
+				Resources/AnimatedArtwork/Squares/Squares.mov = (Squares, );
+				Resources/AnimatedArtwork/StreamLoop/StreamLoop.mov = (StreamLoop, );
+				Resources/AnimatedArtwork/Swirl/Swirl.mov = (Swirl, );
 			};
-			membershipExceptions = (
-				Assets/AnimatedArtwork/README.md,
-			);
 			target = F913505E2D233A43003C85BE /* Blankie */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -75,7 +72,7 @@
 		F9BC93262D41457D00E450FC /* Blankie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				F9D3E0A22EA066C800F4E5A5 /* Exceptions for "Blankie" folder in "Blankie" target */,
+				F97812B62EA2EF1E00580F1A /* Exceptions for "Blankie" folder in "Blankie" target */,
 			);
 			path = Blankie;
 			sourceTree = "<group>";
@@ -329,6 +326,7 @@
 				"cp \"${TEMP_CONFIG}\" \"${CONFIG_PATH}\"",
 				"",
 				"",
+				"",
 			);
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -513,9 +511,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DEAD_CODE_STRIPPING = YES;
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_ON_DEMAND_RESOURCES = NO;
+				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphoneos*]" = YES;
+				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphonesimulator*]" = YES;
+				"ENABLE_ON_DEMAND_RESOURCES[sdk=macosx*]" = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-Info.plist";
@@ -704,9 +705,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DEAD_CODE_STRIPPING = YES;
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_ON_DEMAND_RESOURCES = NO;
+				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphoneos*]" = YES;
+				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphonesimulator*]" = YES;
+				"ENABLE_ON_DEMAND_RESOURCES[sdk=macosx*]" = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-CarPlay.plist";
