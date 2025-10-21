@@ -26,8 +26,8 @@ extension NowPlayingManager {
 
     #if os(iOS)
       if let preset {
-        let candidatePath = preset.staticArtworkPath
-          ?? preset.animatedArtwork?.squarePreviewPath
+        let candidatePath = preset.animatedArtwork?.squarePreviewPath
+          ?? preset.staticArtworkPath
           ?? preset.animatedArtwork?.previewPath
 
         if let candidatePath, AnimatedArtworkFileStore.fileExists(at: candidatePath),
@@ -86,8 +86,8 @@ extension NowPlayingManager {
     #if os(iOS)
       if let preset {
         // Try square preview first (best for Control Center), then static path, then portrait preview
-        let candidatePath = preset.staticArtworkPath
-          ?? preset.animatedArtwork?.squarePreviewPath
+        let candidatePath = preset.animatedArtwork?.squarePreviewPath
+          ?? preset.staticArtworkPath
           ?? preset.animatedArtwork?.previewPath
 
         if let candidatePath, AnimatedArtworkFileStore.fileExists(at: candidatePath) {

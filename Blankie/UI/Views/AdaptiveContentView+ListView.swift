@@ -19,7 +19,27 @@ import SwiftUI
         soundRowIcon
         soundRowControls
       }
-      .background(Color.clear)
+      .padding(.horizontal, 16)
+      .padding(.vertical, 12)
+      .background {
+        if #available(iOS 26.0, *) {
+          RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(.clear)
+            .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 12, style: .continuous))
+            .overlay(
+              RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
+            )
+        } else {
+          RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(.ultraThinMaterial)
+            .opacity(0.7)
+            .overlay(
+              RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
+            )
+        }
+      }
     }
 
     private var soundRowIcon: some View {
@@ -105,7 +125,7 @@ import SwiftUI
         ForEach(filteredSounds) { sound in
           soundRow(for: sound)
             .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
-            .listRowInsets(EdgeInsets(top: 12, leading: 20, bottom: 8, trailing: 20))
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
             .contextMenu {
@@ -270,4 +290,60 @@ import SwiftUI
       SoundRowView(sound: sound, globalSettings: globalSettings, audioManager: audioManager)
     }
   }
+
+  #if DEBUG
+    struct SoundRowView_Previews: PreviewProvider {
+      static var previews: some View {
+        let sound = Sound(
+          title: "Rain",
+          systemIconName: "cloud.rain",
+          fileName: "rain",
+          fileExtension: "m4a",
+          defaultOrder: 1,
+          lufs: nil,
+          normalizationFactor: nil,
+          truePeakdBTP: nil,
+          needsLimiter: false,
+          isCustom: false,
+          fileURL: nil,
+          dateAdded: nil,
+          customSoundDataID: nil
+        )
+        sound.isSelected = true
+        sound.volume = 0.75
+
+        return VStack(spacing: 16) {
+          SoundRowView(
+            sound: sound,
+            globalSettings: GlobalSettings.shared,
+            audioManager: AudioManager.shared
+          )
+          .padding(.horizontal)
+
+          SoundRowView(
+            sound: Sound(
+              title: "Thunder",
+              systemIconName: "cloud.bolt",
+              fileName: "thunder",
+              fileExtension: "m4a",
+              defaultOrder: 2,
+              lufs: nil,
+              normalizationFactor: nil,
+              truePeakdBTP: nil,
+              needsLimiter: false,
+              isCustom: false,
+              fileURL: nil,
+              dateAdded: nil,
+              customSoundDataID: nil
+            ),
+            globalSettings: GlobalSettings.shared,
+            audioManager: AudioManager.shared
+          )
+          .padding(.horizontal)
+        }
+        .padding(.vertical)
+        .background(Color(.systemGroupedBackground))
+      }
+    }
+  #endif
 #endif

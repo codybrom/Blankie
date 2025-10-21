@@ -73,7 +73,8 @@ private struct DragAnimationTrigger: Equatable {
             Label("Solo", systemImage: "headphones")
           }
           .sensoryFeedback(
-            .selection, trigger: AudioManager.shared.soloModeSound?.id)
+            .selection, trigger: AudioManager.shared.soloModeSound?.id
+          )
         }
 
         // Customize Sound
@@ -99,9 +100,23 @@ private struct DragAnimationTrigger: Equatable {
     @ViewBuilder
     private var iconView: some View {
       ZStack {
-        Circle()
-          .fill(backgroundFill)
-          .frame(width: iconSize, height: iconSize)
+        if isSoloMode {
+          // Glass background for solo mode
+          if #available(iOS 26.0, *) {
+            Circle()
+              .fill(.clear)
+              .frame(width: iconSize, height: iconSize)
+              .glassEffect(.clear.interactive(), in: .circle)
+          } else {
+            Circle()
+              .fill(.ultraThinMaterial)
+              .frame(width: iconSize, height: iconSize)
+          }
+        } else {
+          Circle()
+            .fill(backgroundFill)
+            .frame(width: iconSize, height: iconSize)
+        }
 
         Image(systemName: sound.systemIconName)
           .resizable()
@@ -186,7 +201,7 @@ private struct DragAnimationTrigger: Equatable {
             minimumDuration: 0.5, maximumDistance: .infinity,
             pressing: { pressing in
               // Only provide haptic feedback when not in edit mode
-              if pressing && editMode == .inactive {
+              if pressing, editMode == .inactive {
                 longPressTrigger += 1
               }
             }, perform: {}
@@ -249,8 +264,8 @@ private struct DragAnimationTrigger: Equatable {
             .lineLimit(2)
             .multilineTextAlignment(.center)
             .foregroundColor(.primary)
-            .frame(maxWidth: maxWidth - 20)  // Remove fixed min height for better spacing
-            .padding(.top, 2)  // Add a tiny bit more space above text
+            .frame(maxWidth: maxWidth - 20)
+            .padding(.top, 2)
         }
 
         // Slider (not draggable) - hide in solo mode and edit mode
@@ -292,6 +307,5 @@ private struct DragAnimationTrigger: Equatable {
           .allowsHitTesting(false)
       }
     }
-
   }
 #endif

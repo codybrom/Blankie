@@ -284,6 +284,7 @@ import SwiftUI
             let hasSelectedSounds: Bool
             let isQuickMix: Bool
             let presetArtworkId: UUID?
+            let animatedArtwork: AnimatedArtworkRef?
             let accentColor: Color?
 
             static func == (lhs: ArtworkProperties, rhs: ArtworkProperties) -> Bool {
@@ -291,7 +292,8 @@ import SwiftUI
                     lhs.soloSound?.id == rhs.soloSound?.id &&
                     lhs.hasSelectedSounds == rhs.hasSelectedSounds &&
                     lhs.isQuickMix == rhs.isQuickMix &&
-                    lhs.presetArtworkId == rhs.presetArtworkId
+                    lhs.presetArtworkId == rhs.presetArtworkId &&
+                    lhs.animatedArtwork == rhs.animatedArtwork
             }
         }
     }
@@ -456,6 +458,7 @@ import SwiftUI
                 hasSelectedSounds: audioManager.hasSelectedSounds,
                 isQuickMix: audioManager.isQuickMix,
                 presetArtworkId: presetManager.currentPreset?.artworkId,
+                animatedArtwork: presetManager.currentPreset?.animatedArtwork,
                 accentColor: globalSettings.customAccentColor
             )
             PresetArtworkLoader(properties: artworkProps)
@@ -483,6 +486,7 @@ import SwiftUI
         let properties: AdaptiveContentView.ArtworkProperties
 
         @State private var artworkImage: UIImage?
+        @StateObject private var presetManager = PresetManager.shared
 
         var body: some View {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
@@ -508,18 +512,22 @@ import SwiftUI
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                .task(id: properties.presetArtworkId) {
+                .task(id: "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")") {
                     // Only load artwork when not in solo/no sounds mode
                     guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix else {
                         artworkImage = nil
                         return
                     }
 
+                    // Try to load from artworkId first
                     if let artworkId = properties.presetArtworkId,
                        let data = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
                        let image = UIImage(data: data)
                     {
                         artworkImage = image
+                    } else if let preset = presetManager.currentPreset {
+                        // Fallback: Use animated artwork preview if available
+                        artworkImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
                     } else {
                         artworkImage = nil
                     }

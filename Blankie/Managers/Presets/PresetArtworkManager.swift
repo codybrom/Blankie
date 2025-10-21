@@ -31,7 +31,7 @@ class PresetArtworkManager: ObservableObject {
 
   @MainActor
   func setModelContext(_ context: ModelContext) {
-    self.modelContext = context
+    modelContext = context
   }
 
   /// Synchronously load background image from cache
@@ -60,17 +60,25 @@ class PresetArtworkManager: ObservableObject {
       imageId = preset.backgroundImageId
     }
 
-    guard let id = imageId else { return nil }
+    // Try to load from imageId first
+    if let id = imageId {
+      // Check cache first
+      if let cached = imageCache[id] {
+        return cached
+      }
 
-    // Check cache first
-    if let cached = imageCache[id] {
-      return cached
+      // Load asynchronously and cache
+      if let image = await loadArtwork(id: id) {
+        imageCache[id] = image
+        return image
+      }
     }
 
-    // Load asynchronously and cache
-    if let image = await loadArtwork(id: id) {
-      imageCache[id] = image
-      return image
+    // Fallback: If no artwork is set, try to use animated artwork's preview image
+    if imageId == nil, let animatedArtwork = preset.animatedArtwork {
+      #if canImport(UIKit)
+        return await loadAnimatedArtworkPreview(animatedArtwork: animatedArtwork, preset: preset)
+      #endif
     }
 
     return nil
@@ -136,7 +144,7 @@ class PresetArtworkManager: ObservableObject {
     do {
       let results = try context.fetch(descriptor)
       if let imageData = results.first?.imageData,
-        let image = PlatformImage(data: imageData)
+         let image = PlatformImage(data: imageData)
       {
         // Cache the image
         imageCache[id] = image
@@ -237,7 +245,7 @@ class PresetArtworkManager: ObservableObject {
 
     // Cache background image if different from artwork
     if !(preset.useArtworkAsBackground ?? false),
-      let backgroundId = preset.backgroundImageId
+       let backgroundId = preset.backgroundImageId
     {
       _ = await loadArtwork(id: backgroundId)
     }
@@ -316,7 +324,7 @@ class PresetArtworkManager: ObservableObject {
   /// Only runs when artwork is actually being accessed, not during cold start
   private func migrateExistingArtworkIfNeeded() {
     guard !hasMigrationRun,
-      let context = modelContext
+          let context = modelContext
     else { return }
 
     hasMigrationRun = true
@@ -340,10 +348,54 @@ class PresetArtworkManager: ObservableObject {
         }
       } catch {
         print("📸 PresetArtworkManager: Lazy migration failed: \(error)")
-        hasMigrationRun = false  // Allow retry later
+        hasMigrationRun = false // Allow retry later
       }
     }
   }
+
+  #if canImport(UIKit)
+    /// Load preview image from animated artwork as fallback
+    /// Uses square preview for now playing artwork, or falls back to 3:4 preview
+    private func loadAnimatedArtworkPreview(animatedArtwork: AnimatedArtworkRef, preset: Preset)
+      async -> PlatformImage?
+    {
+      // Try square preview first (for now playing artwork)
+      if let squarePath = animatedArtwork.squarePreviewPath {
+        let squareURL = AnimatedArtworkFileStore.absoluteURL(for: squarePath)
+        if FileManager.default.fileExists(atPath: squareURL.path) {
+          if let image = UIImage(contentsOfFile: squareURL.path) {
+            print("📸 PresetArtworkManager: Loaded square preview from Documents: \(squarePath)")
+            return image
+          }
+        }
+      }
+
+      // Check Documents directory for 3:4 preview
+      if let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath {
+        let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
+        if FileManager.default.fileExists(atPath: previewURL.path) {
+          if let image = UIImage(contentsOfFile: previewURL.path) {
+            print("📸 PresetArtworkManager: Loaded 3:4 preview from Documents: \(previewPath)")
+            return image
+          }
+        }
+      }
+
+      // If not cached, try loading from bundle for bundled resources
+      if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
+        let previewName = bundledId
+        if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg") {
+          if let image = UIImage(contentsOfFile: previewURL.path) {
+            print("📸 PresetArtworkManager: Loaded preview from bundle: \(previewName).jpg")
+            return image
+          }
+        }
+      }
+
+      print("📸 PresetArtworkManager: No preview image found for animated artwork")
+      return nil
+    }
+  #endif
 }
 
 enum PresetArtworkError: LocalizedError {

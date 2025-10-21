@@ -43,7 +43,7 @@ extension EditPresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: preset
           )
         ) {
           LabeledContent("Sounds") {
@@ -203,7 +203,7 @@ extension EditPresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: preset
           )
         ) {
           LabeledContent("Sounds") {
@@ -241,8 +241,8 @@ extension EditPresetSheet {
                   withAnimation {
                     backgroundImageData = nil
                     backgroundImageId = nil
-                    backgroundBlurRadius = 15.0
-                    backgroundOpacity = 0.65
+                    backgroundBlurRadius = 3.0 // Low Blur
+                    backgroundOpacity = 0.3 // Low Opacity
                     // Apply changes to persist the removal
                     applyChangesInstantly()
                   }
@@ -272,8 +272,8 @@ extension EditPresetSheet {
           }
         }
 
-        // Preview and controls - show for both cover art and custom image
-        if (useArtworkAsBackground && artworkData != nil)
+        // Preview and controls - show for cover art, custom image, or animated artwork
+        if (useArtworkAsBackground && (artworkData != nil || animatedArtwork != nil))
           || (!useArtworkAsBackground && backgroundImageData != nil)
         {
           backgroundPreviewRow
@@ -360,8 +360,8 @@ extension EditPresetSheet {
 
   private var backgroundResetRow: some View {
     Button {
-      backgroundBlurRadius = 15.0 // Medium blur
-      backgroundOpacity = 0.65 // Medium opacity
+      backgroundBlurRadius = 3.0 // Low blur
+      backgroundOpacity = 0.3 // Low opacity
     } label: {
       Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
         .font(.caption)
@@ -394,9 +394,80 @@ extension EditPresetSheet {
             .background(Color.black)
         }
       #endif
+    } else if useArtworkAsBackground, let animatedArtwork = animatedArtwork {
+      // Show animated artwork's 3:4 preview as background fallback
+      AnimatedArtworkPreviewBackground(
+        animatedArtwork: animatedArtwork,
+        staticArtworkPath: staticArtworkPath,
+        blurRadius: backgroundBlurRadius,
+        opacity: backgroundOpacity
+      )
     }
   }
 }
+
+// MARK: - Animated Artwork Preview Background
+
+#if canImport(UIKit)
+  private struct AnimatedArtworkPreviewBackground: View {
+    let animatedArtwork: AnimatedArtworkRef
+    let staticArtworkPath: String?
+    let blurRadius: Double
+    let opacity: Double
+
+    @State private var previewImage: UIImage?
+
+    var body: some View {
+      Group {
+        if let image = previewImage {
+          Image(uiImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .blur(radius: blurRadius)
+            .opacity(opacity)
+            .background(Color.black)
+        } else {
+          Color.secondary.opacity(0.2)
+        }
+      }
+      .task {
+        await loadPreview()
+      }
+    }
+
+    private func loadPreview() async {
+      // Check Documents directory first for cached preview
+      if let previewPath = animatedArtwork.previewPath ?? staticArtworkPath {
+        let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
+        if FileManager.default.fileExists(atPath: previewURL.path) {
+          if let image = UIImage(contentsOfFile: previewURL.path) {
+            await MainActor.run {
+              previewImage = image
+            }
+            return
+          }
+        }
+      }
+
+      // If not cached, try loading from bundle for bundled resources
+      if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
+        let previewName = bundledId
+        if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg") {
+          if let image = UIImage(contentsOfFile: previewURL.path) {
+            await MainActor.run {
+              previewImage = image
+            }
+            return
+          }
+        }
+      }
+    }
+  }
+#endif
+
+// MARK: - Delete Section
+
+extension EditPresetSheet {}
 
 // MARK: - Delete Section
 

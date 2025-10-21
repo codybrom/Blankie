@@ -48,7 +48,7 @@ private struct GridButtonAnimationTrigger: Equatable {
               sound: sound,
               color: sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
             )
-            .allowsHitTesting(false)  // Progress border is decorative, doesn't need hit testing
+            .allowsHitTesting(false) // Progress border is decorative, doesn't need hit testing
           }
 
           // Icon
@@ -70,14 +70,35 @@ private struct GridButtonAnimationTrigger: Equatable {
       }
       .frame(maxWidth: .infinity)
       .padding(.vertical, 16)
-      .background(
-        RoundedRectangle(cornerRadius: 16)
-          .fill(backgroundColor)
-          .overlay(
-            RoundedRectangle(cornerRadius: 16)
-              .stroke(borderColor, lineWidth: sound.isSelected ? 2 : 1)
-          )
-      )
+      .background {
+        if #available(iOS 26.0, *) {
+          RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(.clear)
+            .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 16, style: .continuous))
+            .overlay(
+              RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(
+                  sound.isSelected
+                    ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
+                    : .primary.opacity(0.15),
+                  lineWidth: sound.isSelected ? 2 : 1
+                )
+            )
+        } else {
+          RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(.ultraThinMaterial)
+            .opacity(0.6)
+            .overlay(
+              RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(
+                  sound.isSelected
+                    ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
+                    : .primary.opacity(0.15),
+                  lineWidth: sound.isSelected ? 2 : 1
+                )
+            )
+        }
+      }
       .contentShape(RoundedRectangle(cornerRadius: 16))
       .overlay(alignment: .topTrailing) {
         // Edit mode indicator
@@ -122,12 +143,12 @@ private struct GridButtonAnimationTrigger: Equatable {
       .sensoryFeedback(.selection, trigger: sound.isSelected)
       .onLongPressGesture(
         minimumDuration: 0.3,
-        maximumDistance: 5.0,  // Reduced from infinity to prevent scroll triggering
+        maximumDistance: 5.0, // Reduced from infinity to prevent scroll triggering
         pressing: { pressing in
           withAnimation(.easeInOut(duration: 0.1)) {
             isPressed = pressing && editMode == .inactive
           }
-          if pressing && editMode == .inactive {
+          if pressing, editMode == .inactive {
             // Start selection feedback after delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
               if isPressed {
@@ -263,7 +284,7 @@ private struct GridButtonAnimationTrigger: Equatable {
 
             Slider(
               value: $currentVolume,
-              in: 0...1,
+              in: 0 ... 1,
               onEditingChanged: { editing in
                 if !editing {
                   sound.volume = Float(currentVolume)
@@ -360,7 +381,7 @@ private struct GridButtonAnimationTrigger: Equatable {
       }
       .sheet(isPresented: $showingEditSheet) {
         SoundSheet(mode: .edit(sound))
-          .interactiveDismissDisabled()  // Prevent accidental dismissal
+          .interactiveDismissDisabled() // Prevent accidental dismissal
       }
     }
   }

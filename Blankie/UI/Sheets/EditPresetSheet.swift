@@ -69,8 +69,8 @@ struct EditPresetSheet: View {
   @State var useArtworkAsBackground: Bool = false
   @State var backgroundImageData: Data?
   @State var backgroundImageId: UUID?
-  @State var backgroundBlurRadius: Double = 3.0 // Low Blur by default
-  @State var backgroundOpacity: Double = 0.3 // Low Opacity by default
+  @State var backgroundBlurRadius: Double = 3.0 // Low Blur
+  @State var backgroundOpacity: Double = 0.3 // Low Opacity
   @State var selectedBackgroundPhoto: PhotosPickerItem?
   @State var exportError: String?
   @State var exportedURL: URL?
@@ -122,7 +122,8 @@ struct EditPresetSheet: View {
             NavigationStack {
               SoundSelectionView(
                 selectedSounds: $selectedSounds,
-                orderedSounds: orderedSounds
+                orderedSounds: orderedSounds,
+                editingPreset: preset
               )
               .navigationBarItems(
                 leading: Button("Done") {
@@ -276,8 +277,8 @@ extension EditPresetSheet {
       }
       errorSection
       nowPlayingSection // Artwork & Animated Artwork
-      // Only show background section after artwork is set
-      if artworkData != nil || artworkId != nil {
+      // Only show background section after artwork is set (regular, animated, or artworkId)
+      if artworkData != nil || artworkId != nil || animatedArtwork != nil {
         backgroundSection
       }
     }
@@ -288,7 +289,7 @@ extension EditPresetSheet {
       errorSection
       coreSection
       nowPlayingSection // Creator & Artwork
-      if artworkData != nil || artworkId != nil {
+      if artworkData != nil || artworkId != nil || animatedArtwork != nil {
         backgroundSection
       }
       deleteSection
@@ -308,8 +309,8 @@ extension EditPresetSheet {
     // Default to using artwork as background
     useArtworkAsBackground = preset.useArtworkAsBackground ?? true
     backgroundImageId = preset.backgroundImageId
-    backgroundBlurRadius = preset.backgroundBlurRadius ?? 15.0
-    backgroundOpacity = preset.backgroundOpacity ?? 0.65
+    backgroundBlurRadius = preset.backgroundBlurRadius ?? 3.0 // Low Blur
+    backgroundOpacity = preset.backgroundOpacity ?? 0.3 // Low Opacity
 
     // Load existing images if they exist
     Task {
