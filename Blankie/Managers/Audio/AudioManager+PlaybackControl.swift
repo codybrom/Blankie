@@ -177,15 +177,9 @@ extension AudioManager {
       sound.pause()
     }
 
-    #if os(iOS) || os(visionOS)
-      // Deactivate audio session when stopping to allow other apps to play
-      do {
-        try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        print("🎵 AudioManager: Audio session deactivated")
-      } catch {
-        print("❌ AudioManager: Failed to deactivate audio session: \(error)")
-      }
-    #endif
+    // Note: We intentionally do NOT deactivate the audio session here
+    // This keeps the Now Playing controls visible on lock screen/control center
+    // The session will be deactivated when appropriate (background, termination, etc.)
 
     print("🎵 AudioManager: Pause all complete")
   }

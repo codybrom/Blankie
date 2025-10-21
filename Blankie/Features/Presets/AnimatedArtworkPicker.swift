@@ -179,6 +179,30 @@ import SwiftUI
       }
     }
 
+    private func restoreAudioControlsAfterVideoPreview() {
+      // CRITICAL: After video preview, iOS may have disconnected remote command handlers
+      // even though we configured the preview player with .pauses policy.
+      // We must re-establish media controls to ensure play/pause/next/previous work.
+      let audioManager = AudioManager.shared
+
+      print("🎨 AnimatedArtworkGallery: Restoring audio controls after video preview")
+
+      Task { @MainActor in
+        // Re-register remote command handlers (play, pause, next, previous)
+        audioManager.setupMediaControls()
+
+        // Refresh Now Playing info to ensure it's current
+        let currentPreset = PresetManager.shared.currentPreset
+        audioManager.nowPlayingManager.updateInfo(
+          preset: currentPreset,
+          presetName: currentPreset?.name,
+          creatorName: currentPreset?.creatorName,
+          artworkId: currentPreset?.artworkId,
+          isPlaying: audioManager.isGloballyPlaying
+        )
+      }
+    }
+
     var categories: [ArtworkCategory] {
       return ArtworkCategory.allCategories
     }
@@ -262,7 +286,7 @@ import SwiftUI
             }
           }
         }
-        .fullScreenCover(item: $previewingAsset) { asset in
+        .sheet(item: $previewingAsset) { asset in
           FullScreenPreview(
             asset: asset,
             onSelect: {
@@ -270,11 +294,14 @@ import SwiftUI
             },
             onDismiss: {
               previewingAsset = nil
+              // Re-establish audio session and media controls after video preview
+              restoreAudioControlsAfterVideoPreview()
             },
             onDelete: {
               handleUncache(asset: asset)
             }
           )
+          .presentationDragIndicator(.visible)
         }
       }
     }
@@ -732,6 +759,12 @@ import SwiftUI
           await MainActor.run {
             let player = AVPlayer(url: videoURL)
             player.isMuted = true
+
+            // CRITICAL: Prevent this preview player from taking over Now Playing controls
+            // This ensures background audio playback controls remain active
+            player.audiovisualBackgroundPlaybackPolicy = .pauses
+            player.preventsDisplaySleepDuringVideoPlayback = false
+
             self.player = player
 
             // Loop the video

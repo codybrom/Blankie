@@ -11,7 +11,6 @@
   import UIKit
 
   extension NowPlayingManager {
-
     @objc func animatedArtworkConditionChanged() {
       republishCurrentPreset()
     }
@@ -22,9 +21,7 @@
         return
       }
 
-      guard shouldPublishAnimatedArtwork(),
-            let resources = loadAnimatedArtworkResources(for: preset)
-      else {
+      guard shouldPublishAnimatedArtwork() else {
         removeAnimatedArtwork()
         return
       }
@@ -36,7 +33,15 @@
         return
       }
 
+      // Check if we should skip because artwork hasn't changed
       guard !shouldSkipAnimatedArtworkUpdate(for: preset) else {
+        return
+      }
+
+      // Try to load resources (may trigger ODR download in background)
+      guard let resources = loadAnimatedArtworkResources(for: preset) else {
+        // Resources not available yet (downloading) - keep existing artwork, don't remove
+        // When download completes, updateAnimatedArtwork will be called again
         return
       }
 
@@ -116,6 +121,33 @@
         return nil
       }
 
+      // CRITICAL: Always check Documents directory FIRST before trying ODR
+      // When bundled resources are selected, they're copied to Documents for permanent caching
+      // This ensures animated artwork works on lock screen without requiring foreground downloads
+      if let loopPath = animatedArtwork.loopPath {
+        let loopURL = AnimatedArtworkFileStore.absoluteURL(for: loopPath)
+        if FileManager.default.fileExists(atPath: loopURL.path) {
+          print("[DEBUG] Found cached video in Documents: \(loopPath)")
+          // Load preview image from Documents if available
+          var previewImage: UIImage?
+          if let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath {
+            let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
+            if FileManager.default.fileExists(atPath: previewURL.path) {
+              previewImage = UIImage(contentsOfFile: previewURL.path)
+              print("[DEBUG] Loaded cached preview image from Documents")
+            }
+          }
+          return (loopURL: loopURL, previewImage: previewImage)
+        }
+      }
+
+      // If not in Documents cache, try loading from ODR (requires foreground)
+      if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
+        print("[DEBUG] Not cached in Documents, trying ODR resource: \(bundledId)")
+        return loadBundledODRResources(bundledId: bundledId, animatedArtwork: animatedArtwork, preset: preset)
+      }
+
+      // No loopPath and no bundled ID - invalid state
       guard let loopPath = animatedArtwork.loopPath else {
         print("[DEBUG] loopPath is nil, returning nil")
         return nil
@@ -123,28 +155,12 @@
 
       let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath
       print(
-        "[DEBUG] loopPath: \(String(describing: loopPath)), previewPath: \(String(describing: previewPath))"
+        "[DEBUG] Custom artwork - loopPath: \(String(describing: loopPath)), previewPath: \(String(describing: previewPath))"
       )
 
       let loopURL = AnimatedArtworkFileStore.absoluteURL(for: loopPath)
       guard FileManager.default.fileExists(atPath: loopURL.path) else {
         print("[DEBUG] File does not exist at loopURL: \(loopURL)")
-
-        // If the file is missing but we have a bundled identifier, try to re-download it
-        if let bundledId = animatedArtwork.bundledIdentifier {
-          print("[DEBUG] Attempting to re-download missing ODR resource: \(bundledId)")
-          Task { @MainActor in
-            do {
-              _ = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
-              print("[DEBUG] Successfully re-downloaded ODR resource: \(bundledId)")
-              // Trigger a refresh of the animated artwork
-              self.updateAnimatedArtwork(for: preset)
-            } catch {
-              print("[DEBUG] Failed to re-download ODR resource \(bundledId): \(error)")
-            }
-          }
-        }
-
         return nil
       }
 
@@ -164,6 +180,50 @@
       print(
         "[DEBUG] Succeeded in building animatedArtworkResources with loopURL: \(loopURL), previewImage: \(previewImage != nil)"
       )
+
+      return (loopURL: loopURL, previewImage: previewImage)
+    }
+
+    private func loadBundledODRResources(
+      bundledId: String,
+      animatedArtwork _: AnimatedArtworkRef,
+      preset: Preset
+    ) -> (loopURL: URL, previewImage: UIImage?)? {
+      // Check if ODR resource is available
+      guard OnDemandResourceManager.shared.isResourceAvailable(bundledId),
+            let loopURL = Bundle.main.url(forResource: bundledId, withExtension: "mov")
+      else {
+        print("[DEBUG] ODR resource \(bundledId) not available, triggering download")
+
+        // Trigger download asynchronously without recursing
+        Task { @MainActor in
+          do {
+            _ = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
+            print("[DEBUG] Successfully downloaded ODR resource: \(bundledId)")
+            // Trigger a single refresh after successful download
+            self.updateAnimatedArtwork(for: preset)
+          } catch {
+            print("[DEBUG] Failed to download ODR resource \(bundledId): \(error)")
+          }
+        }
+
+        return nil
+      }
+
+      print("[DEBUG] ODR resource \(bundledId) is available at: \(loopURL)")
+
+      // Load preview image - for bundled resources, use bundledId + ".jpg" pattern
+      var previewImage: UIImage?
+
+      // For bundled ODR resources, the preview image should be named the same as the bundled ID
+      // (e.g., "OceanWaves.jpg" for bundledId "OceanWaves")
+      let previewName = bundledId
+      if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg") {
+        previewImage = UIImage(contentsOfFile: previewURL.path)
+        print("[DEBUG] Loaded preview image from bundle: \(previewURL)")
+      } else {
+        print("[DEBUG] Preview image not found in bundle: \(previewName).jpg")
+      }
 
       return (loopURL: loopURL, previewImage: previewImage)
     }

@@ -77,6 +77,28 @@ final class OnDemandResourceManager: ObservableObject {
       throw ODRError.resourceNotFound(resourceId)
     #else
       // iOS: Use ODR to download if not in bundle
+
+      // Check if we already have an active request for this resource
+      if activeRequests[resourceId] != nil {
+        // Resource is already being accessed, just wait for it
+        logger.debug("Resource \(resourceId) already has an active request, reusing")
+
+        // If it's available, return immediately
+        if case .available = resourceStates[resourceId],
+           let url = getLocalResourceURL(for: resourceId)
+        {
+          return url
+        }
+
+        // Otherwise, wait a bit and check again (it may be downloading)
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
+
+        if let url = getLocalResourceURL(for: resourceId) {
+          resourceStates[resourceId] = .available
+          return url
+        }
+      }
+
       // Update state to downloading
       resourceStates[resourceId] = .downloading(progress: 0.0)
 
@@ -117,6 +139,11 @@ final class OnDemandResourceManager: ObservableObject {
         // Resource is now available
         logger.info("Successfully downloaded ODR resource: \(resourceId)")
         resourceStates[resourceId] = .available
+
+        // CRITICAL: Keep the request alive to retain the downloaded resource
+        // iOS will purge ODR resources when all requests are released
+        // We keep the request in activeRequests until explicitly released
+        // (The request is already stored in activeRequests at line 87)
 
         // Get the URL to the downloaded resource
         guard let url = getLocalResourceURL(for: resourceId) else {

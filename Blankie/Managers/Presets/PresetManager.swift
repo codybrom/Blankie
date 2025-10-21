@@ -480,7 +480,65 @@ extension PresetManager {
       if shouldAutoPlay, targetStates.contains(where: { $0.isSelected }) {
         AudioManager.shared.setGlobalPlaybackState(true)
       }
+
+      // Prefetch animated artwork for nearby presets so they're available on lock screen
+      prefetchNearbyAnimatedArtwork(currentPreset: preset)
     }
+  }
+
+  /// Prefetch animated artwork ODR resources for next/previous presets
+  /// This ensures animated artwork is available when switching presets on lock screen
+  private func prefetchNearbyAnimatedArtwork(currentPreset: Preset) {
+    #if os(iOS)
+      // Get sorted list of custom presets (same logic as next/previous navigation)
+      let customPresets = presets
+        .filter { !$0.isDefault }
+        .sorted {
+          let order1 = $0.order ?? Int.max
+          let order2 = $1.order ?? Int.max
+          return order1 < order2
+        }
+
+      guard !customPresets.isEmpty else { return }
+
+      // Find current preset index
+      guard let currentIndex = customPresets.firstIndex(where: { $0.id == currentPreset.id }) else {
+        return
+      }
+
+      // Get next and previous presets (wrapping around)
+      let nextIndex = (currentIndex + 1) % customPresets.count
+      let prevIndex = currentIndex > 0 ? currentIndex - 1 : customPresets.count - 1
+
+      let nextPreset = customPresets[nextIndex]
+      let prevPreset = customPresets[prevIndex]
+
+      // Collect bundled ODR identifiers from nearby presets
+      var odrIds: [String] = []
+
+      if let nextAnimated = nextPreset.animatedArtwork,
+         nextAnimated.source == .bundled,
+         let bundledId = nextAnimated.bundledIdentifier
+      {
+        odrIds.append(bundledId)
+      }
+
+      if let prevAnimated = prevPreset.animatedArtwork,
+         prevAnimated.source == .bundled,
+         let bundledId = prevAnimated.bundledIdentifier
+      {
+        odrIds.append(bundledId)
+      }
+
+      guard !odrIds.isEmpty else { return }
+
+      print("🎛️ PresetManager: Prefetching \(odrIds.count) animated artwork resources for nearby presets")
+
+      // Prefetch in background, don't await
+      Task.detached {
+        await OnDemandResourceManager.shared.preloadResources(odrIds)
+      }
+    #endif
   }
 }
 

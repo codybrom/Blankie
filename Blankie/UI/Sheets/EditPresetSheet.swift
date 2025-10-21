@@ -5,6 +5,7 @@
 //  Created by Cody Bromley on 6/9/25.
 //
 
+import MediaPlayer
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
@@ -134,10 +135,14 @@ struct EditPresetSheet: View {
             #if os(iOS)
               ImagePicker(imageData: $artworkData)
                 .onDisappear {
+                  print("🎨 EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")")
                   if artworkData != nil {
                     // Generate new ID for the new artwork
+                    print("🎨 EditPresetSheet: Generating new artwork ID and applying changes")
                     artworkId = UUID()
                     applyChangesInstantly()
+                  } else {
+                    print("🎨 EditPresetSheet: No artwork data, user likely cancelled")
                   }
                 }
             #endif
@@ -152,8 +157,9 @@ struct EditPresetSheet: View {
         }
       #endif
     }
-    .onChange(of: selectedBackgroundPhoto) { _, newItem in
-      print("🎨 EditPresetSheet: Background photo selection changed")
+    .onChange(of: selectedBackgroundPhoto) { oldValue, newItem in
+      print("🎨 EditPresetSheet: Background photo selection changed - old: \(oldValue != nil), new: \(newItem != nil)")
+      print("🎨 EditPresetSheet: showBackgroundImage: \(showBackgroundImage), useArtworkAsBackground: \(useArtworkAsBackground)")
       if let item = newItem {
         Task {
           await loadBackgroundImage(from: item)
@@ -260,9 +266,23 @@ extension EditPresetSheet {
     exportedURL = nil
     exportError = nil
   }
-}
 
-extension EditPresetSheet {
+  var defaultPresetSection: some View {
+    Group {
+      Section {
+        Text("For more customization options, create a new preset")
+          .font(.subheadline)
+          .foregroundColor(.secondary)
+      }
+      errorSection
+      nowPlayingSection // Artwork & Animated Artwork
+      // Only show background section after artwork is set
+      if artworkData != nil || artworkId != nil {
+        backgroundSection
+      }
+    }
+  }
+
   var editablePresetSections: some View {
     Group {
       errorSection
@@ -274,7 +294,9 @@ extension EditPresetSheet {
       deleteSection
     }
   }
+}
 
+extension EditPresetSheet {
   func setupInitialValues() {
     presetName = preset.name
     creatorName = preset.creatorName ?? ""
@@ -318,9 +340,13 @@ extension EditPresetSheet {
 
   func applyChangesInstantly() {
     print("🎨 EditPresetSheet: Applying changes instantly")
-    guard !presetName.isEmpty else {
-      error = "Preset name cannot be empty"
-      return
+
+    // Only validate name for non-default presets
+    if !preset.isDefault {
+      guard !presetName.isEmpty else {
+        error = "Preset name cannot be empty"
+        return
+      }
     }
 
     Task {
@@ -340,6 +366,12 @@ extension EditPresetSheet {
             presetManager.setCurrentPreset(updatedPreset)
             // Don't reapply the preset - just update the metadata
             // This prevents audio from restarting when editing non-sound properties
+
+            // Force full Now Playing update to refresh lock screen artwork immediately
+            audioManager.nowPlayingManager.forceRefresh(
+              preset: updatedPreset,
+              isPlaying: audioManager.isGloballyPlaying
+            )
           }
 
           // Save presets directly without overriding the current preset state
@@ -361,18 +393,22 @@ extension EditPresetSheet {
     let currentVersion =
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
 
-    // Create sound states
-    let selectedSoundStates = createSoundStates()
-
     var updatedPreset = preset
-    updatedPreset.name = presetName
-    updatedPreset.creatorName = creatorName.isEmpty ? nil : creatorName
-    updatedPreset.soundStates = selectedSoundStates
 
-    // Handle artwork
+    // Only update name, creator, and sounds for non-default presets
+    if !preset.isDefault {
+      // Create sound states
+      let selectedSoundStates = createSoundStates()
+
+      updatedPreset.name = presetName
+      updatedPreset.creatorName = creatorName.isEmpty ? nil : creatorName
+      updatedPreset.soundStates = selectedSoundStates
+    }
+
+    // Handle artwork (allowed for all presets including default)
     await handleArtworkChanges()
 
-    // Handle background
+    // Handle background (allowed for all presets including default)
     await handleBackgroundChanges()
 
     // Update preset properties
@@ -390,13 +426,23 @@ extension EditPresetSheet {
   }
 
   private func createSoundStates() -> [PresetState] {
+    // Get existing sound states for this preset
+    let existingSoundStates = preset.soundStates
+
     let states: [PresetState] = selectedSounds.compactMap { fileName -> PresetState? in
       guard let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) else {
         return nil
       }
+
+      // If this sound was already in the preset, preserve its state
+      if let existingState = existingSoundStates.first(where: { $0.fileName == fileName }) {
+        return existingState
+      }
+
+      // New sound added to preset - set it as selected by default
       return PresetState(
         fileName: sound.fileName,
-        isSelected: sound.isSelected,
+        isSelected: true,
         volume: sound.volume
       )
     }
@@ -524,6 +570,8 @@ extension EditPresetSheet {
           await MainActor.run {
             self.backgroundImageData = processedData
             print("🎨 EditPresetSheet: Background image loaded successfully")
+            // Apply changes to save the background image
+            self.applyChangesInstantly()
           }
         }
       }

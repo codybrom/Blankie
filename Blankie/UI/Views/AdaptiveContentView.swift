@@ -15,7 +15,6 @@ private struct AnimationTrigger: Equatable {
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
-
     @State var showingListView = false
     @State var showingPresetPicker = false
     @State var hideInactiveSounds = false
@@ -28,7 +27,7 @@ private struct AnimationTrigger: Equatable {
     @State var showingViewSettings = false
     @State var showingTimer = false
     @State var soundToEdit: Sound?
-    @State private var presetToEdit: Preset?
+    @State var presetToEdit: Preset?
     @State var soundsUpdateTrigger = 0
     @State var editMode: EditMode = .inactive
     @State var playPauseTrigger = 0
@@ -108,12 +107,15 @@ private struct AnimationTrigger: Equatable {
             // Trigger refresh when preset edit is closed in case preset was modified
             print("🔄 AdaptiveContentView: EditPresetSheet closed, triggering refresh")
             soundsUpdateTrigger += 1
+
+            // CRITICAL: Re-establish media controls after sheet dismissal
+            // Animated artwork video preview may have caused iOS to disconnect remote command handlers
+            // We restore controls regardless of play state since the gallery may have been browsed
+            print("🔄 AdaptiveContentView: Restoring media controls after sheet dismissal")
+            audioManager.setupMediaControls()
           }
       }
       .modifier(AudioErrorHandler())
-      .onAppear {
-        showingListView = globalSettings.showingListView
-      }
       // Listen for changes that should trigger view updates
       .onChange(of: audioManager.sounds.count) { oldValue, newValue in
         // Sound imported or removed
@@ -162,13 +164,33 @@ private struct AnimationTrigger: Equatable {
             // Background layer
             presetBackgroundView
 
-            mainContentView
-              .navigationTitle(navigationTitle)
-              .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                  TimerButton()
+            VStack(spacing: 0) {
+              mainContentView
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              ToolbarItem(placement: .principal) {
+                Text(navigationTitle)
+                  .font(.system(size: 28, weight: .semibold))
+                  .foregroundColor(.primary)
+              }
+
+              ToolbarItem(placement: .confirmationAction) {
+                // Preset edit button (right aligned) - also show for default preset
+                if let currentPreset = presetManager.currentPreset,
+                   !audioManager.isQuickMix
+                {
+                  Button {
+                    presetToEdit = currentPreset
+                  } label: {
+                    Image(systemName: "slider.vertical.3")
+                      .font(.system(size: 18))
+                      .foregroundColor(.secondary)
+                  }
                 }
               }
+            }
+            .toolbarBackground(.hidden, for: .navigationBar)
           }
         }
       }
@@ -184,36 +206,11 @@ private struct AnimationTrigger: Equatable {
 
           VStack(spacing: 0) {
             mainContentView
-
-            // Status banners above bottom toolbar
-            statusBanners
-              .animation(.easeInOut(duration: 0.2), value: audioManager.soloModeSound?.id)
-              .animation(.easeInOut(duration: 0.2), value: audioManager.hasSelectedSounds)
-              .animation(.easeInOut(duration: 0.2), value: editMode)
-
+          }
+          .safeAreaInset(edge: .bottom, spacing: 0) {
             bottomToolbar
           }
-          .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-              presetButton
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-              if let currentPreset = presetManager.currentPreset,
-                 !currentPreset.isDefault,
-                 !audioManager.isQuickMix
-              {
-                Button {
-                  presetToEdit = currentPreset
-                } label: {
-                  Image(systemName: "gearshape.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                }
-              }
-            }
-          }
-          .toolbarBackground(.visible, for: .navigationBar)
-          .toolbarBackground(.regularMaterial, for: .navigationBar)
+          .navigationBarHidden(true)
         }
       }
     }
@@ -240,7 +237,7 @@ private struct AnimationTrigger: Equatable {
           Group {
             if audioManager.isQuickMix {
               QuickMixView()
-            } else if showingListView && !isLargeDevice {
+            } else if showingListView {
               listView
             } else if filteredSounds.isEmpty {
               emptyStateView
@@ -262,8 +259,8 @@ private struct AnimationTrigger: Equatable {
         } else if audioManager.isQuickMix {
           // Quick Mix mode view
           QuickMixView()
-        } else if showingListView && !isLargeDevice {
-          // List view for iPhone
+        } else if showingListView {
+          // List view (all devices)
           listView
         } else if filteredSounds.isEmpty {
           // Empty state
@@ -296,6 +293,19 @@ private struct AnimationTrigger: Equatable {
     }
 
     // MARK: - Helper Views
+
+    // Helper computed properties are implemented in AdaptiveContentView+UIComponents.swift
+  }
+
+  extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+      if condition {
+        transform(self)
+      } else {
+        self
+      }
+    }
   }
 
   struct AdaptiveContentView_Previews: PreviewProvider {

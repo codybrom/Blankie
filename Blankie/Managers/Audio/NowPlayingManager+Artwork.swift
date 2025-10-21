@@ -13,6 +13,44 @@ import SwiftUI
 #endif
 
 extension NowPlayingManager {
+  /// Load static artwork synchronously to avoid double-publishing that restarts animated artwork
+  func loadStaticArtworkSync(from preset: Preset?, fallbackArtworkId: UUID?) async {
+    // Same logic as loadStaticArtwork but awaits artwork loading
+    let targetArtworkId = preset?.artworkId ?? fallbackArtworkId
+    if let artworkId = targetArtworkId, artworkId != currentArtworkId {
+      currentArtworkId = artworkId
+      currentStaticArtworkPath = nil
+      await loadAndUpdateArtwork(artworkId: artworkId, shouldPublish: false)
+      return
+    }
+
+    #if os(iOS)
+      if let preset {
+        let candidatePath = preset.staticArtworkPath
+          ?? preset.animatedArtwork?.squarePreviewPath
+          ?? preset.animatedArtwork?.previewPath
+
+        if let candidatePath, AnimatedArtworkFileStore.fileExists(at: candidatePath),
+           currentStaticArtworkPath != candidatePath
+        {
+          currentStaticArtworkPath = candidatePath
+          currentArtworkId = nil
+          let data = try? Data(contentsOf: AnimatedArtworkFileStore.absoluteURL(for: candidatePath))
+          updateArtwork(artworkData: data)
+          return
+        }
+      }
+    #endif
+
+    // No artwork or same as current
+    if targetArtworkId == nil, currentArtworkId != nil || currentStaticArtworkPath != nil {
+      currentArtworkId = nil
+      currentStaticArtworkPath = nil
+      updateArtwork(artworkData: nil)
+    }
+  }
+
+  /// Legacy async version - only use when not publishing immediately after
   func loadStaticArtwork(from preset: Preset?, fallbackArtworkId: UUID?) {
     staticArtworkTask?.cancel()
 
@@ -65,7 +103,11 @@ extension NowPlayingManager {
             let data = try? Data(contentsOf: AnimatedArtworkFileStore.absoluteURL(for: path))
             await MainActor.run {
               self.updateArtwork(artworkData: data)
-              MPNowPlayingInfoCenter.default().nowPlayingInfo = self.nowPlayingInfo
+
+              // Update only the artwork key in MPNowPlayingInfoCenter to avoid restarting animated artwork
+              if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+              }
             }
           }
           return
@@ -99,7 +141,7 @@ extension NowPlayingManager {
   }
 
   /// Load artwork from SwiftData and update Now Playing info
-  func loadAndUpdateArtwork(artworkId: UUID) async {
+  func loadAndUpdateArtwork(artworkId: UUID, shouldPublish: Bool = true) async {
     print("🎨 NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)")
 
     // Load artwork on background thread to prevent UI blocking
@@ -114,13 +156,22 @@ extension NowPlayingManager {
       return imageData
     }.value
 
-    // Update UI on main thread
+    // Update artwork in memory on main thread
     await MainActor.run {
       if artworkData == nil {
         print("🎨 NowPlayingManager: ⚠️ No artwork found in SwiftData")
       }
       updateArtwork(artworkData: artworkData)
-      MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+
+      // Only publish if requested (when called from old async flow)
+      // When called from performNowPlayingUpdate, we skip publishing to avoid restarting animated artwork
+      if shouldPublish {
+        // Update only the artwork key in MPNowPlayingInfoCenter to avoid restarting animated artwork
+        // This preserves the animated artwork objects while updating the static artwork
+        if let artwork = nowPlayingInfo[MPMediaItemPropertyArtwork] {
+          MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+        }
+      }
     }
   }
 }

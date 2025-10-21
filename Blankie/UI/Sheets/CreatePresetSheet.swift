@@ -234,9 +234,7 @@ extension CreatePresetSheet {
   }
 
   func setupDefaultSelection() {
-    if selectedSounds.isEmpty {
-      selectedSounds = Set(orderedSounds.map(\.fileName))
-    }
+    // Start with no sounds selected - user can add sounds as needed
   }
 
   func createPreset() {
@@ -282,7 +280,7 @@ extension CreatePresetSheet {
         .map { sound in
           PresetState(
             fileName: sound.fileName,
-            isSelected: sound.isSelected,
+            isSelected: true, // Newly added sounds should be selected by default
             volume: sound.volume
           )
         }

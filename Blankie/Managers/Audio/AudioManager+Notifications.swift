@@ -72,7 +72,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] _ in
-        self?.saveState()
+        self?.handleDidEnterBackground()
       }
 
       NotificationCenter.default.addObserver(
@@ -81,6 +81,18 @@ extension AudioManager {
         queue: .main
       ) { [weak self] _ in
         self?.handleWillEnterForeground()
+      }
+    }
+
+    func handleDidEnterBackground() {
+      print("🎵 AudioManager: handleDidEnterBackground called - isGloballyPlaying: \(isGloballyPlaying)")
+
+      saveState()
+
+      // Only deactivate audio session if we're not playing
+      // This allows other apps to play when Blankie is paused in background
+      if !isGloballyPlaying {
+        AudioSessionManager.shared.deactivate()
       }
     }
 
@@ -94,8 +106,12 @@ extension AudioManager {
         isPlaying: isGloballyPlaying
       )
 
-      if isGloballyPlaying {
-        Task { @MainActor in
+      // Refresh media controls to ensure iOS hasn't disconnected them
+      Task { @MainActor in
+        if isGloballyPlaying {
+          print("🎵 AudioManager: Refreshing media controls after foreground")
+          setupMediaControls()
+
           let currentPreset = PresetManager.shared.currentPreset
           nowPlayingManager.updateInfo(
             preset: currentPreset,
@@ -231,6 +247,12 @@ extension AudioManager {
 
   func cleanup() {
     saveState()
+
+    #if os(iOS) || os(visionOS)
+      // Deactivate audio session on cleanup/termination
+      AudioSessionManager.shared.deactivate()
+    #endif
+
     Task { @MainActor in
       nowPlayingManager.clear()
     }

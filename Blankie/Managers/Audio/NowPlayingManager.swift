@@ -28,6 +28,7 @@ final class NowPlayingManager {
   #endif
   private var updateTimer: Timer?
   private var cancellables = Set<AnyCancellable>()
+  private var lastPresetId: UUID? // Track last preset to avoid unnecessary artwork updates
 
   init() {
     // Don't setup immediately to avoid triggering audio session
@@ -86,7 +87,7 @@ final class NowPlayingManager {
     updateTimer?.invalidate()
     updateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
       Task { @MainActor in
-        self?.performNowPlayingUpdate(
+        await self?.performNowPlayingUpdate(
           preset: preset, presetName: presetName, creatorName: creatorName, artworkId: artworkId,
           isPlaying: isPlaying
         )
@@ -100,7 +101,7 @@ final class NowPlayingManager {
     creatorName: String?,
     artworkId: UUID?,
     isPlaying: Bool
-  ) {
+  ) async {
     setupNowPlaying()
 
     let resolvedPresetName = preset?.name ?? presetName
@@ -111,14 +112,43 @@ final class NowPlayingManager {
       "🎵 NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )
 
+    // Check if preset changed to determine if we need full update
+    let presetChanged = preset?.id != lastPresetId
+
     updateBasicInfo(displayInfo: displayInfo)
     updateAlbumAndDuration(creatorName: resolvedCreatorName)
     updatePlaybackRate(isPlaying: isPlaying)
 
-    loadStaticArtwork(from: preset, fallbackArtworkId: artworkId)
-    updateAnimatedArtwork(for: preset)
+    // Only update artwork when preset changes to avoid restarting animated artwork
+    if presetChanged {
+      // CRITICAL: Load static artwork synchronously to avoid double-publishing
+      // If we load async, the artwork loads after we publish, triggering a second update that restarts animated artwork
+      await loadStaticArtworkSync(from: preset, fallbackArtworkId: artworkId)
+      updateAnimatedArtwork(for: preset)
+      lastPresetId = preset?.id
 
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+      // Full update when preset changes (only published once, after both artworks are ready)
+      MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    } else {
+      // Incremental update - only update specific keys to avoid restarting animated artwork
+      // CRITICAL: We update keys in-place on the existing dictionary to preserve artwork objects
+      let center = MPNowPlayingInfoCenter.default()
+
+      if center.nowPlayingInfo != nil {
+        print("🎵 NowPlayingManager: Incremental update (preserving animated artwork)")
+        // Update only non-artwork keys in-place
+        center.nowPlayingInfo?[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyTitle]
+        center.nowPlayingInfo?[MPMediaItemPropertyArtist] = nowPlayingInfo[MPMediaItemPropertyArtist]
+        center.nowPlayingInfo?[MPMediaItemPropertyAlbumTitle] = nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
+        center.nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate]
+        center.nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] = nowPlayingInfo[MPMediaItemPropertyPlaybackDuration]
+        center.nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime]
+      } else {
+        // No existing info (iOS cleared it), do full update
+        print("🎵 NowPlayingManager: Full update (iOS cleared nowPlayingInfo)")
+        center.nowPlayingInfo = nowPlayingInfo
+      }
+    }
   }
 
   private func updateBasicInfo(displayInfo: (title: String, artist: String)) {
@@ -198,6 +228,22 @@ final class NowPlayingManager {
       creatorName: preset?.creatorName,
       artworkId: preset?.artworkId,
       isPlaying: AudioManager.shared.isGloballyPlaying
+    )
+  }
+
+  /// Force a full refresh of Now Playing info including artwork
+  /// Used when artwork changes on the same preset
+  func forceRefresh(
+    preset: Preset,
+    isPlaying: Bool
+  ) {
+    lastPresetId = nil // Clear cache to force full artwork update
+    updateInfo(
+      preset: preset,
+      presetName: preset.name,
+      creatorName: preset.creatorName,
+      artworkId: preset.artworkId,
+      isPlaying: isPlaying
     )
   }
 

@@ -12,17 +12,61 @@ import SwiftUI
     @StateObject private var globalSettings = GlobalSettings.shared
     @State private var showingListView = false
 
+    private var customPresets: [Preset] {
+      presetManager.presets.filter { !$0.isDefault }
+    }
+
+    private var recentPresets: [Preset] {
+      Array(customPresets.prefix(5))
+    }
+
     var body: some View {
       List {
-        Section("Presets") {
-          ForEach(presetManager.presets.filter { !$0.isDefault }) { preset in
-            presetRow(preset)
+        Section {
+          // All Sounds (default preset)
+          if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
+            allSoundsRow(defaultPreset)
+              .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
           }
 
-          Button(action: {
-            showingPresetPicker = true
-          }) {
-            Label("Add Preset", systemImage: "plus")
+          // Quick Mix
+          quickMixRow()
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+
+          // Custom presets (5 most recent)
+          ForEach(recentPresets) { preset in
+            presetRow(preset)
+              .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+          }
+
+          // Show All button
+          if customPresets.count > 5 {
+            Button(action: {
+              showingPresetPicker = true
+            }) {
+              HStack {
+                Text("Show All (\(customPresets.count))")
+                  .foregroundColor(.accentColor)
+                Spacer()
+                Image(systemName: "chevron.right")
+                  .font(.caption)
+                  .foregroundColor(.accentColor)
+              }
+            }
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+          }
+        } header: {
+          HStack {
+            Text("Presets")
+            Spacer()
+            Button(action: {
+              showingPresetPicker = true
+            }) {
+              Image(systemName: "plus")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.accentColor)
+            }
+            .buttonStyle(.plain)
           }
         }
 
@@ -30,9 +74,80 @@ import SwiftUI
           settingsButtons
         }
       }
-      .navigationTitle("Blankie")
       .onAppear {
         showingListView = globalSettings.showingListView
+      }
+    }
+
+    // All Sounds row
+    private func allSoundsRow(_ preset: Preset) -> some View {
+      Button(action: {
+        Task {
+          do {
+            // Exit solo mode without resuming if active
+            if AudioManager.shared.soloModeSound != nil {
+              AudioManager.shared.exitSoloModeWithoutResuming()
+            }
+
+            // Exit Quick Mix if active
+            if AudioManager.shared.isQuickMix {
+              AudioManager.shared.exitQuickMix()
+            }
+
+            try presetManager.applyPreset(preset)
+          } catch {
+            print("Error applying preset: \(error)")
+          }
+        }
+      }) {
+        HStack {
+          Image(systemName: "music.note.list")
+            .foregroundColor(.secondary)
+            .frame(width: 20)
+
+          Text("All Sounds")
+            .foregroundColor(.primary)
+
+          Spacer()
+
+          if presetManager.currentPreset?.id == preset.id && !AudioManager.shared.isQuickMix {
+            Image(systemName: "checkmark")
+              .foregroundColor(.accentColor)
+          }
+        }
+      }
+    }
+
+    // Quick Mix row
+    private func quickMixRow() -> some View {
+      Button(action: {
+        // Exit solo mode if active
+        if AudioManager.shared.soloModeSound != nil {
+          AudioManager.shared.exitSoloModeWithoutResuming()
+        }
+
+        // Toggle Quick Mix or enter it
+        if AudioManager.shared.isQuickMix {
+          AudioManager.shared.exitQuickMix()
+        } else {
+          AudioManager.shared.enterQuickMix()
+        }
+      }) {
+        HStack {
+          Image(systemName: "square.grid.2x2.fill")
+            .foregroundColor(.secondary)
+            .frame(width: 20)
+
+          Text("Quick Mix")
+            .foregroundColor(.primary)
+
+          Spacer()
+
+          if AudioManager.shared.isQuickMix {
+            Image(systemName: "checkmark")
+              .foregroundColor(.accentColor)
+          }
+        }
       }
     }
 
@@ -46,7 +161,7 @@ import SwiftUI
               AudioManager.shared.exitSoloModeWithoutResuming()
             }
 
-            // Exit CarPlay Quick Mix if active
+            // Exit Quick Mix if active
             if AudioManager.shared.isQuickMix {
               AudioManager.shared.exitQuickMix()
             }
@@ -58,12 +173,17 @@ import SwiftUI
         }
       }) {
         HStack {
+          // Preset icon - just use generic icon for now (async loading in sidebar is complex)
+          Image(systemName: "music.note")
+            .foregroundColor(.secondary)
+            .frame(width: 20)
+
           Text(preset.name)
             .foregroundColor(.primary)
 
           Spacer()
 
-          if presetManager.currentPreset?.id == preset.id {
+          if presetManager.currentPreset?.id == preset.id && !AudioManager.shared.isQuickMix {
             Image(systemName: "checkmark")
               .foregroundColor(.accentColor)
           }
@@ -88,12 +208,14 @@ import SwiftUI
         }) {
           Label("View Settings", systemImage: "slider.horizontal.3")
         }
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
         Button(action: {
           showingSoundManagement = true
         }) {
           Label("Sound Settings", systemImage: "waveform")
         }
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
         Button(action: {
           showingAbout = true
@@ -104,6 +226,7 @@ import SwiftUI
             Image(systemName: "info.circle")
           }
         }
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
       }
     }
   }

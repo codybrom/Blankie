@@ -10,17 +10,6 @@ import SwiftUI
 
 // MARK: - Default Preset Section
 
-extension EditPresetSheet {
-  var defaultPresetSection: some View {
-    Section("Preset Information") {
-      LabeledContent("Name", value: "All Sounds")
-      Text("The default preset cannot be modified")
-        .font(.caption)
-        .foregroundStyle(.secondary)
-    }
-  }
-}
-
 // MARK: - Core Section (Name and Sounds)
 
 extension EditPresetSheet {
@@ -75,13 +64,15 @@ extension EditPresetSheet {
 extension EditPresetSheet {
   var nowPlayingSection: some View {
     Section("Now Playing") {
-      // Creator field
-      LabeledContent("Creator") {
-        TextField("Optional", text: $creatorName)
-          .multilineTextAlignment(.trailing)
-          .onChange(of: creatorName) { _, _ in
-            applyChangesInstantly()
-          }
+      // Creator field (only for non-default presets)
+      if !preset.isDefault {
+        LabeledContent("Creator") {
+          TextField("Optional", text: $creatorName)
+            .multilineTextAlignment(.trailing)
+            .onChange(of: creatorName) { _, _ in
+              applyChangesInstantly()
+            }
+        }
       }
 
       // Artwork field

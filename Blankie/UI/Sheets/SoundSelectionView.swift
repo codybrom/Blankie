@@ -36,10 +36,7 @@ struct SoundSelectionView: View {
           .contentShape(Rectangle())
           .onTapGesture {
             if selectedSounds.contains(sound.fileName) {
-              // Don't allow deselecting if it's the last sound
-              if selectedSounds.count > 1 {
-                selectedSounds.remove(sound.fileName)
-              }
+              selectedSounds.remove(sound.fileName)
             } else {
               selectedSounds.insert(sound.fileName)
             }
@@ -51,44 +48,20 @@ struct SoundSelectionView: View {
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(
-        trailing: Menu {
-          Button("Select All") {
-            selectedSounds = Set(orderedSounds.map(\.fileName))
-          }
-          Button("Clear All") {
-            // Keep at least one sound selected
-            if selectedSounds.count > 1 {
-              let firstSound = selectedSounds.first ?? ""
-              selectedSounds.removeAll()
-              selectedSounds.insert(firstSound)
-            }
-          }
-          .disabled(selectedSounds.count <= 1)
-        } label: {
-          Image(systemName: "ellipsis.circle")
+        trailing: Button("Clear All") {
+          selectedSounds.removeAll()
         }
+        .disabled(selectedSounds.isEmpty)
       )
     #else
       .toolbar {
-        ToolbarItem(placement: .primaryAction) {
-          Menu {
-            Button("Select All") {
-              selectedSounds = Set(orderedSounds.map(\.fileName))
-            }
+          ToolbarItem(placement: .primaryAction) {
             Button("Clear All") {
-              // Keep at least one sound selected
-              if selectedSounds.count > 1 {
-                let firstSound = selectedSounds.first ?? ""
-                selectedSounds.removeAll()
-                selectedSounds.insert(firstSound)
-              }
+              selectedSounds.removeAll()
             }
-            .disabled(selectedSounds.count <= 1)
-          } label: {
-            Label("Options", systemImage: "ellipsis.circle")
+            .disabled(selectedSounds.isEmpty)
           }
         }
-      }
     #endif
   }
 }

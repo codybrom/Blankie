@@ -9,298 +9,521 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
 
-  // MARK: - UI Components Extension
+    // MARK: - UI Components Extension
 
-  extension AdaptiveContentView {
-    // MARK: - Status Banners
+    extension AdaptiveContentView {
+        // MARK: - Navigation Elements
 
-    @ViewBuilder
-    var statusBanners: some View {
-      // Timer banner (highest priority)
-      if TimerManager.shared.isTimerActive && editMode == .inactive {
-        HStack(spacing: 8) {
-          Image(systemName: "timer")
-            .font(.system(size: 16))
-            .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-
-          if TimerManager.shared.remainingTime < 60 {
-            // Show countdown for less than 1 minute
-            Text("Blankie will stop in \(formatTime(TimerManager.shared.remainingTime))")
-              .font(.system(.subheadline, design: .rounded, weight: .medium))
-              .foregroundColor(.primary)
-          } else {
-            // Show end time for 1 minute or more
-            Text("Blankie will stop at \(formatEndTime())")
-              .font(.system(.subheadline, design: .rounded, weight: .medium))
-              .foregroundColor(.primary)
-          }
-
-          Spacer()
-
-          Button("Modify") {
-            showingTimer = true
-          }
-          .font(.system(.subheadline, weight: .medium))
-          .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-          .buttonStyle(.plain)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .foregroundStyle(.primary)
-        .background(.regularMaterial)
-        .transition(.move(edge: .top).combined(with: .opacity))
-      } else if audioManager.soloModeSound != nil && editMode == .inactive {
-        // Solo mode banner
-        HStack(spacing: 12) {
-          Image(systemName: "headphones.circle.fill")
-            .font(.system(size: 16))
-            .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-          Text("Solo Mode")
-            .font(.system(.subheadline, design: .rounded, weight: .medium))
-
-          Spacer()
-
-          Button("Exit") {
-            withAnimation(.easeInOut(duration: 0.3)) {
-              audioManager.exitSoloMode()
+        var navigationTitle: String {
+            if let soloSound = audioManager.soloModeSound {
+                return soloSound.title
             }
-          }
-          .font(.system(.subheadline, weight: .medium))
-          .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-          .buttonStyle(.plain)
-          .sensoryFeedback(.selection, trigger: audioManager.soloModeSound?.id)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .foregroundStyle(.primary)
-        .background(.regularMaterial)
-        .transition(.move(edge: .top).combined(with: .opacity))
-      } else if !audioManager.hasSelectedSounds && editMode == .inactive
-        && !audioManager.isQuickMix
-      {
-        // No sounds selected banner (not shown in Quick Mix mode)
-        HStack(spacing: 12) {
-          Image(systemName: "speaker.slash.fill")
-            .font(.system(size: 16))
-          Text("No Sounds Selected")
-            .font(.system(.subheadline, design: .rounded, weight: .medium))
 
-          Spacer()
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
-        .foregroundStyle(.secondary)
-        .background(.regularMaterial)
-        .transition(.move(edge: .top).combined(with: .opacity))
-      }
-    }
-
-    // MARK: - Navigation Elements
-
-    var navigationTitle: String {
-      if let soloSound = audioManager.soloModeSound {
-        return soloSound.title
-      }
-
-      if audioManager.isQuickMix {
-        return "Quick Mix"
-      }
-
-      if let preset = presetManager.currentPreset {
-        return preset.isDefault ? "Blankie" : preset.name
-      }
-
-      return "Blankie"
-    }
-
-    var presetButton: some View {
-      Button(action: {
-        showingPresetPicker = true
-      }) {
-        HStack(spacing: 4) {
-          if audioManager.soloModeSound != nil {
-            Image(systemName: "headphones.circle.fill")
-              .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-          } else if audioManager.isQuickMix {
-            Image(systemName: "square.grid.2x2.fill")
-              .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-          }
-          Text(navigationTitle)
-            .font(.title2)
-            .fontWeight(.semibold)
-            .foregroundColor(.primary)
-          Image(systemName: "chevron.down")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-      }
-      .sensoryFeedback(.selection, trigger: showingPresetPicker)
-    }
-
-    // MARK: - Toolbar Components
-
-    var bottomToolbar: some View {
-      VStack(spacing: 0) {
-        HStack(spacing: 0) {
-          // Grid/List toggle (or exit Quick Mix)
-          Spacer()
-          Button(action: {
-            withAnimation(.easeInOut(duration: 0.2)) {
-              if audioManager.isQuickMix {
-                // Exit Quick Mix mode and return to previous view mode
-                audioManager.exitQuickMix()
-              } else {
-                // Normal toggle between grid and list
-                showingListView.toggle()
-                globalSettings.setShowingListView(showingListView)
-              }
+            if audioManager.isQuickMix {
+                return "Quick Mix"
             }
-          }) {
-            Image(
-              systemName: audioManager.isQuickMix
-                ? "arrow.backward"
-                : (showingListView ? "list.bullet" : "square.grid.3x3")
-            )
-            .font(.system(size: 22))
-            .foregroundColor(.primary)
-            .contentTransition(.symbolEffect(.replace))
-          }
-          .buttonStyle(.plain)
-          .sensoryFeedback(
-            .selection,
-            trigger: audioManager.isQuickMix
-              ? audioManager.isQuickMix : showingListView
-          )
-          Spacer()
 
-          // Play/Pause button
-          Spacer()
-          playPauseButton
-          Spacer()
-
-          // Menu button
-          Spacer()
-          menuButton
-          Spacer()
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(.regularMaterial, ignoresSafeAreaEdges: .bottom)
-      }
-    }
-
-    var playPauseButton: some View {
-      Button(action: {
-        if audioManager.hasSelectedSounds {
-          playPauseTrigger += 1
-          audioManager.togglePlayback()
-        }
-      }) {
-        ZStack {
-          Circle()
-            .fill(
-              audioManager.hasSelectedSounds
-                ? (globalSettings.customAccentColor?.opacity(0.2) ?? Color.accentColor.opacity(0.2))
-                : Color.secondary.opacity(0.1)
-            )
-            .frame(width: 60, height: 60)
-
-          Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
-            .font(.system(size: 26))
-            .foregroundColor(
-              audioManager.hasSelectedSounds
-                ? (globalSettings.customAccentColor ?? .accentColor)
-                : .secondary
-            )
-            .contentTransition(
-              .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating)
-            )
-            .offset(x: audioManager.isGloballyPlaying ? 0 : 2)
-        }
-      }
-      .buttonStyle(.plain)
-      .disabled(!audioManager.hasSelectedSounds)
-      .sensoryFeedback(.selection, trigger: playPauseTrigger)
-    }
-
-    var menuButton: some View {
-      Menu {
-        if audioManager.soloModeSound != nil {
-          Button(action: {
-            withAnimation(.easeInOut(duration: 0.3)) {
-              audioManager.exitSoloMode()
+            if let preset = presetManager.currentPreset {
+                return preset.isDefault ? "Blankie" : preset.name
             }
-          }) {
-            Label("Exit Solo Mode", systemImage: "headphones.slash")
-          }
+
+            return "Blankie"
         }
 
-        Section {
-          Button(action: {
-            showingAbout = true
-          }) {
-            Label("About Blankie", systemImage: "info.circle")
-          }
+        var presetButton: some View {
+            Button(action: {
+                showingPresetPicker = true
+            }) {
+                HStack(spacing: 4) {
+                    if audioManager.soloModeSound != nil {
+                        Image(systemName: "headphones.circle.fill")
+                            .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                    } else if audioManager.isQuickMix {
+                        Image(systemName: "square.grid.2x2.fill")
+                            .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                    }
+                    Text(navigationTitle)
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    Image(systemName: "chevron.down")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .sensoryFeedback(.selection, trigger: showingPresetPicker)
         }
 
-        Button(action: {
-          showingSoundManagement = true
-        }) {
-          Label("Settings", systemImage: "waveform")
+        // MARK: - Toolbar Components
+
+        var bottomToolbar: some View {
+            Group {
+                if #available(iOS 26.0, *) {
+                    GlassEffectContainer(spacing: 8) {
+                        bottomToolbarContent
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                } else {
+                    bottomToolbarContent
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
+                }
+            }
         }
 
-        Button(action: {
-          showingViewSettings = true
-        }) {
-          Label("Appearance", systemImage: "slider.horizontal.3")
+        @ViewBuilder
+        var bottomToolbarContent: some View {
+            VStack(spacing: 8) {
+                // Now Playing / Status Bar (thin glass)
+                // Wrap in separate view to isolate timer updates
+                NowPlayingBarContainer(
+                    editMode: editMode,
+                    showingTimer: $showingTimer,
+                    presetToEdit: $presetToEdit,
+                    showingPresetPicker: $showingPresetPicker
+                )
+
+                // 3-Button Toolbar with connected glass tissue
+                if #available(iOS 26.0, *) {
+                    GlassEffectContainer(spacing: 20) {
+                        HStack(spacing: 20) {
+                            // Grid/List toggle OR Back button (solo/quick mix)
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    if audioManager.soloModeSound != nil {
+                                        audioManager.exitSoloMode()
+                                    } else if audioManager.isQuickMix {
+                                        audioManager.exitQuickMix()
+                                    } else {
+                                        showingListView.toggle()
+                                    }
+                                }
+                            } label: {
+                                Image(
+                                    systemName: audioManager.soloModeSound != nil || audioManager.isQuickMix
+                                        ? "arrow.backward"
+                                        : (showingListView ? "list.bullet" : "square.grid.3x3")
+                                )
+                                .font(.system(size: 22))
+                                .foregroundColor(.primary)
+                                .contentTransition(.symbolEffect(.replace))
+                                .frame(width: 56, height: 56)
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Circle())
+                            .glassEffect(.regular.interactive(), in: .circle)
+                            .sensoryFeedback(.selection, trigger: showingListView)
+
+                            // Play/Pause button (larger, more prominent)
+                            playPauseButton
+
+                            // Menu button
+                            menuButton
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background {
+                            Capsule(style: .continuous)
+                                .fill(.clear)
+                        }
+                    }
+                } else {
+                    // Fallback for iOS 25 and earlier
+                    HStack(spacing: 20) {
+                        // Grid/List toggle OR Back button (solo/quick mix)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                if audioManager.soloModeSound != nil {
+                                    audioManager.exitSoloMode()
+                                } else if audioManager.isQuickMix {
+                                    audioManager.exitQuickMix()
+                                } else {
+                                    showingListView.toggle()
+                                }
+                            }
+                        } label: {
+                            Image(
+                                systemName: audioManager.soloModeSound != nil || audioManager.isQuickMix
+                                    ? "arrow.backward"
+                                    : (showingListView ? "list.bullet" : "square.grid.3x3")
+                            )
+                            .font(.system(size: 22))
+                            .foregroundColor(.primary)
+                            .contentTransition(.symbolEffect(.replace))
+                            .frame(width: 56, height: 56)
+                        }
+                        .buttonStyle(.plain)
+                        .contentShape(Circle())
+                        .modernGlassEffect(cornerRadius: 28)
+                        .sensoryFeedback(.selection, trigger: showingListView)
+
+                        // Play/Pause button (larger, more prominent)
+                        playPauseButton
+
+                        // Menu button
+                        menuButton
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+                    .modernGlassEffect(cornerRadius: 40)
+                }
+            }
         }
 
-        Button(action: {
-          withAnimation {
-            editMode = editMode == .active ? .inactive : .active
-          }
-        }) {
-          Label(
-            editMode == .active ? "Done Reordering" : "Reorder",
-            systemImage: editMode == .active ? "checkmark.circle" : "arrow.up.arrow.down"
-          )
+        var playPauseButton: some View {
+            let button = Button(action: {
+                if audioManager.hasSelectedSounds {
+                    playPauseTrigger += 1
+                    audioManager.togglePlayback()
+                }
+            }) {
+                Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 26))
+                    .foregroundColor(
+                        audioManager.hasSelectedSounds
+                            ? (globalSettings.customAccentColor ?? .accentColor)
+                            : .secondary
+                    )
+                    .contentTransition(
+                        .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating)
+                    )
+                    .offset(x: audioManager.isGloballyPlaying ? 0 : 1)
+                    .frame(width: 68, height: 68)
+                    .contentShape(Circle())
+            }
+
+            if #available(iOS 26.0, *) {
+                return button
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .disabled(!audioManager.hasSelectedSounds)
+                    .sensoryFeedback(.selection, trigger: playPauseTrigger)
+            } else {
+                return button
+                    .modernGlassEffect(cornerRadius: 34)
+                    .disabled(!audioManager.hasSelectedSounds)
+                    .sensoryFeedback(.selection, trigger: playPauseTrigger)
+            }
         }
 
-        Button(action: {
-          showingTimer = true
-        }) {
-          Label("Timer", systemImage: "timer")
+        var menuButton: some View {
+            let menu = Menu {
+                if audioManager.soloModeSound != nil {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            audioManager.exitSoloMode()
+                        }
+                    }) {
+                        Label("Exit Solo Mode", systemImage: "headphones.slash")
+                    }
+                }
+
+                Section {
+                    Button(action: {
+                        showingAbout = true
+                    }) {
+                        Label("About Blankie", systemImage: "info.circle")
+                    }
+                }
+
+                Button(action: {
+                    showingSoundManagement = true
+                }) {
+                    Label("Settings", systemImage: "waveform")
+                }
+
+                Button(action: {
+                    showingViewSettings = true
+                }) {
+                    Label("Appearance", systemImage: "slider.horizontal.3")
+                }
+
+                Button(action: {
+                    withAnimation {
+                        editMode = editMode == .active ? .inactive : .active
+                    }
+                }) {
+                    Label(
+                        editMode == .active ? "Done Reordering" : "Reorder",
+                        systemImage: editMode == .active ? "checkmark.circle" : "arrow.up.arrow.down"
+                    )
+                }
+
+                Button(action: {
+                    showingTimer = true
+                }) {
+                    Label("Timer", systemImage: "timer")
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 22))
+                    .foregroundColor(.primary)
+                    .frame(width: 56, height: 56)
+                    .onTapGesture {
+                        menuTrigger += 1
+                    }
+            }
+            .buttonStyle(.plain)
+
+            if #available(iOS 26.0, *) {
+                return menu
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .sensoryFeedback(.selection, trigger: menuTrigger)
+            } else {
+                return menu
+                    .modernGlassEffect(cornerRadius: 28)
+                    .sensoryFeedback(.selection, trigger: menuTrigger)
+            }
         }
-      } label: {
-        Image(systemName: "ellipsis.circle")
-          .font(.system(size: 22))
-          .foregroundColor(.primary)
-          .onTapGesture {
-            menuTrigger += 1
-          }
-      }
-      .sensoryFeedback(.selection, trigger: menuTrigger)
+
+        // MARK: - Artwork Properties (shared across views)
+
+        struct ArtworkProperties: Equatable {
+            let timerActive: Bool
+            let soloSound: Sound?
+            let hasSelectedSounds: Bool
+            let isQuickMix: Bool
+            let presetArtworkId: UUID?
+            let accentColor: Color?
+
+            static func == (lhs: ArtworkProperties, rhs: ArtworkProperties) -> Bool {
+                lhs.timerActive == rhs.timerActive &&
+                    lhs.soloSound?.id == rhs.soloSound?.id &&
+                    lhs.hasSelectedSounds == rhs.hasSelectedSounds &&
+                    lhs.isQuickMix == rhs.isQuickMix &&
+                    lhs.presetArtworkId == rhs.presetArtworkId
+            }
+        }
     }
 
-    // MARK: - Helper Functions
+    // MARK: - Liquid Glass Effect Extension
 
-    private func formatTime(_ timeInterval: TimeInterval) -> String {
-      let formatter = DateComponentsFormatter()
-      formatter.unitsStyle = .full
-      formatter.allowedUnits = timeInterval >= 60 ? [.hour, .minute] : [.minute, .second]
-      formatter.zeroFormattingBehavior = .dropAll
-
-      return formatter.string(from: timeInterval) ?? "0 seconds"
+    extension View {
+        @ViewBuilder
+        func modernGlassEffect(cornerRadius: CGFloat = 12) -> some View {
+            if #available(iOS 26.0, *) {
+                // Use the new Liquid Glass effect when available
+                self.glassEffect(.regular.interactive(), in: .rect(cornerRadius: cornerRadius, style: .continuous))
+            } else {
+                // Fallback to enhanced material effect for earlier iOS versions
+                background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
+                    )
+                    .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+            }
+        }
     }
 
-    private func formatEndTime() -> String {
-      let endTime = Date().addingTimeInterval(TimerManager.shared.remainingTime)
-      let formatter = DateFormatter()
-      formatter.timeStyle = .short
-      return formatter.string(from: endTime)
+    // MARK: - Now Playing Bar Container
+
+    private struct NowPlayingBarContainer: View {
+        let editMode: EditMode
+        @Binding var showingTimer: Bool
+        @Binding var presetToEdit: Preset?
+        @Binding var showingPresetPicker: Bool
+
+        @StateObject private var audioManager = AudioManager.shared
+        @StateObject private var presetManager = PresetManager.shared
+        @StateObject private var timerManager = TimerManager.shared
+        @StateObject private var globalSettings = GlobalSettings.shared
+
+        var body: some View {
+            if editMode == .inactive && !audioManager.isQuickMix {
+                unifiedNowPlayingBar
+            }
+        }
+
+        @ViewBuilder
+        var unifiedNowPlayingBar: some View {
+            HStack(spacing: 10) {
+                // Dynamic artwork based on state
+                presetArtworkView()
+
+                // Dynamic info based on state
+                VStack(alignment: .leading, spacing: 2) {
+                    if let soloSound = audioManager.soloModeSound {
+                        // Solo mode
+                        Text(soloSound.title)
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+
+                        Text("Solo Mode")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    } else if !audioManager.hasSelectedSounds && !audioManager.isQuickMix {
+                        // No sounds selected
+                        Text(presetManager.currentPreset?.isDefault == true ? "Blankie" : (presetManager.currentPreset?.name ?? "Blankie"))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+
+                        Text("No sounds selected")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        // Regular playback (and timer mode uses caption)
+                        Text(presetManager.currentPreset?.isDefault == true ? "Blankie" : (presetManager.currentPreset?.name ?? "Blankie"))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+
+                        // Show timer info in caption if active, otherwise show play status
+                        if timerManager.isTimerActive {
+                            if timerManager.remainingTime < 60 {
+                                Text("Stops in \(formatTime(timerManager.remainingTime))")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Text("Stops at \(formatEndTime())")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        } else {
+                            Text(audioManager.isGloballyPlaying ? "Playing" : "Paused")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
+                Spacer()
+
+                // Trailing buttons (these stop tap propagation)
+                HStack(spacing: 8) {
+                    // Timer button (shown when timer is active)
+                    if timerManager.isTimerActive {
+                        Button {
+                            showingTimer = true
+                        } label: {
+                            Image(systemName: "timer")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .frame(width: 32, height: 32)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                    }
+
+                    // Exit solo mode button (if in solo mode)
+                    if audioManager.soloModeSound != nil {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                audioManager.exitSoloMode()
+                            }
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .frame(width: 32, height: 32)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                    }
+
+                    // Edit preset button (if not in solo mode)
+                    if audioManager.soloModeSound == nil, let preset = presetManager.currentPreset {
+                        Button {
+                            presetToEdit = preset
+                        } label: {
+                            Image(systemName: "slider.vertical.3")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .frame(width: 32, height: 32)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .modernGlassEffect(cornerRadius: 10)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                // Tap on the main bar opens preset picker
+                showingPresetPicker = true
+            }
+        }
+
+        @ViewBuilder
+        func presetArtworkView() -> some View {
+            let artworkProps = AdaptiveContentView.ArtworkProperties(
+                timerActive: timerManager.isTimerActive,
+                soloSound: audioManager.soloModeSound,
+                hasSelectedSounds: audioManager.hasSelectedSounds,
+                isQuickMix: audioManager.isQuickMix,
+                presetArtworkId: presetManager.currentPreset?.artworkId,
+                accentColor: globalSettings.customAccentColor
+            )
+            PresetArtworkLoader(properties: artworkProps)
+        }
+
+        private func formatTime(_ timeInterval: TimeInterval) -> String {
+            let formatter = DateComponentsFormatter()
+            formatter.unitsStyle = .full
+            formatter.allowedUnits = timeInterval >= 60 ? [.hour, .minute] : [.minute, .second]
+            formatter.zeroFormattingBehavior = .dropAll
+            return formatter.string(from: timeInterval) ?? "0 seconds"
+        }
+
+        private func formatEndTime() -> String {
+            let endTime = Date().addingTimeInterval(timerManager.remainingTime)
+            let formatter = DateFormatter()
+            formatter.timeStyle = .short
+            return formatter.string(from: endTime)
+        }
     }
-  }
+
+    // MARK: - Preset Artwork Loader
+
+    private struct PresetArtworkLoader: View {
+        let properties: AdaptiveContentView.ArtworkProperties
+
+        @State private var artworkImage: UIImage?
+
+        var body: some View {
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(Color.secondary.opacity(0.2))
+                .frame(width: 32, height: 32)
+                .overlay {
+                    if properties.soloSound != nil {
+                        Image(systemName: "headphones.circle.fill")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(properties.accentColor ?? .accentColor)
+                    } else if !properties.hasSelectedSounds && !properties.isQuickMix {
+                        Image(systemName: "speaker.slash.fill")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    } else if let image = artworkImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                    } else {
+                        Image(systemName: "waveform")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                .task(id: properties.presetArtworkId) {
+                    // Only load artwork when not in solo/no sounds mode
+                    guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix else {
+                        artworkImage = nil
+                        return
+                    }
+
+                    if let artworkId = properties.presetArtworkId,
+                       let data = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
+                       let image = UIImage(data: data)
+                    {
+                        artworkImage = image
+                    } else {
+                        artworkImage = nil
+                    }
+                }
+        }
+    }
 #endif
