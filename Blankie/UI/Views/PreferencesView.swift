@@ -12,7 +12,6 @@ struct PreferencesView: View {
   @ObservedObject private var globalSettings = GlobalSettings.shared
   @State private var showingRestartAlert = false
   @State private var showingHiddenSounds = false
-  private let colorsPerRow = 6
 
   var accentColorForUI: Color {
     globalSettings.customAccentColor ?? .accentColor
@@ -23,7 +22,7 @@ struct PreferencesView: View {
       if let nsColor = NSColor(accentColorForUI).usingColorSpace(.sRGB) {
         let brightness =
           (0.299 * nsColor.redComponent) + (0.587 * nsColor.greenComponent)
-          + (0.114 * nsColor.blueComponent)
+            + (0.114 * nsColor.blueComponent)
         return brightness > 0.5 ? .black : .white
       }
       return .white
@@ -67,7 +66,7 @@ struct PreferencesView: View {
   }
 
   var colorButtons: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 12) {
       HStack(spacing: 8) {
         Button(
           action: { globalSettings.setAccentColor(nil) },
@@ -87,18 +86,13 @@ struct PreferencesView: View {
         )
         .buttonStyle(.plain)
 
-        ForEach(Array(AccentColor.allCases.dropFirst().prefix(colorsPerRow - 1)), id: \.self) {
-          color in
-          ColorSquare(color: color, isSelected: color.color == globalSettings.customAccentColor)
-        }
+        Spacer()
       }
 
-      HStack(spacing: 8) {
-        ForEach(Array(AccentColor.allCases.dropFirst().dropFirst(colorsPerRow - 1)), id: \.self) {
-          color in
-          ColorSquare(color: color, isSelected: color.color == globalSettings.customAccentColor)
+      SpectrumColorPicker(selectedColor: $globalSettings.customAccentColor)
+        .onChange(of: globalSettings.customAccentColor) { _, newColor in
+          globalSettings.setAccentColor(newColor)
         }
-      }
     }
   }
 
@@ -215,7 +209,7 @@ struct PreferencesView: View {
           )
         )
         #if os(macOS)
-          .help("If enabled, Blankie will immediately play your most recent preset on launch")
+        .help("If enabled, Blankie will immediately play your most recent preset on launch")
         #endif
         .tint(accentColorForUI)
       } header: {
@@ -225,10 +219,10 @@ struct PreferencesView: View {
     .formStyle(.grouped)
     .padding()
     .frame(width: 500)
-    .onChange(of: globalSettings.needsRestartForLanguageChange) {
+    .onChange(of: globalSettings.needsRestartForLanguageChange) { _, _ in
       if globalSettings.needsRestartForLanguageChange {
         showingRestartAlert = true
-        globalSettings.needsRestartForLanguageChange = false  // reset
+        globalSettings.needsRestartForLanguageChange = false // reset
       }
     }
     .alert(
@@ -240,14 +234,14 @@ struct PreferencesView: View {
       } label: {
         Text("Restart Now", comment: "Restart now button")
       }
-      Button(role: .cancel) {
-      } label: {
+      Button(role: .cancel) {} label: {
         Text("Later", comment: "Cancel restart button")
       }
     } message: {
       Text(
         "You will need to restart Blankie for the language change to take effect.",
-        comment: "Language change restart message")
+        comment: "Language change restart message"
+      )
     }
     .sheet(isPresented: $showingHiddenSounds) {
       SoundManagementView()

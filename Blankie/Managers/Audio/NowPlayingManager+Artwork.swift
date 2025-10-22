@@ -15,7 +15,13 @@ import SwiftUI
 extension NowPlayingManager {
   /// Load static artwork synchronously to avoid double-publishing that restarts animated artwork
   func loadStaticArtworkSync(from preset: Preset?, fallbackArtworkId: UUID?) async {
-    // Same logic as loadStaticArtwork but awaits artwork loading
+    // Priority order:
+    // 1. Static artwork from artworkId (SwiftData) - TOP PRIORITY
+    // 2. Bundled animated artwork square preview (from app bundle)
+    // 3. Cached animated artwork square preview (from Documents)
+    // 4. Other cached paths
+
+    // PRIORITY 1: Static artwork from artworkId
     let targetArtworkId = preset?.artworkId ?? fallbackArtworkId
     if let artworkId = targetArtworkId, artworkId != currentArtworkId {
       currentArtworkId = artworkId
@@ -26,8 +32,37 @@ extension NowPlayingManager {
 
     #if os(iOS)
       if let preset {
-        let candidatePath = preset.animatedArtwork?.squarePreviewPath
-          ?? preset.staticArtworkPath
+        // PRIORITY 2: For bundled animated artwork (ODR), load square preview from bundle
+        if let bundledId = preset.animatedArtwork?.bundledIdentifier,
+           let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
+           let squarePreviewURL = Bundle.main.url(
+             forResource: asset.squarePreviewResourceName,
+             withExtension: asset.squarePreviewExtension
+           ),
+           let data = try? Data(contentsOf: squarePreviewURL)
+        {
+          print("🎨 NowPlayingManager: Loading bundled square preview for \(bundledId)")
+          currentStaticArtworkPath = nil
+          currentArtworkId = nil
+          updateArtwork(artworkData: data)
+          return
+        }
+
+        // PRIORITY 3: Check for cached animated artwork square preview
+        if let squarePreviewPath = preset.animatedArtwork?.squarePreviewPath,
+           AnimatedArtworkFileStore.fileExists(at: squarePreviewPath),
+           currentStaticArtworkPath != squarePreviewPath
+        {
+          print("🎨 NowPlayingManager: Loading cached square preview from Documents")
+          currentStaticArtworkPath = squarePreviewPath
+          currentArtworkId = nil
+          let data = try? Data(contentsOf: AnimatedArtworkFileStore.absoluteURL(for: squarePreviewPath))
+          updateArtwork(artworkData: data)
+          return
+        }
+
+        // PRIORITY 4: Other cached paths (staticArtworkPath, previewPath)
+        let candidatePath = preset.staticArtworkPath
           ?? preset.animatedArtwork?.previewPath
 
         if let candidatePath, AnimatedArtworkFileStore.fileExists(at: candidatePath),
@@ -54,14 +89,13 @@ extension NowPlayingManager {
   func loadStaticArtwork(from preset: Preset?, fallbackArtworkId: UUID?) {
     staticArtworkTask?.cancel()
 
-    // Priority order for static artwork display (Control Center, CarPlay, etc):
-    // 1. preset.artworkId (square static artwork from SwiftData)
-    // 2. preset.staticArtworkPath (square static artwork from FileStore) - fallback for legacy presets
-    // 3. preset.animatedArtwork?.squarePreviewPath (1:1 square preview from animated artwork)
-    // 4. preset.animatedArtwork?.previewPath (3:4 portrait preview) - only if no square artwork exists
-    // This ensures Control Center always shows square artwork when available
+    // Priority order (same as loadStaticArtworkSync):
+    // 1. Static artwork from artworkId (SwiftData) - TOP PRIORITY
+    // 2. Bundled animated artwork square preview (from app bundle)
+    // 3. Cached animated artwork square preview (from Documents)
+    // 4. Other cached paths
 
-    // First, check if we have artworkId (preferred square static artwork)
+    // PRIORITY 1: Static artwork from artworkId
     let targetArtworkId = preset?.artworkId ?? fallbackArtworkId
     if targetArtworkId != nil {
       let hadStaticArtworkPath = currentStaticArtworkPath != nil
@@ -82,12 +116,65 @@ extension NowPlayingManager {
       return
     }
 
-    // No artworkId, try file-based static artwork paths
     #if os(iOS)
       if let preset {
-        // Try square preview first (best for Control Center), then static path, then portrait preview
-        let candidatePath = preset.animatedArtwork?.squarePreviewPath
-          ?? preset.staticArtworkPath
+        // PRIORITY 2: Bundled animated artwork (ODR) square preview from bundle
+        if let bundledId = preset.animatedArtwork?.bundledIdentifier,
+           let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
+           let squarePreviewURL = Bundle.main.url(
+             forResource: asset.squarePreviewResourceName,
+             withExtension: asset.squarePreviewExtension
+           )
+        {
+          print("🎨 NowPlayingManager: Loading bundled square preview for \(bundledId)")
+          currentStaticArtworkPath = nil
+          currentArtworkId = nil
+          staticArtworkTask = Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+            let data = try? Data(contentsOf: squarePreviewURL)
+            await MainActor.run {
+              self.updateArtwork(artworkData: data)
+
+              // Update only the artwork key in MPNowPlayingInfoCenter to avoid restarting animated artwork
+              if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+              }
+            }
+          }
+          return
+        }
+
+        // PRIORITY 3: Cached animated artwork square preview
+        if let squarePreviewPath = preset.animatedArtwork?.squarePreviewPath,
+           AnimatedArtworkFileStore.fileExists(at: squarePreviewPath)
+        {
+          if currentStaticArtworkPath == squarePreviewPath {
+            return
+          }
+
+          print("🎨 NowPlayingManager: Loading cached square preview from Documents")
+          currentStaticArtworkPath = squarePreviewPath
+          currentArtworkId = nil
+          staticArtworkTask = Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+            let data = try? Data(contentsOf: AnimatedArtworkFileStore.absoluteURL(for: squarePreviewPath))
+            await MainActor.run {
+              self.updateArtwork(artworkData: data)
+
+              if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+              }
+            }
+          }
+          return
+        }
+      }
+    #endif
+
+    // PRIORITY 4: Other cached paths
+    #if os(iOS)
+      if let preset {
+        let candidatePath = preset.staticArtworkPath
           ?? preset.animatedArtwork?.previewPath
 
         if let candidatePath, AnimatedArtworkFileStore.fileExists(at: candidatePath) {
@@ -104,7 +191,6 @@ extension NowPlayingManager {
             await MainActor.run {
               self.updateArtwork(artworkData: data)
 
-              // Update only the artwork key in MPNowPlayingInfoCenter to avoid restarting animated artwork
               if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
                 MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
               }

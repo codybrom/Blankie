@@ -214,12 +214,12 @@ final class OnDemandResourceManager: ObservableObject {
     #if !os(macOS)
       logger.info("Releasing all ODR resources (\(self.activeRequests.count) active)")
 
-      for (resourceId, request) in self.activeRequests {
+      for (resourceId, request) in activeRequests {
         request.endAccessingResources()
-        self.resourceStates[resourceId] = .notDownloaded
+        resourceStates[resourceId] = .notDownloaded
       }
 
-      self.activeRequests.removeAll()
+      activeRequests.removeAll()
     #else
       // macOS doesn't use ODR, so nothing to release
       logger.debug("Release all resources called on macOS (no-op)")
@@ -270,42 +270,92 @@ final class OnDemandResourceManager: ObservableObject {
   }
 
   private func checkAvailableResources() {
-    // Files are copied flat to bundle root, scan for metadata files
-    guard let resourceURL = Bundle.main.resourceURL else {
-      logger.warning("Failed to find bundle resource directory")
-      return
-    }
-
-    guard let contents = try? FileManager.default.contentsOfDirectory(
-      at: resourceURL,
-      includingPropertiesForKeys: [.isRegularFileKey],
-      options: [.skipsHiddenFiles]
-    ) else {
-      logger.warning("Failed to read bundle resource contents")
-      return
-    }
-
-    // Find all *Metadata.json files to discover resource IDs
-    let metadataFiles = contents.filter { $0.lastPathComponent.hasSuffix("Metadata.json") }
-
-    // Check which resources are already available
-    var availableCount = 0
-    for metadataURL in metadataFiles {
-      // Extract resource ID from filename (e.g., "RainLoopMetadata.json" -> "RainLoop")
-      let filename = metadataURL.deletingPathExtension().lastPathComponent
-      guard let artworkId = filename.components(separatedBy: "Metadata").first else {
-        continue
+    #if os(macOS)
+      // macOS bundles all resources, check local availability
+      guard let resourceURL = Bundle.main.resourceURL else {
+        logger.warning("Failed to find bundle resource directory")
+        return
       }
 
-      if isResourceAvailable(artworkId) {
-        resourceStates[artworkId] = .available
-        availableCount += 1
-      } else {
-        resourceStates[artworkId] = .notDownloaded
+      guard let contents = try? FileManager.default.contentsOfDirectory(
+        at: resourceURL,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+      ) else {
+        logger.warning("Failed to read bundle resource contents")
+        return
       }
-    }
 
-    logger.info("Found \(availableCount) available ODR resources")
+      // Find all *Metadata.json files to discover resource IDs
+      let metadataFiles = contents.filter { $0.lastPathComponent.hasSuffix("Metadata.json") }
+
+      var availableCount = 0
+      for metadataURL in metadataFiles {
+        let filename = metadataURL.deletingPathExtension().lastPathComponent
+        guard let artworkId = filename.components(separatedBy: "Metadata").first else {
+          continue
+        }
+
+        if isResourceAvailable(artworkId) {
+          resourceStates[artworkId] = .available
+          availableCount += 1
+        } else {
+          resourceStates[artworkId] = .notDownloaded
+        }
+      }
+
+      logger.info("Found \(availableCount) available ODR resources")
+    #else
+      // iOS: Use conditionallyBeginAccessingResources to check ODR cache
+      // Scan bundle for metadata files to get list of all possible ODR resources
+      guard let resourceURL = Bundle.main.resourceURL else {
+        logger.warning("Failed to find bundle resource directory")
+        return
+      }
+
+      guard let contents = try? FileManager.default.contentsOfDirectory(
+        at: resourceURL,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]
+      ) else {
+        logger.warning("Failed to read bundle resource contents")
+        return
+      }
+
+      // Find all *Metadata.json files to discover resource IDs
+      let metadataFiles = contents.filter { $0.lastPathComponent.hasSuffix("Metadata.json") }
+
+      var availableCount = 0
+      for metadataURL in metadataFiles {
+        let filename = metadataURL.deletingPathExtension().lastPathComponent
+        guard let resourceId = filename.components(separatedBy: "Metadata").first else {
+          continue
+        }
+
+        // Check if resource is available in ODR cache using conditionallyBeginAccessingResources
+        nonisolated(unsafe) let request = NSBundleResourceRequest(tags: [resourceId])
+        request.conditionallyBeginAccessingResources { [weak self] available in
+          guard let self else { return }
+          DispatchQueue.main.async {
+            if available {
+              self.resourceStates[resourceId] = .available
+              // Keep the request alive to maintain ODR cache
+              self.activeRequests[resourceId] = request
+            } else {
+              self.resourceStates[resourceId] = .notDownloaded
+            }
+          }
+        }
+
+        // Also check for immediate availability (already accessed)
+        if activeRequests[resourceId] != nil {
+          resourceStates[resourceId] = .available
+          availableCount += 1
+        }
+      }
+
+      logger.info("Found \(availableCount) available ODR resources")
+    #endif
   }
 }
 

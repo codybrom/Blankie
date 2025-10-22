@@ -53,45 +53,11 @@ import SwiftUI
             Text("Accent Color")
               .font(.headline)
 
-            let availableColors = Array(AccentColor.allCases.dropFirst())
-            let colorsPerRow = 6
-
-            VStack(alignment: .center, spacing: 12) {
-              ForEach(0..<2, id: \.self) { row in
-                HStack(spacing: 12) {
-                  Spacer()
-                  ForEach(0..<colorsPerRow, id: \.self) { col in
-                    let index = row * colorsPerRow + col
-                    if index < availableColors.count {
-                      let color = availableColors[index]
-                      Button(action: {
-                        globalSettings.setAccentColor(color.color)
-                      }) {
-                        Circle()
-                          .fill(color.color ?? .accentColor)
-                          .frame(width: 44, height: 44)
-                          .overlay(
-                            Circle()
-                              .stroke(
-                                globalSettings.customAccentColor == color.color ? .white : .clear,
-                                lineWidth: 3
-                              )
-                          )
-                          .overlay(
-                            globalSettings.customAccentColor == color.color
-                              ? Image(systemName: "checkmark")
-                                .foregroundColor(.white)
-                                .font(.system(size: 16, weight: .bold))
-                              : nil
-                          )
-                      }
-                      .buttonStyle(.plain)
-                    }
-                  }
-                  Spacer()
-                }
+            SpectrumColorPicker(selectedColor: $globalSettings.customAccentColor)
+              .padding(.vertical, 8)
+              .onChange(of: globalSettings.customAccentColor) { _, newColor in
+                globalSettings.setAccentColor(newColor)
               }
-            }
           }
         }
         .padding(.horizontal, 24)

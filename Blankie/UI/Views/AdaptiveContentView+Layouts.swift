@@ -47,38 +47,27 @@ import SwiftUI
     var gridView: some View {
       ScrollView {
         if editMode == .active {
-          // Edit mode helper text
           Text("Drag sounds to reorder")
             .font(.subheadline)
             .foregroundColor(.secondary)
             .padding(.top, 8)
-            .padding(.bottom, 4)
         }
 
-        LazyVGrid(
-          columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2),
-          spacing: 16
-        ) {
-          ForEach(Array(filteredSounds.enumerated()), id: \.offset) { index, sound in
-            GridSoundButtonWrapper(
-              sound: sound,
-              index: index,
-              editMode: $editMode,
-              draggedIndex: $draggedIndex,
-              audioManager: audioManager,
-              onMove: { fromIndex, toIndex in
-                moveGridItems(from: fromIndex, to: toIndex)
-              }
-            )
+        ReorderableGrid(
+          items: filteredSounds,
+          columns: 2,
+          spacing: 16,
+          isReorderEnabled: editMode == .active,
+          onMove: moveGridItems
+        ) { sound, _ in
+          GridSoundButton(sound: sound, editMode: $editMode)
             .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
-          }
         }
         .padding()
         .padding(.bottom, editMode == .active ? 80 : 0)
       }
       .overlay(alignment: .bottom) {
         if editMode == .active {
-          // Done Moving button
           VStack(spacing: 0) {
             Divider()
 

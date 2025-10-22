@@ -72,7 +72,8 @@ struct CreatePresetSheet: View {
           NavigationStack {
             SoundSelectionView(
               selectedSounds: $selectedSounds,
-              orderedSounds: orderedSounds
+              orderedSounds: orderedSounds,
+              editingPreset: nil
             )
             .navigationBarItems(
               leading: Button("Done") {
