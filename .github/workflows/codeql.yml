@@ -1,0 +1,54 @@
+name: "CodeQL"
+on:
+  push:
+    branches: ["main", "v1.1"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "15 14 * * 1"
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["swift"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: manual
+      - name: Build Swift project
+        run: |
+          if [ ! -f "Configuration.xcconfig" ]; then
+            echo "Creating Configuration.xcconfig from example..."
+            cp Configuration.example.xcconfig Configuration.xcconfig
+            sed -i '' 's/YOUR_TEAM_ID_HERE/DUMMY_TEAM/' Configuration.xcconfig
+            sed -i '' 's/com.yournamehere.blankie/com.example.blankie/' Configuration.xcconfig
+          fi
+          xcodebuild clean build \
+            -project Blankie.xcodeproj \
+            -scheme "Blankie (Universal)" \
+            -destination "platform=macOS,arch=x86_64" \
+            -configuration Debug \
+            -quiet \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            ENABLE_BITCODE=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
