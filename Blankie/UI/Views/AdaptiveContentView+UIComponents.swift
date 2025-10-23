@@ -8,6 +8,7 @@
 import SwiftUI
 
 #if os(iOS) || os(visionOS)
+    import TipKit
 
     // MARK: - UI Components Extension
 
@@ -448,6 +449,7 @@ import SwiftUI
                 // Tap on the main bar opens preset picker
                 showingPresetPicker = true
             }
+            .popoverTip(SwitchPresetsTip(), arrowEdge: .bottom)
         }
 
         @ViewBuilder

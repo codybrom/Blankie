@@ -80,6 +80,7 @@ struct BlankieApp: App {
           showingAbout: $showingAbout
         )
         .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
+        .withPresetOnboarding()
         .preferredColorScheme(
           globalSettings.appearance == .system
             ? nil : (globalSettings.appearance == .dark ? .dark : .light)
@@ -95,7 +96,7 @@ struct BlankieApp: App {
 
   // MARK: - Scene Phase Handling
 
-  private func handleScenePhaseChange(oldPhase: ScenePhase, newPhase: ScenePhase) {
+  private func handleScenePhaseChange(oldPhase _: ScenePhase, newPhase: ScenePhase) {
     switch newPhase {
     case .background:
       // Save state when app goes to background

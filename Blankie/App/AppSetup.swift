@@ -8,6 +8,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import TipKit
 
 /// Shared SwiftData container management to ensure single container per process
 class SharedModelContainer {
@@ -110,5 +111,25 @@ struct AppSetup {
         await PresetManager.shared.cacheAllThumbnails()
       }
     #endif
+
+    // Configure TipKit for preset onboarding
+    configureTipKit()
+  }
+
+  /// Configure TipKit for the app
+  @MainActor
+  private func configureTipKit() {
+    #if DEBUG
+      // Reset tips in debug builds for testing
+      try? Tips.resetDatastore()
+    #endif
+
+    // Configure TipKit
+    try? Tips.configure([
+      .displayFrequency(.immediate),
+      .datastoreLocation(.applicationDefault),
+    ])
+
+    print("✅ AppSetup: TipKit configured for preset onboarding")
   }
 }

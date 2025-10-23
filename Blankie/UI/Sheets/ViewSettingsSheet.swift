@@ -96,10 +96,10 @@ import SwiftUI
             }
             .pickerStyle(.menu)
 
-            // Theme Color
+            // Accent Color
             VStack(alignment: .leading, spacing: 8) {
               HStack {
-                Text("Theme Color")
+                Text("Accent Color")
                   .foregroundColor(.primary)
                 Spacer()
               }

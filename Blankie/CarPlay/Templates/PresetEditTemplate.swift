@@ -154,7 +154,7 @@
         return UIColor(customColor)
       }
 
-      // Second priority: user's theme color
+      // Second priority: user's accent colo
       if let themeColor = GlobalSettings.shared.customAccentColor {
         return UIColor(themeColor)
       }

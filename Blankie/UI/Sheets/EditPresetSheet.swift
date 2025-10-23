@@ -375,6 +375,9 @@ extension EditPresetSheet {
             )
           }
 
+          // Mark that user has edited a preset for onboarding tracking
+          OnboardingManager.shared.markPresetEdited()
+
           // Save presets directly without overriding the current preset state
           savePresetsDirectly()
 

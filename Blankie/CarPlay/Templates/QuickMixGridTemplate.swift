@@ -11,7 +11,6 @@
   import SwiftUI
 
   enum QuickMixGridTemplate {
-
     static func createTemplate() -> CPGridTemplate {
       let gridButtons = createGridButtons()
 
@@ -55,7 +54,7 @@
       // Check if sound is currently playing in QuickMix mode
       let isPlaying =
         sound.player?.isPlaying == true && AudioManager.shared.isQuickMix
-        && AudioManager.shared.soloModeSound == nil
+          && AudioManager.shared.soloModeSound == nil
 
       // Create button titles
       let titles = [sound.title]
@@ -126,7 +125,7 @@
         return UIColor(customColor)
       }
 
-      // Second priority: user's theme color
+      // Second priority: user's accent colo
       if let themeColor = GlobalSettings.shared.customAccentColor {
         return UIColor(themeColor)
       }
@@ -135,7 +134,7 @@
       return UIColor.tintColor
     }
 
-    private static func handleSoundToggle(_ sound: Sound, button: CPGridButton) {
+    private static func handleSoundToggle(_ sound: Sound, button _: CPGridButton) {
       Task { @MainActor in
         // Exit solo mode if active
         if AudioManager.shared.soloModeSound != nil {
@@ -158,7 +157,6 @@
         NotificationCenter.default.post(name: .soundStateChanged, object: sound)
       }
     }
-
   }
 
 #endif

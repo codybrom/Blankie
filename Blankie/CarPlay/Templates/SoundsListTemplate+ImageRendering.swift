@@ -11,7 +11,6 @@
   import SwiftUI
 
   extension SoundsListTemplate {
-
     static func getSoundImage(for sound: Sound) -> UIImage? {
       // Create a circular background with the icon centered
       let size = CGSize(width: 40, height: 40)
@@ -61,7 +60,7 @@
       if isInSoloMode {
         getBackgroundColor(for: sound, isInSoloMode: isInSoloMode).setFill()
       } else {
-        // Use icon color (custom color > theme color > tint color)
+        // Use icon color (custom color > accent color > tint color)
         getIconColor(for: sound).setFill()
       }
       configuredIcon.withRenderingMode(.alwaysTemplate).draw(in: iconRect)
@@ -82,7 +81,7 @@
         return UIColor(customColor)
       }
 
-      // Second priority: user's theme color
+      // Second priority: user's accent colo
       if let themeColor = GlobalSettings.shared.customAccentColor {
         return UIColor(themeColor)
       }

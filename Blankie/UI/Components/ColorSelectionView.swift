@@ -17,7 +17,7 @@ struct ColorSelectionView: View {
       if let nsColor = NSColor(color).usingColorSpace(.sRGB) {
         let brightness =
           (0.299 * nsColor.redComponent) + (0.587 * nsColor.greenComponent)
-          + (0.114 * nsColor.blueComponent)
+            + (0.114 * nsColor.blueComponent)
         return brightness > 0.5 ? .black : .white
       } else {
         return .white
@@ -33,7 +33,7 @@ struct ColorSelectionView: View {
       if let nsColor = NSColor(color).usingColorSpace(.sRGB) {
         let brightness =
           (0.299 * nsColor.redComponent) + (0.587 * nsColor.greenComponent)
-          + (0.114 * nsColor.blueComponent)
+            + (0.114 * nsColor.blueComponent)
         return brightness > 0.5 ? .black : .white
       } else {
         return .white
@@ -54,7 +54,7 @@ struct ColorSelectionView: View {
           Button(
             action: { selectedColor = nil },
             label: {
-              Text("Current Theme", comment: "Current theme color option")
+              Text("Current Theme", comment: "Current accent color option")
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(

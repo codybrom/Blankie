@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct PresetPickerRow: View {
   let preset: Preset
@@ -31,6 +32,10 @@ struct PresetPickerRow: View {
           }
 
           try presetManager.applyPreset(preset)
+
+          // Mark that user has switched presets for onboarding tracking
+          OnboardingManager.shared.markPresetSwitched()
+
           dismiss()
           onSelection?()
         } catch {
@@ -68,12 +73,17 @@ struct PresetPickerRow: View {
 struct PresetPickerView: View {
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
+  @ObservedObject private var onboardingManager = OnboardingManager.shared
   @State private var showingNewPresetSheet = false
   @State private var newPresetName = ""
   @State private var presetToDelete: Preset?
   @State private var isEditMode = false
   @State private var editingPresets: [Preset] = []
   @Environment(\.dismiss) private var dismiss
+
+  // TipKit tips
+  private let createFirstPresetTip = CreateFirstPresetTip()
+  private let switchPresetsTip = SwitchPresetsTip()
 
   private var sortedCustomPresets: [Preset] {
     presetManager.presets
@@ -136,7 +146,7 @@ struct PresetPickerView: View {
 
     // Get all presets and update only the ones we edited
     var allPresets = presetManager.presets
-    for index in 0..<allPresets.count {
+    for index in 0 ..< allPresets.count {
       if let updatedPreset = updatedPresetsMap[allPresets[index].id] {
         allPresets[index] = updatedPreset
         print(
@@ -158,6 +168,17 @@ struct PresetPickerView: View {
   var body: some View {
     NavigationView {
       List {
+        // Show tip for creating first preset if no custom presets exist
+        if !presetManager.hasCustomPresets {
+          TipView(createFirstPresetTip, arrowEdge: .top) { action in
+            if action.id == "create" {
+              showingNewPresetSheet = true
+            }
+          }
+          .listRowBackground(Color.clear)
+          .listRowSeparator(.hidden)
+        }
+
         if presetManager.isLoading {
           // Loading view
           HStack {
@@ -232,6 +253,8 @@ struct PresetPickerView: View {
             Button {
               Task { @MainActor in
                 audioManager.enterQuickMix()
+                // Mark that user has used Quick Mix
+                OnboardingManager.shared.markQuickMixUsed()
                 dismiss()
               }
             } label: {
@@ -272,75 +295,75 @@ struct PresetPickerView: View {
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          if presetManager.hasCustomPresets {
-            Button {
-              if isEditMode {
-                cancelEditing()
-              } else {
-                startEditing()
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            if presetManager.hasCustomPresets {
+              Button {
+                if isEditMode {
+                  cancelEditing()
+                } else {
+                  startEditing()
+                }
+              } label: {
+                Text(isEditMode ? "Cancel" : "Edit", comment: "Edit mode toggle button")
               }
-            } label: {
-              Text(isEditMode ? "Cancel" : "Edit", comment: "Edit mode toggle button")
+            }
+          }
+
+          ToolbarItem(placement: .primaryAction) {
+            if isEditMode {
+              Button("Done") {
+                saveEditing()
+              }
+              .fontWeight(.semibold)
+            } else {
+              Button {
+                showingNewPresetSheet = true
+              } label: {
+                Label("New Preset", systemImage: "plus")
+              }
             }
           }
         }
-
-        ToolbarItem(placement: .primaryAction) {
-          if isEditMode {
-            Button("Done") {
-              saveEditing()
-            }
-            .fontWeight(.semibold)
-          } else {
-            Button {
-              showingNewPresetSheet = true
-            } label: {
-              Label("New Preset", systemImage: "plus")
-            }
-          }
-        }
-
-      }
       #if os(iOS)
         .environment(\.editMode, .constant(isEditMode ? EditMode.active : EditMode.inactive))
       #endif
-      .sheet(isPresented: $showingNewPresetSheet) {
-        CreatePresetSheet(isPresented: $showingNewPresetSheet)
-      }
-      .alert(
-        "Delete Preset",
-        isPresented: .init(
-          get: { presetToDelete != nil },
-          set: { if !$0 { presetToDelete = nil } }
-        )
-      ) {
-        Button("Cancel", role: .cancel) {
-          presetToDelete = nil
+        .sheet(isPresented: $showingNewPresetSheet) {
+          CreatePresetSheet(isPresented: $showingNewPresetSheet)
         }
+        .alert(
+          "Delete Preset",
+          isPresented: .init(
+            get: { presetToDelete != nil },
+            set: { if !$0 { presetToDelete = nil } }
+          )
+        ) {
+          Button("Cancel", role: .cancel) {
+            presetToDelete = nil
+          }
 
-        Button("Delete", role: .destructive) {
-          if let preset = presetToDelete {
-            Task {
-              presetManager.deletePreset(preset)
-              presetToDelete = nil
+          Button("Delete", role: .destructive) {
+            if let preset = presetToDelete {
+              Task {
+                presetManager.deletePreset(preset)
+                presetToDelete = nil
+              }
             }
           }
+        } message: {
+          if let preset = presetToDelete {
+            Text(
+              "Are you sure you want to delete '\(preset.name)'? This action cannot be undone.",
+              comment: "Delete preset confirmation message"
+            )
+          }
         }
-      } message: {
-        if let preset = presetToDelete {
-          Text(
-            "Are you sure you want to delete '\(preset.name)'? This action cannot be undone.",
-            comment: "Delete preset confirmation message")
+        .onDisappear {
+          // Cancel editing if view is dismissed (e.g., by swiping)
+          if isEditMode {
+            cancelEditing()
+          }
         }
-      }
-      .onDisappear {
-        // Cancel editing if view is dismissed (e.g., by swiping)
-        if isEditMode {
-          cancelEditing()
-        }
-      }
     }
   }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 // Animation trigger struct to consolidate multiple animation values
 private struct AnimationTrigger: Equatable {
@@ -15,8 +16,10 @@ private struct AnimationTrigger: Equatable {
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
+    @StateObject var onboardingManager = OnboardingManager.shared
     @State var showingListView = false
     @State var showingPresetPicker = false
+    @State var showingOnboarding = false
     @State var hideInactiveSounds = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State var draggedIndex: Int?
@@ -57,6 +60,10 @@ private struct AnimationTrigger: Equatable {
       .sheet(isPresented: $showingPresetPicker) {
         PresetPickerView()
           .presentationDetents([.large])
+      }
+      .sheet(isPresented: $showingOnboarding) {
+        PresetOnboardingSheet(isPresented: $showingOnboarding)
+          .interactiveDismissDisabled()
       }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
@@ -143,6 +150,13 @@ private struct AnimationTrigger: Equatable {
         // Preset was updated
         print("🔄 AdaptiveContentView: Received PresetUpdated notification")
         soundsUpdateTrigger += 1
+      }
+      .task {
+        // Check if we should show onboarding after a brief delay
+        try? await Task.sleep(for: .seconds(1))
+        if onboardingManager.checkAndShowOnboarding(hasCustomPresets: presetManager.hasCustomPresets) {
+          showingOnboarding = true
+        }
       }
     }
 

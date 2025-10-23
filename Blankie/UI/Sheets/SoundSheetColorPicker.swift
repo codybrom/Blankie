@@ -37,14 +37,14 @@ struct ColorPickerPage: View {
   @Environment(\.dismiss) private var dismiss
 
   private let columns = [
-    GridItem(.adaptive(minimum: 44))
+    GridItem(.adaptive(minimum: 44)),
   ]
 
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
         LazyVGrid(columns: columns, spacing: 16) {
-          // Default option - use theme color
+          // Default option - use accent color
           Button(action: {
             selectedColor = nil
             dismiss()
@@ -61,7 +61,7 @@ struct ColorPickerPage: View {
                 }
               }
 
-              Text("Theme", comment: "Theme color option")
+              Text("Theme", comment: "Accent color option")
                 .font(.caption)
             }
           }
