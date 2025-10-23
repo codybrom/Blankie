@@ -80,3 +80,6 @@ Configuration.xcconfig
 releases/*
 .ignored
 .mcp.json
+.clang-module-cache
+.swift-module-cache
+notes
