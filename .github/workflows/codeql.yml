@@ -38,7 +38,7 @@ jobs:
           fi
           xcodebuild clean build \
             -project Blankie.xcodeproj \
-            -scheme "Blankie (Universal)" \
+            -scheme "Blankie" \
             -destination "platform=macOS,arch=x86_64" \
             -configuration Debug \
             -quiet \
