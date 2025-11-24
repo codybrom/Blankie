@@ -54,19 +54,15 @@ struct Preset: Codable, Identifiable, Equatable {
   var animatedArtwork: AnimatedArtworkRef?
   var staticArtworkPath: String?
 
-  // Background customization
-  var showBackgroundImage: Bool?
-  var useArtworkAsBackground: Bool?
-  var backgroundImageId: UUID? // Reference to PresetArtwork for background
-  var backgroundBlurRadius: Double?
-  var backgroundOpacity: Double?
-
   // Preset order for navigation
   var order: Int?
 
   // Import metadata - tracks if this preset was imported
   var isImported: Bool?
   var originalId: UUID? // Original ID from imported preset for duplicate detection
+
+  // Mood/category tags
+  var moods: [SoundMood]?
 
   /// Display name for the preset (shows "All Blankie Sounds" for default preset)
   var displayName: String {
@@ -85,13 +81,9 @@ struct Preset: Codable, Identifiable, Equatable {
       && lhs.creatorName == rhs.creatorName && lhs.artworkId == rhs.artworkId
       && lhs.animatedArtwork == rhs.animatedArtwork
       && lhs.staticArtworkPath == rhs.staticArtworkPath
-      && lhs.showBackgroundImage == rhs.showBackgroundImage
-      && lhs.useArtworkAsBackground == rhs.useArtworkAsBackground
-      && lhs.backgroundImageId == rhs.backgroundImageId
-      && lhs.backgroundBlurRadius == rhs.backgroundBlurRadius
-      && lhs.backgroundOpacity == rhs.backgroundOpacity
       && lhs.order == rhs.order
       && lhs.isImported == rhs.isImported
+      && lhs.moods == rhs.moods
   }
 
   func validate() -> Bool {

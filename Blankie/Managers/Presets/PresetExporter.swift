@@ -117,7 +117,6 @@ class PresetExporter {
 
   private func writeArtwork(for preset: Preset, to archiveDir: URL) async throws {
     let didWriteStaticArtwork = try await writeStaticArtwork(for: preset, to: archiveDir)
-    try await writeBackgroundImage(for: preset, to: archiveDir)
     try await writeCustomAnimatedArtwork(for: preset, to: archiveDir, didWriteStaticArtwork: didWriteStaticArtwork)
   }
 
@@ -138,18 +137,6 @@ class PresetExporter {
       return true
     }
     return false
-  }
-
-  private func writeBackgroundImage(for preset: Preset, to archiveDir: URL) async throws {
-    guard let backgroundId = preset.backgroundImageId,
-          !(preset.useArtworkAsBackground ?? false),
-          let imageData = await PresetArtworkManager.shared.loadArtworkData(id: backgroundId)
-    else {
-      return
-    }
-
-    let backgroundURL = archiveDir.appendingPathComponent(PresetArchive.backgroundFileName)
-    try imageData.write(to: backgroundURL)
   }
 
   private func writeCustomAnimatedArtwork(

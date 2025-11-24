@@ -150,7 +150,8 @@ class CustomSoundManager {
       originalFileName: importData.sourceURL.lastPathComponent,
       randomizeStartPosition: importData.randomizeStartPosition,
       normalizeAudio: true, volumeAdjustment: 1.0, detectedPeakLevel: analysis.peakLevel,
-      detectedLUFS: lufsResult?.lufs, normalizationFactor: lufsResult?.normalizationFactor
+      detectedLUFS: lufsResult?.lufs, normalizationFactor: lufsResult?.normalizationFactor,
+      duration: analysis.duration
     )
 
     // Store ID3 metadata
@@ -312,6 +313,68 @@ class CustomSoundManager {
   @MainActor
   func saveContext() throws {
     try modelContext?.save()
+  }
+
+  // MARK: - Migration
+
+  /// Backfill durations for existing custom sounds that don't have duration set
+  @MainActor
+  func backfillDurations() async {
+    print("🔄 CustomSoundManager: Starting duration backfill for existing custom sounds")
+
+    guard let modelContext = modelContext else {
+      print("❌ CustomSoundManager: No model context available for backfill")
+      return
+    }
+
+    do {
+      // Fetch all custom sounds that don't have duration set
+      let descriptor = FetchDescriptor<CustomSoundData>(
+        predicate: #Predicate { $0.duration == nil }
+      )
+      let soundsNeedingDuration = try modelContext.fetch(descriptor)
+
+      guard !soundsNeedingDuration.isEmpty else {
+        print("✅ CustomSoundManager: No custom sounds need duration backfill")
+        return
+      }
+
+      print("🔍 CustomSoundManager: Found \(soundsNeedingDuration.count) custom sounds needing duration")
+
+      var successCount = 0
+      var failureCount = 0
+
+      for customSound in soundsNeedingDuration {
+        guard let fileURL = getURLForCustomSound(customSound) else {
+          print("⚠️ CustomSoundManager: Could not get URL for custom sound \(customSound.fileName)")
+          failureCount += 1
+          continue
+        }
+
+        // Calculate duration
+        if let duration = AudioAnalyzer.getDuration(at: fileURL) {
+          customSound.duration = duration
+          successCount += 1
+          print("✅ CustomSoundManager: Set duration \(String(format: "%.1f", duration))s for \(customSound.title)")
+        } else {
+          print("⚠️ CustomSoundManager: Failed to calculate duration for \(customSound.fileName)")
+          failureCount += 1
+        }
+      }
+
+      // Save changes
+      if successCount > 0 {
+        try modelContext.save()
+        print("💾 CustomSoundManager: Backfilled \(successCount) durations")
+      }
+
+      if failureCount > 0 {
+        print("⚠️ CustomSoundManager: Failed to backfill \(failureCount) durations")
+      }
+
+    } catch {
+      print("❌ CustomSoundManager: Duration backfill failed: \(error)")
+    }
   }
 
   // MARK: - Internal Helper

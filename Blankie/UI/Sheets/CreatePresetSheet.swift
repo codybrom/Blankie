@@ -169,7 +169,7 @@ extension CreatePresetSheet {
     } header: {
       Text("Animated Artwork")
     } footer: {
-      Text("Loops play on the Lock Screen (iOS 26+)")
+      Text("Loops play on the Lock Screen")
         .font(.caption)
     }
   }
@@ -304,11 +304,6 @@ extension CreatePresetSheet {
       artworkId: artworkId,
       animatedArtwork: animatedArtwork,
       staticArtworkPath: staticArtworkPath,
-      showBackgroundImage: nil,
-      useArtworkAsBackground: nil,
-      backgroundImageId: nil,
-      backgroundBlurRadius: nil,
-      backgroundOpacity: nil,
       order: customPresetsCount
     )
 

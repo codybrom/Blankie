@@ -16,10 +16,7 @@ private struct AnimationTrigger: Equatable {
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
-    @StateObject var onboardingManager = OnboardingManager.shared
     @State var showingListView = false
-    @State var showingPresetPicker = false
-    @State var showingOnboarding = false
     @State var hideInactiveSounds = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State var draggedIndex: Int?
@@ -39,8 +36,6 @@ private struct AnimationTrigger: Equatable {
     // Performance optimization: cached state properties
     @State var cachedFilteredSounds: [Sound] = []
     @State var lastFilterHash: Int = 0
-    @State var backgroundImage: PlatformImage?
-    @State var lastPresetId: UUID?
     @State var cachedColumnWidth: CGFloat = 0
     @State var lastScreenWidth: CGFloat = 0
 
@@ -56,14 +51,6 @@ private struct AnimationTrigger: Equatable {
       }
       .sheet(isPresented: $showingAbout) {
         AboutView()
-      }
-      .sheet(isPresented: $showingPresetPicker) {
-        PresetPickerView()
-          .presentationDetents([.large])
-      }
-      .sheet(isPresented: $showingOnboarding) {
-        PresetOnboardingSheet(isPresented: $showingOnboarding)
-          .interactiveDismissDisabled()
       }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
@@ -151,13 +138,6 @@ private struct AnimationTrigger: Equatable {
         print("🔄 AdaptiveContentView: Received PresetUpdated notification")
         soundsUpdateTrigger += 1
       }
-      .task {
-        // Check if we should show onboarding after a brief delay
-        try? await Task.sleep(for: .seconds(1))
-        if onboardingManager.checkAndShowOnboarding(hasCustomPresets: presetManager.hasCustomPresets) {
-          showingOnboarding = true
-        }
-      }
     }
 
     // MARK: - Layouts
@@ -166,7 +146,6 @@ private struct AnimationTrigger: Equatable {
     private var iPadLayout: some View {
       NavigationSplitView(columnVisibility: $columnVisibility) {
         SidebarContentView(
-          showingPresetPicker: $showingPresetPicker,
           showingAbout: $showingAbout,
           hideInactiveSounds: $hideInactiveSounds,
           showingViewSettings: $showingViewSettings,
@@ -174,38 +153,33 @@ private struct AnimationTrigger: Equatable {
         )
       } detail: {
         NavigationStack {
-          ZStack {
-            // Background layer
-            presetBackgroundView
-
-            VStack(spacing: 0) {
-              mainContentView
+          VStack(spacing: 0) {
+            mainContentView
+          }
+          .navigationBarTitleDisplayMode(.inline)
+          .toolbar {
+            ToolbarItem(placement: .principal) {
+              Text(navigationTitle)
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundColor(.primary)
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-              ToolbarItem(placement: .principal) {
-                Text(navigationTitle)
-                  .font(.system(size: 28, weight: .semibold))
-                  .foregroundColor(.primary)
-              }
 
-              ToolbarItem(placement: .confirmationAction) {
-                // Preset edit button (right aligned) - also show for default preset
-                if let currentPreset = presetManager.currentPreset,
-                   !audioManager.isQuickMix
-                {
-                  Button {
-                    presetToEdit = currentPreset
-                  } label: {
-                    Image(systemName: "slider.vertical.3")
-                      .font(.system(size: 18))
-                      .foregroundColor(.secondary)
-                  }
+            ToolbarItem(placement: .confirmationAction) {
+              // Preset edit button (right aligned) - also show for default preset
+              if let currentPreset = presetManager.currentPreset,
+                 !audioManager.isQuickMix
+              {
+                Button {
+                  presetToEdit = currentPreset
+                } label: {
+                  Image(systemName: "slider.vertical.3")
+                    .font(.system(size: 18))
+                    .foregroundColor(.secondary)
                 }
               }
             }
-            .toolbarBackground(.hidden, for: .navigationBar)
           }
+          .toolbarBackground(.hidden, for: .navigationBar)
         }
       }
       .navigationSplitViewStyle(.balanced)
@@ -214,18 +188,21 @@ private struct AnimationTrigger: Equatable {
     @ViewBuilder
     private var iPhoneLayout: some View {
       NavigationStack {
-        ZStack {
-          // Background layer
-          presetBackgroundView
+        VStack(spacing: 0) {
+          // Preset name at top
+          Text(navigationTitle)
+            .font(.system(size: 20, weight: .semibold))
+            .foregroundColor(.primary)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 20)
+            .padding(.bottom, 5)
 
-          VStack(spacing: 0) {
-            mainContentView
-          }
-          .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomToolbar
-          }
-          .navigationBarHidden(true)
+          mainContentView
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+          bottomToolbar
+        }
+        .navigationBarHidden(true)
       }
     }
 

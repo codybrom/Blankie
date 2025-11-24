@@ -2,85 +2,115 @@
   "sounds": [
     {
       "author": "alex36917",
-      "authorUrl": "https:\/\/freesound.org\/people\/alex36917\/",
+      "authorUrl": "https://freesound.org/people/alex36917/",
       "defaultOrder": 0,
       "description": "This is a light to medium rain storm. A little thunder may be heard. Towards the end of the sound, there is a train horn in the distance.",
+      "duration": 126.316009,
       "fileName": "rain",
       "license": "ccBy4",
       "lufs": -32.39718,
+      "moods": [
+        "sleep",
+        "relax"
+      ],
       "normalizationFactor": 1.8614824,
       "soundName": "rain ambience",
-      "soundUrl": "https:\/\/freesound.org\/s\/524605\/",
+      "soundUrl": "https://freesound.org/s/524605/",
       "systemIconName": "cloud.rain",
       "title": "Rain"
     },
     {
       "author": "Digifish music",
-      "authorUrl": "https:\/\/freesound.org\/people\/digifishmusic\/",
+      "authorUrl": "https://freesound.org/people/digifishmusic/",
       "defaultOrder": 1,
       "description": "A storm with thunder and rain.",
+      "duration": 25.662993,
       "fileName": "storm",
       "license": "ccBy4",
       "lufs": -16.898233,
+      "moods": [
+        "relax",
+        "sleep"
+      ],
       "normalizationFactor": 0.31254438,
       "soundName": "Infinite Storm.wav",
-      "soundUrl": "https:\/\/freesound.org\/s\/41739",
+      "soundUrl": "https://freesound.org/s/41739",
       "systemIconName": "cloud.bolt.rain",
       "title": "Storm"
     },
     {
       "author": "felix.blume",
-      "authorUrl": "https:\/\/freesound.org\/people\/felix.blume\/",
+      "authorUrl": "https://freesound.org/people/felix.blume/",
       "defaultOrder": 2,
       "description": "Wind whistling with some squalls in a field in Texas.",
+      "duration": 212.318005,
       "fileName": "wind",
       "license": "cc0",
       "lufs": -16.73738,
+      "moods": [
+        "focus",
+        "relax"
+      ],
       "normalizationFactor": 0.30680963,
       "soundName": "Wind blowing in a field in Texas, USA",
-      "soundUrl": "https:\/\/freesound.org\/s\/217506\/",
+      "soundUrl": "https://freesound.org/s/217506/",
       "systemIconName": "wind",
       "title": "Wind"
     },
     {
       "author": "Luftrum",
-      "authorUrl": "https:\/\/freesound.org\/people\/Luftrum\/",
+      "authorUrl": "https://freesound.org/people/Luftrum/",
       "defaultOrder": 3,
       "description": "Close field recording of medium ambient waves crushing on the shore of Kalundborg Fjord at Røsnæs. Water cascading through small stones as it pulls back into the ocean.",
+      "duration": 120.0,
       "fileName": "waves",
       "license": "ccBy4",
       "lufs": -25.343016,
+      "moods": [
+        "sleep",
+        "relax"
+      ],
       "normalizationFactor": 0.82632476,
       "soundName": "oceanwavescrushing.wav",
-      "soundUrl": "https:\/\/freesound.org\/s\/48412\/",
+      "soundUrl": "https://freesound.org/s/48412/",
       "systemIconName": "water.waves",
       "title": "Waves"
     },
     {
       "author": "gluckose",
-      "authorUrl": "https:\/\/freesound.org\/people\/gluckose\/",
+      "authorUrl": "https://freesound.org/people/gluckose/",
       "defaultOrder": 4,
       "description": "A small meandering stream in the woods.",
+      "duration": 145.529002,
       "fileName": "stream",
       "license": "cc0",
       "lufs": -41.927307,
+      "moods": [
+        "sleep",
+        "relax"
+      ],
       "normalizationFactor": 5.576547,
       "soundName": "stream2.wav",
-      "soundUrl": "https:\/\/freesound.org\/s\/333987\/",
+      "soundUrl": "https://freesound.org/s/333987/",
       "systemIconName": "humidity",
       "title": "Stream"
     },
     {
       "author": "kvgarlic",
-      "authorUrl": "https:\/\/freesound.org\/people\/kvgarlic\/",
+      "authorUrl": "https://freesound.org/people/kvgarlic/",
       "defaultOrder": 5,
       "description": "This wood thrush was recorded around 7:30 in the morning in heavy woods in deep southern Illinois.",
+      "duration": 132.480998,
       "fileName": "birds",
       "license": "cc0",
       "lufs": -45.955666,
+      "moods": [
+        "focus",
+        "relax"
+      ],
       "normalizationFactor": 7.943282,
       "soundName": "WoodThrushinMorningShawneeForestMay272012.wav",
-      "soundUrl": "https:\/\/freesound.org\/s\/156826\/",
+      "soundUrl": "https://freesound.org/s/156826/",
       "systemIconName": "bird",
       "title": "Birds"
     },
@@ -88,54 +118,73 @@
       "author": "Lisa Redfern",
       "defaultOrder": 6,
       "description": "Crickets chirping in the night.",
+      "duration": 49.32,
       "fileName": "summer-night",
       "license": "publicDomain",
       "lufs": -30.600727,
+      "moods": [
+        "sleep",
+        "relax"
+      ],
       "normalizationFactor": 1.513688,
       "soundName": "Crickets Chirping At Night",
-      "soundUrl": "https:\/\/soundbible.com\/2083-Crickets-Chirping-At-Night.html",
+      "soundUrl": "https://soundbible.com/2083-Crickets-Chirping-At-Night.html",
       "systemIconName": "moon.stars.fill",
       "title": "Summer Night"
     },
     {
       "author": "SDLx",
-      "authorUrl": "https:\/\/freesound.org\/people\/SDLx\/",
+      "authorUrl": "https://freesound.org/people/SDLx/",
       "defaultOrder": 7,
       "description": "JR Yamanote Line trains near Okachimachi station, Tokyo. Recorded December 2013.",
+      "duration": 568.437007,
       "fileName": "train",
       "license": "ccBy3",
       "lufs": -28.214348,
+      "moods": [
+        "sleep",
+        "focus"
+      ],
       "normalizationFactor": 1.1500518,
       "soundName": "Trains of the Yamanote Line",
-      "soundUrl": "https:\/\/freesound.org\/s\/259988\/",
+      "soundUrl": "https://freesound.org/s/259988/",
       "systemIconName": "tram.fill",
       "title": "Train"
     },
     {
       "author": "Falcet",
-      "authorUrl": "https:\/\/freesound.org\/people\/Falcet\/",
+      "authorUrl": "https://freesound.org/people/Falcet/",
       "defaultOrder": 8,
       "description": "Rope squeaks on boat.",
+      "duration": 42.0,
       "fileName": "boat",
       "license": "cc0",
       "lufs": -51.652145,
+      "moods": [
+        "sleep",
+        "relax"
+      ],
       "normalizationFactor": 7.943282,
       "soundName": "Ambience_Sea_Boat_Night_Ropes_4.wav",
-      "soundUrl": "https:\/\/freesound.org\/s\/439365\/",
+      "soundUrl": "https://freesound.org/s/439365/",
       "systemIconName": "sailboat.fill",
       "title": "Boat"
     },
     {
       "author": "gezortenplotz",
-      "authorUrl": "https:\/\/freesound.org\/people\/gezortenplotz\/",
+      "authorUrl": "https://freesound.org/people/gezortenplotz/",
       "defaultOrder": 9,
       "description": "Street level in New York.",
+      "duration": 24.641995,
       "fileName": "city",
       "license": "ccBy3",
       "lufs": -37.76452,
+      "moods": [
+        "focus"
+      ],
       "normalizationFactor": 3.4532335,
       "soundName": "NYC_street leve02l.wav",
-      "soundUrl": "https:\/\/freesound.org\/s\/44796\/",
+      "soundUrl": "https://freesound.org/s/44796/",
       "systemIconName": "building.2",
       "title": "City"
     },
@@ -143,12 +192,16 @@
       "author": "stephan",
       "defaultOrder": 10,
       "description": "Contains persons talking and other sounds, none of the words are discernible.",
+      "duration": 16.661995,
       "fileName": "coffee-shop",
       "license": "publicDomain",
       "lufs": -22.703123,
+      "moods": [
+        "focus"
+      ],
       "normalizationFactor": 0.6097561,
       "soundName": "Restaurant Ambiance",
-      "soundUrl": "https:\/\/soundbible.com\/1664-Restaurant-Ambiance.html",
+      "soundUrl": "https://soundbible.com/1664-Restaurant-Ambiance.html",
       "systemIconName": "cup.and.saucer.fill",
       "title": "Coffee Shop"
     },
@@ -156,40 +209,55 @@
       "author": "ezwa",
       "defaultOrder": 11,
       "description": "Very small crackles and sizzle burn sound effects along with air movement.",
+      "duration": 25.537007,
       "fileName": "fireplace",
       "license": "publicDomain",
       "lufs": -41.440178,
+      "moods": [
+        "relax",
+        "sleep"
+      ],
       "normalizationFactor": 5.2724066,
       "soundName": "Fireplace",
-      "soundUrl": "https:\/\/soundbible.com\/1543-Fireplace.html",
+      "soundUrl": "https://soundbible.com/1543-Fireplace.html",
       "systemIconName": "fireplace",
       "title": "Fireplace"
     },
     {
       "author": "Blankie",
-      "authorUrl": "https:\/\/blankie.rest",
+      "authorUrl": "https://blankie.rest",
       "defaultOrder": 12,
       "description": "20 seconds of pure pink noise generated in Python using numpy",
+      "duration": 20.0,
       "fileName": "pink-noise",
       "license": "cc0",
       "lufs": -25.240189,
+      "moods": [
+        "focus",
+        "sleep"
+      ],
       "normalizationFactor": 0.8166001,
       "soundName": "Pink Noise (Stereo)",
-      "soundUrl": "https:\/\/blankie.rest\/credits",
+      "soundUrl": "https://blankie.rest/credits",
       "systemIconName": "waveform.path",
       "title": "Pink Noise"
     },
     {
       "author": "Blankie",
-      "authorUrl": "https:\/\/blankie.rest",
+      "authorUrl": "https://blankie.rest",
       "defaultOrder": 13,
       "description": "20 seconds of pure white noise generated in Python using numpy",
+      "duration": 20.0,
       "fileName": "white-noise",
       "license": "cc0",
       "lufs": -31.093039,
+      "moods": [
+        "focus",
+        "sleep"
+      ],
       "normalizationFactor": 1.6019609,
       "soundName": "White Noise (Stereo)",
-      "soundUrl": "https:\/\/blankie.rest\/credits",
+      "soundUrl": "https://blankie.rest/credits",
       "systemIconName": "waveform",
       "title": "White Noise"
     }

@@ -22,23 +22,13 @@ import SwiftUI
       .padding(.horizontal, 16)
       .padding(.vertical, 12)
       .background {
-        if #available(iOS 26.0, *) {
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(.clear)
-            .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 12, style: .continuous))
-            .overlay(
-              RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
-            )
-        } else {
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(.ultraThinMaterial)
-            .opacity(0.7)
-            .overlay(
-              RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
-            )
-        }
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+          .fill(.clear)
+          .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 12, style: .continuous))
+          .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+              .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
+          )
       }
     }
 

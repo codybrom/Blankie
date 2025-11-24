@@ -576,11 +576,6 @@ extension PresetManager {
       artworkId: nil,
       animatedArtwork: nil,
       staticArtworkPath: nil,
-      showBackgroundImage: nil,
-      useArtworkAsBackground: nil,
-      backgroundImageId: nil,
-      backgroundBlurRadius: nil,
-      backgroundOpacity: nil,
       order: nil,
       isImported: nil,
       originalId: nil
@@ -954,7 +949,7 @@ extension PresetManager {
       // Generate a thumbnail for CarPlay (44x44 points)
       let thumbnailSize = CGSize(width: 44, height: 44)
 
-      UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, UIScreen.main.scale)
+      UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, 0)
       fullImage.draw(in: CGRect(origin: .zero, size: thumbnailSize))
       let thumbnail = UIGraphicsGetImageFromCurrentImageContext()
       UIGraphicsEndImageContext()

@@ -78,40 +78,6 @@ import SwiftUI
       horizontalSizeClass == .regular
     }
 
-    // Preset background view
-    @ViewBuilder
-    var presetBackgroundView: some View {
-      if let preset = presetManager.currentPreset,
-         preset.showBackgroundImage ?? false
-      {
-        GeometryReader { geometry in
-          if let image = backgroundImage {
-            Image(uiImage: image)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-              .frame(width: geometry.size.width, height: geometry.size.height)
-              .blur(radius: preset.backgroundBlurRadius ?? 15)
-              .opacity(preset.backgroundOpacity ?? 0.65)
-              .clipped()
-              .overlay(
-                Color.black.opacity(0.2) // Add slight darkening for better UI contrast
-              )
-          }
-        }
-        .ignoresSafeArea()
-        .task(
-          id:
-          "\(preset.id)-\(preset.artworkId?.uuidString ?? "")-\(preset.backgroundImageId?.uuidString ?? "")-\(preset.useArtworkAsBackground ?? false)"
-        ) {
-          Task { @MainActor in
-            self.lastPresetId = preset.id
-            self.backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(
-              for: preset)
-          }
-        }
-      }
-    }
-
     // Computed properties for columns and columnWidth
     var columns: [GridItem] {
       // This is now only used for macOS since iOS uses fixed 2-column grid
@@ -142,20 +108,12 @@ import SwiftUI
           return 300
         }
       #else
-        // Cache column width calculation for iOS
-        let screenWidth = UIScreen.main.bounds.width
-        if screenWidth != lastScreenWidth {
-          DispatchQueue.main.async {
-            self.lastScreenWidth = screenWidth
-            let spacing: CGFloat = 16
-            let padding: CGFloat = 32 // 16 on each side
-            self.cachedColumnWidth = (screenWidth - padding - spacing) / 2
-          }
-          let spacing: CGFloat = 16
-          let padding: CGFloat = 32 // 16 on each side
-          return (screenWidth - padding - spacing) / 2
-        }
-        return cachedColumnWidth
+        // For iOS, use flexible grid items (actual width determined by GeometryReader in view)
+        // Return a reasonable default for layout calculations
+        let spacing: CGFloat = 16
+        let padding: CGFloat = 32
+        let typicalWidth: CGFloat = 393 // Typical iPhone width
+        return (typicalWidth - padding - spacing) / 2
       #endif
     }
 

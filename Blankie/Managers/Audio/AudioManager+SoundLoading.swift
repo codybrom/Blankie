@@ -9,12 +9,13 @@ import SwiftData
 import SwiftUI
 
 // MARK: - Sound Loading
+
 extension AudioManager {
   func loadSounds() {
     print("🎵 AudioManager: Loading built-in sounds from JSON")
 
     // Start with an empty array
-    self.sounds = []
+    sounds = []
 
     // Load built-in sounds
     loadBuiltInSounds()
@@ -56,12 +57,14 @@ extension AudioManager {
       let decoder = JSONDecoder()
       let soundsContainer = try decoder.decode(SoundsContainer.self, from: data)
 
+      soundsData = soundsContainer.sounds.sorted(by: { $0.defaultOrder < $1.defaultOrder })
+
       let builtInSounds = soundsContainer.sounds
         .sorted(by: { $0.defaultOrder < $1.defaultOrder })
         .map { createSoundFromData($0) }
 
       // Add built-in sounds to the sounds array
-      self.sounds.append(contentsOf: builtInSounds)
+      sounds.append(contentsOf: builtInSounds)
 
       // Migrate user preferences from old format (with extensions) to new format (without extensions)
       migrateUserPreferences(for: builtInSounds)
@@ -80,7 +83,8 @@ extension AudioManager {
     let hasExtension = supportedExtensions.contains { soundData.fileName.hasSuffix(".\($0)") }
 
     let (cleanedFileName, fileExtension) = extractFileNameAndExtension(
-      soundData.fileName, hasExtension: hasExtension, supportedExtensions: supportedExtensions)
+      soundData.fileName, hasExtension: hasExtension, supportedExtensions: supportedExtensions
+    )
 
     // Check for cached playback profile
     let profileKey = "\(cleanedFileName).\(fileExtension)"
@@ -90,7 +94,7 @@ extension AudioManager {
     let lufs = cachedProfile?.integratedLUFS ?? soundData.lufs
     let normalizationFactor =
       cachedProfile != nil
-      ? pow(10, cachedProfile!.gainDB / 20) : soundData.normalizationFactor
+        ? pow(10, cachedProfile!.gainDB / 20) : soundData.normalizationFactor
 
     return Sound(
       title: soundData.title,
@@ -101,7 +105,8 @@ extension AudioManager {
       lufs: lufs,
       normalizationFactor: normalizationFactor,
       truePeakdBTP: cachedProfile?.truePeakdBTP,
-      needsLimiter: cachedProfile?.needsLimiter ?? false
+      needsLimiter: cachedProfile?.needsLimiter ?? false,
+      duration: soundData.duration
     )
   }
 
@@ -113,7 +118,8 @@ extension AudioManager {
       let detectedExtension =
         supportedExtensions.first { fileName.hasSuffix(".\($0)") } ?? "mp3"
       let cleanedFileName = fileName.replacingOccurrences(
-        of: ".\(detectedExtension)", with: "")
+        of: ".\(detectedExtension)", with: ""
+      )
       return (cleanedFileName, detectedExtension)
     } else {
       // New format: fileName has no extension, detect from bundle
@@ -141,7 +147,7 @@ extension AudioManager {
     }
 
     // Create Sound objects for each custom sound
-    let customSounds = customSoundData.enumerated().compactMap { (index, data) -> Sound? in
+    let customSounds = customSoundData.enumerated().compactMap { index, data -> Sound? in
       createCustomSound(from: data, index: sounds.count + index)
     }
 
@@ -168,6 +174,11 @@ extension AudioManager {
   func loadCustomSounds() {
     print("🎵 AudioManager: Loading custom sounds")
 
+    // Backfill durations for existing custom sounds (runs once for sounds without duration)
+    Task {
+      await CustomSoundManager.shared.backfillDurations()
+    }
+
     // Get all custom sounds from the database
     let customSoundData = CustomSoundManager.shared.getAllCustomSounds()
 
@@ -175,7 +186,7 @@ extension AudioManager {
     let savedCustomSoundState = stopAndRemoveCustomSounds()
 
     // Create Sound objects for each custom sound
-    let customSounds = customSoundData.enumerated().compactMap { (index, data) -> Sound? in
+    let customSounds = customSoundData.enumerated().compactMap { index, data -> Sound? in
       createCustomSound(from: data, index: index)
     }
 
@@ -259,7 +270,8 @@ extension AudioManager {
       isCustom: true,
       fileURL: url,
       dateAdded: data.dateAdded,
-      customSoundDataID: data.id
+      customSoundDataID: data.id,
+      duration: data.duration
     )
   }
 

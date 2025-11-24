@@ -542,7 +542,6 @@ extension PresetImporter {
 extension PresetImporter {
   func importArtwork(for preset: inout Preset, from archiveURL: URL) async throws {
     try await importStaticArtwork(for: &preset, from: archiveURL)
-    try await importBackgroundImage(for: &preset, from: archiveURL)
     try await importAnimatedArtwork(for: &preset, from: archiveURL)
   }
 
@@ -564,19 +563,6 @@ extension PresetImporter {
     let staticRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: staticId)
     _ = try? AnimatedArtworkFileStore.writeData(artworkData, to: staticRel)
     preset.staticArtworkPath = staticRel
-  }
-
-  private func importBackgroundImage(for preset: inout Preset, from archiveURL: URL) async throws {
-    let backgroundURL = archiveURL.appendingPathComponent(PresetArchive.backgroundFileName)
-    guard FileManager.default.fileExists(atPath: backgroundURL.path) else {
-      return
-    }
-
-    let backgroundData = try Data(contentsOf: backgroundURL)
-    let backgroundId = try await PresetArtworkManager.shared.saveArtwork(
-      backgroundData, for: preset.id, type: .background
-    )
-    preset.backgroundImageId = backgroundId
   }
 
   private func importAnimatedArtwork(for preset: inout Preset, from archiveURL: URL) async throws {
@@ -765,11 +751,6 @@ extension PresetImporter {
       artworkId: preset.artworkId,
       animatedArtwork: preset.animatedArtwork,
       staticArtworkPath: preset.staticArtworkPath,
-      showBackgroundImage: preset.showBackgroundImage,
-      useArtworkAsBackground: preset.useArtworkAsBackground,
-      backgroundImageId: preset.backgroundImageId,
-      backgroundBlurRadius: preset.backgroundBlurRadius,
-      backgroundOpacity: preset.backgroundOpacity,
       order: preset.order,
       isImported: true, // Mark as imported
       originalId: preset.id // Store the original ID for duplicate detection

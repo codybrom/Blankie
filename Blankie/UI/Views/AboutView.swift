@@ -237,8 +237,8 @@ extension AboutView {
   }
 
   private var copyrightText: some View {
-    Text(verbatim: "© 2025 ").font(.caption) +
-      Text("Cody Bromley and contributors. All rights reserved.", comment: "Copyright notice").font(.caption)
+    Text("© 2025 Cody Bromley and contributors. All rights reserved.")
+      .font(.caption)
   }
 
   private var creditsAndLicenseSection: some View {

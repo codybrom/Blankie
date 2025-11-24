@@ -17,6 +17,8 @@ struct PresetOnboardingSheet: View {
     @State private var selectedSounds: Set<String> = []
     @State private var presetName = ""
     @State private var previewingSound: String?
+    @State private var isGeneratingName = false
+    @State private var aiAvailable = false
     @Environment(\.dismiss) private var dismiss
 
     private let steps = OnboardingStep.allSteps
@@ -59,6 +61,15 @@ struct PresetOnboardingSheet: View {
                 if newStep != 2 { // step 2 is selectSounds
                     stopAllPreviews()
                 }
+                // Generate AI name suggestion when entering namePreset step
+                if newStep == 3 { // step 3 is namePreset
+                    Task {
+                        await generateInitialNameSuggestion()
+                    }
+                }
+            }
+            .onAppear {
+                aiAvailable = AIPresetNameGenerator.isAvailable
             }
         }
     }
@@ -94,7 +105,9 @@ struct PresetOnboardingSheet: View {
                     .multilineTextAlignment(.leading)
 
                 // Description
-                Text(step.description)
+                Text(step == .complete && !presetName.isEmpty
+                    ? "'\(presetName)' is ready! Tap 'Create Preset' to save and start listening."
+                    : step.description)
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.leading)
@@ -152,7 +165,7 @@ struct PresetOnboardingSheet: View {
 
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    ForEach(audioManager.sounds.sorted { $0.title < $1.title }) { sound in
+                    ForEach(audioManager.sounds.filter { !$0.isCustom }.sorted { $0.title < $1.title }) { sound in
                         soundSelectionRow(for: sound)
                     }
                 }
@@ -211,12 +224,33 @@ struct PresetOnboardingSheet: View {
         VStack(spacing: 20) {
             Text("Give it a memorable name")
                 .font(.headline)
-
-            TextField("e.g., Morning Meditation", text: $presetName)
+            TextField("e.g., Mindful Meditation", text: $presetName)
                 .textFieldStyle(.roundedBorder)
                 .font(.title3)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+
+            // AI name generation button
+            if aiAvailable {
+                Button {
+                    Task {
+                        await regenerateNameSuggestion()
+                    }
+                } label: {
+                    if isGeneratingName {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                                .scaleEffect(0.8)
+                            Text("Generating...")
+                        }
+                    } else {
+                        Label("Generate Another Name", systemImage: "sparkles")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(isGeneratingName)
+            }
 
             // Preview selected sounds
             if !selectedSounds.isEmpty {
@@ -251,31 +285,21 @@ struct PresetOnboardingSheet: View {
         }
     }
 
+    @ViewBuilder
     private var completionContent: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundStyle(.green)
-                .padding(.bottom, 8)
-
-            Text("You're all set!")
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            if !presetName.isEmpty {
-                Text("'\(presetName)' is ready to use")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
+        if !presetName.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("What's next?")
+                    .font(.headline)
+                VStack(alignment: .leading, spacing: 12) {
+                    Label("Mix sounds with individual volume controls", systemImage: "slider.horizontal.3")
+                    Label("Import your own sounds and backgrounds", systemImage: "square.and.arrow.down")
+                    Label("Set a timer to fade out automatically", systemImage: "timer")
+                }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .padding(.top, 8)
             }
-
-            VStack(alignment: .leading, spacing: 12) {
-                Label("Tap the preset button to switch", systemImage: "rectangle.stack")
-                Label("Edit anytime with the slider icon", systemImage: "slider.vertical.3")
-                Label("Create more presets as you like", systemImage: "plus.circle")
-            }
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .padding(.top, 20)
         }
     }
 
@@ -380,6 +404,37 @@ struct PresetOnboardingSheet: View {
         previewingSound = nil
     }
 
+    private func generateInitialNameSuggestion() async {
+        let selectedTitles = audioManager.sounds
+            .filter { selectedSounds.contains($0.fileName) }
+            .map { $0.title }
+        guard !selectedTitles.isEmpty else { return }
+
+        isGeneratingName = true
+        let suggestion = await AIPresetNameGenerator.generateName(from: selectedTitles, allowVariation: false)
+        await MainActor.run {
+            if presetName.isEmpty {
+                presetName = suggestion
+            }
+            isGeneratingName = false
+        }
+    }
+
+    private func regenerateNameSuggestion() async {
+        guard !isGeneratingName else { return }
+        let selectedTitles = audioManager.sounds
+            .filter { selectedSounds.contains($0.fileName) }
+            .map { $0.title }
+        guard !selectedTitles.isEmpty else { return }
+
+        isGeneratingName = true
+        let suggestion = await AIPresetNameGenerator.generateName(from: selectedTitles, allowVariation: true)
+        await MainActor.run {
+            presetName = suggestion
+            isGeneratingName = false
+        }
+    }
+
     private func createPreset() {
         Task {
             do {
@@ -410,11 +465,6 @@ struct PresetOnboardingSheet: View {
                     artworkId: nil,
                     animatedArtwork: nil,
                     staticArtworkPath: nil,
-                    showBackgroundImage: nil,
-                    useArtworkAsBackground: nil,
-                    backgroundImageId: nil,
-                    backgroundBlurRadius: nil,
-                    backgroundOpacity: nil,
                     order: customPresetsCount
                 )
 
@@ -476,7 +526,7 @@ enum OnboardingStep {
         case .namePreset:
             return "What kind of mood or activity is this preset for? You can always change it later."
         case .complete:
-            return "Your preset is ready! Here's what you can do next:"
+            return "Your preset is ready! Tap 'Create Preset' to save and start listening."
         }
     }
 
@@ -529,10 +579,8 @@ extension LabelStyle where Self == TrailingIconLabelStyle {
 
 // MARK: - Previews
 
-#if DEBUG
-    struct PresetOnboardingSheet_Previews: PreviewProvider {
-        static var previews: some View {
-            PresetOnboardingSheet(isPresented: .constant(true))
-        }
+#Preview {
+    NavigationStack {
+        PresetOnboardingSheet(isPresented: .constant(true))
     }
-#endif
+}

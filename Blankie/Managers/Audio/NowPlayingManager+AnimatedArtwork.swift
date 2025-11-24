@@ -26,9 +26,7 @@
         return
       }
 
-      guard #available(iOS 26.0, *),
-            let artworkKey = determineAnimatedArtworkKey()
-      else {
+      guard let artworkKey = determineAnimatedArtworkKey() else {
         removeAnimatedArtwork()
         return
       }
@@ -65,7 +63,6 @@
       return (loopURL: resources.loopURL, previewImage: previewImage)
     }
 
-    @available(iOS 26.0, *)
     private func determineAnimatedArtworkKey() -> AnimatedArtworkKey? {
       let supportedKeys = Set(MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys)
       if supportedKeys.contains(AnimatedArtworkKey.square.rawValue) {
@@ -82,7 +79,6 @@
       return currentAnimatedLoopPath == loopPath && currentAnimatedPreviewPath == previewPath
     }
 
-    @available(iOS 26.0, *)
     private func publishAnimatedArtwork(
       preset: Preset,
       resources: (loopURL: URL, previewImage: UIImage),

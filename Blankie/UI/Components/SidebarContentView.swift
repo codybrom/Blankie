@@ -2,7 +2,6 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   struct SidebarContentView: View {
-    @Binding var showingPresetPicker: Bool
     @Binding var showingAbout: Bool
     @Binding var hideInactiveSounds: Bool
     @Binding var showingViewSettings: Bool
@@ -38,36 +37,8 @@ import SwiftUI
             presetRow(preset)
               .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
           }
-
-          // Show All button
-          if customPresets.count > 5 {
-            Button(action: {
-              showingPresetPicker = true
-            }) {
-              HStack {
-                Text("Show All (\(customPresets.count))")
-                  .foregroundColor(.accentColor)
-                Spacer()
-                Image(systemName: "chevron.right")
-                  .font(.caption)
-                  .foregroundColor(.accentColor)
-              }
-            }
-            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-          }
         } header: {
-          HStack {
-            Text("Presets")
-            Spacer()
-            Button(action: {
-              showingPresetPicker = true
-            }) {
-              Image(systemName: "plus")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.accentColor)
-            }
-            .buttonStyle(.plain)
-          }
+          Text("Presets")
         }
 
         Section("Settings") {

@@ -2,7 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
   @ObservedObject private var globalSettings = GlobalSettings.shared
-  @Environment(\.dismiss) private var dismiss
+  @State private var showingAbout = false
+  @State private var showingOnboarding = false
 
   var body: some View {
     NavigationStack {
@@ -28,19 +29,49 @@ struct SettingsView: View {
             Text("Animated Background", comment: "Toggle for lock-screen animated artwork")
           }
         }
+
+        Section(
+          header: Text("About", comment: "Settings section header for about")
+        ) {
+          Button {
+            showingAbout = true
+          } label: {
+            HStack {
+              Text("About Blankie", comment: "About button label")
+              Spacer()
+              Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+          }
+        }
+
+        #if DEBUG
+          Section(
+            header: Text("Debug", comment: "Settings section header for debug options")
+          ) {
+            Button {
+              showingOnboarding = true
+            } label: {
+              HStack {
+                Image(systemName: "ladybug.fill")
+                  .foregroundColor(.orange)
+                Text("Show Onboarding", comment: "Debug button to show onboarding")
+                Spacer()
+              }
+            }
+          }
+        #endif
       }
       .navigationTitle("Settings")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
-        .toolbar {
-          ToolbarItem(placement: .primaryAction) {
-            Button {
-              dismiss()
-            } label: {
-              Text("Done", comment: "Settings done button")
-            }
-          }
+        .sheet(isPresented: $showingAbout) {
+          AboutView()
+        }
+        .sheet(isPresented: $showingOnboarding) {
+          PresetOnboardingSheet(isPresented: $showingOnboarding)
         }
     }
   }

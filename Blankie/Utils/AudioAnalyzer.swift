@@ -5,8 +5,8 @@
 //  Created by Cody Bromley on 6/4/25.
 //
 
-import AVFoundation
 import Accelerate
+import AVFoundation
 
 /// Combined audio analysis results
 struct AudioAnalysisResult {
@@ -16,10 +16,12 @@ struct AudioAnalysisResult {
   let rmsLevel: Float?
   let truePeakdBTP: Float?
   let needsLimiter: Bool
+  let duration: TimeInterval?
   var peakdBFS: Float? {
     guard let peak = peakLevel, peak > 0 else { return nil }
     return 20 * log10(peak)
   }
+
   var rmsdBFS: Float? {
     guard let rms = rmsLevel, rms > 0 else { return nil }
     return 20 * log10(rms)
@@ -28,7 +30,6 @@ struct AudioAnalysisResult {
 
 /// Utility class for analyzing audio files
 class AudioAnalyzer {
-
   // MARK: - LUFS Configuration
 
   /// Target LUFS level for normalization
@@ -62,7 +63,7 @@ class AudioAnalyzer {
       // Find the peak level across all channels
       var peakLevel: Float = 0.0
 
-      for channel in 0..<Int(format.channelCount) {
+      for channel in 0 ..< Int(format.channelCount) {
         guard let channelData = buffer.floatChannelData?[channel] else { continue }
 
         // Use Accelerate framework for efficient peak detection
@@ -148,7 +149,7 @@ class AudioAnalyzer {
       var totalRMS: Float = 0.0
       let channelCount = Int(format.channelCount)
 
-      for channel in 0..<channelCount {
+      for channel in 0 ..< channelCount {
         guard let channelData = buffer.floatChannelData?[channel] else { continue }
 
         // Calculate RMS for this channel
@@ -198,7 +199,7 @@ class AudioAnalyzer {
         try file.read(into: buffer)
 
         // Process each channel with 4x oversampling
-        for channel in 0..<Int(format.channelCount) {
+        for channel in 0 ..< Int(format.channelCount) {
           guard let channelData = buffer.floatChannelData?[channel] else { continue }
 
           // Simple 4x oversampling using linear interpolation
@@ -206,7 +207,7 @@ class AudioAnalyzer {
           var oversampledData = [Float](repeating: 0, count: oversampledLength)
 
           // Upsample with linear interpolation
-          for index in 0..<Int(buffer.frameLength - 1) {
+          for index in 0 ..< Int(buffer.frameLength - 1) {
             let sample1 = channelData[index]
             let sample2 = channelData[index + 1]
             let delta = (sample2 - sample1) / 4.0
@@ -255,6 +256,9 @@ class AudioAnalyzer {
     // Get LUFS analysis
     let lufsResult = await analyzeLUFS(at: url)
 
+    // Get duration
+    let duration = getDuration(at: url)
+
     // Calculate normalization and check if limiter is needed
     let normalizationFactor: Float
     var needsLimiter = false
@@ -286,10 +290,26 @@ class AudioAnalyzer {
       peakLevel: peakLevel,
       rmsLevel: rmsLevel,
       truePeakdBTP: truePeakdBTP,
-      needsLimiter: needsLimiter
+      needsLimiter: needsLimiter,
+      duration: duration
     )
   }
 
-  // MARK: - LUFS Analysis
+  // MARK: - Duration Analysis
 
+  /// Get the duration of an audio file
+  /// - Parameter url: URL of the audio file
+  /// - Returns: Duration in seconds, or nil if unable to determine
+  static func getDuration(at url: URL) -> TimeInterval? {
+    do {
+      let file = try AVAudioFile(forReading: url)
+      let frameCount = file.length
+      let sampleRate = file.fileFormat.sampleRate
+      let duration = Double(frameCount) / sampleRate
+      return duration
+    } catch {
+      print("⚠️ AudioAnalyzer: Failed to get duration: \(error)")
+      return nil
+    }
+  }
 }

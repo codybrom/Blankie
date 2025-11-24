@@ -102,16 +102,10 @@ private struct DragAnimationTrigger: Equatable {
       ZStack {
         if isSoloMode {
           // Glass background for solo mode
-          if #available(iOS 26.0, *) {
-            Circle()
-              .fill(.clear)
-              .frame(width: iconSize, height: iconSize)
-              .glassEffect(.clear.interactive(), in: .circle)
-          } else {
-            Circle()
-              .fill(.ultraThinMaterial)
-              .frame(width: iconSize, height: iconSize)
-          }
+          Circle()
+            .fill(.clear)
+            .frame(width: iconSize, height: iconSize)
+            .glassEffect(.clear.interactive(), in: .circle)
         } else {
           Circle()
             .fill(backgroundFill)

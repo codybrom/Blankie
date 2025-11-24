@@ -53,7 +53,12 @@ extension EditPresetSheet {
         }
       #endif
     }
-    .onChange(of: selectedSounds) { _, _ in
+    .onChange(of: selectedSounds) { _, newValue in
+      // Update soundOrder to include new sounds and remove deselected sounds
+      let validOrder = soundOrder.filter { newValue.contains($0) }
+      let newSounds = newValue.filter { !validOrder.contains($0) }
+      soundOrder = validOrder + newSounds.sorted()
+
       applyChangesInstantly()
     }
   }
@@ -219,255 +224,146 @@ extension EditPresetSheet {
   }
 }
 
-// MARK: - Background Section
+// MARK: - Sound Order Section (Reorderable)
 
 extension EditPresetSheet {
-  var backgroundSection: some View {
-    Section("Background") {
-      // Show background toggle
-      Toggle("Show Background Image", isOn: $showBackgroundImage)
+  var soundOrderSection: some View {
+    #if os(iOS) || os(visionOS)
+      Section {
+        if selectedSounds.isEmpty {
+          Text("No sounds selected")
+            .foregroundStyle(.secondary)
+            .font(.subheadline)
+        } else {
+          ForEach(orderedSelectedSounds) { sound in
+            HStack(spacing: 12) {
+              Image(systemName: sound.systemIconName)
+                .font(.title3)
+                .foregroundColor(.accentColor)
+                .frame(width: 24)
 
-      if showBackgroundImage {
-        // Use cover art toggle
-        Toggle("Use Cover Art", isOn: $useArtworkAsBackground)
+              Text(sound.title)
+                .font(.body)
 
-        // Only show image picker if not using cover art
-        if !useArtworkAsBackground {
-          LabeledContent {
-            HStack(spacing: 8) {
-              if backgroundImageData != nil {
+              Spacer()
+            }
+            .padding(.vertical, 4)
+          }
+          .onMove { from, to in
+            moveSound(from: from, to: to)
+          }
+        }
+      } header: {
+        HStack {
+          Text("Sound Order")
+
+          Spacer()
+
+          if !selectedSounds.isEmpty {
+            Button {
+              withAnimation {
+                soundEditMode = soundEditMode == .active ? .inactive : .active
+              }
+            } label: {
+              Text(soundEditMode == .active ? "Done" : "Edit")
+                .font(.body)
+            }
+          }
+        }
+      } footer: {
+        if !selectedSounds.isEmpty {
+          Text("Drag sounds to reorder how they appear in the preset")
+            .font(.caption)
+        }
+      }
+      .environment(\.editMode, $soundEditMode)
+    #else
+      Section {
+        if selectedSounds.isEmpty {
+          Text("No sounds selected")
+            .foregroundStyle(.secondary)
+            .font(.subheadline)
+        } else {
+          ForEach(orderedSelectedSounds) { sound in
+            HStack(spacing: 12) {
+              Image(systemName: sound.systemIconName)
+                .font(.title3)
+                .foregroundColor(.accentColor)
+                .frame(width: 24)
+
+              Text(sound.title)
+                .font(.body)
+
+              Spacer()
+
+              // macOS: Show move up/down buttons instead of drag-and-drop
+              HStack(spacing: 4) {
                 Button {
-                  print("🎨 Clear tapped - removing background")
-                  withAnimation {
-                    backgroundImageData = nil
-                    backgroundImageId = nil
-                    backgroundBlurRadius = 3.0 // Low Blur
-                    backgroundOpacity = 0.3 // Low Opacity
-                    // Apply changes to persist the removal
-                    applyChangesInstantly()
+                  if let index = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }),
+                     index > 0
+                  {
+                    moveSound(from: IndexSet(integer: index), to: index - 1)
                   }
                 } label: {
-                  Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.red)
+                  Image(systemName: "chevron.up")
+                    .font(.caption)
                 }
                 .buttonStyle(.plain)
-              }
+                .disabled(orderedSelectedSounds.first?.id == sound.id)
 
-              PhotosPicker(
-                selection: $selectedBackgroundPhoto,
-                matching: .images
-              ) {
-                Text(backgroundImageData != nil ? "Change" : "Choose Photo")
-                  .foregroundColor(.accentColor)
+                Button {
+                  if let index = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }),
+                     index < orderedSelectedSounds.count - 1
+                  {
+                    moveSound(from: IndexSet(integer: index), to: index + 2)
+                  }
+                } label: {
+                  Image(systemName: "chevron.down")
+                    .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .disabled(orderedSelectedSounds.last?.id == sound.id)
               }
-              .buttonStyle(.plain)
             }
-          } label: {
-            VStack(alignment: .leading, spacing: 2) {
-              Text("Background Image")
-              Text("9:16 aspect ratio recommended")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            }
+            .padding(.vertical, 4)
           }
         }
-
-        // Preview and controls - show for cover art, custom image, or animated artwork
-        if (useArtworkAsBackground && (artworkData != nil || animatedArtwork != nil))
-          || (!useArtworkAsBackground && backgroundImageData != nil)
-        {
-          backgroundPreviewRow
-          backgroundBlurRow
-          backgroundOpacityRow
+      } header: {
+        Text("Sound Order")
+      } footer: {
+        if !selectedSounds.isEmpty {
+          Text("Use the up/down buttons to reorder sounds")
+            .font(.caption)
         }
       }
-    }
-    .onChange(of: showBackgroundImage) { _, _ in
-      applyChangesInstantly()
-    }
-    .onChange(of: useArtworkAsBackground) { _, _ in
-      applyChangesInstantly()
-    }
-    .onChange(of: backgroundImageData) { _, _ in
-      applyChangesInstantly()
-    }
-    .onChange(of: backgroundBlurRadius) { _, _ in
-      applyChangesInstantly()
-    }
-    .onChange(of: backgroundOpacity) { _, _ in
-      applyChangesInstantly()
+    #endif
+  }
+
+  var orderedSelectedSounds: [Sound] {
+    // Filter to only include currently selected sounds
+    let validOrder = soundOrder.filter { selectedSounds.contains($0) }
+
+    // Add any newly selected sounds that aren't in the order yet
+    let newSounds = selectedSounds.filter { !validOrder.contains($0) }
+    let finalOrder = validOrder + newSounds.sorted()
+
+    // Map to Sound objects
+    return finalOrder.compactMap { fileName in
+      audioManager.sounds.first(where: { $0.fileName == fileName })
     }
   }
 
-  private var backgroundPreviewRow: some View {
-    HStack {
-      backgroundPreview
-        .frame(height: 100)
-        .frame(maxWidth: .infinity)
-        .cornerRadius(8)
-        .overlay(
-          RoundedRectangle(cornerRadius: 8)
-            .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
-        )
-    }
-  }
+  func moveSound(from source: IndexSet, to destination: Int) {
+    var currentOrder = orderedSelectedSounds.map { $0.fileName }
+    currentOrder.move(fromOffsets: source, toOffset: destination)
 
-  private var backgroundBlurRow: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("Blur")
-        .font(.subheadline)
+    // Update the soundOrder state
+    soundOrder = currentOrder
 
-      Picker("Blur", selection: $backgroundBlurRadius) {
-        Text("None").tag(0.0)
-        Text("Low").tag(3.0)
-        Text("Medium").tag(15.0)
-        Text("High").tag(25.0)
-      }
-      .pickerStyle(.segmented)
-      .labelsHidden()
-    }
-  }
-
-  private var backgroundOpacityRow: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      Text("Opacity")
-        .font(.subheadline)
-
-      Picker(
-        "Opacity",
-        selection: Binding(
-          get: {
-            // Convert opacity value to closest option
-            switch backgroundOpacity {
-            case 0 ..< 0.5: return 0.3
-            case 0.5 ..< 0.85: return 0.65
-            default: return 1.0
-            }
-          },
-          set: { newValue in
-            backgroundOpacity = newValue
-          }
-        )
-      ) {
-        Text("Low").tag(0.3)
-        Text("Medium").tag(0.65)
-        Text("Full").tag(1.0)
-      }
-      .pickerStyle(.segmented)
-      .labelsHidden()
-    }
-  }
-
-  private var backgroundResetRow: some View {
-    Button {
-      backgroundBlurRadius = 3.0 // Low blur
-      backgroundOpacity = 0.3 // Low opacity
-    } label: {
-      Label("Reset to Defaults", systemImage: "arrow.counterclockwise")
-        .font(.caption)
-    }
-    .buttonStyle(.plain)
-    .foregroundColor(.secondary)
-  }
-
-  @ViewBuilder
-  private var backgroundPreview: some View {
-    let imageData = useArtworkAsBackground ? artworkData : backgroundImageData
-
-    if let imageData = imageData {
-      #if os(macOS)
-        if let nsImage = NSImage(data: imageData) {
-          Image(nsImage: nsImage)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .blur(radius: backgroundBlurRadius)
-            .opacity(backgroundOpacity)
-            .background(Color.black)
-        }
-      #else
-        if let uiImage = UIImage(data: imageData) {
-          Image(uiImage: uiImage)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .blur(radius: backgroundBlurRadius)
-            .opacity(backgroundOpacity)
-            .background(Color.black)
-        }
-      #endif
-    } else if useArtworkAsBackground, let animatedArtwork = animatedArtwork {
-      // Show animated artwork's 3:4 preview as background fallback
-      AnimatedArtworkPreviewBackground(
-        animatedArtwork: animatedArtwork,
-        staticArtworkPath: staticArtworkPath,
-        blurRadius: backgroundBlurRadius,
-        opacity: backgroundOpacity
-      )
-    }
+    // Trigger UI update to save changes
+    applyChangesInstantly()
   }
 }
-
-// MARK: - Animated Artwork Preview Background
-
-#if canImport(UIKit)
-  private struct AnimatedArtworkPreviewBackground: View {
-    let animatedArtwork: AnimatedArtworkRef
-    let staticArtworkPath: String?
-    let blurRadius: Double
-    let opacity: Double
-
-    @State private var previewImage: UIImage?
-
-    var body: some View {
-      Group {
-        if let image = previewImage {
-          Image(uiImage: image)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .blur(radius: blurRadius)
-            .opacity(opacity)
-            .background(Color.black)
-        } else {
-          Color.secondary.opacity(0.2)
-        }
-      }
-      .task {
-        await loadPreview()
-      }
-    }
-
-    private func loadPreview() async {
-      // Check Documents directory first for cached preview
-      if let previewPath = animatedArtwork.previewPath ?? staticArtworkPath {
-        let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
-        if FileManager.default.fileExists(atPath: previewURL.path) {
-          if let image = UIImage(contentsOfFile: previewURL.path) {
-            await MainActor.run {
-              previewImage = image
-            }
-            return
-          }
-        }
-      }
-
-      // If not cached, try loading from bundle for bundled resources
-      if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
-        let previewName = bundledId
-        if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg") {
-          if let image = UIImage(contentsOfFile: previewURL.path) {
-            await MainActor.run {
-              previewImage = image
-            }
-            return
-          }
-        }
-      }
-    }
-  }
-#endif
-
-// MARK: - Delete Section
-
-extension EditPresetSheet {}
 
 // MARK: - Delete Section
 

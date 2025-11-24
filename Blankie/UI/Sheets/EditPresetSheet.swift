@@ -52,11 +52,12 @@ struct ExportablePreset: Transferable {
 struct EditPresetSheet: View {
   let preset: Preset
   @Binding var isPresented: Preset?
-  @ObservedObject private var presetManager = PresetManager.shared
-  @ObservedObject private var audioManager = AudioManager.shared
+  @ObservedObject var presetManager = PresetManager.shared
+  @ObservedObject var audioManager = AudioManager.shared
   @State var presetName: String = ""
   @State var creatorName: String = ""
   @State var selectedSounds: Set<String> = []
+  @State var soundOrder: [String] = []
   @State var error: String?
   @State var showingSoundSelection = false
   @State var artworkData: Data?
@@ -65,16 +66,12 @@ struct EditPresetSheet: View {
   @State var staticArtworkPath: String?
   @State var showingImagePicker = false
   @State var presetToDelete: Preset?
-  @State var showBackgroundImage: Bool = false
-  @State var useArtworkAsBackground: Bool = false
-  @State var backgroundImageData: Data?
-  @State var backgroundImageId: UUID?
-  @State var backgroundBlurRadius: Double = 3.0 // Low Blur
-  @State var backgroundOpacity: Double = 0.3 // Low Opacity
-  @State var selectedBackgroundPhoto: PhotosPickerItem?
   @State var exportError: String?
   @State var exportedURL: URL?
   @State var isExporting = false
+  #if os(iOS) || os(visionOS)
+    @State var soundEditMode: EditMode = .inactive
+  #endif
   @Environment(\.dismiss) private var dismiss
 
   var orderedSounds: [Sound] {
@@ -157,19 +154,6 @@ struct EditPresetSheet: View {
           handleMacOSImageImport(result)
         }
       #endif
-    }
-    .onChange(of: selectedBackgroundPhoto) { oldValue, newItem in
-      print("🎨 EditPresetSheet: Background photo selection changed - old: \(oldValue != nil), new: \(newItem != nil)")
-      print("🎨 EditPresetSheet: showBackgroundImage: \(showBackgroundImage), useArtworkAsBackground: \(useArtworkAsBackground)")
-      if let item = newItem {
-        Task {
-          await loadBackgroundImage(from: item)
-          // Reset selection to allow selecting the same image again
-          await MainActor.run {
-            selectedBackgroundPhoto = nil
-          }
-        }
-      }
     }
     .alert(
       "Delete Preset",
@@ -277,10 +261,6 @@ extension EditPresetSheet {
       }
       errorSection
       nowPlayingSection // Artwork & Animated Artwork
-      // Only show background section after artwork is set (regular, animated, or artworkId)
-      if artworkData != nil || artworkId != nil || animatedArtwork != nil {
-        backgroundSection
-      }
     }
   }
 
@@ -288,10 +268,8 @@ extension EditPresetSheet {
     Group {
       errorSection
       coreSection
+      soundOrderSection // NEW: Reorderable sounds list
       nowPlayingSection // Creator & Artwork
-      if artworkData != nil || artworkId != nil || animatedArtwork != nil {
-        backgroundSection
-      }
       deleteSection
     }
   }
@@ -302,15 +280,10 @@ extension EditPresetSheet {
     presetName = preset.name
     creatorName = preset.creatorName ?? ""
     selectedSounds = Set(preset.soundStates.map(\.fileName))
+    soundOrder = preset.soundOrder ?? preset.soundStates.map(\.fileName)
     artworkId = preset.artworkId
     animatedArtwork = preset.animatedArtwork
     staticArtworkPath = preset.staticArtworkPath
-    showBackgroundImage = preset.showBackgroundImage ?? true
-    // Default to using artwork as background
-    useArtworkAsBackground = preset.useArtworkAsBackground ?? true
-    backgroundImageId = preset.backgroundImageId
-    backgroundBlurRadius = preset.backgroundBlurRadius ?? 3.0 // Low Blur
-    backgroundOpacity = preset.backgroundOpacity ?? 0.3 // Low Opacity
 
     // Load existing images if they exist
     Task {
@@ -321,17 +294,6 @@ extension EditPresetSheet {
               self.artworkData = image.jpegData(compressionQuality: 0.8)
             #else
               self.artworkData = image.jpegData(compressionQuality: 0.8)
-            #endif
-          }
-        }
-      }
-      if let id = backgroundImageId {
-        if let image = await PresetArtworkManager.shared.loadArtwork(id: id) {
-          await MainActor.run {
-            #if os(macOS)
-              self.backgroundImageData = image.jpegData(compressionQuality: 0.8)
-            #else
-              self.backgroundImageData = image.jpegData(compressionQuality: 0.8)
             #endif
           }
         }
@@ -352,9 +314,6 @@ extension EditPresetSheet {
 
     Task {
       let updatedPreset = await createUpdatedPreset()
-      print(
-        "🎨 EditPresetSheet: Updated preset has background: \(updatedPreset.backgroundImageId != nil)"
-      )
 
       await MainActor.run {
         var currentPresets = presetManager.presets
@@ -407,21 +366,14 @@ extension EditPresetSheet {
       updatedPreset.name = presetName
       updatedPreset.creatorName = creatorName.isEmpty ? nil : creatorName
       updatedPreset.soundStates = selectedSoundStates
+      updatedPreset.soundOrder = soundOrder
     }
 
     // Handle artwork (allowed for all presets including default)
     await handleArtworkChanges()
 
-    // Handle background (allowed for all presets including default)
-    await handleBackgroundChanges()
-
     // Update preset properties
     updatedPreset.artworkId = artworkId
-    updatedPreset.showBackgroundImage = showBackgroundImage
-    updatedPreset.useArtworkAsBackground = useArtworkAsBackground
-    updatedPreset.backgroundImageId = backgroundImageId
-    updatedPreset.backgroundBlurRadius = backgroundBlurRadius
-    updatedPreset.backgroundOpacity = backgroundOpacity
     updatedPreset.animatedArtwork = animatedArtwork
     updatedPreset.staticArtworkPath = staticArtworkPath
     updatedPreset.lastModifiedVersion = currentVersion
@@ -433,7 +385,13 @@ extension EditPresetSheet {
     // Get existing sound states for this preset
     let existingSoundStates = preset.soundStates
 
-    let states: [PresetState] = selectedSounds.compactMap { fileName -> PresetState? in
+    // Use soundOrder state variable, filtering to only include currently selected sounds
+    let validOrder = soundOrder.filter { selectedSounds.contains($0) }
+    // Add any newly selected sounds that aren't in the order yet
+    let newSounds = selectedSounds.filter { !validOrder.contains($0) }
+    let orderedFileNames = validOrder + newSounds.sorted()
+
+    let states: [PresetState] = orderedFileNames.compactMap { fileName -> PresetState? in
       guard let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) else {
         return nil
       }
@@ -477,21 +435,6 @@ extension EditPresetSheet {
         print("🎨 EditPresetSheet: Deleted old artwork")
       } catch {
         print("❌ EditPresetSheet: Failed to delete old artwork: \(error)")
-      }
-    }
-  }
-
-  private func handleBackgroundChanges() async {
-    if let data = backgroundImageData {
-      // Save background (this will update existing or create new)
-      do {
-        let savedId = try await PresetArtworkManager.shared.saveArtwork(
-          data, for: preset.id, type: .background
-        )
-        backgroundImageId = savedId
-        print("🎨 EditPresetSheet: Saved background with ID: \(savedId)")
-      } catch {
-        print("❌ EditPresetSheet: Failed to save background: \(error)")
       }
     }
   }
@@ -564,25 +507,6 @@ extension EditPresetSheet {
       return image.jpegData(compressionQuality: 0.8)
     }
   #endif
-
-  func loadBackgroundImage(from item: PhotosPickerItem) async {
-    do {
-      print("🎨 EditPresetSheet: Loading background image...")
-      if let data = try await item.loadTransferable(type: Data.self) {
-        // Process the image to optimize size
-        if let processedData = processImage(data: data) {
-          await MainActor.run {
-            self.backgroundImageData = processedData
-            print("🎨 EditPresetSheet: Background image loaded successfully")
-            // Apply changes to save the background image
-            self.applyChangesInstantly()
-          }
-        }
-      }
-    } catch {
-      print("🎨 EditPresetSheet: Failed to load image: \(error)")
-    }
-  }
 
   private func processImage(data: Data) -> Data? {
     #if os(macOS)

@@ -158,7 +158,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     defaultOrder: Int = 0, lufs: Float? = nil, normalizationFactor: Float? = nil,
     truePeakdBTP: Float? = nil, needsLimiter: Bool = false,
     isCustom: Bool = false, fileURL: URL? = nil, dateAdded: Date? = nil,
-    customSoundDataID: UUID? = nil
+    customSoundDataID: UUID? = nil, duration: TimeInterval? = nil
   ) {
     self.originalTitle = title
     self.originalSystemIconName = systemIconName
@@ -172,6 +172,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     self.fileURL = fileURL
     self.dateAdded = dateAdded
     self.customSoundDataID = customSoundDataID
+    self.duration = duration
 
     super.init()
 

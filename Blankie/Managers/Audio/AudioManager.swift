@@ -17,6 +17,7 @@ class AudioManager: ObservableObject {
   var onReset: (() -> Void)?
 
   @Published var sounds: [Sound] = []
+  @Published var soundsData: [SoundData] = [] // Metadata for sounds (includes mood tags)
   @Published var defaultSoundOrder: [String] = [] // Order of sounds in default view
   @Published var isGloballyPlaying: Bool = false
   @Published var soloModeSound: Sound?

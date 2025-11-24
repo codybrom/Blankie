@@ -80,27 +80,6 @@ import UniformTypeIdentifiers
 
     var body: some View {
       ZStack {
-        // Background layer
-        if let preset = presetManager.currentPreset,
-          preset.showBackgroundImage ?? false
-        {
-          GeometryReader { geometry in
-            if let image = PresetArtworkManager.shared.loadBackgroundImage(for: preset) {
-              Image(nsImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: geometry.size.width, height: geometry.size.height)
-                .blur(radius: preset.backgroundBlurRadius ?? 15)
-                .opacity(preset.backgroundOpacity ?? 0.65)
-                .clipped()
-                .overlay(
-                  Color.black.opacity(0.2)  // Add slight darkening for better UI contrast
-                )
-            }
-          }
-          .ignoresSafeArea()
-        }
-
         VStack(spacing: 0) {
           if !audioManager.isGloballyPlaying {
             HStack {
@@ -144,7 +123,6 @@ import UniformTypeIdentifiers
               .foregroundColor(Color.gray.opacity(0.2))
 
             HStack(spacing: 24) {
-
               // Timer button
               CompactTimerButton()
 
@@ -182,7 +160,8 @@ import UniformTypeIdentifiers
                     .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
                     .contentTransition(
                       .symbolEffect(
-                        .replace.magic(fallback: .downUp.byLayer), options: .nonRepeating)
+                        .replace.magic(fallback: .downUp.byLayer), options: .nonRepeating
+                      )
                     )
                     .offset(x: audioManager.isGloballyPlaying ? 0 : 2)
                 }
@@ -206,7 +185,6 @@ import UniformTypeIdentifiers
               }
 
               hideShowButton
-
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
@@ -222,7 +200,7 @@ import UniformTypeIdentifiers
           isDragTargeted: $isDragTargeted,
           globalSettings: globalSettings
         )
-      }  // End of ZStack
+      } // End of ZStack
       .ignoresSafeArea(.container, edges: .horizontal)
       .animation(.easeInOut(duration: 0.2), value: audioManager.isGloballyPlaying)
       .sheet(isPresented: $showingShortcuts) {
@@ -262,7 +240,8 @@ import UniformTypeIdentifiers
     private func calculateColumns(for availableWidth: CGFloat) -> [GridItem] {
       let numberOfColumns = max(2, Int(availableWidth / (itemWidth + minimumSpacing)))
       return Array(
-        repeating: GridItem(.fixed(itemWidth), spacing: minimumSpacing), count: numberOfColumns)
+        repeating: GridItem(.fixed(itemWidth), spacing: minimumSpacing), count: numberOfColumns
+      )
     }
 
     private func setupResetHandler() {
@@ -270,7 +249,6 @@ import UniformTypeIdentifiers
         showingVolumePopover = false
       }
     }
-
   }
 
   struct DraggableSoundIcon: View {
@@ -299,7 +277,7 @@ import UniformTypeIdentifiers
 
           provider.loadObject(ofClass: NSString.self) { object, _ in
             guard let sourceIndexString = object as? String,
-              let sourceIndex = Int(sourceIndexString)
+                  let sourceIndex = Int(sourceIndexString)
             else { return }
 
             DispatchQueue.main.async {

@@ -25,6 +25,7 @@ private struct GridButtonAnimationTrigger: Equatable {
     @State private var selectionTrigger = 0
     @State private var popoverPosition: CGRect = .zero
     @Binding var editMode: EditMode
+    var showOptionsMenu: Bool = true // Allow disabling the long-press menu
 
     // For progress border
     private var shouldShowProgressBorder: Bool {
@@ -71,33 +72,18 @@ private struct GridButtonAnimationTrigger: Equatable {
       .frame(maxWidth: .infinity)
       .padding(.vertical, 16)
       .background {
-        if #available(iOS 26.0, *) {
-          RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(.clear)
-            .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 16, style: .continuous))
-            .overlay(
-              RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(
-                  sound.isSelected
-                    ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
-                    : .primary.opacity(0.15),
-                  lineWidth: sound.isSelected ? 2 : 1
-                )
-            )
-        } else {
-          RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(.ultraThinMaterial)
-            .opacity(0.6)
-            .overlay(
-              RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(
-                  sound.isSelected
-                    ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
-                    : .primary.opacity(0.15),
-                  lineWidth: sound.isSelected ? 2 : 1
-                )
-            )
-        }
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+          .fill(.clear)
+          .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 16, style: .continuous))
+          .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+              .strokeBorder(
+                sound.isSelected
+                  ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
+                  : .primary.opacity(0.15),
+                lineWidth: sound.isSelected ? 2 : 1
+              )
+          )
       }
       .contentShape(RoundedRectangle(cornerRadius: 16))
       .overlay(alignment: .topTrailing) {
@@ -146,9 +132,9 @@ private struct GridButtonAnimationTrigger: Equatable {
         maximumDistance: 5.0, // Reduced from infinity to prevent scroll triggering
         pressing: { pressing in
           withAnimation(.easeInOut(duration: 0.1)) {
-            isPressed = pressing && editMode == .inactive
+            isPressed = pressing && editMode == .inactive && showOptionsMenu
           }
-          if pressing, editMode == .inactive {
+          if pressing, editMode == .inactive, showOptionsMenu {
             // Start selection feedback after delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
               if isPressed {
@@ -173,7 +159,7 @@ private struct GridButtonAnimationTrigger: Equatable {
           }
         },
         perform: {
-          if editMode == .inactive {
+          if editMode == .inactive, showOptionsMenu {
             showingOptions = true
           }
         }
@@ -235,19 +221,8 @@ private struct GridButtonAnimationTrigger: Equatable {
     }
 
     private var popoverArrowEdge: Edge {
-      #if os(iOS)
-        let screenHeight = UIScreen.main.bounds.height
-        let isNearBottom = popoverPosition.maxY > screenHeight * 0.7
-
-        // Prefer bottom edge arrow (pointing up from bottom), but use top edge if we're near the bottom of the screen
-        if isNearBottom {
-          return .bottom
-        } else {
-          return .top
-        }
-      #else
-        return .bottom
-      #endif
+      // iOS handles popover positioning automatically
+      .bottom
     }
   }
 

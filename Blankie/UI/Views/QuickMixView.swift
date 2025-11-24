@@ -19,28 +19,42 @@ struct QuickMixView: View {
 
   var body: some View {
     NavigationView {
-      GeometryReader { geometry in
-        ScrollView {
-          LazyVGrid(
-            columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16
-          ) {
-            ForEach(quickMixSounds, id: \.id) { sound in
-              QuickMixSoundButton(
-                sound: sound
-              )
+      ZStack {
+        // Gradient background
+        LinearGradient(
+          colors: [
+            (globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
+            (globalSettings.customAccentColor ?? .accentColor).opacity(0.3),
+            Color.black.opacity(0.8),
+          ],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+
+        GeometryReader { geometry in
+          ScrollView {
+            LazyVGrid(
+              columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16
+            ) {
+              ForEach(quickMixSounds, id: \.id) { sound in
+                QuickMixSoundButton(
+                  sound: sound
+                )
+              }
             }
+            .padding()
+            .padding(.bottom, geometry.safeAreaInsets.bottom)
           }
-          .padding()
-          .padding(.bottom, geometry.safeAreaInsets.bottom)
+          .ignoresSafeArea(edges: .bottom)
         }
-        .ignoresSafeArea(edges: .bottom)
       }
       #if !os(macOS)
-        .navigationBarHidden(true)
+      .navigationBarHidden(true)
       #endif
     }
     #if !os(macOS)
-      .navigationViewStyle(StackNavigationViewStyle())
+    .navigationViewStyle(StackNavigationViewStyle())
     #endif
   }
 }
@@ -53,6 +67,11 @@ struct QuickMixSoundButton: View {
   @State private var popoverPosition: CGRect = .zero
   @State private var isPressed = false
   @State private var selectionTrigger = 0
+
+  // Only show as selected if we're in Quick Mix mode (not solo mode)
+  private var isSelectedInQuickMix: Bool {
+    return audioManager.isQuickMix && sound.isSelected
+  }
 
   var body: some View {
     VStack(spacing: 12) {
@@ -77,16 +96,27 @@ struct QuickMixSoundButton: View {
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, 16)
-    .background(
-      RoundedRectangle(cornerRadius: 16)
-        .fill(backgroundColor)
-        .overlay(
-          RoundedRectangle(cornerRadius: 16)
-            .stroke(borderColor, lineWidth: sound.isSelected ? 2 : 1)
-        )
+    .background {
+      if isSelectedInQuickMix {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+          .fill((globalSettings.customAccentColor ?? .accentColor).opacity(0.1))
+      }
+    }
+    .glassEffect(
+      .clear.interactive(),
+      in: .rect(cornerRadius: 16, style: .continuous)
     )
-    .scaleEffect(isPressed ? 0.95 : (sound.isSelected ? 1.05 : 1.0))
-    .animation(.easeInOut(duration: 0.15), value: sound.isSelected)
+    .overlay {
+      RoundedRectangle(cornerRadius: 16, style: .continuous)
+        .strokeBorder(
+          isSelectedInQuickMix
+            ? (globalSettings.customAccentColor ?? .accentColor)
+            : Color.primary.opacity(0.1),
+          lineWidth: isSelectedInQuickMix ? 2 : 1
+        )
+    }
+    .scaleEffect(isPressed ? 0.95 : (isSelectedInQuickMix ? 1.05 : 1.0))
+    .animation(.easeInOut(duration: 0.15), value: isSelectedInQuickMix)
     .animation(.easeInOut(duration: 0.1), value: isPressed)
     .background(
       GeometryReader { geometry in
@@ -100,12 +130,16 @@ struct QuickMixSoundButton: View {
       }
     )
     .onTapGesture {
+      // Enter Quick Mix mode if not already in it
+      if !audioManager.isQuickMix {
+        audioManager.enterQuickMix()
+      }
       audioManager.toggleQuickMixSound(sound)
     }
-    .sensoryFeedback(.selection, trigger: sound.isSelected)
+    .sensoryFeedback(.selection, trigger: isSelectedInQuickMix)
     .onLongPressGesture(
       minimumDuration: 0.3,
-      maximumDistance: 5.0,  // Reduced from infinity to prevent scroll triggering
+      maximumDistance: 5.0, // Reduced from infinity to prevent scroll triggering
       pressing: { pressing in
         withAnimation(.easeInOut(duration: 0.1)) {
           isPressed = pressing
@@ -155,43 +189,12 @@ struct QuickMixSoundButton: View {
   }
 
   private var popoverArrowEdge: Edge {
-    #if os(iOS)
-      let screenHeight = UIScreen.main.bounds.height
-      let isNearBottom = popoverPosition.maxY > screenHeight * 0.7
-
-      // Prefer bottom edge arrow (pointing up from bottom), but use top edge if we're near the bottom of the screen
-      if isNearBottom {
-        return .bottom
-      } else {
-        return .top
-      }
-    #else
-      return .bottom
-    #endif
-  }
-
-  private var backgroundColor: Color {
-    if sound.isSelected {
-      return (globalSettings.customAccentColor ?? .accentColor).opacity(0.1)
-    } else {
-      #if os(macOS)
-        return Color(NSColor.controlBackgroundColor)
-      #else
-        return Color(UIColor.systemBackground)
-      #endif
-    }
-  }
-
-  private var borderColor: Color {
-    if sound.isSelected {
-      return globalSettings.customAccentColor ?? .accentColor
-    } else {
-      return Color.secondary.opacity(0.3)
-    }
+    // iOS handles popover positioning automatically
+    .bottom
   }
 
   private var iconBackgroundColor: Color {
-    if sound.isSelected {
+    if isSelectedInQuickMix {
       return globalSettings.customAccentColor ?? .accentColor
     } else {
       return Color.secondary.opacity(0.2)
@@ -199,7 +202,7 @@ struct QuickMixSoundButton: View {
   }
 
   private var iconForegroundColor: Color {
-    if sound.isSelected {
+    if isSelectedInQuickMix {
       return .white
     } else {
       return .secondary
@@ -245,7 +248,7 @@ struct QuickMixSoundOptionsPopover: View {
 
           Slider(
             value: $currentVolume,
-            in: 0...1,
+            in: 0 ... 1,
             onEditingChanged: { editing in
               if !editing {
                 sound.volume = Float(currentVolume)

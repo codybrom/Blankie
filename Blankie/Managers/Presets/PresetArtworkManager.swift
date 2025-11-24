@@ -34,34 +34,17 @@ class PresetArtworkManager: ObservableObject {
     modelContext = context
   }
 
-  /// Synchronously load background image from cache
+  /// Synchronously load artwork/background image from cache
   func loadBackgroundImage(for preset: Preset) -> PlatformImage? {
-    let imageId: UUID?
-
-    if preset.useArtworkAsBackground ?? false {
-      imageId = preset.artworkId
-    } else {
-      imageId = preset.backgroundImageId
-    }
-
-    guard let id = imageId else { return nil }
-
+    guard let id = preset.artworkId else { return nil }
     // Return from cache if available
     return imageCache[id]
   }
 
-  /// Asynchronously load background image (for better performance)
+  /// Asynchronously load artwork/background image (for better performance)
   func loadBackgroundImageAsync(for preset: Preset) async -> PlatformImage? {
-    let imageId: UUID?
-
-    if preset.useArtworkAsBackground ?? false {
-      imageId = preset.artworkId
-    } else {
-      imageId = preset.backgroundImageId
-    }
-
-    // Try to load from imageId first
-    if let id = imageId {
+    // Try to load from artworkId first
+    if let id = preset.artworkId {
       // Check cache first
       if let cached = imageCache[id] {
         return cached
@@ -75,7 +58,7 @@ class PresetArtworkManager: ObservableObject {
     }
 
     // Fallback: If no artwork is set, try to use animated artwork's preview image
-    if imageId == nil, let animatedArtwork = preset.animatedArtwork {
+    if preset.artworkId == nil, let animatedArtwork = preset.animatedArtwork {
       #if canImport(UIKit)
         return await loadAnimatedArtworkPreview(animatedArtwork: animatedArtwork, preset: preset)
       #endif
@@ -242,13 +225,6 @@ class PresetArtworkManager: ObservableObject {
     if let artworkId = preset.artworkId {
       _ = await loadArtwork(id: artworkId)
     }
-
-    // Cache background image if different from artwork
-    if !(preset.useArtworkAsBackground ?? false),
-       let backgroundId = preset.backgroundImageId
-    {
-      _ = await loadArtwork(id: backgroundId)
-    }
   }
 
   /// Pre-cache artwork for multiple presets
@@ -289,9 +265,6 @@ class PresetArtworkManager: ObservableObject {
     for preset in presets {
       if let artworkId = preset.artworkId {
         referencedArtworkIds.insert(artworkId)
-      }
-      if let backgroundId = preset.backgroundImageId {
-        referencedArtworkIds.insert(backgroundId)
       }
     }
 

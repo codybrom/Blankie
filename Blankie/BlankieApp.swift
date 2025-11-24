@@ -16,8 +16,11 @@ struct BlankieApp: App {
 
   // Shared state objects
   @StateObject private var globalSettings = GlobalSettings.shared
-  @State private var showingAbout = false
   @Environment(\.scenePhase) private var scenePhase
+
+  #if os(macOS)
+    @State private var showingAbout = false
+  #endif
 
   // Initialize SwiftData
   init() {
@@ -73,22 +76,21 @@ struct BlankieApp: App {
     @UIApplicationDelegateAdaptor(IOSAppDelegate.self) private var appDelegate
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var timerManager = TimerManager.shared
+    @State private var showingOnboarding = false
 
     var body: some Scene {
       WindowGroup {
-        AdaptiveContentView(
-          showingAbout: $showingAbout
-        )
-        .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
-        .withPresetOnboarding()
-        .preferredColorScheme(
-          globalSettings.appearance == .system
-            ? nil : (globalSettings.appearance == .dark ? .dark : .light)
-        )
-        .onChange(of: scenePhase) { oldPhase, newPhase in
-          handleScenePhaseChange(oldPhase: oldPhase, newPhase: newPhase)
-          timerManager.handleScenePhaseChange()
-        }
+        HomeView()
+          .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
+          .withPresetOnboarding(showOnboarding: $showingOnboarding)
+          .preferredColorScheme(
+            globalSettings.appearance == .system
+              ? nil : (globalSettings.appearance == .dark ? .dark : .light)
+          )
+          .onChange(of: scenePhase) { oldPhase, newPhase in
+            handleScenePhaseChange(oldPhase: oldPhase, newPhase: newPhase)
+            timerManager.handleScenePhaseChange()
+          }
       }
       .modelContainer(modelContainer)
     }

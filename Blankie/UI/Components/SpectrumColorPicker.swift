@@ -112,26 +112,6 @@ struct SpectrumColorPicker: View {
     .animation(.easeInOut(duration: 0.18), value: isDragging)
   }
 
-  // Visual tick marks
-  @ViewBuilder
-  private var legacyTickMarks: some View {
-    if #unavailable(iOS 26.0) {
-      HStack(spacing: 0) {
-        ForEach(0 ..< spectrumColors.count, id: \.self) { index in
-          if index > 0 { Spacer() }
-          Circle()
-            .fill(colorScheme == .dark ? Color.white.opacity(0.5) : Color.white.opacity(0.3))
-            .frame(width: 3, height: 3)
-        }
-      }
-      .padding(.horizontal, 20)
-      .allowsHitTesting(false)
-    } else {
-      // On iOS 26+, rely on native Slider tick marks; nothing to draw here.
-      EmptyView()
-    }
-  }
-
   // Color chip overlay
   @ViewBuilder
   private func colorChip(geometry: GeometryProxy) -> some View {
@@ -159,103 +139,52 @@ struct SpectrumColorPicker: View {
     }
   }
 
-  // Native slider with iOS 26 ticks
+  // Color slider with ticks
   @ViewBuilder
-  private var nativeSlider: some View {
-    if #available(iOS 26.0, *) {
-      Slider(
-        value: $sliderValue,
-        in: 0 ... Double(spectrumColors.count - 1)
-      ) {
-        Text("Accent Color")
-      } ticks: {
-        SliderTickContentForEach(
-          stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
-          id: \.self
-        ) { value in
-          SliderTick(value)
-        }
+  private var slider: some View {
+    Slider(
+      value: $sliderValue,
+      in: 0 ... Double(spectrumColors.count - 1)
+    ) {
+      Text("Accent Color")
+    } ticks: {
+      SliderTickContentForEach(
+        stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
+        id: \.self
+      ) { value in
+        SliderTick(value)
       }
-      .onChange(of: sliderValue) { _, newValue in
-        handleSliderValueChange(newValue)
-      }
-      .tint(.clear)
-      .frame(height: 44)
-      .simultaneousGesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { _ in
-            if !isDragging {
-              isDragging = true
-              currentColorName = currentColor.name
-              withAnimation(.easeIn(duration: 0.2)) {
-                showingChip = true
-              }
-            }
-          }
-          .onEnded { _ in
-            isDragging = false
-            selectedColor = currentColor.color
-            withAnimation(.easeOut(duration: 0.2)) {
-              showingChip = false
-            }
-
-            #if os(iOS)
-              let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-              impactFeedback.prepare()
-              impactFeedback.impactOccurred()
-            #endif
-          }
-      )
-    } else {
-      Slider(
-        value: $sliderValue,
-        in: 0 ... Double(spectrumColors.count - 1),
-        step: 1
-      ) {
-        Text("Accent Color")
-      } minimumValueLabel: {
-        EmptyView()
-      } maximumValueLabel: {
-        EmptyView()
-      }
-      .onChange(of: sliderValue) { oldValue, newValue in
-        // Show chip immediately on any value change
-        if !showingChip {
-          currentColorName = currentColor.name
-          withAnimation(.easeIn(duration: 0.2)) {
-            showingChip = true
-          }
-        }
-
-        // Detect if slider is being actively dragged by checking if value changed
-        if oldValue != newValue {
+    }
+    .onChange(of: sliderValue) { _, newValue in
+      handleSliderValueChange(newValue)
+    }
+    .tint(.clear)
+    .frame(height: 44)
+    .simultaneousGesture(
+      DragGesture(minimumDistance: 0)
+        .onChanged { _ in
           if !isDragging {
             isDragging = true
-          }
-          handleSliderValueChange(newValue)
-
-          // Reset isDragging after a delay when value stops changing
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-            if self.sliderValue == newValue {
-              isDragging = false
-              selectedColor = currentColor.color
-              withAnimation(.easeOut(duration: 0.2)) {
-                showingChip = false
-              }
+            currentColorName = currentColor.name
+            withAnimation(.easeIn(duration: 0.2)) {
+              showingChip = true
             }
           }
         }
-      }
-      .tint(.clear)
-      .accentColor(.clear)
-      .frame(height: 44)
-    }
-  }
+        .onEnded { _ in
+          isDragging = false
+          selectedColor = currentColor.color
+          withAnimation(.easeOut(duration: 0.2)) {
+            showingChip = false
+          }
 
-  // Fallback slider for iOS 18 and earlier (same as nativeSlider)
-  @ViewBuilder
-  private var fallbackSlider: some View {
-    nativeSlider
+          #if os(iOS)
+            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+            impactFeedback.prepare()
+            impactFeedback.impactOccurred()
+          #endif
+        }
+    )
   }
 
   // Track overlay view
@@ -264,7 +193,6 @@ struct SpectrumColorPicker: View {
     GeometryReader { geometry in
       ZStack {
         gradientTrack(geometry: geometry)
-        legacyTickMarks
         colorChip(geometry: geometry)
       }
       .frame(height: 40)
@@ -280,9 +208,6 @@ struct SpectrumColorPicker: View {
           ZStack {
             gradientTrack(geometry: geometry)
 
-            // Only show manual tick marks for iOS 18 and earlier
-            legacyTickMarks
-
             // Show color chip overlay when dragging
             colorChip(geometry: geometry)
           }
@@ -290,7 +215,7 @@ struct SpectrumColorPicker: View {
         }
         .frame(height: 4)
 
-        nativeSlider
+        slider
       }
       .frame(height: 44)
       .padding(.horizontal, 20) // Match padding with other form elements

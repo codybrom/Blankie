@@ -4,16 +4,16 @@ import SwiftUI
 struct PresetOnboardingPresenter<Content: View>: View {
     private let content: () -> Content
     private let force: Bool
+    @Binding var showOnboarding: Bool
 
-    init(force: Bool = false, @ViewBuilder content: @escaping () -> Content) {
+    init(force: Bool = false, showOnboarding: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) {
         self.force = force
+        _showOnboarding = showOnboarding
         self.content = content
     }
 
     @StateObject private var onboardingManager = OnboardingManager.shared
     @StateObject private var presetManager = PresetManager.shared
-
-    @State private var showOnboarding = false
 
     var body: some View {
         content()
@@ -22,13 +22,6 @@ struct PresetOnboardingPresenter<Content: View>: View {
             }
             .onChange(of: presetManager.isLoading) { oldValue, newValue in
                 if oldValue != newValue, newValue == false {
-                    #if DEBUG
-                    if presetManager.hasCustomPresets {
-                        print("🧭 OnboardingPresenter[DEBUG]: Forcing onboarding despite existing presets")
-                        showOnboarding = true
-                        return
-                    }
-                    #endif
                     let shouldShow = onboardingManager.checkAndShowOnboarding(
                         hasCustomPresets: presetManager.hasCustomPresets
                     )
@@ -42,13 +35,6 @@ struct PresetOnboardingPresenter<Content: View>: View {
                     showOnboarding = true
                     return
                 }
-                #if DEBUG
-                if presetManager.hasCustomPresets {
-                    print("🧭 OnboardingPresenter[DEBUG]: Forcing onboarding on appear despite existing presets")
-                    showOnboarding = true
-                    return
-                }
-                #endif
                 if !presetManager.isLoading {
                     let shouldShow = onboardingManager.checkAndShowOnboarding(
                         hasCustomPresets: presetManager.hasCustomPresets
@@ -65,11 +51,11 @@ struct PresetOnboardingPresenter<Content: View>: View {
 extension View {
     /// Presents the PresetOnboardingSheet when onboarding should be shown.
     /// Apply this to your root view (e.g., AdaptiveContentView())
-    func withPresetOnboarding() -> some View {
-        PresetOnboardingPresenter { self }
+    func withPresetOnboarding(showOnboarding: Binding<Bool>) -> some View {
+        PresetOnboardingPresenter(showOnboarding: showOnboarding) { self }
     }
 
-    func withPresetOnboarding(force: Bool) -> some View {
-        PresetOnboardingPresenter(force: force) { self }
+    func withPresetOnboarding(force: Bool, showOnboarding: Binding<Bool>) -> some View {
+        PresetOnboardingPresenter(force: force, showOnboarding: showOnboarding) { self }
     }
 }
