@@ -50,7 +50,7 @@ struct PresetOnboardingPresenter<Content: View>: View {
 
 extension View {
     /// Presents the PresetOnboardingSheet when onboarding should be shown.
-    /// Apply this to your root view (e.g., AdaptiveContentView())
+    /// Apply this to your root view (e.g., MixerView())
     func withPresetOnboarding(showOnboarding: Binding<Bool>) -> some View {
         PresetOnboardingPresenter(showOnboarding: showOnboarding) { self }
     }

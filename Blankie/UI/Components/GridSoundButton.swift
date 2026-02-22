@@ -71,20 +71,12 @@ private struct GridButtonAnimationTrigger: Equatable {
       }
       .frame(maxWidth: .infinity)
       .padding(.vertical, 16)
-      .background {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-          .fill(.clear)
-          .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 16, style: .continuous))
-          .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-              .strokeBorder(
-                sound.isSelected
-                  ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
-                  : .primary.opacity(0.15),
-                lineWidth: sound.isSelected ? 2 : 1
-              )
-          )
-      }
+      .glassEffect(
+        sound.isSelected
+          ? .regular.tint(sound.customColor ?? globalSettings.customAccentColor ?? .accentColor).interactive()
+          : .regular.interactive(),
+        in: .rect(cornerRadius: 16)
+      )
       .contentShape(RoundedRectangle(cornerRadius: 16))
       .overlay(alignment: .topTrailing) {
         // Edit mode indicator

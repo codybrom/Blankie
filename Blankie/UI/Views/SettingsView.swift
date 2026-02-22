@@ -20,6 +20,46 @@ struct SettingsView: View {
         }
 
         Section(
+          header: Text("Appearance", comment: "Settings section header for appearance options")
+        ) {
+          Picker(
+            selection: Binding(
+              get: { globalSettings.appearance },
+              set: { globalSettings.setAppearance($0) }
+            )
+          ) {
+            ForEach(AppearanceMode.allCases, id: \.self) { mode in
+              Text(mode.localizedName).tag(mode)
+            }
+          } label: {
+            Text("Appearance", comment: "Appearance picker label")
+          }
+
+          VStack(alignment: .leading, spacing: 8) {
+            Text("Accent Color")
+            SpectrumColorPicker(selectedColor: Binding(
+              get: { globalSettings.customAccentColor },
+              set: { globalSettings.customAccentColor = $0 }
+            ))
+          }
+          .padding(.vertical, 4)
+
+          Toggle(isOn: Binding(
+            get: { globalSettings.showSoundNames },
+            set: { globalSettings.setShowSoundNames($0) }
+          )) {
+            Text("Show Labels", comment: "Toggle for showing sound labels")
+          }
+
+          Toggle(isOn: Binding(
+            get: { globalSettings.showProgressBorder },
+            set: { globalSettings.setShowProgressBorder($0) }
+          )) {
+            Text("Show Progress Borders", comment: "Toggle for showing progress borders around playing sounds")
+          }
+        }
+
+        Section(
           header: Text("Lock Screen", comment: "Settings section header for lock screen options")
         ) {
           Toggle(isOn: Binding(

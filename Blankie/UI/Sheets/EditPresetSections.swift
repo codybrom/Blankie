@@ -10,10 +10,24 @@ import SwiftUI
 
 // MARK: - Default Preset Section
 
-// MARK: - Core Section (Name and Sounds)
+// MARK: - Error Section
 
 extension EditPresetSheet {
-  var coreSection: some View {
+  @ViewBuilder
+  var errorSection: some View {
+    if let error = error {
+      Section {
+        Label(error, systemImage: "exclamationmark.triangle.fill")
+          .foregroundStyle(.red)
+      }
+    }
+  }
+}
+
+// MARK: - Basic Details Section (Name, Creator, Moods)
+
+extension EditPresetSheet {
+  var basicDetailsSection: some View {
     Section {
       // Name field
       LabeledContent("Name") {
@@ -24,51 +38,6 @@ extension EditPresetSheet {
           }
       }
 
-      // Sounds field
-      #if os(iOS)
-        Button {
-          showingSoundSelection = true
-        } label: {
-          LabeledContent("Sounds") {
-            HStack {
-              Text("\(selectedSounds.count) Selected")
-                .foregroundStyle(.secondary)
-              Image(systemName: "chevron.right")
-                .foregroundStyle(.tertiary)
-                .imageScale(.small)
-            }
-          }
-        }
-        .buttonStyle(.plain)
-      #else
-        NavigationLink(
-          destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: preset
-          )
-        ) {
-          LabeledContent("Sounds") {
-            Text("\(selectedSounds.count) Selected")
-              .foregroundStyle(.secondary)
-          }
-        }
-      #endif
-    }
-    .onChange(of: selectedSounds) { _, newValue in
-      // Update soundOrder to include new sounds and remove deselected sounds
-      let validOrder = soundOrder.filter { newValue.contains($0) }
-      let newSounds = newValue.filter { !validOrder.contains($0) }
-      soundOrder = validOrder + newSounds.sorted()
-
-      applyChangesInstantly()
-    }
-  }
-}
-
-// MARK: - Now Playing Section (Creator & Artwork)
-
-extension EditPresetSheet {
-  var nowPlayingSection: some View {
-    Section("Now Playing") {
       // Creator field (only for non-default presets)
       if !preset.isDefault {
         LabeledContent("Creator") {
@@ -78,6 +47,96 @@ extension EditPresetSheet {
               applyChangesInstantly()
             }
         }
+      }
+
+      // Moods field
+      if !preset.isDefault {
+        moodsPicker
+      }
+    }
+  }
+
+  var activeAccentColor: Color {
+    if useCustomTheme {
+      return accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    } else {
+      return globalSettings.customAccentColor ?? .accentColor
+    }
+  }
+
+  var moodsPicker: some View {
+    DisclosureGroup {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 8) {
+        ForEach(SoundMood.allCases, id: \.self) { mood in
+          let isSelected = moods.contains(mood)
+          Button {
+            if isSelected {
+              moods.remove(mood)
+            } else {
+              moods.insert(mood)
+            }
+            applyChangesInstantly()
+          } label: {
+            HStack {
+              Image(systemName: mood.icon)
+              Text(mood.displayName)
+            }
+            .font(.caption)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+            .background(
+              isSelected
+                ? activeAccentColor.opacity(0.15)
+                : Color.secondary.opacity(0.1)
+            )
+            .foregroundColor(
+              isSelected
+                ? activeAccentColor
+                : .primary
+            )
+            .clipShape(Capsule())
+            .overlay(
+              Capsule()
+                .strokeBorder(
+                  isSelected
+                    ? activeAccentColor
+                    : Color.clear,
+                  lineWidth: 1
+                )
+            )
+          }
+          .buttonStyle(.plain)
+        }
+      }
+      .padding(.vertical, 8)
+    } label: {
+      HStack {
+        Text("Moods")
+        Spacer()
+        if moods.isEmpty {
+          Text("None")
+            .foregroundColor(.secondary)
+        } else {
+          Text("\(moods.count) Selected")
+            .foregroundColor(.secondary)
+        }
+      }
+    }
+  }
+}
+
+// MARK: - Visuals Section (Accent Color, Artwork, Lockscreen)
+
+extension EditPresetSheet {
+  var visualsSection: some View {
+    Section("Appearance") {
+      // Accent Color
+      Toggle("Accent Color", isOn: $useCustomTheme)
+
+      if useCustomTheme {
+        SpectrumColorPicker(selectedColor: $accentColor)
+          .padding(.vertical, 4)
       }
 
       // Artwork field
@@ -108,50 +167,12 @@ extension EditPresetSheet {
       AnimatedArtworkPicker(
         artwork: $animatedArtwork,
         staticArtworkPath: $staticArtworkPath,
-        onChange: applyChangesInstantly
+        onChange: { applyChangesInstantly() }
       )
     }
     .onChange(of: artworkData) { _, _ in
       applyChangesInstantly()
     }
-  }
-}
-
-// MARK: - Error Section
-
-extension EditPresetSheet {
-  @ViewBuilder
-  var errorSection: some View {
-    if let error = error {
-      Section {
-        Label(error, systemImage: "exclamationmark.triangle.fill")
-          .foregroundStyle(.red)
-      }
-    }
-  }
-}
-
-// MARK: - Basic Info Section (deprecated - use nowPlayingSection)
-
-extension EditPresetSheet {
-  var basicInfoSection: some View {
-    nowPlayingSection
-  }
-}
-
-// MARK: - Creator Section (deprecated - now part of nowPlayingInfoSection)
-
-extension EditPresetSheet {
-  var creatorSection: some View {
-    EmptyView()
-  }
-}
-
-// MARK: - Artwork Section (deprecated - now part of nowPlayingInfoSection)
-
-extension EditPresetSheet {
-  var artworkSection: some View {
-    EmptyView()
   }
 }
 
@@ -185,158 +206,94 @@ extension EditPresetSheet {
   }
 }
 
-// MARK: - Sounds Section
+// MARK: - Sounds Section (Reorderable)
 
 extension EditPresetSheet {
   var soundsSection: some View {
     Section {
+      // Add/Edit Sounds Button
       #if os(iOS)
         Button {
           showingSoundSelection = true
         } label: {
-          LabeledContent("Sounds") {
-            HStack {
-              Text("\(selectedSounds.count) Selected")
-                .foregroundStyle(.secondary)
-              Image(systemName: "chevron.right")
-                .foregroundStyle(.tertiary)
-                .imageScale(.small)
-            }
+          HStack {
+            Text("Manage Sounds")
+            Spacer()
+            Text("\(selectedSounds.count)")
+              .foregroundStyle(.secondary)
+            Image(systemName: "chevron.right")
+              .foregroundStyle(.tertiary)
+              .imageScale(.small)
           }
         }
-        .buttonStyle(.plain)
       #else
         NavigationLink(
           destination: SoundSelectionView(
             selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: preset
           )
         ) {
-          LabeledContent("Sounds") {
-            Text("\(selectedSounds.count) Selected")
+          HStack {
+            Text("Manage Sounds")
+            Spacer()
+            Text("\(selectedSounds.count)")
               .foregroundStyle(.secondary)
           }
         }
       #endif
-    }
-    .onChange(of: selectedSounds) { _, _ in
-      applyChangesInstantly()
-    }
-  }
-}
 
-// MARK: - Sound Order Section (Reorderable)
-
-extension EditPresetSheet {
-  var soundOrderSection: some View {
-    #if os(iOS) || os(visionOS)
-      Section {
-        if selectedSounds.isEmpty {
-          Text("No sounds selected")
-            .foregroundStyle(.secondary)
-            .font(.subheadline)
-        } else {
-          ForEach(orderedSelectedSounds) { sound in
-            HStack(spacing: 12) {
-              Image(systemName: sound.systemIconName)
-                .font(.title3)
-                .foregroundColor(.accentColor)
-                .frame(width: 24)
-
-              Text(sound.title)
-                .font(.body)
-
-              Spacer()
-            }
-            .padding(.vertical, 4)
-          }
-          .onMove { from, to in
-            moveSound(from: from, to: to)
-          }
-        }
-      } header: {
-        HStack {
-          Text("Sound Order")
-
-          Spacer()
-
-          if !selectedSounds.isEmpty {
+      if selectedSounds.isEmpty {
+        Text("No sounds selected")
+          .foregroundStyle(.secondary)
+          .font(.subheadline)
+      } else {
+        ForEach(orderedSelectedSounds) { sound in
+          #if os(iOS)
             Button {
-              withAnimation {
-                soundEditMode = soundEditMode == .active ? .inactive : .active
-              }
+              navPath.append(sound)
             } label: {
-              Text(soundEditMode == .active ? "Done" : "Edit")
-                .font(.body)
+              HStack(spacing: 12) {
+                Image(systemName: sound.systemIconName)
+                  .font(.title3)
+                  .foregroundColor(activeAccentColor)
+                  .frame(width: 24)
+
+                Text(sound.title)
+                  .font(.body)
+
+                Spacer()
+              }
+              .padding(.vertical, 4)
+              .contentShape(Rectangle())
             }
-          }
-        }
-      } footer: {
-        if !selectedSounds.isEmpty {
-          Text("Drag sounds to reorder how they appear in the preset")
-            .font(.caption)
-        }
-      }
-      .environment(\.editMode, $soundEditMode)
-    #else
-      Section {
-        if selectedSounds.isEmpty {
-          Text("No sounds selected")
-            .foregroundStyle(.secondary)
-            .font(.subheadline)
-        } else {
-          ForEach(orderedSelectedSounds) { sound in
+            .buttonStyle(.plain)
+          #else
             HStack(spacing: 12) {
               Image(systemName: sound.systemIconName)
                 .font(.title3)
-                .foregroundColor(.accentColor)
+                .foregroundColor(activeAccentColor)
                 .frame(width: 24)
 
               Text(sound.title)
                 .font(.body)
 
               Spacer()
-
-              // macOS: Show move up/down buttons instead of drag-and-drop
-              HStack(spacing: 4) {
-                Button {
-                  if let index = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }),
-                     index > 0
-                  {
-                    moveSound(from: IndexSet(integer: index), to: index - 1)
-                  }
-                } label: {
-                  Image(systemName: "chevron.up")
-                    .font(.caption)
-                }
-                .buttonStyle(.plain)
-                .disabled(orderedSelectedSounds.first?.id == sound.id)
-
-                Button {
-                  if let index = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }),
-                     index < orderedSelectedSounds.count - 1
-                  {
-                    moveSound(from: IndexSet(integer: index), to: index + 2)
-                  }
-                } label: {
-                  Image(systemName: "chevron.down")
-                    .font(.caption)
-                }
-                .buttonStyle(.plain)
-                .disabled(orderedSelectedSounds.last?.id == sound.id)
-              }
             }
             .padding(.vertical, 4)
-          }
+          #endif
         }
-      } header: {
-        Text("Sound Order")
-      } footer: {
-        if !selectedSounds.isEmpty {
-          Text("Use the up/down buttons to reorder sounds")
-            .font(.caption)
+        .onMove { from, to in
+          moveSound(from: from, to: to)
         }
       }
-    #endif
+    } header: {
+      Text("Sounds")
+    } footer: {
+      if !selectedSounds.isEmpty {
+        Text("Drag sounds to reorder how they appear in the preset")
+          .font(.caption)
+      }
+    }
+    .environment(\.editMode, .constant(.active))
   }
 
   var orderedSelectedSounds: [Sound] {
@@ -361,7 +318,7 @@ extension EditPresetSheet {
     soundOrder = currentOrder
 
     // Trigger UI update to save changes
-    applyChangesInstantly()
+    applyChangesInstantly(skipRefresh: true)
   }
 }
 

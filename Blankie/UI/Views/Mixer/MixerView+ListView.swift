@@ -1,5 +1,5 @@
 //
-//  AdaptiveContentView+ListView.swift
+//  MixerView+ListView.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 6/3/25.
@@ -13,6 +13,7 @@ import SwiftUI
     @ObservedObject var sound: Sound
     @ObservedObject var globalSettings: GlobalSettings
     @ObservedObject var audioManager: AudioManager
+    @ObservedObject var presetManager = PresetManager.shared
 
     var body: some View {
       HStack(spacing: 16) {
@@ -21,38 +22,20 @@ import SwiftUI
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 12)
-      .background {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-          .fill(.clear)
-          .glassEffect(.clear.interactive(), in: .rect(cornerRadius: 12, style: .continuous))
-          .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-              .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
-          )
+      .glassEffect(.regular, in: .rect(cornerRadius: 12))
+    }
+
+    private var accentColor: Color {
+      // If we are in a custom preset that has a specific color, use it to override sound colors
+      if let preset = presetManager.currentPreset, !preset.isDefault, let presetColor = preset.accentColor {
+        return presetColor
       }
+      // Otherwise (Default preset, or custom preset with no color), respect sound's custom color
+      return sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
     private var soundRowIcon: some View {
-      ZStack {
-        Circle()
-          .fill(
-            !audioManager.isGloballyPlaying || !sound.isSelected
-              ? .clear
-              : (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
-              .opacity(0.2)
-          )
-          .frame(width: 50, height: 50)
-
-        Image(systemName: sound.systemIconName)
-          .font(.system(size: 24))
-          .foregroundColor(
-            !audioManager.isGloballyPlaying
-              ? .gray
-              : (sound.isSelected
-                ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
-                : .gray))
-      }
-      .onTapGesture {
+      Button {
         // If global playback is paused and this sound is already selected,
         // start global playback instead of deselecting the sound
         if !audioManager.isGloballyPlaying && sound.isSelected {
@@ -60,7 +43,36 @@ import SwiftUI
         } else {
           sound.toggle()
         }
+      } label: {
+        ZStack {
+          // Progress border if enabled
+          if globalSettings.showProgressBorder && audioManager.isGloballyPlaying && sound.isSelected {
+            ProgressBorderView(
+              iconSize: 50,
+              borderWidth: 3,
+              sound: sound,
+              color: accentColor.mix(with: .white, by: 0.3)
+            )
+            .allowsHitTesting(false)
+          }
+
+          Image(systemName: sound.systemIconName)
+            .font(.system(size: 24))
+            .foregroundColor(
+              !audioManager.isGloballyPlaying
+                ? .gray
+                : (sound.isSelected ? accentColor : .gray)
+            )
+        }
+        .frame(width: 50, height: 50)
+        .glassEffect(
+          sound.isSelected && audioManager.isGloballyPlaying
+            ? .regular.tint(accentColor).interactive()
+            : .regular.interactive(),
+          in: .circle
+        )
       }
+      .buttonStyle(.plain)
     }
 
     private var soundRowControls: some View {
@@ -95,9 +107,7 @@ import SwiftUI
           in: 0 ... 1
         )
         .tint(
-          sound.isSelected
-            ? (sound.customColor ?? (globalSettings.customAccentColor ?? .accentColor))
-            : .gray
+          sound.isSelected ? accentColor : .gray
         )
         .disabled(!sound.isSelected)
 
@@ -108,63 +118,22 @@ import SwiftUI
     }
   }
 
-  extension AdaptiveContentView {
+  extension MixerView {
     // List view for small devices
     var soundListView: some View {
-      return List {
+      List {
         ForEach(filteredSounds) { sound in
           soundRow(for: sound)
             .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
-            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-            .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
-            .contextMenu {
-              // Solo Mode - only show if not already in solo mode
-              if audioManager.soloModeSound?.id != sound.id {
-                Button(action: {
-                  withAnimation(.easeInOut(duration: 0.3)) {
-                    audioManager.toggleSoloMode(for: sound)
-                  }
-                }) {
-                  Label("Solo", systemImage: "headphones")
-                }
-                .sensoryFeedback(.selection, trigger: audioManager.soloModeSound?.id)
-              }
-
-              // Customize Sound
-              Button(action: {
-                soundToEdit = sound
-              }) {
-                Label("Customize", systemImage: "paintbrush")
-              }
-
-              Divider()
-
-              // Reorder
-              Button(action: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                  if editMode == .active {
-                    exitEditMode()
-                  } else {
-                    enterEditMode()
-                  }
-                }
-              }) {
-                Label(
-                  editMode == .active ? "Done Reordering" : "Reorder",
-                  systemImage: editMode == .active ? "checkmark" : "arrow.up.arrow.down"
-                )
-              }
-            }
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
         }
-        .onMove(perform: editMode == .active ? moveItems : nil)
-        .deleteDisabled(true)
+        .onMove(perform: moveItems)
       }
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
-      .environment(\.editMode, $editMode)
       .transition(.opacity)
-      .padding(.top, 8)
       .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
     }
 
@@ -252,27 +221,6 @@ import SwiftUI
         soundsUpdateTrigger += 1
         print("📱 ListView: UI refresh triggered for default view")
       }
-    }
-
-    private func getSoundAuthor(for sound: Sound) -> String? {
-      // Check if it's a custom sound first
-      if isCustomSound(sound) {
-        return "You" // Custom sounds are created by the user
-      }
-
-      // For built-in sounds, get author from credits
-      let credits = SoundCreditsManager.shared.credits
-      return credits.first { $0.soundName == sound.fileName || $0.name == sound.title }?.author
-    }
-
-    private func isCustomSound(_ sound: Sound) -> Bool {
-      // Custom sounds typically have higher defaultOrder values (1000+)
-      // or are not found in the built-in credits
-      let credits = SoundCreditsManager.shared.credits
-      let isInCredits = credits.contains {
-        $0.soundName == sound.fileName || $0.name == sound.title
-      }
-      return !isInCredits
     }
 
     @ViewBuilder

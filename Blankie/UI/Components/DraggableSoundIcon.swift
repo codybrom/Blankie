@@ -101,7 +101,7 @@ private struct DragAnimationTrigger: Equatable {
     private var iconView: some View {
       ZStack {
         if isSoloMode {
-          // Glass background for solo mode
+          // Clear glass for solo mode - interactive without heavy blur
           Circle()
             .fill(.clear)
             .frame(width: iconSize, height: iconSize)

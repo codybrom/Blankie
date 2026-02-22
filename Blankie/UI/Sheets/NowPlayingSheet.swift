@@ -48,8 +48,8 @@ import SwiftUI
               // Solo mode or preset without artwork: show gradient
               LinearGradient(
                 colors: [
-                  (globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
-                  (globalSettings.customAccentColor ?? .accentColor).opacity(0.3),
+                  (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
+                  (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor).opacity(0.3),
                   Color.black.opacity(0.8),
                 ],
                 startPoint: .topLeading,
@@ -102,7 +102,7 @@ import SwiftUI
               .overlay {
                 Image(systemName: soloSound.systemIconName)
                   .font(.system(size: 120))
-                  .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                  .foregroundColor(soloSound.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
               }
               .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
           } else if let image = backgroundImage {
@@ -117,7 +117,10 @@ import SwiftUI
               .fill(Color.white.opacity(0.1))
               .frame(width: 340, height: 340)
               .overlay {
-                BrandedBlankieIcon(size: 120)
+                BrandedBlankieIcon(
+                  size: 120,
+                  color: presetManager.currentPreset?.accentColor
+                )
               }
           }
         }
@@ -145,16 +148,9 @@ import SwiftUI
                   .foregroundColor(.white)
                   .lineLimit(1)
 
-                if audioManager.hasSelectedSounds {
-                  let soundCount = audioManager.sounds.filter { $0.isSelected }.count
-                  Text("\(soundCount) sound\(soundCount == 1 ? "" : "s")")
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.7))
-                } else {
-                  Text("No sounds")
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.7))
-                }
+                Text(subtitleText)
+                  .font(.subheadline)
+                  .foregroundColor(.white.opacity(0.7))
               }
             }
 
@@ -229,7 +225,7 @@ import SwiftUI
           } label: {
             Image(systemName: timerManager.isTimerActive ? "timer" : "timer")
               .font(.system(size: 32))
-              .foregroundColor(timerManager.isTimerActive ? (globalSettings.customAccentColor ?? .accentColor) : .white.opacity(0.7))
+              .foregroundColor(timerManager.isTimerActive ? (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor) : .white.opacity(0.7))
           }
 
           // Play/Pause button
@@ -255,21 +251,20 @@ import SwiftUI
           .disabled(!audioManager.hasSelectedSounds)
           .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: playPauseTrigger)
 
-          // Mixer button (hidden in solo mode)
-          if audioManager.soloModeSound == nil {
+          // Mixer button (hidden in solo mode or when no sounds)
+          if audioManager.soloModeSound == nil && !audioManager.sounds.isEmpty {
             Button {
               controlTrigger += 1
               withAnimation(.spring(response: 0.3)) {
                 currentPage = currentPage == .nowPlaying ? .mixer : .nowPlaying
               }
             } label: {
-              Image(systemName: currentPage == .nowPlaying ? "slider.horizontal.3" : "music.note")
+              Image(systemName: "slider.horizontal.3")
                 .font(.system(size: 32))
                 .foregroundColor(.white.opacity(0.7))
-                .contentTransition(.symbolEffect(.replace))
             }
           } else {
-            // Spacer to maintain layout in solo mode
+            // Spacer to maintain layout in solo mode or when no sounds
             Color.clear
               .frame(width: 32, height: 32)
           }
@@ -311,7 +306,11 @@ import SwiftUI
 
     @ViewBuilder
     private var mixerView: some View {
-      AdaptiveContentView(showingAbout: .constant(false))
+      MixerView(onSwitchToNowPlaying: {
+        withAnimation(.spring(response: 0.3)) {
+          currentPage = .nowPlaying
+        }
+      })
     }
 
     // MARK: - Expanded Player View
@@ -362,6 +361,41 @@ import SwiftUI
       let formatter = DateFormatter()
       formatter.timeStyle = .short
       return formatter.string(from: endTime)
+    }
+
+    private var timerStatusText: String {
+      if timerManager.remainingTime < 60 {
+        return "Stops in \(formatTime(timerManager.remainingTime))"
+      } else {
+        return "Stops at \(formatEndTime())"
+      }
+    }
+
+    private var subtitleText: String {
+      let creatorName: String? = {
+        if let name = presetManager.currentPreset?.creatorName, !name.isEmpty {
+          return name
+        }
+        return nil
+      }()
+
+      if !audioManager.hasSelectedSounds {
+        return "No sounds"
+      }
+
+      let statusPart: String
+      if timerManager.isTimerActive {
+        statusPart = timerStatusText
+      } else {
+        let soundCount = audioManager.sounds.filter { $0.isSelected }.count
+        statusPart = "\(soundCount) sound\(soundCount == 1 ? "" : "s")"
+      }
+
+      if let creatorName {
+        return "\(creatorName) • \(statusPart)"
+      } else {
+        return statusPart
+      }
     }
   }
 

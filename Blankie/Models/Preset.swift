@@ -64,6 +64,14 @@ struct Preset: Codable, Identifiable, Equatable {
   // Mood/category tags
   var moods: [SoundMood]?
 
+  // Custom accent color
+  var accentColorName: String?
+
+  var accentColor: Color? {
+    guard let name = accentColorName else { return nil }
+    return Color(fromString: name)
+  }
+
   /// Display name for the preset (shows "All Blankie Sounds" for default preset)
   var displayName: String {
     return isDefault ? "All Blankie Sounds" : name
@@ -84,6 +92,7 @@ struct Preset: Codable, Identifiable, Equatable {
       && lhs.order == rhs.order
       && lhs.isImported == rhs.isImported
       && lhs.moods == rhs.moods
+      && lhs.accentColorName == rhs.accentColorName
   }
 
   func validate() -> Bool {

@@ -11,7 +11,6 @@ import SwiftUI
 
   struct PresetsLibraryView: View {
     @Binding var expandPlayer: Bool
-    @Binding var showingMixer: Bool
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var audioManager = AudioManager.shared
     @State private var showingCreatePreset = false
@@ -400,10 +399,7 @@ import SwiftUI
   }
 
   #Preview {
-    PresetsLibraryView(
-      expandPlayer: .constant(false),
-      showingMixer: .constant(false)
-    )
+    PresetsLibraryView(expandPlayer: .constant(false))
   }
 
 #endif

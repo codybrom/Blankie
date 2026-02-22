@@ -54,8 +54,10 @@ struct EditPresetSheet: View {
   @Binding var isPresented: Preset?
   @ObservedObject var presetManager = PresetManager.shared
   @ObservedObject var audioManager = AudioManager.shared
+  @ObservedObject var globalSettings = GlobalSettings.shared
   @State var presetName: String = ""
   @State var creatorName: String = ""
+  @State var moods: Set<SoundMood> = []
   @State var selectedSounds: Set<String> = []
   @State var soundOrder: [String] = []
   @State var error: String?
@@ -65,13 +67,16 @@ struct EditPresetSheet: View {
   @State var animatedArtwork: AnimatedArtworkRef?
   @State var staticArtworkPath: String?
   @State var showingImagePicker = false
+  @State var accentColor: Color?
   @State var presetToDelete: Preset?
   @State var exportError: String?
   @State var exportedURL: URL?
   @State var isExporting = false
+  @State var useCustomTheme = false
   #if os(iOS) || os(visionOS)
     @State var soundEditMode: EditMode = .inactive
   #endif
+  @State var navPath = NavigationPath()
   @Environment(\.dismiss) private var dismiss
 
   var orderedSounds: [Sound] {
@@ -81,7 +86,7 @@ struct EditPresetSheet: View {
   }
 
   var body: some View {
-    NavigationStack {
+    NavigationStack(path: $navPath) {
       Form {
         if preset.isDefault {
           defaultPresetSection
@@ -114,47 +119,30 @@ struct EditPresetSheet: View {
             // Clean up exported file when sheet closes
             cleanupExportedFile()
           }
+          .onChange(of: accentColor) { _, _ in
+            applyChangesInstantly()
+          }
+          .onChange(of: useCustomTheme) { _, _ in
+            applyChangesInstantly()
+          }
       #if os(iOS) || os(visionOS)
           .sheet(isPresented: $showingSoundSelection) {
-            NavigationStack {
-              SoundSelectionView(
-                selectedSounds: $selectedSounds,
-                orderedSounds: orderedSounds,
-                editingPreset: preset
-              )
-              .navigationBarItems(
-                leading: Button("Done") {
-                  showingSoundSelection = false
-                }
-              )
-            }
+            soundSelectionSheet
           }
           .sheet(isPresented: $showingImagePicker) {
-            #if os(iOS)
-              ImagePicker(imageData: $artworkData)
-                .onDisappear {
-                  print("🎨 EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")")
-                  if artworkData != nil {
-                    // Generate new ID for the new artwork
-                    print("🎨 EditPresetSheet: Generating new artwork ID and applying changes")
-                    artworkId = UUID()
-                    applyChangesInstantly()
-                  } else {
-                    print("🎨 EditPresetSheet: No artwork data, user likely cancelled")
-                  }
-                }
-            #endif
+            imagePickerSheet
           }
       #else
-        .fileImporter(
-          isPresented: $showingImagePicker,
-          allowedContentTypes: [.image],
-          allowsMultipleSelection: false
-        ) { result in
-          handleMacOSImageImport(result)
-        }
+          .fileImporter(
+            isPresented: $showingImagePicker,
+            allowedContentTypes: [.image],
+            allowsMultipleSelection: false
+          ) { result in
+            handleMacOSImageImport(result)
+          }
       #endif
     }
+    .tint(useCustomTheme ? (accentColor ?? globalSettings.customAccentColor ?? .accentColor) : (globalSettings.customAccentColor ?? .accentColor))
     .alert(
       "Delete Preset",
       isPresented: .init(
@@ -175,6 +163,43 @@ struct EditPresetSheet: View {
         Text("Are you sure you want to delete \"\(preset.name)\"? This action cannot be undone.")
       }
     }
+  }
+
+  @ViewBuilder
+  var soundSelectionSheet: some View {
+    NavigationStack {
+      SoundSelectionView(
+        selectedSounds: $selectedSounds,
+        orderedSounds: orderedSounds,
+        editingPreset: preset
+      )
+      .navigationBarItems(
+        leading: Button("Done") {
+          showingSoundSelection = false
+        }
+      )
+      .navigationDestination(for: Sound.self) { sound in
+        SoundSheet(mode: .edit(sound), embedInNavigation: false)
+      }
+    }
+  }
+
+  @ViewBuilder
+  var imagePickerSheet: some View {
+    #if os(iOS)
+      ImagePicker(imageData: $artworkData)
+        .onDisappear {
+          print("🎨 EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")")
+          if artworkData != nil {
+            // Generate new ID for the new artwork
+            print("🎨 EditPresetSheet: Generating new artwork ID and applying changes")
+            artworkId = UUID()
+            applyChangesInstantly()
+          } else {
+            print("🎨 EditPresetSheet: No artwork data, user likely cancelled")
+          }
+        }
+    #endif
   }
 }
 
@@ -260,16 +285,16 @@ extension EditPresetSheet {
           .foregroundColor(.secondary)
       }
       errorSection
-      nowPlayingSection // Artwork & Animated Artwork
+      visualsSection // Artwork & Animated Artwork
     }
   }
 
   var editablePresetSections: some View {
     Group {
       errorSection
-      coreSection
-      soundOrderSection // NEW: Reorderable sounds list
-      nowPlayingSection // Creator & Artwork
+      basicDetailsSection
+      soundsSection
+      visualsSection
       deleteSection
     }
   }
@@ -279,11 +304,14 @@ extension EditPresetSheet {
   func setupInitialValues() {
     presetName = preset.name
     creatorName = preset.creatorName ?? ""
+    moods = Set(preset.moods ?? [])
     selectedSounds = Set(preset.soundStates.map(\.fileName))
     soundOrder = preset.soundOrder ?? preset.soundStates.map(\.fileName)
     artworkId = preset.artworkId
     animatedArtwork = preset.animatedArtwork
     staticArtworkPath = preset.staticArtworkPath
+    accentColor = preset.accentColor
+    useCustomTheme = preset.accentColor != nil
 
     // Load existing images if they exist
     Task {
@@ -301,8 +329,8 @@ extension EditPresetSheet {
     }
   }
 
-  func applyChangesInstantly() {
-    print("🎨 EditPresetSheet: Applying changes instantly")
+  func applyChangesInstantly(skipRefresh: Bool = false) {
+    print("🎨 EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))")
 
     // Only validate name for non-default presets
     if !preset.isDefault {
@@ -328,10 +356,12 @@ extension EditPresetSheet {
             // This prevents audio from restarting when editing non-sound properties
 
             // Force full Now Playing update to refresh lock screen artwork immediately
-            audioManager.nowPlayingManager.forceRefresh(
-              preset: updatedPreset,
-              isPlaying: audioManager.isGloballyPlaying
-            )
+            if !skipRefresh {
+              audioManager.nowPlayingManager.forceRefresh(
+                preset: updatedPreset,
+                isPlaying: audioManager.isGloballyPlaying
+              )
+            }
           }
 
           // Mark that user has edited a preset for onboarding tracking
@@ -365,6 +395,7 @@ extension EditPresetSheet {
 
       updatedPreset.name = presetName
       updatedPreset.creatorName = creatorName.isEmpty ? nil : creatorName
+      updatedPreset.moods = moods.isEmpty ? nil : Array(moods)
       updatedPreset.soundStates = selectedSoundStates
       updatedPreset.soundOrder = soundOrder
     }
@@ -377,6 +408,13 @@ extension EditPresetSheet {
     updatedPreset.animatedArtwork = animatedArtwork
     updatedPreset.staticArtworkPath = staticArtworkPath
     updatedPreset.lastModifiedVersion = currentVersion
+
+    // Save accent color
+    if useCustomTheme, let color = accentColor {
+      updatedPreset.accentColorName = color.toString
+    } else {
+      updatedPreset.accentColorName = nil
+    }
 
     return updatedPreset
   }

@@ -49,7 +49,10 @@ import SwiftUI
                 .frame(width: 32, height: 32)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 .overlay {
-                  BrandedBlankieIcon(size: 18)
+                  BrandedBlankieIcon(
+                    size: 18,
+                    color: presetManager.currentPreset?.accentColor
+                  )
                 }
             }
           }
@@ -84,27 +87,22 @@ import SwiftUI
 
           Spacer(minLength: 0)
 
-          // Control buttons
-          Group {
-            Button {
-              if audioManager.hasSelectedSounds {
-                audioManager.togglePlayback()
-              }
-            } label: {
-              Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
+          // Play/pause button
+          Button {
+            if audioManager.hasSelectedSounds {
+              audioManager.togglePlayback()
             }
-            .disabled(!audioManager.hasSelectedSounds)
-
-            Button {
-              // Next action
-            } label: {
-              Image(systemName: "forward.fill")
-            }
+          } label: {
+            Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
+              .frame(width: 44, height: 44)
+              .contentShape(Rectangle())
           }
+          .disabled(!audioManager.hasSelectedSounds)
           .font(.title3)
           .foregroundStyle(Color.primary)
         }
-        .padding(.horizontal, 10)
+        .padding(.leading, 10)
+        .padding(.trailing, 16)
         .frame(height: 70)
         .contentShape(.rect)
       }

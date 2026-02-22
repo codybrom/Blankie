@@ -11,7 +11,6 @@ import SwiftUI
 
   struct SoundsLibraryView: View {
     @Binding var expandPlayer: Bool
-    @Binding var showingMixer: Bool
     @StateObject private var audioManager = AudioManager.shared
     @State private var selectedMood: SoundMood?
     @State private var searchText = ""
@@ -185,10 +184,7 @@ import SwiftUI
   }
 
   #Preview {
-    SoundsLibraryView(
-      expandPlayer: .constant(false),
-      showingMixer: .constant(false)
-    )
+    SoundsLibraryView(expandPlayer: .constant(false))
   }
 
 #endif

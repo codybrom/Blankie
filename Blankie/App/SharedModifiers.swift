@@ -10,7 +10,7 @@ import SwiftUI
 /// Shared view modifiers for all platforms
 struct SharedAppModifiers: ViewModifier {
   let appSetup: AppSetup
-  let globalSettings: GlobalSettings
+  @ObservedObject var globalSettings: GlobalSettings
   @StateObject private var audioFileImporter = AudioFileImporter.shared
 
   func body(content: Content) -> some View {
@@ -20,7 +20,7 @@ struct SharedAppModifiers: ViewModifier {
           appSetup.setupManagers()
         }
       }
-      .accentColor(globalSettings.customAccentColor ?? .accentColor)
+      .tint(globalSettings.customAccentColor ?? .accentColor)
       .onOpenURL { url in
         if url.pathExtension == "blankie" {
           // Handle preset import

@@ -8,6 +8,7 @@
 import SwiftUI
 
 // MARK: - UI Components
+
 extension SoundSheet {
   var macOSLayout: some View {
     SoundSheetMacOSLayout(
@@ -40,38 +41,48 @@ extension SoundSheet {
   }
 
   var iOSLayout: some View {
-    NavigationView {
-      CleanSoundSheetForm(
-        mode: mode,
-        isFilePreselected: isFilePreselected,
-        soundName: $soundName,
-        selectedIcon: $selectedIcon,
-        selectedFile: $selectedFile,
-        isImporting: $isImporting,
-        selectedColor: $selectedColor,
-        randomizeStartPosition: $randomizeStartPosition,
-        normalizeAudio: $normalizeAudio,
-        volumeAdjustment: $volumeAdjustment,
-        loopSound: $loopSound,
-        isPreviewing: $isPreviewing,
-        previewSound: $previewSound,
-        previewProgress: $previewProgress,
-        showingDeleteConfirmation: $showingDeleteConfirmation,
-        showingResetConfirmation: $showingResetConfirmation,
-        isDisappearing: $isDisappearing
-      )
-      .navigationTitle(title)
-      #if !os(macOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .navigationBarItems(
-          leading: leadingNavigationButton,
-          trailing: trailingNavigationButton
-        )
-      #endif
+    Group {
+      if embedInNavigation {
+        NavigationView {
+          content
+        }
+        #if !os(macOS)
+        .navigationViewStyle(.stack)
+        #endif
+      } else {
+        content
+      }
     }
+  }
+
+  var content: some View {
+    CleanSoundSheetForm(
+      mode: mode,
+      isFilePreselected: isFilePreselected,
+      soundName: $soundName,
+      selectedIcon: $selectedIcon,
+      selectedFile: $selectedFile,
+      isImporting: $isImporting,
+      selectedColor: $selectedColor,
+      randomizeStartPosition: $randomizeStartPosition,
+      normalizeAudio: $normalizeAudio,
+      volumeAdjustment: $volumeAdjustment,
+      loopSound: $loopSound,
+      isPreviewing: $isPreviewing,
+      previewSound: $previewSound,
+      previewProgress: $previewProgress,
+      showingDeleteConfirmation: $showingDeleteConfirmation,
+      showingResetConfirmation: $showingResetConfirmation,
+      isDisappearing: $isDisappearing
+    )
+    .navigationTitle(title)
     #if !os(macOS)
-      .navigationViewStyle(.stack)
+      .navigationBarTitleDisplayMode(.inline)
+      .navigationBarBackButtonHidden(true)
+      .navigationBarItems(
+        leading: leadingNavigationButton,
+        trailing: trailingNavigationButton
+      )
     #endif
   }
 
@@ -97,13 +108,12 @@ extension SoundSheet {
 
   func handleFileImport(result: Result<[URL], Error>) {
     switch result {
-    case .success(let files):
+    case let .success(files):
       if let file = files.first {
         selectedFile = file
         if soundName.isEmpty {
           Task {
-            if let metadataTitle = await CustomSoundManager.shared.extractMetadataTitle(from: file)
-            {
+            if let metadataTitle = await CustomSoundManager.shared.extractMetadataTitle(from: file) {
               soundName = metadataTitle
             } else {
               soundName = file.deletingPathExtension().lastPathComponent
@@ -111,7 +121,7 @@ extension SoundSheet {
           }
         }
       }
-    case .failure(let error):
+    case let .failure(error):
       importError = error
       showingError = true
     }

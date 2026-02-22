@@ -34,7 +34,6 @@ import SwiftUI
   struct HomeView: View {
     @State private var selectedTab: HomeTab = .home
     @State private var expandPlayer = false
-    @State private var showingMixer = false
     @State private var showingTimer = false
     @State private var presetToEdit: Preset?
     @StateObject private var audioManager = AudioManager.shared
@@ -47,20 +46,17 @@ import SwiftUI
     // MARK: - Tab View
 
     private var shouldHideMiniPlayer: Bool {
-      selectedTab == .quickMix || showingTimer || presetToEdit != nil || expandPlayer
+      showingTimer || presetToEdit != nil || expandPlayer
     }
 
     private var tabView: some View {
       TabView(selection: $selectedTab) {
         // Home tab
-        HomeOverviewView(
-          expandPlayer: $expandPlayer,
-          showingMixer: $showingMixer
-        )
-        .tabItem {
-          Label(HomeTab.home.title, systemImage: HomeTab.home.icon)
-        }
-        .tag(HomeTab.home)
+        HomeOverviewView(expandPlayer: $expandPlayer)
+          .tabItem {
+            Label(HomeTab.home.title, systemImage: HomeTab.home.icon)
+          }
+          .tag(HomeTab.home)
 
         // Quick Mix tab
         QuickMixView()
@@ -77,11 +73,7 @@ import SwiftUI
           .tag(HomeTab.settings)
       }
       .tabBarMinimizeBehavior(.onScrollDown)
-      .tabViewBottomAccessory {
-        if !shouldHideMiniPlayer {
-          NowPlayingAccessoryView(expandPlayer: $expandPlayer)
-        }
-      }
+      .modifier(ConditionalBottomAccessory(isEnabled: !shouldHideMiniPlayer, expandPlayer: $expandPlayer))
       .sheet(isPresented: $showingTimer) {
         TimerSheetView()
       }
@@ -93,34 +85,6 @@ import SwiftUI
           .presentationDetents([.large])
           .presentationDragIndicator(.visible)
       }
-      .fullScreenCover(isPresented: $showingMixer) {
-        mixerView
-      }
-    }
-
-    // MARK: - Shared Views
-
-    private var mixerView: some View {
-      ZStack(alignment: .topLeading) {
-        AdaptiveContentView(showingAbout: .constant(false))
-
-        // Back button to return to home
-        Button {
-          showingMixer = false
-        } label: {
-          HStack(spacing: 4) {
-            Image(systemName: "chevron.left")
-            Text("Home")
-          }
-          .font(.body)
-          .foregroundColor(.primary)
-          .padding(.horizontal, 12)
-          .padding(.vertical, 8)
-          .background(.ultraThinMaterial, in: Capsule())
-        }
-        .padding()
-        .padding(.top, 40)
-      }
     }
   }
 
@@ -128,7 +92,6 @@ import SwiftUI
 
   struct HomeOverviewView: View {
     @Binding var expandPlayer: Bool
-    @Binding var showingMixer: Bool
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var globalSettings = GlobalSettings.shared
@@ -136,101 +99,115 @@ import SwiftUI
 
     var body: some View {
       NavigationStack {
-        ScrollView {
-          VStack(alignment: .leading, spacing: 24) {
-            // Header
-            VStack(alignment: .leading, spacing: 4) {
-              Text("Blankie")
-                .font(.system(size: 32, weight: .bold))
-            }
-            .padding(.horizontal)
-            .padding(.top, 16)
+        ZStack {
+          // Subtle gradient background
+          LinearGradient(
+            colors: [
+              (globalSettings.customAccentColor ?? .accentColor).opacity(0.2),
+              (globalSettings.customAccentColor ?? .accentColor).opacity(0.05),
+              Color.clear,
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+          .ignoresSafeArea()
 
-            // Library navigation
-            List {
-              NavigationLink(destination: PresetsLibraryView(expandPlayer: $expandPlayer, showingMixer: $showingMixer)) {
-                HStack(spacing: 16) {
-                  Image(systemName: "rectangle.stack.fill")
-                    .font(.title3)
-                    .foregroundColor(.accentColor)
-                    .frame(width: 24)
-
-                  Text("Presets")
-                    .font(.body)
-                    .foregroundColor(.primary)
-                }
+          ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+              // Header
+              VStack(alignment: .leading, spacing: 4) {
+                Text("Blankie")
+                  .font(.system(size: 32, weight: .bold))
               }
-              .listRowInsets(EdgeInsets(top: 11, leading: 20, bottom: 11, trailing: 16))
-              .listRowSeparator(.visible, edges: .bottom)
-              .simultaneousGesture(TapGesture().onEnded { _ in
-                navigationTrigger += 1
-              })
-              .sensoryFeedback(.selection, trigger: navigationTrigger)
+              .padding(.horizontal)
+              .padding(.top, 16)
 
-              NavigationLink(destination: SoundsLibraryView(expandPlayer: $expandPlayer, showingMixer: $showingMixer)) {
-                HStack(spacing: 16) {
-                  Image(systemName: "waveform")
-                    .font(.title3)
-                    .foregroundColor(.accentColor)
-                    .frame(width: 24)
+              // Library navigation
+              List {
+                NavigationLink(destination: PresetsLibraryView(expandPlayer: $expandPlayer)) {
+                  HStack(spacing: 16) {
+                    Image(systemName: "rectangle.stack.fill")
+                      .font(.title3)
+                      .foregroundColor(.accentColor)
+                      .frame(width: 24)
 
-                  Text("Sounds")
-                    .font(.body)
-                    .foregroundColor(.primary)
-                }
-              }
-              .listRowInsets(EdgeInsets(top: 11, leading: 20, bottom: 11, trailing: 16))
-              .listRowSeparator(.hidden, edges: .bottom)
-              .simultaneousGesture(TapGesture().onEnded { _ in
-                navigationTrigger += 1
-              })
-              .sensoryFeedback(.selection, trigger: navigationTrigger)
-            }
-            .listStyle(.plain)
-            .scrollDisabled(true)
-            .frame(height: 100)
-
-            // Recent presets grid
-            if !recentPresets.isEmpty {
-              VStack(alignment: .leading, spacing: 16) {
-                Text("Recent Presets")
-                  .font(.title2)
-                  .fontWeight(.bold)
-                  .padding(.horizontal)
-
-                LazyVGrid(columns: [
-                  GridItem(.flexible(), spacing: 16),
-                  GridItem(.flexible(), spacing: 16),
-                ], spacing: 16) {
-                  ForEach(recentPresets) { preset in
-                    PresetCard(preset: preset, expandPlayer: $expandPlayer)
+                    Text("Presets")
+                      .font(.body)
+                      .foregroundColor(.primary)
                   }
                 }
-                .padding(.horizontal)
-              }
-            }
+                .listRowInsets(EdgeInsets(top: 11, leading: 20, bottom: 11, trailing: 16))
+                .listRowSeparator(.visible, edges: .bottom)
+                .simultaneousGesture(TapGesture().onEnded { _ in
+                  navigationTrigger += 1
+                })
+                .sensoryFeedback(.selection, trigger: navigationTrigger)
 
-            // Recent solo sounds grid
-            if !recentSoloSounds.isEmpty {
-              VStack(alignment: .leading, spacing: 16) {
-                Text("Recent Solo Sounds")
-                  .font(.title2)
-                  .fontWeight(.bold)
-                  .padding(.horizontal)
+                NavigationLink(destination: SoundsLibraryView(expandPlayer: $expandPlayer)) {
+                  HStack(spacing: 16) {
+                    Image(systemName: "waveform")
+                      .font(.title3)
+                      .foregroundColor(.accentColor)
+                      .frame(width: 24)
 
-                LazyVGrid(columns: [
-                  GridItem(.flexible(), spacing: 16),
-                  GridItem(.flexible(), spacing: 16),
-                ], spacing: 16) {
-                  ForEach(recentSoloSounds) { sound in
-                    SoloSoundCard(sound: sound, expandPlayer: $expandPlayer)
+                    Text("Sounds")
+                      .font(.body)
+                      .foregroundColor(.primary)
                   }
                 }
-                .padding(.horizontal)
+                .listRowInsets(EdgeInsets(top: 11, leading: 20, bottom: 11, trailing: 16))
+                .listRowSeparator(.hidden, edges: .bottom)
+                .simultaneousGesture(TapGesture().onEnded { _ in
+                  navigationTrigger += 1
+                })
+                .sensoryFeedback(.selection, trigger: navigationTrigger)
+              }
+              .listStyle(.plain)
+              .scrollDisabled(true)
+              .frame(height: 100)
+
+              // Recent presets grid
+              if !recentPresets.isEmpty {
+                VStack(alignment: .leading, spacing: 16) {
+                  Text("Recent Presets")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal)
+
+                  LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 16),
+                    GridItem(.flexible(), spacing: 16),
+                  ], spacing: 16) {
+                    ForEach(recentPresets) { preset in
+                      PresetCard(preset: preset, expandPlayer: $expandPlayer)
+                    }
+                  }
+                  .padding(.horizontal)
+                }
+              }
+
+              // Recent solo sounds grid
+              if !recentSoloSounds.isEmpty {
+                VStack(alignment: .leading, spacing: 16) {
+                  Text("Recent Solo Sounds")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal)
+
+                  LazyVGrid(columns: [
+                    GridItem(.flexible(), spacing: 16),
+                    GridItem(.flexible(), spacing: 16),
+                  ], spacing: 16) {
+                    ForEach(recentSoloSounds) { sound in
+                      SoloSoundCard(sound: sound, expandPlayer: $expandPlayer)
+                    }
+                  }
+                  .padding(.horizontal)
+                }
               }
             }
+            .padding(.bottom, 32)
           }
-          .padding(.bottom, 32)
         }
         .navigationBarTitleDisplayMode(.inline)
       }
@@ -278,11 +255,11 @@ import SwiftUI
           // Icon with filled circle when playing
           ZStack {
             Circle()
-              .fill(isPlaying ? (globalSettings.customAccentColor ?? .accentColor) : Color.secondary.opacity(0.15))
+              .fill(isPlaying ? (sound.customColor ?? globalSettings.customAccentColor ?? .accentColor) : Color.secondary.opacity(0.15))
 
             Image(systemName: sound.systemIconName)
               .font(.system(size: 48))
-              .foregroundColor(isPlaying ? .white : (globalSettings.customAccentColor ?? .accentColor))
+              .foregroundColor(isPlaying ? .white : (sound.customColor ?? globalSettings.customAccentColor ?? .accentColor))
           }
           .frame(width: 120, height: 120)
 
@@ -348,7 +325,10 @@ import SwiftUI
                 Rectangle()
                   .fill(Color.secondary.opacity(0.2))
                   .overlay {
-                    BrandedBlankieIcon(size: 60)
+                    BrandedBlankieIcon(
+                      size: 60,
+                      color: preset.accentColor
+                    )
                   }
               }
             }
@@ -369,6 +349,24 @@ import SwiftUI
       .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: playTrigger)
       .task {
         artworkImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+      }
+    }
+  }
+
+  // MARK: - Conditional Bottom Accessory
+
+  struct ConditionalBottomAccessory: ViewModifier {
+    let isEnabled: Bool
+    @Binding var expandPlayer: Bool
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+      if isEnabled {
+        content.tabViewBottomAccessory {
+          NowPlayingAccessoryView(expandPlayer: $expandPlayer)
+        }
+      } else {
+        content
       }
     }
   }

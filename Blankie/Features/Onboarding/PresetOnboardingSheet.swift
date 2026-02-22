@@ -160,8 +160,13 @@ struct PresetOnboardingSheet: View {
 
     private var soundSelectionContent: some View {
         VStack(spacing: 16) {
-            Text("Pick some sounds for your first mix")
-                .font(.headline)
+            VStack(spacing: 4) {
+                Text("Pick some sounds for your first mix")
+                    .font(.headline)
+                Text("Select at least 2 sounds")
+                    .font(.caption)
+                    .foregroundStyle(selectedSounds.count >= 2 ? Color.secondary : Color.red)
+            }
 
             ScrollView {
                 LazyVStack(spacing: 12) {
@@ -176,9 +181,11 @@ struct PresetOnboardingSheet: View {
     }
 
     private func soundSelectionRow(for sound: Sound) -> some View {
-        Button {
+        let isSelected = selectedSounds.contains(sound.fileName)
+
+        return Button {
             withAnimation(.spring(response: 0.3)) {
-                if selectedSounds.contains(sound.fileName) {
+                if isSelected {
                     selectedSounds.remove(sound.fileName)
                 } else {
                     selectedSounds.insert(sound.fileName)
@@ -186,10 +193,15 @@ struct PresetOnboardingSheet: View {
             }
         } label: {
             HStack(spacing: 12) {
+                // Selection Indicator
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(isSelected ? (globalSettings.customAccentColor ?? .accentColor) : .secondary.opacity(0.5))
+
                 // Sound icon
                 Image(systemName: sound.systemIconName)
-                    .font(.system(size: 24))
-                    .foregroundStyle(selectedSounds.contains(sound.fileName) ? .primary : .secondary)
+                    .font(.system(size: 20)) // Slightly smaller
+                    .foregroundStyle(isSelected ? .primary : .secondary)
 
                 // Sound info
                 VStack(alignment: .leading, spacing: 4) {
@@ -200,13 +212,16 @@ struct PresetOnboardingSheet: View {
 
                 Spacer()
 
-                // Preview button
+                // Preview button (De-emphasized)
                 Button {
                     togglePreview(for: sound)
                 } label: {
-                    Image(systemName: previewingSound == sound.fileName ? "stop.circle.fill" : "play.circle")
-                        .font(.system(size: 24))
+                    Image(systemName: previewingSound == sound.fileName ? "stop.fill" : "play.fill")
+                        .font(.system(size: 14)) // Smaller
                         .foregroundStyle(previewingSound == sound.fileName ? .primary : .secondary)
+                        .padding(8)
+                        .background(Color.secondary.opacity(0.1))
+                        .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
             }
@@ -214,7 +229,8 @@ struct PresetOnboardingSheet: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(selectedSounds.contains(sound.fileName) ? globalSettings.customAccentColor ?? .accentColor.opacity(0.1) : Color.secondary.opacity(0.05))
+                    .fill(isSelected ? (globalSettings.customAccentColor ?? .accentColor).opacity(0.1) : Color.secondary.opacity(0.05))
+                    .strokeBorder(isSelected ? (globalSettings.customAccentColor ?? .accentColor).opacity(0.3) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -345,8 +361,8 @@ struct PresetOnboardingSheet: View {
             if currentStep < steps.count - 1 {
                 Button {
                     withAnimation {
-                        if currentStep == 2 && selectedSounds.isEmpty {
-                            // Don't allow progression without selecting sounds
+                        if currentStep == 2 && selectedSounds.count < 2 {
+                            // Don't allow progression without selecting at least 2 sounds
                             return
                         }
                         if currentStep == 3 && presetName.isEmpty {
@@ -361,7 +377,7 @@ struct PresetOnboardingSheet: View {
                         .labelStyle(.trailingIcon)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled((currentStep == 2 && selectedSounds.isEmpty) || (currentStep == 3 && presetName.isEmpty))
+                .disabled((currentStep == 2 && selectedSounds.count < 2) || (currentStep == 3 && presetName.isEmpty))
             } else {
                 Button {
                     createPreset()

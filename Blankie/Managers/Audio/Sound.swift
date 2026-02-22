@@ -12,7 +12,6 @@ import SwiftUI
 
 /// Represents a single sound with its associated properties and playback controls.
 open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegate {
-
   public let id = UUID()
   let originalTitle: String
   let originalSystemIconName: String
@@ -27,7 +26,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   let isCustom: Bool
   let fileURL: URL?
   let dateAdded: Date?
-  let customSoundDataID: UUID?  // For linking to SwiftData if needed
+  let customSoundDataID: UUID? // For linking to SwiftData if needed
 
   // Computed properties that respect customizations
   var title: String {
@@ -51,9 +50,15 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
       // If sound was just selected, start playing it immediately when playback becomes active
       // Only do this after AudioManager is fully initialized to avoid circular dependency
-      if isSelected && oldValue == false {
+      if isSelected, oldValue == false {
         DispatchQueue.main.async { [weak self] in
           guard let self = self else { return }
+
+          // Fix race condition: Ensure sound is still selected before proceeding
+          guard self.isSelected else {
+            print("🎵 Sound: Aborting auto-play for '\(self.fileName)' - sound was deselected")
+            return
+          }
 
           // Check if playback is active, or will become active soon
           if AudioManager.shared.isGloballyPlaying {
@@ -61,19 +66,26 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
               "🎵 Sound: Auto-playing newly selected sound '\(self.fileName)' during active playback"
             )
             self.loadSound()
-            self.resetSoundPosition()  // Apply randomization if enabled
+            self.resetSoundPosition() // Apply randomization if enabled
             self.play()
           } else {
             // If playback isn't active yet, wait for auto-start to kick in
             Task { @MainActor [weak self] in
-              await Task.yield()  // Allow auto-start to process
-              guard let self = self,
-                AudioManager.shared.isGloballyPlaying
-              else { return }
+              await Task.yield() // Allow auto-start to process
+              guard let self = self else { return }
+
+              // Fix race condition: Ensure sound is still selected before proceeding
+              guard self.isSelected else {
+                print("🎵 Sound: Aborting delayed auto-play for '\(self.fileName)' - sound was deselected")
+                return
+              }
+
+              guard AudioManager.shared.isGloballyPlaying else { return }
+
               print(
                 "🎵 Sound: Auto-playing newly selected sound '\(self.fileName)' after auto-start")
               self.loadSound()
-              self.resetSoundPosition()  // Apply randomization if enabled
+              self.resetSoundPosition() // Apply randomization if enabled
               self.play()
             }
           }
@@ -81,11 +93,11 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
       }
 
       // If sound was just deselected, stop playing it immediately
-      if !isSelected && oldValue == true {
-        print("🎵 Sound: Auto-stopping newly deselected sound '\(self.fileName)'")
+      if !isSelected, oldValue == true {
+        print("🎵 Sound: Auto-stopping newly deselected sound '\(fileName)'")
         // If player exists, pause it
-        if self.player != nil {
-          self.pause(immediate: true)
+        if player != nil {
+          pause(immediate: true)
         }
         // Also make sure AudioManager stops it if it's playing there
         DispatchQueue.main.async {
@@ -98,12 +110,12 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     }
   }
 
-  internal var volumeDebounceTimer: Timer?
-  internal var updateVolumeLogTimer: Timer?
+  var volumeDebounceTimer: Timer?
+  var updateVolumeLogTimer: Timer?
 
   @Published var volume: Float = 0.75 {
     didSet {
-      guard volume >= 0 && volume <= 1 else {
+      guard volume >= 0, volume <= 1 else {
         print("❌ Sound: Invalid volume for '\(fileName)'")
         ErrorReporter.shared.report(AudioError.invalidVolume)
         volume = oldValue
@@ -134,13 +146,13 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   }
 
   var player: AVAudioPlayer?
-  internal let fadeDuration: TimeInterval = 0.1
-  internal var fadeTimer: Timer?
-  internal var fadeStartVolume: Float = 0
-  internal var targetVolume: Float = 1.0
+  let fadeDuration: TimeInterval = 0.1
+  var fadeTimer: Timer?
+  var fadeStartVolume: Float = 0
+  var targetVolume: Float = 1.0
   private var globalSettingsObserver: AnyCancellable?
   private var customizationObserver: AnyCancellable?
-  internal var isResetting = false
+  var isResetting = false
   private var isLoading = false
 
   // Metadata properties
@@ -151,17 +163,17 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
   // Playback progress tracking
   @Published var playbackProgress: Double = 0.0
-  internal var progressTimer: Timer?
+  var progressTimer: Timer?
 
   init(
     title: String, systemIconName: String, fileName: String, fileExtension: String = "mp3",
-    defaultOrder: Int = 0, lufs: Float? = nil, normalizationFactor: Float? = nil,
+    defaultOrder _: Int = 0, lufs: Float? = nil, normalizationFactor: Float? = nil,
     truePeakdBTP: Float? = nil, needsLimiter: Bool = false,
     isCustom: Bool = false, fileURL: URL? = nil, dateAdded: Date? = nil,
     customSoundDataID: UUID? = nil, duration: TimeInterval? = nil
   ) {
-    self.originalTitle = title
-    self.originalSystemIconName = systemIconName
+    originalTitle = title
+    originalSystemIconName = systemIconName
     self.fileName = fileName
     self.fileExtension = fileExtension
     self.lufs = lufs
@@ -282,7 +294,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
   // MARK: - AVAudioPlayerDelegate
 
-  public func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+  public func audioPlayerDidFinishPlaying(_: AVAudioPlayer, successfully flag: Bool) {
     guard flag else { return }
 
     // Check if sound should loop
@@ -290,7 +302,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     if let customization = SoundCustomizationManager.shared.getCustomization(for: fileName) {
       shouldLoop = customization.loopSound ?? true
     } else {
-      shouldLoop = true  // Default to true for all sounds
+      shouldLoop = true // Default to true for all sounds
     }
 
     // If not looping, handle completion

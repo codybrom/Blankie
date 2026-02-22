@@ -3,8 +3,6 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
   struct SidebarContentView: View {
     @Binding var showingAbout: Bool
-    @Binding var hideInactiveSounds: Bool
-    @Binding var showingViewSettings: Bool
     @Binding var showingSoundManagement: Bool
 
     @StateObject private var presetManager = PresetManager.shared
@@ -174,13 +172,6 @@ import SwiftUI
     // Settings buttons in sidebar
     private var settingsButtons: some View {
       Group {
-        Button(action: {
-          showingViewSettings = true
-        }) {
-          Label("View Settings", systemImage: "slider.horizontal.3")
-        }
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-
         Button(action: {
           showingSoundManagement = true
         }) {

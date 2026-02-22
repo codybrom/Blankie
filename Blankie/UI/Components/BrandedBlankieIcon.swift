@@ -11,6 +11,7 @@ import SwiftUI
 /// Used as a fallback placeholder for preset artwork throughout the app.
 struct BrandedBlankieIcon: View {
   let size: CGFloat
+  var color: Color? = nil
   @StateObject private var globalSettings = GlobalSettings.shared
 
   var body: some View {
@@ -22,8 +23,8 @@ struct BrandedBlankieIcon: View {
       .foregroundStyle(
         LinearGradient(
           colors: [
-            globalSettings.customAccentColor ?? .accentColor,
-            (globalSettings.customAccentColor ?? .accentColor).opacity(0.7),
+            color ?? globalSettings.customAccentColor ?? .accentColor,
+            (color ?? globalSettings.customAccentColor ?? .accentColor).opacity(0.7),
           ],
           startPoint: .topLeading,
           endPoint: .bottomTrailing

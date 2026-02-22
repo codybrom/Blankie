@@ -96,25 +96,12 @@ struct QuickMixSoundButton: View {
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, 16)
-    .background {
-      if isSelectedInQuickMix {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-          .fill((globalSettings.customAccentColor ?? .accentColor).opacity(0.1))
-      }
-    }
     .glassEffect(
-      .clear.interactive(),
-      in: .rect(cornerRadius: 16, style: .continuous)
+      isSelectedInQuickMix
+        ? .regular.tint(globalSettings.customAccentColor ?? .accentColor).interactive()
+        : .regular.interactive(),
+      in: .rect(cornerRadius: 16)
     )
-    .overlay {
-      RoundedRectangle(cornerRadius: 16, style: .continuous)
-        .strokeBorder(
-          isSelectedInQuickMix
-            ? (globalSettings.customAccentColor ?? .accentColor)
-            : Color.primary.opacity(0.1),
-          lineWidth: isSelectedInQuickMix ? 2 : 1
-        )
-    }
     .scaleEffect(isPressed ? 0.95 : (isSelectedInQuickMix ? 1.05 : 1.0))
     .animation(.easeInOut(duration: 0.15), value: isSelectedInQuickMix)
     .animation(.easeInOut(duration: 0.1), value: isPressed)

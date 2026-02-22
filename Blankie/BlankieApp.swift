@@ -137,7 +137,7 @@ struct BlankieApp: App {
               )
               .frame(width: 450, height: 450)
             #else
-              AdaptiveContentView(showingAbout: .constant(false))
+              HomeView()
             #endif
           }
           .preferredColorScheme(scheme == "Dark Mode" ? .dark : .light)
