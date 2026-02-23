@@ -31,6 +31,12 @@ import SwiftUI
     @State private var playPauseTrigger = 0
     @State private var controlTrigger = 0
 
+    private var artworkTaskID: String {
+      let solo = audioManager.soloModeSound?.id.uuidString ?? ""
+      let preset = presetManager.currentPreset?.id.uuidString ?? ""
+      return "\(solo)-\(preset)"
+    }
+
     var body: some View {
       GeometryReader { geometry in
         let size = geometry.size
@@ -61,7 +67,7 @@ import SwiftUI
           .overlay {
             expandedPlayerView(size, safeArea)
           }
-          .task(id: audioManager.soloModeSound?.id) {
+          .task(id: artworkTaskID) {
             if audioManager.soloModeSound == nil, let preset = presetManager.currentPreset {
               backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
             } else if audioManager.soloModeSound != nil {
