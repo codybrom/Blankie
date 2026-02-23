@@ -38,10 +38,10 @@ import SwiftUI
                 HStack(spacing: 4) {
                     if audioManager.soloModeSound != nil {
                         Image(systemName: "headphones.circle.fill")
-                            .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                            .foregroundColor(presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
                     } else if audioManager.isQuickMix {
                         Image(systemName: "square.grid.2x2.fill")
-                            .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                            .foregroundColor(presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
                     }
                     Text(navigationTitle)
                         .font(.title2)
@@ -190,7 +190,7 @@ import SwiftUI
                     .font(.system(size: 26))
                     .foregroundColor(
                         audioManager.hasSelectedSounds
-                            ? (globalSettings.customAccentColor ?? .accentColor)
+                            ? (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
                             : .secondary
                     )
                     .contentTransition(
@@ -223,7 +223,7 @@ import SwiftUI
         var menuButton: some View {
             let button = Button {
                 menuTrigger += 1
-                showingSoundManagement = true
+                showingSettings = true
             } label: {
                 Image(systemName: "gearshape")
                     .font(.system(size: 22))

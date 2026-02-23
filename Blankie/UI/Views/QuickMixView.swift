@@ -32,29 +32,26 @@ struct QuickMixView: View {
         )
         .ignoresSafeArea()
 
-        GeometryReader { geometry in
-          ScrollView {
-            LazyVGrid(
-              columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16
-            ) {
-              ForEach(quickMixSounds, id: \.id) { sound in
-                QuickMixSoundButton(
-                  sound: sound
-                )
-              }
+        ScrollView {
+          LazyVGrid(
+            columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16
+          ) {
+            ForEach(quickMixSounds, id: \.id) { sound in
+              QuickMixSoundButton(
+                sound: sound
+              )
             }
-            .padding()
-            .padding(.bottom, geometry.safeAreaInsets.bottom)
           }
-          .ignoresSafeArea(edges: .bottom)
+          .padding()
+          .padding(.top, 44)
         }
       }
       #if !os(macOS)
-      .navigationBarHidden(true)
+        .navigationBarHidden(true)
       #endif
     }
     #if !os(macOS)
-    .navigationViewStyle(StackNavigationViewStyle())
+      .navigationViewStyle(StackNavigationViewStyle())
     #endif
   }
 }

@@ -25,6 +25,8 @@ private struct AnimationTrigger: Equatable {
     @State var dragResetTimer: Timer?
     @State private var showingThemePicker = false
     @State var showingSoundManagement = false
+    @State var showingSettings = false
+    @State var showingQuickMixEditor = false
     @State var showingViewSettings = false
     @State var showingTimer = false
     @State var soundToEdit: Sound?
@@ -89,12 +91,27 @@ private struct AnimationTrigger: Equatable {
         ThemePickerSheet(isPresented: $showingThemePicker)
       }
       .sheet(isPresented: $showingSoundManagement) {
-        SoundManagementView()
-          .onDisappear {
-            // Trigger refresh when sound management is closed in case sounds were imported
-            print("🔄 MixerView: SoundManagementView closed, triggering refresh")
-            soundsUpdateTrigger += 1
-          }
+        NavigationStack {
+          SoundManagementView()
+            .toolbar {
+              ToolbarItem(placement: .cancellationAction) {
+                Button("Done") {
+                  showingSoundManagement = false
+                }
+              }
+            }
+        }
+        .onDisappear {
+          // Trigger refresh when sound management is closed in case sounds were imported
+          print("🔄 MixerView: SoundManagementView closed, triggering refresh")
+          soundsUpdateTrigger += 1
+        }
+      }
+      .sheet(isPresented: $showingSettings) {
+        SettingsView()
+      }
+      .sheet(isPresented: $showingQuickMixEditor) {
+        QuickMixEditorSheet()
       }
       .sheet(isPresented: $showingTimer) {
         TimerSheetView()
@@ -232,7 +249,7 @@ private struct AnimationTrigger: Equatable {
                 } label: {
                   Image(systemName: "timer")
                     .font(.system(size: 16))
-                    .foregroundColor(timerManager.isTimerActive ? (globalSettings.customAccentColor ?? .accentColor) : .secondary)
+                    .foregroundColor(timerManager.isTimerActive ? (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor) : .secondary)
                     .frame(width: 36, height: 36)
                 }
                 .modifier(TopBarGlassButton())
@@ -258,9 +275,11 @@ private struct AnimationTrigger: Equatable {
 
                 Spacer()
 
-                // Edit preset button (right)
+                // Edit preset / Quick Mix button (right)
                 Button {
-                  if let preset = presetManager.currentPreset {
+                  if audioManager.isQuickMix {
+                    showingQuickMixEditor = true
+                  } else if let preset = presetManager.currentPreset {
                     presetToEdit = preset
                   }
                 } label: {
@@ -270,7 +289,7 @@ private struct AnimationTrigger: Equatable {
                     .frame(width: 36, height: 36)
                 }
                 .modifier(TopBarGlassButton())
-                .disabled(presetManager.currentPreset == nil)
+                .disabled(!audioManager.isQuickMix && presetManager.currentPreset == nil)
                 .padding(.trailing, 16)
               }
               .padding(.bottom, 8)

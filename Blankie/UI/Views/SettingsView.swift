@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+  @Environment(\.dismiss) private var dismiss
   @ObservedObject private var globalSettings = GlobalSettings.shared
   @State private var showingAbout = false
   @State private var showingOnboarding = false
@@ -106,6 +107,13 @@ struct SettingsView: View {
       .navigationTitle("Settings")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Done") {
+              dismiss()
+            }
+          }
+        }
       #endif
         .sheet(isPresented: $showingAbout) {
           AboutView()

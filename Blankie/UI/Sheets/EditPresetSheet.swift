@@ -114,6 +114,9 @@ struct EditPresetSheet: View {
             }
           }
       #endif
+          .navigationDestination(for: Sound.self) { sound in
+            SoundSheet(mode: .edit(sound), embedInNavigation: false)
+          }
           .onAppear(perform: setupInitialValues)
           .onDisappear {
             // Clean up exported file when sheet closes
@@ -128,6 +131,11 @@ struct EditPresetSheet: View {
       #if os(iOS) || os(visionOS)
           .sheet(isPresented: $showingSoundSelection) {
             soundSelectionSheet
+          }
+          .onChange(of: showingSoundSelection) { _, isShowing in
+            if !isShowing {
+              applyChangesInstantly()
+            }
           }
           .sheet(isPresented: $showingImagePicker) {
             imagePickerSheet
@@ -306,7 +314,13 @@ extension EditPresetSheet {
     creatorName = preset.creatorName ?? ""
     moods = Set(preset.moods ?? [])
     selectedSounds = Set(preset.soundStates.map(\.fileName))
-    soundOrder = preset.soundOrder ?? preset.soundStates.map(\.fileName)
+    if let order = preset.soundOrder {
+      soundOrder = order
+    } else if preset.isDefault {
+      soundOrder = audioManager.defaultSoundOrder
+    } else {
+      soundOrder = preset.soundStates.map(\.fileName)
+    }
     artworkId = preset.artworkId
     animatedArtwork = preset.animatedArtwork
     staticArtworkPath = preset.staticArtworkPath

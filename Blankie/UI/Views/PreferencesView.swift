@@ -244,7 +244,16 @@ struct PreferencesView: View {
       )
     }
     .sheet(isPresented: $showingHiddenSounds) {
-      SoundManagementView()
+      NavigationStack {
+        SoundManagementView()
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button("Done") {
+                showingHiddenSounds = false
+              }
+            }
+          }
+      }
     }
   }
 }

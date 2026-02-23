@@ -106,8 +106,17 @@ import SwiftUI
           SoundSheet(mode: .add)
         }
         .sheet(isPresented: $showingSoundManagement) {
-          SoundManagementView()
-            .frame(width: 500, height: 600)
+          NavigationStack {
+            SoundManagementView()
+              .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                  Button("Done") {
+                    showingSoundManagement = false
+                  }
+                }
+              }
+          }
+          .frame(width: 500, height: 600)
         }
       }
     }

@@ -224,7 +224,7 @@ import SwiftUI
         }
 
         Spacer()
-          .frame(maxHeight: 24)
+          .frame(maxHeight: 40)
 
         // Volume slider
         HStack(spacing: 15) {

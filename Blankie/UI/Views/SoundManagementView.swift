@@ -21,7 +21,7 @@ struct SoundManagementView: View {
   @State private var selectedSound: Sound?
   @State private var selectedFileURL: URL?
   @State private var showingDeleteConfirmation = false
-  @State private var builtInSoundsExpanded = true
+  @State private var builtInSoundsExpanded = false
   @State private var customSoundsExpanded = true
 
   private var builtInSounds: [Sound] {
@@ -33,60 +33,56 @@ struct SoundManagementView: View {
   }
 
   var body: some View {
-    NavigationStack {
-      mainContentView
-        .navigationTitle("Settings")
-      #if os(iOS) || os(visionOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
-        .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
-            Button("Done") {
-              dismiss()
-            }
-          }
-          ToolbarItem(placement: .primaryAction) {
-            Button {
-              showingFilePicker = true
-            } label: {
-              Label("Import", systemImage: "plus")
+    mainContentView
+      .navigationTitle("Manage Sounds")
+    #if os(iOS) || os(visionOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
+      .toolbar {
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            showingFilePicker = true
+          } label: {
+            HStack(spacing: 4) {
+              Image(systemName: "plus")
+              Text("Import")
             }
           }
         }
-        .fileImporter(
-          isPresented: $showingFilePicker,
-          allowedContentTypes: [.audio, .blankiePreset],
-          allowsMultipleSelection: false
-        ) { result in
-          handleFileImport(result)
+      }
+      .fileImporter(
+        isPresented: $showingFilePicker,
+        allowedContentTypes: [.audio, .blankiePreset],
+        allowsMultipleSelection: false
+      ) { result in
+        handleFileImport(result)
+      }
+      .sheet(isPresented: $showingImportSheet) {
+        if let fileURL = selectedFileURL {
+          SoundSheet(mode: .add, preselectedFile: fileURL)
         }
-        .sheet(isPresented: $showingImportSheet) {
-          if let fileURL = selectedFileURL {
-            SoundSheet(mode: .add, preselectedFile: fileURL)
-          }
+      }
+      .sheet(isPresented: $showingEditSheet) {
+        if let sound = selectedSound {
+          SoundSheet(mode: .edit(sound))
         }
-        .sheet(isPresented: $showingEditSheet) {
+      }
+      .alert(
+        Text("Delete Sound", comment: "Delete sound confirmation alert title"),
+        isPresented: $showingDeleteConfirmation
+      ) {
+        Button("Cancel", role: .cancel) {}
+        Button("Delete", role: .destructive) {
           if let sound = selectedSound {
-            SoundSheet(mode: .edit(sound))
+            deleteSound(sound)
           }
         }
-        .alert(
-          Text("Delete Sound", comment: "Delete sound confirmation alert title"),
-          isPresented: $showingDeleteConfirmation
-        ) {
-          Button("Cancel", role: .cancel) {}
-          Button("Delete", role: .destructive) {
-            if let sound = selectedSound {
-              deleteSound(sound)
-            }
-          }
-        } message: {
-          Text(
-            "Are you sure you want to delete '\(selectedSound?.title ?? "this sound")'? This action cannot be undone.",
-            comment: "Delete custom sound confirmation message"
-          )
-        }
-    }
+      } message: {
+        Text(
+          "Are you sure you want to delete '\(selectedSound?.title ?? "this sound")'? This action cannot be undone.",
+          comment: "Delete custom sound confirmation message"
+        )
+      }
   }
 
   private var mainContentView: some View {
@@ -104,13 +100,17 @@ struct SoundManagementView: View {
 
   @ViewBuilder
   private var builtInSoundsSection: some View {
-    Section(
-      header: Text("Built-in Sounds"),
-      footer: Text("\(builtInSounds.count) sounds")
-    ) {
-      if builtInSoundsExpanded {
+    Section {
+      DisclosureGroup(isExpanded: $builtInSoundsExpanded) {
         ForEach(builtInSounds) { sound in
           builtInSoundRow(sound: sound, isLast: false)
+        }
+      } label: {
+        HStack {
+          Text("Built-in Sounds")
+          Spacer()
+          Text("\(builtInSounds.count)")
+            .foregroundStyle(.secondary)
         }
       }
     }
