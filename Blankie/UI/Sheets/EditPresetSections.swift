@@ -24,7 +24,7 @@ extension EditPresetSheet {
   }
 }
 
-// MARK: - Basic Details Section (Name, Creator, Moods)
+// MARK: - Basic Details Section (Name, Creator)
 
 extension EditPresetSheet {
   var basicDetailsSection: some View {
@@ -49,10 +49,6 @@ extension EditPresetSheet {
         }
       }
 
-      // Moods field
-      if !preset.isDefault {
-        moodsPicker
-      }
     }
   }
 
@@ -61,67 +57,6 @@ extension EditPresetSheet {
       return accentColor ?? globalSettings.customAccentColor ?? .accentColor
     } else {
       return globalSettings.customAccentColor ?? .accentColor
-    }
-  }
-
-  var moodsPicker: some View {
-    DisclosureGroup {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 8) {
-        ForEach(SoundMood.allCases, id: \.self) { mood in
-          let isSelected = moods.contains(mood)
-          Button {
-            if isSelected {
-              moods.remove(mood)
-            } else {
-              moods.insert(mood)
-            }
-            applyChangesInstantly()
-          } label: {
-            HStack {
-              Image(systemName: mood.icon)
-              Text(mood.displayName)
-            }
-            .font(.caption)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(
-              isSelected
-                ? activeAccentColor.opacity(0.15)
-                : Color.secondary.opacity(0.1)
-            )
-            .foregroundColor(
-              isSelected
-                ? activeAccentColor
-                : .primary
-            )
-            .clipShape(Capsule())
-            .overlay(
-              Capsule()
-                .strokeBorder(
-                  isSelected
-                    ? activeAccentColor
-                    : Color.clear,
-                  lineWidth: 1
-                )
-            )
-          }
-          .buttonStyle(.plain)
-        }
-      }
-      .padding(.vertical, 8)
-    } label: {
-      HStack {
-        Text("Moods")
-        Spacer()
-        if moods.isEmpty {
-          Text("None")
-            .foregroundColor(.secondary)
-        } else {
-          Text("\(moods.count) Selected")
-            .foregroundColor(.secondary)
-        }
-      }
     }
   }
 }

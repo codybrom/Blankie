@@ -23,9 +23,9 @@ struct QuickMixView: View {
         // Gradient background
         LinearGradient(
           colors: [
-            (globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
-            (globalSettings.customAccentColor ?? .accentColor).opacity(0.3),
-            Color.black.opacity(0.8),
+            (globalSettings.customAccentColor ?? .accentColor).opacity(0.25),
+            (globalSettings.customAccentColor ?? .accentColor).opacity(0.1),
+            Color.black.opacity(0.9),
           ],
           startPoint: .topLeading,
           endPoint: .bottomTrailing
@@ -95,7 +95,7 @@ struct QuickMixSoundButton: View {
     .padding(.vertical, 16)
     .glassEffect(
       isSelectedInQuickMix
-        ? .regular.tint(globalSettings.customAccentColor ?? .accentColor).interactive()
+        ? .regular.tint((globalSettings.customAccentColor ?? .accentColor).opacity(0.5)).interactive()
         : .regular.interactive(),
       in: .rect(cornerRadius: 16)
     )
@@ -173,13 +173,13 @@ struct QuickMixSoundButton: View {
   }
 
   private var popoverArrowEdge: Edge {
-    // iOS handles popover positioning automatically
-    .bottom
+    // Show popover below for items near the top of the screen
+    popoverPosition.midY < 300 ? .top : .bottom
   }
 
   private var iconBackgroundColor: Color {
     if isSelectedInQuickMix {
-      return globalSettings.customAccentColor ?? .accentColor
+      return (globalSettings.customAccentColor ?? .accentColor).opacity(0.3)
     } else {
       return Color.secondary.opacity(0.2)
     }

@@ -28,6 +28,7 @@ private struct DragAnimationTrigger: Equatable {
     var isSoloMode: Bool = false
     var editMode: EditMode = .inactive
     @ObservedObject var globalSettings = GlobalSettings.shared
+    @Environment(\.colorScheme) private var colorScheme
     @State var jiggleAnimation = false
     @State private var longPressTrigger = 0
     @State private var dragStartTrigger = 0

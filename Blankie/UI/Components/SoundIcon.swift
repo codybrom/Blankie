@@ -12,6 +12,7 @@ struct SoundIcon: View {
   @ObservedObject var sound: Sound
   @ObservedObject var globalSettings = GlobalSettings.shared
   @ObservedObject var audioManager = AudioManager.shared
+  @Environment(\.colorScheme) private var colorScheme
   let maxWidth: CGFloat
 
   @State private var showingEditSheet = false

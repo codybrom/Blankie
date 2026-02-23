@@ -14,6 +14,7 @@ import SwiftUI
     @ObservedObject var globalSettings: GlobalSettings
     @ObservedObject var audioManager: AudioManager
     @ObservedObject var presetManager = PresetManager.shared
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
       HStack(spacing: 16) {
@@ -22,6 +23,14 @@ import SwiftUI
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 12)
+      .contentShape(.rect(cornerRadius: 12))
+      .onTapGesture {
+        if !audioManager.isGloballyPlaying && sound.isSelected {
+          audioManager.setGlobalPlaybackState(true)
+        } else {
+          sound.toggle()
+        }
+      }
       .glassEffect(.regular, in: .rect(cornerRadius: 12))
     }
 
@@ -35,44 +44,34 @@ import SwiftUI
     }
 
     private var soundRowIcon: some View {
-      Button {
-        // If global playback is paused and this sound is already selected,
-        // start global playback instead of deselecting the sound
-        if !audioManager.isGloballyPlaying && sound.isSelected {
-          audioManager.setGlobalPlaybackState(true)
-        } else {
-          sound.toggle()
+      ZStack {
+        // Progress border if enabled
+        if globalSettings.showProgressBorder && audioManager.isGloballyPlaying && sound.isSelected {
+          ProgressBorderView(
+            iconSize: 50,
+            borderWidth: 3,
+            sound: sound,
+            color: accentColor
+          )
+          .allowsHitTesting(false)
         }
-      } label: {
-        ZStack {
-          // Progress border if enabled
-          if globalSettings.showProgressBorder && audioManager.isGloballyPlaying && sound.isSelected {
-            ProgressBorderView(
-              iconSize: 50,
-              borderWidth: 3,
-              sound: sound,
-              color: accentColor.mix(with: .white, by: 0.3)
-            )
-            .allowsHitTesting(false)
-          }
 
-          Image(systemName: sound.systemIconName)
-            .font(.system(size: 24))
-            .foregroundColor(
-              !audioManager.isGloballyPlaying
-                ? .gray
-                : (sound.isSelected ? accentColor : .gray)
-            )
-        }
-        .frame(width: 50, height: 50)
-        .glassEffect(
-          sound.isSelected && audioManager.isGloballyPlaying
-            ? .regular.tint(accentColor).interactive()
-            : .regular.interactive(),
-          in: .circle
-        )
+        Image(systemName: sound.systemIconName)
+          .font(.system(size: 24))
+          .foregroundColor(
+            !audioManager.isGloballyPlaying
+              ? .gray
+              : (sound.isSelected ? accentColor : .gray)
+          )
       }
-      .buttonStyle(.plain)
+      .frame(width: 50, height: 50)
+      .glassEffect(
+        sound.isSelected && audioManager.isGloballyPlaying
+          ? .regular.tint(accentColor.opacity(0.5)).interactive()
+          : .regular.interactive(),
+        in: .circle
+      )
+      .opacity(sound.isSelected ? 1.0 : 0.4)
     }
 
     private var soundRowControls: some View {
