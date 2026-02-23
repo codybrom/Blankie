@@ -5,6 +5,7 @@ import TipKit
 private struct AnimationTrigger: Equatable {
   let soloMode: UUID?
   let quickMix: Bool
+  let listView: Bool
 }
 
 #if os(iOS) || os(visionOS)
@@ -13,25 +14,33 @@ private struct AnimationTrigger: Equatable {
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
+    @StateObject var onboardingManager = OnboardingManager.shared
+    @State var showingListView = false
+    @State var showingPresetPicker = false
+    @State var showingOnboarding = false
+    @State var hideInactiveSounds = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State var draggedIndex: Int?
     @State var hoveredIndex: Int?
     @State var dragResetTimer: Timer?
     @State private var showingThemePicker = false
     @State var showingSoundManagement = false
+    @State var showingViewSettings = false
     @State var showingTimer = false
     @State var soundToEdit: Sound?
     @State var presetToEdit: Preset?
     @State var soundsUpdateTrigger = 0
+    @State var editMode: EditMode = .inactive
     @State var playPauseTrigger = 0
     @State var menuTrigger = 0
-    var onSwitchToNowPlaying: (() -> Void)?
+    @State var showingNowPlaying = false
 
     // Performance optimization: cached state properties
     @State var cachedFilteredSounds: [Sound] = []
     @State var lastFilterHash: Int = 0
     @State var cachedColumnWidth: CGFloat = 0
     @State var lastScreenWidth: CGFloat = 0
+    @State var backgroundImage: PlatformImage?
 
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
@@ -42,6 +51,10 @@ private struct AnimationTrigger: Equatable {
         } else {
           iPhoneLayout
         }
+      }
+      .sheet(isPresented: $showingPresetPicker) {
+        PresetPickerView()
+          .presentationDetents([.large])
       }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
@@ -63,6 +76,15 @@ private struct AnimationTrigger: Equatable {
         }
       }
 
+      .sheet(isPresented: $showingViewSettings) {
+        ViewSettingsSheet(
+          isPresented: $showingViewSettings,
+          showingListView: $showingListView,
+          hideInactiveSounds: $hideInactiveSounds
+        )
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.hidden)
+      }
       .sheet(isPresented: $showingThemePicker) {
         ThemePickerSheet(isPresented: $showingThemePicker)
       }
@@ -121,6 +143,13 @@ private struct AnimationTrigger: Equatable {
         print("🔄 MixerView: Received PresetUpdated notification")
         soundsUpdateTrigger += 1
       }
+      .task {
+        // Check if we should show onboarding after a brief delay
+        try? await Task.sleep(for: .seconds(1))
+        if onboardingManager.checkAndShowOnboarding(hasCustomPresets: presetManager.hasCustomPresets) {
+          showingOnboarding = true
+        }
+      }
     }
 
     // MARK: - Layouts
@@ -134,8 +163,11 @@ private struct AnimationTrigger: Equatable {
         )
       } detail: {
         NavigationStack {
-          VStack(spacing: 0) {
-            mainContentView
+          ZStack {
+            presetBackgroundView
+            VStack(spacing: 0) {
+              mainContentView
+            }
           }
           .navigationBarTitleDisplayMode(.inline)
           .toolbar {
@@ -169,20 +201,87 @@ private struct AnimationTrigger: Equatable {
     @ViewBuilder
     private var iPhoneLayout: some View {
       NavigationStack {
-        VStack(spacing: 0) {
-          // Preset name at top
-          Text(navigationTitle)
-            .font(.system(size: 20, weight: .semibold))
-            .foregroundColor(.primary)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 20)
-            .padding(.bottom, 5)
+        ZStack {
+          if showingNowPlaying {
+            NowPlayingSheet(
+              onDismiss: {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                  showingNowPlaying = false
+                }
+              },
+              showingPresetPicker: $showingPresetPicker
+            )
+            .transition(.opacity)
+          } else {
+            ZStack {
+              presetBackgroundView
+              VStack(spacing: 0) {
+                mainContentView
+              }
+            }
+            .transition(.opacity)
+          }
+        }
+        .safeAreaInset(edge: .top) {
+          if !showingNowPlaying {
+            VStack(spacing: 0) {
+              HStack {
+                // Timer button (left)
+                Button {
+                  showingTimer = true
+                } label: {
+                  Image(systemName: "timer")
+                    .font(.system(size: 16))
+                    .foregroundColor(timerManager.isTimerActive ? (globalSettings.customAccentColor ?? .accentColor) : .secondary)
+                    .frame(width: 36, height: 36)
+                }
+                .modifier(TopBarGlassButton())
+                .padding(.leading, 16)
 
-          mainContentView
+                Spacer()
+
+                // Tappable preset title
+                Button {
+                  showingPresetPicker = true
+                } label: {
+                  HStack(spacing: 4) {
+                    Text(navigationTitle)
+                      .font(.headline)
+                      .foregroundColor(.primary)
+                    Image(systemName: "chevron.down")
+                      .font(.caption2.weight(.semibold))
+                      .foregroundColor(.secondary)
+                  }
+                  .padding(.vertical, 6)
+                }
+                .sensoryFeedback(.selection, trigger: showingPresetPicker)
+
+                Spacer()
+
+                // Edit preset button (right)
+                Button {
+                  if let preset = presetManager.currentPreset {
+                    presetToEdit = preset
+                  }
+                } label: {
+                  Image(systemName: "slider.vertical.3")
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+                    .frame(width: 36, height: 36)
+                }
+                .modifier(TopBarGlassButton())
+                .disabled(presetManager.currentPreset == nil)
+                .padding(.trailing, 16)
+              }
+              .padding(.bottom, 8)
+            }
+            .background(.ultraThinMaterial)
+          }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
           bottomToolbar
         }
+        .animation(.easeInOut(duration: 0.3), value: showingNowPlaying)
         .navigationBarHidden(true)
       }
     }
@@ -237,7 +336,8 @@ private struct AnimationTrigger: Equatable {
         value: AnimationTrigger(
           soloMode: soundToEdit == nil && audioManager.previewModeSound == nil
             ? audioManager.soloModeSound?.id : nil,
-          quickMix: audioManager.isQuickMix
+          quickMix: audioManager.isQuickMix,
+          listView: showingListView
         )
       )
       .onChange(of: audioManager.soloModeSound) { oldValue, newValue in

@@ -7,7 +7,7 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   extension MixerView {
-    // Calculate filtered sounds based on current preset
+    // Calculate filtered sounds based on current preset and hideInactiveSounds preference
     var filteredSounds: [Sound] {
       return filterSounds()
     }
@@ -20,14 +20,31 @@ import SwiftUI
         if let currentPreset = presetManager.currentPreset {
           // For default preset, show all sounds
           if currentPreset.isDefault {
-            return true
+            if hideInactiveSounds, editMode == .inactive {
+              return sound.isSelected
+            } else {
+              return true
+            }
           } else {
             // For custom presets, only show sounds that are part of the preset
-            return currentPreset.soundStates.contains { $0.fileName == sound.fileName }
+            let isInPreset = currentPreset.soundStates.contains { $0.fileName == sound.fileName }
+            if !isInPreset {
+              return false
+            }
+
+            if hideInactiveSounds, editMode == .inactive {
+              return sound.isSelected
+            } else {
+              return true
+            }
           }
         } else {
-          // No current preset - show all sounds
-          return true
+          // No current preset - show all sounds with hideInactiveSounds filter
+          if hideInactiveSounds, editMode == .inactive {
+            return sound.isSelected
+          } else {
+            return true
+          }
         }
       }
 
@@ -68,6 +85,55 @@ import SwiftUI
 
     var hasSelectedSounds: Bool {
       audioManager.hasSelectedSounds
+    }
+
+    // MARK: - Preset Background
+
+    @ViewBuilder
+    var presetBackgroundView: some View {
+      let preset = presetManager.currentPreset
+
+      GeometryReader { geometry in
+        ZStack {
+          // Layer 1: Animated artwork preview image (blurred)
+          if let _ = preset,
+             let artworkImage = backgroundImage
+          {
+            Image(uiImage: artworkImage)
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+              .frame(width: geometry.size.width, height: geometry.size.height)
+              .blur(radius: 20)
+              .opacity(0.6)
+              .clipped()
+              .overlay(
+                Color.black.opacity(0.15)
+              )
+          }
+          // Layer 2: Accent color gradient fallback
+          else if let preset = preset,
+                  let accent = preset.accentColor ?? globalSettings.customAccentColor
+          {
+            LinearGradient(
+              colors: [
+                accent.opacity(0.3),
+                accent.opacity(0.1),
+                Color(.systemBackground).opacity(0.5),
+              ],
+              startPoint: .top,
+              endPoint: .bottom
+            )
+          }
+        }
+      }
+      .ignoresSafeArea()
+      .task(id: "\(preset?.id.uuidString ?? "")-\(preset?.artworkId?.uuidString ?? "")-\(preset?.animatedArtwork?.previewPath ?? "")") {
+        guard let preset = preset else {
+          backgroundImage = nil
+          return
+        }
+        backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+      }
     }
   }
 #endif

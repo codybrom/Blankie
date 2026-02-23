@@ -15,6 +15,8 @@ import SwiftUI
   }
 
   struct NowPlayingSheet: View {
+    var onDismiss: (() -> Void)?
+    @Binding var showingPresetPicker: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
@@ -38,14 +40,12 @@ import SwiftUI
         Color.black
           .overlay {
             if let image = backgroundImage {
-              // Preset with artwork: show blurred image
               Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .blur(radius: 40)
                 .opacity(0.4)
             } else {
-              // Solo mode or preset without artwork: show gradient
               LinearGradient(
                 colors: [
                   (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
@@ -59,15 +59,12 @@ import SwiftUI
           }
           .ignoresSafeArea()
           .overlay {
-            // Content
             expandedPlayerView(size, safeArea)
           }
           .task(id: audioManager.soloModeSound?.id) {
-            // Load background image (only for presets, not solo mode)
             if audioManager.soloModeSound == nil, let preset = presetManager.currentPreset {
               backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
             } else if audioManager.soloModeSound != nil {
-              // Clear background when in solo mode
               backgroundImage = nil
             }
           }
@@ -88,20 +85,21 @@ import SwiftUI
     // MARK: - Now Playing View
 
     @ViewBuilder
-    private var nowPlayingView: some View {
+    private func nowPlayingView(in size: CGSize) -> some View {
+      let artworkSize = size.width - 64
+
       VStack(spacing: 0) {
         Spacer()
 
         // Artwork
-        VStack(spacing: 0) {
+        Group {
           if let soloSound = audioManager.soloModeSound {
-            // Solo mode: show sound icon
             Circle()
               .fill(Color.white.opacity(0.1))
-              .frame(width: 340, height: 340)
+              .frame(width: artworkSize, height: artworkSize)
               .overlay {
                 Image(systemName: soloSound.systemIconName)
-                  .font(.system(size: 120))
+                  .font(.system(size: artworkSize * 0.35))
                   .foregroundColor(soloSound.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
               }
               .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
@@ -109,103 +107,112 @@ import SwiftUI
             Image(uiImage: image)
               .resizable()
               .aspectRatio(contentMode: .fill)
-              .frame(width: 340, height: 340)
+              .frame(width: artworkSize, height: artworkSize)
               .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
               .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
           } else {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
               .fill(Color.white.opacity(0.1))
-              .frame(width: 340, height: 340)
+              .frame(width: artworkSize, height: artworkSize)
               .overlay {
                 BrandedBlankieIcon(
-                  size: 120,
+                  size: artworkSize * 0.35,
                   color: presetManager.currentPreset?.accentColor
                 )
               }
           }
         }
+        .padding(.horizontal, 32)
 
-        Spacer(minLength: 20)
+        Spacer()
 
-        // Info section with menu
-        VStack(spacing: 4) {
-          HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 4) {
-              if let soloSound = audioManager.soloModeSound {
-                Text(soloSound.title)
-                  .font(.title3)
-                  .fontWeight(.semibold)
-                  .foregroundColor(.white)
-                  .lineLimit(1)
+        // Info section
+        HStack(alignment: .center) {
+          VStack(alignment: .leading, spacing: 4) {
+            if let soloSound = audioManager.soloModeSound {
+              Text(soloSound.title)
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .lineLimit(1)
 
-                Text("Solo Mode")
-                  .font(.subheadline)
-                  .foregroundColor(.white.opacity(0.7))
-              } else {
-                Text(presetManager.currentPreset?.activeTitle ?? "Blankie")
-                  .font(.title3)
-                  .fontWeight(.semibold)
-                  .foregroundColor(.white)
-                  .lineLimit(1)
-
-                Text(subtitleText)
-                  .font(.subheadline)
-                  .foregroundColor(.white.opacity(0.7))
+              Text("Solo Mode")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+            } else {
+              Button {
+                showingPresetPicker = true
+              } label: {
+                HStack(spacing: 4) {
+                  Text(presetManager.currentPreset?.activeTitle ?? "Blankie")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                  Image(systemName: "chevron.down")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundColor(.white.opacity(0.5))
+                }
               }
+
+              Text(subtitleText)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+            }
+          }
+
+          Spacer()
+
+          HStack(spacing: 12) {
+            Button {
+              controlTrigger += 1
+              showingTimer = true
+            } label: {
+              Image(systemName: "timer")
+                .font(.title2)
+                .foregroundColor(timerManager.isTimerActive ? (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor) : .white.opacity(0.7))
+                .frame(width: 44, height: 44)
             }
 
-            Spacer()
-
-            // Edit button (preset or sound)
             Button {
               controlTrigger += 1
               if let soloSound = audioManager.soloModeSound {
-                // Edit solo sound
                 soundToEdit = soloSound
               } else {
-                // Edit preset
                 presetToEdit = presetManager.currentPreset
               }
             } label: {
-              Image(systemName: "ellipsis.circle")
+              Image(systemName: "slider.vertical.3")
                 .font(.title2)
                 .foregroundColor(.white.opacity(0.7))
                 .frame(width: 44, height: 44)
             }
             .disabled(audioManager.soloModeSound == nil && presetManager.currentPreset == nil)
           }
-          .padding(.horizontal, 32)
         }
-        .padding(.bottom, 16)
+        .padding(.horizontal, 32)
 
         // Progress bar (solo mode only)
         if let soloSound = audioManager.soloModeSound, let duration = soloSound.duration {
           VStack(spacing: 8) {
-            // Progress bar
-            GeometryReader { geometry in
+            GeometryReader { geo in
               ZStack(alignment: .leading) {
-                // Track
                 Capsule()
                   .fill(.white.opacity(0.3))
                   .frame(height: 4)
-
-                // Progress
                 Capsule()
                   .fill(.white)
-                  .frame(width: geometry.size.width * soloSound.playbackProgress, height: 4)
+                  .frame(width: geo.size.width * soloSound.playbackProgress, height: 4)
               }
             }
             .frame(height: 4)
 
-            // Time labels
             HStack {
               Text(formatTime(duration * soloSound.playbackProgress))
                 .font(.caption2)
                 .foregroundColor(.white.opacity(0.7))
                 .monospacedDigit()
-
               Spacer()
-
               Text(formatTime(duration))
                 .font(.caption2)
                 .foregroundColor(.white.opacity(0.7))
@@ -213,64 +220,11 @@ import SwiftUI
             }
           }
           .padding(.horizontal, 32)
-          .padding(.bottom, 24)
+          .padding(.top, 24)
         }
 
-        // Main controls (Timer, Play/Pause, Mixer)
-        HStack(spacing: 60) {
-          // Timer button
-          Button {
-            controlTrigger += 1
-            showingTimer = true
-          } label: {
-            Image(systemName: timerManager.isTimerActive ? "timer" : "timer")
-              .font(.system(size: 32))
-              .foregroundColor(timerManager.isTimerActive ? (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor) : .white.opacity(0.7))
-          }
-
-          // Play/Pause button
-          Button {
-            if audioManager.hasSelectedSounds {
-              playPauseTrigger += 1
-              audioManager.togglePlayback()
-            }
-          } label: {
-            Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
-              .font(.system(size: 36))
-              .foregroundColor(
-                audioManager.hasSelectedSounds
-                  ? .white
-                  : .white.opacity(0.5)
-              )
-              .contentTransition(.symbolEffect(.replace))
-              .offset(x: audioManager.isGloballyPlaying ? 0 : 2)
-              .frame(width: 80, height: 80)
-              .contentShape(Circle())
-          }
-          .glassEffect(.regular.interactive(), in: .circle)
-          .disabled(!audioManager.hasSelectedSounds)
-          .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: playPauseTrigger)
-
-          // Mixer button (hidden in solo mode or when no sounds)
-          if audioManager.soloModeSound == nil && !audioManager.sounds.isEmpty {
-            Button {
-              controlTrigger += 1
-              withAnimation(.spring(response: 0.3)) {
-                currentPage = currentPage == .nowPlaying ? .mixer : .nowPlaying
-              }
-            } label: {
-              Image(systemName: "slider.horizontal.3")
-                .font(.system(size: 32))
-                .foregroundColor(.white.opacity(0.7))
-            }
-          } else {
-            // Spacer to maintain layout in solo mode or when no sounds
-            Color.clear
-              .frame(width: 32, height: 32)
-          }
-        }
-        .padding(.bottom, 32)
-        .sensoryFeedback(.selection, trigger: controlTrigger)
+        Spacer()
+          .frame(maxHeight: 24)
 
         // Volume slider
         HStack(spacing: 15) {
@@ -298,46 +252,16 @@ import SwiftUI
             .font(.caption)
         }
         .padding(.horizontal, 32)
-        .padding(.bottom, 40)
+
+        Spacer()
       }
-    }
-
-    // MARK: - Mixer View
-
-    @ViewBuilder
-    private var mixerView: some View {
-      MixerView(onSwitchToNowPlaying: {
-        withAnimation(.spring(response: 0.3)) {
-          currentPage = .nowPlaying
-        }
-      })
     }
 
     // MARK: - Expanded Player View
 
     @ViewBuilder
-    private func expandedPlayerView(_: CGSize, _: EdgeInsets) -> some View {
-      VStack(spacing: 0) {
-        if audioManager.soloModeSound != nil {
-          // Solo mode: only show now playing (no swiping)
-          nowPlayingView
-        } else {
-          // Preset mode: swipeable views
-          TabView(selection: Binding(
-            get: { currentPage.rawValue },
-            set: { currentPage = NowPlayingPage(rawValue: $0) ?? .nowPlaying }
-          )) {
-            // Now Playing
-            nowPlayingView
-              .tag(NowPlayingPage.nowPlaying.rawValue)
-
-            // Mixer
-            mixerView
-              .tag(NowPlayingPage.mixer.rawValue)
-          }
-          .tabViewStyle(.page(indexDisplayMode: .never))
-        }
-      }
+    private func expandedPlayerView(_ size: CGSize, _: EdgeInsets) -> some View {
+      nowPlayingView(in: size)
     }
 
     // MARK: - Helper Methods
@@ -400,7 +324,7 @@ import SwiftUI
   }
 
   #Preview {
-    NowPlayingSheet()
+    NowPlayingSheet(showingPresetPicker: .constant(false))
   }
 
 #endif

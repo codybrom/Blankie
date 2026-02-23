@@ -80,7 +80,7 @@ struct BlankieApp: App {
 
     var body: some Scene {
       WindowGroup {
-        HomeView()
+        MixerView()
           .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
           .withPresetOnboarding(showOnboarding: $showingOnboarding)
           .preferredColorScheme(
@@ -137,7 +137,7 @@ struct BlankieApp: App {
               )
               .frame(width: 450, height: 450)
             #else
-              HomeView()
+              MixerView()
             #endif
           }
           .preferredColorScheme(scheme == "Dark Mode" ? .dark : .light)

@@ -1,8 +1,4 @@
 {
-  "[swift]": {
-    "editor.defaultFormatter": "vknabel.vscode-swiftformat",
-    "editor.formatOnSave": true
-  },
   "astro.content-intellisense": true,
   "astro.language-server.ls-path": "docs/node_modules/@astrojs/language-server/bin/nodeServer.js",
   "astro.trace.server": "messages",

@@ -45,19 +45,7 @@ import SwiftUI
 
     @ViewBuilder
     var listView: some View {
-      List {
-        ForEach(filteredSounds) { sound in
-          soundRow(for: sound)
-            .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
-        }
-        .onMove(perform: moveItems)
-      }
-      .listStyle(.plain)
-      .scrollContentBackground(.hidden)
-      .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
+      soundListView
     }
 
     private func moveItems(from source: IndexSet, to destination: Int) {
