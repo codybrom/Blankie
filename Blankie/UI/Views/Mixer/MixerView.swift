@@ -280,14 +280,15 @@ private struct AnimationTrigger: Equatable {
           }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-          HStack(spacing: 0) {
-            if showingNowPlaying && isLandscape {
-              Color.clear
+          if showingNowPlaying && isLandscape {
+            HStack(spacing: 0) {
+              Spacer()
                 .frame(maxWidth: .infinity)
-                .layoutPriority(1.5)
+              bottomToolbar
+                .frame(maxWidth: .infinity)
             }
+          } else {
             bottomToolbar
-              .frame(maxWidth: showingNowPlaying && isLandscape ? .infinity : nil)
           }
         }
         .animation(.easeInOut(duration: 0.3), value: showingNowPlaying)

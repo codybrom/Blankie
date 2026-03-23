@@ -45,6 +45,8 @@ import SwiftUI
               Image(uiImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .frame(minWidth: size.width, minHeight: size.height)
+                .clipped()
                 .blur(radius: 40)
                 .opacity(0.4)
             } else {
@@ -117,13 +119,16 @@ import SwiftUI
 
     @ViewBuilder
     private func landscapeNowPlaying(in size: CGSize) -> some View {
-      let artworkSize = size.height - 60
+      let artworkSize = max(size.height * 0.75, 120)
 
       HStack(spacing: 0) {
-        // Artwork takes the left side
-        artworkView(size: artworkSize)
-          .frame(maxWidth: .infinity)
-          .padding(.top, 20)
+        // Artwork takes the left side, vertically centered
+        VStack {
+          Spacer()
+          artworkView(size: artworkSize)
+          Spacer()
+        }
+        .frame(maxWidth: .infinity)
 
         // Controls on the right
         VStack(spacing: 0) {
