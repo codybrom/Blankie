@@ -240,61 +240,36 @@ private struct AnimationTrigger: Equatable {
           }
         }
         .safeAreaInset(edge: .top) {
-          if !showingNowPlaying {
-            VStack(spacing: 0) {
-              HStack {
-                // Timer button (left)
-                Button {
-                  showingTimer = true
-                } label: {
-                  Image(systemName: "timer")
-                    .font(.system(size: 16))
-                    .foregroundColor(timerManager.isTimerActive ? (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor) : .secondary)
-                    .frame(width: 36, height: 36)
-                }
-                .modifier(TopBarGlassButton())
-                .padding(.leading, 16)
-
-                Spacer()
-
-                // Tappable preset title
-                Button {
-                  showingPresetPicker = true
-                } label: {
-                  HStack(spacing: 4) {
-                    Text(navigationTitle)
-                      .font(.headline)
-                      .foregroundColor(.primary)
-                    Image(systemName: "chevron.down")
-                      .font(.caption2.weight(.semibold))
-                      .foregroundColor(.secondary)
-                  }
-                  .padding(.vertical, 6)
-                }
-                .sensoryFeedback(.selection, trigger: showingPresetPicker)
-
-                Spacer()
-
-                // Edit preset / Quick Mix button (right)
-                Button {
-                  if audioManager.isQuickMix {
-                    showingQuickMixEditor = true
-                  } else if let preset = presetManager.currentPreset {
-                    presetToEdit = preset
-                  }
-                } label: {
-                  Image(systemName: "slider.vertical.3")
-                    .font(.system(size: 16))
-                    .foregroundColor(.secondary)
-                    .frame(width: 36, height: 36)
-                }
-                .modifier(TopBarGlassButton())
-                .disabled(!audioManager.isQuickMix && presetManager.currentPreset == nil)
-                .padding(.trailing, 16)
+          VStack(spacing: 0) {
+            // Tappable preset title
+            Button {
+              showingPresetPicker = true
+            } label: {
+              HStack(spacing: 4) {
+                Text(navigationTitle)
+                  .font(.headline)
+                  .foregroundColor(showingNowPlaying ? .white : .primary)
+                Image(systemName: "chevron.down")
+                  .font(.caption2.weight(.semibold))
+                  .foregroundColor(showingNowPlaying ? .white.opacity(0.5) : .secondary)
               }
-              .padding(.bottom, 8)
+              .padding(.vertical, 6)
             }
-            .background(.ultraThinMaterial)
+            .sensoryFeedback(.selection, trigger: showingPresetPicker)
+
+            if timerManager.isTimerActive {
+              Text(timerTopBarText)
+                .font(.caption2)
+                .foregroundColor(showingNowPlaying ? .white.opacity(0.6) : .secondary)
+            }
+          }
+          .padding(.bottom, 8)
+          .frame(maxWidth: .infinity)
+          .background {
+            if !showingNowPlaying {
+              Rectangle().fill(.ultraThinMaterial)
+                .ignoresSafeArea(edges: .top)
+            }
           }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -375,6 +350,20 @@ private struct AnimationTrigger: Equatable {
     // MARK: - Helper Views
 
     // Helper computed properties are implemented in MixerView+UIComponents.swift
+
+    private var timerTopBarText: String {
+      if timerManager.remainingTime < 60 {
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .full
+        formatter.allowedUnits = [.second]
+        return "Stops in \(formatter.string(from: timerManager.remainingTime) ?? "0 seconds")"
+      } else {
+        let endTime = Date().addingTimeInterval(timerManager.remainingTime)
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return "Stops at \(formatter.string(from: endTime))"
+      }
+    }
   }
 
   extension View {

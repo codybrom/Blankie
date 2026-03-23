@@ -20,16 +20,12 @@ import SwiftUI
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
-    @StateObject private var timerManager = TimerManager.shared
+
     @StateObject private var globalSettings = GlobalSettings.shared
     @State private var backgroundImage: UIImage?
     @State private var currentPage: NowPlayingPage = .nowPlaying
-    @State private var showingTimer = false
-    @State private var presetToEdit: Preset?
-    @State private var soundToEdit: Sound?
     @State private var isEditingVolume = false
     @State private var playPauseTrigger = 0
-    @State private var controlTrigger = 0
 
     private var artworkTaskID: String {
       let solo = audioManager.soloModeSound?.id.uuidString ?? ""
@@ -73,16 +69,6 @@ import SwiftUI
             } else if audioManager.soloModeSound != nil {
               backgroundImage = nil
             }
-          }
-          .sheet(isPresented: $showingTimer) {
-            TimerSheetView()
-              .presentationDetents([.medium, .large])
-          }
-          .sheet(item: $presetToEdit) { preset in
-            EditPresetSheet(preset: preset, isPresented: $presetToEdit)
-          }
-          .sheet(item: $soundToEdit) { sound in
-            SoundSheet(mode: .edit(sound))
           }
           .sensoryFeedback(.impact(weight: .heavy, intensity: 1.0), trigger: currentPage)
       }
@@ -131,72 +117,6 @@ import SwiftUI
         .padding(.horizontal, 32)
 
         Spacer()
-
-        // Info section
-        HStack(alignment: .center) {
-          VStack(alignment: .leading, spacing: 4) {
-            if let soloSound = audioManager.soloModeSound {
-              Text(soloSound.title)
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .lineLimit(1)
-
-              Text("Solo Mode")
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.7))
-            } else {
-              Button {
-                showingPresetPicker = true
-              } label: {
-                HStack(spacing: 4) {
-                  Text(presetManager.currentPreset?.activeTitle ?? "Blankie")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                  Image(systemName: "chevron.down")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundColor(.white.opacity(0.5))
-                }
-              }
-
-              Text(subtitleText)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.7))
-            }
-          }
-
-          Spacer()
-
-          HStack(spacing: 12) {
-            Button {
-              controlTrigger += 1
-              showingTimer = true
-            } label: {
-              Image(systemName: "timer")
-                .font(.title2)
-                .foregroundColor(timerManager.isTimerActive ? (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor) : .white.opacity(0.7))
-                .frame(width: 44, height: 44)
-            }
-
-            Button {
-              controlTrigger += 1
-              if let soloSound = audioManager.soloModeSound {
-                soundToEdit = soloSound
-              } else {
-                presetToEdit = presetManager.currentPreset
-              }
-            } label: {
-              Image(systemName: "slider.vertical.3")
-                .font(.title2)
-                .foregroundColor(.white.opacity(0.7))
-                .frame(width: 44, height: 44)
-            }
-            .disabled(audioManager.soloModeSound == nil && presetManager.currentPreset == nil)
-          }
-        }
-        .padding(.horizontal, 32)
 
         // Progress bar (solo mode only)
         if let soloSound = audioManager.soloModeSound, let duration = soloSound.duration {
@@ -278,55 +198,6 @@ import SwiftUI
       return String(format: "%d:%02d", minutes, seconds)
     }
 
-    private func formatTimerTime(_ timeInterval: TimeInterval) -> String {
-      let formatter = DateComponentsFormatter()
-      formatter.unitsStyle = .full
-      formatter.allowedUnits = timeInterval >= 60 ? [.hour, .minute] : [.minute, .second]
-      formatter.zeroFormattingBehavior = .dropAll
-      return formatter.string(from: timeInterval) ?? "0 seconds"
-    }
-
-    private func formatEndTime() -> String {
-      let endTime = Date().addingTimeInterval(timerManager.remainingTime)
-      let formatter = DateFormatter()
-      formatter.timeStyle = .short
-      return formatter.string(from: endTime)
-    }
-
-    private var timerStatusText: String {
-      if timerManager.remainingTime < 60 {
-        return "Stops in \(formatTime(timerManager.remainingTime))"
-      } else {
-        return "Stops at \(formatEndTime())"
-      }
-    }
-
-    private var subtitleText: String {
-      let creatorName: String? = {
-        if let name = presetManager.currentPreset?.creatorName, !name.isEmpty {
-          return name
-        }
-        return nil
-      }()
-
-      if !audioManager.hasSelectedSounds {
-        return "No sounds"
-      }
-
-      let statusPart: String
-      if timerManager.isTimerActive {
-        statusPart = timerStatusText
-      } else {
-        let soundCount = audioManager.sounds.filter { $0.isSelected }.count
-        statusPart = "\(soundCount) sound\(soundCount == 1 ? "" : "s")"
-      }
-
-      if let creatorName {
-        return "\(creatorName) • \(statusPart)"
-      } else {
-        return statusPart
-      }
-    }
   }
 
   #Preview {

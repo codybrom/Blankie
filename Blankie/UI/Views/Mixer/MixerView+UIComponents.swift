@@ -221,11 +221,39 @@ import SwiftUI
         }
 
         var menuButton: some View {
-            let button = Button {
-                menuTrigger += 1
-                showingSettings = true
+            let button = Menu {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Label("Blankie Settings", systemImage: "gearshape")
+                }
+
+                Divider()
+
+                if audioManager.isQuickMix {
+                    Button {
+                        showingQuickMixEditor = true
+                    } label: {
+                        Label("Edit Quick Mix", systemImage: "slider.vertical.3")
+                    }
+                } else if let preset = presetManager.currentPreset {
+                    Button {
+                        presetToEdit = preset
+                    } label: {
+                        Label("Edit Preset", systemImage: "slider.vertical.3")
+                    }
+                }
+
+                Button {
+                    showingTimer = true
+                } label: {
+                    Label(
+                        timerManager.isTimerActive ? "Timer (Active)" : "Timer",
+                        systemImage: "timer"
+                    )
+                }
             } label: {
-                Image(systemName: "gearshape")
+                Image(systemName: "ellipsis")
                     .font(.system(size: 22))
                     .foregroundColor(.primary)
                     .frame(width: 56, height: 56)
