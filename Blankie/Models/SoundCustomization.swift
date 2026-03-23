@@ -14,7 +14,6 @@ struct SoundCustomization: Codable, Identifiable {
   let fileName: String
   var customTitle: String?
   var customIconName: String?
-  var customColorName: String?
   var randomizeStartPosition: Bool?
   var loopSound: Bool?  // nil = default (true), false = play once and deselect
 
@@ -24,14 +23,13 @@ struct SoundCustomization: Codable, Identifiable {
 
   init(
     fileName: String, customTitle: String? = nil, customIconName: String? = nil,
-    customColorName: String? = nil, randomizeStartPosition: Bool? = nil,
+    randomizeStartPosition: Bool? = nil,
     normalizeAudio: Bool? = nil, volumeAdjustment: Float? = nil, loopSound: Bool? = nil
   ) {
     self.id = UUID()
     self.fileName = fileName
     self.customTitle = customTitle
     self.customIconName = customIconName
-    self.customColorName = customColorName
     self.randomizeStartPosition = randomizeStartPosition
     self.normalizeAudio = normalizeAudio
     self.volumeAdjustment = volumeAdjustment
@@ -48,15 +46,9 @@ struct SoundCustomization: Codable, Identifiable {
     return customIconName ?? originalIconName
   }
 
-  /// Returns the effective color (custom or nil for default)
-  var effectiveColor: Color? {
-    guard let colorName = customColorName else { return nil }
-    return Color(fromString: colorName)
-  }
-
   /// Whether this customization has any custom values
   var hasCustomizations: Bool {
-    return customTitle != nil || customIconName != nil || customColorName != nil
+    return customTitle != nil || customIconName != nil
       || randomizeStartPosition != nil || normalizeAudio != nil || volumeAdjustment != nil
       || loopSound != nil
   }
@@ -107,25 +99,6 @@ class SoundCustomizationManager: ObservableObject {
 
     var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
     customization.customIconName = iconName
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
-  }
-
-  /// Set custom color for a sound
-  func setCustomColor(_ colorName: String?, for fileName: String) {
-    if colorName?.isEmpty == true {
-      setCustomColor(nil, for: fileName)
-      return
-    }
-
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.customColorName = colorName
 
     if customization.hasCustomizations {
       customizations[fileName] = customization

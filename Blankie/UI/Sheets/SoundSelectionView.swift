@@ -49,7 +49,7 @@ struct SoundSelectionView: View {
       let isRowSelected = selectedSounds.contains(sound.fileName)
 
       Image(systemName: sound.systemIconName)
-        .foregroundColor(isRowSelected ? sound.customColor : .white)
+        .foregroundColor(isRowSelected ? .accentColor : .white)
         .frame(width: 20)
 
       Text(sound.title)
@@ -83,13 +83,13 @@ struct SoundSelectionView: View {
       )
     #else
       .toolbar {
-          ToolbarItem(placement: .primaryAction) {
-            Button("Clear All") {
-              handleClearAll()
-            }
-            .disabled(selectedSounds.isEmpty)
+        ToolbarItem(placement: .primaryAction) {
+          Button("Clear All") {
+            handleClearAll()
           }
+          .disabled(selectedSounds.isEmpty)
         }
+      }
     #endif
   }
 }

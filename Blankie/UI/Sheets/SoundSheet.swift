@@ -22,7 +22,6 @@ struct SoundSheet: View {
 
   @State var soundName: String = ""
   @State var selectedIcon: String = "waveform.circle"
-  @State var selectedColor: AccentColor?
   @State var selectedFile: URL?
   @State var isImporting = false
   @State var importError: Error?
@@ -45,7 +44,6 @@ struct SoundSheet: View {
   // Track initial values to detect changes
   @State var initialSoundName: String = ""
   @State var initialSelectedIcon: String = ""
-  @State var initialSelectedColor: AccentColor?
   @State var initialRandomizeStartPosition: Bool = true
   @State var initialNormalizeAudio: Bool = true
   @State var initialVolumeAdjustment: Float = 1.0
@@ -68,7 +66,7 @@ struct SoundSheet: View {
       _initialSoundName = State(initialValue: values.initialSoundName)
       _initialSelectedIcon = State(initialValue: values.initialSelectedIcon)
 
-    case let .edit(sound):
+    case .edit(let sound):
       let values = Self.createEditModeInitValues(sound: sound)
       _soundName = State(initialValue: values.soundName)
       _selectedIcon = State(initialValue: values.selectedIcon)
@@ -76,7 +74,6 @@ struct SoundSheet: View {
       _normalizeAudio = State(initialValue: values.normalizeAudio)
       _volumeAdjustment = State(initialValue: values.volumeAdjustment)
       _loopSound = State(initialValue: values.loopSound)
-      _selectedColor = State(initialValue: values.selectedColor)
       _initialSoundName = State(initialValue: values.initialSoundName)
       _initialSelectedIcon = State(initialValue: values.initialSelectedIcon)
       _initialRandomizeStartPosition = State(
@@ -84,7 +81,6 @@ struct SoundSheet: View {
       _initialNormalizeAudio = State(initialValue: values.initialNormalizeAudio)
       _initialVolumeAdjustment = State(initialValue: values.initialVolumeAdjustment)
       _initialLoopSound = State(initialValue: values.initialLoopSound)
-      _initialSelectedColor = State(initialValue: values.initialSelectedColor)
     }
   }
 
@@ -125,7 +121,7 @@ struct SoundSheet: View {
         isPresented: $showingResetConfirmation
       ) {
         Button("Reset", role: .destructive) {
-          if case let .edit(sound) = mode {
+          if case .edit(let sound) = mode {
             handleResetToDefaults(for: sound)
           }
         }
@@ -150,7 +146,6 @@ struct SoundSheet: View {
           loopSound: $loopSound,
           soundName: $soundName,
           selectedIcon: $selectedIcon,
-          selectedColor: $selectedColor,
           startPreview: startPreview,
           stopPreview: stopPreview,
           updateSoundSettings: updateSoundSettings

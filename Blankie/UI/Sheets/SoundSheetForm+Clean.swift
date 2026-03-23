@@ -14,7 +14,6 @@ struct CleanSoundSheetForm: View {
   @Binding var selectedIcon: String
   @Binding var selectedFile: URL?
   @Binding var isImporting: Bool
-  @Binding var selectedColor: AccentColor?
   @Binding var randomizeStartPosition: Bool
   @Binding var normalizeAudio: Bool
   @Binding var volumeAdjustment: Float

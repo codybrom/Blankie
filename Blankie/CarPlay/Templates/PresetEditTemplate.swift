@@ -51,7 +51,9 @@
       }
 
       // Sort sounds alphabetically
-      let sortedSounds = presetSounds.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+      let sortedSounds = presetSounds.sorted {
+        $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+      }
 
       let items = sortedSounds.map { sound in
         createSoundEditItem(sound)
@@ -149,12 +151,7 @@
     }
 
     private static func getIconColor(for sound: Sound) -> UIColor {
-      // First priority: sound's custom color
-      if let customColor = sound.customColor {
-        return UIColor(customColor)
-      }
-
-      // Second priority: user's accent colo
+      // First priority: user's accent color
       if let themeColor = GlobalSettings.shared.customAccentColor {
         return UIColor(themeColor)
       }

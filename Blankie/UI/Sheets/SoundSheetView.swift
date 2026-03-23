@@ -19,7 +19,6 @@ struct SoundSheetView: View {
   @Binding var selectedIcon: String
   @Binding var selectedFile: URL?
   @Binding var isImporting: Bool
-  @Binding var selectedColor: AccentColor?
   @Binding var randomizeStartPosition: Bool
   @Binding var normalizeAudio: Bool
   @Binding var volumeAdjustment: Float
@@ -48,7 +47,7 @@ struct SoundSheetView: View {
           selectedIcon: $selectedIcon,
           selectedFile: $selectedFile,
           isImporting: $isImporting,
-          selectedColor: $selectedColor,
+
           randomizeStartPosition: $randomizeStartPosition,
           normalizeAudio: $normalizeAudio,
           volumeAdjustment: $volumeAdjustment,
@@ -92,7 +91,7 @@ struct SoundSheetView: View {
           selectedIcon: $selectedIcon,
           selectedFile: $selectedFile,
           isImporting: $isImporting,
-          selectedColor: $selectedColor,
+
           randomizeStartPosition: $randomizeStartPosition,
           normalizeAudio: $normalizeAudio,
           volumeAdjustment: $volumeAdjustment,

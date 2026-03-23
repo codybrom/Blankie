@@ -76,12 +76,7 @@
     }
 
     private static func getIconColor(for sound: Sound) -> UIColor {
-      // First priority: sound's custom color
-      if let customColor = sound.customColor {
-        return UIColor(customColor)
-      }
-
-      // Second priority: user's accent colo
+      // First priority: user's accent color
       if let themeColor = GlobalSettings.shared.customAccentColor {
         return UIColor(themeColor)
       }

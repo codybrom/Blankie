@@ -54,7 +54,7 @@
       // Check if sound is currently playing in QuickMix mode
       let isPlaying =
         sound.player?.isPlaying == true && AudioManager.shared.isQuickMix
-          && AudioManager.shared.soloModeSound == nil
+        && AudioManager.shared.soloModeSound == nil
 
       // Create button titles
       let titles = [sound.title]
@@ -120,12 +120,7 @@
     }
 
     private static func getIconColor(for sound: Sound) -> UIColor {
-      // First priority: sound's custom color
-      if let customColor = sound.customColor {
-        return UIColor(customColor)
-      }
-
-      // Second priority: user's accent colo
+      // First priority: user's accent color
       if let themeColor = GlobalSettings.shared.customAccentColor {
         return UIColor(themeColor)
       }

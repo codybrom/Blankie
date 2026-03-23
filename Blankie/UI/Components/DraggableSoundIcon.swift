@@ -140,7 +140,7 @@ private struct DragAnimationTrigger: Equatable {
             iconSize: borderSize,
             borderWidth: borderWidth,
             sound: sound,
-            color: sound.customColor ?? accentColor
+            color: accentColor
           )
         }
 

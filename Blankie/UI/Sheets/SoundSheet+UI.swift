@@ -18,7 +18,7 @@ extension SoundSheet {
       selectedIcon: $selectedIcon,
       selectedFile: $selectedFile,
       isImporting: $isImporting,
-      selectedColor: $selectedColor,
+
       randomizeStartPosition: $randomizeStartPosition,
       normalizeAudio: $normalizeAudio,
       volumeAdjustment: $volumeAdjustment,
@@ -47,7 +47,7 @@ extension SoundSheet {
           content
         }
         #if !os(macOS)
-        .navigationViewStyle(.stack)
+          .navigationViewStyle(.stack)
         #endif
       } else {
         content
@@ -63,7 +63,7 @@ extension SoundSheet {
       selectedIcon: $selectedIcon,
       selectedFile: $selectedFile,
       isImporting: $isImporting,
-      selectedColor: $selectedColor,
+
       randomizeStartPosition: $randomizeStartPosition,
       normalizeAudio: $normalizeAudio,
       volumeAdjustment: $volumeAdjustment,
@@ -108,12 +108,13 @@ extension SoundSheet {
 
   func handleFileImport(result: Result<[URL], Error>) {
     switch result {
-    case let .success(files):
+    case .success(let files):
       if let file = files.first {
         selectedFile = file
         if soundName.isEmpty {
           Task {
-            if let metadataTitle = await CustomSoundManager.shared.extractMetadataTitle(from: file) {
+            if let metadataTitle = await CustomSoundManager.shared.extractMetadataTitle(from: file)
+            {
               soundName = metadataTitle
             } else {
               soundName = file.deletingPathExtension().lastPathComponent
@@ -121,7 +122,7 @@ extension SoundSheet {
           }
         }
       }
-    case let .failure(error):
+    case .failure(let error):
       importError = error
       showingError = true
     }

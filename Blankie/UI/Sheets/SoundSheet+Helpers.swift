@@ -78,7 +78,6 @@ extension SoundSheet {
     // Reset all values to defaults
     soundName = sound.originalTitle
     selectedIcon = sound.originalSystemIconName
-    selectedColor = nil
     randomizeStartPosition = true
     normalizeAudio = true
     volumeAdjustment = 1.0

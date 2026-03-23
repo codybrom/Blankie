@@ -82,13 +82,12 @@ extension SoundSheet {
   private func checkForCustomizations(_ sound: Sound) -> Bool {
     let hasCustomName = soundName != sound.originalTitle
     let hasCustomIcon = selectedIcon != sound.originalSystemIconName
-    let hasCustomColor = selectedColor != nil
     let hasCustomRandomization = randomizeStartPosition != true  // Default is true
     let hasCustomNormalization = normalizeAudio != true  // Default is true
     let hasCustomVolume = volumeAdjustment != 1.0  // Default is 1.0
     let hasCustomLoop = loopSound != true  // Default is true
 
-    return hasCustomName || hasCustomIcon || hasCustomColor || hasCustomRandomization
+    return hasCustomName || hasCustomIcon || hasCustomRandomization
       || hasCustomNormalization || hasCustomVolume || hasCustomLoop
   }
 
@@ -104,12 +103,6 @@ extension SoundSheet {
     // Icon customization
     manager.setCustomIcon(
       selectedIcon != sound.originalSystemIconName ? selectedIcon : nil,
-      for: sound.fileName
-    )
-
-    // Color customization
-    manager.setCustomColor(
-      selectedColor?.color?.toString,
       for: sound.fileName
     )
 

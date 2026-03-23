@@ -73,14 +73,14 @@ struct SoundIcon: View {
     if !audioManager.isGloballyPlaying {
       return .gray
     }
-    return sound.isSelected ? (sound.customColor ?? accentColor) : .gray
+    return sound.isSelected ? (accentColor) : .gray
   }
 
   var backgroundFill: Color {
     if !audioManager.isGloballyPlaying {
       return sound.isSelected ? Color.gray.opacity(0.2) : .clear
     }
-    return sound.isSelected ? (sound.customColor ?? accentColor).opacity(0.2) : .clear
+    return sound.isSelected ? (accentColor).opacity(0.2) : .clear
   }
 
   // Get the script category for proper font styling
@@ -134,7 +134,7 @@ struct SoundIcon: View {
             Circle()
               .trim(from: 0, to: max(0.01, getCurrentProgress()))  // Ensure minimum visibility
               .stroke(
-                sound.customColor ?? accentColor,
+                accentColor,
                 style: StrokeStyle(lineWidth: configuration.borderWidth, lineCap: .round)
               )
               .frame(width: borderSize, height: borderSize)
@@ -184,7 +184,7 @@ struct SoundIcon: View {
       .frame(width: configuration.sliderWidth)
       .tint(
         audioManager.isGloballyPlaying
-          ? (sound.isSelected ? (sound.customColor ?? accentColor) : .gray) : .gray
+          ? (sound.isSelected ? (accentColor) : .gray) : .gray
       )
       .disabled(!sound.isSelected)
     }

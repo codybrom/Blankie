@@ -25,7 +25,7 @@ private struct GridButtonAnimationTrigger: Equatable {
     @State private var selectionTrigger = 0
     @State private var popoverPosition: CGRect = .zero
     @Binding var editMode: EditMode
-    var showOptionsMenu: Bool = true // Allow disabling the long-press menu
+    var showOptionsMenu: Bool = true  // Allow disabling the long-press menu
 
     // For progress border
     private var shouldShowProgressBorder: Bool {
@@ -47,9 +47,9 @@ private struct GridButtonAnimationTrigger: Equatable {
               iconSize: 80,
               borderWidth: 3,
               sound: sound,
-              color: sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
+              color: globalSettings.customAccentColor ?? .accentColor
             )
-            .allowsHitTesting(false) // Progress border is decorative, doesn't need hit testing
+            .allowsHitTesting(false)  // Progress border is decorative, doesn't need hit testing
           }
 
           // Icon
@@ -73,7 +73,7 @@ private struct GridButtonAnimationTrigger: Equatable {
       .padding(.vertical, 16)
       .glassEffect(
         sound.isSelected
-          ? .regular.tint(sound.customColor ?? globalSettings.customAccentColor ?? .accentColor).interactive()
+          ? .regular.tint(globalSettings.customAccentColor ?? .accentColor).interactive()
           : .regular.interactive(),
         in: .rect(cornerRadius: 16)
       )
@@ -121,7 +121,7 @@ private struct GridButtonAnimationTrigger: Equatable {
       .sensoryFeedback(.selection, trigger: sound.isSelected)
       .onLongPressGesture(
         minimumDuration: 0.3,
-        maximumDistance: 5.0, // Reduced from infinity to prevent scroll triggering
+        maximumDistance: 5.0,  // Reduced from infinity to prevent scroll triggering
         pressing: { pressing in
           withAnimation(.easeInOut(duration: 0.1)) {
             isPressed = pressing && editMode == .inactive && showOptionsMenu
@@ -176,7 +176,7 @@ private struct GridButtonAnimationTrigger: Equatable {
     // MARK: - Color Properties
 
     private var backgroundColor: Color {
-      let effectiveColor = sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
+      let effectiveColor = globalSettings.customAccentColor ?? .accentColor
 
       if !audioManager.isGloballyPlaying {
         return sound.isSelected ? Color.gray.opacity(0.1) : Color.clear
@@ -185,7 +185,7 @@ private struct GridButtonAnimationTrigger: Equatable {
     }
 
     private var borderColor: Color {
-      let effectiveColor = sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
+      let effectiveColor = globalSettings.customAccentColor ?? .accentColor
 
       if sound.isSelected {
         return audioManager.isGloballyPlaying ? effectiveColor : Color.gray
@@ -195,7 +195,7 @@ private struct GridButtonAnimationTrigger: Equatable {
     }
 
     private var iconBackgroundColor: Color {
-      let effectiveColor = sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
+      let effectiveColor = globalSettings.customAccentColor ?? .accentColor
 
       if !audioManager.isGloballyPlaying {
         return sound.isSelected ? Color.gray.opacity(0.2) : .clear
@@ -204,7 +204,7 @@ private struct GridButtonAnimationTrigger: Equatable {
     }
 
     private var iconForegroundColor: Color {
-      let effectiveColor = sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
+      let effectiveColor = globalSettings.customAccentColor ?? .accentColor
 
       if !audioManager.isGloballyPlaying {
         return .gray
@@ -251,7 +251,7 @@ private struct GridButtonAnimationTrigger: Equatable {
 
             Slider(
               value: $currentVolume,
-              in: 0 ... 1,
+              in: 0...1,
               onEditingChanged: { editing in
                 if !editing {
                   sound.volume = Float(currentVolume)
@@ -348,7 +348,7 @@ private struct GridButtonAnimationTrigger: Equatable {
       }
       .sheet(isPresented: $showingEditSheet) {
         SoundSheet(mode: .edit(sound))
-          .interactiveDismissDisabled() // Prevent accidental dismissal
+          .interactiveDismissDisabled()  // Prevent accidental dismissal
       }
     }
   }

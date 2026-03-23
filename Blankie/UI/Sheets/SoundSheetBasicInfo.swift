@@ -17,10 +17,9 @@ extension CleanSoundSheetForm {
       // Icon
       iconRow
 
-      // Color
+      // About
       switch mode {
       case .edit:
-        ColorPickerRow(selectedColor: $selectedColor)
         aboutRow
       case .add:
         EmptyView()

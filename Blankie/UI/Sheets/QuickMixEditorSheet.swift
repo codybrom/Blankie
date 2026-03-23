@@ -22,9 +22,11 @@ import SwiftUI
       NavigationStack {
         List {
           Section {
-            Text("Quick Mix is a simple soundboard for quick access in CarPlay and other places coming soon. Unlike presets, it doesn't save which sounds are active, remember volume levels, or restore on next launch. Quick Mix cannot use custom sounds.")
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
+            Text(
+              "Quick Mix is a simple soundboard for quick access in CarPlay and other places coming soon. Unlike presets, it doesn't save which sounds are active, remember volume levels, or restore on next launch. Quick Mix cannot use custom sounds."
+            )
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
           }
 
           Section {
@@ -50,7 +52,7 @@ import SwiftUI
                 if let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) {
                   HStack(spacing: 12) {
                     Image(systemName: sound.systemIconName)
-                      .foregroundColor(sound.customColor ?? .accentColor)
+                      .foregroundColor(.accentColor)
                       .frame(width: 20)
                     Text(sound.title)
                   }
@@ -113,7 +115,7 @@ import SwiftUI
           } label: {
             HStack(spacing: 12) {
               Image(systemName: sound.systemIconName)
-                .foregroundColor(isSelected ? sound.customColor ?? .accentColor : .secondary)
+                .foregroundColor(isSelected ? .accentColor : .secondary)
                 .frame(width: 20)
               Text(sound.title)
                 .foregroundColor(.primary)

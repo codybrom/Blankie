@@ -50,8 +50,10 @@ import SwiftUI
             } else {
               LinearGradient(
                 colors: [
-                  (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
-                  (audioManager.soloModeSound?.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor).opacity(0.3),
+                  (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+                    ?? .accentColor).opacity(0.6),
+                  (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+                    ?? .accentColor).opacity(0.3),
                   Color.black.opacity(0.8),
                 ],
                 startPoint: .topLeading,
@@ -65,7 +67,8 @@ import SwiftUI
           }
           .task(id: artworkTaskID) {
             if audioManager.soloModeSound == nil, let preset = presetManager.currentPreset {
-              backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+              backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(
+                for: preset)
             } else if audioManager.soloModeSound != nil {
               backgroundImage = nil
             }
@@ -92,7 +95,9 @@ import SwiftUI
               .overlay {
                 Image(systemName: soloSound.systemIconName)
                   .font(.system(size: artworkSize * 0.35))
-                  .foregroundColor(soloSound.customColor ?? presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
+                  .foregroundColor(
+                    presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+                      ?? .accentColor)
               }
               .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
           } else if let image = backgroundImage {
@@ -163,7 +168,7 @@ import SwiftUI
               get: { globalSettings.volume },
               set: { globalSettings.setVolume($0) }
             ),
-            in: 0 ... 1,
+            in: 0...1,
             onEditingChanged: { editing in
               withAnimation(.easeOut(duration: 0.2)) {
                 isEditingVolume = editing

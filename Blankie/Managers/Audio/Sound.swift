@@ -26,7 +26,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   let isCustom: Bool
   let fileURL: URL?
   let dateAdded: Date?
-  let customSoundDataID: UUID? // For linking to SwiftData if needed
+  let customSoundDataID: UUID?  // For linking to SwiftData if needed
 
   // Computed properties that respect customizations
   var title: String {
@@ -37,10 +37,6 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   var systemIconName: String {
     return SoundCustomizationManager.shared.getCustomization(for: fileName)?.effectiveIconName(
       originalIconName: originalSystemIconName) ?? originalSystemIconName
-  }
-
-  var customColor: Color? {
-    return SoundCustomizationManager.shared.getCustomization(for: fileName)?.effectiveColor
   }
 
   @Published var isSelected = false {
@@ -66,17 +62,19 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
               "🎵 Sound: Auto-playing newly selected sound '\(self.fileName)' during active playback"
             )
             self.loadSound()
-            self.resetSoundPosition() // Apply randomization if enabled
+            self.resetSoundPosition()  // Apply randomization if enabled
             self.play()
           } else {
             // If playback isn't active yet, wait for auto-start to kick in
             Task { @MainActor [weak self] in
-              await Task.yield() // Allow auto-start to process
+              await Task.yield()  // Allow auto-start to process
               guard let self = self else { return }
 
               // Fix race condition: Ensure sound is still selected before proceeding
               guard self.isSelected else {
-                print("🎵 Sound: Aborting delayed auto-play for '\(self.fileName)' - sound was deselected")
+                print(
+                  "🎵 Sound: Aborting delayed auto-play for '\(self.fileName)' - sound was deselected"
+                )
                 return
               }
 
@@ -85,7 +83,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
               print(
                 "🎵 Sound: Auto-playing newly selected sound '\(self.fileName)' after auto-start")
               self.loadSound()
-              self.resetSoundPosition() // Apply randomization if enabled
+              self.resetSoundPosition()  // Apply randomization if enabled
               self.play()
             }
           }
@@ -302,7 +300,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     if let customization = SoundCustomizationManager.shared.getCustomization(for: fileName) {
       shouldLoop = customization.loopSound ?? true
     } else {
-      shouldLoop = true // Default to true for all sounds
+      shouldLoop = true  // Default to true for all sounds
     }
 
     // If not looping, handle completion

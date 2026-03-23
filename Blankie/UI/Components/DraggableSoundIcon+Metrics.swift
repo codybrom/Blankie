@@ -59,7 +59,7 @@ import SwiftUI
 
     var iconColor: Color {
       let isSoloMode = AudioManager.shared.soloModeSound?.id == sound.id
-      let effectiveColor = sound.customColor ?? accentColor
+      let effectiveColor = accentColor
 
       if isSoloMode {
         return effectiveColor  // Solo mode color
@@ -73,7 +73,7 @@ import SwiftUI
 
     var backgroundFill: Color {
       let isSoloMode = AudioManager.shared.soloModeSound?.id == sound.id
-      let effectiveColor = sound.customColor ?? accentColor
+      let effectiveColor = accentColor
 
       // In edit mode, always show a semi-transparent background
       if editMode == .active {
@@ -102,7 +102,7 @@ import SwiftUI
 
     var sliderTintColor: Color {
       let isSoloMode = AudioManager.shared.soloModeSound?.id == sound.id
-      let effectiveColor = sound.customColor ?? accentColor
+      let effectiveColor = accentColor
 
       if !AudioManager.shared.isGloballyPlaying {
         return .gray

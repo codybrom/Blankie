@@ -13,7 +13,6 @@ struct SoundSheetForm: View {
   @Binding var selectedIcon: String
   @Binding var selectedFile: URL?
   @Binding var isImporting: Bool
-  @Binding var selectedColor: AccentColor?
   @Binding var randomizeStartPosition: Bool
   @Binding var normalizeAudio: Bool
   @Binding var volumeAdjustment: Float
@@ -71,14 +70,6 @@ struct SoundSheetForm: View {
 
       // Icon Selection
       SoundIconSelector(selectedIcon: $selectedIcon)
-
-      // Color Selection
-      switch mode {
-      case .edit:
-        ColorSelectionView(selectedColor: $selectedColor)
-      case .add:
-        EmptyView()
-      }
 
       // Audio Section Header
       Text("Audio")

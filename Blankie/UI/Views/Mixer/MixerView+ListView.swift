@@ -36,11 +36,13 @@ import SwiftUI
 
     private var accentColor: Color {
       // If we are in a custom preset that has a specific color, use it to override sound colors
-      if let preset = presetManager.currentPreset, !preset.isDefault, let presetColor = preset.accentColor {
+      if let preset = presetManager.currentPreset, !preset.isDefault,
+        let presetColor = preset.accentColor
+      {
         return presetColor
       }
       // Otherwise (Default preset, or custom preset with no color), respect sound's custom color
-      return sound.customColor ?? globalSettings.customAccentColor ?? .accentColor
+      return globalSettings.customAccentColor ?? .accentColor
     }
 
     private var soundRowIcon: some View {
@@ -103,7 +105,7 @@ import SwiftUI
             get: { Double(sound.volume) },
             set: { sound.volume = Float($0) }
           ),
-          in: 0 ... 1
+          in: 0...1
         )
         .tint(
           sound.isSelected ? accentColor : .gray
@@ -123,7 +125,9 @@ import SwiftUI
       List {
         ForEach(filteredSounds) { sound in
           soundRow(for: sound)
-            .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)")
+            .id(
+              "\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)"
+            )
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))

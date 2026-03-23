@@ -16,14 +16,12 @@ struct SoundSheetInitValues {
   let normalizeAudio: Bool
   let volumeAdjustment: Float
   let loopSound: Bool
-  let selectedColor: AccentColor?
   let initialSoundName: String
   let initialSelectedIcon: String
   let initialRandomizeStartPosition: Bool
   let initialNormalizeAudio: Bool
   let initialVolumeAdjustment: Float
   let initialLoopSound: Bool
-  let initialSelectedColor: AccentColor?
 
   init(
     soundName: String = "",
@@ -32,8 +30,7 @@ struct SoundSheetInitValues {
     randomizeStartPosition: Bool = true,
     normalizeAudio: Bool = true,
     volumeAdjustment: Float = 1.0,
-    loopSound: Bool = true,
-    selectedColor: AccentColor? = nil
+    loopSound: Bool = true
   ) {
     self.soundName = soundName
     self.selectedIcon = selectedIcon
@@ -42,14 +39,12 @@ struct SoundSheetInitValues {
     self.normalizeAudio = normalizeAudio
     self.volumeAdjustment = volumeAdjustment
     self.loopSound = loopSound
-    self.selectedColor = selectedColor
     self.initialSoundName = soundName
     self.initialSelectedIcon = selectedIcon
     self.initialRandomizeStartPosition = randomizeStartPosition
     self.initialNormalizeAudio = normalizeAudio
     self.initialVolumeAdjustment = volumeAdjustment
     self.initialLoopSound = loopSound
-    self.initialSelectedColor = selectedColor
   }
 }
 
@@ -94,9 +89,6 @@ extension SoundSheet {
 
   static func createEditModeInitValues(sound: Sound) -> SoundSheetInitValues {
     let customization = SoundCustomizationManager.shared.getCustomization(for: sound.fileName)
-    let color = customization?.customColorName.flatMap { colorName in
-      AccentColor.allCases.first { $0.color?.toString == colorName }
-    }
 
     return SoundSheetInitValues(
       soundName: customization?.customTitle ?? sound.originalTitle,
@@ -104,8 +96,7 @@ extension SoundSheet {
       randomizeStartPosition: customization?.randomizeStartPosition ?? true,
       normalizeAudio: customization?.normalizeAudio ?? true,
       volumeAdjustment: customization?.volumeAdjustment ?? 1.0,
-      loopSound: customization?.loopSound ?? true,
-      selectedColor: color
+      loopSound: customization?.loopSound ?? true
     )
   }
 }
