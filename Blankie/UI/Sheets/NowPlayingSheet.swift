@@ -81,111 +81,162 @@ import SwiftUI
 
     @ViewBuilder
     private func nowPlayingView(in size: CGSize) -> some View {
+      if size.width > size.height {
+        landscapeNowPlaying(in: size)
+      } else {
+        portraitNowPlaying(in: size)
+      }
+    }
+
+    // MARK: - Portrait Layout
+
+    @ViewBuilder
+    private func portraitNowPlaying(in size: CGSize) -> some View {
       let artworkSize = size.width - 64
 
       VStack(spacing: 0) {
         Spacer()
 
-        // Artwork
-        Group {
-          if let soloSound = audioManager.soloModeSound {
-            Circle()
-              .fill(Color.white.opacity(0.1))
-              .frame(width: artworkSize, height: artworkSize)
-              .overlay {
-                Image(systemName: soloSound.systemIconName)
-                  .font(.system(size: artworkSize * 0.35))
-                  .foregroundColor(
-                    presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
-                      ?? .accentColor)
-              }
-              .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
-          } else if let image = backgroundImage {
-            Image(uiImage: image)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-              .frame(width: artworkSize, height: artworkSize)
-              .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-              .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
-          } else {
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-              .fill(Color.white.opacity(0.1))
-              .frame(width: artworkSize, height: artworkSize)
-              .overlay {
-                BrandedBlankieIcon(
-                  size: artworkSize * 0.35,
-                  color: presetManager.currentPreset?.accentColor
-                )
-              }
-          }
-        }
-        .padding(.horizontal, 32)
+        artworkView(size: artworkSize)
+          .padding(.horizontal, 32)
 
         Spacer()
 
-        // Progress bar (solo mode only)
-        if let soloSound = audioManager.soloModeSound, let duration = soloSound.duration {
-          VStack(spacing: 8) {
-            GeometryReader { geo in
-              ZStack(alignment: .leading) {
-                Capsule()
-                  .fill(.white.opacity(0.3))
-                  .frame(height: 4)
-                Capsule()
-                  .fill(.white)
-                  .frame(width: geo.size.width * soloSound.playbackProgress, height: 4)
-              }
-            }
-            .frame(height: 4)
-
-            HStack {
-              Text(formatTime(duration * soloSound.playbackProgress))
-                .font(.caption2)
-                .foregroundColor(.white.opacity(0.7))
-                .monospacedDigit()
-              Spacer()
-              Text(formatTime(duration))
-                .font(.caption2)
-                .foregroundColor(.white.opacity(0.7))
-                .monospacedDigit()
-            }
-          }
-          .padding(.horizontal, 32)
-          .padding(.top, 24)
-        }
+        soloProgressBar
 
         Spacer()
           .frame(maxHeight: 40)
 
-        // Volume slider
-        HStack(spacing: 15) {
-          Image(systemName: "speaker.fill")
-            .foregroundColor(.gray)
-            .font(.caption)
-
-          Slider(
-            value: Binding(
-              get: { globalSettings.volume },
-              set: { globalSettings.setVolume($0) }
-            ),
-            in: 0...1,
-            onEditingChanged: { editing in
-              withAnimation(.easeOut(duration: 0.2)) {
-                isEditingVolume = editing
-              }
-            }
-          )
-          .tint(.white.opacity(0.7))
-          .sliderThumbVisibility(isEditingVolume ? .visible : .hidden)
-
-          Image(systemName: "speaker.wave.3.fill")
-            .foregroundColor(.gray)
-            .font(.caption)
-        }
-        .padding(.horizontal, 32)
+        volumeSlider
 
         Spacer()
       }
+    }
+
+    // MARK: - Landscape Layout
+
+    @ViewBuilder
+    private func landscapeNowPlaying(in size: CGSize) -> some View {
+      let artworkSize = size.height - 60
+
+      HStack(spacing: 0) {
+        // Artwork takes the left side
+        artworkView(size: artworkSize)
+          .frame(maxWidth: .infinity)
+          .padding(.top, 20)
+
+        // Controls on the right
+        VStack(spacing: 0) {
+          Spacer()
+
+          soloProgressBar
+
+          Spacer()
+            .frame(maxHeight: 24)
+
+          volumeSlider
+
+          Spacer()
+        }
+        .frame(width: size.width * 0.4)
+        .padding(.trailing, 16)
+      }
+    }
+
+    // MARK: - Shared Components
+
+    @ViewBuilder
+    private func artworkView(size: CGFloat) -> some View {
+      if let soloSound = audioManager.soloModeSound {
+        Circle()
+          .fill(Color.white.opacity(0.1))
+          .frame(width: size, height: size)
+          .overlay {
+            Image(systemName: soloSound.systemIconName)
+              .font(.system(size: size * 0.35))
+              .foregroundColor(
+                presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+                  ?? .accentColor)
+          }
+          .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+      } else if let image = backgroundImage {
+        Image(uiImage: image)
+          .resizable()
+          .aspectRatio(contentMode: .fill)
+          .frame(width: size, height: size)
+          .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+          .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
+      } else {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+          .fill(Color.white.opacity(0.1))
+          .frame(width: size, height: size)
+          .overlay {
+            BrandedBlankieIcon(
+              size: size * 0.35,
+              color: presetManager.currentPreset?.accentColor
+            )
+          }
+      }
+    }
+
+    @ViewBuilder
+    private var soloProgressBar: some View {
+      if let soloSound = audioManager.soloModeSound, let duration = soloSound.duration {
+        VStack(spacing: 8) {
+          GeometryReader { geo in
+            ZStack(alignment: .leading) {
+              Capsule()
+                .fill(.white.opacity(0.3))
+                .frame(height: 4)
+              Capsule()
+                .fill(.white)
+                .frame(width: geo.size.width * soloSound.playbackProgress, height: 4)
+            }
+          }
+          .frame(height: 4)
+
+          HStack {
+            Text(formatTime(duration * soloSound.playbackProgress))
+              .font(.caption2)
+              .foregroundColor(.white.opacity(0.7))
+              .monospacedDigit()
+            Spacer()
+            Text(formatTime(duration))
+              .font(.caption2)
+              .foregroundColor(.white.opacity(0.7))
+              .monospacedDigit()
+          }
+        }
+        .padding(.horizontal, 32)
+      }
+    }
+
+    private var volumeSlider: some View {
+      HStack(spacing: 15) {
+        Image(systemName: "speaker.fill")
+          .foregroundColor(.gray)
+          .font(.caption)
+
+        Slider(
+          value: Binding(
+            get: { globalSettings.volume },
+            set: { globalSettings.setVolume($0) }
+          ),
+          in: 0...1,
+          onEditingChanged: { editing in
+            withAnimation(.easeOut(duration: 0.2)) {
+              isEditingVolume = editing
+            }
+          }
+        )
+        .tint(.white.opacity(0.7))
+        .sliderThumbVisibility(isEditingVolume ? .visible : .hidden)
+
+        Image(systemName: "speaker.wave.3.fill")
+          .foregroundColor(.gray)
+          .font(.caption)
+      }
+      .padding(.horizontal, 32)
     }
 
     // MARK: - Expanded Player View

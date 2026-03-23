@@ -36,6 +36,7 @@ private struct AnimationTrigger: Equatable {
     @State var playPauseTrigger = 0
     @State var menuTrigger = 0
     @State var showingNowPlaying = false
+    @State private var isLandscape = false
 
     // Performance optimization: cached state properties
     @State var cachedFilteredSounds: [Sound] = []
@@ -239,6 +240,11 @@ private struct AnimationTrigger: Equatable {
             .transition(.opacity)
           }
         }
+        .onGeometryChange(for: Bool.self) { geo in
+          geo.size.width > geo.size.height
+        } action: { newValue in
+          isLandscape = newValue
+        }
         .safeAreaInset(edge: .top) {
           VStack(spacing: 0) {
             // Tappable preset title
@@ -247,10 +253,10 @@ private struct AnimationTrigger: Equatable {
             } label: {
               HStack(spacing: 4) {
                 Text(navigationTitle)
-                  .font(.headline)
+                  .font(showingNowPlaying ? .title3.weight(.semibold) : .headline)
                   .foregroundColor(showingNowPlaying ? .white : .primary)
                 Image(systemName: "chevron.down")
-                  .font(.caption2.weight(.semibold))
+                  .font(showingNowPlaying ? .caption.weight(.semibold) : .caption2.weight(.semibold))
                   .foregroundColor(showingNowPlaying ? .white.opacity(0.5) : .secondary)
               }
               .padding(.vertical, 6)
@@ -263,17 +269,26 @@ private struct AnimationTrigger: Equatable {
                 .foregroundColor(showingNowPlaying ? .white.opacity(0.6) : .secondary)
             }
           }
+          .padding(.top, showingNowPlaying && isLandscape ? 8 : 0)
           .padding(.bottom, 8)
           .frame(maxWidth: .infinity)
           .background {
             if !showingNowPlaying {
               Rectangle().fill(.ultraThinMaterial)
-                .ignoresSafeArea(edges: .top)
+                .ignoresSafeArea(edges: [.top, .horizontal])
             }
           }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-          bottomToolbar
+          HStack(spacing: 0) {
+            if showingNowPlaying && isLandscape {
+              Color.clear
+                .frame(maxWidth: .infinity)
+                .layoutPriority(1.5)
+            }
+            bottomToolbar
+              .frame(maxWidth: showingNowPlaying && isLandscape ? .infinity : nil)
+          }
         }
         .animation(.easeInOut(duration: 0.3), value: showingNowPlaying)
         .navigationBarHidden(true)
