@@ -160,6 +160,10 @@ import SwiftUI
       #if CARPLAY_ENABLED
         print("🚗 IOSAppDelegate: Performing synchronous CarPlay initialization...")
 
+        // Bridge CarPlay connection state into AudioManager. Must start before
+        // CarPlay can connect so the first connect/disconnect is observed.
+        CarPlayAudioBridge.shared.start()
+
         // Use the shared model container (don't create a duplicate!)
         if !SharedModelContainer.shared.isInitialized {
           SharedModelContainer.shared.initialize()

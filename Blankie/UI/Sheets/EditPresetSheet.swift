@@ -332,11 +332,7 @@ extension EditPresetSheet {
       if let id = artworkId {
         if let image = await PresetArtworkManager.shared.loadArtwork(id: id) {
           await MainActor.run {
-            #if os(macOS)
-              self.artworkData = image.jpegData(compressionQuality: 0.8)
-            #else
-              self.artworkData = image.jpegData(compressionQuality: 0.8)
-            #endif
+            self.artworkData = image.jpegData(compressionQuality: 0.8)
           }
         }
       }

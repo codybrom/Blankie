@@ -191,24 +191,29 @@
       else {
         print("[DEBUG] ODR resource \(bundledId) not available, triggering download and cache")
 
-        // Trigger download asynchronously and copy to Documents for permanent caching
-        Task { @MainActor in
-          do {
-            let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
-            print("[DEBUG] Successfully downloaded ODR resource: \(bundledId)")
+        // Coalesce duplicate triggers for the same id (scrolling back onto a
+        // card that's already downloading, repeated preset re-publishes, etc.)
+        if animatedArtworkDownloadTasks[bundledId] == nil {
+          animatedArtworkDownloadTasks[bundledId] = Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { self.animatedArtworkDownloadTasks.removeValue(forKey: bundledId) }
+            do {
+              let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
+              print("[DEBUG] Successfully downloaded ODR resource: \(bundledId)")
 
-            // Copy to Documents for permanent caching (prevents future re-downloads)
-            await self.cacheODRResourceToDocuments(
-              bundledId: bundledId,
-              videoURL: videoURL,
-              animatedArtwork: animatedArtwork,
-              preset: preset
-            )
+              // Copy to Documents for permanent caching (prevents future re-downloads)
+              await self.cacheODRResourceToDocuments(
+                bundledId: bundledId,
+                videoURL: videoURL,
+                animatedArtwork: animatedArtwork,
+                preset: preset
+              )
 
-            // Trigger a single refresh after successful download and caching
-            self.updateAnimatedArtwork(for: preset)
-          } catch {
-            print("[DEBUG] Failed to download ODR resource \(bundledId): \(error)")
+              // Trigger a single refresh after successful download and caching
+              self.updateAnimatedArtwork(for: preset)
+            } catch {
+              print("[DEBUG] Failed to download ODR resource \(bundledId): \(error)")
+            }
           }
         }
 
@@ -219,13 +224,17 @@
 
       // Copy to Documents for permanent caching if not already done
       // This handles the case where ODR resource is available but not yet permanently cached
-      Task { @MainActor in
-        await self.cacheODRResourceToDocuments(
-          bundledId: bundledId,
-          videoURL: loopURL,
-          animatedArtwork: animatedArtwork,
-          preset: preset
-        )
+      if animatedArtworkDownloadTasks[bundledId] == nil {
+        animatedArtworkDownloadTasks[bundledId] = Task { @MainActor [weak self] in
+          guard let self else { return }
+          defer { self.animatedArtworkDownloadTasks.removeValue(forKey: bundledId) }
+          await self.cacheODRResourceToDocuments(
+            bundledId: bundledId,
+            videoURL: loopURL,
+            animatedArtwork: animatedArtwork,
+            preset: preset
+          )
+        }
       }
 
       // Load preview image - for bundled resources, use bundledId + ".jpg" pattern

@@ -43,11 +43,7 @@ extension AudioManager {
     updateNextPreviousCommandState()
 
     // Filter initial sounds to only include Quick Mix sounds (built-in only)
-    #if CARPLAY_ENABLED
-      let quickMixSounds = CarPlayInterfaceController.shared.quickMixSoundFileNames
-    #else
-      let quickMixSounds = GlobalSettings.shared.quickMixSoundFileNames
-    #endif
+    let quickMixSounds = GlobalSettings.shared.quickMixSoundFileNames
     let validInitialSounds = initialSounds.filter { sound in
       quickMixSounds.contains(sound.fileName) && !sound.isCustom
     }

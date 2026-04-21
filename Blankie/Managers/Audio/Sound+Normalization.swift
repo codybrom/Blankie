@@ -168,6 +168,11 @@ extension Sound {
             "✅ Sound: Updated LUFS data for '\(soundFileName)' - LUFS: \(detectedLUFS), Factor: \(normalizationFactor)"
           )
 
+          // Update this Sound's own cached values so `getNormalizationFactor()`
+          // returns the fresh factor instead of the stale init-time nil.
+          self.lufs = detectedLUFS
+          self.normalizationFactor = normalizationFactor
+
           // Trigger volume update to apply new normalization
           self.updateVolume()
         } catch {

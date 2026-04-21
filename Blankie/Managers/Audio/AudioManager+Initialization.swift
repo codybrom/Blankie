@@ -53,12 +53,6 @@ extension AudioManager {
 
   #if os(iOS) || os(visionOS)
     func setupAudioSessionForPlayback() {
-      #if CARPLAY_ENABLED
-        let isCarPlayConnected = CarPlayInterface.shared.isConnected
-      #else
-        let isCarPlayConnected = false
-      #endif
-
       AudioSessionManager.shared.setupForPlayback(
         mixWithOthers: GlobalSettings.shared.mixWithOthers,
         isCarPlayConnected: isCarPlayConnected

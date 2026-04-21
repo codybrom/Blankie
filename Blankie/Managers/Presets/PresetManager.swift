@@ -32,6 +32,10 @@ class PresetManager: ObservableObject {
   private var cancellables = Set<AnyCancellable>()
   private var isInitialLoad = true
 
+  // In-flight prefetch for nearby preset animated artwork; cancelled when the
+  // current preset changes so stale prefetches don't compete with the new one.
+  private var nearbyArtworkPrefetchTask: Task<Void, Never>?
+
   private init() {
     print("\n🎛️ PresetManager: --- Begin Initialization ---")
 
@@ -40,7 +44,7 @@ class PresetManager: ObservableObject {
       .debounce(for: .milliseconds(800), scheduler: RunLoop.main)
       .sink { [weak self] _ in
         Task { @MainActor in
-          self?.updateCurrentPresetState() // Remove await
+          self?.updateCurrentPresetState()
         }
       }
       .store(in: &cancellables)
@@ -534,8 +538,9 @@ extension PresetManager {
 
       print("🎛️ PresetManager: Prefetching \(odrIds.count) animated artwork resources for nearby presets")
 
-      // Prefetch in background, don't await
-      Task.detached {
+      // Cancel any stale prefetch from the previous current-preset.
+      nearbyArtworkPrefetchTask?.cancel()
+      nearbyArtworkPrefetchTask = Task {
         await OnDemandResourceManager.shared.preloadResources(odrIds)
       }
     #endif

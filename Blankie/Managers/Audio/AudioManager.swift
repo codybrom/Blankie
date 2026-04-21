@@ -34,6 +34,27 @@ class AudioManager: ObservableObject {
     let isPlaying: Bool
   }
 
+  // CarPlay connection state, pushed in by `CarPlayAudioBridge`. Stays `false`
+  // on platforms that don't build CarPlay support. Read by
+  // `setupAudioSessionForPlayback` to configure the audio session appropriately.
+  @Published private(set) var isCarPlayConnected: Bool = false
+
+  /// Called by `CarPlayAudioBridge` when CarPlay connects or disconnects.
+  /// Updates `isCarPlayConnected` and, if audio is currently playing, reconfigures
+  /// the audio session so it picks up the new routing policy.
+  @MainActor
+  func setCarPlayConnected(_ connected: Bool) {
+    guard isCarPlayConnected != connected else { return }
+    print("🎵 AudioManager: CarPlay connection changed to: \(connected)")
+    isCarPlayConnected = connected
+
+    #if os(iOS) || os(visionOS)
+      if isGloballyPlaying {
+        setupAudioSessionForPlayback()
+      }
+    #endif
+  }
+
   // Quick Mix Mode
   @Published var isQuickMix: Bool = false
   struct QuickMixState {

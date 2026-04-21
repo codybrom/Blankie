@@ -17,8 +17,13 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   let originalSystemIconName: String
   let fileName: String
   let fileExtension: String
-  let lufs: Float?
-  let normalizationFactor: Float?
+  // `lufs` and `normalizationFactor` are `var` (not `let`) because deferred
+  // LUFS analysis can complete after a custom sound is already loaded and
+  // playing; `Sound+Normalization.analyzeAndUpdateLUFS` writes these from an
+  // extension in another file, so they cannot be `private(set)`. Without this
+  // relaxation, volume stays stuck at factor 1.0 until next app launch.
+  @Published var lufs: Float?
+  @Published var normalizationFactor: Float?
   let truePeakdBTP: Float?
   let needsLimiter: Bool
 

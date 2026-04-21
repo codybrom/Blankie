@@ -42,8 +42,20 @@ final class OnDemandResourceManager: ObservableObject {
   @Published private(set) var resourceStates: [String: ResourceState] = [:]
 
   #if !os(macOS)
-    /// Active resource requests being managed (iOS only - macOS doesn't support ODR)
+    /// Active resource requests being managed (iOS only - macOS doesn't support ODR).
+    /// These stay alive after the download completes to retain the ODR cache; iOS
+    /// purges resources when all requests are released.
     private var activeRequests: [String: NSBundleResourceRequest] = [:]
+
+    /// In-flight download tasks keyed by resource id. If a second caller asks
+    /// for the same id while a download is already running, it awaits the same
+    /// task rather than starting a second `NSBundleResourceRequest`.
+    ///
+    /// Cancellation semantics: when an individual caller's outer `Task` is
+    /// cancelled (e.g., a view dismisses), that caller's `await` throws
+    /// `CancellationError`, but the shared inner task keeps running for any
+    /// other joiners — `.cancel()` does not abort the download for everyone.
+    private var activeDownloadTasks: [String: Task<URL, Error>] = [:]
 
     /// Queue for serializing ODR operations
     private let odrQueue = DispatchQueue(label: "com.codybrom.blankie.odr", qos: .userInitiated)
@@ -63,7 +75,7 @@ final class OnDemandResourceManager: ObservableObject {
   /// - Parameter resourceId: The identifier matching the ODR tag
   /// - Returns: URL to the video file if available
   func requestVideoResource(_ resourceId: String) async throws -> URL {
-    // Check if already available in bundle (development/simulator/macOS)
+    // Fast path: already in bundle (development/simulator/macOS)
     if let url = getLocalResourceURL(for: resourceId), FileManager.default.fileExists(atPath: url.path) {
       logger.debug("Resource \(resourceId) already available locally")
       resourceStates[resourceId] = .available
@@ -76,89 +88,66 @@ final class OnDemandResourceManager: ObservableObject {
       resourceStates[resourceId] = .failed(ODRError.resourceNotFound(resourceId))
       throw ODRError.resourceNotFound(resourceId)
     #else
-      // iOS: Use ODR to download if not in bundle
-
-      // Check if we already have an active request for this resource
-      if activeRequests[resourceId] != nil {
-        // Resource is already being accessed, just wait for it
-        logger.debug("Resource \(resourceId) already has an active request, reusing")
-
-        // If it's available, return immediately
-        if case .available = resourceStates[resourceId],
-           let url = getLocalResourceURL(for: resourceId)
-        {
-          return url
-        }
-
-        // Otherwise, wait a bit and check again (it may be downloading)
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-
-        if let url = getLocalResourceURL(for: resourceId) {
-          resourceStates[resourceId] = .available
-          return url
-        }
+      // Join an in-flight download for the same id instead of starting a second one.
+      if let existing = activeDownloadTasks[resourceId] {
+        logger.debug("Resource \(resourceId) download already in flight, joining")
+        return try await existing.value
       }
 
-      // Update state to downloading
+      let task = Task<URL, Error> { @MainActor [weak self] in
+        guard let self else { throw ODRError.resourceNotFound(resourceId) }
+        defer { self.activeDownloadTasks.removeValue(forKey: resourceId) }
+        return try await self.performDownload(resourceId: resourceId)
+      }
+      activeDownloadTasks[resourceId] = task
+      return try await task.value
+    #endif
+  }
+
+  #if !os(macOS)
+    /// Performs the actual ODR download. Kept separate from `requestVideoResource`
+    /// so the dedup/joining logic in the public entry point stays legible.
+    private func performDownload(resourceId: String) async throws -> URL {
       resourceStates[resourceId] = .downloading(progress: 0.0)
 
-      // Create resource request with the tag
       let request = NSBundleResourceRequest(tags: [resourceId])
-
-      // Store the active request
       activeRequests[resourceId] = request
-
-      // Set up progress tracking with KVO
       request.loadingPriority = NSBundleResourceRequestLoadingPriorityUrgent
 
-      // Track progress using polling
       let progressTask = Task { @MainActor in
         while !Task.isCancelled {
           let currentProgress = request.progress.fractionCompleted
-          // Update the download progress
           if case .downloading = self.resourceStates[resourceId] {
             self.resourceStates[resourceId] = .downloading(progress: currentProgress)
           } else {
-            // State changed, stop tracking
             break
           }
-          // Poll every 0.1 seconds
           try? await Task.sleep(nanoseconds: 100_000_000)
         }
       }
 
       do {
         logger.info("Requesting ODR resource: \(resourceId)")
-
-        // Begin accessing the resource
         try await request.beginAccessingResources()
-
-        // Cancel progress tracking
         progressTask.cancel()
 
-        // Resource is now available
         logger.info("Successfully downloaded ODR resource: \(resourceId)")
         resourceStates[resourceId] = .available
 
-        // CRITICAL: Keep the request alive to retain the downloaded resource
-        // iOS will purge ODR resources when all requests are released
-        // We keep the request in activeRequests until explicitly released
-        // (The request is already stored in activeRequests at line 87)
+        // The request stays in `activeRequests` to retain the download — iOS
+        // purges ODR resources when all requests are released.
 
-        // Get the URL to the downloaded resource
         guard let url = getLocalResourceURL(for: resourceId) else {
           throw ODRError.resourceNotFound(resourceId)
         }
-
         return url
-
       } catch {
-        // Cancel progress tracking
         progressTask.cancel()
 
         logger.warning("ODR download failed for \(resourceId), checking if bundled locally: \(error.localizedDescription)")
 
-        // ODR failed - check if the resource is bundled locally (development/simulator)
+        // Fall back to the local bundle (development/simulator builds often have
+        // the resource bundled directly).
         if let url = getLocalResourceURL(for: resourceId), FileManager.default.fileExists(atPath: url.path) {
           logger.info("Resource \(resourceId) found in local bundle, using as fallback")
           resourceStates[resourceId] = .available
@@ -166,14 +155,13 @@ final class OnDemandResourceManager: ObservableObject {
           return url
         }
 
-        // Neither ODR nor local bundle worked
         logger.error("Resource \(resourceId) not available via ODR or local bundle")
         resourceStates[resourceId] = .failed(error)
         activeRequests.removeValue(forKey: resourceId)
         throw ODRError.downloadFailed(resourceId, error)
       }
-    #endif
-  }
+    }
+  #endif
 
   /// Preload multiple resources in the background
   /// - Parameter resourceIds: Array of resource identifiers to preload

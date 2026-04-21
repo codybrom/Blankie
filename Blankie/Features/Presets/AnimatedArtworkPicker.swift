@@ -531,6 +531,7 @@ import SwiftUI
     @State private var isLoading = true
     @State private var loadError: String?
     @State private var showingDeleteConfirmation = false
+    @State private var setupTask: Task<Void, Never>?
     @StateObject private var odrManager = OnDemandResourceManager.shared
 
     var resourceState: ResourceState {
@@ -735,6 +736,8 @@ import SwiftUI
         setupPlayer()
       }
       .onDisappear {
+        setupTask?.cancel()
+        setupTask = nil
         player?.pause()
         player = nil
       }
@@ -751,10 +754,13 @@ import SwiftUI
     }
 
     private func setupPlayer() {
-      Task {
+      setupTask?.cancel()
+      setupTask = Task {
         do {
           // Request the video file from ODR (downloads if needed)
           let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
+          // If the sheet dismissed during the download, stop here.
+          if Task.isCancelled { return }
 
           await MainActor.run {
             let player = AVPlayer(url: videoURL)
@@ -782,6 +788,8 @@ import SwiftUI
             // Hide loading indicator once player is ready
             self.isLoading = false
           }
+        } catch is CancellationError {
+          // Sheet dismissed before download finished; nothing to do.
         } catch {
           // Handle download failure - show error UI
           await MainActor.run {

@@ -25,6 +25,10 @@ final class NowPlayingManager {
   #if os(iOS)
     var currentAnimatedLoopPath: String?
     var currentAnimatedPreviewPath: String?
+    // ODR download + Documents-cache tasks in flight, keyed by bundled id.
+    // Lets duplicate triggers for the same animated artwork coalesce instead
+    // of spawning parallel downloads and cache-copy attempts.
+    var animatedArtworkDownloadTasks: [String: Task<Void, Never>] = [:]
   #endif
   private var updateTimer: Timer?
   private var cancellables = Set<AnyCancellable>()

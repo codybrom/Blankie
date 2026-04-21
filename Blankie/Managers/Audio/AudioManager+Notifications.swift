@@ -23,7 +23,6 @@ extension AudioManager {
   #if os(iOS) || os(visionOS)
     private func setupIOSNotificationObservers() {
       setupTerminationObserver()
-      setupCarPlayObserver()
       setupBackgroundObservers()
       // Delay audio session observers until first playback to avoid interrupting other apps
       // setupAudioInterruptionObserver()
@@ -47,23 +46,6 @@ extension AudioManager {
       ) { _ in
         self.handleAppTermination()
       }
-    }
-
-    private func setupCarPlayObserver() {
-      #if CARPLAY_ENABLED
-        NotificationCenter.default.addObserver(
-          forName: NSNotification.Name("CarPlayConnectionChanged"),
-          object: nil,
-          queue: .main
-        ) { [weak self] notification in
-          if let isConnected = notification.userInfo?["isConnected"] as? Bool {
-            print("🎵 AudioManager: CarPlay connection changed to: \(isConnected)")
-            if self?.isGloballyPlaying == true {
-              self?.setupAudioSessionForPlayback()
-            }
-          }
-        }
-      #endif
     }
 
     private func setupBackgroundObservers() {
