@@ -547,7 +547,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.1.0;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
 				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
@@ -608,7 +608,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.1.0;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
 				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
@@ -743,7 +743,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.1.0;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
 				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				OTHER_SWIFT_FLAGS = "-DCARPLAY_ENABLED";
@@ -924,7 +924,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 1.1.0;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
 				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				"OTHER_SWIFT_FLAGS[arch=*]" = "-DCARPLAY_ENABLED";
