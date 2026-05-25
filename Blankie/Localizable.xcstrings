@@ -6636,6 +6636,9 @@
         }
       }
     },
+    "This preset uses its own view mode. Change it in Edit Preset." : {
+      "comment" : "Caption shown when the active preset overrides the app-wide view mode"
+    },
     "This video is currently selected for your lock screen. Removing it will also unselect it. You can download it again later." : {
 
     },

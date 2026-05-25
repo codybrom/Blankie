@@ -16,36 +16,16 @@ import SwiftUI
       let visibleSounds = audioManager.getVisibleSounds()
 
       let filteredSounds = visibleSounds.filter { sound in
-        // Check if sound is included in current preset
-        if let currentPreset = presetManager.currentPreset {
-          // For default preset, show all sounds
-          if currentPreset.isDefault {
-            if hideInactiveSounds, editMode == .inactive {
-              return sound.isSelected
-            } else {
-              return true
-            }
-          } else {
-            // For custom presets, only show sounds that are part of the preset
-            let isInPreset = currentPreset.soundStates.contains { $0.fileName == sound.fileName }
-            if !isInPreset {
-              return false
-            }
-
-            if hideInactiveSounds, editMode == .inactive {
-              return sound.isSelected
-            } else {
-              return true
-            }
-          }
-        } else {
-          // No current preset - show all sounds with hideInactiveSounds filter
-          if hideInactiveSounds, editMode == .inactive {
-            return sound.isSelected
-          } else {
-            return true
-          }
+        guard let currentPreset = presetManager.currentPreset else {
+          // No current preset — show everything.
+          return true
         }
+        // Default preset shows all sounds; a custom preset shows only the
+        // sounds that belong to it.
+        if currentPreset.isDefault {
+          return true
+        }
+        return currentPreset.soundStates.contains { $0.fileName == sound.fileName }
       }
 
       // Sort filtered sounds according to preset order or default sound order
@@ -139,14 +119,24 @@ import SwiftUI
   /// Shared background used by both the main tile grid (non-artwork presets)
   /// and Quick Mix so the two modes read as one visual system.
   struct SoundSurfaceBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
     let accent: Color
 
     var body: some View {
+      // The base (bottom) stop must adapt: a hardcoded near-black makes the
+      // grid/Quick Mix render black-on-black under the Light appearance (tile
+      // text is `.primary`). Dark keeps the deep look; Light falls back to the
+      // system background, matching the pre-unification main-grid surface.
+      let base =
+        colorScheme == .dark
+        ? Color.black.opacity(0.9)
+        : Color(.systemBackground).opacity(0.5)
+
       LinearGradient(
         colors: [
           accent.opacity(0.25),
           accent.opacity(0.1),
-          Color.black.opacity(0.9),
+          base,
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing

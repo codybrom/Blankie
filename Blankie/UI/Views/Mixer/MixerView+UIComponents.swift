@@ -212,12 +212,14 @@ import SwiftUI
           .glassEffect(.regular.interactive(), in: .circle)
           .disabled(!audioManager.hasSelectedSounds)
           .sensoryFeedback(.selection, trigger: playPauseTrigger)
+          .onLongPressGesture { showingPresetPicker = true }
       } else {
         return
           button
           .modernGlassEffect(cornerRadius: 34)
           .disabled(!audioManager.hasSelectedSounds)
           .sensoryFeedback(.selection, trigger: playPauseTrigger)
+          .onLongPressGesture { showingPresetPicker = true }
       }
     }
 

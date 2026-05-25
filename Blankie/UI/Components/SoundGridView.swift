@@ -50,6 +50,16 @@ import SwiftUI
         } else if isDragging {
           isDragging = false
           commitReorder()
+          // `onChange(of: sounds)` is gated by `isDragging`, so a membership
+          // change that arrived mid-drag (preset switch, import, add/remove)
+          // was skipped and won't be re-delivered. Reconcile now if the set of
+          // tiles differs — a pure reorder keeps the same set and is left for
+          // `commitReorder`/`onChange` to settle, avoiding a flicker back to
+          // the pre-commit order.
+          if Set(items.map(\.id)) != Set(sounds.map(\.id)) {
+            let known = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.position) })
+            items = sounds.map { SortableSound(sound: $0, position: known[$0.id] ?? .zero) }
+          }
         }
       }
       .safeAreaPadding(16)

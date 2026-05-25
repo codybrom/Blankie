@@ -17,11 +17,7 @@ private struct AnimationTrigger: Equatable {
     @StateObject var onboardingManager = OnboardingManager.shared
     @State var showingPresetPicker = false
     @State var showingOnboarding = false
-    @State var hideInactiveSounds = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
-    @State var draggedIndex: Int?
-    @State var hoveredIndex: Int?
-    @State var dragResetTimer: Timer?
     @State private var showingThemePicker = false
     @State var showingSoundManagement = false
     @State var showingSettings = false
@@ -30,7 +26,6 @@ private struct AnimationTrigger: Equatable {
     @State var soundToEdit: Sound?
     @State var presetToEdit: Preset?
     @State var soundsUpdateTrigger = 0
-    @State var editMode: EditMode = .inactive
     @State var playPauseTrigger = 0
     @State var menuTrigger = 0
     @State var showingNowPlaying = false
