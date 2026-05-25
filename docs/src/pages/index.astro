@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
+import { Card } from "@/components/ui/card";
 import BackgroundVideo from "../components/BackgroundVideo.astro";
 import screenshot from "../assets/en-dark.png";
 import macAppStoreBadge from "../assets/download-on-mac-app-store.svg";
@@ -58,7 +59,7 @@ const title = "Ambient sound mixer for macOS";
           width={800}
           height={454}
           loading="eager"
-          class="rounded-lg mx-auto my-12 max-w-full block transition duration-300 hover:scale-105 w-full md:w-[800px] cursor-pointer"
+          class="rounded-lg mx-auto my-12 max-w-full block transition duration-300 hover:scale-105 w-full md:w-200 cursor-pointer"
           quality={90}
         />
       </a>
@@ -71,7 +72,7 @@ const title = "Ambient sound mixer for macOS";
           <a
             href="https://apps.apple.com/app/blankie/id6740096581"
             target="_blank"
-            class="relative inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 hover:scale-105 transition-all duration-300"
+            class="relative inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 hover:scale-105 transition-all duration-300"
           >
             <!-- Left Laurel -->
             <img
@@ -108,7 +109,7 @@ const title = "Ambient sound mixer for macOS";
           <a
             href="https://www.producthunt.com/products/blankie?embed=true&utm_source=badge-top-post-topic-badge&utm_medium=badge&utm_source=badge-blankie"
             target="_blank"
-            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 hover:scale-105 transition-all duration-300"
+            class="inline-flex items-center px-6 py-3 bg-linear-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 hover:scale-105 transition-all duration-300"
           >
             <div class="text-center">
               <div
@@ -130,7 +131,7 @@ const title = "Ambient sound mixer for macOS";
         <div class="flex flex-wrap justify-center gap-4">
           <!-- Combined Stats Box -->
           <div
-            class="inline-flex items-center gap-6 px-8 py-3 bg-gradient-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50"
+            class="inline-flex items-center gap-6 px-8 py-3 bg-linear-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50"
           >
             <!-- Rating -->
             <div class="flex items-center gap-2">
@@ -415,7 +416,7 @@ const title = "Ambient sound mixer for macOS";
   <!-- Homebrew Installation Section -->
   <section class="max-w-3xl mx-auto px-5 py-4 text-center" id="brew">
     <h2 class="text-3xl font-semibold mb-6">Install with Homebrew</h2>
-    <div class="bg-card rounded-xl p-8 mb-6">
+    <Card className="p-8 mb-6 gap-0">
       <p class="mb-4">
         You can install Blankie via Homebrew by running this in your Terminal:
       </p>
@@ -448,7 +449,7 @@ const title = "Ambient sound mixer for macOS";
           >brew.sh</a
         > for more information.
       </p>
-    </div>
+    </Card>
   </section>
 
   <!-- Coming Soon Section -->
@@ -501,7 +502,7 @@ const title = "Ambient sound mixer for macOS";
         rel="noopener noreferrer"
       >
         <img
-          class="h-[15px] inline-block mr-2"
+          class="h-3.75 inline-block mr-2"
           src={ghSVG.src}
           alt=""
           width="15"
@@ -516,7 +517,7 @@ const title = "Ambient sound mixer for macOS";
         rel="noopener noreferrer"
       >
         <img
-          class="h-[15px] inline-block mr-2"
+          class="h-3.75 inline-block mr-2"
           src={bmcSVG.src}
           alt=""
           width="15"
@@ -531,7 +532,7 @@ const title = "Ambient sound mixer for macOS";
         rel="noopener noreferrer"
       >
         <img
-          class="h-[15px] inline-block mr-2"
+          class="h-3.75 inline-block mr-2"
           src={kfSVG.src}
           alt=""
           width="15"

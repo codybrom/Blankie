@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { marked } from "marked";
+import { renderMarkdown } from "@/utils/markdown";
+import { Card } from "@/components/ui/card";
 
 const title = "Contributing";
 const introText =
@@ -48,19 +49,6 @@ const mainSections = contentAfterFirstH2
   .filter((section) => section.trim())
   .map((section) => `## ${section}`);
 
-// Configure marked to add IDs to headers
-marked.use({
-  walkTokens: (token) => {
-    if (token.type === "heading" && token.tokens) {
-      token.tokens.forEach((t) => {
-        if (t.type === "text") {
-          t.text = t.text.replace(/\{#[\w-]+\}/, ""); // Remove any existing IDs
-        }
-      });
-    }
-  },
-});
-
 // Process each section
 const processedSections = mainSections.map((section) => {
   // Extract the h2 title if present
@@ -76,20 +64,8 @@ const processedSections = mainSections.map((section) => {
   // Process content
   sectionContent = rewriteGitHubLinks(sectionContent);
 
-  // Convert to HTML
-  let htmlContent = marked(sectionContent) as string;
-
-  // Convert alerts
-  htmlContent = htmlContent.replace(
-    /<blockquote>[\s\n]*<p>\[!(IMPORTANT|NOTE|WARNING|CAUTION)\][\s\n]*(.*?)(<\/p>.*?)<\/blockquote>/gs,
-    (_match, alertType, alertTitle, alertContent) => `
-      <div class="my-6 p-4 rounded-lg border-l-4 bg-yellow-500/10 border-yellow-500">
-        <div class="font-semibold mb-2 text-lg">${alertType}</div>
-        <p>${alertTitle.trim()}</p>
-        ${alertContent.replace("</p>", "")}
-      </div>
-    `
-  );
+  // Convert to HTML (GitHub-style alerts handled by the shared marked config)
+  const htmlContent = renderMarkdown(sectionContent);
 
   return { title, titleId, content: htmlContent };
 });
@@ -117,14 +93,14 @@ const tocItems = processedSections
   <main class="max-w-5xl mx-auto px-5 pt-28 pb-10">
     <h1 class="text-4xl font-semibold mb-6">Contributing to Blankie</h1>
 
-    <div class="border border-gray-700 bg-card rounded-lg p-6 mb-8 text-base">
+    <Card className="mb-8 p-6 text-base gap-0">
       <p class="text-md leading-relaxed">
         {introText}
       </p>
-    </div>
+    </Card>
 
     <!-- Table of Contents -->
-    <div class="bg-card rounded-lg p-6 mb-8">
+    <Card className="mb-8 p-6 gap-0">
       <h2 class="text-2xl font-semibold mb-4 text-base">Table of Contents</h2>
       <nav>
         <ul class="list-disc list-inside space-y-2">
@@ -153,14 +129,14 @@ const tocItems = processedSections
           }
         </ul>
       </nav>
-    </div>
+    </Card>
 
     <!-- Content Sections -->
     <div class="space-y-4">
       {
         processedSections.map(({ title, titleId, content }) =>
           title ? (
-            <div class="bg-card rounded-lg p-6">
+            <Card className="p-6 gap-0">
               <h2
                 id={titleId}
                 class="group text-2xl font-semibold mb-4 text-base"
@@ -176,7 +152,7 @@ const tocItems = processedSections
               <div class="prose prose-lg prose-invert max-w-none prose-headings:text-base">
                 <Fragment set:html={content} />
               </div>
-            </div>
+            </Card>
           ) : (
             <div class="prose prose-lg prose-invert max-w-none">
               <Fragment set:html={content} />

@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
+import { Card } from "@/components/ui/card";
 import screenshot from "../assets/screenshot.png";
 import bg1 from "../assets/bg-1.png";
 import bg2 from "../assets/bg-2.png";
@@ -82,7 +83,7 @@ const title = "Features - Blankie";
         class="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4 items-center mb-8"
       >
         <div class="order-2 lg:order-1 flex justify-center">
-          <div class="bg-card rounded-xl p-8 max-w-md">
+          <Card className="p-8 max-w-md gap-0">
             <div class="space-y-3">
               <div class="bg-black/30 rounded-lg p-3">
                 <div class="font-medium">☔️ Rainy Day Focus</div>
@@ -99,7 +100,7 @@ const title = "Features - Blankie";
                 <div class="text-sm text-gray-400">Fireplace + Rain + Wind</div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
         <div class="order-1 lg:order-2">
           <h2 class="text-3xl font-semibold mb-6">💾 Preset Perfection</h2>
@@ -131,30 +132,30 @@ const title = "Features - Blankie";
         </p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-card rounded-xl p-6">
+        <Card className="p-6 gap-0">
           <div class="text-2xl mb-4">⌨️</div>
           <h3 class="text-lg font-semibold mb-3">Media Controls</h3>
           <p class="text-gray-200">
             Works with media keys, AirPods, and other Bluetooth headphones for
             seamless control.
           </p>
-        </div>
-        <div class="bg-card rounded-xl p-6">
+        </Card>
+        <Card className="p-6 gap-0">
           <div class="text-2xl mb-4">🎛️</div>
           <h3 class="text-lg font-semibold mb-3">Control Center</h3>
           <p class="text-gray-200">
             See now playing information and preset names in the macOS Control
             Center.
           </p>
-        </div>
-        <div class="bg-card rounded-xl p-6">
+        </Card>
+        <Card className="p-6 gap-0">
           <div class="text-2xl mb-4">⚡</div>
           <h3 class="text-lg font-semibold mb-3">Native Performance</h3>
           <p class="text-gray-200">
             Built with Swift for optimal performance and energy efficiency on
             Apple Silicon and Intel Macs.
           </p>
-        </div>
+        </Card>
       </div>
     </div>
   </section>
