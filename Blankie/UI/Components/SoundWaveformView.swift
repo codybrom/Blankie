@@ -89,7 +89,7 @@ struct SoundWaveformView: View {
           self.isLoading = false
         }
       } catch {
-        print("Failed to load waveform: \(error)")
+        debugLog("Failed to load waveform: \(error)")
         await MainActor.run {
           self.isLoading = false
         }

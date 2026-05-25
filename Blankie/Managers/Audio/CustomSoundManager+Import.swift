@@ -29,7 +29,7 @@ extension CustomSoundManager {
     let uniqueFileName = metadata.id.uuidString
     let fileExtension = sourceURL.pathExtension.lowercased()
 
-    print(
+    debugLog(
       "📦 CustomSoundManager: Importing with metadata ID: \(metadata.id) from file: \(sourceURL.lastPathComponent)"
     )
 
@@ -37,12 +37,13 @@ extension CustomSoundManager {
       return .failure(CustomSoundError.unsupportedFormat)
     }
 
-    print("🔐 CustomSoundManager: Starting security-scoped resource access for import with metadata")
+    debugLog(
+      "🔐 CustomSoundManager: Starting security-scoped resource access for import with metadata")
     let didStartAccess = sourceURL.startAccessingSecurityScopedResource()
     defer {
       if didStartAccess {
         sourceURL.stopAccessingSecurityScopedResource()
-        print(
+        debugLog(
           "🔓 CustomSoundManager: Released security-scoped resource access for import with metadata")
       }
     }
@@ -91,7 +92,7 @@ extension CustomSoundManager {
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
     } catch {
-      print("❌ CustomSoundManager: Failed to import sound with metadata: \(error)")
+      debugLog("❌ CustomSoundManager: Failed to import sound with metadata: \(error)")
       return .failure(.invalidAudioFile(error))
     }
   }
@@ -146,7 +147,7 @@ extension CustomSoundManager {
       needsLimiter: lufs < -30.0  // Need limiter for very quiet sounds
     )
     PlaybackProfileStore.shared.store(profile)
-    print("💾 CustomSoundManager: Stored playback profile from metadata for \(fileName)")
+    debugLog("💾 CustomSoundManager: Stored playback profile from metadata for \(fileName)")
   }
 
   private func extractAndApplyID3Metadata(to customSound: CustomSoundData, from url: URL) async {

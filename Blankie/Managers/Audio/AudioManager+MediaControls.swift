@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - Media Controls
 extension AudioManager {
   func setupMediaControls() {
-    print("🎵 AudioManager: Setting up media controls")
+    debugLog("🎵 AudioManager: Setting up media controls")
 
     let commandCenter = MPRemoteCommandCenter.shared()
     configureMediaCommands(commandCenter)
@@ -41,7 +41,7 @@ extension AudioManager {
 
   private func addPlaybackCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
     commandCenter.playCommand.addTarget { [weak self] _ in
-      print("🎵 AudioManager: Media key play command received")
+      debugLog("🎵 AudioManager: Media key play command received")
       Task { @MainActor in
         // Only play if we're currently paused
         if !(self?.isGloballyPlaying ?? false) {
@@ -52,7 +52,7 @@ extension AudioManager {
     }
 
     commandCenter.pauseCommand.addTarget { [weak self] _ in
-      print("🎵 AudioManager: Media key pause command received")
+      debugLog("🎵 AudioManager: Media key pause command received")
       Task { @MainActor in
         // Only pause if we're currently playing
         if self?.isGloballyPlaying ?? false {
@@ -63,7 +63,7 @@ extension AudioManager {
     }
 
     commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
-      print("🎵 AudioManager: Media key toggle command received")
+      debugLog("🎵 AudioManager: Media key toggle command received")
       Task { @MainActor in
         self?.togglePlayback()
       }
@@ -74,13 +74,13 @@ extension AudioManager {
   private func addNavigationCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
     // Next/Previous track commands for preset navigation
     commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-      print("🎵 AudioManager: Next track command received")
+      debugLog("🎵 AudioManager: Next track command received")
       guard let self = self else { return .commandFailed }
 
       Task { @MainActor in
         // Skip if in solo mode or quick mix
         guard self.soloModeSound == nil && !self.isQuickMix else {
-          print("🎵 AudioManager: Skipping next preset - in solo mode or quick mix")
+          debugLog("🎵 AudioManager: Skipping next preset - in solo mode or quick mix")
           return
         }
 
@@ -90,13 +90,13 @@ extension AudioManager {
     }
 
     commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-      print("🎵 AudioManager: Previous track command received")
+      debugLog("🎵 AudioManager: Previous track command received")
       guard let self = self else { return .commandFailed }
 
       Task { @MainActor in
         // Skip if in solo mode or quick mix
         guard self.soloModeSound == nil && !self.isQuickMix else {
-          print("🎵 AudioManager: Skipping previous preset - in solo mode or quick mix")
+          debugLog("🎵 AudioManager: Skipping previous preset - in solo mode or quick mix")
           return
         }
 
@@ -134,7 +134,7 @@ extension AudioManager {
       let nextIndex = (currentIndex + 1) % presets.count
       let nextPreset = presets[nextIndex]
 
-      print("🎵 AudioManager: Switching to next preset: \(nextPreset.name)")
+      debugLog("🎵 AudioManager: Switching to next preset: \(nextPreset.name)")
       do {
         try PresetManager.shared.applyPreset(nextPreset)
         // Ensure playback continues if it was playing
@@ -142,19 +142,19 @@ extension AudioManager {
           setGlobalPlaybackState(true)
         }
       } catch {
-        print("❌ AudioManager: Failed to apply next preset: \(error)")
+        debugLog("❌ AudioManager: Failed to apply next preset: \(error)")
       }
     } else {
       // No current preset or current is default when customs exist, go to first
       if let firstPreset = presets.first {
-        print("🎵 AudioManager: Switching to first preset: \(firstPreset.name)")
+        debugLog("🎵 AudioManager: Switching to first preset: \(firstPreset.name)")
         do {
           try PresetManager.shared.applyPreset(firstPreset)
           if isGloballyPlaying {
             setGlobalPlaybackState(true)
           }
         } catch {
-          print("❌ AudioManager: Failed to apply first preset: \(error)")
+          debugLog("❌ AudioManager: Failed to apply first preset: \(error)")
         }
       }
     }
@@ -188,7 +188,7 @@ extension AudioManager {
       let previousIndex = currentIndex > 0 ? currentIndex - 1 : presets.count - 1
       let previousPreset = presets[previousIndex]
 
-      print("🎵 AudioManager: Switching to previous preset: \(previousPreset.name)")
+      debugLog("🎵 AudioManager: Switching to previous preset: \(previousPreset.name)")
       do {
         try PresetManager.shared.applyPreset(previousPreset)
         // Ensure playback continues if it was playing
@@ -196,19 +196,19 @@ extension AudioManager {
           setGlobalPlaybackState(true)
         }
       } catch {
-        print("❌ AudioManager: Failed to apply previous preset: \(error)")
+        debugLog("❌ AudioManager: Failed to apply previous preset: \(error)")
       }
     } else {
       // No current preset or current is default when customs exist, go to last
       if let lastPreset = presets.last {
-        print("🎵 AudioManager: Switching to last preset: \(lastPreset.name)")
+        debugLog("🎵 AudioManager: Switching to last preset: \(lastPreset.name)")
         do {
           try PresetManager.shared.applyPreset(lastPreset)
           if isGloballyPlaying {
             setGlobalPlaybackState(true)
           }
         } catch {
-          print("❌ AudioManager: Failed to apply last preset: \(error)")
+          debugLog("❌ AudioManager: Failed to apply last preset: \(error)")
         }
       }
     }
@@ -222,6 +222,6 @@ extension AudioManager {
     commandCenter.nextTrackCommand.isEnabled = enableNextPrev
     commandCenter.previousTrackCommand.isEnabled = enableNextPrev
 
-    print("🎵 AudioManager: Next/Previous commands \(enableNextPrev ? "enabled" : "disabled")")
+    debugLog("🎵 AudioManager: Next/Previous commands \(enableNextPrev ? "enabled" : "disabled")")
   }
 }

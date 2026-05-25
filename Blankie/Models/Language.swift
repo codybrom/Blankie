@@ -46,7 +46,7 @@ struct Language: Hashable, Identifiable, Equatable {
     let displayName =
       "\(NSLocalizedString("System", comment: "System default language option")) (\(languageName))"
 
-    print("🌐 System language: code=\(languageCode), name=\(languageName)")
+    debugLog("🌐 System language: code=\(languageCode), name=\(languageName)")
 
     let systemLanguage = Language(
       code: "system",
@@ -64,11 +64,11 @@ struct Language: Hashable, Identifiable, Equatable {
   static func getAvailableLanguages() -> [Language] {
     var languages = [Language.system]
 
-    print("🔍 Detecting available app localizations using Bundle.main.localizations")
+    debugLog("🔍 Detecting available app localizations using Bundle.main.localizations")
 
     // Get all localizations from the app bundle
     let bundleLocalizations = Bundle.main.localizations
-    print(
+    debugLog(
       "📄 Found \(bundleLocalizations.count) localizations in bundle: \(bundleLocalizations.joined(separator: ", "))"
     )
 
@@ -87,14 +87,14 @@ struct Language: Hashable, Identifiable, Equatable {
 
     // If we still don't have any languages, try reading from Localizable.xcstrings
     if languages.count <= 1 {
-      print("⚠️ No localizations found in bundle, trying Localizable.xcstrings")
+      debugLog("⚠️ No localizations found in bundle, trying Localizable.xcstrings")
       tryReadXCStringsFile(into: &languages)
     }
 
     // Log the final language list
-    print("🔢 Final language list:")
+    debugLog("🔢 Final language list:")
     for lang in languages {
-      print("- \(lang.code): \(lang.displayName)")
+      debugLog("- \(lang.code): \(lang.displayName)")
     }
 
     // Sort languages by display name but keep system first
@@ -109,11 +109,11 @@ struct Language: Hashable, Identifiable, Equatable {
 
   private static func tryReadXCStringsFile(into languages: inout [Language]) {
     guard let url = Bundle.main.url(forResource: "Localizable", withExtension: "xcstrings") else {
-      print("❌ Localizable.xcstrings not found in bundle")
+      debugLog("❌ Localizable.xcstrings not found in bundle")
       return
     }
 
-    print("📄 Found Localizable.xcstrings at: \(url.path)")
+    debugLog("📄 Found Localizable.xcstrings at: \(url.path)")
 
     // Extract and process language codes from the file
     let langCodes = extractLanguagesFromXCStrings(at: url)
@@ -127,16 +127,16 @@ struct Language: Hashable, Identifiable, Equatable {
 
     do {
       let data = try Data(contentsOf: url)
-      print("📊 Read \(data.count) bytes from file")
+      debugLog("📊 Read \(data.count) bytes from file")
 
       guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-        print("⚠️ Failed to parse JSON from xcstrings file")
+        debugLog("⚠️ Failed to parse JSON from xcstrings file")
         return languageCodes
       }
 
       // Get source language
       if let sourceLanguage = json["sourceLanguage"] as? String {
-        print("🌐 Source language: \(sourceLanguage)")
+        debugLog("🌐 Source language: \(sourceLanguage)")
         languageCodes.insert(sourceLanguage)
       }
 
@@ -154,9 +154,9 @@ struct Language: Hashable, Identifiable, Equatable {
         }
       }
 
-      print("🌐 Found language codes in xcstrings: \(languageCodes.joined(separator: ", "))")
+      debugLog("🌐 Found language codes in xcstrings: \(languageCodes.joined(separator: ", "))")
     } catch {
-      print("❌ Error reading .xcstrings file: \(error)")
+      debugLog("❌ Error reading .xcstrings file: \(error)")
     }
 
     return languageCodes
@@ -177,14 +177,14 @@ struct Language: Hashable, Identifiable, Equatable {
   }
 
   static func applyLanguage(_ language: Language) {
-    print("🌐 Changing language to: \(language.code)")
+    debugLog("🌐 Changing language to: \(language.code)")
 
     // Store the language preference
     if language.code == "system" {
-      print("🌐 Removing AppleLanguages key to use system default")
+      debugLog("🌐 Removing AppleLanguages key to use system default")
       UserDefaults.standard.removeObject(forKey: "AppleLanguages")
     } else {
-      print("🌐 Setting AppleLanguages to: [\(language.code)]")
+      debugLog("🌐 Setting AppleLanguages to: [\(language.code)]")
       UserDefaults.standard.set([language.code], forKey: "AppleLanguages")
     }
 
@@ -199,7 +199,7 @@ struct Language: Hashable, Identifiable, Equatable {
     let value = UserDefaults.standard.object(forKey: "AppleLanguages")
     let languages = value as? [String] ?? Locale.preferredLanguages
 
-    print("🌐 Attempting to refresh localization with languages: \(languages)")
+    debugLog("🌐 Attempting to refresh localization with languages: \(languages)")
 
     // Try to force UI refresh
     // This is a hack and only works partially

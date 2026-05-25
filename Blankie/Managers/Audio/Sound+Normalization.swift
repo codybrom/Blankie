@@ -30,7 +30,7 @@ extension Sound {
       // Use detected peak level if available, otherwise use default
       let normalizationFactor = getNormalizationFactor()
       effectiveVolume *= normalizationFactor
-      print("🔊 Sound: Applying normalization factor \(normalizationFactor) to '\(fileName)'")
+      debugLog("🔊 Sound: Applying normalization factor \(normalizationFactor) to '\(fileName)'")
       // When normalization is enabled, ignore volume adjustment
     } else {
       // Only apply volume adjustment when normalization is disabled
@@ -45,7 +45,7 @@ extension Sound {
       if effectiveVolume > softLimitThreshold {
         let excess = (effectiveVolume - softLimitThreshold) / (1.0 - softLimitThreshold)
         let limited = softLimitThreshold + (1.0 - softLimitThreshold) * tanh(excess * 2)
-        print(
+        debugLog(
           "🔊 Sound: Applying soft limiter to '\(fileName)' - from \(effectiveVolume) to \(limited)")
         effectiveVolume = limited
       }
@@ -54,14 +54,14 @@ extension Sound {
     // Only log volume calculations if they actually change the player volume
     if player?.volume != effectiveVolume {
       player?.volume = effectiveVolume
-      print("🔊 Sound: Set player volume for '\(fileName)' to \(effectiveVolume)")
+      debugLog("🔊 Sound: Set player volume for '\(fileName)' to \(effectiveVolume)")
 
       // Debounce just the print statement
       updateVolumeLogTimer?.invalidate()
       updateVolumeLogTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
         [weak self] _ in
         guard let self = self else { return }
-        print("🔊 Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)")
+        debugLog("🔊 Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)")
       }
     }
     // Remove "Volume already at" logging - too verbose for production
@@ -116,7 +116,7 @@ extension Sound {
     guard isCustom,
       let customSoundDataID = customSoundDataID
     else {
-      print(
+      debugLog(
         "🔍 Sound: Skipping LUFS analysis for '\(fileName)' - not a custom sound"
       )
       return
@@ -134,13 +134,13 @@ extension Sound {
     }
 
     guard let analysisURL = fileURL else {
-      print(
+      debugLog(
         "🔍 Sound: Skipping LUFS analysis for '\(fileName)' - already has LUFS data or file not found"
       )
       return
     }
 
-    print("🔍 Sound: Starting LUFS analysis for custom sound '\(fileName)'")
+    debugLog("🔍 Sound: Starting LUFS analysis for custom sound '\(fileName)'")
 
     if let lufsResult = await AudioAnalyzer.analyzeLUFS(at: analysisURL) {
       // Capture the values we need before the MainActor run
@@ -153,7 +153,7 @@ extension Sound {
         guard let customSoundDataID = self.customSoundDataID,
           let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID)
         else {
-          print("❌ Sound: Could not refetch custom sound data for '\(soundFileName)'")
+          debugLog("❌ Sound: Could not refetch custom sound data for '\(soundFileName)'")
           return
         }
 
@@ -164,7 +164,7 @@ extension Sound {
         // Save to database
         do {
           try CustomSoundManager.shared.saveContext()
-          print(
+          debugLog(
             "✅ Sound: Updated LUFS data for '\(soundFileName)' - LUFS: \(detectedLUFS), Factor: \(normalizationFactor)"
           )
 
@@ -176,11 +176,11 @@ extension Sound {
           // Trigger volume update to apply new normalization
           self.updateVolume()
         } catch {
-          print("❌ Sound: Failed to save LUFS data for '\(soundFileName)': \(error)")
+          debugLog("❌ Sound: Failed to save LUFS data for '\(soundFileName)': \(error)")
         }
       }
     } else {
-      print("❌ Sound: Failed to analyze LUFS for '\(fileName)'")
+      debugLog("❌ Sound: Failed to analyze LUFS for '\(fileName)'")
     }
   }
 }

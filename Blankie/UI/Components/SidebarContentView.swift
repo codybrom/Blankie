@@ -100,7 +100,7 @@ import SwiftUI
 
             try presetManager.applyPreset(preset)
           } catch {
-            print("Error applying preset: \(error)")
+            debugLog("Error applying preset: \(error)")
           }
         }
       }) {
@@ -172,7 +172,7 @@ import SwiftUI
 
             try presetManager.applyPreset(preset)
           } catch {
-            print("Error applying preset: \(error)")
+            debugLog("Error applying preset: \(error)")
           }
         }
       }) {

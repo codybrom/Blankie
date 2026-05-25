@@ -15,9 +15,11 @@ extension CleanSoundSheetForm {
       HStack(spacing: 12) {
         // Play/Stop button
         Button(action: {
-          print("🎵 SoundSheetAudioProcessing: Preview button tapped, isPreviewing: \(isPreviewing)")
+          debugLog(
+            "🎵 SoundSheetAudioProcessing: Preview button tapped, isPreviewing: \(isPreviewing)")
           togglePreview()
-          print("🎵 SoundSheetAudioProcessing: After togglePreview(), isPreviewing: \(isPreviewing)")
+          debugLog(
+            "🎵 SoundSheetAudioProcessing: After togglePreview(), isPreviewing: \(isPreviewing)")
         }) {
           ZStack {
             Circle()

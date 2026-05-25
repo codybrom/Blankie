@@ -14,9 +14,7 @@ private struct AnimationTrigger: Equatable {
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
-    @StateObject var onboardingManager = OnboardingManager.shared
     @State var showingPresetPicker = false
-    @State var showingOnboarding = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State private var showingThemePicker = false
     @State var showingSoundManagement = false
@@ -56,19 +54,19 @@ private struct AnimationTrigger: Equatable {
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()  // Prevent accidental dismissal
           .onAppear {
-            print("🎵 MixerView: SoundSheet appeared for '\(sound.title)'")
+            debugLog("🎵 MixerView: SoundSheet appeared for '\(sound.title)'")
           }
           .onDisappear {
-            print("🎵 MixerView: SoundSheet disappeared for '\(sound.title)'")
+            debugLog("🎵 MixerView: SoundSheet disappeared for '\(sound.title)'")
             // Trigger refresh when sound edit is closed in case sound properties changed
             soundsUpdateTrigger += 1
           }
       }
       .onChange(of: soundToEdit) { oldValue, newValue in
         if let sound = newValue {
-          print("🎵 MixerView: SoundSheet will be presented for '\(sound.title)'")
+          debugLog("🎵 MixerView: SoundSheet will be presented for '\(sound.title)'")
         } else if let oldSound = oldValue {
-          print("🎵 MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
+          debugLog("🎵 MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
         }
       }
 
@@ -88,7 +86,7 @@ private struct AnimationTrigger: Equatable {
         }
         .onDisappear {
           // Trigger refresh when sound management is closed in case sounds were imported
-          print("🔄 MixerView: SoundManagementView closed, triggering refresh")
+          debugLog("🔄 MixerView: SoundManagementView closed, triggering refresh")
           soundsUpdateTrigger += 1
         }
       }
@@ -106,13 +104,13 @@ private struct AnimationTrigger: Equatable {
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
           .onDisappear {
             // Trigger refresh when preset edit is closed in case preset was modified
-            print("🔄 MixerView: EditPresetSheet closed, triggering refresh")
+            debugLog("🔄 MixerView: EditPresetSheet closed, triggering refresh")
             soundsUpdateTrigger += 1
 
             // CRITICAL: Re-establish media controls after sheet dismissal
             // Animated artwork video preview may have caused iOS to disconnect remote command handlers
             // We restore controls regardless of play state since the gallery may have been browsed
-            print("🔄 MixerView: Restoring media controls after sheet dismissal")
+            debugLog("🔄 MixerView: Restoring media controls after sheet dismissal")
             audioManager.setupMediaControls()
           }
       }
@@ -120,12 +118,12 @@ private struct AnimationTrigger: Equatable {
       // Listen for changes that should trigger view updates
       .onChange(of: audioManager.sounds.count) { oldValue, newValue in
         // Sound imported or removed
-        print("🔄 MixerView: Sound count changed from \(oldValue) to \(newValue)")
+        debugLog("🔄 MixerView: Sound count changed from \(oldValue) to \(newValue)")
         soundsUpdateTrigger += 1
       }
       .onChange(of: presetManager.currentPreset?.id) { oldValue, newValue in
         // Preset switched
-        print(
+        debugLog(
           "🔄 MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")"
         )
         soundsUpdateTrigger += 1
@@ -133,7 +131,7 @@ private struct AnimationTrigger: Equatable {
       .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
         // Preset content changed (sounds added/removed)
         if let oldCount = oldValue, let newCount = newValue, oldCount != newCount {
-          print("🔄 MixerView: Preset sound count changed from \(oldCount) to \(newCount)")
+          debugLog("🔄 MixerView: Preset sound count changed from \(oldCount) to \(newCount)")
           soundsUpdateTrigger += 1
         }
       }
@@ -141,23 +139,14 @@ private struct AnimationTrigger: Equatable {
         NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))
       ) { _ in
         // Custom sound was imported
-        print("🔄 MixerView: Received CustomSoundImported notification")
+        debugLog("🔄 MixerView: Received CustomSoundImported notification")
         soundsUpdateTrigger += 1
       }
       .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) {
         _ in
         // Preset was updated
-        print("🔄 MixerView: Received PresetUpdated notification")
+        debugLog("🔄 MixerView: Received PresetUpdated notification")
         soundsUpdateTrigger += 1
-      }
-      .task {
-        // Check if we should show onboarding after a brief delay
-        try? await Task.sleep(for: .seconds(1))
-        if onboardingManager.checkAndShowOnboarding(
-          hasCustomPresets: presetManager.hasCustomPresets)
-        {
-          showingOnboarding = true
-        }
       }
     }
 
@@ -239,6 +228,7 @@ private struct AnimationTrigger: Equatable {
                       .font(.system(size: 18))
                       .foregroundColor(.secondary)
                   }
+                  .accessibilityLabel("Edit Quick Mix")
                 } else if let currentPreset = presetManager.currentPreset {
                   Button {
                     presetToEdit = currentPreset
@@ -247,6 +237,7 @@ private struct AnimationTrigger: Equatable {
                       .font(.system(size: 18))
                       .foregroundColor(.secondary)
                   }
+                  .accessibilityLabel("Edit Preset")
                 }
               }
             }
@@ -356,7 +347,7 @@ private struct AnimationTrigger: Equatable {
           // Solo mode view (only when no SoundSheet is presented and not in preview mode)
           soloModeView(for: soloSound)
             .onAppear {
-              print(
+              debugLog(
                 "🎵 MixerView: Showing solo mode view for '\(soloSound.title)' (no SoundSheet open, no preview)"
               )
             }
@@ -373,11 +364,11 @@ private struct AnimationTrigger: Equatable {
           }
           .onAppear {
             if audioManager.previewModeSound != nil {
-              print(
+              debugLog(
                 "🎵 MixerView: Solo mode active for '\(soloSound.title)' but preview mode active - maintaining normal layout"
               )
             } else {
-              print(
+              debugLog(
                 "🎵 MixerView: Solo mode active for '\(soloSound.title)' but SoundSheet is open - maintaining normal layout"
               )
             }
@@ -401,11 +392,11 @@ private struct AnimationTrigger: Equatable {
       )
       .onChange(of: audioManager.soloModeSound) { oldValue, newValue in
         if let newSolo = newValue {
-          print(
+          debugLog(
             "🎵 MixerView: Solo mode started for '\(newSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
         } else if let oldSolo = oldValue {
-          print(
+          debugLog(
             "🎵 MixerView: Solo mode ended for '\(oldSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
         }

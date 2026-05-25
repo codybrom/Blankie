@@ -34,7 +34,7 @@ extension AudioManager {
   func saveState() {
     // Don't save state during Quick Mix mode - volume changes are temporary
     guard !isQuickMix else {
-      print("🚗 AudioManager: Skipping state save during Quick Mix mode")
+      debugLog("🚗 AudioManager: Skipping state save during Quick Mix mode")
       return
     }
 
@@ -53,6 +53,6 @@ extension AudioManager {
     defaultSoundOrder.move(fromOffsets: source, toOffset: destination)
     UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
     objectWillChange.send()
-    print("🎵 AudioManager: Updated default sound order - moved from \(source) to \(destination)")
+    debugLog("🎵 AudioManager: Updated default sound order - moved from \(source) to \(destination)")
   }
 }

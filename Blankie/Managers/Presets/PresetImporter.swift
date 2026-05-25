@@ -17,13 +17,13 @@ private enum DuplicateDetectionHelper {
 
       // Check if we've already imported this exact preset (by original ID)
       if let duplicate = existingPresets.first(where: { $0.originalId == preset.id }) {
-        print("🔍 Import: Found previously imported preset with original ID \(preset.id)")
+        debugLog("🔍 Import: Found previously imported preset with original ID \(preset.id)")
         return duplicate
       }
 
       // Check for same name to avoid confusion
       if let sameName = existingPresets.first(where: { $0.name == preset.name }) {
-        print("🔍 Import: Found existing preset with same name '\(preset.name)'")
+        debugLog("🔍 Import: Found existing preset with same name '\(preset.name)'")
         return sameName
       }
 
@@ -46,7 +46,7 @@ private enum DuplicateDetectionHelper {
       while true {
         let candidateName = "\(baseName) (\(counter))"
         if !existingNames.contains(candidateName) {
-          print("🔍 Import: Generated unique name '\(candidateName)'")
+          debugLog("🔍 Import: Generated unique name '\(candidateName)'")
           return candidateName
         }
         counter += 1
@@ -94,7 +94,7 @@ private enum SoundCustomizationImporter {
 
     // Check if metadata file exists
     guard FileManager.default.fileExists(atPath: metadataURL.path) else {
-      print("📦 Import: No sound metadata found in archive")
+      debugLog("📦 Import: No sound metadata found in archive")
       return
     }
 
@@ -105,14 +105,14 @@ private enum SoundCustomizationImporter {
       let customizations = soundsManifest.builtInCustomizations
       await applyCustomizations(customizations)
     } catch {
-      print("⚠️ Import: Failed to import sound customizations: \(error)")
+      debugLog("⚠️ Import: Failed to import sound customizations: \(error)")
       // Don't throw error - customizations are optional
     }
   }
 
   private static func applyCustomizations(_ customizations: [SoundCustomization]) async {
     guard !customizations.isEmpty else {
-      print("📦 Import: No sound customizations to apply")
+      debugLog("📦 Import: No sound customizations to apply")
       return
     }
 
@@ -153,7 +153,7 @@ private enum SoundCustomizationImporter {
         appliedCount += 1
       }
 
-      print(
+      debugLog(
         "📦 Import: Applied \(appliedCount) sound customizations, skipped \(skippedCount) existing")
     }
   }
@@ -211,12 +211,12 @@ class PresetImporter {
       // Clean up temporary files
       if let tempURL = tempExtractedURL {
         try? FileManager.default.removeItem(at: tempURL)
-        print("🗑️ Import: Cleaned up extracted files at \(tempURL.lastPathComponent)")
+        debugLog("🗑️ Import: Cleaned up extracted files at \(tempURL.lastPathComponent)")
       }
       // Clean up the imported file if it's in the tmp directory
       if url.path.contains("/tmp/") {
         try? FileManager.default.removeItem(at: url)
-        print("🗑️ Import: Cleaned up temporary file at \(url.lastPathComponent)")
+        debugLog("🗑️ Import: Cleaned up temporary file at \(url.lastPathComponent)")
       }
     }
 
@@ -232,7 +232,7 @@ class PresetImporter {
 
     // Check for duplicate preset
     if await DuplicateDetectionHelper.checkForDuplicatePreset(preset) != nil {
-      print("⚠️ Import: Found existing preset with ID \(preset.id)")
+      debugLog("⚠️ Import: Found existing preset with ID \(preset.id)")
       // Generate a unique name with number suffix
       preset.name = await DuplicateDetectionHelper.generateUniquePresetName(baseName: preset.name)
     }
@@ -271,7 +271,7 @@ class PresetImporter {
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
       !isDirectory.boolValue
     {
-      print("📦 Import: Detected compressed .blankie file, extracting...")
+      debugLog("📦 Import: Detected compressed .blankie file, extracting...")
 
       // Create a temporary directory for extraction
       let tempDir = FileManager.default.temporaryDirectory
@@ -287,10 +287,10 @@ class PresetImporter {
 
         archiveURL = extractionDir
         tempExtractedURL = extractionDir
-        print("✅ Import: Successfully extracted to \(extractionDir.lastPathComponent)")
+        debugLog("✅ Import: Successfully extracted to \(extractionDir.lastPathComponent)")
 
       } catch {
-        print("❌ Import: Failed to extract archive: \(error)")
+        debugLog("❌ Import: Failed to extract archive: \(error)")
         throw ImportError.invalidArchive
       }
     }
@@ -404,20 +404,20 @@ extension PresetImporter {
     _ existingSound: ExistingSoundInfo,
     _ importedCount: inout Int
   ) async -> UUID? {
-    print("🔍 Import: Sound '\(soundMetadata.title)' already exists with ID \(existingSound.id)")
+    debugLog("🔍 Import: Sound '\(soundMetadata.title)' already exists with ID \(existingSound.id)")
 
     // If we have SHA hashes, verify they match
     if let existingHash = existingSound.sha256Hash,
       let importHash = soundMetadata.sha256Hash,
       existingHash != importHash
     {
-      print(
+      debugLog(
         "⚠️ Import: SHA hash mismatch for '\(soundMetadata.title)' - treating as different file")
       return nil  // Continue with import as it's a different file
     }
 
     // Same file, skip import but record the ID mapping
-    print("✅ Import: SHA hash matches or not available - skipping duplicate import")
+    debugLog("✅ Import: SHA hash matches or not available - skipping duplicate import")
     importedCount += 1
     return existingSound.id
   }
@@ -440,7 +440,7 @@ extension PresetImporter {
     if let uuidFromFilename = UUID(uuidString: fileNameWithoutExt),
       uuidFromFilename != soundMetadata.id
     {
-      print(
+      debugLog(
         "⚠️ PresetImporter: Filename UUID \(uuidFromFilename) differs from metadata ID \(soundMetadata.id), using filename UUID"
       )
       actualId = uuidFromFilename
@@ -479,7 +479,7 @@ extension PresetImporter {
       case .success:
         break
       case .failure(let error):
-        print("❌ PresetImporter: Failed to import sound: \(error)")
+        debugLog("❌ PresetImporter: Failed to import sound: \(error)")
         throw ImportError.soundImportFailed(soundMetadata.title)
       }
 
@@ -578,7 +578,7 @@ extension PresetImporter {
   private func importBundledAnimation(
     bundledId: String, animated: AnimatedArtworkRef, for preset: inout Preset
   ) throws {
-    print("📦 Import: Restoring bundled animation '\(bundledId)' from app bundle")
+    debugLog("📦 Import: Restoring bundled animation '\(bundledId)' from app bundle")
 
     // Capture the preset ID to look it up later
     let presetId = preset.id
@@ -588,7 +588,7 @@ extension PresetImporter {
       do {
         // Request the video file from ODR (downloads if needed)
         let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
-        print("📦 Import: Successfully downloaded ODR resource '\(bundledId)'")
+        debugLog("📦 Import: Successfully downloaded ODR resource '\(bundledId)'")
 
         // Get preview images from bundle (these are always available, not part of ODR)
         guard
@@ -597,7 +597,7 @@ extension PresetImporter {
           let squarePreviewURL = Bundle.main.url(
             forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
         else {
-          print("⚠️ Import: Failed to find preview images for '\(bundledId)'")
+          debugLog("⚠️ Import: Failed to find preview images for '\(bundledId)'")
           return
         }
 
@@ -626,11 +626,11 @@ extension PresetImporter {
           updatedPreset.animatedArtwork = updatedAnimated
           PresetManager.shared.updatePresetAtIndex(index, with: updatedPreset)
           PresetManager.shared.savePresets()
-          print("📦 Import: Successfully restored bundled animation '\(bundledId)'")
+          debugLog("📦 Import: Successfully restored bundled animation '\(bundledId)'")
         }
 
       } catch {
-        print("⚠️ Import: Failed to download ODR resource '\(bundledId)': \(error)")
+        debugLog("⚠️ Import: Failed to download ODR resource '\(bundledId)': \(error)")
         // Don't throw - preset can still be used without animated artwork
       }
     }
@@ -641,7 +641,7 @@ extension PresetImporter {
     updatedAnimated.bundledIdentifier = bundledId
     preset.animatedArtwork = updatedAnimated
 
-    print("📦 Import: Scheduled download for bundled animation '\(bundledId)'")
+    debugLog("📦 Import: Scheduled download for bundled animation '\(bundledId)'")
   }
 
   private func importCustomAnimation(
@@ -740,7 +740,7 @@ extension PresetImporter {
           isSelected: state.isSelected,
           volume: state.volume
         )
-        print("📝 Import: Updated sound state from \(state.fileName) to \(mappedId.uuidString)")
+        debugLog("📝 Import: Updated sound state from \(state.fileName) to \(mappedId.uuidString)")
         return updatedState
       }
 
@@ -809,10 +809,10 @@ extension PresetImporter {
       do {
         try presetManager.applyPreset(preset)
       } catch {
-        print("⚠️ Import: Failed to apply preset: \(error)")
+        debugLog("⚠️ Import: Failed to apply preset: \(error)")
       }
 
-      print("📦 Import: Successfully imported and activated preset '\(preset.name)'")
+      debugLog("📦 Import: Successfully imported and activated preset '\(preset.name)'")
     }
   }
 }

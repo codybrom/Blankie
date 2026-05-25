@@ -27,9 +27,9 @@ struct SharedAppModifiers: ViewModifier {
           Task { @MainActor in
             do {
               let importedPreset = try await PresetImporter.shared.importArchive(from: url)
-              print("📦 Imported preset '\(importedPreset.name)' from \(url.lastPathComponent)")
+              debugLog("📦 Imported preset '\(importedPreset.name)' from \(url.lastPathComponent)")
             } catch {
-              print("❌ Failed to import presets: \(error)")
+              debugLog("❌ Failed to import presets: \(error)")
             }
           }
         } else {

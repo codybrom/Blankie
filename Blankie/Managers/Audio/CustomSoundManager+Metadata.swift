@@ -36,13 +36,15 @@ extension CustomSoundManager {
 
       logExtractedMetadata(metadata)
     } catch {
-      print("⚠️ CustomSoundManager: Failed to extract metadata: \(error)")
+      debugLog("⚠️ CustomSoundManager: Failed to extract metadata: \(error)")
     }
 
     return metadata
   }
 
-  private func processCommonMetadata(_ items: [AVMetadataItem], _ metadata: AudioMetadata) async -> AudioMetadata {
+  private func processCommonMetadata(_ items: [AVMetadataItem], _ metadata: AudioMetadata) async
+    -> AudioMetadata
+  {
     var result = metadata
 
     for item in items {
@@ -60,7 +62,8 @@ extension CustomSoundManager {
         result.comment = extractStringValue(from: value)
       default:
         if let urlString = extractStringValue(from: value),
-           isValidURL(urlString) {
+          isValidURL(urlString)
+        {
           result.url = urlString
         }
       }
@@ -69,7 +72,9 @@ extension CustomSoundManager {
     return result
   }
 
-  private func processFormatMetadata(_ items: [AVMetadataItem], _ metadata: AudioMetadata) async -> AudioMetadata {
+  private func processFormatMetadata(_ items: [AVMetadataItem], _ metadata: AudioMetadata) async
+    -> AudioMetadata
+  {
     var result = metadata
 
     for item in items {
@@ -78,7 +83,8 @@ extension CustomSoundManager {
 
       if isURLIdentifier(idString) && result.url == nil {
         if let urlValue = try? await item.load(.value),
-           let urlString = extractStringValue(from: urlValue) {
+          let urlString = extractStringValue(from: urlValue)
+        {
           result.url = urlString
         }
       } else if isCommentIdentifier(idString) && result.comment == nil {
@@ -105,12 +111,12 @@ extension CustomSoundManager {
   }
 
   private func logExtractedMetadata(_ metadata: AudioMetadata) {
-    print("🎵 CustomSoundManager: Extracted metadata:")
-    print("   Title: \(metadata.title ?? "none")")
-    print("   Artist: \(metadata.artist ?? "none")")
-    print("   Album: \(metadata.album ?? "none")")
-    print("   Comment: \(metadata.comment ?? "none")")
-    print("   URL: \(metadata.url ?? "none")")
+    debugLog("🎵 CustomSoundManager: Extracted metadata:")
+    debugLog("   Title: \(metadata.title ?? "none")")
+    debugLog("   Artist: \(metadata.artist ?? "none")")
+    debugLog("   Album: \(metadata.album ?? "none")")
+    debugLog("   Comment: \(metadata.comment ?? "none")")
+    debugLog("   URL: \(metadata.url ?? "none")")
   }
 
   private func extractStringValue(from value: Any) -> String? {

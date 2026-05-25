@@ -16,7 +16,8 @@ extension Sound {
       try extractFileMetadata(from: url)
       extractAudioMetadata(from: url)
     } catch {
-      print("❌ Sound: Failed to extract metadata for '\(fileName)': \(error.localizedDescription)")
+      debugLog(
+        "❌ Sound: Failed to extract metadata for '\(fileName)': \(error.localizedDescription)")
     }
   }
 
@@ -59,7 +60,7 @@ extension Sound {
 
         logMetadata()
       } catch {
-        print("❌ Sound: Failed to load metadata asynchronously: \(error)")
+        debugLog("❌ Sound: Failed to load metadata asynchronously: \(error)")
       }
     }
   }
@@ -76,7 +77,7 @@ extension Sound {
   }
 
   private func logMetadata() {
-    print(
+    debugLog(
       "📊 Sound: Metadata for '\(fileName)' - Channels: \(channelCount ?? 0), Duration: \(duration ?? 0)s, Size: \(fileSize ?? 0) bytes, Format: \(fileFormat ?? "unknown")"
     )
   }

@@ -53,9 +53,9 @@ struct AppGroupConfiguration {
 
     do {
       try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true)
-      print("📁 AppGroup: Created shared documents directory")
+      debugLog("📁 AppGroup: Created shared documents directory")
     } catch {
-      print("❌ AppGroup: Failed to create documents directory: \(error)")
+      debugLog("❌ AppGroup: Failed to create documents directory: \(error)")
     }
   }
 }

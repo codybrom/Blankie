@@ -27,7 +27,7 @@ import SwiftUI
         if let image = UIImage(named: altName) {
           return image
         }
-        print("⚠️ AboutView: Unable to load alternate icon image '\(altName)'; falling back")
+        debugLog("⚠️ AboutView: Unable to load alternate icon image '\(altName)'; falling back")
       }
 
       // Try primary icon display asset
@@ -48,7 +48,7 @@ import SwiftUI
   /// Represents an available app icon option (primary or alternate)
   private struct AppIconOption: Identifiable {
     let id = UUID()
-    let name: String? // nil for primary icon
+    let name: String?  // nil for primary icon
     let displayName: String
     let image: UIImage?
   }
@@ -196,13 +196,13 @@ extension AboutView {
     VStack(spacing: 8) {
       Text(verbatim: "Blankie")
         .font(.system(size: 24, weight: .medium, design: .rounded))
-      #if os(iOS)
-        .onTapGesture {
-          appIconOptions = getAvailableAppIcons()
-          showingIconChooser = appIconOptions.count > 1
-        }
-        .accessibilityAddTraits(.isButton)
-      #endif
+        #if os(iOS)
+          .onTapGesture {
+            appIconOptions = getAvailableAppIcons()
+            showingIconChooser = appIconOptions.count > 1
+          }
+          .accessibilityAddTraits(.isButton)
+        #endif
 
       Text(LocalizedStringKey("Version \(appVersion) (\(buildNumber))"), comment: "Version string")
         .font(.system(size: 12))
@@ -247,7 +247,10 @@ extension AboutView {
         title: "Sound Credits",
         comment: "Expandable section title: Sound Credits",
         isExpanded: $isSoundCreditsExpanded,
-        onExpand: { isLicenseExpanded = false; isAcknowledgementsExpanded = false }
+        onExpand: {
+          isLicenseExpanded = false
+          isAcknowledgementsExpanded = false
+        }
       ) {
         VStack(alignment: .leading, spacing: 4) {
           ForEach(creditsManager.credits, id: \.name) { credit in
@@ -260,7 +263,10 @@ extension AboutView {
         title: "Software License",
         comment: "Expandable section title: Software License",
         isExpanded: $isLicenseExpanded,
-        onExpand: { isSoundCreditsExpanded = false; isAcknowledgementsExpanded = false }
+        onExpand: {
+          isSoundCreditsExpanded = false
+          isAcknowledgementsExpanded = false
+        }
       ) {
         SoftwareLicenseSection()
       }
@@ -269,7 +275,10 @@ extension AboutView {
         title: "Acknowledgements",
         comment: "Expandable section title: Acknowledgements",
         isExpanded: $isAcknowledgementsExpanded,
-        onExpand: { isSoundCreditsExpanded = false; isLicenseExpanded = false }
+        onExpand: {
+          isSoundCreditsExpanded = false
+          isLicenseExpanded = false
+        }
       ) {
         AcknowledgementsSection()
       }
@@ -337,21 +346,27 @@ extension AboutView {
       var options: [AppIconOption] = []
 
       let primaryImage = UIImage(named: "BlankieAppIconDisplay") ?? UIImage(systemName: "app.fill")
-      options.append(AppIconOption(
-        name: nil,
-        displayName: NSLocalizedString("Default", comment: "Default app icon option"),
-        image: primaryImage
-      ))
+      options.append(
+        AppIconOption(
+          name: nil,
+          displayName: NSLocalizedString("Default", comment: "Default app icon option"),
+          image: primaryImage
+        ))
 
       let knownAlternates: [(key: String, displayName: String)] = [
-        ("BlankieAltIcon", NSLocalizedString("Alternative", comment: "Alternative app icon option")),
+        (
+          "BlankieAltIcon", NSLocalizedString("Alternative", comment: "Alternative app icon option")
+        ),
         ("BlankieClassicIcon", NSLocalizedString("Classic", comment: "Classic app icon option")),
         ("BetaIcon", NSLocalizedString("Beta", comment: "Beta app icon option")),
       ]
 
       for alternate in knownAlternates {
-        let image = UIImage(named: "\(alternate.key)Display") ?? UIImage(named: alternate.key) ?? UIImage(systemName: "app.fill")
-        options.append(AppIconOption(name: alternate.key, displayName: alternate.displayName, image: image))
+        let image =
+          UIImage(named: "\(alternate.key)Display") ?? UIImage(named: alternate.key)
+          ?? UIImage(systemName: "app.fill")
+        options.append(
+          AppIconOption(name: alternate.key, displayName: alternate.displayName, image: image))
       }
 
       return options
@@ -361,9 +376,9 @@ extension AboutView {
       guard UIApplication.shared.supportsAlternateIcons else { return }
       UIApplication.shared.setAlternateIconName(name) { error in
         if let error = error {
-          print("❌ AboutView: Failed to set app icon: \(error)")
+          debugLog("❌ AboutView: Failed to set app icon: \(error)")
         } else {
-          print("✅ AboutView: App icon changed to \(name ?? "Default")")
+          debugLog("✅ AboutView: App icon changed to \(name ?? "Default")")
           DispatchQueue.main.async {
             currentIconName = name
           }
@@ -378,7 +393,7 @@ extension AboutView {
 extension AboutView {
   private func loadCredits() {
     guard let url = Bundle.main.url(forResource: "credits", withExtension: "json") else {
-      print("Unable to find credits.json in bundle")
+      debugLog("Unable to find credits.json in bundle")
       return
     }
 
@@ -389,7 +404,7 @@ extension AboutView {
       contributors = credits.contributors
       translators = credits.translators
     } catch {
-      print("Error loading credits: \(error)")
+      debugLog("Error loading credits: \(error)")
     }
   }
 }

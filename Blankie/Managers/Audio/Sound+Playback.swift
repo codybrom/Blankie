@@ -30,32 +30,32 @@ extension Sound {
 
     let success = validPlayer.play()
     if !success {
-      print("❌ Sound: Failed to play '\(fileName)'")
+      debugLog("❌ Sound: Failed to play '\(fileName)'")
       let error = NSError(
         domain: "SoundPlayback", code: -1,
         userInfo: [NSLocalizedDescriptionKey: "Failed to play sound"])
       ErrorReporter.shared.report(AudioError.playbackFailed(error))
     } else {
-      print("🔊 Sound: Playing '\(fileName)' from position: \(validPlayer.currentTime)s")
+      debugLog("🔊 Sound: Playing '\(fileName)' from position: \(validPlayer.currentTime)s")
     }
   }
 
   private func preparePlayer() -> AVAudioPlayer? {
     guard let player = self.player else {
-      print("❌ Sound: No player available for '\(fileName)'")
+      debugLog("❌ Sound: No player available for '\(fileName)'")
       return nil
     }
 
     // Additional validation
     if !player.prepareToPlay() {
-      print("❌ Sound: Player not ready for '\(fileName)' - attempting to reload")
+      debugLog("❌ Sound: Player not ready for '\(fileName)' - attempting to reload")
       loadSound()
       guard let reloadedPlayer = self.player else {
-        print("❌ Sound: Failed to reload player for '\(fileName)'")
+        debugLog("❌ Sound: Failed to reload player for '\(fileName)'")
         return nil
       }
       if !reloadedPlayer.prepareToPlay() {
-        print("❌ Sound: Player still not ready after reload for '\(fileName)'")
+        debugLog("❌ Sound: Player still not ready after reload for '\(fileName)'")
         return nil
       }
       return reloadedPlayer
@@ -87,46 +87,46 @@ extension Sound {
         let maxPosition = player.duration * 0.75
         let randomPosition = Double.random(in: 0..<maxPosition)
         player.currentTime = randomPosition
-        print(
+        debugLog(
           "🎲 Sound: Reset '\(fileName)' to random position: \(randomPosition)s of \(player.duration)s (max 75%)"
         )
       } else {
-        print(
+        debugLog(
           "⚠️ Sound: Cannot randomize start position for '\(fileName)' - invalid duration: \(player.duration)"
         )
       }
     } else {
       // Reset to beginning if randomization is disabled
       player.currentTime = 0
-      print("🎵 Sound: Reset '\(fileName)' to beginning")
+      debugLog("🎵 Sound: Reset '\(fileName)' to beginning")
     }
   }
 
   func pause(immediate: Bool = false) {
     guard let currentPlayer = player else {
-      print("🔊 Sound: No player to pause for '\(fileName)'")
+      debugLog("🔊 Sound: No player to pause for '\(fileName)'")
       return
     }
 
     if immediate {
       currentPlayer.stop()
       currentPlayer.currentTime = 0  // Reset to beginning for next play
-      print("🔊 Sound: Immediately stopped '\(fileName)'")
+      debugLog("🔊 Sound: Immediately stopped '\(fileName)'")
     } else {
       currentPlayer.pause()
-      print("🔊 Sound: Paused '\(fileName)'")
+      debugLog("🔊 Sound: Paused '\(fileName)'")
     }
   }
 
   func stop() {
     guard let currentPlayer = player else {
-      print("🔊 Sound: No player to stop for '\(fileName)'")
+      debugLog("🔊 Sound: No player to stop for '\(fileName)'")
       return
     }
 
     currentPlayer.stop()
     currentPlayer.currentTime = 0  // Reset to beginning for next play
-    print("🔊 Sound: Stopped '\(fileName)'")
+    debugLog("🔊 Sound: Stopped '\(fileName)'")
   }
 
   func fadeIn(duration: TimeInterval = 0.5, completion: (() -> Void)? = nil) {
@@ -140,7 +140,7 @@ extension Sound {
       return
     }
 
-    print("🔊 Sound: Fading in '\(fileName)' over \(duration)s")
+    debugLog("🔊 Sound: Fading in '\(fileName)' over \(duration)s")
 
     // Store original volume level
     let originalVolume = player.volume
@@ -190,7 +190,7 @@ extension Sound {
       return
     }
 
-    print("🔊 Sound: Fading out '\(fileName)' over \(duration)s")
+    debugLog("🔊 Sound: Fading out '\(fileName)' over \(duration)s")
 
     fadeTimer?.invalidate()
     fadeStartVolume = player.volume
@@ -228,7 +228,7 @@ extension Sound {
     guard !isResetting else { return }
     isResetting = true
 
-    print("🔄 Sound: Resetting '\(fileName)'")
+    debugLog("🔄 Sound: Resetting '\(fileName)'")
 
     // Clean up timers
     fadeTimer?.invalidate()
@@ -251,7 +251,7 @@ extension Sound {
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
 
-    print("✅ Sound: Reset complete for '\(fileName)'")
+    debugLog("✅ Sound: Reset complete for '\(fileName)'")
     isResetting = false
   }
 

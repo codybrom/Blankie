@@ -21,6 +21,7 @@ struct TimerButton: View {
           timerManager.isTimerActive
             ? (GlobalSettings.shared.customAccentColor ?? .accentColor) : .primary)
     }
+    .accessibilityLabel("Timer")
     .buttonStyle(.borderless)
     #if os(macOS)
       .popover(isPresented: $showingTimerView, arrowEdge: .bottom) {
@@ -51,6 +52,7 @@ struct CompactTimerButton: View {
           timerManager.isTimerActive
             ? (GlobalSettings.shared.customAccentColor ?? .accentColor) : .primary)
     }
+    .accessibilityLabel("Timer")
     .buttonStyle(.borderless)
     #if os(macOS)
       .popover(isPresented: $showingTimerView, arrowEdge: .top) {

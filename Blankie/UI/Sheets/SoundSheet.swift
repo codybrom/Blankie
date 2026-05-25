@@ -180,23 +180,23 @@ struct SoundSheet: View {
 
   private func handleOnAppear() {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
-    print("🎵 SoundSheet: handleOnAppear called for '\(soundName)'")
+    debugLog("🎵 SoundSheet: handleOnAppear called for '\(soundName)'")
   }
 
   private func handleOnDisappear() {
     // Mark that we're disappearing to prevent re-entrance
     guard !isDisappearing else {
-      print("🎵 SoundSheet: handleOnDisappear called but already disappearing")
+      debugLog("🎵 SoundSheet: handleOnDisappear called but already disappearing")
       return
     }
 
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
-    print(
+    debugLog(
       "🎵 SoundSheet: handleOnDisappear called for '\(soundName)', isPreviewing: \(isPreviewing)")
     isDisappearing = true
 
     if isPreviewing {
-      print("🎵 SoundSheet: Stopping preview in onDisappear")
+      debugLog("🎵 SoundSheet: Stopping preview in onDisappear")
       stopPreview()
     }
   }

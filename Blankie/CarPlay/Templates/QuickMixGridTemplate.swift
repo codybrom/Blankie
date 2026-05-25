@@ -28,7 +28,7 @@
     static func updateTemplate(_ template: CPGridTemplate) {
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
-        print("🚗 QuickMixGridTemplate: No sounds loaded yet")
+        debugLog("🚗 QuickMixGridTemplate: No sounds loaded yet")
         return
       }
 

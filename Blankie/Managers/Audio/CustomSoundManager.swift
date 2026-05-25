@@ -34,9 +34,9 @@ class CustomSoundManager {
     if !FileManager.default.fileExists(atPath: directoryURL.path) {
       do {
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
-        print("📂 CustomSoundManager: Created custom sounds directory at \(directoryURL.path)")
+        debugLog("📂 CustomSoundManager: Created custom sounds directory at \(directoryURL.path)")
       } catch {
-        print("❌ CustomSoundManager: Failed to create custom sounds directory: \(error)")
+        debugLog("❌ CustomSoundManager: Failed to create custom sounds directory: \(error)")
         ErrorReporter.shared.report(error)
       }
     }
@@ -44,11 +44,11 @@ class CustomSoundManager {
     // Remove file protection for accessibility
     do {
       let attributes: [FileAttributeKey: Any] = [
-        .protectionKey: FileProtectionType.none,
+        .protectionKey: FileProtectionType.none
       ]
       try FileManager.default.setAttributes(attributes, ofItemAtPath: directoryURL.path)
     } catch {
-      print("⚠️ CustomSoundManager: Could not set file protection: \(error)")
+      debugLog("⚠️ CustomSoundManager: Could not set file protection: \(error)")
     }
   }
 
@@ -74,13 +74,13 @@ class CustomSoundManager {
       return .failure(CustomSoundError.unsupportedFormat)
     }
 
-    print("🔐 CustomSoundManager: Starting security-scoped resource access for import")
+    debugLog("🔐 CustomSoundManager: Starting security-scoped resource access for import")
     // Start security-scoped resource access at the beginning of import
     let didStartAccess = sourceURL.startAccessingSecurityScopedResource()
     defer {
       if didStartAccess {
         sourceURL.stopAccessingSecurityScopedResource()
-        print("🔓 CustomSoundManager: Released security-scoped resource access for import")
+        debugLog("🔓 CustomSoundManager: Released security-scoped resource access for import")
       }
     }
 
@@ -100,14 +100,14 @@ class CustomSoundManager {
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
     } catch {
-      print("❌ CustomSoundManager: Failed to import sound: \(error)")
+      debugLog("❌ CustomSoundManager: Failed to import sound: \(error)")
       return .failure(.invalidAudioFile(error))
     }
   }
 
   private func validateImportableAudioFile(at sourceURL: URL) async throws {
     let validationResult = try await validateAudioFile(at: sourceURL)
-    if case let .failure(error) = validationResult {
+    if case .failure(let error) = validationResult {
       throw (error as? CustomSoundError) ?? CustomSoundError.invalidAudioFile(error)
     }
   }
@@ -132,12 +132,12 @@ class CustomSoundManager {
     let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: importData.copiedURL)
     let lufsResult =
       analysis.lufs != nil
-        ? (lufs: analysis.lufs!, normalizationFactor: analysis.normalizationFactor) : nil
+      ? (lufs: analysis.lufs!, normalizationFactor: analysis.normalizationFactor) : nil
 
     // Create and store playback profile for efficient runtime use
     if let profile = PlaybackProfile.from(analysis: analysis, filename: importData.uniqueFileName) {
       PlaybackProfileStore.shared.store(profile)
-      print("💾 CustomSoundManager: Stored playback profile for \(importData.uniqueFileName)")
+      debugLog("💾 CustomSoundManager: Stored playback profile for \(importData.uniqueFileName)")
     }
 
     // Extract ID3 metadata
@@ -181,19 +181,19 @@ class CustomSoundManager {
     throws -> URL?
   {
     guard let directoryURL = getCustomSoundsDirectoryURL() else {
-      print("❌ CustomSoundManager: Could not get custom sounds directory URL")
+      debugLog("❌ CustomSoundManager: Could not get custom sounds directory URL")
       return nil
     }
 
-    print("🔍 CustomSoundManager: Copying from \(source.path) to CustomSounds directory")
+    debugLog("🔍 CustomSoundManager: Copying from \(source.path) to CustomSounds directory")
 
     let destinationURL = directoryURL.appendingPathComponent("\(filename).\(ext)")
-    print("🎯 CustomSoundManager: Target destination: \(destinationURL.path)")
+    debugLog("🎯 CustomSoundManager: Target destination: \(destinationURL.path)")
 
     do {
       // Check if source file exists and is accessible
       guard FileManager.default.fileExists(atPath: source.path) else {
-        print("❌ CustomSoundManager: Source file does not exist at \(source.path)")
+        debugLog("❌ CustomSoundManager: Source file does not exist at \(source.path)")
         throw CustomSoundError.invalidAudioFile(
           NSError(
             domain: "CustomSoundManager", code: -1,
@@ -203,25 +203,25 @@ class CustomSoundManager {
       }
 
       // Read the source file data instead of directly copying the file
-      print("📖 CustomSoundManager: Reading source file data...")
+      debugLog("📖 CustomSoundManager: Reading source file data...")
       let data = try Data(contentsOf: source)
-      print("💾 CustomSoundManager: Read \(data.count) bytes from source file")
+      debugLog("💾 CustomSoundManager: Read \(data.count) bytes from source file")
 
       // Write to destination
       try data.write(to: destinationURL)
-      print("✅ CustomSoundManager: Successfully copied file to \(destinationURL.path)")
+      debugLog("✅ CustomSoundManager: Successfully copied file to \(destinationURL.path)")
 
       // Verify the copied file exists
       if FileManager.default.fileExists(atPath: destinationURL.path) {
-        print("✅ CustomSoundManager: Verified copied file exists at destination")
+        debugLog("✅ CustomSoundManager: Verified copied file exists at destination")
       } else {
-        print(
+        debugLog(
           "❌ CustomSoundManager: File copy appeared successful but file not found at destination")
       }
 
       return destinationURL
     } catch {
-      print(
+      debugLog(
         "❌ CustomSoundManager: Failed to copy file from \(source.path) to \(destinationURL.path): \(error.localizedDescription)"
       )
       throw error
@@ -235,7 +235,7 @@ class CustomSoundManager {
   @MainActor
   func getAllCustomSounds() -> [CustomSoundData] {
     guard let modelContext = modelContext else {
-      print("⚠️ CustomSoundManager: No model context available")
+      debugLog("⚠️ CustomSoundManager: No model context available")
       return []
     }
 
@@ -245,11 +245,12 @@ class CustomSoundManager {
     do {
       let descriptor = FetchDescriptor<CustomSoundData>(sortBy: [SortDescriptor(\.dateAdded)])
       let results = try modelContext.fetch(descriptor)
-      print("✅ CustomSoundManager: Successfully fetched \(results.count) custom sounds")
+      debugLog("✅ CustomSoundManager: Successfully fetched \(results.count) custom sounds")
       return results
     } catch {
-      print("❌ CustomSoundManager: SwiftData fetch failed: \(error)")
-      print("❌ CustomSoundManager: This indicates SwiftData container issues or actor violations")
+      debugLog("❌ CustomSoundManager: SwiftData fetch failed: \(error)")
+      debugLog(
+        "❌ CustomSoundManager: This indicates SwiftData container issues or actor violations")
       // Return empty array to allow app to continue functioning
       return []
     }
@@ -272,7 +273,7 @@ class CustomSoundManager {
       let results = try modelContext.fetch(descriptor)
       return results.first
     } catch {
-      print("❌ CustomSoundManager: Failed to fetch custom sound by ID: \(error)")
+      debugLog("❌ CustomSoundManager: Failed to fetch custom sound by ID: \(error)")
       return nil
     }
   }
@@ -303,7 +304,7 @@ class CustomSoundManager {
 
       return .success(())
     } catch {
-      print("❌ CustomSoundManager: Failed to delete custom sound: \(error)")
+      debugLog("❌ CustomSoundManager: Failed to delete custom sound: \(error)")
       return .failure(error)
     }
   }
@@ -320,10 +321,10 @@ class CustomSoundManager {
   /// Backfill durations for existing custom sounds that don't have duration set
   @MainActor
   func backfillDurations() async {
-    print("🔄 CustomSoundManager: Starting duration backfill for existing custom sounds")
+    debugLog("🔄 CustomSoundManager: Starting duration backfill for existing custom sounds")
 
     guard let modelContext = modelContext else {
-      print("❌ CustomSoundManager: No model context available for backfill")
+      debugLog("❌ CustomSoundManager: No model context available for backfill")
       return
     }
 
@@ -335,18 +336,20 @@ class CustomSoundManager {
       let soundsNeedingDuration = try modelContext.fetch(descriptor)
 
       guard !soundsNeedingDuration.isEmpty else {
-        print("✅ CustomSoundManager: No custom sounds need duration backfill")
+        debugLog("✅ CustomSoundManager: No custom sounds need duration backfill")
         return
       }
 
-      print("🔍 CustomSoundManager: Found \(soundsNeedingDuration.count) custom sounds needing duration")
+      debugLog(
+        "🔍 CustomSoundManager: Found \(soundsNeedingDuration.count) custom sounds needing duration")
 
       var successCount = 0
       var failureCount = 0
 
       for customSound in soundsNeedingDuration {
         guard let fileURL = getURLForCustomSound(customSound) else {
-          print("⚠️ CustomSoundManager: Could not get URL for custom sound \(customSound.fileName)")
+          debugLog(
+            "⚠️ CustomSoundManager: Could not get URL for custom sound \(customSound.fileName)")
           failureCount += 1
           continue
         }
@@ -355,9 +358,11 @@ class CustomSoundManager {
         if let duration = AudioAnalyzer.getDuration(at: fileURL) {
           customSound.duration = duration
           successCount += 1
-          print("✅ CustomSoundManager: Set duration \(String(format: "%.1f", duration))s for \(customSound.title)")
+          debugLog(
+            "✅ CustomSoundManager: Set duration \(String(format: "%.1f", duration))s for \(customSound.title)"
+          )
         } else {
-          print("⚠️ CustomSoundManager: Failed to calculate duration for \(customSound.fileName)")
+          debugLog("⚠️ CustomSoundManager: Failed to calculate duration for \(customSound.fileName)")
           failureCount += 1
         }
       }
@@ -365,15 +370,15 @@ class CustomSoundManager {
       // Save changes
       if successCount > 0 {
         try modelContext.save()
-        print("💾 CustomSoundManager: Backfilled \(successCount) durations")
+        debugLog("💾 CustomSoundManager: Backfilled \(successCount) durations")
       }
 
       if failureCount > 0 {
-        print("⚠️ CustomSoundManager: Failed to backfill \(failureCount) durations")
+        debugLog("⚠️ CustomSoundManager: Failed to backfill \(failureCount) durations")
       }
 
     } catch {
-      print("❌ CustomSoundManager: Duration backfill failed: \(error)")
+      debugLog("❌ CustomSoundManager: Duration backfill failed: \(error)")
     }
   }
 
@@ -408,7 +413,7 @@ enum CustomSoundError: Error, LocalizedError, Sendable {
       return "Audio file is too large. Maximum size is 50MB."
     case .durationTooLong:
       return "Audio file is too long. Maximum duration is 120 minutes."
-    case let .invalidAudioFile(error):
+    case .invalidAudioFile(let error):
       return "Invalid audio file: \(error.localizedDescription)"
     case .databaseError:
       return "Failed to access the database."

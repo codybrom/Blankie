@@ -34,19 +34,20 @@ extension AudioManager {
   func updateHasSelectedSounds() {
     let newValue = sounds.contains { $0.isSelected }
     if hasSelectedSounds != newValue {
-      print("🎵 AudioManager: hasSelectedSounds changed from \(hasSelectedSounds) to \(newValue)")
+      debugLog("🎵 AudioManager: hasSelectedSounds changed from \(hasSelectedSounds) to \(newValue)")
       hasSelectedSounds = newValue
 
       // Auto-start playback when sounds are selected and nothing is currently playing
       // Only auto-start if autoplay is enabled and we're not during initialization
       if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch
       {
-        print("🎵 AudioManager: Auto-starting playback for selected sounds (autoplay enabled)")
+        debugLog("🎵 AudioManager: Auto-starting playback for selected sounds (autoplay enabled)")
         Task { @MainActor in
           setGlobalPlaybackState(true)
         }
       } else if newValue && !isGloballyPlaying && !sounds.isEmpty {
-        print("🎵 AudioManager: Selected sounds detected but autoplay disabled - waiting for user")
+        debugLog(
+          "🎵 AudioManager: Selected sounds detected but autoplay disabled - waiting for user")
       }
     }
   }

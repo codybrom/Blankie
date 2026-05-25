@@ -19,7 +19,7 @@ enum AppDataMigrator {
       return
     }
 
-    print("🔄 AppDataMigrator: Starting unified app data migration...")
+    debugLog("🔄 AppDataMigrator: Starting unified app data migration...")
 
     // Step 1: Migrate to app group container first
     migrateToAppGroup()
@@ -32,13 +32,13 @@ enum AppDataMigrator {
 
     // Mark all migrations as completed
     UserDefaults.shared.set(true, forKey: migrationCompletedKey)
-    print("✅ AppDataMigrator: All migrations completed successfully")
+    debugLog("✅ AppDataMigrator: All migrations completed successfully")
   }
 
   /// Migrate UserDefaults to app group (from UserDefaults+AppGroup.swift)
   private static func migrateToAppGroup() {
     guard let groupDefaults = AppGroupConfiguration.sharedDefaults else {
-      print("❌ AppDataMigrator: Unable to access app group defaults")
+      debugLog("❌ AppDataMigrator: Unable to access app group defaults")
       return
     }
 
@@ -75,7 +75,7 @@ enum AppDataMigrator {
     var migratedCount = 0
     for key in keysToMigrate {
       if let value = standardDefaults.object(forKey: key),
-         groupDefaults.object(forKey: key) == nil
+        groupDefaults.object(forKey: key) == nil
       {
         groupDefaults.set(value, forKey: key)
         migratedCount += 1
@@ -84,26 +84,26 @@ enum AppDataMigrator {
 
     if migratedCount > 0 {
       groupDefaults.synchronize()
-      print("✅ AppDataMigrator: Migrated \(migratedCount) values to app group")
+      debugLog("✅ AppDataMigrator: Migrated \(migratedCount) values to app group")
     }
   }
 
   /// Migrate SwiftData to app group (from SwiftDataMigration.swift)
   private static func migrateSwiftDataToAppGroup() {
     guard let appGroupURL = AppGroupConfiguration.dataStoreURL else {
-      print("❌ AppDataMigrator: No app group URL available")
+      debugLog("❌ AppDataMigrator: No app group URL available")
       return
     }
 
     let fileManager = FileManager.default
     let appGroupStoreExists = fileManager.fileExists(atPath: appGroupURL.path)
 
-    print("📦 AppDataMigrator: Checking SwiftData migration status...")
-    print("  - App group store exists: \(appGroupStoreExists) at \(appGroupURL.path)")
+    debugLog("📦 AppDataMigrator: Checking SwiftData migration status...")
+    debugLog("  - App group store exists: \(appGroupStoreExists) at \(appGroupURL.path)")
 
     // If app group store already exists, no migration needed
     if appGroupStoreExists {
-      print("📦 AppDataMigrator: App group store already exists, no migration needed")
+      debugLog("📦 AppDataMigrator: App group store already exists, no migration needed")
       return
     }
 
@@ -112,7 +112,7 @@ enum AppDataMigrator {
     var migrated = false
 
     for storeURL in possibleStoreLocations where fileManager.fileExists(atPath: storeURL.path) {
-      print("📦 AppDataMigrator: Found existing store at \(storeURL.path)")
+      debugLog("📦 AppDataMigrator: Found existing store at \(storeURL.path)")
 
       do {
         // Create app group directory if needed
@@ -128,20 +128,20 @@ enum AppDataMigrator {
 
           if fileManager.fileExists(atPath: sourceFile.path) {
             try fileManager.copyItem(at: sourceFile, to: destFile)
-            print("  ✅ Copied: \(sourceFile.lastPathComponent)")
+            debugLog("  ✅ Copied: \(sourceFile.lastPathComponent)")
           }
         }
 
         migrated = true
-        print("📦 AppDataMigrator: SwiftData migration completed successfully")
+        debugLog("📦 AppDataMigrator: SwiftData migration completed successfully")
         break
       } catch {
-        print("❌ AppDataMigrator: Failed to migrate store: \(error)")
+        debugLog("❌ AppDataMigrator: Failed to migrate store: \(error)")
       }
     }
 
     if !migrated {
-      print("📦 AppDataMigrator: No existing SwiftData store found to migrate")
+      debugLog("📦 AppDataMigrator: No existing SwiftData store found to migrate")
     }
 
     // Also migrate custom sound files
@@ -173,7 +173,7 @@ enum AppDataMigrator {
   /// Migrate custom sound files from documents directory to app group
   private static func migrateCustomSoundFiles() {
     guard let appGroupDocsURL = AppGroupConfiguration.documentsURL else {
-      print("❌ AppDataMigrator: No app group documents URL available")
+      debugLog("❌ AppDataMigrator: No app group documents URL available")
       return
     }
 
@@ -188,7 +188,7 @@ enum AppDataMigrator {
 
     // Check if old directory exists
     guard fileManager.fileExists(atPath: oldCustomSoundsURL.path) else {
-      print("📦 AppDataMigrator: No custom sounds directory to migrate")
+      debugLog("📦 AppDataMigrator: No custom sounds directory to migrate")
       return
     }
 
@@ -196,7 +196,7 @@ enum AppDataMigrator {
     do {
       try fileManager.createDirectory(at: newCustomSoundsURL, withIntermediateDirectories: true)
     } catch {
-      print("❌ AppDataMigrator: Failed to create custom sounds directory: \(error)")
+      debugLog("❌ AppDataMigrator: Failed to create custom sounds directory: \(error)")
       return
     }
 
@@ -212,13 +212,13 @@ enum AppDataMigrator {
         // Only migrate if destination doesn't exist
         if !fileManager.fileExists(atPath: destination.path) {
           try fileManager.copyItem(at: file, to: destination)
-          print("📦 AppDataMigrator: Migrated custom sound: \(file.lastPathComponent)")
+          debugLog("📦 AppDataMigrator: Migrated custom sound: \(file.lastPathComponent)")
         }
       }
 
-      print("📦 AppDataMigrator: Custom sound migration completed")
+      debugLog("📦 AppDataMigrator: Custom sound migration completed")
     } catch {
-      print("❌ AppDataMigrator: Failed to migrate custom sounds: \(error)")
+      debugLog("❌ AppDataMigrator: Failed to migrate custom sounds: \(error)")
     }
   }
 
@@ -233,7 +233,7 @@ enum AppDataMigrator {
     // Migrate individual sound settings
     migratedCount += migrateSoundSettings()
 
-    print(
+    debugLog(
       "✅ AppDataMigrator: UserDefaults migration completed - migrated \(migratedCount) settings")
   }
 
@@ -286,9 +286,9 @@ enum AppDataMigrator {
         if UserDefaults.shared.object(forKey: key) == nil {
           UserDefaults.shared.set(value, forKey: key)
           migratedCount += 1
-          print("🔄 AppDataMigrator: Migrated '\(key)'")
+          debugLog("🔄 AppDataMigrator: Migrated '\(key)'")
         } else {
-          print("⏭️ AppDataMigrator: Skipped '\(key)' - already exists in shared")
+          debugLog("⏭️ AppDataMigrator: Skipped '\(key)' - already exists in shared")
         }
         UserDefaults.standard.removeObject(forKey: key)
       }

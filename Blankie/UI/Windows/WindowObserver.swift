@@ -68,7 +68,7 @@
         "width": Double(frame.size.width),
         "height": Double(frame.size.height),
       ]
-      print("🪟 Saving final window frame: \(frameDict)")
+      debugLog("🪟 Saving final window frame: \(frameDict)")
       UserDefaults.standard.set(frameDict, forKey: lastWindowFrameKey)
     }
 
@@ -80,29 +80,29 @@
           width: (frameDict["width"] as? Double ?? WindowDefaults.defaultWidth),
           height: (frameDict["height"] as? Double ?? WindowDefaults.defaultHeight)
         )
-        print("🪟 Retrieved saved frame: \(frame)")
+        debugLog("🪟 Retrieved saved frame: \(frame)")
         return frame
       }
-      print("🪟 Using default frame")
+      debugLog("🪟 Using default frame")
       return WindowDefaults.defaultFrame
     }
 
     @objc private func windowDidBecomeKey(_ notification: Notification) {
-      print("🪟 Window became key")
+      debugLog("🪟 Window became key")
       DispatchQueue.main.async {
         self.hasVisibleWindow = true
       }
     }
 
     @objc private func windowDidClose(_ notification: Notification) {
-      print("🪟 Window closing")
+      debugLog("🪟 Window closing")
       DispatchQueue.main.async {
         self.checkVisibleWindows()
       }
     }
 
     private func checkVisibleWindows() {
-      print("🪟 Checking visible windows")
+      debugLog("🪟 Checking visible windows")
       hasVisibleWindow = NSApp.windows.contains { window in
         window.isVisible && !window.isMiniaturized
       }

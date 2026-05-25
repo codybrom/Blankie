@@ -23,6 +23,6 @@ extension GlobalSettings {
   private func saveVolume(_ newVolume: Double) {
     let validVolume = validateVolume(newVolume)
     UserDefaults.shared.set(validVolume, forKey: UserDefaultsKeys.volume)
-    print("⚙️ GlobalSettings: Saved volume: \(validVolume)")
+    debugLog("⚙️ GlobalSettings: Saved volume: \(validVolume)")
   }
 }

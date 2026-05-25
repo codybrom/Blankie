@@ -44,7 +44,7 @@ class TimerManager: ObservableObject {
       self?.updateTimer()
     }
 
-    print("⏱️ TimerManager: Started timer for \(duration) seconds")
+    debugLog("⏱️ TimerManager: Started timer for \(duration) seconds")
   }
 
   func stopTimer() {
@@ -55,7 +55,7 @@ class TimerManager: ObservableObject {
     selectedDuration = 0
     startTime = nil
 
-    print("⏱️ TimerManager: Timer stopped")
+    debugLog("⏱️ TimerManager: Timer stopped")
   }
 
   private func updateTimer() {
@@ -70,7 +70,7 @@ class TimerManager: ObservableObject {
   }
 
   private func handleTimerExpired() {
-    print("⏱️ TimerManager: Timer expired")
+    debugLog("⏱️ TimerManager: Timer expired")
 
     stopTimer()
 

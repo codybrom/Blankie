@@ -150,24 +150,24 @@ extension SoundSheet {
       audioManager.soloModeSound == nil,
       !audioManager.isQuickMix
     else {
-      print("🎵 SoundSheet: Not adding to preset - conditions not met")
+      debugLog("🎵 SoundSheet: Not adding to preset - conditions not met")
       return
     }
 
     // Check if the sound is already in the preset
     let existingSoundFileNames = Set(currentPreset.soundStates.map(\.fileName))
     guard !existingSoundFileNames.contains(fileName) else {
-      print("🎵 SoundSheet: Sound already exists in preset")
+      debugLog("🎵 SoundSheet: Sound already exists in preset")
       return
     }
 
     // Find the newly imported sound
     guard let newSound = audioManager.sounds.first(where: { $0.fileName == fileName }) else {
-      print("❌ SoundSheet: Could not find imported sound with fileName: \(fileName)")
+      debugLog("❌ SoundSheet: Could not find imported sound with fileName: \(fileName)")
       return
     }
 
-    print("🎵 SoundSheet: Adding '\(newSound.title)' to preset '\(currentPreset.name)'")
+    debugLog("🎵 SoundSheet: Adding '\(newSound.title)' to preset '\(currentPreset.name)'")
 
     // Create a new preset state for the imported sound
     let newSoundState = PresetState(
@@ -192,7 +192,7 @@ extension SoundSheet {
       // Save directly to avoid state override
       savePresetsDirectly()
 
-      print(
+      debugLog(
         "🎵 SoundSheet: Successfully added sound to preset (now has \(updatedPreset.soundStates.count) sounds)"
       )
     }
@@ -242,7 +242,7 @@ extension SoundSheet {
       PresetStorage.saveDefaultPreset(defaultPreset)
     }
     PresetStorage.saveCustomPresets(customPresets)
-    print("🎵 SoundSheet: Presets saved directly without state override")
+    debugLog("🎵 SoundSheet: Presets saved directly without state override")
   }
 
   // MARK: - Dismiss Action

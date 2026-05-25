@@ -17,8 +17,8 @@ struct AnimatedArtworkRef: Codable, Equatable, Hashable {
 
   var source: Source
   var loopPath: String?
-  var previewPath: String? // 3:4 portrait preview
-  var squarePreviewPath: String? // 1:1 square preview (used as static artwork fallback)
+  var previewPath: String?  // 3:4 portrait preview
+  var squarePreviewPath: String?  // 1:1 square preview (used as static artwork fallback)
   var preferredAspect: String?
   var bundledIdentifier: String?
 
@@ -79,7 +79,7 @@ struct Preset: Codable, Identifiable, Equatable {
   var lastModifiedVersion: String?
   var soundOrder: [String]?
   var creatorName: String?
-  var artworkId: UUID? // Reference to PresetArtwork in SwiftData
+  var artworkId: UUID?  // Reference to PresetArtwork in SwiftData
 
   // Animated artwork
   var animatedArtwork: AnimatedArtworkRef?
@@ -90,7 +90,7 @@ struct Preset: Codable, Identifiable, Equatable {
 
   // Import metadata - tracks if this preset was imported
   var isImported: Bool?
-  var originalId: UUID? // Original ID from imported preset for duplicate detection
+  var originalId: UUID?  // Original ID from imported preset for duplicate detection
 
   // Mood/category tags
   var moods: [SoundMood]?
@@ -134,7 +134,7 @@ struct Preset: Codable, Identifiable, Equatable {
   func validate() -> Bool {
     // Preset must have at least one sound
     guard !soundStates.isEmpty else {
-      print("❌ Preset: Must contain at least one sound")
+      debugLog("❌ Preset: Must contain at least one sound")
       return false
     }
 
@@ -143,19 +143,19 @@ struct Preset: Codable, Identifiable, Equatable {
     let presetSounds = soundStates.map(\.fileName)
 
     for soundFileName in presetSounds where !availableSounds.contains(soundFileName) {
-      print("❌ Preset: References non-existent sound '\(soundFileName)'")
+      debugLog("❌ Preset: References non-existent sound '\(soundFileName)'")
       return false
     }
 
     // Validate volume ranges
     guard soundStates.allSatisfy({ $0.volume >= 0 && $0.volume <= 1 }) else {
-      print("❌ Preset: Invalid volume range")
+      debugLog("❌ Preset: Invalid volume range")
       return false
     }
 
     // Validate name
     guard !name.isEmpty else {
-      print("❌ Preset: Empty name")
+      debugLog("❌ Preset: Empty name")
       return false
     }
 

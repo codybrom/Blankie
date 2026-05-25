@@ -47,7 +47,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   @Published var isSelected = false {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
-      print("🔊 Sound: \(fileName) -  isSelected set to \(isSelected)")
+      debugLog("🔊 Sound: \(fileName) -  isSelected set to \(isSelected)")
 
       // If sound was just selected, start playing it immediately when playback becomes active
       // Only do this after AudioManager is fully initialized to avoid circular dependency
@@ -57,13 +57,13 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
           // Fix race condition: Ensure sound is still selected before proceeding
           guard self.isSelected else {
-            print("🎵 Sound: Aborting auto-play for '\(self.fileName)' - sound was deselected")
+            debugLog("🎵 Sound: Aborting auto-play for '\(self.fileName)' - sound was deselected")
             return
           }
 
           // Check if playback is active, or will become active soon
           if AudioManager.shared.isGloballyPlaying {
-            print(
+            debugLog(
               "🎵 Sound: Auto-playing newly selected sound '\(self.fileName)' during active playback"
             )
             self.loadSound()
@@ -77,7 +77,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
               // Fix race condition: Ensure sound is still selected before proceeding
               guard self.isSelected else {
-                print(
+                debugLog(
                   "🎵 Sound: Aborting delayed auto-play for '\(self.fileName)' - sound was deselected"
                 )
                 return
@@ -85,7 +85,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
               guard AudioManager.shared.isGloballyPlaying else { return }
 
-              print(
+              debugLog(
                 "🎵 Sound: Auto-playing newly selected sound '\(self.fileName)' after auto-start")
               self.loadSound()
               self.resetSoundPosition()  // Apply randomization if enabled
@@ -97,7 +97,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
       // If sound was just deselected, stop playing it immediately
       if !isSelected, oldValue == true {
-        print("🎵 Sound: Auto-stopping newly deselected sound '\(fileName)'")
+        debugLog("🎵 Sound: Auto-stopping newly deselected sound '\(fileName)'")
         // If player exists, pause it
         if player != nil {
           pause(immediate: true)
@@ -119,7 +119,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   @Published var volume: Float = 0.75 {
     didSet {
       guard volume >= 0, volume <= 1 else {
-        print("❌ Sound: Invalid volume for '\(fileName)'")
+        debugLog("❌ Sound: Invalid volume for '\(fileName)'")
         ErrorReporter.shared.report(AudioError.invalidVolume)
         volume = oldValue
         return
@@ -138,12 +138,12 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
         // Don't persist volume changes during Quick Mix mode
         guard !AudioManager.shared.isQuickMix else {
-          print("🚗 Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
+          debugLog("🚗 Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
           return
         }
 
         UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
-        print("🔊 Sound: \(self.fileName) final volume saved as \(self.volume)")
+        debugLog("🔊 Sound: \(self.fileName) final volume saved as \(self.volume)")
       }
     }
   }
@@ -219,23 +219,23 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   open func loadSound() {
     // Prevent concurrent loading
     guard !isLoading else {
-      print("⚠️ Sound: Already loading '\(fileName).\(fileExtension)', skipping")
+      debugLog("⚠️ Sound: Already loading '\(fileName).\(fileExtension)', skipping")
       return
     }
 
     // If player already exists, no need to reload
     guard player == nil else {
-      print("🔍 Sound: Player already loaded for '\(fileName).\(fileExtension)'")
+      debugLog("🔍 Sound: Player already loaded for '\(fileName).\(fileExtension)'")
       return
     }
 
     isLoading = true
     defer { isLoading = false }
 
-    print("🔍 Sound: Loading '\(fileName).\(fileExtension)'")
+    debugLog("🔍 Sound: Loading '\(fileName).\(fileExtension)'")
 
     guard let soundURL = getSoundURL() else {
-      print("❌ Sound: File not found for '\(fileName).\(fileExtension)'")
+      debugLog("❌ Sound: File not found for '\(fileName).\(fileExtension)'")
       ErrorReporter.shared.report(AudioError.fileNotFound)
       return
     }
@@ -248,7 +248,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
       // Additional validation
       guard let loadedPlayer = player else {
-        print("❌ Sound: Player is nil after initialization for '\(fileName)'")
+        debugLog("❌ Sound: Player is nil after initialization for '\(fileName)'")
         return
       }
 
@@ -264,11 +264,11 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
       // Apply random start position if enabled
       applyRandomStartPosition(to: loadedPlayer)
 
-      print(
+      debugLog(
         "🔊 Sound: Loaded sound '\(fileName).\(fileExtension)' with volume: \(loadedPlayer.volume)")
     } catch {
-      print("❌ Sound: Failed to load '\(fileName).\(fileExtension)': \(error)")
-      print(
+      debugLog("❌ Sound: Failed to load '\(fileName).\(fileExtension)': \(error)")
+      debugLog(
         "❌ Sound: Error details - domain: \((error as NSError).domain), code: \((error as NSError).code)"
       )
       ErrorReporter.shared.report(error)
@@ -286,7 +286,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   }
 
   deinit {
-    print("🔄 Sound: Deinitialized '\(fileName)'")
+    debugLog("🔄 Sound: Deinitialized '\(fileName)'")
     globalSettingsObserver?.cancel()
     customizationObserver?.cancel()
     fadeTimer?.invalidate()
@@ -312,11 +312,11 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     if !shouldLoop {
       DispatchQueue.main.async { [weak self] in
         guard let self = self else { return }
-        print("🔊 Sound: Non-looping sound '\(self.fileName)' finished playing")
+        debugLog("🔊 Sound: Non-looping sound '\(self.fileName)' finished playing")
 
         // Check if we're in solo mode with this sound
         if AudioManager.shared.soloModeSound?.id == self.id {
-          print("🔊 Sound: Non-looping sound in solo mode finished, pausing global playback")
+          debugLog("🔊 Sound: Non-looping sound in solo mode finished, pausing global playback")
           // Reset the sound position for next play
           self.resetSoundPosition()
           // Pause global playback but stay in solo mode

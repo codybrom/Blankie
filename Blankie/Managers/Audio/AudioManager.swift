@@ -17,8 +17,8 @@ class AudioManager: ObservableObject {
   var onReset: (() -> Void)?
 
   @Published var sounds: [Sound] = []
-  @Published var soundsData: [SoundData] = [] // Metadata for sounds (includes mood tags)
-  @Published var defaultSoundOrder: [String] = [] // Order of sounds in default view
+  @Published var soundsData: [SoundData] = []  // Metadata for sounds (includes mood tags)
+  @Published var defaultSoundOrder: [String] = []  // Order of sounds in default view
   @Published var isGloballyPlaying: Bool = false
   @Published var soloModeSound: Sound?
   @Published var hasSelectedSounds: Bool = false
@@ -45,7 +45,7 @@ class AudioManager: ObservableObject {
   @MainActor
   func setCarPlayConnected(_ connected: Bool) {
     guard isCarPlayConnected != connected else { return }
-    print("🎵 AudioManager: CarPlay connection changed to: \(connected)")
+    debugLog("🎵 AudioManager: CarPlay connection changed to: \(connected)")
     isCarPlayConnected = connected
 
     #if os(iOS) || os(visionOS)
@@ -75,12 +75,12 @@ class AudioManager: ObservableObject {
   #endif
 
   private init() {
-    print("🎵 AudioManager: Initializing - START")
+    debugLog("🎵 AudioManager: Initializing - START")
 
     // Only load sounds and state immediately - delay media controls and observers
-    print("🎵 AudioManager: About to loadSounds()")
+    debugLog("🎵 AudioManager: About to loadSounds()")
     loadSounds()
-    print("🎵 AudioManager: About to loadSavedState()")
+    debugLog("🎵 AudioManager: About to loadSavedState()")
     loadSavedState()
 
     // Delay media controls and notification setup to avoid triggering audio session
@@ -91,14 +91,14 @@ class AudioManager: ObservableObject {
       // Allow app to fully launch before setting up delayed components
       await Task.yield()
 
-      print("🎵 AudioManager: About to setupMediaControls() (delayed)")
+      debugLog("🎵 AudioManager: About to setupMediaControls() (delayed)")
       self.setupMediaControls()
-      print("🎵 AudioManager: About to setupNotificationObservers() (delayed)")
+      debugLog("🎵 AudioManager: About to setupNotificationObservers() (delayed)")
       self.setupNotificationObservers()
 
       self.isInitializing = false
 
-      print("🎵 AudioManager: About to setupSoundObservers() (after initialization)")
+      debugLog("🎵 AudioManager: About to setupSoundObservers() (after initialization)")
       self.setupSoundObservers()
 
       // Analyze custom sounds that might be missing profiles
@@ -108,9 +108,9 @@ class AudioManager: ObservableObject {
 
       // Restore solo mode if it was saved
       if let savedSoloFileName = GlobalSettings.shared.getSavedSoloModeFileName(),
-         let soloSound = self.sounds.first(where: { $0.fileName == savedSoloFileName })
+        let soloSound = self.sounds.first(where: { $0.fileName == savedSoloFileName })
       {
-        print("🎵 AudioManager: Restoring solo mode for '\(soloSound.title)'")
+        debugLog("🎵 AudioManager: Restoring solo mode for '\(soloSound.title)'")
         self.enterSoloMode(for: soloSound)
       } else if GlobalSettings.shared.autoPlayOnLaunch {
         let hasSelectedSounds = self.sounds.contains { $0.isSelected }
@@ -149,6 +149,6 @@ class AudioManager: ObservableObject {
   deinit {
     NotificationCenter.default.removeObserver(self)
     cleanup()
-    print("🎵 AudioManager: Deinit called, cleanup performed")
+    debugLog("🎵 AudioManager: Deinit called, cleanup performed")
   }
 }

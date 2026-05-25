@@ -9,17 +9,18 @@ import Foundation
 
 extension GlobalSettings {
   func logCurrentSettings() {
-    print("\n⚙️ GlobalSettings: Current State")
-    print("  - Volume: \(volume)")
-    print("  - Appearance: \(appearance.rawValue)")
-    print("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")")
-    print("  - Autoplay on Open: \(autoPlayOnLaunch)")
-    print("  - Hide Inactive Sounds: \(hideInactiveSounds)")
-    print("  - Enable Spatial Audio: \(enableSpatialAudio)")
-    print("  - Mix With Others: \(mixWithOthers)")
-    print("  - Volume With Other Audio: \(volumeWithOtherAudio)")
-    print("  - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)")
-    print("  - Language: \(language.code)")
-    print("  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))")
+    debugLog("\n⚙️ GlobalSettings: Current State")
+    debugLog("  - Volume: \(volume)")
+    debugLog("  - Appearance: \(appearance.rawValue)")
+    debugLog("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")")
+    debugLog("  - Autoplay on Open: \(autoPlayOnLaunch)")
+    debugLog("  - Hide Inactive Sounds: \(hideInactiveSounds)")
+    debugLog("  - Enable Spatial Audio: \(enableSpatialAudio)")
+    debugLog("  - Mix With Others: \(mixWithOthers)")
+    debugLog("  - Volume With Other Audio: \(volumeWithOtherAudio)")
+    debugLog("  - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)")
+    debugLog("  - Language: \(language.code)")
+    debugLog(
+      "  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))")
   }
 }

@@ -29,26 +29,26 @@ struct ArchiveUtility {
   }
 
   static func create(from sourceURL: URL, to archiveURL: URL) throws {
-    print("📦 ArchiveUtility: Creating archive from \(sourceURL.path) to \(archiveURL.path)")
+    debugLog("📦 ArchiveUtility: Creating archive from \(sourceURL.path) to \(archiveURL.path)")
 
     // Remove existing archive if needed
     try removeExistingArchive(at: archiveURL)
 
     // Create new archive
-    print("📦 ArchiveUtility: Creating new archive...")
+    debugLog("📦 ArchiveUtility: Creating new archive...")
     let archive = try Archive(url: archiveURL, accessMode: .create)
-    print("📦 ArchiveUtility: Archive created successfully")
+    debugLog("📦 ArchiveUtility: Archive created successfully")
 
     // Enumerate and add files
     let fileCount = try addFilesToArchive(archive, from: sourceURL)
 
-    print("📦 ArchiveUtility: Archive creation completed with \(fileCount) files")
+    debugLog("📦 ArchiveUtility: Archive creation completed with \(fileCount) files")
   }
 
   private static func removeExistingArchive(at archiveURL: URL) throws {
     if FileManager.default.fileExists(atPath: archiveURL.path) {
       try FileManager.default.removeItem(at: archiveURL)
-      print("📦 ArchiveUtility: Removed existing archive")
+      debugLog("📦 ArchiveUtility: Removed existing archive")
     }
   }
 
@@ -63,7 +63,7 @@ struct ArchiveUtility {
         userInfo: [NSLocalizedDescriptionKey: "Cannot enumerate source directory"])
     }
 
-    print("📦 ArchiveUtility: Starting to enumerate files...")
+    debugLog("📦 ArchiveUtility: Starting to enumerate files...")
     var fileCount = 0
 
     for case let fileURL as URL in enumerator {
@@ -74,7 +74,7 @@ struct ArchiveUtility {
         continue
       }
 
-      print("📦 ArchiveUtility: Processing \(relativePath)")
+      debugLog("📦 ArchiveUtility: Processing \(relativePath)")
 
       var isDirectory: ObjCBool = false
       fileManager.fileExists(atPath: fileURL.path, isDirectory: &isDirectory)
@@ -97,7 +97,7 @@ struct ArchiveUtility {
       uncompressedSize: Int64(0),
       compressionMethod: .none
     ) { _, _ in return Data() }
-    print("📦 ArchiveUtility: Added directory: \(relativePath)/")
+    debugLog("📦 ArchiveUtility: Added directory: \(relativePath)/")
   }
 
   private static func addFileEntry(to archive: Archive, fileURL: URL, relativePath: String) throws {
@@ -119,6 +119,6 @@ struct ArchiveUtility {
       let data = fileHandle.readData(ofLength: size)
       return data
     }
-    print("📦 ArchiveUtility: Added file: \(relativePath) (\(fileSize) bytes)")
+    debugLog("📦 ArchiveUtility: Added file: \(relativePath) (\(fileSize) bytes)")
   }
 }

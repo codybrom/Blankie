@@ -12,7 +12,7 @@ extension AudioManager {
 
   @MainActor
   func enterQuickMix(with initialSounds: [Sound] = []) {
-    print("🚗 AudioManager: Entering Quick Mix mode")
+    debugLog("🚗 AudioManager: Entering Quick Mix mode")
 
     // Exit solo mode if active
     if soloModeSound != nil {
@@ -48,14 +48,14 @@ extension AudioManager {
       quickMixSounds.contains(sound.fileName) && !sound.isCustom
     }
 
-    print(
+    debugLog(
       "🚗 AudioManager: Filtered \(initialSounds.count) initial sounds to \(validInitialSounds.count) valid Quick Mix sounds"
     )
 
     // Reset all Quick Mix sounds to 80% volume
     for sound in sounds where quickMixSounds.contains(sound.fileName) && !sound.isCustom {
       sound.volume = 0.8
-      print("🚗 AudioManager: Reset \(sound.fileName) volume to 80%")
+      debugLog("🚗 AudioManager: Reset \(sound.fileName) volume to 80%")
     }
 
     // Enable only the valid initial sounds
@@ -78,7 +78,7 @@ extension AudioManager {
   @MainActor
   func exitQuickMix() {
     guard isQuickMix else { return }
-    print("🚗 AudioManager: Exiting Quick Mix mode")
+    debugLog("🚗 AudioManager: Exiting Quick Mix mode")
 
     // Pause all current sounds
     for sound in sounds {
@@ -107,7 +107,7 @@ extension AudioManager {
 
     // Restore the previous preset if it exists
     if let savedPreset = preQuickMixPreset {
-      print("🚗 AudioManager: Restoring previous preset: '\(savedPreset.name)'")
+      debugLog("🚗 AudioManager: Restoring previous preset: '\(savedPreset.name)'")
       PresetManager.shared.setCurrentPreset(savedPreset)
 
       // Update Now Playing info with restored preset
@@ -137,7 +137,7 @@ extension AudioManager {
 
     // Only allow toggling of built-in sounds (no custom sounds)
     guard !sound.isCustom else {
-      print("🚗 AudioManager: Attempted to toggle custom sound in Quick Mix: \(sound.fileName)")
+      debugLog("🚗 AudioManager: Attempted to toggle custom sound in Quick Mix: \(sound.fileName)")
       return
     }
 

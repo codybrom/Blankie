@@ -18,11 +18,11 @@ class AudioFileImporter: ObservableObject {
   func handleIncomingFile(_ url: URL) {
     // Handle direct file imports via URL scheme or document picker
 
-    print("🎵 AudioFileImporter: Received file: \(url.lastPathComponent)")
+    debugLog("🎵 AudioFileImporter: Received file: \(url.lastPathComponent)")
 
     // Check if it's a .blankie preset file first
     if url.pathExtension.lowercased() == "blankie" {
-      print("📦 AudioFileImporter: Detected .blankie preset file, importing as preset")
+      debugLog("📦 AudioFileImporter: Detected .blankie preset file, importing as preset")
       handleBlankiePresetImport(url)
       return
     }
@@ -31,13 +31,13 @@ class AudioFileImporter: ObservableObject {
     guard let type = UTType(filenameExtension: url.pathExtension),
       type.conforms(to: .audio)
     else {
-      print("❌ AudioFileImporter: Unsupported file type: \(url.pathExtension)")
+      debugLog("❌ AudioFileImporter: Unsupported file type: \(url.pathExtension)")
       return
     }
 
     // Start accessing security-scoped resource
     let didStartAccessing = url.startAccessingSecurityScopedResource()
-    print("🔐 AudioFileImporter: Security-scoped access started: \(didStartAccessing)")
+    debugLog("🔐 AudioFileImporter: Security-scoped access started: \(didStartAccessing)")
 
     // Copy the file to a temporary location that the app owns
     let tempDir = FileManager.default.temporaryDirectory
@@ -49,13 +49,15 @@ class AudioFileImporter: ObservableObject {
 
       // Copy the file to temp directory
       try FileManager.default.copyItem(at: url, to: tempFileURL)
-      print("✅ AudioFileImporter: Copied file to temp directory: \(tempFileURL.lastPathComponent)")
+      debugLog(
+        "✅ AudioFileImporter: Copied file to temp directory: \(tempFileURL.lastPathComponent)")
 
       // Store the temp file URL and show the sound sheet
       fileToImport = tempFileURL
       showingSoundSheet = true
     } catch {
-      print("❌ AudioFileImporter: Failed to copy file: \(error)")
+      debugLog("❌ AudioFileImporter: Failed to copy file: \(error)")
+      ErrorReporter.shared.report(AudioError.loadFailed(error))
     }
 
     // Stop accessing the security-scoped resource
@@ -73,10 +75,12 @@ class AudioFileImporter: ObservableObject {
     Task {
       do {
         let preset = try await PresetImporter.shared.importArchive(from: url)
-        print("📦 AudioFileImporter: Successfully imported preset '\(preset.name)'")
+        debugLog("📦 AudioFileImporter: Successfully imported preset '\(preset.name)'")
       } catch {
-        print("❌ AudioFileImporter: Failed to import preset: \(error)")
-        // TODO: Show error alert to user
+        debugLog("❌ AudioFileImporter: Failed to import preset: \(error)")
+        // Surface the failure: PresetImporter.ImportError is a LocalizedError,
+        // so AudioErrorHandler's alert shows a meaningful message.
+        ErrorReporter.shared.report(error)
       }
     }
   }

@@ -39,7 +39,7 @@ struct PresetPickerRow: View {
           dismiss()
           onSelection?()
         } catch {
-          print("Error applying preset: \(error)")
+          debugLog("Error applying preset: \(error)")
         }
       }
     } label: {
@@ -101,13 +101,13 @@ struct PresetPickerView: View {
   }
 
   private func movePresets(from source: IndexSet, to destination: Int) {
-    print("🎵 PresetPickerView: Moving preset from \(source) to \(destination)")
+    debugLog("🎵 PresetPickerView: Moving preset from \(source) to \(destination)")
     // Work with the editing copy
     editingPresets.move(fromOffsets: source, toOffset: destination)
 
     // Log the new order
     for (index, preset) in editingPresets.enumerated() {
-      print("🎵 PresetPickerView: Position \(index): \(preset.name)")
+      debugLog("🎵 PresetPickerView: Position \(index): \(preset.name)")
     }
   }
 
@@ -140,16 +140,16 @@ struct PresetPickerView: View {
     for (index, editedPreset) in editingPresets.enumerated() {
       var updatedPreset = editedPreset
       updatedPreset.order = index
-      print("🎵 PresetPickerView: Setting order \(index) for preset '\(updatedPreset.name)'")
+      debugLog("🎵 PresetPickerView: Setting order \(index) for preset '\(updatedPreset.name)'")
       updatedPresetsMap[updatedPreset.id] = updatedPreset
     }
 
     // Get all presets and update only the ones we edited
     var allPresets = presetManager.presets
-    for index in 0 ..< allPresets.count {
+    for index in 0..<allPresets.count {
       if let updatedPreset = updatedPresetsMap[allPresets[index].id] {
         allPresets[index] = updatedPreset
-        print(
+        debugLog(
           "🎵 PresetPickerView: Updated preset '\(updatedPreset.name)' at index \(index) with order \(updatedPreset.order ?? -1)"
         )
       }
@@ -295,75 +295,75 @@ struct PresetPickerView: View {
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
-        .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
-            if presetManager.hasCustomPresets {
-              Button {
-                if isEditMode {
-                  cancelEditing()
-                } else {
-                  startEditing()
-                }
-              } label: {
-                Text(isEditMode ? "Cancel" : "Edit", comment: "Edit mode toggle button")
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          if presetManager.hasCustomPresets {
+            Button {
+              if isEditMode {
+                cancelEditing()
+              } else {
+                startEditing()
               }
-            }
-          }
-
-          ToolbarItem(placement: .primaryAction) {
-            if isEditMode {
-              Button("Done") {
-                saveEditing()
-              }
-              .fontWeight(.semibold)
-            } else {
-              Button {
-                showingNewPresetSheet = true
-              } label: {
-                Label("New Preset", systemImage: "plus")
-              }
+            } label: {
+              Text(isEditMode ? "Cancel" : "Edit", comment: "Edit mode toggle button")
             }
           }
         }
+
+        ToolbarItem(placement: .primaryAction) {
+          if isEditMode {
+            Button("Done") {
+              saveEditing()
+            }
+            .fontWeight(.semibold)
+          } else {
+            Button {
+              showingNewPresetSheet = true
+            } label: {
+              Label("New Preset", systemImage: "plus")
+            }
+          }
+        }
+      }
       #if os(iOS)
         .environment(\.editMode, .constant(isEditMode ? EditMode.active : EditMode.inactive))
       #endif
-        .sheet(isPresented: $showingNewPresetSheet) {
-          CreatePresetSheet(isPresented: $showingNewPresetSheet)
+      .sheet(isPresented: $showingNewPresetSheet) {
+        CreatePresetSheet(isPresented: $showingNewPresetSheet)
+      }
+      .alert(
+        "Delete Preset",
+        isPresented: .init(
+          get: { presetToDelete != nil },
+          set: { if !$0 { presetToDelete = nil } }
+        )
+      ) {
+        Button("Cancel", role: .cancel) {
+          presetToDelete = nil
         }
-        .alert(
-          "Delete Preset",
-          isPresented: .init(
-            get: { presetToDelete != nil },
-            set: { if !$0 { presetToDelete = nil } }
-          )
-        ) {
-          Button("Cancel", role: .cancel) {
-            presetToDelete = nil
-          }
 
-          Button("Delete", role: .destructive) {
-            if let preset = presetToDelete {
-              Task {
-                presetManager.deletePreset(preset)
-                presetToDelete = nil
-              }
+        Button("Delete", role: .destructive) {
+          if let preset = presetToDelete {
+            Task {
+              presetManager.deletePreset(preset)
+              presetToDelete = nil
             }
           }
-        } message: {
-          if let preset = presetToDelete {
-            Text(
-              "Are you sure you want to delete '\(preset.name)'? This action cannot be undone.",
-              comment: "Delete preset confirmation message"
-            )
-          }
         }
-        .onDisappear {
-          // Cancel editing if view is dismissed (e.g., by swiping)
-          if isEditMode {
-            cancelEditing()
-          }
+      } message: {
+        if let preset = presetToDelete {
+          Text(
+            "Are you sure you want to delete '\(preset.name)'? This action cannot be undone.",
+            comment: "Delete preset confirmation message"
+          )
         }
+      }
+      .onDisappear {
+        // Cancel editing if view is dismissed (e.g., by swiping)
+        if isEditMode {
+          cancelEditing()
+        }
+      }
     }
   }
 }

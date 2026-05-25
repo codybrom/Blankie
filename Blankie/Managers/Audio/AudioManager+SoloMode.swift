@@ -23,7 +23,7 @@ extension AudioManager {
 
   @MainActor
   func enterSoloMode(for sound: Sound) {
-    print("🎵 AudioManager: Entering solo mode for '\(sound.title)'")
+    debugLog("🎵 AudioManager: Entering solo mode for '\(sound.title)'")
 
     // Save original state before modifying
     soloModeOriginalVolume = sound.volume
@@ -72,7 +72,7 @@ extension AudioManager {
   @MainActor
   func exitSoloMode() {
     guard let soloSound = soloModeSound else { return }
-    print("🎵 AudioManager: Exiting solo mode for '\(soloSound.title)'")
+    debugLog("🎵 AudioManager: Exiting solo mode for '\(soloSound.title)'")
 
     // Stop the solo sound
     soloSound.pause()
@@ -107,13 +107,13 @@ extension AudioManager {
       isPlaying: false
     )
 
-    print("🎵 AudioManager: Exit solo mode complete")
+    debugLog("🎵 AudioManager: Exit solo mode complete")
   }
 
   @MainActor
   func exitSoloModeWithoutResuming() {
     guard let soloSound = soloModeSound else { return }
-    print("🎵 AudioManager: Exiting solo mode (without resuming) for '\(soloSound.title)'")
+    debugLog("🎵 AudioManager: Exiting solo mode (without resuming) for '\(soloSound.title)'")
 
     // Pause the solo sound
     soloSound.pause()
@@ -139,14 +139,14 @@ extension AudioManager {
     // Update media control command state
     updateNextPreviousCommandState()
 
-    print("🎵 AudioManager: Exit solo mode (without resuming) complete")
+    debugLog("🎵 AudioManager: Exit solo mode (without resuming) complete")
   }
 
   // MARK: - Preview Mode (for SoundSheet previews)
 
   @MainActor
   func enterPreviewMode(for sound: Sound) {
-    print("🎵 AudioManager: Entering preview mode for '\(sound.title)'")
+    debugLog("🎵 AudioManager: Entering preview mode for '\(sound.title)'")
 
     // Store original volume and playback states (don't touch selection states)
     previewModeOriginalStates.removeAll()
@@ -188,13 +188,13 @@ extension AudioManager {
     // Play the sound (continues from current position if it was already playing)
     sound.play()
 
-    print("🎵 AudioManager: Preview mode started for '\(sound.title)'")
+    debugLog("🎵 AudioManager: Preview mode started for '\(sound.title)'")
   }
 
   @MainActor
   func exitPreviewMode() {
     guard let previewSound = previewModeSound else { return }
-    print("🎵 AudioManager: Exiting preview mode for '\(previewSound.title)'")
+    debugLog("🎵 AudioManager: Exiting preview mode for '\(previewSound.title)'")
 
     // Handle the preview sound: pause it only if it wasn't playing before preview
     let previewSoundWasPlaying =
@@ -215,10 +215,10 @@ extension AudioManager {
         // Restore playback state: if it was playing before and should still be playing
         if originalState.isPlaying, isGloballyPlaying {
           if sound.player?.isPlaying != true {
-            print("🎵 AudioManager: Resuming '\(sound.title)' - was playing before preview")
+            debugLog("🎵 AudioManager: Resuming '\(sound.title)' - was playing before preview")
             sound.play()
           } else {
-            print("🎵 AudioManager: '\(sound.title)' already playing, continuing")
+            debugLog("🎵 AudioManager: '\(sound.title)' already playing, continuing")
           }
         }
       }
@@ -228,6 +228,6 @@ extension AudioManager {
     previewModeSound = nil
     previewModeOriginalStates.removeAll()
 
-    print("🎵 AudioManager: Preview mode exited")
+    debugLog("🎵 AudioManager: Preview mode exited")
   }
 }

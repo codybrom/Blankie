@@ -20,7 +20,8 @@
       // Only show edit button when playing a preset, not in solo mode
       if AudioManager.shared.soloModeSound == nil, PresetManager.shared.currentPreset != nil {
         // Create custom edit button using CPNowPlayingImageButton
-        let editButton = CPNowPlayingImageButton(image: UIImage(systemName: "slider.horizontal.3")!) { [weak self] _ in
+        let editButton = CPNowPlayingImageButton(image: UIImage(systemName: "slider.horizontal.3")!)
+        { [weak self] _ in
           Task { @MainActor in
             self?.showEditSoundsInterface()
           }
@@ -29,12 +30,12 @@
         // Update the Now Playing template with edit button
         nowPlayingTemplate.updateNowPlayingButtons([editButton])
 
-        print("✅ CarPlay: Now Playing template configured with edit button (preset mode)")
+        debugLog("✅ CarPlay: Now Playing template configured with edit button (preset mode)")
       } else {
         // Clear any custom buttons when in solo mode
         nowPlayingTemplate.updateNowPlayingButtons([])
 
-        print("✅ CarPlay: Now Playing template configured without edit button (solo mode)")
+        debugLog("✅ CarPlay: Now Playing template configured without edit button (solo mode)")
       }
     }
 
@@ -63,7 +64,8 @@
       let playingSounds = AudioManager.shared.sounds.filter { $0.isSelected }
 
       let title = currentPreset?.name ?? "Custom Mix"
-      let detail = playingSounds.isEmpty ? "No sounds selected" : "\(playingSounds.count) sounds playing"
+      let detail =
+        playingSounds.isEmpty ? "No sounds selected" : "\(playingSounds.count) sounds playing"
 
       // Create information items
       var items: [CPInformationItem] = []
@@ -78,19 +80,21 @@
 
       // Add playing sounds list
       if !playingSounds.isEmpty {
-        for sound in playingSounds.prefix(5) { // Limit to first 5 for display
+        for sound in playingSounds.prefix(5) {  // Limit to first 5 for display
           let volumeText = "\(Int(sound.volume * 100))%"
           let soundItem = CPInformationItem(title: sound.title, detail: "Volume: \(volumeText)")
           items.append(soundItem)
         }
 
         if playingSounds.count > 5 {
-          let moreItem = CPInformationItem(title: "...", detail: "and \(playingSounds.count - 5) more")
+          let moreItem = CPInformationItem(
+            title: "...", detail: "and \(playingSounds.count - 5) more")
           items.append(moreItem)
         }
       }
 
-      let template = CPInformationTemplate(title: "Now Playing", layout: .leading, items: items, actions: [])
+      let template = CPInformationTemplate(
+        title: "Now Playing", layout: .leading, items: items, actions: [])
 
       // Add edit button
       let editButton = CPBarButton(title: "Edit") { [weak self] _ in

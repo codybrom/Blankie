@@ -105,6 +105,7 @@ extension EditPresetSheet {
                 .foregroundColor(.secondary)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Remove Artwork")
           }
 
           Button {
@@ -113,6 +114,7 @@ extension EditPresetSheet {
             artworkPreview
           }
           .buttonStyle(.plain)
+          .accessibilityLabel("Choose Artwork")
         }
       }
 

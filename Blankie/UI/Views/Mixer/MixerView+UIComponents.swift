@@ -99,6 +99,7 @@ import SwiftUI
                     .foregroundColor(.primary)
                     .frame(width: 56, height: 56)
                 }
+                .accessibilityLabel("Back")
                 .buttonStyle(.plain)
                 .contentShape(Circle())
                 .glassEffect(.regular.interactive(), in: .circle)
@@ -114,6 +115,7 @@ import SwiftUI
                     .contentTransition(.symbolEffect(.replace))
                     .frame(width: 56, height: 56)
                 }
+                .accessibilityLabel(showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing"))
                 .buttonStyle(.plain)
                 .contentShape(Circle())
                 .glassEffect(.regular.interactive(), in: .circle)
@@ -151,6 +153,7 @@ import SwiftUI
                   .foregroundColor(.primary)
                   .frame(width: 56, height: 56)
               }
+              .accessibilityLabel("Back")
               .buttonStyle(.plain)
               .contentShape(Circle())
               .modernGlassEffect(cornerRadius: 28)
@@ -165,6 +168,7 @@ import SwiftUI
                   .foregroundColor(.primary)
                   .frame(width: 56, height: 56)
               }
+              .accessibilityLabel(showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing"))
               .buttonStyle(.plain)
               .contentShape(Circle())
               .modernGlassEffect(cornerRadius: 28)
@@ -205,6 +209,7 @@ import SwiftUI
           .frame(width: 68, height: 68)
           .contentShape(Circle())
       }
+      .accessibilityLabel(audioManager.isGloballyPlaying ? Text("Pause") : Text("Play"))
 
       if #available(iOS 26.0, *) {
         return
@@ -273,6 +278,7 @@ import SwiftUI
           .foregroundColor(.primary)
           .frame(width: 56, height: 56)
       }
+      .accessibilityLabel("More Options")
       .buttonStyle(.plain)
       .contentShape(Circle())
 
@@ -298,6 +304,7 @@ import SwiftUI
           .foregroundColor(timerManager.isTimerActive ? .accentColor : .primary)
           .frame(width: 56, height: 56)
       }
+      .accessibilityLabel("Timer")
       .buttonStyle(.plain)
       .contentShape(Circle())
 
@@ -468,6 +475,7 @@ import SwiftUI
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
             }
+            .accessibilityLabel("Timer")
             .buttonStyle(.borderless)
           }
 
@@ -484,6 +492,7 @@ import SwiftUI
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
             }
+            .accessibilityLabel("Exit Solo Mode")
             .buttonStyle(.borderless)
           }
 
@@ -498,6 +507,7 @@ import SwiftUI
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
             }
+            .accessibilityLabel("Edit Preset")
             .buttonStyle(.borderless)
           }
         }

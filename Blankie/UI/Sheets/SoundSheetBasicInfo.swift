@@ -59,6 +59,7 @@ extension CleanSoundSheetForm {
               .imageScale(.small)
           }
           .buttonStyle(.plain)
+          .accessibilityLabel("Clear Name")
         }
       }
     }

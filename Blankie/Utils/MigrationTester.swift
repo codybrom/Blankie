@@ -12,19 +12,19 @@ struct MigrationTester {
 
   /// Run complete migration test - call this from app to test
   static func runCompleteMigrationTest() {
-    print("🧪 MigrationTester: Starting complete migration test...")
+    debugLog("🧪 MigrationTester: Starting complete migration test...")
 
     resetTestEnvironment()
     setupTestUserData()
     AppDataMigrator.performAllMigrations()
     verifyMigration()
 
-    print("🧪 MigrationTester: Complete migration test finished")
+    debugLog("🧪 MigrationTester: Complete migration test finished")
   }
 
   /// Simulate an existing user's UserDefaults.standard data before migration
   static func setupTestUserData() {
-    print("🧪 MigrationTester: Setting up test user data in UserDefaults.standard...")
+    debugLog("🧪 MigrationTester: Setting up test user data in UserDefaults.standard...")
 
     // Simulate existing user settings
     UserDefaults.standard.set(0.8, forKey: UserDefaultsKeys.volume)
@@ -72,13 +72,13 @@ struct MigrationTester {
 
     UserDefaults.standard.set("12345", forKey: "lastActivePresetID")
 
-    print("✅ MigrationTester: Test user data setup complete")
+    debugLog("✅ MigrationTester: Test user data setup complete")
     logUserDefaults(UserDefaults.standard, label: "BEFORE Migration (standard)")
   }
 
   /// Verify migration worked correctly
   static func verifyMigration() {
-    print("\n🧪 MigrationTester: Verifying migration results...")
+    debugLog("\n🧪 MigrationTester: Verifying migration results...")
 
     logUserDefaults(UserDefaults.shared, label: "AFTER Migration (shared)")
 
@@ -88,30 +88,30 @@ struct MigrationTester {
     let migratedSoundState = UserDefaults.shared.array(forKey: "soundState")
     let migratedPresetID = UserDefaults.shared.string(forKey: "lastActivePresetID")
 
-    print("🔍 MigrationTester: Key values after migration:")
-    print("  - Volume: \(migratedVolume) (expected: 0.8)")
-    print("  - Autoplay: \(migratedAutoplay) (expected: true)")
-    print("  - Sound state count: \(migratedSoundState?.count ?? 0) (expected: 3)")
-    print("  - Last preset ID: \(migratedPresetID ?? "nil") (expected: 12345)")
+    debugLog("🔍 MigrationTester: Key values after migration:")
+    debugLog("  - Volume: \(migratedVolume) (expected: 0.8)")
+    debugLog("  - Autoplay: \(migratedAutoplay) (expected: true)")
+    debugLog("  - Sound state count: \(migratedSoundState?.count ?? 0) (expected: 3)")
+    debugLog("  - Last preset ID: \(migratedPresetID ?? "nil") (expected: 12345)")
 
     // Verify settings are cleaned up from standard
     let remainingStandard = UserDefaults.standard.object(forKey: UserDefaultsKeys.volume)
-    print(
+    debugLog(
       "  - Remaining in standard: \(remainingStandard != nil ? "❌ Not cleaned up" : "✅ Cleaned up")"
     )
 
     if migratedVolume == 0.8 && migratedAutoplay && migratedSoundState?.count == 3
       && migratedPresetID == "12345" && remainingStandard == nil
     {
-      print("✅ MigrationTester: Migration test PASSED")
+      debugLog("✅ MigrationTester: Migration test PASSED")
     } else {
-      print("❌ MigrationTester: Migration test FAILED")
+      debugLog("❌ MigrationTester: Migration test FAILED")
     }
   }
 
   /// Reset test environment
   static func resetTestEnvironment() {
-    print("🧪 MigrationTester: Resetting test environment...")
+    debugLog("🧪 MigrationTester: Resetting test environment...")
 
     // Clear migration flag to allow re-testing
     UserDefaults.shared.removeObject(forKey: "unifiedMigrationCompleted")
@@ -139,11 +139,11 @@ struct MigrationTester {
       UserDefaults.shared.removeObject(forKey: key)
     }
 
-    print("✅ MigrationTester: Test environment reset")
+    debugLog("✅ MigrationTester: Test environment reset")
   }
 
   private static func logUserDefaults(_ defaults: UserDefaults, label: String) {
-    print("\n📋 \(label):")
+    debugLog("\n📋 \(label):")
     let dict = defaults.dictionaryRepresentation()
     let relevantKeys = dict.keys.filter { key in
       key.contains("volume") || key.contains("auto") || key.contains("sound")
@@ -152,7 +152,7 @@ struct MigrationTester {
     }
 
     for key in relevantKeys.sorted() {
-      print("  - \(key): \(dict[key] ?? "nil")")
+      debugLog("  - \(key): \(dict[key] ?? "nil")")
     }
   }
 }

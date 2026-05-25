@@ -144,7 +144,7 @@ struct SoundAboutSheet: View {
           try modelContext.save()
         }
       } catch {
-        print("Error saving credits: \(error)")
+        debugLog("Error saving credits: \(error)")
       }
     }
   }

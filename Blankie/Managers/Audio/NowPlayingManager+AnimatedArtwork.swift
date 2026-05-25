@@ -56,7 +56,7 @@
       loopURL: URL, previewImage: UIImage
     )? {
       guard let resources = animatedArtworkResources(for: preset),
-            let previewImage = resources.previewImage
+        let previewImage = resources.previewImage
       else {
         return nil
       }
@@ -111,9 +111,9 @@
     }
 
     func animatedArtworkResources(for preset: Preset) -> (loopURL: URL, previewImage: UIImage?)? {
-      print("[DEBUG] animatedArtworkResources called. preset id: \(preset.id.uuidString)")
+      debugLog("[DEBUG] animatedArtworkResources called. preset id: \(preset.id.uuidString)")
       guard let animatedArtwork = preset.animatedArtwork else {
-        print("[DEBUG] animatedArtwork is nil, returning nil")
+        debugLog("[DEBUG] animatedArtwork is nil, returning nil")
         return nil
       }
 
@@ -123,14 +123,14 @@
       if let loopPath = animatedArtwork.loopPath {
         let loopURL = AnimatedArtworkFileStore.absoluteURL(for: loopPath)
         if FileManager.default.fileExists(atPath: loopURL.path) {
-          print("[DEBUG] Found cached video in Documents: \(loopPath)")
+          debugLog("[DEBUG] Found cached video in Documents: \(loopPath)")
           // Load preview image from Documents if available
           var previewImage: UIImage?
           if let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath {
             let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
             if FileManager.default.fileExists(atPath: previewURL.path) {
               previewImage = UIImage(contentsOfFile: previewURL.path)
-              print("[DEBUG] Loaded cached preview image from Documents")
+              debugLog("[DEBUG] Loaded cached preview image from Documents")
             }
           }
           return (loopURL: loopURL, previewImage: previewImage)
@@ -139,24 +139,25 @@
 
       // If not in Documents cache, try loading from ODR (requires foreground)
       if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
-        print("[DEBUG] Not cached in Documents, trying ODR resource: \(bundledId)")
-        return loadBundledODRResources(bundledId: bundledId, animatedArtwork: animatedArtwork, preset: preset)
+        debugLog("[DEBUG] Not cached in Documents, trying ODR resource: \(bundledId)")
+        return loadBundledODRResources(
+          bundledId: bundledId, animatedArtwork: animatedArtwork, preset: preset)
       }
 
       // No loopPath and no bundled ID - invalid state
       guard let loopPath = animatedArtwork.loopPath else {
-        print("[DEBUG] loopPath is nil, returning nil")
+        debugLog("[DEBUG] loopPath is nil, returning nil")
         return nil
       }
 
       let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath
-      print(
+      debugLog(
         "[DEBUG] Custom artwork - loopPath: \(String(describing: loopPath)), previewPath: \(String(describing: previewPath))"
       )
 
       let loopURL = AnimatedArtworkFileStore.absoluteURL(for: loopPath)
       guard FileManager.default.fileExists(atPath: loopURL.path) else {
-        print("[DEBUG] File does not exist at loopURL: \(loopURL)")
+        debugLog("[DEBUG] File does not exist at loopURL: \(loopURL)")
         return nil
       }
 
@@ -164,16 +165,16 @@
       if let previewPath = previewPath {
         let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
         guard FileManager.default.fileExists(atPath: previewURL.path) else {
-          print("[DEBUG] File does not exist at previewURL: \(previewURL)")
+          debugLog("[DEBUG] File does not exist at previewURL: \(previewURL)")
           return nil
         }
         previewImage = UIImage(contentsOfFile: previewURL.path)
         if previewImage == nil {
-          print("[DEBUG] Failed to load preview image from: \(previewURL)")
+          debugLog("[DEBUG] Failed to load preview image from: \(previewURL)")
         }
       }
 
-      print(
+      debugLog(
         "[DEBUG] Succeeded in building animatedArtworkResources with loopURL: \(loopURL), previewImage: \(previewImage != nil)"
       )
 
@@ -187,9 +188,9 @@
     ) -> (loopURL: URL, previewImage: UIImage?)? {
       // Check if ODR resource is available
       guard OnDemandResourceManager.shared.isResourceAvailable(bundledId),
-            let loopURL = Bundle.main.url(forResource: bundledId, withExtension: "mov")
+        let loopURL = Bundle.main.url(forResource: bundledId, withExtension: "mov")
       else {
-        print("[DEBUG] ODR resource \(bundledId) not available, triggering download and cache")
+        debugLog("[DEBUG] ODR resource \(bundledId) not available, triggering download and cache")
 
         // Coalesce duplicate triggers for the same id (scrolling back onto a
         // card that's already downloading, repeated preset re-publishes, etc.)
@@ -198,8 +199,9 @@
             guard let self else { return }
             defer { self.animatedArtworkDownloadTasks.removeValue(forKey: bundledId) }
             do {
-              let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
-              print("[DEBUG] Successfully downloaded ODR resource: \(bundledId)")
+              let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(
+                bundledId)
+              debugLog("[DEBUG] Successfully downloaded ODR resource: \(bundledId)")
 
               // Copy to Documents for permanent caching (prevents future re-downloads)
               await self.cacheODRResourceToDocuments(
@@ -212,7 +214,7 @@
               // Trigger a single refresh after successful download and caching
               self.updateAnimatedArtwork(for: preset)
             } catch {
-              print("[DEBUG] Failed to download ODR resource \(bundledId): \(error)")
+              debugLog("[DEBUG] Failed to download ODR resource \(bundledId): \(error)")
             }
           }
         }
@@ -220,7 +222,7 @@
         return nil
       }
 
-      print("[DEBUG] ODR resource \(bundledId) is available at: \(loopURL)")
+      debugLog("[DEBUG] ODR resource \(bundledId) is available at: \(loopURL)")
 
       // Copy to Documents for permanent caching if not already done
       // This handles the case where ODR resource is available but not yet permanently cached
@@ -245,9 +247,9 @@
       let previewName = bundledId
       if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg") {
         previewImage = UIImage(contentsOfFile: previewURL.path)
-        print("[DEBUG] Loaded preview image from bundle: \(previewURL)")
+        debugLog("[DEBUG] Loaded preview image from bundle: \(previewURL)")
       } else {
-        print("[DEBUG] Preview image not found in bundle: \(previewName).jpg")
+        debugLog("[DEBUG] Preview image not found in bundle: \(previewName).jpg")
       }
 
       return (loopURL: loopURL, previewImage: previewImage)
@@ -260,37 +262,41 @@
       animatedArtwork: AnimatedArtworkRef,
       preset: Preset
     ) async {
-      var preset = preset // Create mutable copy
+      var preset = preset  // Create mutable copy
 
       // Skip if already cached to Documents
       if let loopPath = animatedArtwork.loopPath,
-         AnimatedArtworkFileStore.fileExists(at: loopPath)
+        AnimatedArtworkFileStore.fileExists(at: loopPath)
       {
-        print("[DEBUG] ODR resource \(bundledId) already cached to Documents at: \(loopPath)")
+        debugLog("[DEBUG] ODR resource \(bundledId) already cached to Documents at: \(loopPath)")
         return
       }
 
       do {
         // Find the bundled asset info
         guard let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }) else {
-          print("[DEBUG] BundledAnimatedLoop not found for \(bundledId)")
+          debugLog("[DEBUG] BundledAnimatedLoop not found for \(bundledId)")
           return
         }
 
         // Load preview images from bundle
-        guard let previewURL = Bundle.main.url(
-          forResource: asset.previewResourceName,
-          withExtension: asset.previewExtension
-        ) else {
-          print("[DEBUG] Preview image not found for \(bundledId)")
+        guard
+          let previewURL = Bundle.main.url(
+            forResource: asset.previewResourceName,
+            withExtension: asset.previewExtension
+          )
+        else {
+          debugLog("[DEBUG] Preview image not found for \(bundledId)")
           return
         }
 
-        guard let squarePreviewURL = Bundle.main.url(
-          forResource: asset.squarePreviewResourceName,
-          withExtension: asset.squarePreviewExtension
-        ) else {
-          print("[DEBUG] Square preview image not found for \(bundledId)")
+        guard
+          let squarePreviewURL = Bundle.main.url(
+            forResource: asset.squarePreviewResourceName,
+            withExtension: asset.squarePreviewExtension
+          )
+        else {
+          debugLog("[DEBUG] Square preview image not found for \(bundledId)")
           return
         }
 
@@ -315,7 +321,7 @@
         _ = try AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
         _ = try AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
 
-        print("[DEBUG] Successfully cached ODR resource \(bundledId) to Documents: \(loopRel)")
+        debugLog("[DEBUG] Successfully cached ODR resource \(bundledId) to Documents: \(loopRel)")
 
         // Update preset with new paths
         await MainActor.run {
@@ -337,7 +343,7 @@
           PresetManager.shared.savePresets()
         }
       } catch {
-        print("[DEBUG] Failed to cache ODR resource \(bundledId) to Documents: \(error)")
+        debugLog("[DEBUG] Failed to cache ODR resource \(bundledId) to Documents: \(error)")
       }
     }
   }

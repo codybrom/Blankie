@@ -93,14 +93,14 @@ class PresetArtworkManager: ObservableObject {
       existingArtwork.imageData = imageData
       existingArtwork.updatedAt = Date()
       try context.save()
-      print("📸 PresetArtworkManager: Updated \(type.rawValue) for preset \(presetId)")
+      debugLog("📸 PresetArtworkManager: Updated \(type.rawValue) for preset \(presetId)")
       return existingArtwork.id
     } else {
       // Create new artwork
       let artwork = PresetArtwork(presetId: presetId, imageData: imageData, type: type)
       context.insert(artwork)
       try context.save()
-      print("📸 PresetArtworkManager: Saved new \(type.rawValue) for preset \(presetId)")
+      debugLog("📸 PresetArtworkManager: Saved new \(type.rawValue) for preset \(presetId)")
       return artwork.id
     }
   }
@@ -113,7 +113,7 @@ class PresetArtworkManager: ObservableObject {
     }
 
     guard let context = modelContext else {
-      print("❌ PresetArtworkManager: No model context")
+      debugLog("❌ PresetArtworkManager: No model context")
       return nil
     }
 
@@ -127,14 +127,14 @@ class PresetArtworkManager: ObservableObject {
     do {
       let results = try context.fetch(descriptor)
       if let imageData = results.first?.imageData,
-         let image = PlatformImage(data: imageData)
+        let image = PlatformImage(data: imageData)
       {
         // Cache the image
         imageCache[id] = image
         return image
       }
     } catch {
-      print("❌ PresetArtworkManager: Failed to load artwork: \(error)")
+      debugLog("❌ PresetArtworkManager: Failed to load artwork: \(error)")
     }
 
     return nil
@@ -158,7 +158,7 @@ class PresetArtworkManager: ObservableObject {
   func loadArtworkData(id: UUID) async -> Data? {
     await Task {
       guard let context = modelContext else {
-        print("❌ PresetArtworkManager: No model context")
+        debugLog("❌ PresetArtworkManager: No model context")
         return nil
       }
 
@@ -170,7 +170,7 @@ class PresetArtworkManager: ObservableObject {
         let results = try context.fetch(descriptor)
         return results.first?.imageData
       } catch {
-        print("❌ PresetArtworkManager: Failed to load artwork data: \(error)")
+        debugLog("❌ PresetArtworkManager: Failed to load artwork data: \(error)")
         return nil
       }
     }.value
@@ -189,7 +189,7 @@ class PresetArtworkManager: ObservableObject {
     if let artwork = try context.fetch(descriptor).first {
       context.delete(artwork)
       try context.save()
-      print("📸 PresetArtworkManager: Deleted artwork for preset \(presetId)")
+      debugLog("📸 PresetArtworkManager: Deleted artwork for preset \(presetId)")
     }
   }
 
@@ -215,7 +215,7 @@ class PresetArtworkManager: ObservableObject {
 
     if !artworks.isEmpty {
       try context.save()
-      print("📸 PresetArtworkManager: Deleted \(type.rawValue) for preset \(presetId)")
+      debugLog("📸 PresetArtworkManager: Deleted \(type.rawValue) for preset \(presetId)")
     }
   }
 
@@ -236,7 +236,7 @@ class PresetArtworkManager: ObservableObject {
 
   /// Warm cache on app launch with current and recent presets
   func warmCache() async {
-    print("📸 PresetArtworkManager: Warming artwork cache...")
+    debugLog("📸 PresetArtworkManager: Warming artwork cache...")
 
     // Get current preset
     if let currentPreset = PresetManager.shared.currentPreset {
@@ -247,7 +247,7 @@ class PresetArtworkManager: ObservableObject {
     let recentPresets = PresetManager.shared.getRecentPresets(limit: 5)
     await preCacheArtwork(for: recentPresets)
 
-    print("📸 PresetArtworkManager: Cache warming complete")
+    debugLog("📸 PresetArtworkManager: Cache warming complete")
   }
 
   /// Clean up orphaned artwork (not referenced by any preset)
@@ -256,7 +256,7 @@ class PresetArtworkManager: ObservableObject {
       throw PresetArtworkError.noModelContext
     }
 
-    print("📸 PresetArtworkManager: Starting orphaned artwork cleanup...")
+    debugLog("📸 PresetArtworkManager: Starting orphaned artwork cleanup...")
 
     // Get all preset IDs and their artwork references
     let presets = PresetManager.shared.presets
@@ -275,7 +275,7 @@ class PresetArtworkManager: ObservableObject {
     // Find and delete orphaned artwork
     var deletedCount = 0
     for artwork in allArtwork where !referencedArtworkIds.contains(artwork.id) {
-      print("📸 PresetArtworkManager: Deleting orphaned artwork \(artwork.id)")
+      debugLog("📸 PresetArtworkManager: Deleting orphaned artwork \(artwork.id)")
       context.delete(artwork)
       deletedCount += 1
 
@@ -285,9 +285,9 @@ class PresetArtworkManager: ObservableObject {
 
     if deletedCount > 0 {
       try context.save()
-      print("📸 PresetArtworkManager: Deleted \(deletedCount) orphaned artwork items")
+      debugLog("📸 PresetArtworkManager: Deleted \(deletedCount) orphaned artwork items")
     } else {
-      print("📸 PresetArtworkManager: No orphaned artwork found")
+      debugLog("📸 PresetArtworkManager: No orphaned artwork found")
     }
   }
 
@@ -297,7 +297,7 @@ class PresetArtworkManager: ObservableObject {
   /// Only runs when artwork is actually being accessed, not during cold start
   private func migrateExistingArtworkIfNeeded() {
     guard !hasMigrationRun,
-          let context = modelContext
+      let context = modelContext
     else { return }
 
     hasMigrationRun = true
@@ -316,12 +316,12 @@ class PresetArtworkManager: ObservableObject {
 
         if migratedCount > 0 {
           try context.save()
-          print(
+          debugLog(
             "📸 PresetArtworkManager: Migrated \(migratedCount) artwork records to have imageType")
         }
       } catch {
-        print("📸 PresetArtworkManager: Lazy migration failed: \(error)")
-        hasMigrationRun = false // Allow retry later
+        debugLog("📸 PresetArtworkManager: Lazy migration failed: \(error)")
+        hasMigrationRun = false  // Allow retry later
       }
     }
   }
@@ -337,7 +337,7 @@ class PresetArtworkManager: ObservableObject {
         let squareURL = AnimatedArtworkFileStore.absoluteURL(for: squarePath)
         if FileManager.default.fileExists(atPath: squareURL.path) {
           if let image = UIImage(contentsOfFile: squareURL.path) {
-            print("📸 PresetArtworkManager: Loaded square preview from Documents: \(squarePath)")
+            debugLog("📸 PresetArtworkManager: Loaded square preview from Documents: \(squarePath)")
             return image
           }
         }
@@ -348,7 +348,7 @@ class PresetArtworkManager: ObservableObject {
         let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
         if FileManager.default.fileExists(atPath: previewURL.path) {
           if let image = UIImage(contentsOfFile: previewURL.path) {
-            print("📸 PresetArtworkManager: Loaded 3:4 preview from Documents: \(previewPath)")
+            debugLog("📸 PresetArtworkManager: Loaded 3:4 preview from Documents: \(previewPath)")
             return image
           }
         }
@@ -359,13 +359,13 @@ class PresetArtworkManager: ObservableObject {
         let previewName = bundledId
         if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg") {
           if let image = UIImage(contentsOfFile: previewURL.path) {
-            print("📸 PresetArtworkManager: Loaded preview from bundle: \(previewName).jpg")
+            debugLog("📸 PresetArtworkManager: Loaded preview from bundle: \(previewName).jpg")
             return image
           }
         }
       }
 
-      print("📸 PresetArtworkManager: No preview image found for animated artwork")
+      debugLog("📸 PresetArtworkManager: No preview image found for animated artwork")
       return nil
     }
   #endif

@@ -170,6 +170,7 @@ private struct PresetRow: View {
             .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Rename Preset")
         #if os(macOS)
           .help("Rename Preset")
         #endif
@@ -180,6 +181,7 @@ private struct PresetRow: View {
             .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Delete Preset")
         #if os(macOS)
           .help("Delete Preset")
         #endif

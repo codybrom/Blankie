@@ -101,11 +101,11 @@ extension GlobalSettings {
   @MainActor
   func setLanguage(_ newLanguage: Language) {
     guard newLanguage.code != language.code else {
-      print("🌐 Language not changed (already set to \(language.code))")
+      debugLog("🌐 Language not changed (already set to \(language.code))")
       return
     }
 
-    print("🌐 GlobalSettings: Changing language from \(language.code) to \(newLanguage.code)")
+    debugLog("🌐 GlobalSettings: Changing language from \(language.code) to \(newLanguage.code)")
     language = newLanguage
     UserDefaults.shared.setValue(newLanguage.code, forKey: UserDefaultsKeys.language)
 

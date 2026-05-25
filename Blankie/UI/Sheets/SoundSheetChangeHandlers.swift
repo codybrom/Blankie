@@ -23,7 +23,7 @@ struct SoundSheetChangeHandlers: ViewModifier {
   func body(content: Content) -> some View {
     content
       .onChange(of: isPreviewing) { _, previewing in
-        print("🎵 SoundSheetChangeHandlers: isPreviewing changed to: \(previewing)")
+        debugLog("🎵 SoundSheetChangeHandlers: isPreviewing changed to: \(previewing)")
         if previewing {
           startPreview()
         } else {

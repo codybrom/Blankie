@@ -13,6 +13,31 @@ struct SettingsView: View {
   var body: some View {
     NavigationStack {
       Form {
+        if Bundle.main.isTestFlightOrDebug {
+          Section(
+            header: Text(
+              "Thanks for Testing Blankie!",
+              comment: "Settings section header for beta tester feedback")
+          ) {
+            Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
+              HStack {
+                Image(systemName: "sparkles")
+                  .foregroundColor(.accentColor)
+                Text(
+                  "Add Your Name to the Beta Tester Credits",
+                  comment: "Beta tester credits form link label"
+                )
+                .foregroundColor(.primary)
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+              }
+            }
+            .handCursor()
+          }
+        }
+
         Section(
           header: Text("Sounds", comment: "Settings section header for sound management")
         ) {

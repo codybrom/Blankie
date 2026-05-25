@@ -37,7 +37,7 @@ class PresetManager: ObservableObject {
   private var nearbyArtworkPrefetchTask: Task<Void, Never>?
 
   private init() {
-    print("\n🎛️ PresetManager: --- Begin Initialization ---")
+    debugLog("\n🎛️ PresetManager: --- Begin Initialization ---")
 
     // Set up a single observer for state changes
     AudioManager.shared.$sounds
@@ -51,26 +51,26 @@ class PresetManager: ObservableObject {
 
     // Don't load presets immediately - wait for custom sounds to be loaded
     // This will be triggered by initializePresetManager() after AudioManager setup
-    print("🎛️ PresetManager: --- End Initialization (deferred preset loading) ---\n")
+    debugLog("🎛️ PresetManager: --- End Initialization (deferred preset loading) ---\n")
   }
 
   /// Initialize preset manager after AudioManager has loaded all sounds (including custom)
   @MainActor
   func initializePresetManager() async {
     guard isInitializing else {
-      print("🎛️ PresetManager: Already initialized, skipping")
+      debugLog("🎛️ PresetManager: Already initialized, skipping")
       return
     }
 
-    print("🎛️ PresetManager: --- Begin Preset Loading After Sound Setup ---")
+    debugLog("🎛️ PresetManager: --- Begin Preset Loading After Sound Setup ---")
     await loadPresets()
 
     // Cache thumbnails for CarPlay after presets are loaded
-    print("🖼️ PresetManager: Caching thumbnails for CarPlay...")
+    debugLog("🖼️ PresetManager: Caching thumbnails for CarPlay...")
     await cacheAllThumbnails()
 
     isInitializing = false
-    print("🎛️ PresetManager: --- End Preset Loading After Sound Setup ---\n")
+    debugLog("🎛️ PresetManager: --- End Preset Loading After Sound Setup ---\n")
   }
 
   // Helper methods for extensions to set private properties
@@ -104,7 +104,7 @@ class PresetManager: ObservableObject {
 
   deinit {
     cancellables.forEach { $0.cancel() }
-    print("🎛️ PresetManager: Cleaned up")
+    debugLog("🎛️ PresetManager: Cleaned up")
   }
 }
 
@@ -123,7 +123,7 @@ extension PresetManager {
 extension PresetManager {
   @MainActor
   func updatePreset(_ preset: Preset, newName: String) {
-    print("\n🎛️ PresetManager: Updating preset '\(preset.name)' to '\(newName)'")
+    debugLog("\n🎛️ PresetManager: Updating preset '\(preset.name)' to '\(newName)'")
 
     guard let index = presets.firstIndex(where: { $0.id == preset.id }) else {
       handleError(PresetError.invalidPreset)
@@ -148,13 +148,13 @@ extension PresetManager {
     }
 
     savePresets()
-    print("🎛️ PresetManager: Preset updated successfully\n")
+    debugLog("🎛️ PresetManager: Preset updated successfully\n")
   }
 
   @MainActor
   func deletePreset(_ preset: Preset) {
-    print("\n🎛️ PresetManager: --- Begin Delete Preset ---")
-    print("🎛️ PresetManager: Attempting to delete preset '\(preset.name)'")
+    debugLog("\n🎛️ PresetManager: --- Begin Delete Preset ---")
+    debugLog("🎛️ PresetManager: Attempting to delete preset '\(preset.name)'")
 
     guard !preset.isDefault else {
       handleError(PresetError.invalidPreset)
@@ -172,12 +172,12 @@ extension PresetManager {
     removeThumbnail(for: preset.id)
 
     if wasCurrentPreset {
-      print("🎛️ PresetManager: Deleted current preset, switching to default/next")
+      debugLog("🎛️ PresetManager: Deleted current preset, switching to default/next")
 
       // Find next available CUSTOM preset
       if let nextCustomPreset = presets.first(where: { !$0.isDefault }) {
         do {
-          print("🎛️ PresetManager: Applying next custom preset '\(nextCustomPreset.name)'")
+          debugLog("🎛️ PresetManager: Applying next custom preset '\(nextCustomPreset.name)'")
           try applyPreset(nextCustomPreset)
         } catch {
           handleError(error)
@@ -192,7 +192,7 @@ extension PresetManager {
           currentPreset = nil
 
           do {
-            print(
+            debugLog(
               "🎛️ PresetManager: No other custom presets. Updating default and setting current preset to nil."
             )
             try applyPreset(updatedDefaultPreset)
@@ -201,13 +201,13 @@ extension PresetManager {
           }
 
         } else {
-          print("🎛️ PresetManager: No default or custom presets to switch too after deletion")
+          debugLog("🎛️ PresetManager: No default or custom presets to switch too after deletion")
         }
       }
     }
 
     savePresets()
-    print("🎛️ PresetManager: --- End Delete Preset ---\n")
+    debugLog("🎛️ PresetManager: --- End Delete Preset ---\n")
   }
 }
 
@@ -225,7 +225,7 @@ extension PresetManager {
 
     guard let preset = currentPreset else {
       if !isInitializing {
-        print("❌ PresetManager: No current preset to update")
+        debugLog("❌ PresetManager: No current preset to update")
       }
       return
     }
@@ -292,7 +292,8 @@ extension PresetManager {
   }
 
   @MainActor
-  func applyPreset(_ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false) throws {
+  func applyPreset(_ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false) throws
+  {
     logPresetApplication(preset)
 
     guard preset.validate() else {
@@ -307,13 +308,13 @@ extension PresetManager {
     preparePresetApplication(preset)
     executePresetApplication(preset: preset, isInitialLoad: isInitialLoad)
 
-    print("🎛️ PresetManager: --- End Apply Preset ---\n")
+    debugLog("🎛️ PresetManager: --- End Apply Preset ---\n")
   }
 
   /// Remove deleted custom sounds from all presets
   @MainActor
   func cleanupDeletedCustomSounds() {
-    print("🎛️ PresetManager: Cleaning up deleted custom sounds from presets")
+    debugLog("🎛️ PresetManager: Cleaning up deleted custom sounds from presets")
 
     // Get current valid sound file names
     let validSoundFileNames = Set(AudioManager.shared.sounds.map(\.fileName))
@@ -335,7 +336,7 @@ extension PresetManager {
           currentPreset = updatedPreset
         }
 
-        print(
+        debugLog(
           "🎛️ PresetManager: Removed \(preset.soundStates.count - validSoundStates.count) deleted sounds from preset '\(preset.name)'"
         )
       }
@@ -348,12 +349,12 @@ extension PresetManager {
   @MainActor
   func updateCurrentPresetSoundOrder(from source: IndexSet, to destination: Int) {
     guard let preset = currentPreset else {
-      print("❌ PresetManager: No current preset to update sound order")
+      debugLog("❌ PresetManager: No current preset to update sound order")
       return
     }
 
-    print("🎛️ PresetManager: Updating sound order for preset '\(preset.name)'")
-    print("  - Moving from indices: \(source) to destination: \(destination)")
+    debugLog("🎛️ PresetManager: Updating sound order for preset '\(preset.name)'")
+    debugLog("  - Moving from indices: \(source) to destination: \(destination)")
 
     // Get the current order of sounds in the preset
     var soundOrder = preset.soundOrder ?? preset.soundStates.map(\.fileName)
@@ -365,9 +366,10 @@ extension PresetManager {
     // Debug: Print the sound being moved
     for index in source {
       if index < soundOrder.count {
-        print("  - Moving sound: '\(soundOrder[index])' from index \(index)")
+        debugLog("  - Moving sound: '\(soundOrder[index])' from index \(index)")
       } else {
-        print("  - WARNING: Index \(index) out of bounds for soundOrder count \(soundOrder.count)")
+        debugLog(
+          "  - WARNING: Index \(index) out of bounds for soundOrder count \(soundOrder.count)")
       }
     }
 
@@ -386,20 +388,20 @@ extension PresetManager {
       currentPreset = updatedPreset
       savePresets()
 
-      print("🎛️ PresetManager: Updated sound order for preset '\(preset.name)'")
-      print("  - New order: \(soundOrder)")
+      debugLog("🎛️ PresetManager: Updated sound order for preset '\(preset.name)'")
+      debugLog("  - New order: \(soundOrder)")
     }
   }
 
   @MainActor
   func updateCurrentPresetWithOrder(_ newOrder: [String]) {
     guard let preset = currentPreset else {
-      print("❌ PresetManager: No current preset to update sound order")
+      debugLog("❌ PresetManager: No current preset to update sound order")
       return
     }
 
-    print("🎛️ PresetManager: Updating sound order for preset '\(preset.name)'")
-    print("  - New order: \(newOrder)")
+    debugLog("🎛️ PresetManager: Updating sound order for preset '\(preset.name)'")
+    debugLog("  - New order: \(newOrder)")
 
     // Update the preset
     var updatedPreset = preset
@@ -416,14 +418,14 @@ extension PresetManager {
       // Force UI update
       objectWillChange.send()
 
-      print("🎛️ PresetManager: Successfully updated sound order")
+      debugLog("🎛️ PresetManager: Successfully updated sound order")
 
       // Verify the update
       if let verifyPreset = presets.first(where: { $0.id == preset.id }) {
-        print("🎛️ PresetManager: Verified saved order: \(verifyPreset.soundOrder ?? [])")
+        debugLog("🎛️ PresetManager: Verified saved order: \(verifyPreset.soundOrder ?? [])")
       }
     } else {
-      print("❌ PresetManager: Failed to find preset in array!")
+      debugLog("❌ PresetManager: Failed to find preset in array!")
     }
   }
 }
@@ -432,8 +434,8 @@ extension PresetManager {
 
 extension PresetManager {
   @MainActor func handleAlreadyActivePreset(_ preset: Preset) {
-    print("🎛️ PresetManager: Preset already active, but still updating Now Playing info")
-    print(
+    debugLog("🎛️ PresetManager: Preset already active, but still updating Now Playing info")
+    debugLog(
       "🎨 PresetManager: Artwork ID: \(preset.artworkId != nil ? "✅ \(preset.artworkId!)" : "❌ None")"
     )
     AudioManager.shared.updateNowPlayingInfoForPreset(
@@ -453,7 +455,7 @@ extension PresetManager {
       await PresetArtworkManager.shared.preCacheArtwork(for: preset)
     }
 
-    print(
+    debugLog(
       "🎨 PresetManager: Updating Now Playing with artwork ID: \(preset.artworkId != nil ? "✅ \(preset.artworkId!)" : "❌ None")"
     )
     AudioManager.shared.updateNowPlayingInfoForPreset(
@@ -495,7 +497,8 @@ extension PresetManager {
   private func prefetchNearbyAnimatedArtwork(currentPreset: Preset) {
     #if os(iOS)
       // Get sorted list of custom presets (same logic as next/previous navigation)
-      let customPresets = presets
+      let customPresets =
+        presets
         .filter { !$0.isDefault }
         .sorted {
           let order1 = $0.order ?? Int.max
@@ -521,22 +524,24 @@ extension PresetManager {
       var odrIds: [String] = []
 
       if let nextAnimated = nextPreset.animatedArtwork,
-         nextAnimated.source == .bundled,
-         let bundledId = nextAnimated.bundledIdentifier
+        nextAnimated.source == .bundled,
+        let bundledId = nextAnimated.bundledIdentifier
       {
         odrIds.append(bundledId)
       }
 
       if let prevAnimated = prevPreset.animatedArtwork,
-         prevAnimated.source == .bundled,
-         let bundledId = prevAnimated.bundledIdentifier
+        prevAnimated.source == .bundled,
+        let bundledId = prevAnimated.bundledIdentifier
       {
         odrIds.append(bundledId)
       }
 
       guard !odrIds.isEmpty else { return }
 
-      print("🎛️ PresetManager: Prefetching \(odrIds.count) animated artwork resources for nearby presets")
+      debugLog(
+        "🎛️ PresetManager: Prefetching \(odrIds.count) animated artwork resources for nearby presets"
+      )
 
       // Cancel any stale prefetch from the previous current-preset.
       nearbyArtworkPrefetchTask?.cancel()
@@ -551,7 +556,7 @@ extension PresetManager {
 
 extension PresetManager {
   func handleError(_ error: Error) {
-    print("❌ PresetManager: Error occurred: \(error.localizedDescription)")
+    debugLog("❌ PresetManager: Error occurred: \(error.localizedDescription)")
     setError(error)
   }
 
@@ -560,7 +565,7 @@ extension PresetManager {
   }
 
   func createDefaultPreset() -> Preset {
-    print("🎛️ PresetManager: Creating new default preset")
+    debugLog("🎛️ PresetManager: Creating new default preset")
     let currentVersion =
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     return Preset(
@@ -588,29 +593,29 @@ extension PresetManager {
   }
 
   func logPresetState(_ preset: Preset) {
-    print("  - Name: '\(preset.name)'")
-    print("  - ID: \(preset.id)")
-    print("  - Is Default: \(preset.isDefault)")
+    debugLog("  - Name: '\(preset.name)'")
+    debugLog("  - ID: \(preset.id)")
+    debugLog("  - Is Default: \(preset.isDefault)")
 
     // Only log active sounds
     let activeStates = preset.soundStates.filter { $0.isSelected }
     if !activeStates.isEmpty {
-      print("  - Active Sounds:")
+      debugLog("  - Active Sounds:")
       for state in activeStates {
-        print("    * \(state.fileName) (Volume: \(state.volume))")
+        debugLog("    * \(state.fileName) (Volume: \(state.volume))")
       }
     }
   }
 
   func logPresetApplication(_ preset: Preset) {
-    print("\n🎛️ PresetManager: --- Begin Apply Preset ---")
-    print("🎛️ PresetManager: Applying preset '\(preset.name)':")
-    print("  - ID: \(preset.id)")
-    print("  - Is Default: \(preset.isDefault)")
-    print("  - Active Sounds:")
+    debugLog("\n🎛️ PresetManager: --- Begin Apply Preset ---")
+    debugLog("🎛️ PresetManager: Applying preset '\(preset.name)':")
+    debugLog("  - ID: \(preset.id)")
+    debugLog("  - Is Default: \(preset.isDefault)")
+    debugLog("  - Active Sounds:")
     preset.soundStates
       .filter { $0.isSelected }.forEach { state in
-        print("    * \(state.fileName) (Volume: \(state.volume))")
+        debugLog("    * \(state.fileName) (Volume: \(state.volume))")
       }
   }
 
@@ -639,7 +644,7 @@ extension PresetManager {
     // First, disable all sounds that are NOT in this preset
     for sound in AudioManager.shared.sounds {
       if !presetSoundFileNames.contains(sound.fileName), sound.isSelected {
-        print("  - Disabling '\(sound.fileName)' (not in preset)")
+        debugLog("  - Disabling '\(sound.fileName)' (not in preset)")
         sound.isSelected = false
       }
     }
@@ -651,12 +656,12 @@ extension PresetManager {
         let volumeChanged = sound.volume != state.volume
 
         if selectionChanged || volumeChanged {
-          print("  - Configuring '\(sound.fileName)':")
+          debugLog("  - Configuring '\(sound.fileName)':")
           if selectionChanged {
-            print("    * Selection: \(sound.isSelected) -> \(state.isSelected)")
+            debugLog("    * Selection: \(sound.isSelected) -> \(state.isSelected)")
           }
           if volumeChanged {
-            print("    * Volume: \(sound.volume) -> \(state.volume)")
+            debugLog("    * Volume: \(sound.volume) -> \(state.volume)")
           }
 
           sound.isSelected = state.isSelected
@@ -672,7 +677,7 @@ extension PresetManager {
 extension PresetManager {
   @MainActor
   func loadPresets() async {
-    print("\n🎛️ PresetManager: --- Begin Loading Presets ---")
+    debugLog("\n🎛️ PresetManager: --- Begin Loading Presets ---")
     setLoading(true)
 
     do {
@@ -698,21 +703,22 @@ extension PresetManager {
 
       // Load last active preset or default
       if let lastID = PresetStorage.loadLastActivePresetID() {
-        print("🎛️ PresetManager: Found last active preset ID: \(lastID)")
+        debugLog("🎛️ PresetManager: Found last active preset ID: \(lastID)")
         if let lastPreset = presets.first(where: { $0.id == lastID }) {
-          print("🎛️ PresetManager: ✅ Found matching preset: '\(lastPreset.name)'")
-          print("\n🎛️ PresetManager: Loading last active preset:")
+          debugLog("🎛️ PresetManager: ✅ Found matching preset: '\(lastPreset.name)'")
+          debugLog("\n🎛️ PresetManager: Loading last active preset:")
           logPresetState(lastPreset)
           try applyPreset(lastPreset, isInitialLoad: true)
-          print("🎛️ PresetManager: ✅ Successfully applied last active preset '\(lastPreset.name)'")
+          debugLog(
+            "🎛️ PresetManager: ✅ Successfully applied last active preset '\(lastPreset.name)'")
         } else {
-          print("❌ PresetManager: Last active preset ID \(lastID) not found in loaded presets")
-          print("🎛️ PresetManager: Available presets: \(presets.map { "\($0.name) (\($0.id))" })")
-          print("🎛️ PresetManager: Falling back to default preset")
+          debugLog("❌ PresetManager: Last active preset ID \(lastID) not found in loaded presets")
+          debugLog("🎛️ PresetManager: Available presets: \(presets.map { "\($0.name) (\($0.id))" })")
+          debugLog("🎛️ PresetManager: Falling back to default preset")
           try applyPreset(presets[0], isInitialLoad: true)
         }
       } else {
-        print("🎛️ PresetManager: No last active preset ID found, applying default")
+        debugLog("🎛️ PresetManager: No last active preset ID found, applying default")
         try applyPreset(presets[0], isInitialLoad: true)
       }
     } catch {
@@ -721,30 +727,30 @@ extension PresetManager {
 
     setLoading(false)
     setInitialLoad(false)
-    print("🎛️ PresetManager: --- End Loading Presets ---\n")
+    debugLog("🎛️ PresetManager: --- End Loading Presets ---\n")
   }
 
   @MainActor
   func savePresets() {
     // Skip saving during initialization - nothing has actually changed
     guard !isInitializing else {
-      print("🎛️ PresetManager: Skipping save during initialization")
+      debugLog("🎛️ PresetManager: Skipping save during initialization")
       return
     }
 
-    print("\n🎛️ PresetManager: --- Begin Saving Presets ---")
+    debugLog("\n🎛️ PresetManager: --- Begin Saving Presets ---")
 
     updateCurrentPresetBeforeSave()
     performActualSave()
 
-    print("🎛️ PresetManager: --- End Saving Presets ---\n")
+    debugLog("🎛️ PresetManager: --- End Saving Presets ---\n")
   }
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {
     // Update current preset's state before saving
     if let currentPreset = currentPreset,
-       let index = presets.firstIndex(where: { $0.id == currentPreset.id })
+      let index = presets.firstIndex(where: { $0.id == currentPreset.id })
     {
       // Get the preset from the array to preserve any updates (like order)
       var updatedPreset = presets[index]
@@ -776,12 +782,12 @@ extension PresetManager {
       updatePresetAtIndex(index, with: updatedPreset)
       setCurrentPreset(updatedPreset)
 
-      print("Saving current preset state for '\(updatedPreset.name)':")
-      print("  - Active sounds:")
+      debugLog("Saving current preset state for '\(updatedPreset.name)':")
+      debugLog("  - Active sounds:")
       updatedPreset.soundStates
         .filter { $0.isSelected }
         .forEach { state in
-          print("    * \(state.fileName) (Volume: \(state.volume))")
+          debugLog("    * \(state.fileName) (Volume: \(state.volume))")
         }
     }
   }
@@ -822,7 +828,7 @@ extension PresetManager {
         for ext in legacyExtensions where soundState.fileName.hasSuffix(".\(ext)") {
           migratedFileName = soundState.fileName.replacingOccurrences(of: ".\(ext)", with: "")
           presetHasMigrations = true
-          print(
+          debugLog(
             "🔄 PresetManager: Migrating sound name in preset '\(preset.name)': '\(soundState.fileName)' -> '\(migratedFileName)'"
           )
           break
@@ -848,7 +854,7 @@ extension PresetManager {
 
     if hasMigrations {
       setPresets(migratedPresets)
-      print("🔄 PresetManager: Preset migration completed, saving updated presets")
+      debugLog("🔄 PresetManager: Preset migration completed, saving updated presets")
 
       // Save the migrated presets immediately
       let defaultPreset = migratedPresets.first { $0.isDefault }
@@ -878,7 +884,7 @@ extension PresetManager {
       if let order = preset.order {
         if orderValues.contains(order) {
           hasDuplicates = true
-          print("🎛️ PresetManager: Found duplicate order value: \(order)")
+          debugLog("🎛️ PresetManager: Found duplicate order value: \(order)")
           break
         }
         orderValues.insert(order)
@@ -889,7 +895,7 @@ extension PresetManager {
     let hasUnorderedPresets = customPresets.contains { $0.order == nil } || hasDuplicates
 
     if hasUnorderedPresets {
-      print("🎛️ PresetManager: Reassigning order values to all custom presets")
+      debugLog("🎛️ PresetManager: Reassigning order values to all custom presets")
 
       // Sort custom presets by current order (if exists) then by name
       let sortedCustomPresets = customPresets.sorted { preset1, preset2 in
@@ -912,7 +918,7 @@ extension PresetManager {
       for (index, preset) in sortedCustomPresets.enumerated() where preset.order != index {
         var updatedPreset = preset
         updatedPreset.order = index
-        print(
+        debugLog(
           "🎛️ PresetManager: Updating order for '\(preset.name)' from \(preset.order ?? -1) to \(index)"
         )
 
@@ -943,12 +949,12 @@ extension PresetManager {
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
       if userDefaults.data(forKey: thumbnailKey) != nil {
-        return // Already cached
+        return  // Already cached
       }
 
       // Load the full artwork
       guard let artworkData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
-            let fullImage = UIImage(data: artworkData)
+        let fullImage = UIImage(data: artworkData)
       else { return }
 
       // Generate a thumbnail for CarPlay (44x44 points)
@@ -961,10 +967,10 @@ extension PresetManager {
 
       // Cache the thumbnail in app group UserDefaults for CarPlay access
       if let thumbnail = thumbnail,
-         let thumbnailData = thumbnail.pngData()
+        let thumbnailData = thumbnail.pngData()
       {
         userDefaults.set(thumbnailData, forKey: thumbnailKey)
-        print("🖼️ PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
+        debugLog("🖼️ PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
       }
     #endif
   }
@@ -974,7 +980,7 @@ extension PresetManager {
   func cacheAllThumbnails() async {
     // Don't cache if we're still loading
     guard !isLoading else {
-      print("⚠️ PresetManager: Skipping thumbnail cache - still loading")
+      debugLog("⚠️ PresetManager: Skipping thumbnail cache - still loading")
       return
     }
 

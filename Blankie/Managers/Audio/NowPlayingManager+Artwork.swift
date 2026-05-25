@@ -8,6 +8,7 @@
 import AVFoundation
 import MediaPlayer
 import SwiftUI
+
 #if os(iOS)
   import UIKit
 #endif
@@ -34,14 +35,14 @@ extension NowPlayingManager {
       if let preset {
         // PRIORITY 2: For bundled animated artwork (ODR), load square preview from bundle
         if let bundledId = preset.animatedArtwork?.bundledIdentifier,
-           let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
-           let squarePreviewURL = Bundle.main.url(
-             forResource: asset.squarePreviewResourceName,
-             withExtension: asset.squarePreviewExtension
-           ),
-           let data = try? Data(contentsOf: squarePreviewURL)
+          let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
+          let squarePreviewURL = Bundle.main.url(
+            forResource: asset.squarePreviewResourceName,
+            withExtension: asset.squarePreviewExtension
+          ),
+          let data = try? Data(contentsOf: squarePreviewURL)
         {
-          print("🎨 NowPlayingManager: Loading bundled square preview for \(bundledId)")
+          debugLog("🎨 NowPlayingManager: Loading bundled square preview for \(bundledId)")
           currentStaticArtworkPath = nil
           currentArtworkId = nil
           updateArtwork(artworkData: data)
@@ -50,23 +51,25 @@ extension NowPlayingManager {
 
         // PRIORITY 3: Check for cached animated artwork square preview
         if let squarePreviewPath = preset.animatedArtwork?.squarePreviewPath,
-           AnimatedArtworkFileStore.fileExists(at: squarePreviewPath),
-           currentStaticArtworkPath != squarePreviewPath
+          AnimatedArtworkFileStore.fileExists(at: squarePreviewPath),
+          currentStaticArtworkPath != squarePreviewPath
         {
-          print("🎨 NowPlayingManager: Loading cached square preview from Documents")
+          debugLog("🎨 NowPlayingManager: Loading cached square preview from Documents")
           currentStaticArtworkPath = squarePreviewPath
           currentArtworkId = nil
-          let data = try? Data(contentsOf: AnimatedArtworkFileStore.absoluteURL(for: squarePreviewPath))
+          let data = try? Data(
+            contentsOf: AnimatedArtworkFileStore.absoluteURL(for: squarePreviewPath))
           updateArtwork(artworkData: data)
           return
         }
 
         // PRIORITY 4: Other cached paths (staticArtworkPath, previewPath)
-        let candidatePath = preset.staticArtworkPath
+        let candidatePath =
+          preset.staticArtworkPath
           ?? preset.animatedArtwork?.previewPath
 
         if let candidatePath, AnimatedArtworkFileStore.fileExists(at: candidatePath),
-           currentStaticArtworkPath != candidatePath
+          currentStaticArtworkPath != candidatePath
         {
           currentStaticArtworkPath = candidatePath
           currentArtworkId = nil
@@ -120,13 +123,13 @@ extension NowPlayingManager {
       if let preset {
         // PRIORITY 2: Bundled animated artwork (ODR) square preview from bundle
         if let bundledId = preset.animatedArtwork?.bundledIdentifier,
-           let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
-           let squarePreviewURL = Bundle.main.url(
-             forResource: asset.squarePreviewResourceName,
-             withExtension: asset.squarePreviewExtension
-           )
+          let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
+          let squarePreviewURL = Bundle.main.url(
+            forResource: asset.squarePreviewResourceName,
+            withExtension: asset.squarePreviewExtension
+          )
         {
-          print("🎨 NowPlayingManager: Loading bundled square preview for \(bundledId)")
+          debugLog("🎨 NowPlayingManager: Loading bundled square preview for \(bundledId)")
           currentStaticArtworkPath = nil
           currentArtworkId = nil
           staticArtworkTask = Task.detached(priority: .background) { [weak self] in
@@ -137,7 +140,8 @@ extension NowPlayingManager {
 
               // Update only the artwork key in MPNowPlayingInfoCenter to avoid restarting animated artwork
               if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
-                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] =
+                  artwork
               }
             }
           }
@@ -146,23 +150,25 @@ extension NowPlayingManager {
 
         // PRIORITY 3: Cached animated artwork square preview
         if let squarePreviewPath = preset.animatedArtwork?.squarePreviewPath,
-           AnimatedArtworkFileStore.fileExists(at: squarePreviewPath)
+          AnimatedArtworkFileStore.fileExists(at: squarePreviewPath)
         {
           if currentStaticArtworkPath == squarePreviewPath {
             return
           }
 
-          print("🎨 NowPlayingManager: Loading cached square preview from Documents")
+          debugLog("🎨 NowPlayingManager: Loading cached square preview from Documents")
           currentStaticArtworkPath = squarePreviewPath
           currentArtworkId = nil
           staticArtworkTask = Task.detached(priority: .background) { [weak self] in
             guard let self else { return }
-            let data = try? Data(contentsOf: AnimatedArtworkFileStore.absoluteURL(for: squarePreviewPath))
+            let data = try? Data(
+              contentsOf: AnimatedArtworkFileStore.absoluteURL(for: squarePreviewPath))
             await MainActor.run {
               self.updateArtwork(artworkData: data)
 
               if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
-                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] =
+                  artwork
               }
             }
           }
@@ -174,7 +180,8 @@ extension NowPlayingManager {
     // PRIORITY 4: Other cached paths
     #if os(iOS)
       if let preset {
-        let candidatePath = preset.staticArtworkPath
+        let candidatePath =
+          preset.staticArtworkPath
           ?? preset.animatedArtwork?.previewPath
 
         if let candidatePath, AnimatedArtworkFileStore.fileExists(at: candidatePath) {
@@ -192,7 +199,8 @@ extension NowPlayingManager {
               self.updateArtwork(artworkData: data)
 
               if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
-                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] =
+                  artwork
               }
             }
           }
@@ -212,30 +220,30 @@ extension NowPlayingManager {
   }
 
   func updateArtwork(artworkData: Data?) {
-    print(
+    debugLog(
       "🎨 NowPlayingManager: Processing artwork data: \(artworkData != nil ? "✅ \(artworkData!.count) bytes" : "❌ None")"
     )
     if let customArtwork = loadCustomArtwork(from: artworkData) {
-      print("🎨 NowPlayingManager: ✅ Custom artwork loaded successfully")
+      debugLog("🎨 NowPlayingManager: ✅ Custom artwork loaded successfully")
       nowPlayingInfo[MPMediaItemPropertyArtwork] = customArtwork
     } else if let defaultArtwork = loadArtwork() {
-      print("🎨 NowPlayingManager: Using default artwork")
+      debugLog("🎨 NowPlayingManager: Using default artwork")
       nowPlayingInfo[MPMediaItemPropertyArtwork] = defaultArtwork
     } else {
-      print("🎨 NowPlayingManager: ❌ No artwork available")
+      debugLog("🎨 NowPlayingManager: ❌ No artwork available")
     }
   }
 
   /// Load artwork from SwiftData and update Now Playing info
   func loadAndUpdateArtwork(artworkId: UUID, shouldPublish: Bool = true) async {
-    print("🎨 NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)")
+    debugLog("🎨 NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)")
 
     // Load artwork on background thread to prevent UI blocking
     let artworkData: Data? = await Task.detached {
       // Get the data directly from PresetArtworkManager instead of converting image
       let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
       if let imageData = imageData {
-        print(
+        debugLog(
           "🎨 NowPlayingManager: ✅ Loaded artwork from SwiftData (\(imageData.count) bytes)"
         )
       }
@@ -245,7 +253,7 @@ extension NowPlayingManager {
     // Update artwork in memory on main thread
     await MainActor.run {
       if artworkData == nil {
-        print("🎨 NowPlayingManager: ⚠️ No artwork found in SwiftData")
+        debugLog("🎨 NowPlayingManager: ⚠️ No artwork found in SwiftData")
       }
       updateArtwork(artworkData: artworkData)
 

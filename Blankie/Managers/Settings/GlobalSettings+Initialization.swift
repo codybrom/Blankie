@@ -16,7 +16,7 @@ extension GlobalSettings {
 
     appearance =
       UserDefaults.shared.string(forKey: UserDefaultsKeys.appearance)
-        .flatMap { AppearanceMode(rawValue: $0) } ?? .system
+      .flatMap { AppearanceMode(rawValue: $0) } ?? .system
 
     // Load saved accent color
     if let colorString = UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor) {
@@ -38,7 +38,7 @@ extension GlobalSettings {
 
     // Icon size preference (default to medium)
     if let savedSize = UserDefaults.shared.string(forKey: UserDefaultsKeys.iconSize),
-       let size = IconSize(rawValue: savedSize)
+      let size = IconSize(rawValue: savedSize)
     {
       iconSize = size
     } else {
@@ -55,7 +55,7 @@ extension GlobalSettings {
     // Lock portrait orientation on iOS preference (default to false)
     lockPortraitOrientationiOS =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockPortraitOrientationiOS) as? Bool
-        ?? false
+      ?? false
 
     // Load Quick Mix sound file names (default to original 8 sounds)
     if let savedQuickMixSounds = UserDefaults.shared.array(
@@ -66,7 +66,7 @@ extension GlobalSettings {
 
     lockScreenBackgroundEnabled =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockScreenBackgroundEnabled) as? Bool
-        ?? true
+      ?? true
   }
 
   func loadPlatformSettings() {
@@ -89,7 +89,7 @@ extension GlobalSettings {
     // Finally, try to set the saved language preference
     let savedLanguageCode = UserDefaults.shared.string(forKey: UserDefaultsKeys.language)
     if let code = savedLanguageCode,
-       let savedLanguage = availableLanguages.first(where: { $0.code == code })
+      let savedLanguage = availableLanguages.first(where: { $0.code == code })
     {
       language = savedLanguage
     }
@@ -98,12 +98,12 @@ extension GlobalSettings {
   func migrateLegacySettings() {
     // Migration: Convert old alwaysStartPaused setting to new autoPlayOnLaunch setting
     if let oldValue = UserDefaults.shared.object(forKey: "alwaysStartPaused") as? Bool {
-      print(
+      debugLog(
         "🔄 GlobalSettings: Migrating alwaysStartPaused(\(oldValue)) to autoPlayOnLaunch(\(!oldValue))"
       )
-      autoPlayOnLaunch = !oldValue // Flip the logic
+      autoPlayOnLaunch = !oldValue  // Flip the logic
       UserDefaults.shared.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunch)
-      UserDefaults.shared.removeObject(forKey: "alwaysStartPaused") // Remove old key
+      UserDefaults.shared.removeObject(forKey: "alwaysStartPaused")  // Remove old key
     }
   }
 }

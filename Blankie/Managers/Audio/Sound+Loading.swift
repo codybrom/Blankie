@@ -13,14 +13,14 @@ extension Sound {
     if isCustom, let customURL = fileURL {
       // Verify the custom sound file actually exists
       if FileManager.default.fileExists(atPath: customURL.path) {
-        print("🔍 Sound: Loading custom sound from: \(customURL.path)")
+        debugLog("🔍 Sound: Loading custom sound from: \(customURL.path)")
         return customURL
       } else {
-        print("❌ Sound: Custom sound file not found at path: \(customURL.path)")
+        debugLog("❌ Sound: Custom sound file not found at path: \(customURL.path)")
         return nil
       }
     } else {
-      print("🔍 Sound: Loading built-in sound from bundle")
+      debugLog("🔍 Sound: Loading built-in sound from bundle")
       return Bundle.main.url(forResource: fileName, withExtension: fileExtension)
     }
   }
@@ -53,7 +53,7 @@ extension Sound {
       let maxPosition = player.duration * 0.75
       let randomPosition = Double.random(in: 0..<maxPosition)
       player.currentTime = randomPosition
-      print(
+      debugLog(
         "🎲 Sound: Applied random start position: \(randomPosition)s of \(player.duration)s (max 75%)"
       )
     }
@@ -61,11 +61,11 @@ extension Sound {
 
   func validatePlayer(_ player: AVAudioPlayer) -> Bool {
     let prepareSuccess = player.prepareToPlay()
-    print("🔍 Sound: Prepare to play result for '\(fileName)': \(prepareSuccess)")
-    print("🔍 Sound: Player duration: \(player.duration), format: \(player.format)")
+    debugLog("🔍 Sound: Prepare to play result for '\(fileName)': \(prepareSuccess)")
+    debugLog("🔍 Sound: Player duration: \(player.duration), format: \(player.format)")
 
     if !prepareSuccess || player.duration <= 0 || !player.duration.isFinite {
-      print(
+      debugLog(
         "❌ Sound: Invalid player state - prepareSuccess: \(prepareSuccess), duration: \(player.duration)"
       )
       return false

@@ -59,7 +59,7 @@
     func updateInterface() {
       guard isConnected, let interfaceController = interfaceController else { return }
 
-      print("🚗 CarPlay: Updating interface at \(Date())")
+      debugLog("🚗 CarPlay: Updating interface at \(Date())")
 
       // Just show the preset list
       let presetsTemplate = createPresetsTemplate()
@@ -121,7 +121,7 @@
               AudioManager.shared.setGlobalPlaybackState(true)
             }
           } catch {
-            print("🚗 CarPlay: Error applying preset: \(error)")
+            debugLog("🚗 CarPlay: Error applying preset: \(error)")
           }
           completion()
         }
@@ -135,7 +135,7 @@
       let isActive = preset.id == currentPresetId
       let activeIndicator = isActive ? " ✓" : ""
 
-      print(
+      debugLog(
         "🚗 CarPlay: Creating preset item '\(preset.name)' - isActive: \(isActive), currentPresetId: \(currentPresetId?.uuidString ?? "nil")"
       )
 
@@ -152,7 +152,7 @@
               AudioManager.shared.setGlobalPlaybackState(true)
             }
           } catch {
-            print("🚗 CarPlay: Error applying preset: \(error)")
+            debugLog("🚗 CarPlay: Error applying preset: \(error)")
           }
           completion()
         }
@@ -205,7 +205,7 @@
 
     @MainActor
     private func playIndividualSound(_ sound: Sound) async {
-      print("🚗 CarPlay: Playing individual sound '\(sound.title)'")
+      debugLog("🚗 CarPlay: Playing individual sound '\(sound.title)'")
 
       // Toggle solo mode for this sound
       AudioManager.shared.toggleSoloMode(for: sound)
@@ -224,12 +224,12 @@
       // Observe global playback state
       AudioManager.shared.$isGloballyPlaying
         .sink { [weak self] isPlaying in
-          print("🚗 CarPlay: Playback state changed to: \(isPlaying)")
+          debugLog("🚗 CarPlay: Playback state changed to: \(isPlaying)")
           // Only update if we're showing the root template (not Now Playing)
           if let interfaceController = self?.interfaceController,
             interfaceController.topTemplate === interfaceController.rootTemplate
           {
-            print("🚗 CarPlay: Updating interface for playback state change")
+            debugLog("🚗 CarPlay: Updating interface for playback state change")
             self?.updateInterface()
           }
         }
@@ -241,7 +241,7 @@
       PresetManager.shared.$currentPreset
         .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
         .sink { [weak self] preset in
-          print("🚗 CarPlay: Current preset changed to: \(preset?.name ?? "nil")")
+          debugLog("🚗 CarPlay: Current preset changed to: \(preset?.name ?? "nil")")
           self?.updateInterface()
         }
         .store(in: &cancellables)
@@ -250,7 +250,7 @@
       PresetManager.shared.$presets
         .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
         .sink { [weak self] _ in
-          print("🚗 CarPlay: Presets array changed")
+          debugLog("🚗 CarPlay: Presets array changed")
           self?.updateInterface()
         }
         .store(in: &cancellables)

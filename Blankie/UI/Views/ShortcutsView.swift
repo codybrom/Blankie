@@ -44,6 +44,7 @@ struct ShortcutsView: View {
             .imageScale(.large)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Close")
       }
       .padding(.bottom, 8)
 

@@ -29,7 +29,7 @@
     static func updateTemplate(_ template: CPListTemplate) {
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
-        print("🚗 SoundsListTemplate: No sounds loaded yet")
+        debugLog("🚗 SoundsListTemplate: No sounds loaded yet")
         let loadingItem = CPListItem(text: "Loading sounds...", detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])
@@ -56,7 +56,7 @@
           sections.append(
             CPListSection(
               items: soundItems,
-              header: nil, // No header for cleaner look
+              header: nil,  // No header for cleaner look
               sectionIndexTitle: key
             )
           )

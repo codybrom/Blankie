@@ -32,7 +32,7 @@ extension AudioManager {
     // Call this when we first start playing to setup audio session observers
     func setupAudioSessionObservers() {
       guard !audioSessionObserversSetup else { return }
-      print("🎵 AudioManager: Setting up audio session observers on first playback")
+      debugLog("🎵 AudioManager: Setting up audio session observers on first playback")
       setupAudioInterruptionObserver()
       setupAudioRouteChangeObserver()
       audioSessionObserversSetup = true
@@ -67,7 +67,8 @@ extension AudioManager {
     }
 
     func handleDidEnterBackground() {
-      print("🎵 AudioManager: handleDidEnterBackground called - isGloballyPlaying: \(isGloballyPlaying)")
+      debugLog(
+        "🎵 AudioManager: handleDidEnterBackground called - isGloballyPlaying: \(isGloballyPlaying)")
 
       saveState()
 
@@ -79,7 +80,7 @@ extension AudioManager {
     }
 
     func handleWillEnterForeground() {
-      print(
+      debugLog(
         "🎵 AudioManager: handleWillEnterForeground called - isGloballyPlaying: \(isGloballyPlaying)"
       )
 
@@ -91,7 +92,7 @@ extension AudioManager {
       // Refresh media controls to ensure iOS hasn't disconnected them
       Task { @MainActor in
         if isGloballyPlaying {
-          print("🎵 AudioManager: Refreshing media controls after foreground")
+          debugLog("🎵 AudioManager: Refreshing media controls after foreground")
           setupMediaControls()
 
           let currentPreset = PresetManager.shared.currentPreset
@@ -118,8 +119,8 @@ extension AudioManager {
 
     private func handleAudioInterruption(_ notification: Notification) {
       guard let userInfo = notification.userInfo,
-            let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
-            let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+        let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+        let type = AVAudioSession.InterruptionType(rawValue: typeValue)
       else {
         return
       }
@@ -135,7 +136,7 @@ extension AudioManager {
     }
 
     private func handleInterruptionBegan() {
-      print("🎵 AudioManager: Audio interruption began - pausing playback")
+      debugLog("🎵 AudioManager: Audio interruption began - pausing playback")
       if isGloballyPlaying {
         Task { @MainActor in
           // Update Now Playing info to show paused state with current position
@@ -161,13 +162,13 @@ extension AudioManager {
       if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
         if options.contains(.shouldResume) {
-          print(
+          debugLog(
             "🎵 AudioManager: Audio interruption ended with shouldResume flag - resuming playback")
           Task { @MainActor in
             self.setGlobalPlaybackState(true)
           }
         } else {
-          print("🎵 AudioManager: Audio interruption ended without shouldResume flag")
+          debugLog("🎵 AudioManager: Audio interruption ended without shouldResume flag")
         }
       }
     }
@@ -184,22 +185,22 @@ extension AudioManager {
 
     private func handleAudioRouteChange(_ notification: Notification) {
       guard let userInfo = notification.userInfo,
-            let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
-            let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
+        let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+        let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
       else {
         return
       }
 
       switch reason {
       case .oldDeviceUnavailable:
-        print("🎵 AudioManager: Audio route changed - old device unavailable")
+        debugLog("🎵 AudioManager: Audio route changed - old device unavailable")
         if isGloballyPlaying {
           Task { @MainActor in
             self.setGlobalPlaybackState(false)
           }
         }
       case .newDeviceAvailable:
-        print("🎵 AudioManager: Audio route changed - new device available")
+        debugLog("🎵 AudioManager: Audio route changed - new device available")
       default:
         break
       }
@@ -223,7 +224,7 @@ extension AudioManager {
   #endif
 
   func handleAppTermination() {
-    print("🎵 AudioManager: App is terminating, cleaning up")
+    debugLog("🎵 AudioManager: App is terminating, cleaning up")
     cleanup()
   }
 
@@ -238,6 +239,6 @@ extension AudioManager {
     Task { @MainActor in
       nowPlayingManager.clear()
     }
-    print("🎵 AudioManager: Cleanup complete")
+    debugLog("🎵 AudioManager: Cleanup complete")
   }
 }

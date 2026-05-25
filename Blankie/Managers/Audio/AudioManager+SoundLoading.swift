@@ -12,7 +12,7 @@ import SwiftUI
 
 extension AudioManager {
   func loadSounds() {
-    print("🎵 AudioManager: Loading built-in sounds from JSON")
+    debugLog("🎵 AudioManager: Loading built-in sounds from JSON")
 
     // Start with an empty array
     sounds = []
@@ -24,7 +24,7 @@ extension AudioManager {
     // (Custom sounds will update the order when they're loaded)
     if let savedOrder = UserDefaults.shared.stringArray(forKey: "defaultSoundOrder") {
       defaultSoundOrder = savedOrder
-      print("🎵 AudioManager: Loaded default sound order with \(savedOrder.count) sounds")
+      debugLog("🎵 AudioManager: Loaded default sound order with \(savedOrder.count) sounds")
 
       // Add any new built-in sounds that aren't in the saved order
       let currentSoundFileNames = Set(sounds.map(\.fileName))
@@ -34,20 +34,20 @@ extension AudioManager {
       if !newSounds.isEmpty {
         defaultSoundOrder.append(contentsOf: newSounds)
         UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
-        print("🎵 AudioManager: Added \(newSounds.count) new sounds to default order")
+        debugLog("🎵 AudioManager: Added \(newSounds.count) new sounds to default order")
       }
     } else {
       // Initialize with default order (all sounds in their loaded order)
       defaultSoundOrder = sounds.map(\.fileName)
       UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
-      print(
+      debugLog(
         "🎵 AudioManager: Initialized default sound order with \(defaultSoundOrder.count) sounds")
     }
   }
 
   private func loadBuiltInSounds() {
     guard let url = Bundle.main.url(forResource: "sounds", withExtension: "json") else {
-      print("❌ AudioManager: sounds.json file not found in Resources folder")
+      debugLog("❌ AudioManager: sounds.json file not found in Resources folder")
       ErrorReporter.shared.report(AudioError.fileNotFound)
       return
     }
@@ -69,9 +69,9 @@ extension AudioManager {
       // Migrate user preferences from old format (with extensions) to new format (without extensions)
       migrateUserPreferences(for: builtInSounds)
 
-      print("🎵 AudioManager: Loaded \(builtInSounds.count) built-in sounds")
+      debugLog("🎵 AudioManager: Loaded \(builtInSounds.count) built-in sounds")
     } catch {
-      print("❌ AudioManager: Failed to parse sounds.json: \(error)")
+      debugLog("❌ AudioManager: Failed to parse sounds.json: \(error)")
       ErrorReporter.shared.report(error)
     }
   }
@@ -94,7 +94,7 @@ extension AudioManager {
     let lufs = cachedProfile?.integratedLUFS ?? soundData.lufs
     let normalizationFactor =
       cachedProfile != nil
-        ? pow(10, cachedProfile!.gainDB / 20) : soundData.normalizationFactor
+      ? pow(10, cachedProfile!.gainDB / 20) : soundData.normalizationFactor
 
     return Sound(
       title: soundData.title,
@@ -134,7 +134,7 @@ extension AudioManager {
   /// Load specific custom sounds by their IDs
   @MainActor
   func loadCustomSoundsByIds(_ ids: Set<UUID>) {
-    print("🎵 AudioManager: Loading \(ids.count) specific custom sounds")
+    debugLog("🎵 AudioManager: Loading \(ids.count) specific custom sounds")
 
     // Get only the requested custom sounds from the database
     let allCustomSounds = CustomSoundManager.shared.getAllCustomSounds()
@@ -153,7 +153,7 @@ extension AudioManager {
 
     // Add custom sounds to the array
     sounds.append(contentsOf: customSounds)
-    print("🎵 AudioManager: Loaded \(customSounds.count) specific custom sounds")
+    debugLog("🎵 AudioManager: Loaded \(customSounds.count) specific custom sounds")
 
     // Update default sound order if needed
     let newCustomFileNames = customSounds.map(\.fileName)
@@ -172,7 +172,7 @@ extension AudioManager {
 
   @MainActor
   func loadCustomSounds() {
-    print("🎵 AudioManager: Loading custom sounds")
+    debugLog("🎵 AudioManager: Loading custom sounds")
 
     // Backfill durations for existing custom sounds (runs once for sounds without duration)
     Task {
@@ -198,11 +198,13 @@ extension AudioManager {
       if let savedState = savedCustomSoundState[sound.fileName] {
         sound.isSelected = savedState.isSelected
         sound.volume = savedState.volume
-        print("🔄 AudioManager: Restored state for '\(sound.fileName)' - selected: \(savedState.isSelected), volume: \(savedState.volume)")
+        debugLog(
+          "🔄 AudioManager: Restored state for '\(sound.fileName)' - selected: \(savedState.isSelected), volume: \(savedState.volume)"
+        )
       }
     }
 
-    print("🎵 AudioManager: Loaded \(customSounds.count) custom sounds")
+    debugLog("🎵 AudioManager: Loaded \(customSounds.count) custom sounds")
 
     // Clean up orphaned custom sound UUIDs from defaultSoundOrder
     cleanupOrphanedSoundOrder()
@@ -216,7 +218,7 @@ extension AudioManager {
     }
     if orderUpdated {
       UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
-      print("🎵 AudioManager: Updated default sound order with new custom sounds")
+      debugLog("🎵 AudioManager: Updated default sound order with new custom sounds")
     }
 
     // Re-setup observers for the new sounds
@@ -247,7 +249,7 @@ extension AudioManager {
 
   private func createCustomSound(from data: CustomSoundData, index: Int) -> Sound? {
     guard let url = CustomSoundManager.shared.getURLForCustomSound(data) else {
-      print("❌ AudioManager: Could not get URL for custom sound \(data.fileName)")
+      debugLog("❌ AudioManager: Could not get URL for custom sound \(data.fileName)")
       return nil
     }
 
@@ -349,14 +351,15 @@ extension AudioManager {
         {
           userDefaults.set(legacyIsSelected, forKey: "\(newFileName)_isSelected")
           userDefaults.removeObject(forKey: "\(legacyFileName)_isSelected")
-          print("🔄 AudioManager: Migrated isSelected for '\(legacyFileName)' -> '\(newFileName)'")
+          debugLog(
+            "🔄 AudioManager: Migrated isSelected for '\(legacyFileName)' -> '\(newFileName)'")
         }
 
         // Migrate volume
         if let legacyVolume = userDefaults.object(forKey: "\(legacyFileName)_volume") as? Float {
           userDefaults.set(legacyVolume, forKey: "\(newFileName)_volume")
           userDefaults.removeObject(forKey: "\(legacyFileName)_volume")
-          print("🔄 AudioManager: Migrated volume for '\(legacyFileName)' -> '\(newFileName)'")
+          debugLog("🔄 AudioManager: Migrated volume for '\(legacyFileName)' -> '\(newFileName)'")
         }
 
         // customOrder is no longer used - managed by individual presets
@@ -366,7 +369,7 @@ extension AudioManager {
         if let legacyHidden = userDefaults.object(forKey: "\(legacyFileName)_isHidden") as? Bool {
           userDefaults.set(legacyHidden, forKey: "\(newFileName)_isHidden")
           userDefaults.removeObject(forKey: "\(legacyFileName)_isHidden")
-          print("🔄 AudioManager: Migrated isHidden for '\(legacyFileName)' -> '\(newFileName)'")
+          debugLog("🔄 AudioManager: Migrated isHidden for '\(legacyFileName)' -> '\(newFileName)'")
         }
       }
     }
@@ -387,7 +390,7 @@ extension AudioManager {
       // Check if it looks like a UUID (8-4-4-4-12 format)
       let uuidPattern = #"^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$"#
       if fileName.range(of: uuidPattern, options: [.regularExpression, .caseInsensitive]) != nil {
-        print("🧹 AudioManager: Removing orphaned UUID from defaultSoundOrder: \(fileName)")
+        debugLog("🧹 AudioManager: Removing orphaned UUID from defaultSoundOrder: \(fileName)")
         return false
       }
 
@@ -397,7 +400,7 @@ extension AudioManager {
 
     if defaultSoundOrder.count != originalCount {
       UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
-      print(
+      debugLog(
         "🧹 AudioManager: Cleaned up \(originalCount - defaultSoundOrder.count) orphaned entries from defaultSoundOrder"
       )
     }

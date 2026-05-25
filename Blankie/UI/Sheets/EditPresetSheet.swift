@@ -104,54 +104,58 @@ struct EditPresetSheet: View {
         )
       #else
         .formStyle(.grouped)
-          .frame(minWidth: 400, idealWidth: 500, minHeight: preset.isDefault ? 200 : 300)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              Button("Done") { isPresented = nil }
-                .keyboardShortcut(.escape)
-            }
-            ToolbarItem(placement: .automatic) {
-              exportButton
-            }
+        .frame(minWidth: 400, idealWidth: 500, minHeight: preset.isDefault ? 200 : 300)
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Done") { isPresented = nil }
+            .keyboardShortcut(.escape)
           }
+          ToolbarItem(placement: .automatic) {
+            exportButton
+          }
+        }
       #endif
-          .navigationDestination(for: Sound.self) { sound in
-            SoundSheet(mode: .edit(sound), embedInNavigation: false)
-          }
-          .onAppear(perform: setupInitialValues)
-          .onDisappear {
-            // Clean up exported file when sheet closes
-            cleanupExportedFile()
-          }
-          .onChange(of: accentColor) { _, _ in
-            applyChangesInstantly()
-          }
-          .onChange(of: useCustomTheme) { _, _ in
-            applyChangesInstantly()
-          }
+      .navigationDestination(for: Sound.self) { sound in
+        SoundSheet(mode: .edit(sound), embedInNavigation: false)
+      }
+      .onAppear(perform: setupInitialValues)
+      .onDisappear {
+        // Clean up exported file when sheet closes
+        cleanupExportedFile()
+      }
+      .onChange(of: accentColor) { _, _ in
+        applyChangesInstantly()
+      }
+      .onChange(of: useCustomTheme) { _, _ in
+        applyChangesInstantly()
+      }
       #if os(iOS) || os(visionOS)
-          .sheet(isPresented: $showingSoundSelection) {
-            soundSelectionSheet
+        .sheet(isPresented: $showingSoundSelection) {
+          soundSelectionSheet
+        }
+        .onChange(of: showingSoundSelection) { _, isShowing in
+          if !isShowing {
+            applyChangesInstantly()
           }
-          .onChange(of: showingSoundSelection) { _, isShowing in
-            if !isShowing {
-              applyChangesInstantly()
-            }
-          }
-          .sheet(isPresented: $showingImagePicker) {
-            imagePickerSheet
-          }
+        }
+        .sheet(isPresented: $showingImagePicker) {
+          imagePickerSheet
+        }
       #else
-          .fileImporter(
-            isPresented: $showingImagePicker,
-            allowedContentTypes: [.image],
-            allowsMultipleSelection: false
-          ) { result in
-            handleMacOSImageImport(result)
-          }
+        .fileImporter(
+          isPresented: $showingImagePicker,
+          allowedContentTypes: [.image],
+          allowsMultipleSelection: false
+        ) { result in
+          handleMacOSImageImport(result)
+        }
       #endif
     }
-    .tint(useCustomTheme ? (accentColor ?? globalSettings.customAccentColor ?? .accentColor) : (globalSettings.customAccentColor ?? .accentColor))
+    .tint(
+      useCustomTheme
+        ? (accentColor ?? globalSettings.customAccentColor ?? .accentColor)
+        : (globalSettings.customAccentColor ?? .accentColor)
+    )
     .alert(
       "Delete Preset",
       isPresented: .init(
@@ -198,14 +202,16 @@ struct EditPresetSheet: View {
     #if os(iOS)
       ImagePicker(imageData: $artworkData)
         .onDisappear {
-          print("🎨 EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")")
+          debugLog(
+            "🎨 EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")"
+          )
           if artworkData != nil {
             // Generate new ID for the new artwork
-            print("🎨 EditPresetSheet: Generating new artwork ID and applying changes")
+            debugLog("🎨 EditPresetSheet: Generating new artwork ID and applying changes")
             artworkId = UUID()
             applyChangesInstantly()
           } else {
-            print("🎨 EditPresetSheet: No artwork data, user likely cancelled")
+            debugLog("🎨 EditPresetSheet: No artwork data, user likely cancelled")
           }
         }
     #endif
@@ -279,7 +285,7 @@ extension EditPresetSheet {
     if let url = exportedURL {
       // Delete the temporary file
       try? FileManager.default.removeItem(at: url)
-      print("🗑️ Cleaned up temporary export file: \(url.lastPathComponent)")
+      debugLog("🗑️ Cleaned up temporary export file: \(url.lastPathComponent)")
     }
     // Reset the state
     exportedURL = nil
@@ -294,7 +300,7 @@ extension EditPresetSheet {
           .foregroundColor(.secondary)
       }
       errorSection
-      visualsSection // Artwork & Animated Artwork
+      visualsSection  // Artwork & Animated Artwork
     }
   }
 
@@ -342,7 +348,7 @@ extension EditPresetSheet {
   }
 
   func applyChangesInstantly(skipRefresh: Bool = false) {
-    print("🎨 EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))")
+    debugLog("🎨 EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))")
 
     // Only validate name for non-default presets
     if !preset.isDefault {
@@ -383,7 +389,8 @@ extension EditPresetSheet {
           savePresetsDirectly()
 
           // Post notification that preset was updated
-          NotificationCenter.default.post(name: Notification.Name("PresetUpdated"), object: updatedPreset)
+          NotificationCenter.default.post(
+            name: Notification.Name("PresetUpdated"), object: updatedPreset)
         }
       }
 
@@ -462,7 +469,7 @@ extension EditPresetSheet {
       )
     }
 
-    print(
+    debugLog(
       "🎨 EditPresetSheet: Creating \(states.count) sound states from \(selectedSounds.count) selected sounds"
     )
 
@@ -477,17 +484,17 @@ extension EditPresetSheet {
           data, for: preset.id, type: .artwork
         )
         artworkId = savedId
-        print("🎨 EditPresetSheet: Saved artwork with ID: \(savedId)")
+        debugLog("🎨 EditPresetSheet: Saved artwork with ID: \(savedId)")
       } catch {
-        print("❌ EditPresetSheet: Failed to save artwork: \(error)")
+        debugLog("❌ EditPresetSheet: Failed to save artwork: \(error)")
       }
     } else if artworkId == nil, preset.artworkId != nil {
       // Artwork was deleted - clean up old artwork
       do {
         try await PresetArtworkManager.shared.deleteArtwork(for: preset.artworkId!)
-        print("🎨 EditPresetSheet: Deleted old artwork")
+        debugLog("🎨 EditPresetSheet: Deleted old artwork")
       } catch {
-        print("❌ EditPresetSheet: Failed to delete old artwork: \(error)")
+        debugLog("❌ EditPresetSheet: Failed to delete old artwork: \(error)")
       }
     }
   }
@@ -502,7 +509,7 @@ extension EditPresetSheet {
       PresetStorage.saveDefaultPreset(defaultPreset)
     }
     PresetStorage.saveCustomPresets(customPresets)
-    print("🎨 EditPresetSheet: Presets saved directly without state override")
+    debugLog("🎨 EditPresetSheet: Presets saved directly without state override")
   }
 
   private func deletePreset(_ preset: Preset) {
@@ -513,7 +520,7 @@ extension EditPresetSheet {
   #if os(macOS)
     func handleMacOSImageImport(_ result: Result<[URL], Error>) {
       switch result {
-      case let .success(urls):
+      case .success(let urls):
         guard let url = urls.first else { return }
 
         let accessing = url.startAccessingSecurityScopedResource()
@@ -530,15 +537,15 @@ extension EditPresetSheet {
             let targetSize = CGSize(width: 300, height: 300)
             if let processedData = processImage(nsImage: nsImage, targetSize: targetSize) {
               artworkData = processedData
-              artworkId = UUID() // Generate new ID for the new artwork
+              artworkId = UUID()  // Generate new ID for the new artwork
               applyChangesInstantly()
             }
           }
         } catch {
-          print("❌ EditPresetSheet: Failed to import image: \(error)")
+          debugLog("❌ EditPresetSheet: Failed to import image: \(error)")
         }
-      case let .failure(error):
-        print("❌ EditPresetSheet: Failed to import image: \(error)")
+      case .failure(let error):
+        debugLog("❌ EditPresetSheet: Failed to import image: \(error)")
       }
     }
 
@@ -589,7 +596,7 @@ extension EditPresetSheet {
 
       // Convert to JPEG with compression
       guard let tiffData = resizedImage.tiffRepresentation,
-            let bitmap = NSBitmapImageRep(data: tiffData)
+        let bitmap = NSBitmapImageRep(data: tiffData)
       else { return nil }
 
       return bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])

@@ -27,7 +27,7 @@
     static func updateTemplate(_ template: CPListTemplate) {
       // Safety check for initialization
       guard !PresetManager.shared.isLoading else {
-        print("🚗 PresetListTemplate: PresetManager still loading, showing loading state")
+        debugLog("🚗 PresetListTemplate: PresetManager still loading, showing loading state")
         let loadingItem = CPListItem(text: "Loading presets...", detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])
@@ -96,7 +96,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            print("🚗 CarPlay: Error applying preset: \(error)")
+            debugLog("🚗 CarPlay: Error applying preset: \(error)")
           }
           completion()
         }
@@ -147,7 +147,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            print("🚗 CarPlay: Error applying preset: \(error)")
+            debugLog("🚗 CarPlay: Error applying preset: \(error)")
           }
           completion()
         }
@@ -194,7 +194,7 @@
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
 
       if let thumbnailData = userDefaults.data(forKey: thumbnailKey),
-         let image = UIImage(data: thumbnailData)
+        let image = UIImage(data: thumbnailData)
       {
         return image
       }
@@ -208,7 +208,7 @@
 
     private static func addRecentSection(to sections: inout [CPListSection]) {
       if let currentPreset = PresetManager.shared.currentPreset,
-         !currentPreset.isDefault
+        !currentPreset.isDefault
       {
         let recentItem = createPresetListItem(currentPreset)
         sections.append(
@@ -315,7 +315,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            print("🚗 CarPlay: Error applying All Sounds preset: \(error)")
+            debugLog("🚗 CarPlay: Error applying All Sounds preset: \(error)")
           }
           completion()
         }
