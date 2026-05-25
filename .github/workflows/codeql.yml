@@ -9,7 +9,7 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-26') || 'ubuntu-latest' }}
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
     permissions:
       security-events: write
@@ -35,10 +35,13 @@ jobs:
       - name: Select latest Xcode
         if: matrix.language == 'swift'
         run: |
-          echo "Installed Xcodes:"
+          echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
           LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
           if [ -z "$LATEST" ]; then LATEST=/Applications/Xcode.app; fi
+          # macos-26's default Xcode is 26.4.1, which can't open the project's
+          # objectVersion=100. Selecting the newest installed Xcode (26.5, the
+          # same build as local) is required so xcodebuild can read it.
           echo "Selecting $LATEST"
           sudo xcode-select -s "$LATEST"
           xcodebuild -version
