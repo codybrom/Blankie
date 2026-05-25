@@ -1,39 +1,58 @@
-name: "CodeQL"
+name: "CodeQL (Swift)"
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
+    # Only the Xcode/app build surface — not docs, notes, apple_docs, scripts
+    # (incl. scripts/*.swift), or top-level markdown.
+    paths:
+      - "Blankie/**"
+      - "BlankieTests/**"
+      - "BlankieUITests/**"
+      - "Blankie.xcodeproj/**"
+      - "Blankie.xctestplan"
+      - "Blankie*.plist"
+      - "**/*.entitlements"
+      - "**/*.xcconfig"
+      - ".github/workflows/codeql-swift.yml"
   pull_request:
     branches: ["main"]
+    # ready_for_review so flipping a draft to ready kicks off a scan
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "Blankie/**"
+      - "BlankieTests/**"
+      - "BlankieUITests/**"
+      - "Blankie.xcodeproj/**"
+      - "Blankie.xctestplan"
+      - "Blankie*.plist"
+      - "**/*.entitlements"
+      - "**/*.xcconfig"
+      - ".github/workflows/codeql-swift.yml"
   schedule:
     - cron: "15 14 * * 1"
+
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-26') || 'ubuntu-latest' }}
-    timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
+    name: Analyze (swift)
+    # Don't scan draft PRs (push/schedule are unaffected)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: macos-26
+    timeout-minutes: 120
     permissions:
       security-events: write
       packages: read
       actions: read
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: swift
-            build-mode: manual
-          - language: actions
-            build-mode: none
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
+          languages: swift
+          build-mode: manual
       - name: Select latest Xcode
-        if: matrix.language == 'swift'
         run: |
           echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
@@ -46,7 +65,6 @@ jobs:
           sudo xcode-select -s "$LATEST"
           xcodebuild -version
       - name: Build Swift project
-        if: matrix.language == 'swift'
         run: |
           if [ ! -f "Configuration.xcconfig" ]; then
             echo "Creating Configuration.xcconfig from example..."
@@ -69,4 +87,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:swift"
