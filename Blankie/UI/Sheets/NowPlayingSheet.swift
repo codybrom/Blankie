@@ -83,7 +83,12 @@ import SwiftUI
 
     @ViewBuilder
     private func nowPlayingView(in size: CGSize) -> some View {
-      if size.width > size.height {
+      // Only use the side-by-side landscape layout when the available area
+      // is meaningfully wider than tall. On iPad with the sidebar visible
+      // the detail pane can end up nearly square, which makes the HStack
+      // artwork+controls layout cramped — fall back to stacked portrait.
+      let aspect = size.height > 0 ? size.width / size.height : 1
+      if aspect > 1.6 {
         landscapeNowPlaying(in: size)
       } else {
         portraitNowPlaying(in: size)
@@ -122,13 +127,15 @@ import SwiftUI
       let artworkSize = max(size.height * 0.75, 120)
 
       HStack(spacing: 0) {
-        // Artwork takes the left side, vertically centered
+        // Artwork takes the left side, vertically centered. Leading padding
+        // keeps it off the sidebar divider on iPad.
         VStack {
           Spacer()
           artworkView(size: artworkSize)
           Spacer()
         }
         .frame(maxWidth: .infinity)
+        .padding(.leading, 16)
 
         // Controls on the right
         VStack(spacing: 0) {

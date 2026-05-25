@@ -48,89 +48,31 @@ import SwiftUI
       soundListView
     }
 
-    private func moveItems(from source: IndexSet, to destination: Int) {
-      print("📱 iPadLayout: moveItems called - source: \(source), destination: \(destination)")
+    // MARK: - Grid (tile) View
 
-      // Check if we have a current preset (not default)
-      if let preset = presetManager.currentPreset, !preset.isDefault {
-        print("📱 iPadLayout: Moving sounds in preset '\(preset.name)'")
+    @ViewBuilder
+    var gridView: some View {
+      SoundGridView(sounds: filteredSounds, onMove: moveItems)
+    }
 
-        // Get the actual filtered sounds array that the list is displaying
-        let displayedSounds = filteredSounds
-        print("📱 iPadLayout: Displayed sounds count: \(displayedSounds.count)")
-        print("📱 iPadLayout: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
+    /// Resolved view mode for the current context: per-preset override wins
+    /// over the app-wide default. Solo mode and Quick Mix have their own
+    /// rendering paths and don't route through here.
+    private var effectiveUseListView: Bool {
+      if let override = presetManager.currentPreset?.viewMode {
+        return override == .list
+      }
+      return showingListView
+    }
 
-        // Create a mutable copy of the current order
-        var newOrder = displayedSounds.map { $0.fileName }
-
-        // Debug: Show what's being moved
-        for index in source where index < newOrder.count {
-          print("📱 iPadLayout: Moving '\(newOrder[index])' from index \(index) to \(destination)")
-        }
-
-        // Apply the move operation
-        newOrder.move(fromOffsets: source, toOffset: destination)
-        print("📱 iPadLayout: New order after move: \(newOrder)")
-
-        // Build the complete sound order for the preset
-        // Start with the new order of displayed sounds
-        var completeOrder = newOrder
-
-        // Add any sounds from the preset that aren't currently displayed (e.g., hidden sounds)
-        let displayedSet = Set(newOrder)
-        for state in preset.soundStates where !displayedSet.contains(state.fileName) {
-          completeOrder.append(state.fileName)
-        }
-
-        print("📱 iPadLayout: Complete order being sent: \(completeOrder)")
-
-        // Update the preset with the new order
-        presetManager.updateCurrentPresetWithOrder(completeOrder)
-
-        // Force UI refresh
-        soundsUpdateTrigger += 1
-        print("📱 iPadLayout: UI refresh triggered")
+    /// Chooses list or grid view based on per-preset override then app
+    /// setting. Grid is the tile layout (matches Quick Mix visually).
+    @ViewBuilder
+    var soundsView: some View {
+      if effectiveUseListView {
+        listView
       } else {
-        // We're reordering the main sound grid (default preset or no preset)
-        print("📱 iPadLayout: Moving sounds in default view")
-
-        // Get the actual filtered sounds array that the list is displaying
-        let displayedSounds = filteredSounds
-        print("📱 iPadLayout: Displayed sounds count: \(displayedSounds.count)")
-        print("📱 iPadLayout: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
-
-        // Create a mutable copy of the current order
-        var newOrder = displayedSounds.map { $0.fileName }
-
-        // Debug: Show what's being moved
-        for index in source where index < newOrder.count {
-          print("📱 iPadLayout: Moving '\(newOrder[index])' from index \(index) to \(destination)")
-        }
-
-        // Apply the move operation
-        newOrder.move(fromOffsets: source, toOffset: destination)
-        print("📱 iPadLayout: New order after move: \(newOrder)")
-
-        // Build the complete default order
-        // Start with the new order of displayed sounds
-        var completeOrder = newOrder
-
-        // Add any sounds that aren't currently displayed
-        let displayedSet = Set(newOrder)
-        for fileName in audioManager.defaultSoundOrder where !displayedSet.contains(fileName) {
-          completeOrder.append(fileName)
-        }
-
-        print("📱 iPadLayout: Complete default order being saved: \(completeOrder)")
-
-        // Update the default order
-        audioManager.defaultSoundOrder = completeOrder
-        UserDefaults.standard.set(completeOrder, forKey: "defaultSoundOrder")
-        audioManager.objectWillChange.send()
-
-        // Force UI refresh
-        soundsUpdateTrigger += 1
-        print("📱 iPadLayout: UI refresh triggered for default view")
+        gridView
       }
     }
 

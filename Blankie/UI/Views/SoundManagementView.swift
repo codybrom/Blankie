@@ -35,9 +35,9 @@ struct SoundManagementView: View {
   var body: some View {
     mainContentView
       .navigationTitle("Manage Sounds")
-    #if os(iOS) || os(visionOS)
-      .navigationBarTitleDisplayMode(.inline)
-    #endif
+      #if os(iOS) || os(visionOS)
+        .navigationBarTitleDisplayMode(.inline)
+      #endif
       .toolbar {
         ToolbarItem(placement: .primaryAction) {
           Button {
@@ -209,22 +209,22 @@ struct SoundManagementView: View {
 
   private func deleteSound(_ sound: Sound) {
     guard sound.isCustom,
-          let customSoundDataID = sound.customSoundDataID,
-          let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID)
+      let customSoundDataID = sound.customSoundDataID,
+      let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID)
     else {
       return
     }
 
     let result = CustomSoundManager.shared.deleteCustomSound(customSoundData)
 
-    if case let .failure(error) = result {
+    if case .failure(let error) = result {
       print("❌ SoundManagementView: Failed to delete custom sound: \(error)")
     }
   }
 
   private func handleFileImport(_ result: Result<[URL], Error>) {
     switch result {
-    case let .success(urls):
+    case .success(let urls):
       guard let url = urls.first else { return }
 
       // Check if it's a .blankie preset file
@@ -237,7 +237,7 @@ struct SoundManagementView: View {
       // Otherwise, it's an audio file for custom sound
       selectedFileURL = url
       showingImportSheet = true
-    case let .failure(error):
+    case .failure(let error):
       print("❌ SoundManagementView: File import failed: \(error)")
     }
   }
@@ -321,7 +321,7 @@ private struct PlaybackSettingsSection: View {
               get: { globalSettings.volumeWithOtherAudio },
               set: { globalSettings.setVolumeWithOtherAudio($0) }
             ),
-            in: 0.0 ... 1.0
+            in: 0.0...1.0
           )
           .tint(globalSettings.customAccentColor ?? .accentColor)
 

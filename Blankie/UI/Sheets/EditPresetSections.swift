@@ -66,6 +66,23 @@ extension EditPresetSheet {
 extension EditPresetSheet {
   var visualsSection: some View {
     Section("Appearance") {
+      // Per-preset view mode: Default falls back to the app-wide setting.
+      Picker(
+        "View Mode",
+        selection: Binding<PresetViewModeSelection>(
+          get: { PresetViewModeSelection(viewModeOverride) },
+          set: { viewModeOverride = $0.asOptional }
+        )
+      ) {
+        Text("Default", comment: "Follow app-wide view-mode setting").tag(
+          PresetViewModeSelection.useDefault)
+        Text("Grid", comment: "Tile/grid view mode").tag(PresetViewModeSelection.grid)
+        Text("List", comment: "List view mode").tag(PresetViewModeSelection.list)
+      }
+      .onChange(of: viewModeOverride) { _, _ in
+        applyChangesInstantly()
+      }
+
       // Accent Color
       Toggle("Accent Color", isOn: $useCustomTheme)
 

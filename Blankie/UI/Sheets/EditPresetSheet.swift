@@ -73,6 +73,7 @@ struct EditPresetSheet: View {
   @State var exportedURL: URL?
   @State var isExporting = false
   @State var useCustomTheme = false
+  @State var viewModeOverride: PresetViewMode?
   #if os(iOS) || os(visionOS)
     @State var soundEditMode: EditMode = .inactive
   #endif
@@ -326,6 +327,7 @@ extension EditPresetSheet {
     staticArtworkPath = preset.staticArtworkPath
     accentColor = preset.accentColor
     useCustomTheme = preset.accentColor != nil
+    viewModeOverride = preset.viewMode
 
     // Load existing images if they exist
     Task {
@@ -425,6 +427,9 @@ extension EditPresetSheet {
     } else {
       updatedPreset.accentColorName = nil
     }
+
+    // Save per-preset view-mode override (nil = follow app setting).
+    updatedPreset.viewMode = viewModeOverride
 
     return updatedPreset
   }

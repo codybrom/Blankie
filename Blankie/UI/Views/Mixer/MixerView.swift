@@ -15,7 +15,6 @@ private struct AnimationTrigger: Equatable {
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
     @StateObject var onboardingManager = OnboardingManager.shared
-    @State var showingListView = false
     @State var showingPresetPicker = false
     @State var showingOnboarding = false
     @State var hideInactiveSounds = false
@@ -27,7 +26,6 @@ private struct AnimationTrigger: Equatable {
     @State var showingSoundManagement = false
     @State var showingSettings = false
     @State var showingQuickMixEditor = false
-    @State var showingViewSettings = false
     @State var showingTimer = false
     @State var soundToEdit: Sound?
     @State var presetToEdit: Preset?
@@ -61,7 +59,7 @@ private struct AnimationTrigger: Equatable {
       }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
-          .interactiveDismissDisabled() // Prevent accidental dismissal
+          .interactiveDismissDisabled()  // Prevent accidental dismissal
           .onAppear {
             print("🎵 MixerView: SoundSheet appeared for '\(sound.title)'")
           }
@@ -79,15 +77,6 @@ private struct AnimationTrigger: Equatable {
         }
       }
 
-      .sheet(isPresented: $showingViewSettings) {
-        ViewSettingsSheet(
-          isPresented: $showingViewSettings,
-          showingListView: $showingListView,
-          hideInactiveSounds: $hideInactiveSounds
-        )
-        .presentationDetents([.medium])
-        .presentationDragIndicator(.hidden)
-      }
       .sheet(isPresented: $showingThemePicker) {
         ThemePickerSheet(isPresented: $showingThemePicker)
       }
@@ -141,7 +130,9 @@ private struct AnimationTrigger: Equatable {
       }
       .onChange(of: presetManager.currentPreset?.id) { oldValue, newValue in
         // Preset switched
-        print("🔄 MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")")
+        print(
+          "🔄 MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")"
+        )
         soundsUpdateTrigger += 1
       }
       .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
@@ -151,12 +142,15 @@ private struct AnimationTrigger: Equatable {
           soundsUpdateTrigger += 1
         }
       }
-      .onReceive(NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))) { _ in
+      .onReceive(
+        NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))
+      ) { _ in
         // Custom sound was imported
         print("🔄 MixerView: Received CustomSoundImported notification")
         soundsUpdateTrigger += 1
       }
-      .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) { _ in
+      .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) {
+        _ in
         // Preset was updated
         print("🔄 MixerView: Received PresetUpdated notification")
         soundsUpdateTrigger += 1
@@ -164,10 +158,19 @@ private struct AnimationTrigger: Equatable {
       .task {
         // Check if we should show onboarding after a brief delay
         try? await Task.sleep(for: .seconds(1))
-        if onboardingManager.checkAndShowOnboarding(hasCustomPresets: presetManager.hasCustomPresets) {
+        if onboardingManager.checkAndShowOnboarding(
+          hasCustomPresets: presetManager.hasCustomPresets)
+        {
           showingOnboarding = true
         }
       }
+    }
+
+    /// App-wide Grid/List preference. Read live from GlobalSettings so changes
+    /// made in the Settings sheet take effect immediately — a local @State
+    /// mirror would only refresh on the next view appearance.
+    var showingListView: Bool {
+      globalSettings.showingListView
     }
 
     // MARK: - Layouts
@@ -176,41 +179,90 @@ private struct AnimationTrigger: Equatable {
     private var iPadLayout: some View {
       NavigationSplitView(columnVisibility: $columnVisibility) {
         SidebarContentView(
-          showingAbout: .constant(false),
-          showingSoundManagement: $showingSoundManagement
+          showingSettings: $showingSettings,
+          showingPresetPicker: $showingPresetPicker
         )
       } detail: {
         NavigationStack {
           ZStack {
-            presetBackgroundView
-            VStack(spacing: 0) {
-              mainContentView
+            if showingNowPlaying {
+              NowPlayingSheet(
+                onDismiss: {
+                  withAnimation(.easeInOut(duration: 0.3)) {
+                    showingNowPlaying = false
+                  }
+                },
+                showingPresetPicker: $showingPresetPicker
+              )
+              .transition(.opacity)
+            } else {
+              ZStack {
+                presetBackgroundView
+                VStack(spacing: 0) {
+                  mainContentView
+                }
+              }
+              .transition(.opacity)
             }
           }
+          .animation(.easeInOut(duration: 0.3), value: showingNowPlaying)
           .navigationBarTitleDisplayMode(.inline)
           .toolbar {
             ToolbarItem(placement: .principal) {
-              Text(navigationTitle)
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundColor(.primary)
+              Button {
+                showingPresetPicker = true
+              } label: {
+                VStack(spacing: 0) {
+                  HStack(spacing: 4) {
+                    Text(navigationTitle)
+                      .font(.headline)
+                      .foregroundColor(.primary)
+                    Image(systemName: "chevron.down")
+                      .font(.caption2.weight(.semibold))
+                      .foregroundColor(.secondary)
+                  }
+                  if let caption = topBarCaption {
+                    Text(caption)
+                      .font(.caption2)
+                      .foregroundColor(.secondary)
+                  }
+                }
+              }
+              .sensoryFeedback(.selection, trigger: showingPresetPicker)
             }
 
+            // Edit button is only meaningful on the grid/list view — hide it
+            // while Now Playing is showing so it doesn't compete with the
+            // NowPlayingSheet chrome.
             ToolbarItem(placement: .confirmationAction) {
-              // Preset edit button (right aligned) - also show for default preset
-              if let currentPreset = presetManager.currentPreset,
-                 !audioManager.isQuickMix
-              {
-                Button {
-                  presetToEdit = currentPreset
-                } label: {
-                  Image(systemName: "slider.vertical.3")
-                    .font(.system(size: 18))
-                    .foregroundColor(.secondary)
+              if !showingNowPlaying {
+                if audioManager.isQuickMix {
+                  Button {
+                    showingQuickMixEditor = true
+                  } label: {
+                    Image(systemName: "slider.vertical.3")
+                      .font(.system(size: 18))
+                      .foregroundColor(.secondary)
+                  }
+                } else if let currentPreset = presetManager.currentPreset {
+                  Button {
+                    presetToEdit = currentPreset
+                  } label: {
+                    Image(systemName: "slider.vertical.3")
+                      .font(.system(size: 18))
+                      .foregroundColor(.secondary)
+                  }
                 }
               }
             }
           }
           .toolbarBackground(.hidden, for: .navigationBar)
+          // Playback controls must be reachable at every size class. Without
+          // this, iPad at regular horizontal size shows no play/pause at all
+          // (compact width falls back to iPhoneLayout, which does include it).
+          .safeAreaInset(edge: .bottom, spacing: 0) {
+            bottomToolbar
+          }
         }
       }
       .navigationSplitViewStyle(.balanced)
@@ -256,15 +308,17 @@ private struct AnimationTrigger: Equatable {
                   .font(showingNowPlaying ? .title3.weight(.semibold) : .headline)
                   .foregroundColor(showingNowPlaying ? .white : .primary)
                 Image(systemName: "chevron.down")
-                  .font(showingNowPlaying ? .caption.weight(.semibold) : .caption2.weight(.semibold))
+                  .font(
+                    showingNowPlaying ? .caption.weight(.semibold) : .caption2.weight(.semibold)
+                  )
                   .foregroundColor(showingNowPlaying ? .white.opacity(0.5) : .secondary)
               }
               .padding(.vertical, 6)
             }
             .sensoryFeedback(.selection, trigger: showingPresetPicker)
 
-            if timerManager.isTimerActive {
-              Text(timerTopBarText)
+            if let caption = topBarCaption {
+              Text(caption)
                 .font(.caption2)
                 .foregroundColor(showingNowPlaying ? .white.opacity(0.6) : .secondary)
             }
@@ -302,7 +356,7 @@ private struct AnimationTrigger: Equatable {
     private var mainContentView: some View {
       Group {
         if let soloSound = audioManager.soloModeSound, soundToEdit == nil,
-           audioManager.previewModeSound == nil
+          audioManager.previewModeSound == nil
         {
           // Solo mode view (only when no SoundSheet is presented and not in preview mode)
           soloModeView(for: soloSound)
@@ -312,14 +366,14 @@ private struct AnimationTrigger: Equatable {
               )
             }
         } else if let soloSound = audioManager.soloModeSound,
-                  soundToEdit != nil || audioManager.previewModeSound != nil
+          soundToEdit != nil || audioManager.previewModeSound != nil
         {
           // Solo mode is active but SoundSheet is open or in preview mode, maintain normal layout
           Group {
             if audioManager.isQuickMix {
               QuickMixView()
             } else {
-              listView
+              soundsView
             }
           }
           .onAppear {
@@ -337,8 +391,8 @@ private struct AnimationTrigger: Equatable {
           // Quick Mix mode view
           QuickMixView()
         } else {
-          // List view
-          listView
+          // Normal content: list or grid based on user preference (iPad).
+          soundsView
         }
       }
       .animation(
@@ -379,6 +433,19 @@ private struct AnimationTrigger: Equatable {
         formatter.timeStyle = .short
         return "Stops at \(formatter.string(from: endTime))"
       }
+    }
+
+    /// Small status line rendered under the preset name in the top bar.
+    /// "Paused" takes priority so users always know the global state; the
+    /// timer caption only shows while actively playing.
+    var topBarCaption: String? {
+      if !audioManager.isGloballyPlaying && audioManager.hasSelectedSounds {
+        return String(localized: "Paused", comment: "Top bar caption when playback is paused")
+      }
+      if timerManager.isTimerActive {
+        return timerTopBarText
+      }
+      return nil
     }
   }
 

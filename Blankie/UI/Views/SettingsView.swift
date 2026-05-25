@@ -3,6 +3,9 @@ import SwiftUI
 struct SettingsView: View {
   @Environment(\.dismiss) private var dismiss
   @ObservedObject private var globalSettings = GlobalSettings.shared
+  #if os(iOS) || os(visionOS)
+    @ObservedObject private var audioManager = AudioManager.shared
+  #endif
   @State private var showingAbout = false
   @State private var showingOnboarding = false
 
@@ -23,6 +26,24 @@ struct SettingsView: View {
         Section(
           header: Text("Appearance", comment: "Settings section header for appearance options")
         ) {
+          #if os(iOS) || os(visionOS)
+            // View mode (Grid / List). Locked to Grid while in Quick Mix,
+            // which is tile-only by design.
+            Picker(
+              selection: Binding(
+                get: { audioManager.isQuickMix ? false : globalSettings.showingListView },
+                set: { globalSettings.setShowingListView($0) }
+              )
+            ) {
+              Text("Grid", comment: "View mode: tile/grid").tag(false)
+              Text("List", comment: "View mode: list").tag(true)
+            } label: {
+              Text("View Mode", comment: "View mode picker label")
+            }
+            .pickerStyle(.segmented)
+            .disabled(audioManager.isQuickMix)
+          #endif
+
           Picker(
             selection: Binding(
               get: { globalSettings.appearance },

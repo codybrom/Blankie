@@ -21,6 +21,7 @@
     "Español",
     "facebookexternalhit",
     "Français",
+    "gearshape",
     "healthcheck",
     "INFOPLIST",
     "iphoneos",
@@ -34,6 +35,7 @@
     "lufs",
     "Mardojai",
     "Orientationi",
+    "papaparse",
     "pbxproj",
     "playform",
     "Português",
@@ -50,6 +52,13 @@
     "简体中文"
   ],
   "docker.lsp.experimental.vulnerabilityScanning": false,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "css.lint.unknownAtRules": "ignore",
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll": "always"
   },

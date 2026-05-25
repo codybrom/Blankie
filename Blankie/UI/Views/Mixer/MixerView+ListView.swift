@@ -140,7 +140,8 @@ import SwiftUI
       .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
     }
 
-    private func moveItems(from source: IndexSet, to destination: Int) {
+    // Reorder handler shared by the list and grid views in `mainContentView`.
+    func moveItems(from source: IndexSet, to destination: Int) {
       print("📱 ListView: moveItems called - source: \(source), destination: \(destination)")
 
       // Check if we have a current preset (not default)

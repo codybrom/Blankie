@@ -50,8 +50,8 @@ import SwiftUI
 
       // Sort filtered sounds according to preset order or default sound order
       if let currentPreset = presetManager.currentPreset,
-         !currentPreset.isDefault,
-         let soundOrder = currentPreset.soundOrder
+        !currentPreset.isDefault,
+        let soundOrder = currentPreset.soundOrder
       {
         // Use preset's sound order for custom presets
         print("🔍 FilteredSounds: Using preset order: \(soundOrder)")
@@ -95,9 +95,11 @@ import SwiftUI
 
       GeometryReader { geometry in
         ZStack {
-          // Layer 1: Animated artwork preview image (blurred)
-          if let _ = preset,
-             let artworkImage = backgroundImage
+          // Layer 1: Animated artwork preview image (blurred) — only when
+          // a custom artwork exists. Presets without artwork fall through
+          // to the shared accent gradient (same look as Quick Mix).
+          if preset != nil,
+            let artworkImage = backgroundImage
           {
             Image(uiImage: artworkImage)
               .resizable()
@@ -110,30 +112,46 @@ import SwiftUI
                 Color.black.opacity(0.15)
               )
           }
-          // Layer 2: Accent color gradient fallback
-          else if let preset = preset,
-                  let accent = preset.accentColor ?? globalSettings.customAccentColor
-          {
-            LinearGradient(
-              colors: [
-                accent.opacity(0.3),
-                accent.opacity(0.1),
-                Color(.systemBackground).opacity(0.5),
-              ],
-              startPoint: .top,
-              endPoint: .bottom
+          // Layer 2: Shared accent gradient — matches Quick Mix so the
+          // default preset, custom accent presets, and Quick Mix all read
+          // as variants of the same surface.
+          else {
+            SoundSurfaceBackground(
+              accent: preset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
             )
           }
         }
       }
       .ignoresSafeArea()
-      .task(id: "\(preset?.id.uuidString ?? "")-\(preset?.artworkId?.uuidString ?? "")-\(preset?.animatedArtwork?.previewPath ?? "")") {
+      .task(
+        id:
+          "\(preset?.id.uuidString ?? "")-\(preset?.artworkId?.uuidString ?? "")-\(preset?.animatedArtwork?.previewPath ?? "")"
+      ) {
         guard let preset = preset else {
           backgroundImage = nil
           return
         }
         backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
       }
+    }
+  }
+
+  /// Shared background used by both the main tile grid (non-artwork presets)
+  /// and Quick Mix so the two modes read as one visual system.
+  struct SoundSurfaceBackground: View {
+    let accent: Color
+
+    var body: some View {
+      LinearGradient(
+        colors: [
+          accent.opacity(0.25),
+          accent.opacity(0.1),
+          Color.black.opacity(0.9),
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+      )
+      .ignoresSafeArea()
     }
   }
 #endif

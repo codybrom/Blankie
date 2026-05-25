@@ -2,12 +2,13 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   struct SidebarContentView: View {
-    @Binding var showingAbout: Bool
-    @Binding var showingSoundManagement: Bool
+    @Binding var showingSettings: Bool
+    @Binding var showingPresetPicker: Bool
 
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var globalSettings = GlobalSettings.shared
     @State private var showingListView = false
+    @State private var showingCreatePreset = false
 
     private var customPresets: [Preset] {
       presetManager.presets.filter { !$0.isDefault }
@@ -35,6 +36,37 @@ import SwiftUI
             presetRow(preset)
               .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
           }
+
+          // Browse all presets — opens the full picker modal so users can
+          // reach presets that fall outside the recent-5 list in the sidebar.
+          Button {
+            showingPresetPicker = true
+          } label: {
+            Label {
+              Text("Browse All Presets", comment: "Sidebar link to open the full presets modal")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "list.bullet")
+                .foregroundColor(.secondary)
+                .frame(width: 20)
+            }
+          }
+          .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+
+          // New preset
+          Button {
+            showingCreatePreset = true
+          } label: {
+            Label {
+              Text("New Preset", comment: "Sidebar button to create a new preset")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "plus")
+                .foregroundColor(.secondary)
+                .frame(width: 20)
+            }
+          }
+          .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
         } header: {
           Text("Presets")
         }
@@ -45,6 +77,9 @@ import SwiftUI
       }
       .onAppear {
         showingListView = globalSettings.showingListView
+      }
+      .sheet(isPresented: $showingCreatePreset) {
+        CreatePresetSheet(isPresented: $showingCreatePreset)
       }
     }
 
@@ -169,27 +204,19 @@ import SwiftUI
       }
     }
 
-    // Settings buttons in sidebar
+    // Settings button in sidebar — opens the full SettingsView, which
+    // already contains Manage Sounds, Appearance, About, etc.
     private var settingsButtons: some View {
-      Group {
-        Button(action: {
-          showingSoundManagement = true
-        }) {
-          Label("Sound Settings", systemImage: "waveform")
+      Button(action: {
+        showingSettings = true
+      }) {
+        Label {
+          Text("Settings", comment: "Sidebar settings link")
+        } icon: {
+          Image(systemName: "gearshape")
         }
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-
-        Button(action: {
-          showingAbout = true
-        }) {
-          Label {
-            Text("About Blankie", comment: "About menu item")
-          } icon: {
-            Image(systemName: "info.circle")
-          }
-        }
-        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
       }
+      .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
     }
   }
 #endif

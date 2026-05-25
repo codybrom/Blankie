@@ -54,19 +54,19 @@ struct CreatePresetSheet: View {
         )
       #else
         .formStyle(.grouped)
-          .frame(minWidth: 400, idealWidth: 500, minHeight: 300)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              Button("Cancel") { isPresented = false }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-              Button("Create") { createPreset() }
-                .keyboardShortcut(.return)
-                .disabled(presetName.isEmpty || selectedSounds.isEmpty)
-            }
+        .frame(minWidth: 400, idealWidth: 500, minHeight: 300)
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel") { isPresented = false }
           }
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Create") { createPreset() }
+            .keyboardShortcut(.return)
+            .disabled(presetName.isEmpty || selectedSounds.isEmpty)
+          }
+        }
       #endif
-          .onAppear(perform: setupDefaultSelection)
+      .onAppear(perform: setupDefaultSelection)
       #if os(iOS) || os(visionOS)
         .sheet(isPresented: $showingSoundSelection) {
           NavigationStack {
@@ -277,14 +277,14 @@ extension CreatePresetSheet {
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
     let selectedSoundStates =
       orderedSounds
-        .filter { selectedSounds.contains($0.fileName) }
-        .map { sound in
-          PresetState(
-            fileName: sound.fileName,
-            isSelected: true, // Newly added sounds should be selected by default
-            volume: sound.volume
-          )
-        }
+      .filter { selectedSounds.contains($0.fileName) }
+      .map { sound in
+        PresetState(
+          fileName: sound.fileName,
+          isSelected: true,  // Newly added sounds should be selected by default
+          volume: sound.volume
+        )
+      }
 
     let presetId = UUID()
     let artworkId = await saveArtworkIfPresent(for: presetId)
@@ -342,10 +342,10 @@ extension CreatePresetSheet {
 // MARK: - macOS Image Handling
 
 #if os(macOS)
-  fileprivate extension CreatePresetSheet {
-    func handleMacOSImageImport(_ result: Result<[URL], Error>) {
+  extension CreatePresetSheet {
+    fileprivate func handleMacOSImageImport(_ result: Result<[URL], Error>) {
       switch result {
-      case let .success(urls):
+      case .success(let urls):
         guard let url = urls.first else { return }
 
         let accessing = url.startAccessingSecurityScopedResource()
@@ -370,12 +370,12 @@ extension CreatePresetSheet {
         } catch {
           print("❌ macOS Image Picker: Failed to load image: \(error)")
         }
-      case let .failure(error):
+      case .failure(let error):
         print("❌ macOS Image Picker: Image picker error: \(error)")
       }
     }
 
-    func cropToSquareMacOS(image: NSImage) -> NSImage {
+    fileprivate func cropToSquareMacOS(image: NSImage) -> NSImage {
       let size = min(image.size.width, image.size.height)
       let offsetX = (image.size.width - size) / 2
       let offsetY = (image.size.height - size) / 2

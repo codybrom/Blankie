@@ -42,7 +42,7 @@ import SwiftUI
           Text("Lock Screen Animation", comment: "Button to select animated artwork")
           Spacer()
           if let identifier = selectedBundledIdentifier,
-             let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == identifier })
+            let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == identifier })
           {
             Text(asset.displayName)
               .foregroundColor(.secondary)
@@ -104,13 +104,19 @@ import SwiftUI
         let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
 
         // Preview images remain bundled for fast gallery display
-        guard let previewURL = Bundle.main.url(forResource: asset.previewResourceName, withExtension: asset.previewExtension) else {
+        guard
+          let previewURL = Bundle.main.url(
+            forResource: asset.previewResourceName, withExtension: asset.previewExtension)
+        else {
           throw AnimatedArtworkError.missingBundledAsset("\(asset.id)/preview")
         }
 
-        guard let squarePreviewURL = Bundle.main.url(
-          forResource: asset.squarePreviewResourceName, withExtension: asset.squarePreviewExtension
-        ) else {
+        guard
+          let squarePreviewURL = Bundle.main.url(
+            forResource: asset.squarePreviewResourceName,
+            withExtension: asset.squarePreviewExtension
+          )
+        else {
           throw AnimatedArtworkError.missingBundledAsset("\(asset.id)/preview-square")
         }
 
@@ -121,7 +127,8 @@ import SwiftUI
         if let oldPreview = artwork?.previewPath, oldPreview != staticArtworkPath {
           AnimatedArtworkFileStore.removeItemIfExists(relativePath: oldPreview)
         }
-        if let oldSquarePreview = artwork?.squarePreviewPath, oldSquarePreview != staticArtworkPath {
+        if let oldSquarePreview = artwork?.squarePreviewPath, oldSquarePreview != staticArtworkPath
+        {
           AnimatedArtworkFileStore.removeItemIfExists(relativePath: oldSquarePreview)
         }
 
@@ -358,8 +365,9 @@ import SwiftUI
     var body: some View {
       Button(action: onTap) {
         ZStack(alignment: .bottomLeading) {
-          if let previewURL = Bundle.main.url(forResource: asset.previewResourceName, withExtension: asset.previewExtension),
-             let uiImage = UIImage(contentsOfFile: previewURL.path)
+          if let previewURL = Bundle.main.url(
+            forResource: asset.previewResourceName, withExtension: asset.previewExtension),
+            let uiImage = UIImage(contentsOfFile: previewURL.path)
           {
             Image(uiImage: uiImage)
               .resizable()
@@ -442,7 +450,9 @@ import SwiftUI
         Button("Cancel", role: .cancel) {}
       } message: {
         if isSelected {
-          Text("This video is currently selected for your lock screen. Removing it will also unselect it. You can download it again later.")
+          Text(
+            "This video is currently selected for your lock screen. Removing it will also unselect it. You can download it again later."
+          )
         } else {
           Text("This will free up space on your device. You can download it again later.")
         }
@@ -461,7 +471,7 @@ import SwiftUI
           .clipShape(Circle())
           .shadow(radius: 2)
 
-      case let .downloading(progress):
+      case .downloading(let progress):
         ZStack {
           Circle()
             .stroke(Color.white.opacity(0.3), lineWidth: 2)
@@ -568,7 +578,7 @@ import SwiftUI
                 .foregroundColor(.white)
                 .font(.subheadline)
 
-            case let .downloading(progress):
+            case .downloading(let progress):
               ZStack {
                 Circle()
                   .stroke(Color.white.opacity(0.3), lineWidth: 4)
@@ -601,7 +611,7 @@ import SwiftUI
                 .foregroundColor(.white)
                 .font(.subheadline)
 
-            case let .failed(error):
+            case .failed(let error):
               VStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                   .font(.largeTitle)
@@ -807,7 +817,7 @@ import SwiftUI
 
     var errorDescription: String? {
       switch self {
-      case let .missingBundledAsset(name):
+      case .missingBundledAsset(let name):
         return "Missing bundled asset: \(name)"
       }
     }
@@ -841,11 +851,13 @@ import SwiftUI
         return []
       }
 
-      guard let contents = try? FileManager.default.contentsOfDirectory(
-        at: resourceURL,
-        includingPropertiesForKeys: [.isRegularFileKey],
-        options: [.skipsHiddenFiles]
-      ) else {
+      guard
+        let contents = try? FileManager.default.contentsOfDirectory(
+          at: resourceURL,
+          includingPropertiesForKeys: [.isRegularFileKey],
+          options: [.skipsHiddenFiles]
+        )
+      else {
         print("⚠️ Failed to read bundle resource contents")
         return []
       }
@@ -857,7 +869,7 @@ import SwiftUI
 
       for metadataURL in metadataFiles {
         guard let data = try? Data(contentsOf: metadataURL),
-              let artwork = try? JSONDecoder().decode(BundledAnimatedLoop.self, from: data)
+          let artwork = try? JSONDecoder().decode(BundledAnimatedLoop.self, from: data)
         else {
           print("⚠️ Failed to load metadata from \(metadataURL.lastPathComponent)")
           continue
@@ -867,7 +879,7 @@ import SwiftUI
       }
 
       print("✅ Loaded \(artworks.count) artworks from bundle resources")
-      return artworks.sorted { $0.id < $1.id } // Sort alphabetically by ID
+      return artworks.sorted { $0.id < $1.id }  // Sort alphabetically by ID
     }
   }
 
@@ -878,10 +890,11 @@ import SwiftUI
 
     static var allCategories: [ArtworkCategory] {
       // Files are copied flat to bundle root, not in AnimatedArtwork subfolder
-      guard let categoriesURL = Bundle.main.url(
-        forResource: "categories",
-        withExtension: "json"
-      ),
+      guard
+        let categoriesURL = Bundle.main.url(
+          forResource: "categories",
+          withExtension: "json"
+        ),
         let data = try? Data(contentsOf: categoriesURL),
         let config = try? JSONDecoder().decode(CategoriesConfig.self, from: data)
       else {
@@ -902,9 +915,12 @@ import SwiftUI
     let onChange: () -> Void
 
     var body: some View {
-      Text("Animated artwork editing is available on iOS", comment: "Fallback text when feature unavailable")
-        .font(.subheadline)
-        .foregroundColor(.secondary)
+      Text(
+        "Animated artwork editing is available on iOS",
+        comment: "Fallback text when feature unavailable"
+      )
+      .font(.subheadline)
+      .foregroundColor(.secondary)
     }
   }
 #endif

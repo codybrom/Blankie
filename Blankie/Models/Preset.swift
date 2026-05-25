@@ -39,6 +39,37 @@ struct AnimatedArtworkRef: Codable, Equatable, Hashable {
   }
 }
 
+/// Per-preset override for the sound-layout mode. `nil` on a preset means
+/// "follow the app-wide default" (`GlobalSettings.showingListView`).
+enum PresetViewMode: String, Codable, CaseIterable {
+  case grid
+  case list
+}
+
+/// UI-side enum for the Edit Preset picker, so SwiftUI can bind to a
+/// concrete value even when the underlying model stores `nil`.
+enum PresetViewModeSelection: Hashable {
+  case useDefault
+  case grid
+  case list
+
+  init(_ mode: PresetViewMode?) {
+    switch mode {
+    case .some(.grid): self = .grid
+    case .some(.list): self = .list
+    case .none: self = .useDefault
+    }
+  }
+
+  var asOptional: PresetViewMode? {
+    switch self {
+    case .useDefault: return nil
+    case .grid: return .grid
+    case .list: return .list
+    }
+  }
+}
+
 struct Preset: Codable, Identifiable, Equatable {
   let id: UUID
   var name: String
@@ -67,6 +98,10 @@ struct Preset: Codable, Identifiable, Equatable {
   // Custom accent color
   var accentColorName: String?
 
+  /// Per-preset view-mode override (Grid vs List). `nil` = follow the
+  /// app-wide `GlobalSettings.showingListView` setting.
+  var viewMode: PresetViewMode?
+
   var accentColor: Color? {
     guard let name = accentColorName else { return nil }
     return Color(fromString: name)
@@ -93,6 +128,7 @@ struct Preset: Codable, Identifiable, Equatable {
       && lhs.isImported == rhs.isImported
       && lhs.moods == rhs.moods
       && lhs.accentColorName == rhs.accentColorName
+      && lhs.viewMode == rhs.viewMode
   }
 
   func validate() -> Bool {
