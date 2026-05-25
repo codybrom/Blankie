@@ -107,21 +107,39 @@ extension AudioManager {
   }
 
   @MainActor
-  private func navigateToNextPreset() {
-    let allPresets = PresetManager.shared.presets
-    guard !allPresets.isEmpty else { return }
-
-    // Filter out default preset if custom presets exist and sort by order
-    let customPresets =
-      allPresets
-      .filter { !$0.isDefault }
-      .sorted {
-        let order1 = $0.order ?? Int.max
-        let order2 = $1.order ?? Int.max
-        return order1 < order2
+  /// Presets the lock-screen / CarPlay next & previous commands cycle through:
+  /// the user's favorites in their saved order (Quick Mix is skipped — it isn't
+  /// a preset). Falls back to all custom presets by saved order when there are
+  /// no favorites.
+  private var navigablePresets: [Preset] {
+    let favorites = GlobalSettings.shared.starredItems.compactMap { token -> Preset? in
+      switch token {
+      case GlobalSettings.allSoundsToken:
+        return PresetManager.shared.presets.first { $0.isDefault }
+      case GlobalSettings.quickMixToken:
+        return nil
+      default:
+        return PresetManager.shared.presets.first { $0.id.uuidString == token }
       }
-    let presets = customPresets.isEmpty ? allPresets : customPresets
+    }
+    let favoriteIDs = Set(favorites.map(\.id))
+    // Favorites first (in saved order), then every other custom preset by its
+    // order — so favorites lead but no preset is unreachable from next/previous.
+    let rest = PresetManager.shared.presets
+      .filter { !$0.isDefault && !favoriteIDs.contains($0.id) }
+      .sorted { ($0.order ?? Int.max) < ($1.order ?? Int.max) }
+    let result = favorites + rest
+    // Nothing to cycle (no favorites and no custom presets): fall back to the
+    // default preset so next/previous still re-applies something.
+    if result.isEmpty, let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {
+      return [defaultPreset]
+    }
+    return result
+  }
 
+  @MainActor
+  private func navigateToNextPreset() {
+    let presets = navigablePresets
     guard !presets.isEmpty else { return }
 
     let currentPresetId = PresetManager.shared.currentPreset?.id
@@ -162,20 +180,7 @@ extension AudioManager {
 
   @MainActor
   private func navigateToPreviousPreset() {
-    let allPresets = PresetManager.shared.presets
-    guard !allPresets.isEmpty else { return }
-
-    // Filter out default preset if custom presets exist and sort by order
-    let customPresets =
-      allPresets
-      .filter { !$0.isDefault }
-      .sorted {
-        let order1 = $0.order ?? Int.max
-        let order2 = $1.order ?? Int.max
-        return order1 < order2
-      }
-    let presets = customPresets.isEmpty ? allPresets : customPresets
-
+    let presets = navigablePresets
     guard !presets.isEmpty else { return }
 
     let currentPresetId = PresetManager.shared.currentPreset?.id

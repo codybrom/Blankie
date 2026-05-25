@@ -91,10 +91,60 @@ extension GlobalSettings {
     logCurrentSettings()
   }
 
+  // MARK: - Starred items (iPad sidebar + CarPlay)
+
+  @MainActor
+  func setStarredItems(_ value: [String]) {
+    starredItems = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.starredItems)
+  }
+
+  /// Whether the given token (`allSoundsToken`, `quickMixToken`, or a preset
+  /// UUID string) is currently starred.
+  func isStarred(_ token: String) -> Bool {
+    starredItems.contains(token)
+  }
+
+  /// Toggle a token's starred membership. Newly starred items append to the end.
+  @MainActor
+  func toggleStarred(_ token: String) {
+    // Mutate a local copy so `starredItems` publishes once (via setStarredItems),
+    // not twice — a double publish made the CarPlay observer rebuild its template
+    // twice, the first time reading the pre-mutation value.
+    var items = starredItems
+    if let index = items.firstIndex(of: token) {
+      items.remove(at: index)
+    } else {
+      items.append(token)
+    }
+    setStarredItems(items)
+  }
+
+  /// Drop tokens for presets that no longer exist. `allSoundsToken` and
+  /// `quickMixToken` are always retained.
+  @MainActor
+  func pruneStarredItems(validPresetIDs: Set<String>) {
+    let pruned = starredItems.filter { token in
+      token == GlobalSettings.allSoundsToken
+        || token == GlobalSettings.quickMixToken
+        || validPresetIDs.contains(token)
+    }
+    if pruned != starredItems {
+      setStarredItems(pruned)
+    }
+  }
+
   @MainActor
   func setLockScreenBackgroundEnabled(_ value: Bool) {
     lockScreenBackgroundEnabled = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.lockScreenBackgroundEnabled)
+    logCurrentSettings()
+  }
+
+  @MainActor
+  func setBackgroundBlurRadius(_ value: Double) {
+    backgroundBlurRadius = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.backgroundBlurRadius)
     logCurrentSettings()
   }
 

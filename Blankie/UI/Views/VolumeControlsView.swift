@@ -34,7 +34,7 @@ struct VolumeControlsView: View {
 
   var body: some View {
     if style == .sheet {
-      NavigationView {
+      NavigationStack {
         ScrollView {
           sheetContent
             .padding(.bottom, 30)

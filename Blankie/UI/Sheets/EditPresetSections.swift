@@ -118,6 +118,44 @@ extension EditPresetSheet {
         }
       }
 
+      // Background blur override. Off = follow the app-wide default; on reveals
+      // a slider, mirroring the Accent Color toggle above. Persist the slider
+      // only on drag-end so we don't run the full preset save on every frame.
+      Toggle("Custom Background Blur", isOn: $useCustomBlur)
+        .onChange(of: useCustomBlur) { _, _ in
+          applyChangesInstantly()
+        }
+
+      if useCustomBlur {
+        Slider(
+          value: $blurOverride,
+          in: 0...20,
+          step: 5,
+          label: {
+            Text("Background Blur", comment: "Accessibility label for background blur slider")
+          },
+          minimumValueLabel: {
+            // Small dot -> large dot encodes "less -> more" without text.
+            Image(systemName: "circle.fill")
+              .font(.system(size: 8))
+              .foregroundStyle(.secondary)
+              .accessibilityHidden(true)
+          },
+          maximumValueLabel: {
+            Image(systemName: "circle.fill")
+              .font(.system(size: 15))
+              .foregroundStyle(.secondary)
+              .accessibilityHidden(true)
+          },
+          onEditingChanged: { editing in
+            if !editing {
+              applyChangesInstantly()
+            }
+          }
+        )
+        .padding(.vertical, 4)
+      }
+
       AnimatedArtworkPicker(
         artwork: $animatedArtwork,
         staticArtworkPath: $staticArtworkPath,

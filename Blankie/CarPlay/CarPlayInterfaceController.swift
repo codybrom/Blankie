@@ -343,6 +343,13 @@
           self?.updatePresetsTemplate()
         }
         .store(in: &cancellables)
+
+      // Observe favorites changes so the CarPlay Favorites section refreshes
+      GlobalSettings.shared.$starredItems
+        .sink { [weak self] _ in
+          self?.updatePresetsTemplate()
+        }
+        .store(in: &cancellables)
     }
 
     // MARK: - Edit Functionality

@@ -7,80 +7,145 @@ import SwiftUI
 
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var globalSettings = GlobalSettings.shared
+    @StateObject private var audioManager = AudioManager.shared
     @State private var showingListView = false
     @State private var showingCreatePreset = false
 
-    private var customPresets: [Preset] {
-      presetManager.presets.filter { !$0.isDefault }
+    /// The sidebar follows the active preset's theme: its accent, then the
+    /// app-wide custom accent, then the system accent.
+    private var activeAccent: Color {
+      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
-    private var recentPresets: [Preset] {
-      Array(customPresets.prefix(5))
+    /// Trailing now-playing indicator: play/pause for the active item.
+    @ViewBuilder
+    private func rowIndicator(isCurrent: Bool) -> some View {
+      if isCurrent {
+        Image(systemName: audioManager.isGloballyPlaying ? "play.fill" : "pause.fill")
+          .foregroundColor(activeAccent)
+      }
+    }
+
+    /// Leading icon for a preset row: a star when favorited, else the given
+    /// type icon (both muted to match the sidebar's leading-icon style).
+    @ViewBuilder
+    private func leadingIcon(typeIcon: String, isFavorite: Bool) -> some View {
+      Image(systemName: isFavorite ? "star.fill" : typeIcon)
+        .foregroundColor(.secondary)
+        .frame(width: 20)
     }
 
     var body: some View {
       List {
         Section {
-          // All Sounds (default preset)
-          if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
-            allSoundsRow(defaultPreset)
-              .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+          if globalSettings.starredItems.isEmpty {
+            // No favorites yet — show All Blankie Sounds so the sidebar isn't
+            // just Quick Mix. Swipe to favorite it.
+            if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
+              allSoundsRow(defaultPreset)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                  Button {
+                    globalSettings.toggleStarred(GlobalSettings.allSoundsToken)
+                  } label: {
+                    Label("Favorite", systemImage: "star")
+                  }
+                  .tint(.yellow)
+                }
+            }
+          } else {
+            // Favorited presets (and possibly All Blankie Sounds) in saved
+            // order. Swipe to unfavorite; reorder happens in Browse All Presets
+            // (the sidebar has no edit mode to drive a List `.onMove`).
+            ForEach(globalSettings.starredItems, id: \.self) { token in
+              starredRow(for: token)
+                .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                  Button {
+                    globalSettings.toggleStarred(token)
+                  } label: {
+                    Label("Unfavorite", systemImage: "star.slash")
+                  }
+                  .tint(.orange)
+                }
+            }
           }
 
-          // Quick Mix
+          // Quick Mix — always available, pinned below favorites (not favoritable).
           quickMixRow()
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
-          // Custom presets (5 most recent)
-          ForEach(recentPresets) { preset in
-            presetRow(preset)
-              .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-          }
-
-          // Browse all presets — opens the full picker modal so users can
-          // reach presets that fall outside the recent-5 list in the sidebar.
-          Button {
-            showingPresetPicker = true
-          } label: {
-            Label {
-              Text("Browse All Presets", comment: "Sidebar link to open the full presets modal")
-                .foregroundColor(.primary)
-            } icon: {
-              Image(systemName: "list.bullet")
-                .foregroundColor(.secondary)
-                .frame(width: 20)
+          // Browse all presets — only when there are custom presets to browse.
+          if presetManager.hasCustomPresets {
+            Button {
+              showingPresetPicker = true
+            } label: {
+              Text("More Presets", comment: "Sidebar link to open the full presets list")
+                .foregroundColor(activeAccent)
             }
+            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
           }
-          .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
-
-          // New preset
-          Button {
-            showingCreatePreset = true
-          } label: {
-            Label {
-              Text("New Preset", comment: "Sidebar button to create a new preset")
-                .foregroundColor(.primary)
-            } icon: {
-              Image(systemName: "plus")
-                .foregroundColor(.secondary)
-                .frame(width: 20)
-            }
-          }
-          .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
         } header: {
-          Text("Presets")
+          HStack {
+            Text("Presets")
+            Spacer()
+            Button {
+              showingCreatePreset = true
+            } label: {
+              Image(systemName: "plus")
+                .imageScale(.large)
+                .padding(.leading, 12)
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
+                .accessibilityLabel(
+                  Text("New Preset", comment: "Sidebar button to create a new preset"))
+            }
+            .buttonStyle(.borderless)
+          }
         }
 
-        Section("Settings") {
-          settingsButtons
-        }
       }
+      .safeAreaInset(edge: .bottom) {
+        settingsFooter
+      }
+      .tint(activeAccent)
       .onAppear {
         showingListView = globalSettings.showingListView
+        pruneStarred()
+      }
+      .onChange(of: presetManager.presets) { _, _ in
+        pruneStarred()
       }
       .sheet(isPresented: $showingCreatePreset) {
         CreatePresetSheet(isPresented: $showingCreatePreset)
       }
+    }
+
+    // Resolve a starred token to its row. Unknown tokens (e.g. a preset that
+    // was deleted before pruning runs) render nothing.
+    @ViewBuilder
+    private func starredRow(for token: String) -> some View {
+      switch token {
+      case GlobalSettings.allSoundsToken:
+        if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
+          allSoundsRow(defaultPreset)
+        }
+      default:
+        if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
+          presetRow(preset)
+        }
+      }
+    }
+
+    // Drop starred tokens whose preset no longer exists.
+    private func pruneStarred() {
+      // Don't prune while presets are still loading — otherwise an empty/partial
+      // preset list at launch would drop every favorited custom preset (and
+      // persist the loss). The `.onChange(of: presetManager.presets)` re-runs
+      // this once they've loaded.
+      guard !presetManager.isLoading, !presetManager.presets.isEmpty else { return }
+      let validIDs = Set(presetManager.presets.map { $0.id.uuidString })
+      globalSettings.pruneStarredItems(validPresetIDs: validIDs)
     }
 
     // All Sounds row
@@ -105,19 +170,18 @@ import SwiftUI
         }
       }) {
         HStack {
-          Image(systemName: "music.note.list")
-            .foregroundColor(.secondary)
-            .frame(width: 20)
+          leadingIcon(
+            typeIcon: "music.note.list",
+            isFavorite: globalSettings.isStarred(GlobalSettings.allSoundsToken))
 
-          Text("All Sounds")
+          Text(preset.displayName)
             .foregroundColor(.primary)
 
           Spacer()
 
-          if presetManager.currentPreset?.id == preset.id && !AudioManager.shared.isQuickMix {
-            Image(systemName: "checkmark")
-              .foregroundColor(.accentColor)
-          }
+          rowIndicator(
+            isCurrent: presetManager.currentPreset?.id == preset.id
+              && !AudioManager.shared.isQuickMix)
         }
       }
     }
@@ -147,10 +211,7 @@ import SwiftUI
 
           Spacer()
 
-          if AudioManager.shared.isQuickMix {
-            Image(systemName: "checkmark")
-              .foregroundColor(.accentColor)
-          }
+          rowIndicator(isCurrent: AudioManager.shared.isQuickMix)
         }
       }
     }
@@ -177,20 +238,18 @@ import SwiftUI
         }
       }) {
         HStack {
-          // Preset icon - just use generic icon for now (async loading in sidebar is complex)
-          Image(systemName: "music.note")
-            .foregroundColor(.secondary)
-            .frame(width: 20)
+          leadingIcon(
+            typeIcon: "music.note",
+            isFavorite: globalSettings.isStarred(preset.id.uuidString))
 
           Text(preset.name)
             .foregroundColor(.primary)
 
           Spacer()
 
-          if presetManager.currentPreset?.id == preset.id && !AudioManager.shared.isQuickMix {
-            Image(systemName: "checkmark")
-              .foregroundColor(.accentColor)
-          }
+          rowIndicator(
+            isCurrent: presetManager.currentPreset?.id == preset.id
+              && !AudioManager.shared.isQuickMix)
         }
       }
       .contextMenu {
@@ -206,17 +265,27 @@ import SwiftUI
 
     // Settings button in sidebar — opens the full SettingsView, which
     // already contains Manage Sounds, Appearance, About, etc.
-    private var settingsButtons: some View {
-      Button(action: {
-        showingSettings = true
-      }) {
-        Label {
-          Text("Settings", comment: "Sidebar settings link")
-        } icon: {
-          Image(systemName: "gearshape")
+    // Settings pinned at the bottom of the sidebar — no section header (a
+    // "Settings" section containing a "Settings" row is redundant).
+    private var settingsFooter: some View {
+      VStack(spacing: 0) {
+        Divider()
+        Button {
+          showingSettings = true
+        } label: {
+          Label {
+            Text("Settings", comment: "Sidebar settings link")
+          } icon: {
+            Image(systemName: "gearshape")
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .contentShape(Rectangle())
+          .padding(.horizontal, 16)
+          .padding(.vertical, 12)
         }
+        .buttonStyle(.plain)
       }
-      .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+      .background(.bar)
     }
   }
 #endif

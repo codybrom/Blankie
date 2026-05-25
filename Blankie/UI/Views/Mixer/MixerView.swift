@@ -176,7 +176,10 @@ private struct AnimationTrigger: Equatable {
                     showingNowPlaying = false
                   }
                 },
-                showingPresetPicker: $showingPresetPicker
+                showingPresetPicker: $showingPresetPicker,
+                showingTimer: $showingTimer,
+                presetToEdit: $presetToEdit,
+                showingQuickMixEditor: $showingQuickMixEditor
               )
               .transition(.opacity)
             } else {
@@ -200,17 +203,21 @@ private struct AnimationTrigger: Equatable {
                   HStack(spacing: 4) {
                     Text(navigationTitle)
                       .font(.headline)
-                      .foregroundColor(.primary)
+                      .foregroundColor(showingNowPlaying ? .white : .primary)
                     Image(systemName: "chevron.down")
                       .font(.caption2.weight(.semibold))
-                      .foregroundColor(.secondary)
+                      .foregroundColor(showingNowPlaying ? .white.opacity(0.5) : .secondary)
                   }
                   if let caption = topBarCaption {
                     Text(caption)
                       .font(.caption2)
-                      .foregroundColor(.secondary)
+                      .foregroundColor(showingNowPlaying ? .white.opacity(0.6) : .secondary)
                   }
                 }
+                // Over the Now Playing artwork the toolbar has no material
+                // backing, so add a soft shadow to keep the title legible on
+                // bright or dark regions of arbitrary artwork.
+                .shadow(color: .black.opacity(showingNowPlaying ? 0.4 : 0), radius: 2, y: 1)
               }
               .sensoryFeedback(.selection, trigger: showingPresetPicker)
             }
@@ -220,25 +227,7 @@ private struct AnimationTrigger: Equatable {
             // NowPlayingSheet chrome.
             ToolbarItem(placement: .confirmationAction) {
               if !showingNowPlaying {
-                if audioManager.isQuickMix {
-                  Button {
-                    showingQuickMixEditor = true
-                  } label: {
-                    Image(systemName: "slider.vertical.3")
-                      .font(.system(size: 18))
-                      .foregroundColor(.secondary)
-                  }
-                  .accessibilityLabel("Edit Quick Mix")
-                } else if let currentPreset = presetManager.currentPreset {
-                  Button {
-                    presetToEdit = currentPreset
-                  } label: {
-                    Image(systemName: "slider.vertical.3")
-                      .font(.system(size: 18))
-                      .foregroundColor(.secondary)
-                  }
-                  .accessibilityLabel("Edit Preset")
-                }
+                editPresetButton
               }
             }
           }
@@ -265,7 +254,10 @@ private struct AnimationTrigger: Equatable {
                   showingNowPlaying = false
                 }
               },
-              showingPresetPicker: $showingPresetPicker
+              showingPresetPicker: $showingPresetPicker,
+              showingTimer: $showingTimer,
+              presetToEdit: $presetToEdit,
+              showingQuickMixEditor: $showingQuickMixEditor
             )
             .transition(.opacity)
           } else {
@@ -293,6 +285,7 @@ private struct AnimationTrigger: Equatable {
                 Text(navigationTitle)
                   .font(showingNowPlaying ? .title3.weight(.semibold) : .headline)
                   .foregroundColor(showingNowPlaying ? .white : .primary)
+                  .lineLimit(1)
                 Image(systemName: "chevron.down")
                   .font(
                     showingNowPlaying ? .caption.weight(.semibold) : .caption2.weight(.semibold)
@@ -309,9 +302,22 @@ private struct AnimationTrigger: Equatable {
                 .foregroundColor(showingNowPlaying ? .white.opacity(0.6) : .secondary)
             }
           }
+          .shadow(color: .black.opacity(showingNowPlaying ? 0.4 : 0), radius: 2, y: 1)
           .padding(.top, showingNowPlaying && isLandscape ? 8 : 0)
           .padding(.bottom, 8)
+          // Reserve horizontal space so a long centered title doesn't run under
+          // the trailing edit button overlay.
+          .padding(.horizontal, 48)
           .frame(maxWidth: .infinity)
+          // Trailing Edit affordance, mirroring iPad's nav-bar button. Only on
+          // the mixer view — on Now Playing the edit control lives in the
+          // actions row instead.
+          .overlay(alignment: .trailing) {
+            if !showingNowPlaying {
+              editPresetButton
+                .padding(.trailing, 16)
+            }
+          }
           .background {
             if !showingNowPlaying {
               Rectangle().fill(.ultraThinMaterial)

@@ -32,6 +32,10 @@ import SwiftUI
         }
       }
       .glassEffect(.regular, in: .rect(cornerRadius: 12))
+      // Match the grid: fire on the user's own selection toggle, not on global
+      // play state, so feedback fires when toggling while paused and never
+      // batch-fires on global play/pause. See GridSoundButton.
+      .sensoryFeedback(.selection, trigger: sound.isSelected)
     }
 
     private var accentColor: Color {

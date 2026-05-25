@@ -72,9 +72,12 @@ class TimerManager: ObservableObject {
   private func handleTimerExpired() {
     debugLog("⏱️ TimerManager: Timer expired")
 
-    stopTimer()
-
+    // Stop the countdown and pause together on the main actor. Doing the stop
+    // synchronously (before this) let a 0.25s progress tick observe the
+    // half-state — timer inactive but audio still "playing" — and re-anchor the
+    // lock-screen scrubber to the loop position, a brief jump at expiry.
     Task { @MainActor in
+      self.stopTimer()
       AudioManager.shared.setGlobalPlaybackState(false)
     }
   }

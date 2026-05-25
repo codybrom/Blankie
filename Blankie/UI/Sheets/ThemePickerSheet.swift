@@ -13,7 +13,7 @@ import SwiftUI
     @ObservedObject private var globalSettings = GlobalSettings.shared
 
     var body: some View {
-      NavigationView {
+      NavigationStack {
         VStack(alignment: .leading, spacing: 20) {
           VStack(alignment: .leading, spacing: 12) {
             Text("Appearance")

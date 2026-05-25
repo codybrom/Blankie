@@ -40,6 +40,8 @@ import SwiftUI
     @State private var isDragging: Bool = false
     @State private var draggingItem: Data.Element?
     @State private var draggingStartRect: CGRect?
+    @State private var draggingStartLocation: CGPoint?
+    @State private var gridOrigin: CGPoint = .zero
     @State private var draggingOffset: CGSize = .zero
     @State private var swapLock: Bool = false
 
@@ -63,13 +65,21 @@ import SwiftUI
               content
                 .scaleEffect(isDragging ? config.previewScale : 1)
             }
-            .offset(x: draggingStartRect.minX, y: draggingStartRect.minY)
+            // Cell rects and the finger are tracked in .global (reliable inside
+            // the iPad split-view detail pane, where a custom named space did
+            // not resolve). Localize to this overlay by subtracting the grid's
+            // own global origin.
+            .offset(
+              x: draggingStartRect.minX - gridOrigin.x,
+              y: draggingStartRect.minY - gridOrigin.y)
             .offset(draggingOffset)
         }
       }
       // Block interaction with the grid while a tile is in flight.
       .allowsHitTesting(draggingItem == nil)
-      .coordinateSpace(.named(Self.coordinateSpace))
+      .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: {
+        gridOrigin = $0
+      }
     }
 
     @ViewBuilder
@@ -83,25 +93,33 @@ import SwiftUI
             .opacity(draggingItem?.id == item.id ? 0 : 1)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onGeometryChange(for: CGRect.self) {
-              $0.frame(in: .named(Self.coordinateSpace))
+              $0.frame(in: .global)
             } action: { newValue in
               item.position = newValue
             }
             .gesture(
               ReorderLongPressGesture(
-                coordinateSpace: Self.coordinateSpace,
-                onChanged: { location, offset in
+                onChanged: { location in
                   if draggingItem == nil {
                     draggingItem = item
                     draggingStartRect = item.position
+                    draggingStartLocation = location
                     DispatchQueue.main.async {
                       isDragging = true
                     }
                   }
 
-                  draggingOffset = offset
+                  // `location` and the cell rects are both in .global, so the
+                  // preview offset is just the global delta since pickup; the
+                  // overlay localizes it via `gridOrigin`.
+                  if let start = draggingStartLocation {
+                    draggingOffset = CGSize(
+                      width: location.x - start.x,
+                      height: location.y - start.y
+                    )
+                  }
                   reorderData(location: location)
-                  onDraggingChange(location, offset, true)
+                  onDraggingChange(location, draggingOffset, true)
                 },
                 onEnd: {
                   onDraggingChange(.zero, .zero, false)
@@ -121,6 +139,7 @@ import SwiftUI
                     } completion: {
                       draggingItem = nil
                       draggingStartRect = nil
+                      draggingStartLocation = nil
                     }
                   }
                 }
@@ -151,7 +170,6 @@ import SwiftUI
       }
     }
 
-    private static var coordinateSpace: String { "SORTABLEGRID" }
   }
 
   struct SortableGridConfig {
@@ -160,18 +178,15 @@ import SwiftUI
     var previewScale: CGFloat = 1.06
   }
 
-  /// Long-press recognizer that reports its translation in the grid's
-  /// coordinate space. It declines touches that land on a `UIControl` so the
-  /// inline volume slider stays draggable.
+  /// Long-press recognizer that reports the finger location in window/global
+  /// space. It declines touches that land on a `UIControl` so the inline
+  /// volume slider stays draggable.
   private struct ReorderLongPressGesture: UIGestureRecognizerRepresentable {
     var duration: CGFloat = 0.16
-    var coordinateSpace: String
-    var onChanged: (_ location: CGPoint, _ offset: CGSize) -> Void
+    var onChanged: (_ location: CGPoint) -> Void
     var onEnd: () -> Void
 
-    @State private var startLocation: CGPoint?
-
-    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+    func makeCoordinator(converter _: CoordinateSpaceConverter) -> Coordinator {
       Coordinator()
     }
 
@@ -191,30 +206,15 @@ import SwiftUI
     func handleUIGestureRecognizerAction(
       _ recognizer: UILongPressGestureRecognizer, context: Context
     ) {
-      let state = recognizer.state
-      // Measure in window (global) space, not `recognizer.view`. The dragged
-      // tile's own view moves as cells swap beneath it; reading the finger in
-      // that moving frame makes the translation jump by the swap distance,
-      // flinging the preview off-grid. Window space is stable across swaps and
-      // is also what the coordinate-space converter expects.
-      let location = recognizer.location(in: nil)
-
-      switch state {
+      // Let SwiftUI convert the recognizer's *current location* into the global
+      // SwiftUI coordinate space. Reading the raw UIKit `location(in: nil)` is
+      // wrong here: in landscape it's the screen-fixed (portrait) space, rotated
+      // 90° from SwiftUI's rendering space. `converter.location(in:)` accounts
+      // for orientation/scale and matches the cells' `frame(in: .global)`.
+      switch recognizer.state {
       case .began, .changed:
-        // Derive translation from the first touch so we don't need a separate
-        // pan recognizer.
-        if startLocation == nil { startLocation = location }
-        guard let startLocation else { return }
-        let translation = CGSize(
-          width: location.x - startLocation.x,
-          height: location.y - startLocation.y
-        )
-
-        let localSpaceLocation = context.converter.convert(
-          globalPoint: location, to: .named(coordinateSpace))
-        onChanged(localSpaceLocation, translation)
+        onChanged(context.converter.location(in: .global))
       default:
-        startLocation = nil
         onEnd()
       }
     }

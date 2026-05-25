@@ -74,6 +74,10 @@ struct EditPresetSheet: View {
   @State var isExporting = false
   @State var useCustomTheme = false
   @State var viewModeOverride: PresetViewMode?
+  /// Whether this preset overrides the app-wide background blur. When off, the
+  /// preset stores `nil` and follows `GlobalSettings.backgroundBlurRadius`.
+  @State var useCustomBlur = false
+  @State var blurOverride: Double = defaultBackgroundBlurRadius
   #if os(iOS) || os(visionOS)
     @State var soundEditMode: EditMode = .inactive
   #endif
@@ -308,9 +312,38 @@ extension EditPresetSheet {
     Group {
       errorSection
       basicDetailsSection
+      starSection
       soundsSection
       visualsSection
       deleteSection
+    }
+  }
+
+  // The default preset shares the "allSounds" token; custom presets use their
+  // UUID string.
+  private var starToken: String {
+    preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
+  }
+
+  var starSection: some View {
+    Section {
+      Toggle(
+        isOn: Binding(
+          get: { globalSettings.isStarred(starToken) },
+          set: { _ in globalSettings.toggleStarred(starToken) }
+        )
+      ) {
+        Label {
+          Text("Favorite", comment: "Preset editor toggle to favorite a preset")
+        } icon: {
+          Image(systemName: "star")
+            .foregroundColor(activeAccentColor)
+        }
+      }
+    } footer: {
+      Text(
+        "Favorites appear in the iPad sidebar and CarPlay.",
+        comment: "Footer explaining the Favorite toggle")
     }
   }
 }
@@ -334,6 +367,10 @@ extension EditPresetSheet {
     accentColor = preset.accentColor
     useCustomTheme = preset.accentColor != nil
     viewModeOverride = preset.viewMode
+    useCustomBlur = preset.backgroundBlurRadius != nil
+    // Seed the slider with the effective value so enabling the override doesn't
+    // jump the background: the preset's own value if set, else the app default.
+    blurOverride = preset.backgroundBlurRadius ?? globalSettings.backgroundBlurRadius
 
     // Load existing images if they exist
     Task {
@@ -437,6 +474,9 @@ extension EditPresetSheet {
 
     // Save per-preset view-mode override (nil = follow app setting).
     updatedPreset.viewMode = viewModeOverride
+
+    // Save per-preset background blur override (nil = follow app setting).
+    updatedPreset.backgroundBlurRadius = useCustomBlur ? blurOverride : nil
 
     return updatedPreset
   }

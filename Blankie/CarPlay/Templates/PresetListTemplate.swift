@@ -40,12 +40,25 @@
       var sections: [CPListSection] = []
 
       addRecentSection(to: &sections)
+      addFavoritesSection(to: &sections)
 
-      if !customPresets.isEmpty {
-        addCustomPresetsSection(to: &sections, customPresets: customPresets)
-        addAllSoundsSection(to: &sections, defaultPreset: defaultPreset)
+      // Favorited presets already appear in the Favorites section above, so
+      // exclude them from "All Presets" / "All Sounds" to avoid duplicate rows.
+      let starred = GlobalSettings.shared.starredItems
+      let nonFavoriteCustoms = customPresets.filter { !starred.contains($0.id.uuidString) }
+      let allSoundsFavorited = starred.contains(GlobalSettings.allSoundsToken)
+
+      if customPresets.isEmpty {
+        // No custom presets: show All Sounds (unless it's already favorited)
+        // plus the "create presets" hint.
+        addEmptyStateSection(to: &sections, defaultPreset: allSoundsFavorited ? nil : defaultPreset)
       } else {
-        addEmptyStateSection(to: &sections, defaultPreset: defaultPreset)
+        if !nonFavoriteCustoms.isEmpty {
+          addCustomPresetsSection(to: &sections, customPresets: nonFavoriteCustoms)
+        }
+        if !allSoundsFavorited {
+          addAllSoundsSection(to: &sections, defaultPreset: defaultPreset)
+        }
       }
 
       template.updateSections(sections)
@@ -61,12 +74,9 @@
         image: getPresetArtwork(preset)
       )
 
-      // Add checkmark accessory if active
-      if isActive {
-        item.accessoryType = .disclosureIndicator
-        // Update text to show active state
-        item.setText("\(preset.name) ✓")
-      }
+      // Leading "now playing" indicator marks the active item.
+      item.playingIndicatorLocation = .leading
+      item.isPlaying = isActive
 
       item.handler = { _, completion in
         Task {
@@ -115,10 +125,8 @@
         image: getPresetArtwork(preset)
       )
 
-      if isActive {
-        item.accessoryType = .disclosureIndicator
-        item.setText("Current Soundscape ✓")
-      }
+      item.playingIndicatorLocation = .leading
+      item.isPlaying = isActive
 
       item.handler = { _, completion in
         Task {
@@ -221,6 +229,37 @@
       }
     }
 
+    // Favorited (starred) presets, in the user's saved order. Shares the
+    // `GlobalSettings.starredItems` token list with the iPad sidebar. Quick Mix
+    // has its own CarPlay tab, so its token is skipped here.
+    private static func addFavoritesSection(to sections: inout [CPListSection]) {
+      let presets = PresetManager.shared.presets
+      let items: [CPListItem] = GlobalSettings.shared.starredItems.compactMap { token in
+        switch token {
+        case GlobalSettings.allSoundsToken:
+          guard let defaultPreset = presets.first(where: { $0.isDefault }) else { return nil }
+          return createAllSoundsItem(defaultPreset)
+        case GlobalSettings.quickMixToken:
+          return nil
+        default:
+          guard let preset = presets.first(where: { $0.id.uuidString == token }) else {
+            return nil
+          }
+          return createPresetListItem(preset)
+        }
+      }
+
+      guard !items.isEmpty else { return }
+
+      sections.append(
+        CPListSection(
+          items: items,
+          header: "Favorites",
+          sectionIndexTitle: "F"
+        )
+      )
+    }
+
     private static func addCustomPresetsSection(
       to sections: inout [CPListSection], customPresets: [Preset]
     ) {
@@ -278,14 +317,13 @@
       let isActive = preset.id == currentPresetId
 
       let item = CPListItem(
-        text: isActive ? "Custom Mix ✓" : "Custom Mix",
+        text: "Custom Mix",
         detailText: "Current selections in \"All Blankie Sounds\"",
         image: getPresetArtwork(preset)
       )
 
-      if isActive {
-        item.accessoryType = .disclosureIndicator
-      }
+      item.playingIndicatorLocation = .leading
+      item.isPlaying = isActive
 
       item.handler = { _, completion in
         Task {

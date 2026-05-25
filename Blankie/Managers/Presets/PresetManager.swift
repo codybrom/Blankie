@@ -168,6 +168,12 @@ extension PresetManager {
     presets.removeAll { $0.id == preset.id }
     updateCustomPresetStatus()
 
+    // Drop the deleted preset from favorites so its token doesn't linger in
+    // `starredItems`. The iPad sidebar prunes on appear too, but this covers
+    // iPhone and CarPlay where that view never instantiates.
+    GlobalSettings.shared.pruneStarredItems(
+      validPresetIDs: Set(presets.map { $0.id.uuidString }))
+
     // Remove cached thumbnail
     removeThumbnail(for: preset.id)
 

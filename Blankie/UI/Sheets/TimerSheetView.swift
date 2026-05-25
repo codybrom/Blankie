@@ -10,10 +10,18 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
   struct TimerSheetView: View {
     @StateObject private var timerManager = TimerManager.shared
+    @StateObject private var presetManager = PresetManager.shared
+    @StateObject private var globalSettings = GlobalSettings.shared
     @Environment(\.dismiss) private var dismiss
 
+    /// The accent driving the action buttons. Mirrors the precedence used by
+    /// the Now Playing sheet so the timer's button matches the surrounding UI.
+    private var accentColor: Color {
+      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    }
+
     var body: some View {
-      NavigationView {
+      NavigationStack {
         VStack(spacing: 20) {
           if timerManager.isTimerActive {
             activeTimerContent
@@ -71,12 +79,11 @@ import SwiftUI
         }) {
           Label("Cancel Timer", systemImage: "xmark.circle.fill")
             .font(.headline)
-            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding()
-            .background(.tint)
-            .cornerRadius(10)
         }
+        .buttonStyle(.glassProminent)
+        .controlSize(.large)
+        .tint(accentColor)
         .padding(.horizontal)
 
         Spacer()
@@ -158,12 +165,11 @@ import SwiftUI
         }) {
           Label("Start Timer", systemImage: "timer")
             .font(.headline)
-            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding()
-            .background(.tint)
-            .cornerRadius(10)
         }
+        .buttonStyle(.glassProminent)
+        .controlSize(.large)
+        .tint(accentColor)
         .padding(.horizontal)
         .disabled(timerManager.selectedHours == 0 && timerManager.selectedMinutes == 0)
 

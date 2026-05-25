@@ -17,9 +17,22 @@
     func setupNowPlayingTemplate() {
       let nowPlayingTemplate = CPNowPlayingTemplate.shared
 
-      // Only show edit button when playing a preset, not in solo mode
-      if AudioManager.shared.soloModeSound == nil, PresetManager.shared.currentPreset != nil {
-        // Create custom edit button using CPNowPlayingImageButton
+      // Buttons show only when a preset is playing. This already excludes Quick
+      // Mix — entering it clears `currentPreset` — and solo mode. Quick Mix has
+      // its own CarPlay tab and isn't favoritable.
+      if AudioManager.shared.soloModeSound == nil, let preset = PresetManager.shared.currentPreset {
+        let favoriteToken =
+          preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
+        let isFavorite = GlobalSettings.shared.isStarred(favoriteToken)
+        let favoriteButton = CPNowPlayingImageButton(
+          image: UIImage(systemName: isFavorite ? "star.fill" : "star")!
+        ) { [weak self] _ in
+          Task { @MainActor in
+            GlobalSettings.shared.toggleStarred(favoriteToken)
+            self?.updateNowPlayingButtons()
+          }
+        }
+
         let editButton = CPNowPlayingImageButton(image: UIImage(systemName: "slider.horizontal.3")!)
         { [weak self] _ in
           Task { @MainActor in
@@ -27,15 +40,12 @@
           }
         }
 
-        // Update the Now Playing template with edit button
-        nowPlayingTemplate.updateNowPlayingButtons([editButton])
-
-        debugLog("✅ CarPlay: Now Playing template configured with edit button (preset mode)")
+        nowPlayingTemplate.updateNowPlayingButtons([favoriteButton, editButton])
+        debugLog("✅ CarPlay: Now Playing configured with favorite + edit buttons (preset mode)")
       } else {
-        // Clear any custom buttons when in solo mode
+        // Solo mode or Quick Mix: no preset-specific buttons.
         nowPlayingTemplate.updateNowPlayingButtons([])
-
-        debugLog("✅ CarPlay: Now Playing template configured without edit button (solo mode)")
+        debugLog("✅ CarPlay: Now Playing configured with no custom buttons (solo / Quick Mix)")
       }
     }
 

@@ -109,13 +109,23 @@ import SwiftUI
                     showingNowPlaying.toggle()
                   }
                 } label: {
-                  Image(systemName: showingNowPlaying ? "list.bullet" : "music.note.list")
-                    .font(.system(size: 22))
-                    .foregroundColor(.primary)
-                    .contentTransition(.symbolEffect(.replace))
-                    .frame(width: 56, height: 56)
+                  // While Now Playing is up, this button returns to the mixer,
+                  // so the icon should preview the destination view mode: a grid
+                  // glyph when the mixer is in grid mode, a list glyph in list
+                  // mode. (`music.note.list` is shown when Now Playing is hidden.)
+                  Image(
+                    systemName: showingNowPlaying
+                      ? (effectiveUseListView ? "list.bullet" : "square.grid.2x2")
+                      : "music.note.list"
+                  )
+                  .font(.system(size: 22))
+                  .foregroundColor(.primary)
+                  .contentTransition(.symbolEffect(.replace))
+                  .frame(width: 56, height: 56)
                 }
-                .accessibilityLabel(showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing"))
+                .accessibilityLabel(
+                  showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
+                )
                 .buttonStyle(.plain)
                 .contentShape(Circle())
                 .glassEffect(.regular.interactive(), in: .circle)
@@ -163,12 +173,18 @@ import SwiftUI
                   showingNowPlaying.toggle()
                 }
               } label: {
-                Image(systemName: showingNowPlaying ? "list.bullet" : "music.note.list")
-                  .font(.system(size: 22))
-                  .foregroundColor(.primary)
-                  .frame(width: 56, height: 56)
+                Image(
+                  systemName: showingNowPlaying
+                    ? (effectiveUseListView ? "list.bullet" : "square.grid.2x2")
+                    : "music.note.list"
+                )
+                .font(.system(size: 22))
+                .foregroundColor(.primary)
+                .frame(width: 56, height: 56)
               }
-              .accessibilityLabel(showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing"))
+              .accessibilityLabel(
+                showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
+              )
               .buttonStyle(.plain)
               .contentShape(Circle())
               .modernGlassEffect(cornerRadius: 28)
@@ -230,55 +246,26 @@ import SwiftUI
 
     @ViewBuilder
     var menuButton: some View {
-      // On iPad, the top nav bar has a direct Edit Preset button and the
-      // sidebar has Settings, so the ellipsis menu is redundant. Collapse
-      // it to a direct Timer button. iPhone keeps the full menu.
+      // iPad keeps a direct Timer button here; Settings is in the sidebar.
+      // iPhone has no sidebar, so this slot is its Settings button. Timer moved
+      // to the Now Playing actions row, and Edit to the top-bar / actions row.
       if isLargeDevice {
         timerButton
       } else {
-        iPhoneMenuButton
+        settingsButton
       }
     }
 
-    private var iPhoneMenuButton: some View {
-      let button = Menu {
-        Button {
-          showingSettings = true
-        } label: {
-          Label("Blankie Settings", systemImage: "gearshape")
-        }
-
-        Divider()
-
-        if audioManager.isQuickMix {
-          Button {
-            showingQuickMixEditor = true
-          } label: {
-            Label("Edit Quick Mix", systemImage: "slider.vertical.3")
-          }
-        } else if let preset = presetManager.currentPreset {
-          Button {
-            presetToEdit = preset
-          } label: {
-            Label("Edit Preset", systemImage: "slider.vertical.3")
-          }
-        }
-
-        Button {
-          showingTimer = true
-        } label: {
-          Label(
-            timerManager.isTimerActive ? "Timer (Active)" : "Timer",
-            systemImage: "timer"
-          )
-        }
+    private var settingsButton: some View {
+      let button = Button {
+        showingSettings = true
       } label: {
-        Image(systemName: "ellipsis")
+        Image(systemName: "gearshape")
           .font(.system(size: 22))
           .foregroundColor(.primary)
           .frame(width: 56, height: 56)
       }
-      .accessibilityLabel("More Options")
+      .accessibilityLabel("Blankie Settings")
       .buttonStyle(.plain)
       .contentShape(Circle())
 
@@ -286,12 +273,38 @@ import SwiftUI
         return
           button
           .glassEffect(.regular.interactive(), in: .circle)
-          .sensoryFeedback(.selection, trigger: menuTrigger)
+          .sensoryFeedback(.selection, trigger: showingSettings)
       } else {
         return
           button
           .modernGlassEffect(cornerRadius: 28)
-          .sensoryFeedback(.selection, trigger: menuTrigger)
+          .sensoryFeedback(.selection, trigger: showingSettings)
+      }
+    }
+
+    /// Trailing Edit affordance shared by the iPad nav bar and the iPhone top
+    /// bar: edits the current preset, or opens the Quick Mix editor in Quick
+    /// Mix. Renders nothing when there's nothing to edit.
+    @ViewBuilder
+    var editPresetButton: some View {
+      if audioManager.isQuickMix {
+        Button {
+          showingQuickMixEditor = true
+        } label: {
+          Image(systemName: "slider.vertical.3")
+            .font(.system(size: 18))
+            .foregroundColor(.secondary)
+        }
+        .accessibilityLabel("Edit Quick Mix")
+      } else if let currentPreset = presetManager.currentPreset {
+        Button {
+          presetToEdit = currentPreset
+        } label: {
+          Image(systemName: "slider.vertical.3")
+            .font(.system(size: 18))
+            .foregroundColor(.secondary)
+        }
+        .accessibilityLabel("Edit Preset")
       }
     }
 

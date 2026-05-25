@@ -108,7 +108,9 @@ struct SettingsView: View {
             SpectrumColorPicker(
               selectedColor: Binding(
                 get: { globalSettings.customAccentColor },
-                set: { globalSettings.customAccentColor = $0 }
+                // Use the setter so the choice persists (assigning the
+                // @Published directly never writes to UserDefaults).
+                set: { globalSettings.setAccentColor($0) }
               ))
           }
           .padding(.vertical, 4)
@@ -132,6 +134,51 @@ struct SettingsView: View {
               "Show Progress Borders",
               comment: "Toggle for showing progress borders around playing sounds")
           }
+
+          #if os(iOS) || os(visionOS)
+            // App-wide default blur for preset background artwork. Persist only
+            // on drag-end (onEditingChanged) to avoid writing UserDefaults on
+            // every drag frame; the binding's setter updates the published value
+            // live so the slider stays responsive.
+            VStack(alignment: .leading, spacing: 8) {
+              Text("Background Blur", comment: "Label for the background artwork blur slider")
+              Slider(
+                value: Binding(
+                  // Persist on each (stepped) change so VoiceOver/keyboard
+                  // adjustments save too — not only on drag-end. step:5 means
+                  // just a handful of writes per drag.
+                  get: { globalSettings.backgroundBlurRadius },
+                  set: { globalSettings.setBackgroundBlurRadius($0) }
+                ),
+                in: 0...20,
+                step: 5,
+                label: {
+                  Text("Background Blur", comment: "Accessibility label for background blur slider")
+                },
+                minimumValueLabel: {
+                  // Small dot -> large dot encodes "less -> more" without text,
+                  // so there's nothing to localize. The slider's accessibility
+                  // label/value already convey meaning, so hide these caps.
+                  Image(systemName: "circle.fill")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                },
+                maximumValueLabel: {
+                  Image(systemName: "circle.fill")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                    .accessibilityHidden(true)
+                },
+                onEditingChanged: { editing in
+                  if !editing {
+                    globalSettings.setBackgroundBlurRadius(globalSettings.backgroundBlurRadius)
+                  }
+                }
+              )
+            }
+            .padding(.vertical, 4)
+          #endif
         }
 
         Section(

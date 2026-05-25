@@ -43,12 +43,9 @@ extension SoundSheet {
   var iOSLayout: some View {
     Group {
       if embedInNavigation {
-        NavigationView {
+        NavigationStack {
           content
         }
-        #if !os(macOS)
-          .navigationViewStyle(.stack)
-        #endif
       } else {
         content
       }

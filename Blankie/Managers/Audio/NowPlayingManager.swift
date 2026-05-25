@@ -32,6 +32,18 @@ final class NowPlayingManager {
     var animatedArtworkDownloadTasks: [String: Task<Void, Never>] = [:]
   #endif
   private var updateTimer: Timer?
+  // Drives elapsed-time republishing so the system scrubber (lock screen +
+  // CarPlay) snaps back to the start each time the longest sound loops.
+  // Independent of `updateTimer`.
+  private var progressTimer: Timer?
+  // Last elapsed/duration we anchored the scrubber to. The system extrapolates
+  // smoothly between writes, so we only re-anchor when the elapsed time jumps
+  // backward (a sound loop wrapped) or the duration changes (sleep timer
+  // started/extended/stopped, or the represented source changed) —
+  // re-anchoring every tick makes the bar stutter. `lastObservedElapsed < 0`
+  // forces the first tick after (re)start to anchor.
+  private var lastObservedElapsed: TimeInterval = -1
+  private var lastObservedDuration: TimeInterval = 0
   private var cancellables = Set<AnyCancellable>()
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
 
@@ -63,6 +75,7 @@ final class NowPlayingManager {
   deinit {
     staticArtworkTask?.cancel()
     updateTimer?.invalidate()
+    progressTimer?.invalidate()
     cancellables.removeAll()
     NotificationCenter.default.removeObserver(self)
   }
@@ -160,6 +173,13 @@ final class NowPlayingManager {
         center.nowPlayingInfo = nowPlayingInfo
       }
     }
+
+    // Keep the scrubber tracking the looping sounds only while playing.
+    if isPlaying {
+      startProgressUpdates()
+    } else {
+      stopProgressUpdates()
+    }
   }
 
   private func updateBasicInfo(displayInfo: (title: String, artist: String)) {
@@ -175,13 +195,9 @@ final class NowPlayingManager {
     }
   }
 
-  private func updateSoloModeInfo(soloSound: Sound) {
+  private func updateSoloModeInfo(soloSound _: Sound) {
     nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie (Solo Mode)"
-
-    if let player = soloSound.player {
-      nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = player.duration
-      nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime
-    }
+    applyProgressAnchorToInfo()
   }
 
   private func updatePresetModeInfo(creatorName: String?) {
@@ -204,22 +220,47 @@ final class NowPlayingManager {
   }
 
   private func updateDurationFromPlayingSounds() {
-    // Use active (selected) sounds instead of only playing sounds
-    // This ensures we track time even when paused
-    let activeSounds = AudioManager.shared.sounds.filter { $0.isSelected }
-    if !activeSounds.isEmpty {
-      let longestSound = activeSounds.max {
-        ($0.player?.duration ?? 0) < ($1.player?.duration ?? 0)
-      }
-      if let longest = longestSound, let player = longest.player {
-        nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = player.duration
-        nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = player.currentTime
-      } else {
-        setInfiniteDuration()
-      }
+    applyProgressAnchorToInfo()
+  }
+
+  /// Writes the current progress anchor into the local `nowPlayingInfo` snapshot
+  /// (falling back to indeterminate). Used by the initial publish; the periodic
+  /// tick re-anchors the live center afterward.
+  private func applyProgressAnchorToInfo() {
+    if let anchor = currentProgressAnchor() {
+      nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = anchor.duration
+      nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = anchor.elapsed
     } else {
       setInfiniteDuration()
     }
+  }
+
+  /// The elapsed/duration the scrubber should represent right now, or `nil` for
+  /// an indeterminate bar. Priority: an active sleep timer (real, slow,
+  /// meaningful progress that ends where playback stops) wins over the looping
+  /// audio, then the solo sound, then the longest selected sound's loop.
+  private func currentProgressAnchor() -> (elapsed: TimeInterval, duration: TimeInterval)? {
+    let sleepTimer = TimerManager.shared
+    if sleepTimer.isTimerActive, sleepTimer.selectedDuration > 0 {
+      let elapsed = sleepTimer.selectedDuration - sleepTimer.remainingTime
+      return (max(0, elapsed), sleepTimer.selectedDuration)
+    }
+
+    let player: AVAudioPlayer?
+    if let soloSound = AudioManager.shared.soloModeSound {
+      player = soloSound.player
+    } else {
+      // Use active (selected) sounds, not only playing ones, so we still track
+      // time when paused; mirror the "longest selected sound" choice.
+      player =
+        AudioManager.shared.sounds
+        .filter { $0.isSelected }
+        .max { ($0.player?.duration ?? 0) < ($1.player?.duration ?? 0) }?
+        .player
+    }
+
+    guard let player, player.duration > 0 else { return nil }
+    return (player.currentTime, player.duration)
   }
 
   private func setInfiniteDuration() {
@@ -278,22 +319,94 @@ final class NowPlayingManager {
       "🎵 NowPlayingManager: Updating now playing state to \(isPlaying), playbackRate: \(nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? -1)"
     )
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+
+    if isPlaying {
+      startProgressUpdates()
+    } else {
+      stopProgressUpdates()
+    }
   }
 
   func updateProgress(currentTime: TimeInterval, duration: TimeInterval) {
     guard !nowPlayingInfo.isEmpty else { return }
 
-    nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
-    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-
     // Ensure playback rate reflects current state
     let isPlaying = AudioManager.shared.isGloballyPlaying
+
+    // Keep our local snapshot in sync so the next full publish is correct.
+    nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
 
-    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    let center = MPNowPlayingInfoCenter.default()
+    if center.nowPlayingInfo != nil {
+      // Update only the timing/rate keys in-place. Replacing the whole dict
+      // (which carries the static/animated artwork objects) would restart the
+      // animated lock-screen artwork on every tick.
+      center.nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+      center.nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] = duration
+      center.nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+    } else {
+      // iOS cleared it — do a full publish to re-establish info + artwork.
+      center.nowPlayingInfo = nowPlayingInfo
+    }
+  }
+
+  /// Starts watching the active progress source (sleep timer or looping sound)
+  /// and re-anchors the system scrubber when it wraps or its duration changes.
+  /// The system extrapolates elapsed time smoothly from `playbackRate` between
+  /// writes, so we publish only at those moments (and once up front) to keep the
+  /// bar from stuttering.
+  private func startProgressUpdates() {
+    stopProgressUpdates()
+    lastObservedElapsed = -1  // Force the first tick to anchor.
+    publishProgressTick()  // Anchor immediately so the bar doesn't lag.
+
+    // Poll faster than we publish: reading `currentTime` is cheap and a tighter
+    // poll detects the wrap sooner, so the snap-back is crisp.
+    let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in
+      Task { @MainActor in
+        self?.publishProgressTick()
+      }
+    }
+    // Track during scrolling/interaction too.
+    RunLoop.main.add(timer, forMode: .common)
+    progressTimer = timer
+  }
+
+  private func stopProgressUpdates() {
+    progressTimer?.invalidate()
+    progressTimer = nil
+    lastObservedElapsed = -1
+    lastObservedDuration = 0
+  }
+
+  /// Re-anchors the system scrubber only on the first tick, a loop wrap, or a
+  /// duration change (sleep timer started/extended/stopped, source switched).
+  private func publishProgressTick() {
+    guard AudioManager.shared.isGloballyPlaying else {
+      stopProgressUpdates()
+      return
+    }
+
+    guard let anchor = currentProgressAnchor() else { return }
+    let elapsed = anchor.elapsed
+    let duration = anchor.duration
+    defer {
+      lastObservedElapsed = elapsed
+      lastObservedDuration = duration
+    }
+
+    let isFirst = lastObservedElapsed < 0
+    let wrapped = elapsed < lastObservedElapsed - 0.5  // sound loop restarted
+    let durationChanged = abs(duration - lastObservedDuration) > 0.5
+    guard isFirst || wrapped || durationChanged else { return }
+
+    updateProgress(currentTime: elapsed, duration: duration)
   }
 
   func clear() {
+    stopProgressUpdates()
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     staticArtworkTask?.cancel()
     staticArtworkTask = nil

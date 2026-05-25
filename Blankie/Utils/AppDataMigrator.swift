@@ -60,6 +60,7 @@ enum AppDataMigrator {
       UserDefaultsKeys.showProgressBorder,
       UserDefaultsKeys.lockPortraitOrientationiOS,
       UserDefaultsKeys.quickMixSoundFileNames,
+      UserDefaultsKeys.starredItems,
       "savedSoundStates",
 
       // Preset storage keys (from PresetStorage.swift)

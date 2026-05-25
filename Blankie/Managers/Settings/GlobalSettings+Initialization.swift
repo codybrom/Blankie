@@ -64,9 +64,24 @@ extension GlobalSettings {
       quickMixSoundFileNames = savedQuickMixSounds
     }
 
+    // Load favorited presets (the `starredItems` token list). Nothing is
+    // favorited by default — the initializer seeds an empty array.
+    if let savedStarred = UserDefaults.shared.array(
+      forKey: UserDefaultsKeys.starredItems) as? [String]
+    {
+      starredItems = savedStarred
+    }
+
     lockScreenBackgroundEnabled =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockScreenBackgroundEnabled) as? Bool
       ?? true
+
+    // Background blur radius (default 20). Read via `object` rather than
+    // `double(forKey:)` so a deliberately-saved 0 ("no blur") isn't mistaken
+    // for "unset" and reset back to the default.
+    backgroundBlurRadius =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.backgroundBlurRadius) as? Double
+      ?? defaultBackgroundBlurRadius
   }
 
   func loadPlatformSettings() {

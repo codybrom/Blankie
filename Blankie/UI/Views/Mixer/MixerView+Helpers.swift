@@ -85,7 +85,10 @@ import SwiftUI
               .resizable()
               .aspectRatio(contentMode: .fill)
               .frame(width: geometry.size.width, height: geometry.size.height)
-              .blur(radius: 20)
+              // Per-preset override wins; otherwise fall back to the app-wide
+              // default. Users who want to see their background more clearly
+              // can dial this down (0 = sharp).
+              .blur(radius: preset?.backgroundBlurRadius ?? globalSettings.backgroundBlurRadius)
               .opacity(0.6)
               .clipped()
               .overlay(

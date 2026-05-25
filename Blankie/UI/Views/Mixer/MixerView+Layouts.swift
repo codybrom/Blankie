@@ -58,7 +58,7 @@ import SwiftUI
     /// Resolved view mode for the current context: per-preset override wins
     /// over the app-wide default. Solo mode and Quick Mix have their own
     /// rendering paths and don't route through here.
-    private var effectiveUseListView: Bool {
+    var effectiveUseListView: Bool {
       if let override = presetManager.currentPreset?.viewMode {
         return override == .list
       }

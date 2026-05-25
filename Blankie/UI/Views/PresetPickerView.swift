@@ -7,6 +7,7 @@ struct PresetPickerRow: View {
   let onSelection: (() -> Void)?
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
+  @ObservedObject private var globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
 
   init(preset: Preset, isEditMode: Bool, onSelection: (() -> Void)? = nil) {
@@ -15,56 +16,73 @@ struct PresetPickerRow: View {
     self.onSelection = onSelection
   }
 
+  // The default preset is favorited under the shared "allSounds" token.
+  private var starToken: String {
+    preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
+  }
+
   var body: some View {
-    Button {
-      // Exit solo mode if active, then apply the preset
-      Task {
-        do {
-          // Exit solo mode without resuming previous sounds if active
-          // This prevents the previous preset from briefly playing
-          if audioManager.soloModeSound != nil {
-            audioManager.exitSoloModeWithoutResuming()
-          }
-
-          // Exit Quick Mix if we're in it
-          if audioManager.isQuickMix {
-            audioManager.exitQuickMix()
-          }
-
-          try presetManager.applyPreset(preset)
-
-          // Mark that user has switched presets for onboarding tracking
-          OnboardingManager.shared.markPresetSwitched()
-
-          dismiss()
-          onSelection?()
-        } catch {
-          debugLog("Error applying preset: \(error)")
-        }
-      }
-    } label: {
-      HStack {
-        HStack(spacing: 8) {
-          // Special badge for default preset
-          if preset.isDefault {
-            Image(systemName: "square.stack")
-              .foregroundColor(.accentColor)
-          }
-
-          Text(preset.displayName)
-            .foregroundColor(.primary)
+    HStack {
+      // Tap target: applies the preset (disabled while editing, where taps
+      // belong to reorder/delete).
+      HStack(spacing: 8) {
+        if preset.isDefault {
+          Image(systemName: "square.stack")
+            .foregroundColor(.accentColor)
         }
 
-        Spacer()
+        Text(preset.displayName)
+          .foregroundColor(.primary)
 
-        // Only show checkmark if not in solo mode AND this is the current preset
         let isSoloModeActive = audioManager.soloModeSound != nil
         let isCurrentPreset = presetManager.currentPreset?.id == preset.id
-
         if !isSoloModeActive && isCurrentPreset {
           Image(systemName: "checkmark")
             .foregroundColor(.accentColor)
         }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
+      .onTapGesture {
+        if !isEditMode { applyPreset() }
+      }
+
+      // Always-visible favorite toggle (hidden in edit mode, where the reorder
+      // handle takes the trailing edge).
+      if !isEditMode {
+        Button {
+          globalSettings.toggleStarred(starToken)
+        } label: {
+          Image(systemName: globalSettings.isStarred(starToken) ? "star.fill" : "star")
+            .foregroundStyle(
+              globalSettings.isStarred(starToken)
+                ? (preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
+                : .secondary)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(
+          globalSettings.isStarred(starToken)
+            ? Text("Remove from Favorites") : Text("Add to Favorites"))
+      }
+    }
+  }
+
+  private func applyPreset() {
+    Task {
+      do {
+        // Exit solo/Quick Mix first so the previous mix doesn't briefly play.
+        if audioManager.soloModeSound != nil {
+          audioManager.exitSoloModeWithoutResuming()
+        }
+        if audioManager.isQuickMix {
+          audioManager.exitQuickMix()
+        }
+        try presetManager.applyPreset(preset)
+        OnboardingManager.shared.markPresetSwitched()
+        dismiss()
+        onSelection?()
+      } catch {
+        debugLog("Error applying preset: \(error)")
       }
     }
   }
@@ -74,11 +92,10 @@ struct PresetPickerView: View {
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
+  @ObservedObject private var globalSettings = GlobalSettings.shared
   @State private var showingNewPresetSheet = false
-  @State private var newPresetName = ""
   @State private var presetToDelete: Preset?
   @State private var isEditMode = false
-  @State private var editingPresets: [Preset] = []
   @Environment(\.dismiss) private var dismiss
 
   // TipKit tips
@@ -95,78 +112,161 @@ struct PresetPickerView: View {
       }
   }
 
-  private func deletePresets(at offsets: IndexSet) {
-    // Remove from editing array
-    editingPresets.remove(atOffsets: offsets)
-  }
+  // MARK: - Favorites / All Presets model
 
-  private func movePresets(from source: IndexSet, to destination: Int) {
-    debugLog("🎵 PresetPickerView: Moving preset from \(source) to \(destination)")
-    // Work with the editing copy
-    editingPresets.move(fromOffsets: source, toOffset: destination)
-
-    // Log the new order
-    for (index, preset) in editingPresets.enumerated() {
-      debugLog("🎵 PresetPickerView: Position \(index): \(preset.name)")
-    }
-  }
-
-  private func startEditing() {
-    // Create a copy of custom presets sorted by order for editing
-    editingPresets = sortedCustomPresets
-    isEditMode = true
-  }
-
-  private func cancelEditing() {
-    isEditMode = false
-    editingPresets = []
-  }
-
-  private func saveEditing() {
-    // First, handle deletions by finding presets that are no longer in editingPresets
-    let editingIds = Set(editingPresets.map { $0.id })
-    let customPresets = presetManager.presets.filter { !$0.isDefault }
-    let deletedPresets = customPresets.filter { !editingIds.contains($0.id) }
-
-    // Delete removed presets
-    for preset in deletedPresets {
-      presetManager.deletePreset(preset)
-    }
-
-    // Create a map of updated presets with their new order values
-    var updatedPresetsMap: [UUID: Preset] = [:]
-
-    // Update order property for each preset in editingPresets
-    for (index, editedPreset) in editingPresets.enumerated() {
-      var updatedPreset = editedPreset
-      updatedPreset.order = index
-      debugLog("🎵 PresetPickerView: Setting order \(index) for preset '\(updatedPreset.name)'")
-      updatedPresetsMap[updatedPreset.id] = updatedPreset
-    }
-
-    // Get all presets and update only the ones we edited
-    var allPresets = presetManager.presets
-    for index in 0..<allPresets.count {
-      if let updatedPreset = updatedPresetsMap[allPresets[index].id] {
-        allPresets[index] = updatedPreset
-        debugLog(
-          "🎵 PresetPickerView: Updated preset '\(updatedPreset.name)' at index \(index) with order \(updatedPreset.order ?? -1)"
-        )
+  /// Favorited tokens in saved order, dropping any whose preset no longer exists.
+  private var favoriteTokens: [String] {
+    globalSettings.starredItems.filter { token in
+      switch token {
+      case GlobalSettings.allSoundsToken: return presetManager.presets.contains { $0.isDefault }
+      default: return presetManager.presets.contains { $0.id.uuidString == token }
       }
     }
+  }
 
-    // Update all presets at once
-    presetManager.setPresets(allPresets)
+  /// Non-favorited custom presets in saved order. All Blankie Sounds and Quick
+  /// Mix render as fixed rows in the All Presets section, NOT in this list — so
+  /// the reorderable ForEach contains only reorderable customs.
+  private var nonFavoriteCustomTokens: [String] {
+    sortedCustomPresets.map(\.id.uuidString).filter { !globalSettings.isStarred($0) }
+  }
 
-    // Save the updated order
+  /// Show All Blankie Sounds as a fixed row in All Presets only when it isn't
+  /// favorited (when favorited it appears in the Favorites section instead).
+  private var showsDefaultInAllPresets: Bool {
+    presetManager.presets.contains { $0.isDefault }
+      && !globalSettings.isStarred(GlobalSettings.allSoundsToken)
+  }
+
+  // MARK: - Favorite ordering & deletion
+  //
+  // Single source of truth: `starredItems`. Favoriting is a star tap on the
+  // row; reordering is standard edit-mode `.onMove` within Favorites.
+
+  private func reorderFavorites(from offsets: IndexSet, to destination: Int) {
+    var tokens = favoriteTokens
+    tokens.move(fromOffsets: offsets, toOffset: destination)
+    // Preserve any starred tokens not currently shown (e.g. a preset still
+    // loading) so reordering never silently drops a favorite.
+    let shown = Set(favoriteTokens)
+    let preserved = globalSettings.starredItems.filter { !shown.contains($0) }
+    globalSettings.setStarredItems(tokens + preserved)
+  }
+
+  /// Only custom presets can be deleted (not All Blankie Sounds).
+  private func isDeletable(_ token: String) -> Bool {
+    presetManager.presets.contains { $0.id.uuidString == token && !$0.isDefault }
+  }
+
+  private func requestDelete(_ token: String) {
+    if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }),
+      !preset.isDefault
+    {
+      presetToDelete = preset
+    }
+  }
+
+  // These lists only ever produce single-offset deletes (swipe / edit-mode −),
+  // and deletion routes through one confirmation alert, so handle a single row.
+  private func deleteFavorites(at offsets: IndexSet) {
+    if let index = offsets.first, favoriteTokens.indices.contains(index) {
+      requestDelete(favoriteTokens[index])
+    }
+  }
+
+  private func deleteAllPresets(at offsets: IndexSet) {
+    if let index = offsets.first, nonFavoriteCustomTokens.indices.contains(index) {
+      requestDelete(nonFavoriteCustomTokens[index])
+    }
+  }
+
+  /// Reorder the non-favorited custom presets, persisting their master `order`.
+  private func reorderAllPresets(from offsets: IndexSet, to destination: Int) {
+    var tokens = nonFavoriteCustomTokens
+    tokens.move(fromOffsets: offsets, toOffset: destination)
+    applyCustomOrder(tokens)
+  }
+
+  /// Persist a collision-free `order` across ALL custom presets: favorited
+  /// customs (in favorites order) first, then the reordered non-favorited ones.
+  /// Ordering the full set avoids leaving favorited presets with stale `order`
+  /// values that collide with the new sequence.
+  private func applyCustomOrder(_ reorderedNonFavoriteIDs: [String]) {
+    let favoritedCustomIDs = favoriteTokens.filter { $0 != GlobalSettings.allSoundsToken }
+    let fullOrder = favoritedCustomIDs + reorderedNonFavoriteIDs
+    let orderByID = Dictionary(uniqueKeysWithValues: fullOrder.enumerated().map { ($1, $0) })
+    var presets = presetManager.presets
+    for index in presets.indices {
+      if let newOrder = orderByID[presets[index].id.uuidString] {
+        presets[index].order = newOrder
+      }
+    }
+    presetManager.setPresets(presets)
     presetManager.savePresets()
+  }
 
-    isEditMode = false
-    editingPresets = []
+  // MARK: - Row builders
+
+  @ViewBuilder
+  private func tokenRow(_ token: String) -> some View {
+    switch token {
+    case GlobalSettings.allSoundsToken:
+      if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
+        PresetPickerRow(preset: defaultPreset, isEditMode: isEditMode) { dismiss() }
+      }
+    default:
+      if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
+        PresetPickerRow(preset: preset, isEditMode: isEditMode) { dismiss() }
+      }
+    }
+  }
+
+  private var quickMixRow: some View {
+    Button {
+      Task { @MainActor in
+        if audioManager.soloModeSound != nil {
+          audioManager.exitSoloModeWithoutResuming()
+        }
+        if !audioManager.isQuickMix {
+          audioManager.enterQuickMix()
+          OnboardingManager.shared.markQuickMixUsed()
+        }
+        dismiss()
+      }
+    } label: {
+      HStack(spacing: 8) {
+        Image(systemName: "square.grid.2x2")
+          .foregroundColor(.accentColor)
+          .frame(width: 20)
+        Text("Quick Mix")
+          .foregroundColor(.primary)
+        Spacer()
+        if audioManager.isQuickMix {
+          Image(systemName: "checkmark")
+            .foregroundColor(.accentColor)
+        }
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func soloIndicatorRow(_ soloSound: Sound) -> some View {
+    HStack {
+      HStack(spacing: 8) {
+        Image(systemName: "headphones.circle.fill")
+          .foregroundColor(.accentColor)
+        Text("Solo Mode - \(soloSound.title)")
+          .foregroundColor(.secondary)
+      }
+      Spacer()
+      Image(systemName: "checkmark")
+        .foregroundColor(.accentColor)
+    }
+    .listRowBackground(Color.secondary.opacity(0.1))
   }
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       List {
         // Show tip for creating first preset if no custom presets exist
         if !presetManager.hasCustomPresets {
@@ -213,82 +313,50 @@ struct PresetPickerView: View {
           }
           .listRowBackground(Color.clear)
         } else {
-          // Solo mode indicator (if active)
+          // Solo mode status (not part of the favorites list)
           if let soloSound = audioManager.soloModeSound {
-            HStack {
-              HStack(spacing: 8) {
-                Image(systemName: "headphones.circle.fill")
-                  .foregroundColor(.accentColor)
-                Text("Solo Mode - \(soloSound.title)")
-                  .foregroundColor(.secondary)
-              }
-
-              Spacer()
-
-              Image(systemName: "checkmark")
-                .foregroundColor(.accentColor)
-            }
-            .listRowBackground(Color.secondary.opacity(0.1))
+            soloIndicatorRow(soloSound)
           }
 
-          // Quick Mix mode
-          if audioManager.isQuickMix {
-            // Quick Mix indicator (if active)
-            HStack {
-              HStack(spacing: 8) {
-                Image(systemName: "square.grid.2x2.fill")
-                  .foregroundColor(.accentColor)
-                Text("Quick Mix")
-                  .foregroundColor(.secondary)
+          // FAVORITES — tap a row's star to add/remove; reorder via Edit.
+          Section {
+            if favoriteTokens.isEmpty {
+              Text(
+                "Tap the star on any preset to add it here.",
+                comment: "Empty favorites hint"
+              )
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+            } else {
+              ForEach(favoriteTokens, id: \.self) { token in
+                tokenRow(token)
+                  .deleteDisabled(!isDeletable(token))
               }
-
-              Spacer()
-
-              Image(systemName: "checkmark")
-                .foregroundColor(.accentColor)
+              .onMove(perform: reorderFavorites)
+              .onDelete(perform: deleteFavorites)
             }
-            .listRowBackground(Color.secondary.opacity(0.1))
-          } else {
-            // Quick Mix button (if not active)
-            Button {
-              Task { @MainActor in
-                audioManager.enterQuickMix()
-                // Mark that user has used Quick Mix
-                OnboardingManager.shared.markQuickMixUsed()
-                dismiss()
-              }
-            } label: {
-              HStack {
-                HStack(spacing: 8) {
-                  Image(systemName: "square.grid.2x2")
-                    .foregroundColor(.accentColor)
-                  Text("Quick Mix")
-                    .foregroundColor(.primary)
-                }
-
-                Spacer()
-              }
-            }
+          } header: {
+            Text("Favorites", comment: "Picker section header for favorited presets")
           }
 
-          // Default preset (not reorderable)
-          if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
-            PresetPickerRow(preset: defaultPreset, isEditMode: isEditMode) {
-              dismiss()
-            }
-          }
+          // ALL PRESETS — Quick Mix and All Blankie Sounds are fixed rows at the
+          // top; only the custom presets below are reorderable in Edit.
+          Section {
+            // Quick Mix — always available, not favoritable (its own thing).
+            quickMixRow
 
-          // Custom presets (reorderable)
-          let customPresets = isEditMode ? editingPresets : sortedCustomPresets
-
-          ForEach(customPresets) { preset in
-            PresetPickerRow(preset: preset, isEditMode: isEditMode) {
-              dismiss()
+            if showsDefaultInAllPresets {
+              tokenRow(GlobalSettings.allSoundsToken)
             }
-            .deleteDisabled(!isEditMode || preset.isDefault)
+
+            ForEach(nonFavoriteCustomTokens, id: \.self) { token in
+              tokenRow(token)
+            }
+            .onMove(perform: reorderAllPresets)
+            .onDelete(perform: deleteAllPresets)
+          } header: {
+            Text("All Presets", comment: "Picker section header for non-favorited presets")
           }
-          .onDelete(perform: isEditMode ? deletePresets : nil)
-          .onMove(perform: isEditMode ? movePresets : nil)
         }
       }
       .navigationTitle("Presets")
@@ -296,27 +364,20 @@ struct PresetPickerView: View {
         .navigationBarTitleDisplayMode(.inline)
       #endif
       .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
+        ToolbarItem(placement: .topBarLeading) {
+          Button("Close") { dismiss() }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
           if presetManager.hasCustomPresets {
             Button {
-              if isEditMode {
-                cancelEditing()
-              } else {
-                startEditing()
-              }
+              isEditMode.toggle()
             } label: {
-              Text(isEditMode ? "Cancel" : "Edit", comment: "Edit mode toggle button")
+              Text(isEditMode ? "Done" : "Edit", comment: "Edit mode toggle button")
             }
           }
         }
-
-        ToolbarItem(placement: .primaryAction) {
-          if isEditMode {
-            Button("Done") {
-              saveEditing()
-            }
-            .fontWeight(.semibold)
-          } else {
+        ToolbarItem(placement: .topBarTrailing) {
+          if !isEditMode {
             Button {
               showingNewPresetSheet = true
             } label: {
@@ -356,12 +417,6 @@ struct PresetPickerView: View {
             "Are you sure you want to delete '\(preset.name)'? This action cannot be undone.",
             comment: "Delete preset confirmation message"
           )
-        }
-      }
-      .onDisappear {
-        // Cancel editing if view is dismissed (e.g., by swiping)
-        if isEditMode {
-          cancelEditing()
         }
       }
     }

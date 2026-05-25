@@ -44,11 +44,21 @@ enum UserDefaultsKeys {
   static let lockPortraitOrientationiOS = "lockPortraitOrientationiOS"
   static let quickMixSoundFileNames = "quickMixSoundFileNames"
   static let lockScreenBackgroundEnabled = "lockScreenBackgroundEnabled"
+  static let starredItems = "starredItems"
+  static let backgroundBlurRadius = "backgroundBlurRadius"
 }
+
+/// Default blur (in points) applied to a preset's background artwork behind the
+/// mixer. Presets may override this with their own `backgroundBlurRadius`.
+let defaultBackgroundBlurRadius: Double = 20
 
 class GlobalSettings: ObservableObject {
   @Published var needsRestartForLanguageChange = false
   static let shared = GlobalSettings()
+
+  /// Tokens for the non-preset starrable items. Presets use their UUID string.
+  static let allSoundsToken = "allSounds"
+  static let quickMixToken = "quickMix"
 
   @Published var volume: Double
   @Published var appearance: AppearanceMode
@@ -62,13 +72,20 @@ class GlobalSettings: ObservableObject {
   @Published var showProgressBorder: Bool
   @Published var lockPortraitOrientationiOS: Bool
   @Published var quickMixSoundFileNames: [String]
+  /// Ordered list of starred items shown in the iPad sidebar and CarPlay.
+  /// Tokens: `allSoundsToken`, `quickMixToken`, or a preset's UUID string.
+  /// Order = display order; membership = starred.
+  @Published var starredItems: [String]
   @Published var availableLanguages: [Language] = []
   @Published var lockScreenBackgroundEnabled: Bool
+  /// App-wide default blur (in points) for preset background artwork. A preset's
+  /// own `backgroundBlurRadius` overrides this when set.
+  @Published var backgroundBlurRadius: Double
 
   // Platform-specific settings
   @Published var enableSpatialAudio: Bool = false
   @Published var mixWithOthers: Bool = false
-  @Published var volumeWithOtherAudio: Double = 0.5 // 0.0 = silent, 1.0 = full volume
+  @Published var volumeWithOtherAudio: Double = 0.5  // 0.0 = silent, 1.0 = full volume
 
   var observers = Set<AnyCancellable>()
   var volumeDebounceTimer: Timer?
@@ -90,8 +107,10 @@ class GlobalSettings: ObservableObject {
       "rain", "waves", "fireplace", "white-noise",
       "wind", "stream", "birds", "coffee-shop",
     ]
+    starredItems = []
     availableLanguages = []
     lockScreenBackgroundEnabled = true
+    backgroundBlurRadius = defaultBackgroundBlurRadius
 
     // Then load actual values from UserDefaults
     loadBasicSettings()

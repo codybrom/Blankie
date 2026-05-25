@@ -102,6 +102,10 @@ struct Preset: Codable, Identifiable, Equatable {
   /// app-wide `GlobalSettings.showingListView` setting.
   var viewMode: PresetViewMode?
 
+  /// Per-preset override for the background-artwork blur radius (in points).
+  /// `nil` = follow the app-wide `GlobalSettings.backgroundBlurRadius`.
+  var backgroundBlurRadius: Double?
+
   var accentColor: Color? {
     guard let name = accentColorName else { return nil }
     return Color(fromString: name)
@@ -129,6 +133,7 @@ struct Preset: Codable, Identifiable, Equatable {
       && lhs.moods == rhs.moods
       && lhs.accentColorName == rhs.accentColorName
       && lhs.viewMode == rhs.viewMode
+      && lhs.backgroundBlurRadius == rhs.backgroundBlurRadius
   }
 
   func validate() -> Bool {

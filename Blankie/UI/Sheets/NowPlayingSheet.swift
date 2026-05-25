@@ -17,15 +17,20 @@ import SwiftUI
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
     @Binding var showingPresetPicker: Bool
+    @Binding var showingTimer: Bool
+    @Binding var presetToEdit: Preset?
+    @Binding var showingQuickMixEditor: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
+    @StateObject private var timerManager = TimerManager.shared
 
     @StateObject private var globalSettings = GlobalSettings.shared
     @State private var backgroundImage: UIImage?
     @State private var currentPage: NowPlayingPage = .nowPlaying
     @State private var isEditingVolume = false
     @State private var playPauseTrigger = 0
+    @State private var favoriteHapticTrigger = 0
 
     private var artworkTaskID: String {
       let solo = audioManager.soloModeSound?.id.uuidString ?? ""
@@ -99,7 +104,11 @@ import SwiftUI
 
     @ViewBuilder
     private func portraitNowPlaying(in size: CGSize) -> some View {
-      let artworkSize = size.width - 64
+      // Cap by height too. When the pane is short relative to its width — iPad
+      // landscape with the sidebar open makes the detail pane nearly square —
+      // width - 64 overflows vertically and crowds the controls. Reserve room
+      // for the progress/volume stack; true (tall) portrait is unaffected.
+      let artworkSize = max(min(size.width - 64, size.height - 240), 120)
 
       VStack(spacing: 0) {
         Spacer()
@@ -112,7 +121,12 @@ import SwiftUI
         soloProgressBar
 
         Spacer()
-          .frame(maxHeight: 40)
+          .frame(maxHeight: 32)
+
+        actionsRow
+
+        Spacer()
+          .frame(maxHeight: 16)
 
         volumeSlider
 
@@ -144,7 +158,12 @@ import SwiftUI
           soloProgressBar
 
           Spacer()
-            .frame(maxHeight: 24)
+            .frame(maxHeight: 20)
+
+          actionsRow
+
+          Spacer()
+            .frame(maxHeight: 16)
 
           volumeSlider
 
@@ -193,34 +212,53 @@ import SwiftUI
 
     @ViewBuilder
     private var soloProgressBar: some View {
-      if let soloSound = audioManager.soloModeSound, let duration = soloSound.duration {
-        VStack(spacing: 8) {
-          GeometryReader { geo in
-            ZStack(alignment: .leading) {
-              Capsule()
-                .fill(.white.opacity(0.3))
-                .frame(height: 4)
-              Capsule()
-                .fill(.white)
-                .frame(width: geo.size.width * soloSound.playbackProgress, height: 4)
-            }
+      if let soloSound = audioManager.soloModeSound, let duration = soloSound.duration,
+        duration > 0
+      {
+        // Drive progress from the player's live `currentTime` (matching the
+        // grid's ProgressBorderView). Only tick while playing — when paused the
+        // playhead is stationary, so render once instead of redrawing 30×/sec.
+        if audioManager.isGloballyPlaying {
+          TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
+            soloBar(soloSound, duration: duration)
           }
-          .frame(height: 4)
+        } else {
+          soloBar(soloSound, duration: duration)
+        }
+      }
+    }
 
-          HStack {
-            Text(formatTime(duration * soloSound.playbackProgress))
-              .font(.caption2)
-              .foregroundColor(.white.opacity(0.7))
-              .monospacedDigit()
-            Spacer()
-            Text(formatTime(duration))
-              .font(.caption2)
-              .foregroundColor(.white.opacity(0.7))
-              .monospacedDigit()
+    @ViewBuilder
+    private func soloBar(_ soloSound: Sound, duration: TimeInterval) -> some View {
+      let elapsed = soloSound.player?.currentTime ?? 0
+      let progress = min(max(elapsed / duration, 0), 1)
+
+      VStack(spacing: 8) {
+        GeometryReader { geo in
+          ZStack(alignment: .leading) {
+            Capsule()
+              .fill(.white.opacity(0.3))
+              .frame(height: 4)
+            Capsule()
+              .fill(.white)
+              .frame(width: geo.size.width * progress, height: 4)
           }
         }
-        .padding(.horizontal, 32)
+        .frame(height: 4)
+
+        HStack {
+          Text(formatTime(elapsed))
+            .font(.caption2)
+            .foregroundColor(.white.opacity(0.7))
+            .monospacedDigit()
+          Spacer()
+          Text(formatTime(duration))
+            .font(.caption2)
+            .foregroundColor(.white.opacity(0.7))
+            .monospacedDigit()
+        }
       }
+      .padding(.horizontal, 32)
     }
 
     private var volumeSlider: some View {
@@ -251,6 +289,78 @@ import SwiftUI
       .padding(.horizontal, 32)
     }
 
+    // MARK: - Actions Row
+
+    private var accentColor: Color {
+      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    }
+
+    /// Starred token for the current context, or nil when favoriting doesn't
+    /// apply. Mirrors the sidebar: the default preset maps to `allSoundsToken`,
+    /// custom presets to their UUID string. Quick Mix isn't favoritable and
+    /// Solo isn't a preset, so both return nil (the star is hidden).
+    private var favoriteToken: String? {
+      guard audioManager.soloModeSound == nil, !audioManager.isQuickMix,
+        let preset = presetManager.currentPreset
+      else { return nil }
+      return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
+    }
+
+    /// Whether the row has something to edit: a preset, or Quick Mix. Solo mode
+    /// has no edit target here.
+    private var canEditCurrent: Bool {
+      audioManager.soloModeSound == nil
+        && (audioManager.isQuickMix || presetManager.currentPreset != nil)
+    }
+
+    /// Favorite / Timer / Edit controls shown above the volume slider. Favorite
+    /// and Edit drop out in contexts where they don't apply, so the row may show
+    /// one to three buttons; it stays centered either way.
+    @ViewBuilder
+    private var actionsRow: some View {
+      HStack(spacing: 44) {
+        if let token = favoriteToken {
+          let starred = globalSettings.isStarred(token)
+          Button {
+            globalSettings.toggleStarred(token)
+            favoriteHapticTrigger += 1
+          } label: {
+            Image(systemName: starred ? "star.fill" : "star")
+              .foregroundColor(starred ? accentColor : .white.opacity(0.7))
+          }
+          .accessibilityLabel(starred ? Text("Unfavorite") : Text("Favorite"))
+        }
+
+        Button {
+          showingTimer = true
+        } label: {
+          Image(systemName: "timer")
+            .foregroundColor(timerManager.isTimerActive ? accentColor : .white.opacity(0.7))
+        }
+        .accessibilityLabel(Text("Timer"))
+
+        if canEditCurrent {
+          Button {
+            if audioManager.isQuickMix {
+              showingQuickMixEditor = true
+            } else if let preset = presetManager.currentPreset {
+              presetToEdit = preset
+            }
+          } label: {
+            Image(systemName: "slider.vertical.3")
+              .foregroundColor(.white.opacity(0.7))
+          }
+          .accessibilityLabel(
+            audioManager.isQuickMix ? Text("Edit Quick Mix") : Text("Edit Preset"))
+        }
+      }
+      .font(.system(size: 22))
+      .buttonStyle(.plain)
+      // Fire only on the user's own tap of the star — not when the favorite
+      // state changes because the preset switched or another surface toggled it.
+      .sensoryFeedback(.selection, trigger: favoriteHapticTrigger)
+    }
+
     // MARK: - Expanded Player View
 
     @ViewBuilder
@@ -269,7 +379,12 @@ import SwiftUI
   }
 
   #Preview {
-    NowPlayingSheet(showingPresetPicker: .constant(false))
+    NowPlayingSheet(
+      showingPresetPicker: .constant(false),
+      showingTimer: .constant(false),
+      presetToEdit: .constant(nil),
+      showingQuickMixEditor: .constant(false)
+    )
   }
 
 #endif

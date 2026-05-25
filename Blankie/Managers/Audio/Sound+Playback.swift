@@ -254,41 +254,4 @@ extension Sound {
     debugLog("✅ Sound: Reset complete for '\(fileName)'")
     isResetting = false
   }
-
-  func updateProgress() {
-    guard let player = player, player.duration > 0 else {
-      playbackProgress = 0.0
-      return
-    }
-
-    let newProgress = player.currentTime / player.duration
-
-    // Update on main thread to ensure UI updates
-    DispatchQueue.main.async { [weak self] in
-      self?.playbackProgress = newProgress
-
-      // Update Now Playing progress if this is the solo mode sound
-      if let self = self, AudioManager.shared.soloModeSound?.id == self.id {
-        AudioManager.shared.nowPlayingManager.updateProgress(
-          currentTime: player.currentTime,
-          duration: player.duration
-        )
-      } else if let self = self {
-        // For presets, check if this is the longest playing sound
-        let playingSounds = AudioManager.shared.sounds.filter { $0.player?.isPlaying == true }
-        let longestSound = playingSounds.max {
-          ($0.player?.duration ?? 0) < ($1.player?.duration ?? 0)
-        }
-
-        if longestSound?.id == self.id {
-          // This is the longest sound, update Now Playing progress
-          AudioManager.shared.nowPlayingManager.updateProgress(
-            currentTime: player.currentTime,
-            duration: player.duration
-          )
-        }
-      }
-    }
-
-  }
 }

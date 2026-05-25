@@ -164,10 +164,6 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   @Published var fileSize: Int64?
   @Published var fileFormat: String?
 
-  // Playback progress tracking
-  @Published var playbackProgress: Double = 0.0
-  var progressTimer: Timer?
-
   init(
     title: String, systemIconName: String, fileName: String, fileExtension: String = "mp3",
     defaultOrder _: Int = 0, lufs: Float? = nil, normalizationFactor: Float? = nil,
@@ -292,7 +288,6 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     fadeTimer?.invalidate()
     volumeDebounceTimer?.invalidate()
     updateVolumeLogTimer?.invalidate()
-    progressTimer?.invalidate()
   }
 
   // MARK: - AVAudioPlayerDelegate

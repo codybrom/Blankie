@@ -323,14 +323,17 @@ import SwiftUI
     let onTap: () -> Void
 
     var body: some View {
-      Button(action: onTap) {
+      let pill = Button(action: onTap) {
         Label(label, systemImage: icon)
           .font(.subheadline)
-          .foregroundColor(isSelected ? .white : .primary)
-          .padding(.horizontal, 12)
-          .padding(.vertical, 8)
-          .background(isSelected ? Color.accentColor : Color(uiColor: .secondarySystemFill))
-          .cornerRadius(20)
+      }
+      if isSelected {
+        // Prominent glass fills with the accent and picks a legible label automatically.
+        pill.buttonStyle(.glassProminent).tint(
+          PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared.customAccentColor
+            ?? .accentColor)
+      } else {
+        pill.buttonStyle(.glass)
       }
     }
   }
@@ -719,24 +722,22 @@ import SwiftUI
           Button {
             onSelect()
           } label: {
-            if case .downloading = resourceState {
-              Text("Downloading...", comment: "Button label while video is downloading")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.gray)
-                .cornerRadius(12)
-            } else {
-              Text("Choose", comment: "Button to select animated artwork")
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(isCached ? Color.accentColor : Color.gray)
-                .cornerRadius(12)
+            Group {
+              if case .downloading = resourceState {
+                Text("Downloading...", comment: "Button label while video is downloading")
+              } else {
+                Text("Choose", comment: "Button to select animated artwork")
+              }
             }
+            .font(.headline)
+            .frame(maxWidth: .infinity)
           }
+          .buttonStyle(.glassProminent)
+          .controlSize(.large)
+          .tint(
+            PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared
+              .customAccentColor ?? .accentColor
+          )
           .disabled(!isCached)
           .padding(.horizontal, 32)
           .padding(.bottom, 32)
