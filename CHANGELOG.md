@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-25
+
+Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below are primary for those platforms with the macOS app inheriting platform bug fixes.
+
+### Added
+
+- **iPhone and iPad support** - Blankie is now a universal app, with layouts that adapt to each screen, iPad Split View, and an iPad sidebar for favorite presets, Quick Mix, and settings
+- **CarPlay support** - a tabbed in-car interface with Presets (Recent, Favorites, and All), a Quick Mix sound grid, and a full Sounds list, plus a Now Playing screen with animated artwork, one-tap favoriting, and an in-car sound editor
+- **Custom sounds** - import your own audio files and play them alongside the built-in library, with automatic loudness matching so they sit at a comparable volume
+- **Favorites** - star presets to promote them in the iPad sidebar and CarPlay
+- **Quick Mix** - a lightweight soundboard for starting sounds quickly without saving a preset
+- **Sleep timer** - stop playback after a set time, with the option to add more time on the fly
+- Animated lock-screen artwork for presets, downloaded on demand to keep the app download small
+- Preset import and export as `.blankie` files for sharing
+- Per-preset accent color, grid or list layout, and background blur
+- Drag to reorder sounds in both grid and list views
+- Interactive onboarding on first launch
+- Settings to toggle sound name labels and the progress border around playing sounds
+- English (United Kingdom) localization (now 12 languages total)
+- CodeQL security scanning workflows
+
+### Changed
+
+- Migrated all audio from MP3 to M4A (AAC)
+- Rebuilt the documentation website on Astro 6
+- **Breaking**: minimum requirements are now iOS 26 and macOS 15.5
+
 ## [1.0.13] - 2025-10-27
 
 ### Added
@@ -191,7 +218,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v1.0.10...HEAD
+[Unreleased]: https://github.com/codybrom/blankie/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/codybrom/blankie/compare/v1.0.13...v1.1.0
+[1.0.13]: https://github.com/codybrom/blankie/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/codybrom/blankie/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/codybrom/blankie/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/codybrom/blankie/compare/v1.0.9...v1.0.10
