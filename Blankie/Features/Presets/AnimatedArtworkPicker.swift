@@ -581,7 +581,7 @@ import SwiftUI
                   .rotationEffect(.degrees(-90))
                   .animation(.linear(duration: 0.2), value: progress)
 
-                Text("\(Int(progress * 100))%")
+                Text(Double(progress).formatted(.percent.precision(.fractionLength(0))))
                   .font(.title3)
                   .fontWeight(.semibold)
                   .foregroundColor(.white)

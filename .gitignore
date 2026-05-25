@@ -83,3 +83,7 @@ releases/*
 .clang-module-cache
 .swift-module-cache
 notes
+
+# SourceKit-LSP / xcode-build-server (local, machine-specific)
+buildServer.json
+.compile

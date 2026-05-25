@@ -125,16 +125,22 @@ extension CleanSoundSheetForm {
       }
 
       HStack {
-        Text("-50%", comment: "Volume decrease label")
-          .font(.caption)
-          .foregroundColor(.secondary)
+        Text(
+          (-0.5).formatted(
+            .percent.precision(.fractionLength(0)).sign(strategy: .always(includingZero: false)))
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
 
         Slider(value: $volumeAdjustment, in: 0.5...8.0, step: 0.01)
           .tint(globalSettings.customAccentColor ?? .accentColor)
 
-        Text("+700%", comment: "Volume increase label")
-          .font(.caption)
-          .foregroundColor(.secondary)
+        Text(
+          (7.0).formatted(
+            .percent.precision(.fractionLength(0)).sign(strategy: .always(includingZero: false)))
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
       }
     }
   }

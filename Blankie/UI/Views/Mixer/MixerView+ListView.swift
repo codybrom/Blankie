@@ -92,7 +92,7 @@ import SwiftUI
 
             Spacer()
 
-            Text("\(Int(sound.volume * 100))%")
+            Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
               .font(.caption)
               .foregroundColor(.secondary)
               .monospacedDigit()

@@ -45,14 +45,9 @@ extension CleanSoundSheetForm {
 // MARK: - Volume Helpers
 extension CleanSoundSheetForm {
   var volumePercentageText: String {
-    let percentage = Int((volumeAdjustment - 1.0) * 100)
-    if percentage > 0 {
-      return "+\(percentage)%"
-    } else if percentage < 0 {
-      return "\(percentage)%"
-    } else {
-      return "0%"
-    }
+    let delta = Double(volumeAdjustment) - 1.0
+    return delta.formatted(
+      .percent.precision(.fractionLength(0)).sign(strategy: .always(includingZero: false)))
   }
 }
 

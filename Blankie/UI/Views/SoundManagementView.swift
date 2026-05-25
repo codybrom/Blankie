@@ -309,9 +309,11 @@ private struct PlaybackSettingsSection: View {
             Text("Blankie Volume with Media")
               .font(.subheadline)
             Spacer()
-            Text("\(Int(globalSettings.volumeWithOtherAudio * 100))%")
-              .font(.caption)
-              .foregroundColor(.secondary)
+            Text(
+              globalSettings.volumeWithOtherAudio.formatted(.percent.precision(.fractionLength(0)))
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
           }
 
           Slider(
