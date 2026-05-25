@@ -47,7 +47,7 @@ Blankie helps you focus, relax, and sleep better by creating perfect ambient sou
 - **Save custom presets** for quick access to your favorite combinations
 - **Native macOS app** with automatic light/dark mode support
 - **System integration** with media keys and Control Center
-- **7+ languages supported** with more coming soon
+- **11 languages supported** with more coming soon
 
 ## Installation
 

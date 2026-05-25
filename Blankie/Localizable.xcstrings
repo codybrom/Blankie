@@ -87,6 +87,12 @@
             "value" : "À propos de Blankie"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Blankie-ről"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -157,6 +163,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Couleur d’accentuation"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiemelő szín"
           }
         },
         "it" : {
@@ -251,6 +263,12 @@
             "value" : "Ajouter un son (bientôt disponible !)"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Egyéni hang hozzáadása (hamarosan)"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -336,6 +354,12 @@
             "value" : "Tous les sons"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minden hang"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -417,6 +441,12 @@
             "value" : "Toujours démarrer en pause"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mindig csendesen induljon"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -496,6 +526,12 @@
             "value" : "Apparence"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kinézet"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -566,6 +602,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Êtes-vous sûr de vouloir supprimer '%@' ? Cette action est irréversible."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biztosan törölni szeretnéd a(z) '%@' sablont? Ez a művelet nem vonható vissza"
           }
         },
         "it" : {
@@ -674,6 +716,12 @@
             "value" : "Comportement"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behavior"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -747,6 +795,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Oiseaux"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Madárcsicsergés"
           }
         },
         "it" : {
@@ -825,6 +879,12 @@
             "value" : "Aide de Blankie"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blankie Súgó"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -898,6 +958,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Paramètres de Blankie"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blankie beállítások"
           }
         },
         "it" : {
@@ -981,6 +1047,12 @@
             "value" : "Bleu"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kék"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1053,6 +1125,12 @@
             "value" : "Bateau"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hajó"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1123,6 +1201,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Marron"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Barna"
           }
         },
         "it" : {
@@ -1203,6 +1287,12 @@
             "value" : "Par"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "által"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1273,6 +1363,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Annuler"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mégsem"
           }
         },
         "it" : {
@@ -1411,6 +1507,12 @@
             "value" : "Ville"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nagyvárosi zaj"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1496,6 +1598,12 @@
             "value" : "Fermer"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezárás"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1566,6 +1674,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fermer la fenêtre"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ablak bezárása"
           }
         },
         "it" : {
@@ -1640,6 +1754,12 @@
             "value" : "Cody Bromley et les contributeurs. Tous droits réservés."
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cody Bromley és közreműködői. Minden jog fenntartva."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1710,6 +1830,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Café"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kávézó"
           }
         },
         "it" : {
@@ -1788,6 +1914,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contributeurs"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közreműködők"
           }
         },
         "it" : {
@@ -1914,6 +2046,12 @@
             "value" : "Cyan"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cián"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1984,6 +2122,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sombre"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sötét"
           }
         },
         "it" : {
@@ -2058,6 +2202,12 @@
             "value" : "Par défaut"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alapértelmezett"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2130,6 +2280,12 @@
             "value" : "Supprimer"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Törlés"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2200,6 +2356,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimer le préréglage"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sablon törlése"
           }
         },
         "it" : {
@@ -2298,6 +2460,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Développé par"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fejlesztette"
           }
         },
         "it" : {
@@ -2422,6 +2590,12 @@
             "value" : "Modifier le préréglage"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sablon módosítása"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2515,6 +2689,12 @@
             "value" : "Édité par"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Módosította"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2585,6 +2765,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Erreur"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiba"
           }
         },
         "it" : {
@@ -2666,6 +2852,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Feu de Cheminée"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kandalló"
           }
         },
         "it" : {
@@ -2773,6 +2965,12 @@
             "value" : "Vert"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zöld"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2846,6 +3044,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Masquer les sons inactifs"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inaktív hangok elrejtése"
           }
         },
         "it" : {
@@ -2947,6 +3151,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Si désactivé, Blankie jouera immédiatement votre préréglage le plus récent au lancement"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ha ki van kapcsolva, az alkalmazás futtatásakor a Blankie automatikusan elindul a legutóbbi beállításokkal"
           }
         },
         "it" : {
@@ -3102,6 +3312,12 @@
             "value" : "Indigo"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indigó"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3171,6 +3387,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inspiré par Blanket par Rafael Mardojai CM"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rafael Mardojai CM Blanket munkája által inspirálva"
           }
         },
         "it" : {
@@ -3245,6 +3467,12 @@
             "value" : "Raccourcis clavier"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Billentyűparancsok"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3316,6 +3544,12 @@
             "value" : "Langue"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyelv"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3375,6 +3609,12 @@
             "value" : "Langue modifiée"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az alkalmazás nyelve megváltozott"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3420,6 +3660,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Plus tard"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Később"
           }
         },
         "ja" : {
@@ -3480,6 +3726,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "En savoir plus sur la Licence MIT"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tudj meg többet az MIT Licenszről"
           }
         },
         "it" : {
@@ -3563,6 +3815,12 @@
             "value" : "Clair"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Világos"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3643,6 +3901,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chargement des préréglages..."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sablonok betöltése"
           }
         },
         "it" : {
@@ -3743,6 +4007,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menthe"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentazöld"
           }
         },
         "it" : {
@@ -3851,6 +4121,12 @@
             "value" : "Nouveau préréglage"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Új sablon"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3921,6 +4197,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nouvelle fenêtre"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Új ablak"
           }
         },
         "it" : {
@@ -4000,6 +4282,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun préréglage personnalisé"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nincsenek saját sablonok"
           }
         },
         "it" : {
@@ -4132,6 +4420,12 @@
             "value" : "Ok"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4205,6 +4499,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Orange"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Narancssárga"
           }
         },
         "it" : {
@@ -4298,6 +4598,12 @@
             "value" : "Rose"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rózsaszín"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4368,6 +4674,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bruit rose"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pink zaj"
           }
         },
         "it" : {
@@ -4445,6 +4757,12 @@
             "value" : "Lire/Mettre en pause les sons"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hangok lejátszása/szüneteltetése"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4520,6 +4838,12 @@
             "value" : "Lecture en pause"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A hanglejátszás szünetel"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4593,6 +4917,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Préférences"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tulajdonságok"
           }
         },
         "it" : {
@@ -4674,6 +5004,12 @@
             "value" : "Nom du préréglage"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sablon neve"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4744,6 +5080,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le nom du préréglage ne peut pas être vide"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A sablon neve nem lehet üres"
           }
         },
         "it" : {
@@ -4822,6 +5164,12 @@
             "value" : "Préréglages"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sablonok"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4894,6 +5242,12 @@
             "value" : "Domaine public"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Közkincs"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4964,6 +5318,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Violet"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lila"
           }
         },
         "it" : {
@@ -5048,6 +5408,12 @@
             "value" : "Quitter"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilépés"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5120,6 +5486,12 @@
             "value" : "Quitter Blankie"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kilépés a Blankie-ből"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5190,6 +5562,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pluie"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eső"
           }
         },
         "it" : {
@@ -5268,6 +5646,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rouge"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Piros"
           }
         },
         "it" : {
@@ -5352,6 +5736,12 @@
             "value" : "Renommer le préréglage"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sablon átnevezése"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5425,6 +5815,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Signaler un problème"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiba bejelentése"
           }
         },
         "it" : {
@@ -5505,6 +5901,12 @@
             "value" : "Réinitialiser les sons"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A hangok visszaállítása"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5570,6 +5972,12 @@
             "value" : "Redémarrer maintenant"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Újraindítás most"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5628,6 +6036,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enregistrer"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentés"
           }
         },
         "it" : {
@@ -5700,6 +6114,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enregistrez votre configuration sonore actuelle comme préréglage pour y accéder rapidement plus tard."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentsd el a jelenlegi hangösszeállításodat sablonként, hogy legközelebb gyorsabban elérd azt."
           }
         },
         "it" : {
@@ -5868,6 +6288,12 @@
             "value" : "Afficher tous les sons"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az összes hang megjelenítése"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5959,6 +6385,12 @@
             "value" : "Licence logicielle"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szoftver licensz"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6044,6 +6476,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Crédits des sons"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A hanganyagok forrása"
           }
         },
         "it" : {
@@ -6151,6 +6589,12 @@
             "value" : "Mettre une étoile sur GitHub"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Értékeld csillaggal a GitHub-on"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6238,6 +6682,12 @@
             "value" : "Orage"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zivatar"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6310,6 +6760,12 @@
             "value" : "Ruisseau"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folyó"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6380,6 +6836,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nuit d'été"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nyári este"
           }
         },
         "it" : {
@@ -6455,6 +6917,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Système"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rendszer"
           }
         },
         "it" : {
@@ -6539,6 +7007,12 @@
             "value" : "Sarcelle"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récezöld"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6612,6 +7086,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le préréglage par défaut ne peut pas être renommé"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Az alapértelmezett sablont nem lehet átnevezni"
           }
         },
         "it" : {
@@ -6721,6 +7201,12 @@
             "value" : "Train"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vasút"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6791,6 +7277,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Traductions"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fordítások"
           }
         },
         "it" : {
@@ -6880,6 +7372,12 @@
             "value" : "Version %@ (%@)"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verziószám: %@ (%@)"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6964,6 +7462,12 @@
             "value" : "Vagues"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hullámok"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7034,6 +7538,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Site web"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weboldal"
           }
         },
         "it" : {
@@ -7112,6 +7622,12 @@
             "value" : "Bruit blanc"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fehér zaj"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7182,6 +7698,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vent"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Szél"
           }
         },
         "it" : {
@@ -7256,6 +7778,12 @@
             "value" : "Jaune"
           }
         },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sárga"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7316,6 +7844,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vous devez redémarrer Blankie pour que le changement de langue prenne effet"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Újra kell indítanod a Blankie-t, hogy a nyelvi beállítások alkalmazásra kerüljenek"
           }
         },
         "ja" : {

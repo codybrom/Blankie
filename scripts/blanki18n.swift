@@ -25,16 +25,30 @@ func parseCSV(data: String) -> [CSVRow] {
   var rows: [CSVRow] = []
   let lines = data.components(separatedBy: .newlines)
 
+  guard !lines.isEmpty else { return rows }
+
+  // Detect delimiter by counting occurrences in the header line
+  let header = lines[0]
+  let semicolonCount = header.components(separatedBy: ";").count - 1
+  let commaCount = header.components(separatedBy: ",").count - 1
+  let delimiter = semicolonCount > commaCount ? ";" : ","
+
   // Skip header
   for line in lines.dropFirst() where !line.isEmpty {
-    let columns = line.components(separatedBy: ",")
+    let columns = line.components(separatedBy: delimiter)
       .map { $0.trimmingCharacters(in: .init(charactersIn: "\"")) }
 
     if columns.count >= 4 {
+      // For semicolon CSVs, check both source (index 1) and target (index 2) columns
+      // Use whichever is non-empty, preferring target if both exist
+      let sourceValue = columns[1].trimmingCharacters(in: .whitespacesAndNewlines)
+      let targetValue = columns[2].trimmingCharacters(in: .whitespacesAndNewlines)
+      let translation = !targetValue.isEmpty ? targetValue : sourceValue
+
       rows.append(
         CSVRow(
           key: columns[0],
-          target: columns[2],
+          target: translation,
           state: columns[3]
         ))
     }
@@ -103,11 +117,19 @@ func readTranslationFile(at path: String) -> [CSVRow] {
     }
     return parseJSON(data: fileData)
   } else if path.hasSuffix(".csv") {
-    guard let fileData = try? String(contentsOfFile: path, encoding: .utf8) else {
-      print("Error: Could not read file at \(path)")
-      exit(1)
+    // Try multiple encodings (UTF-8, Mac Central European Roman, MacRoman, Windows-1252, ISO Latin-2)
+    // Mac Central European Roman is for Central/Eastern European languages like Hungarian
+    let encodings: [String.Encoding] = [.utf8, String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.macCentralEurRoman.rawValue))), .macOSRoman, .windowsCP1252, .isoLatin2]
+
+    for encoding in encodings {
+      if let fileData = try? String(contentsOfFile: path, encoding: encoding) {
+        print("Successfully read file using encoding: \(encoding)")
+        return parseCSV(data: fileData)
+      }
     }
-    return parseCSV(data: fileData)
+
+    print("Error: Could not read file at \(path) with any supported encoding")
+    exit(1)
   } else {
     print("Error: Only CSV and JSON files are supported")
     exit(1)

@@ -257,6 +257,7 @@
 				"en-GB",
 				es,
 				fr,
+				hu,
 				it,
 				ja,
 				ko,
