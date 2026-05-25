@@ -2,6 +2,20 @@
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import { Card } from "@/components/ui/card";
+import {
+  SlidersHorizontal,
+  Bookmark,
+  Sparkles,
+  Check,
+  CloudRain,
+  Waves,
+  Flame,
+  Keyboard,
+  LayoutGrid,
+  Zap,
+  FolderPlus,
+  Smartphone,
+} from "lucide-react";
 import screenshot from "../assets/screenshot.png";
 import bg1 from "../assets/bg-1.png";
 import bg2 from "../assets/bg-2.png";
@@ -15,7 +29,7 @@ const title = "Features - Blankie";
   <section class="relative overflow-hidden">
     <div class="absolute inset-0">
       <Image src={bg2} alt="" class="w-full h-full object-cover" />
-      <div class="absolute inset-0 bg-black/60"></div>
+      <div class="absolute inset-0 bg-black/75"></div>
     </div>
 
     <!-- Hero -->
@@ -31,7 +45,10 @@ const title = "Features - Blankie";
     <div class="relative max-w-6xl mx-auto px-5 pb-12">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
-          <h2 class="text-3xl font-semibold mb-6">🎚️ High-Quality Audio</h2>
+          <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
+            <SlidersHorizontal className="size-7 text-primary" strokeWidth={1.75} />
+            High-Quality Audio
+          </h2>
           <p class="text-lg text-gray-200 mb-6">
             14 carefully curated ambient sounds recorded in high fidelity. From
             gentle rain and ocean waves to crackling fireplaces and bustling
@@ -39,19 +56,19 @@ const title = "Features - Blankie";
           </p>
           <ul class="space-y-3 text-gray-200">
             <li class="flex items-center gap-3">
-              <span class="text-yellow-400">✓</span>
+              <Check className="size-5 shrink-0 text-primary" strokeWidth={2} />
               Individual volume controls for each sound
             </li>
             <li class="flex items-center gap-3">
-              <span class="text-yellow-400">✓</span>
+              <Check className="size-5 shrink-0 text-primary" strokeWidth={2} />
               High-quality audio files optimized for long listening
             </li>
             <li class="flex items-center gap-3">
-              <span class="text-yellow-400">✓</span>
+              <Check className="size-5 shrink-0 text-primary" strokeWidth={2} />
               Mix and match sounds to create your perfect environment
             </li>
             <li class="flex items-center gap-3">
-              <span class="text-yellow-400">✓</span>
+              <Check className="size-5 shrink-0 text-primary" strokeWidth={2} />
               Seamless loops with no gaps or interruptions
             </li>
           </ul>
@@ -74,7 +91,7 @@ const title = "Features - Blankie";
   <section class="relative overflow-hidden">
     <div class="absolute inset-0">
       <Image src={bg3} alt="" class="w-full h-full object-cover" />
-      <div class="absolute inset-0 bg-black/60"></div>
+      <div class="absolute inset-0 bg-black/75"></div>
     </div>
 
     <!-- Preset System -->
@@ -86,35 +103,47 @@ const title = "Features - Blankie";
           <Card className="p-8 max-w-md gap-0">
             <div class="space-y-3">
               <div class="bg-black/30 rounded-lg p-3">
-                <div class="font-medium">☔️ Rainy Day Focus</div>
+                <div class="flex items-center gap-2 font-medium">
+                  <CloudRain className="size-4 text-primary" strokeWidth={1.75} />
+                  Rainy Day Focus
+                </div>
                 <div class="text-sm text-gray-400">
                   Rain + Storm + Coffee Shop
                 </div>
               </div>
               <div class="bg-black/30 rounded-lg p-3">
-                <div class="font-medium">🌊 Ocean Meditation</div>
+                <div class="flex items-center gap-2 font-medium">
+                  <Waves className="size-4 text-primary" strokeWidth={1.75} />
+                  Ocean Meditation
+                </div>
                 <div class="text-sm text-gray-400">Waves + Wind + Boat</div>
               </div>
               <div class="bg-black/30 rounded-lg p-3">
-                <div class="font-medium">🔥 Cozy Evening</div>
+                <div class="flex items-center gap-2 font-medium">
+                  <Flame className="size-4 text-primary" strokeWidth={1.75} />
+                  Cozy Evening
+                </div>
                 <div class="text-sm text-gray-400">Fireplace + Rain + Wind</div>
               </div>
             </div>
           </Card>
         </div>
         <div class="order-1 lg:order-2">
-          <h2 class="text-3xl font-semibold mb-6">💾 Preset Perfection</h2>
+          <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
+            <Bookmark className="size-7 text-primary" strokeWidth={1.75} />
+            Preset Perfection
+          </h2>
           <p class="text-lg text-gray-200 mb-6">
             Save your favorite mixes and switch between them instantly. Perfect
             for different moods, activities or times of day.
           </p>
           <ul class="space-y-3 text-gray-200">
             <li class="flex items-center gap-3">
-              <span class="text-yellow-400">✓</span>
+              <Check className="size-5 shrink-0 text-primary" strokeWidth={2} />
               Use unlimited custom presets to save your favorite mixes
             </li>
             <li class="flex items-center gap-3">
-              <span class="text-yellow-400">✓</span>
+              <Check className="size-5 shrink-0 text-primary" strokeWidth={2} />
               One-click switching from toolbar preset picker
             </li>
           </ul>
@@ -125,7 +154,10 @@ const title = "Features - Blankie";
     <!-- macOS Integration -->
     <div class="relative max-w-6xl mx-auto px-5 pb-12 mb-6">
       <div class="text-center mb-12">
-        <h2 class="text-3xl font-semibold mb-6"> Made for macOS</h2>
+        <h2 class="flex items-center justify-center gap-3 text-3xl font-semibold mb-6">
+          <span class="leading-none text-primary" aria-hidden="true"></span>
+          Made for macOS
+        </h2>
         <p class="text-lg text-gray-200 max-w-3xl mx-auto">
           Blankie integrates seamlessly with macOS, feeling like a native part
           of your system. It just works the way you'd expect.
@@ -133,7 +165,7 @@ const title = "Features - Blankie";
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <Card className="p-6 gap-0">
-          <div class="text-2xl mb-4">⌨️</div>
+          <Keyboard className="size-7 text-primary mb-4" strokeWidth={1.75} />
           <h3 class="text-lg font-semibold mb-3">Media Controls</h3>
           <p class="text-gray-200">
             Works with media keys, AirPods, and other Bluetooth headphones for
@@ -141,7 +173,7 @@ const title = "Features - Blankie";
           </p>
         </Card>
         <Card className="p-6 gap-0">
-          <div class="text-2xl mb-4">🎛️</div>
+          <LayoutGrid className="size-7 text-primary mb-4" strokeWidth={1.75} />
           <h3 class="text-lg font-semibold mb-3">Control Center</h3>
           <p class="text-gray-200">
             See now playing information and preset names in the macOS Control
@@ -149,7 +181,7 @@ const title = "Features - Blankie";
           </p>
         </Card>
         <Card className="p-6 gap-0">
-          <div class="text-2xl mb-4">⚡</div>
+          <Zap className="size-7 text-primary mb-4" strokeWidth={1.75} />
           <h3 class="text-lg font-semibold mb-3">Native Performance</h3>
           <p class="text-gray-200">
             Built with Swift for optimal performance and energy efficiency on
@@ -164,21 +196,24 @@ const title = "Features - Blankie";
   <section class="relative overflow-hidden">
     <div class="absolute inset-0">
       <Image src={bg1} alt="" class="w-full h-full object-cover" />
-      <div class="absolute inset-0 bg-black/70"></div>
+      <div class="absolute inset-0 bg-black/80"></div>
     </div>
     <div class="relative max-w-4xl mx-auto px-5 py-12 text-center">
-      <div class="bg-card/30 rounded-2xl p-8 border border-yellow-500/20 mb-12">
-        <h2 class="text-3xl font-semibold mb-6">🔮 What's Coming Next</h2>
+      <div class="rounded-2xl bg-card ring-1 ring-foreground/10 p-8 mb-12">
+        <h2 class="flex items-center justify-center gap-3 text-3xl font-semibold mb-6">
+          <Sparkles className="size-7 text-primary" strokeWidth={1.75} />
+          What's Coming Next
+        </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="bg-card/30 rounded-xl p-6">
-            <div class="text-2xl mb-3">📁</div>
+          <div class="rounded-xl bg-black/20 ring-1 ring-foreground/10 p-6 text-left">
+            <FolderPlus className="size-7 text-primary mb-3" strokeWidth={1.75} />
             <h3 class="text-lg font-semibold mb-2">Import Custom Sounds</h3>
             <p class="text-gray-200">
               Add your own audio files to create truly personalized soundscapes.
             </p>
           </div>
-          <div class="bg-card/20 rounded-xl p-6">
-            <div class="text-2xl mb-3">📱</div>
+          <div class="rounded-xl bg-black/20 ring-1 ring-foreground/10 p-6 text-left">
+            <Smartphone className="size-7 text-primary mb-3" strokeWidth={1.75} />
             <h3 class="text-lg font-semibold mb-2">iOS & iPadOS</h3>
             <p class="text-gray-200">
               Bring your favorite ambient sounds to iPhone and iPad.
@@ -201,7 +236,7 @@ const title = "Features - Blankie";
         </h2>
         <a
           href="/#download"
-          class="inline-flex items-center px-6 py-3 text-lg font-semibold text-black bg-yellow-300 hover:bg-yellow-200 rounded-lg transition-colors duration-200"
+          class="inline-flex items-center px-6 py-3 text-lg font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-200"
         >
           Download Now
         </a>

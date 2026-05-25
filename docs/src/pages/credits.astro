@@ -4,6 +4,7 @@ import soundsJSON from "../../../Blankie/Resources/sounds.json";
 import creditsJSON from "../../../Blankie/credits.json";
 import ccSvg from "../assets/cc.svg";
 import bySvg from "../assets/by.svg";
+import { Heart } from "lucide-react";
 
 const title = "Credits";
 const contributors = creditsJSON.contributors || [];
@@ -75,7 +76,11 @@ function getLicenseURL(license: string) {
         <div class="bg-dark-gray rounded-lg p-6 shadow-sm space-y-8 not-prose">
           <div>
             <p class="mb-4">
-              Built with 💛 by
+              Built with <Heart
+                className="inline size-4 align-[-0.15em] text-yellow-400"
+                fill="currentColor"
+                strokeWidth={0}
+              /><span class="sr-only">love</span> by
               <a
                 href="https://github.com/codybrom"
                 class="text-yellow-500 hover:text-yellow-700 transition-colors"
@@ -278,13 +283,13 @@ function getLicenseURL(license: string) {
             >
               Creative Commons Attribution 4.0 International License
               <img
-                class="h-[22px] inline-block"
+                class="h-5.5 inline-block"
                 src={ccSvg.src}
                 alt="Creative Commons"
                 aria-label="Creative Commons License"
               />
               <img
-                class="h-[22px] inline-block"
+                class="h-5.5 inline-block"
                 src={bySvg.src}
                 alt="Attribution"
                 aria-label="Attribution Required"

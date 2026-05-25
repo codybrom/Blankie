@@ -57,6 +57,9 @@
     "*.css": "tailwindcss"
   },
   "css.lint.unknownAtRules": "ignore",
+  "tailwindCSS.experimental.configFile": {
+    "docs/src/styles/global.css": "docs/**"
+  },
   "editor.quickSuggestions": {
     "strings": "on"
   },

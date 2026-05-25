@@ -7,6 +7,7 @@ import {
   getTranslatorCredits,
 } from "../../utils/i18n-helpers";
 import macAppStoreBadge from "../../assets/download-on-mac-app-store.svg";
+import { Heart } from "lucide-react";
 
 // Define types for the language data
 interface StringItem {
@@ -170,8 +171,15 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
       <div
         class="bg-zinc-900/20 rounded-lg px-4 py-2 border border-dashed border-zinc-800/50 flex items-center justify-between flex-wrap gap-4"
       >
-        <div class="text-lg italic">
-          Blankie ❤️ {getNativeLanguageName(lang || "")}
+        <div class="flex items-center gap-2 text-lg italic">
+          Blankie
+          <Heart
+            className="inline size-4 text-red-500"
+            fill="currentColor"
+            strokeWidth={0}
+          />
+          <span class="sr-only">loves</span>
+          {getNativeLanguageName(lang || "")}
         </div>
         <div class="flex gap-3">
           <a

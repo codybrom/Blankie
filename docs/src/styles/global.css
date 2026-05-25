@@ -161,39 +161,6 @@ body {
   }
 }
 
-/* Coming soon component */
-.coming-soon-card {
-  opacity: 0.75;
-  filter: grayscale(30%);
-  pointer-events: none;
-  position: relative;
-
-  &::before {
-    content: "Coming Soon";
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: var(--color-bluegray);
-    color: var(--color-black);
-    padding: 0.3rem 0.6rem;
-    font-size: 0.8rem;
-    border-radius: 0.3rem;
-    font-weight: bold;
-    pointer-events: none;
-    z-index: 10;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-color: var(--color-black);
-    opacity: 0.1;
-    border-radius: 0.75rem;
-    pointer-events: none;
-  }
-}
-
 /* GitHub-style markdown alerts (marked-alert), matched to site styling */
 .markdown-alert {
   @apply my-6 p-4 rounded-lg border-l-4 bg-yellow-500/10 border-yellow-500;

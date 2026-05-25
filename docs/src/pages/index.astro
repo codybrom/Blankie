@@ -12,6 +12,16 @@ import bmcSVG from "../assets/bmc.svg";
 import kfSVG from "../assets/kofi.svg";
 import laurelLeft from "../assets/laurel-left.svg";
 import laurelRight from "../assets/laurel-right.svg";
+import {
+  Globe,
+  ChevronRight,
+  SlidersHorizontal,
+  Bookmark,
+  Languages,
+  Infinity as InfinityIcon,
+  FolderPlus,
+  FlaskConical,
+} from "lucide-react";
 
 const title = "Ambient sound mixer for macOS";
 ---
@@ -23,13 +33,19 @@ const title = "Ambient sound mixer for macOS";
   >
     <BackgroundVideo videoSrc={wavesVideo} posterSrc={wavesPoster.src} />
     <div class="relative z-10 max-w-4xl mx-auto px-5 text-center py-16 mt-8">
-      <p
-        class="text-base mt-6 flex items-center justify-center gap-2 bg-blue-900/10 rounded px-3 py-1 mx-auto w-fit border border-blue-300 border-opacity-20 font-normal tracking-wide"
-        aria-label="Multiple language support announcement"
+      <a
+        href="/i18n/"
+        class="group mt-6 inline-flex items-center gap-2 rounded-full bg-card px-4 py-1.5 text-sm font-medium tracking-wide text-gray-200 ring-1 ring-foreground/10 transition-colors hover:ring-foreground/25 no-underline"
       >
-        🌍 Now available in Deutsch, Español, Français, Italiano, 日本語,
+        <Globe className="size-4 shrink-0 text-primary" strokeWidth={1.75} />
+        Now available in Deutsch, Español, Français, Italiano, 日本語,
         한국어, Português, Türkçe and 简体中文!
-      </p>
+        <span
+          class="shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5"
+          aria-hidden="true"
+          >→</span
+        >
+      </a>
 
       <h1
         class="text-5xl md:text-6xl font-semibold leading-tight tracking-tighter my-4"
@@ -59,7 +75,7 @@ const title = "Ambient sound mixer for macOS";
           width={800}
           height={454}
           loading="eager"
-          class="rounded-lg mx-auto my-12 max-w-full block transition duration-300 hover:scale-105 w-full md:w-200 cursor-pointer"
+          class="rounded-lg mx-auto my-12 max-w-full block w-full md:w-200 cursor-pointer ring-1 ring-white/10 transition duration-300 hover:scale-[1.02] hover:ring-white/20"
           quality={90}
         />
       </a>
@@ -72,7 +88,7 @@ const title = "Ambient sound mixer for macOS";
           <a
             href="https://apps.apple.com/app/blankie/id6740096581"
             target="_blank"
-            class="relative inline-flex items-center gap-2 px-6 py-3 bg-linear-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50 hover:border-yellow-500/50 hover:shadow-lg hover:shadow-yellow-500/10 hover:scale-105 transition-all duration-300"
+            class="relative inline-flex items-center gap-2 px-6 py-3 bg-card rounded-full ring-1 ring-foreground/10 hover:ring-foreground/25 transition-colors duration-200"
           >
             <!-- Left Laurel -->
             <img
@@ -109,7 +125,7 @@ const title = "Ambient sound mixer for macOS";
           <a
             href="https://www.producthunt.com/products/blankie?embed=true&utm_source=badge-top-post-topic-badge&utm_medium=badge&utm_source=badge-blankie"
             target="_blank"
-            class="inline-flex items-center px-6 py-3 bg-linear-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 hover:scale-105 transition-all duration-300"
+            class="inline-flex items-center px-6 py-3 bg-card rounded-full ring-1 ring-foreground/10 hover:ring-foreground/25 transition-colors duration-200"
           >
             <div class="text-center">
               <div
@@ -131,7 +147,7 @@ const title = "Ambient sound mixer for macOS";
         <div class="flex flex-wrap justify-center gap-4">
           <!-- Combined Stats Box -->
           <div
-            class="inline-flex items-center gap-6 px-8 py-3 bg-linear-to-r from-zinc-900/60 to-zinc-800/60 rounded-full border border-zinc-700/50"
+            class="inline-flex items-center gap-6 px-8 py-3 bg-card rounded-full ring-1 ring-foreground/10"
           >
             <!-- Rating -->
             <div class="flex items-center gap-2">
@@ -242,171 +258,139 @@ const title = "Ambient sound mixer for macOS";
   <!-- Features Section -->
   <section class="max-w-5xl mx-auto px-5 py-10" id="features">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <a href="/features/#high-quality-audio" class="block group">
-        <div
-          class="feature-card bg-card rounded-xl p-8 transition-transform duration-300 hover:translate-y-1 relative cursor-pointer"
-        >
-          <div class="text-3xl mb-5">🎚️</div>
-          <h3
-            class="text-xl font-semibold mb-2 group-hover:text-yellow-300 transition-colors flex items-center gap-2"
-          >
-            High-Quality Audio
-            <svg
-              class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-          </h3>
-          <p class="text-mid-gray base">
-            14 built-in ambient sounds for mixing custom soundscapes.
-          </p>
-          <p
-            class="text-xs text-yellow-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            Learn more about audio features →
-          </p>
-        </div>
-      </a>
-
-      <a href="/features/#preset-perfection" class="block group">
-        <div
-          class="feature-card bg-card rounded-xl p-8 transition-transform duration-300 hover:translate-y-1 relative cursor-pointer"
-        >
-          <div class="text-3xl mb-5">💾</div>
-          <h3
-            class="text-xl font-semibold mb-2 group-hover:text-yellow-300 transition-colors flex items-center gap-2"
-          >
-            Preset Perfection
-            <svg
-              class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-          </h3>
-          <p class="text-mid-gray base">
-            Save and switch between your favorite ambient mixes.
-          </p>
-          <p
-            class="text-xs text-yellow-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            Learn more about presets →
-          </p>
-        </div>
-      </a>
-
-      <a href="/i18n/" class="block group">
-        <div
-          class="feature-card bg-card rounded-xl p-8 transition-transform duration-300 hover:translate-y-1 relative cursor-pointer"
-        >
-          <div class="text-3xl mb-5">🌍</div>
-          <h3
-            class="text-xl font-semibold mb-2 group-hover:text-yellow-300 transition-colors flex items-center gap-2"
-          >
-            Multiple Languages
-            <svg
-              class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-          </h3>
-          <p class="text-mid-gray base">
-            Available in 7 languages, with ongoing community contributions.
-          </p>
-          <p
-            class="text-xs text-yellow-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            View translations page →
-          </p>
-        </div>
-      </a>
-
-      <a href="/features/#made-for-macos" class="block group">
-        <div
-          class="feature-card bg-card rounded-xl p-8 transition-transform duration-300 hover:translate-y-1 relative cursor-pointer"
-        >
-          <div class="text-3xl mb-5"></div>
-          <h3
-            class="text-xl font-semibold mb-2 group-hover:text-yellow-300 transition-colors flex items-center gap-2"
-          >
-            Made for macOS
-            <svg
-              class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-          </h3>
-          <p class="text-mid-gray base">
-            <i class="font-semibold">It just works</i> with media keys, Control Center
-            & AirPod controls.
-          </p>
-          <p
-            class="text-xs text-yellow-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            Learn more about macOS integration →
-          </p>
-        </div>
-      </a>
-      <a href="/privacy/" class="block group">
-        <div
-          class="feature-card bg-card rounded-xl p-8 transition-transform duration-300 hover:translate-y-1 relative cursor-pointer"
-        >
-          <div class="text-3xl mb-5">♾️</div>
-          <h3
-            class="text-xl font-semibold mb-2 group-hover:text-yellow-300 transition-colors flex items-center gap-2"
-          >
-            Actually Free
-            <svg
-              class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"></path>
-            </svg>
-          </h3>
-          <p class="text-mid-gray base">
-            No accounts, subscriptions, or additional purchases. Ever.
-          </p>
-          <p
-            class="text-xs text-yellow-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            View privacy policy →
-          </p>
-        </div>
-      </a>
-      <div
-        class="feature-card bg-card rounded-xl p-8 transition-transform duration-300 hover:translate-y-1 coming-soon-card relative"
+      <a
+        href="/features/#high-quality-audio"
+        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
       >
-        <div class="text-3xl mb-5">📁</div>
-        <h3 class="text-xl font-semibold mb-2">Custom Sounds</h3>
-        <p class="text-mid-gray base">
+        <SlidersHorizontal className="size-7 text-primary" strokeWidth={1.75} />
+        <h3
+          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
+        >
+          High-Quality Audio
+          <ChevronRight
+            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
+            strokeWidth={2}
+          />
+        </h3>
+        <p class="text-mid-gray">
+          14 built-in ambient sounds for mixing custom soundscapes.
+        </p>
+        <p
+          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          Learn more about audio features →
+        </p>
+      </a>
+
+      <a
+        href="/features/#preset-perfection"
+        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+      >
+        <Bookmark className="size-7 text-primary" strokeWidth={1.75} />
+        <h3
+          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
+        >
+          Preset Perfection
+          <ChevronRight
+            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
+            strokeWidth={2}
+          />
+        </h3>
+        <p class="text-mid-gray">
+          Save and switch between your favorite ambient mixes.
+        </p>
+        <p
+          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          Learn more about presets →
+        </p>
+      </a>
+
+      <a
+        href="/i18n/"
+        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+      >
+        <Languages className="size-7 text-primary" strokeWidth={1.75} />
+        <h3
+          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
+        >
+          Multiple Languages
+          <ChevronRight
+            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
+            strokeWidth={2}
+          />
+        </h3>
+        <p class="text-mid-gray">
+          Available in 10+ languages with ongoing community contributions.
+        </p>
+        <p
+          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          View translations page →
+        </p>
+      </a>
+
+      <a
+        href="/features/#made-for-macos"
+        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+      >
+        <span class="block text-3xl leading-none text-primary" aria-hidden="true"
+          ></span
+        >
+        <h3
+          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
+        >
+          Made for macOS
+          <ChevronRight
+            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
+            strokeWidth={2}
+          />
+        </h3>
+        <p class="text-mid-gray">
+          <i class="font-semibold">It just works</i> with media keys, Control Center
+          & AirPod controls.
+        </p>
+        <p
+          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          Learn more about features →
+        </p>
+      </a>
+      <a
+        href="/privacy/"
+        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+      >
+        <InfinityIcon className="size-7 text-primary" strokeWidth={1.75} />
+        <h3
+          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
+        >
+          Actually Free
+          <ChevronRight
+            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
+            strokeWidth={2}
+          />
+        </h3>
+        <p class="text-mid-gray">
+          No accounts, subscriptions, or additional purchases. Ever.
+        </p>
+        <p
+          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          View privacy policy →
+        </p>
+      </a>
+
+      <div
+        class="relative rounded-xl bg-card p-8 ring-1 ring-foreground/10 opacity-80"
+      >
+        <span
+          class="absolute right-4 top-4 inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+        >
+          Coming Soon
+        </span>
+        <FolderPlus className="size-7 text-mid-gray" strokeWidth={1.75} />
+        <h3 class="text-xl font-semibold mt-5 mb-2">Custom Sounds</h3>
+        <p class="text-mid-gray">
           Soon, you'll be able to add your own sounds for a truly custom mix.
         </p>
       </div>
@@ -421,7 +405,7 @@ const title = "Ambient sound mixer for macOS";
         You can install Blankie via Homebrew by running this in your Terminal:
       </p>
       <div
-        class="bg-black text-white py-3 px-4 rounded-md overflow-x-auto text-center cursor-pointer hover:bg-gray-900 transition-colors duration-200 relative group"
+        class="bg-black text-white py-3 px-4 rounded-md overflow-x-auto text-center cursor-pointer hover:bg-neutral-900 transition-colors duration-200 relative group"
         id="brew-command-container"
       >
         <pre
@@ -454,7 +438,7 @@ const title = "Ambient sound mixer for macOS";
 
   <!-- Coming Soon Section -->
   <section class="max-w-3xl mx-auto px-5 py-4 text-center">
-    <div class="bg-card rounded-xl p-8 mb-6 border border-yellow-500/20">
+    <div class="rounded-xl bg-card ring-1 ring-foreground/10 p-8 mb-6">
       <div class="flex items-center justify-center mb-4">
         <h2 class="text-2xl font-semibold">
           Wish you could use Blankie on other devices?
@@ -467,12 +451,12 @@ const title = "Ambient sound mixer for macOS";
       </p>
       <a
         href="https://testflight.apple.com/join/XgpBpWv8"
-        class="inline-flex items-center px-6 py-3 text-sm font-bold text-yellow-100 bg-yellow-100/20 hover:bg-yellow-200/90 border hover:text-yellow-950 border-yellow-300 rounded-md shadow-sm transition-colors duration-200 group"
+        class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-md bg-secondary text-foreground ring-1 ring-border hover:bg-secondary/80 transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span class="mr-2">🧪</span>
-        <span class="group-hover:text-black">Join the TestFlight Beta</span>
+        <FlaskConical className="size-4" strokeWidth={1.75} />
+        Join the TestFlight Beta
       </a>
       <p class="text-xs text-white mt-4">
         Requires TestFlight to be installed on your device.
@@ -497,7 +481,7 @@ const title = "Ambient sound mixer for macOS";
     <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
       <a
         href="https://github.com/sponsors/codybrom"
-        class="inline-flex items-center px-3 py-2 text-sm font-bold text-blue-100 bg-blue-100/20 hover:bg-blue-950 border hover:text-blue-200/90 border-blue-300 rounded-md shadow-sm transition-colors duration-200 group"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-secondary ring-1 ring-border hover:bg-secondary/80 rounded-md transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -512,7 +496,7 @@ const title = "Ambient sound mixer for macOS";
       </a>
       <a
         href="https://buymeacoffee.com/codybrom"
-        class="inline-flex items-center px-3 py-2 text-sm font-bold text-blue-100 bg-blue-100/20 hover:bg-blue-950 border hover:text-blue-200/90 border-blue-300 rounded-md shadow-sm transition-colors duration-200 group"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-secondary ring-1 ring-border hover:bg-secondary/80 rounded-md transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
@@ -527,7 +511,7 @@ const title = "Ambient sound mixer for macOS";
       </a>
       <a
         href="https://ko-fi.com/codybrom"
-        class="inline-flex items-center px-3 py-2 text-sm font-bold text-blue-100 bg-blue-100/20 hover:bg-blue-950 border hover:text-blue-200/90 border-blue-300 rounded-md shadow-sm transition-colors duration-200 group"
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-secondary ring-1 ring-border hover:bg-secondary/80 rounded-md transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
