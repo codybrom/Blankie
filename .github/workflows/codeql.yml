@@ -8,7 +8,7 @@ on:
     - cron: "15 14 * * 1"
 jobs:
   analyze:
-    name: Analyze
+    name: Analyze (${{ matrix.language }})
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
     permissions:
@@ -19,7 +19,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["swift"]
+        include:
+          - language: swift
+            build-mode: manual
+          - language: actions
+            build-mode: none
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -27,8 +31,19 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
-          build-mode: manual
+          build-mode: ${{ matrix.build-mode }}
+      - name: Select latest Xcode
+        if: matrix.language == 'swift'
+        run: |
+          echo "Installed Xcodes:"
+          ls -d /Applications/Xcode*.app 2>/dev/null || true
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$LATEST" ]; then LATEST=/Applications/Xcode.app; fi
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST"
+          xcodebuild -version
       - name: Build Swift project
+        if: matrix.language == 'swift'
         run: |
           if [ ! -f "Configuration.xcconfig" ]; then
             echo "Creating Configuration.xcconfig from example..."
@@ -36,17 +51,17 @@ jobs:
             sed -i '' 's/YOUR_TEAM_ID_HERE/DUMMY_TEAM/' Configuration.xcconfig
             sed -i '' 's/com.yournamehere.blankie/com.example.blankie/' Configuration.xcconfig
           fi
+          # macOS build is currently broken (tracked separately); CodeQL only
+          # needs the Swift source compiled, so build the iOS Simulator variant
+          # of the same sources — no signing required.
           xcodebuild clean build \
             -project Blankie.xcodeproj \
             -scheme "Blankie (Universal)" \
-            -destination "platform=macOS,arch=x86_64" \
+            -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
-            -quiet \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            ONLY_ACTIVE_ARCH=NO \
-            ENABLE_BITCODE=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
