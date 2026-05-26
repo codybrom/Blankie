@@ -26,9 +26,9 @@ class PresetExporter {
         return "Failed to create preset archive"
       case .missingArtwork:
         return "Missing artwork file"
-      case let .missingCustomSound(soundName):
+      case .missingCustomSound(let soundName):
         return "Missing custom sound: \(soundName)"
-      case let .fileSystemError(message):
+      case .fileSystemError(let message):
         return "File system error: \(message)"
       }
     }
@@ -117,18 +117,19 @@ class PresetExporter {
 
   private func writeArtwork(for preset: Preset, to archiveDir: URL) async throws {
     let didWriteStaticArtwork = try await writeStaticArtwork(for: preset, to: archiveDir)
-    try await writeCustomAnimatedArtwork(for: preset, to: archiveDir, didWriteStaticArtwork: didWriteStaticArtwork)
+    try await writeCustomAnimatedArtwork(
+      for: preset, to: archiveDir, didWriteStaticArtwork: didWriteStaticArtwork)
   }
 
   private func writeStaticArtwork(for preset: Preset, to archiveDir: URL) async throws -> Bool {
     if let artworkId = preset.artworkId,
-       let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
+      let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
     {
       let artworkURL = archiveDir.appendingPathComponent(PresetArchive.artworkFileName)
       try imageData.write(to: artworkURL)
       return true
     } else if let staticPath = preset.staticArtworkPath,
-              AnimatedArtworkFileStore.fileExists(at: staticPath)
+      AnimatedArtworkFileStore.fileExists(at: staticPath)
     {
       let sourceURL = AnimatedArtworkFileStore.absoluteURL(for: staticPath)
       let destination = archiveDir.appendingPathComponent(PresetArchive.artworkFileName)
@@ -144,9 +145,9 @@ class PresetExporter {
   ) async throws {
     // Only export custom animations (bundled animations are referenced by identifier)
     guard let animated = preset.animatedArtwork,
-          animated.source == .custom,
-          let loopPath = animated.loopPath,
-          AnimatedArtworkFileStore.fileExists(at: loopPath)
+      animated.source == .custom,
+      let loopPath = animated.loopPath,
+      AnimatedArtworkFileStore.fileExists(at: loopPath)
     else {
       return
     }
@@ -170,19 +171,21 @@ class PresetExporter {
   }
 
   private func writeAnimatedPreview(
-    animated: AnimatedArtworkRef, to archiveDir: URL, staticPath: String?, didWriteStaticArtwork: Bool
+    animated: AnimatedArtworkRef, to archiveDir: URL, staticPath: String?,
+    didWriteStaticArtwork: Bool
   ) throws {
-    let destinationPreview = archiveDir.appendingPathComponent(PresetArchive.animatedPreviewFileName)
+    let destinationPreview = archiveDir.appendingPathComponent(
+      PresetArchive.animatedPreviewFileName)
 
     if let previewPath = animated.previewPath,
-       AnimatedArtworkFileStore.fileExists(at: previewPath)
+      AnimatedArtworkFileStore.fileExists(at: previewPath)
     {
       let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
       try? FileManager.default.removeItem(at: destinationPreview)
       try FileManager.default.copyItem(at: previewURL, to: destinationPreview)
     } else if !didWriteStaticArtwork,
-              let staticPath,
-              AnimatedArtworkFileStore.fileExists(at: staticPath)
+      let staticPath,
+      AnimatedArtworkFileStore.fileExists(at: staticPath)
     {
       let previewURL = AnimatedArtworkFileStore.absoluteURL(for: staticPath)
       try? FileManager.default.removeItem(at: destinationPreview)

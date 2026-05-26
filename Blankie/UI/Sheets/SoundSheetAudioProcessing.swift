@@ -10,7 +10,7 @@ import SwiftUI
 extension CleanSoundSheetForm {
   @ViewBuilder
   var audioProcessingSection: some View {
-    Section(header: Text("Audio", comment: "Audio options section header")) {
+    Section(header: Text("Audio")) {
       // Preview with waveform
       HStack(spacing: 12) {
         // Play/Stop button
@@ -78,16 +78,14 @@ extension CleanSoundSheetForm {
 
       Toggle(isOn: $randomizeStartPosition) {
         Text(
-          "Randomize Start Position",
-          comment: "Toggle label for randomizing sound start position"
+          "Randomize Start Position"
         )
       }
       .tint(globalSettings.customAccentColor ?? .accentColor)
 
       Toggle(isOn: $loopSound) {
         Text(
-          "Loop Sound",
-          comment: "Toggle label for looping sound playback"
+          "Loop Sound"
         )
       }
       .tint(globalSettings.customAccentColor ?? .accentColor)
@@ -95,12 +93,10 @@ extension CleanSoundSheetForm {
       Toggle(isOn: $normalizeAudio) {
         VStack(alignment: .leading, spacing: 2) {
           Text(
-            "Sound Check",
-            comment: "Toggle label for Sound Check (audio normalization)"
+            "Sound Check"
           )
           Text(
-            "Sound Check adjusts the loudness between different sounds to play at the same volume.",
-            comment: "Description for Sound Check toggle"
+            "Sound Check adjusts the loudness between different sounds to play at the same volume."
           )
           .font(.caption)
           .foregroundColor(.secondary)
@@ -119,7 +115,7 @@ extension CleanSoundSheetForm {
   var volumeAdjustmentView: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
-        Text("Volume Adjustment", comment: "Volume adjustment field label")
+        Text("Volume Adjustment")
         Spacer()
         Text(volumePercentageText)
           .font(.caption)

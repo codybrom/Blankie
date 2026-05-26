@@ -41,7 +41,7 @@ extension CleanSoundSheetForm {
           TextField(
             "Sound Name",
             text: $soundName,
-            prompt: Text("Sound Name", comment: "Sound name text field placeholder")
+            prompt: Text("Sound Name")
           )
           .labelsHidden()
           .textFieldStyle(.plain)
@@ -59,15 +59,15 @@ extension CleanSoundSheetForm {
           }
         }
       } label: {
-        Text("Name", comment: "Display name field label")
+        Text("Name")
       }
     #else
       HStack {
-        Text("Name", comment: "Display name field label")
+        Text("Name")
         Spacer()
         HStack {
           TextField(text: $soundName) {
-            Text("Sound Name", comment: "Sound name text field placeholder")
+            Text("Sound Name")
           }
           .multilineTextAlignment(.trailing)
           .textFieldStyle(.plain)
@@ -103,7 +103,7 @@ extension CleanSoundSheetForm {
       showingIconPicker = true
     } label: {
       HStack {
-        Text("Icon", comment: "Icon selection label")
+        Text("Icon")
         Spacer()
         Image(systemName: selectedIcon)
           .font(.title3)
@@ -126,7 +126,7 @@ extension CleanSoundSheetForm {
           showingAboutSheet = true
         } label: {
           HStack {
-            Text("About & Sharing", comment: "About and sharing button label")
+            Text("About & Sharing")
             Spacer()
             Image(systemName: "chevron.right")
               .font(.caption)
@@ -140,7 +140,7 @@ extension CleanSoundSheetForm {
       if let currentSound = getCurrentSound() {
         NavigationLink(destination: SoundAboutSheet(sound: currentSound)) {
           HStack {
-            Text("About & Sharing", comment: "About and sharing button label")
+            Text("About & Sharing")
             Spacer()
           }
         }

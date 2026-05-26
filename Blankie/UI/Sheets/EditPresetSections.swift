@@ -82,10 +82,10 @@ extension EditPresetSheet {
             set: { viewModeOverride = $0.asOptional }
           )
         ) {
-          Text("Default", comment: "Follow app-wide view-mode setting").tag(
+          Text("Default").tag(
             PresetViewModeSelection.useDefault)
-          Text("Grid", comment: "Tile/grid view mode").tag(PresetViewModeSelection.grid)
-          Text("List", comment: "List view mode").tag(PresetViewModeSelection.list)
+          Text("Grid").tag(PresetViewModeSelection.grid)
+          Text("List").tag(PresetViewModeSelection.list)
         }
         .onChange(of: viewModeOverride) { _, _ in
           applyChangesInstantly()
@@ -149,7 +149,7 @@ extension EditPresetSheet {
             in: 0...20,
             step: 5,
             label: {
-              Text("Background Blur", comment: "Accessibility label for background blur slider")
+              Text("Background Blur")
             },
             minimumValueLabel: {
               // Small dot -> large dot encodes "less -> more" without text.

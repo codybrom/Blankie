@@ -21,7 +21,7 @@ enum ResourceState: Equatable {
     switch (lhs, rhs) {
     case (.notDownloaded, .notDownloaded):
       return true
-    case let (.downloading(lhsProgress), .downloading(rhsProgress)):
+    case (.downloading(let lhsProgress), .downloading(let rhsProgress)):
       return lhsProgress == rhsProgress
     case (.available, .available):
       return true
@@ -66,7 +66,9 @@ final class OnDemandResourceManager: ObservableObject {
     checkAvailableResources()
 
     // Log migration info for users upgrading from previous version
-    logger.info("OnDemandResourceManager initialized. Users upgrading from older versions may need to re-download videos due to restructured resource paths.")
+    logger.info(
+      "OnDemandResourceManager initialized. Users upgrading from older versions may need to re-download videos due to restructured resource paths."
+    )
   }
 
   // MARK: - Public API
@@ -76,7 +78,9 @@ final class OnDemandResourceManager: ObservableObject {
   /// - Returns: URL to the video file if available
   func requestVideoResource(_ resourceId: String) async throws -> URL {
     // Fast path: already in bundle (development/simulator/macOS)
-    if let url = getLocalResourceURL(for: resourceId), FileManager.default.fileExists(atPath: url.path) {
+    if let url = getLocalResourceURL(for: resourceId),
+      FileManager.default.fileExists(atPath: url.path)
+    {
       logger.debug("Resource \(resourceId) already available locally")
       resourceStates[resourceId] = .available
       return url
@@ -144,11 +148,15 @@ final class OnDemandResourceManager: ObservableObject {
       } catch {
         progressTask.cancel()
 
-        logger.warning("ODR download failed for \(resourceId), checking if bundled locally: \(error.localizedDescription)")
+        logger.warning(
+          "ODR download failed for \(resourceId), checking if bundled locally: \(error.localizedDescription)"
+        )
 
         // Fall back to the local bundle (development/simulator builds often have
         // the resource bundled directly).
-        if let url = getLocalResourceURL(for: resourceId), FileManager.default.fileExists(atPath: url.path) {
+        if let url = getLocalResourceURL(for: resourceId),
+          FileManager.default.fileExists(atPath: url.path)
+        {
           logger.info("Resource \(resourceId) found in local bundle, using as fallback")
           resourceStates[resourceId] = .available
           activeRequests.removeValue(forKey: resourceId)
@@ -265,11 +273,13 @@ final class OnDemandResourceManager: ObservableObject {
         return
       }
 
-      guard let contents = try? FileManager.default.contentsOfDirectory(
-        at: resourceURL,
-        includingPropertiesForKeys: [.isRegularFileKey],
-        options: [.skipsHiddenFiles]
-      ) else {
+      guard
+        let contents = try? FileManager.default.contentsOfDirectory(
+          at: resourceURL,
+          includingPropertiesForKeys: [.isRegularFileKey],
+          options: [.skipsHiddenFiles]
+        )
+      else {
         logger.warning("Failed to read bundle resource contents")
         return
       }
@@ -301,11 +311,13 @@ final class OnDemandResourceManager: ObservableObject {
         return
       }
 
-      guard let contents = try? FileManager.default.contentsOfDirectory(
-        at: resourceURL,
-        includingPropertiesForKeys: [.isRegularFileKey],
-        options: [.skipsHiddenFiles]
-      ) else {
+      guard
+        let contents = try? FileManager.default.contentsOfDirectory(
+          at: resourceURL,
+          includingPropertiesForKeys: [.isRegularFileKey],
+          options: [.skipsHiddenFiles]
+        )
+      else {
         logger.warning("Failed to read bundle resource contents")
         return
       }
@@ -355,9 +367,9 @@ enum ODRError: LocalizedError {
 
   var errorDescription: String? {
     switch self {
-    case let .resourceNotFound(id):
+    case .resourceNotFound(let id):
       return "Resource not found: \(id)"
-    case let .downloadFailed(id, error):
+    case .downloadFailed(let id, let error):
       return "Failed to download \(id): \(error.localizedDescription)"
     }
   }

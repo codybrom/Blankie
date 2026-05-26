@@ -25,17 +25,19 @@ struct ColorPickerRow: View {
         }
 
       if useCustomTheme {
-        SpectrumColorPicker(selectedColor: Binding(
-          get: { selectedColor?.color },
-          set: { newColor in
-            if let newColor = newColor {
-              // Find matching AccentColor
-              if let match = AccentColor.allCases.first(where: { $0.color == newColor }) {
-                selectedColor = match
+        SpectrumColorPicker(
+          selectedColor: Binding(
+            get: { selectedColor?.color },
+            set: { newColor in
+              if let newColor = newColor {
+                // Find matching AccentColor
+                if let match = AccentColor.allCases.first(where: { $0.color == newColor }) {
+                  selectedColor = match
+                }
               }
             }
-          }
-        ))
+          )
+        )
         .padding(.bottom, 4)
       }
     }

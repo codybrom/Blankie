@@ -55,7 +55,7 @@ struct CreditRow: View {
   // Extracted view for the attribution line
   private var attributionView: some View {
     HStack(spacing: 4) {
-      Text("By", comment: "Attribution by label")
+      Text("By")
         .foregroundStyle(.secondary)
       Text(credit.author)
 

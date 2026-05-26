@@ -19,7 +19,7 @@ import Foundation
 
   func animatedArtworkResources(for preset: Preset) -> (loopURL: URL, previewImage: UIImage)? {
     guard let animatedRef = preset.animatedArtwork,
-          let loopPath = animatedRef.loopPath
+      let loopPath = animatedRef.loopPath
     else {
       return nil
     }
@@ -31,7 +31,8 @@ import Foundation
 
     let previewPath = animatedRef.previewPath ?? preset.staticArtworkPath
     guard let previewPath,
-          FileManager.default.fileExists(atPath: AnimatedArtworkFileStore.absoluteURL(for: previewPath).path)
+      FileManager.default.fileExists(
+        atPath: AnimatedArtworkFileStore.absoluteURL(for: previewPath).path)
     else {
       return nil
     }

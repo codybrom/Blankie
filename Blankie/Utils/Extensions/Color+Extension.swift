@@ -24,19 +24,19 @@ enum AccentColor: CaseIterable {
 
   var name: String {
     switch self {
-    case .system: return String(localized: "System", comment: "Accent color name")
-    case .red: return String(localized: "Red", comment: "Accent color name")
-    case .pink: return String(localized: "Pink", comment: "Accent color name")
-    case .orange: return String(localized: "Orange", comment: "Accent color name")
-    case .brown: return String(localized: "Brown", comment: "Accent color name")
-    case .yellow: return String(localized: "Yellow", comment: "Accent color name")
-    case .green: return String(localized: "Green", comment: "Accent color name")
-    case .mint: return String(localized: "Mint", comment: "Accent color name")
-    case .teal: return String(localized: "Teal", comment: "Accent color name")
-    case .cyan: return String(localized: "Cyan", comment: "Accent color name")
-    case .blue: return String(localized: "Blue", comment: "Accent color name")
-    case .indigo: return String(localized: "Indigo", comment: "Accent color name")
-    case .purple: return String(localized: "Purple", comment: "Accent color name")
+    case .system: return String(localized: "System")
+    case .red: return String(localized: "Red")
+    case .pink: return String(localized: "Pink")
+    case .orange: return String(localized: "Orange")
+    case .brown: return String(localized: "Brown")
+    case .yellow: return String(localized: "Yellow")
+    case .green: return String(localized: "Green")
+    case .mint: return String(localized: "Mint")
+    case .teal: return String(localized: "Teal")
+    case .cyan: return String(localized: "Cyan")
+    case .blue: return String(localized: "Blue")
+    case .indigo: return String(localized: "Indigo")
+    case .purple: return String(localized: "Purple")
     }
   }
 
@@ -66,9 +66,9 @@ enum AppearanceMode: String, CaseIterable {
 
   var localizedName: String {
     switch self {
-    case .system: return String(localized: "Automatic", comment: "Appearance mode")
-    case .light: return String(localized: "Light", comment: "Appearance mode")
-    case .dark: return String(localized: "Dark", comment: "Appearance mode")
+    case .system: return String(localized: "Automatic")
+    case .light: return String(localized: "Light")
+    case .dark: return String(localized: "Dark")
     }
   }
 

@@ -67,7 +67,7 @@ import UniformTypeIdentifiers
         if !audioManager.isGloballyPlaying {
           HStack {
             Image(systemName: "pause.circle.fill")
-            Text("Playback Paused", comment: "Playback paused banner")
+            Text("Playback Paused")
               .font(
                 Locale.current.identifier.hasPrefix("zh")
                   ? .system(size: 16, weight: .medium, design: .rounded)

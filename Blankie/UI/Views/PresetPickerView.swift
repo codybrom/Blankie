@@ -296,12 +296,11 @@ struct PresetPickerView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
 
-              Text("No Custom Presets", comment: "Empty state title for presets")
+              Text("No Custom Presets")
                 .font(.headline)
 
               Text(
-                "Save your current sound configuration as a preset to quickly access it later.",
-                comment: "Empty state description for presets"
+                "Save your current sound configuration as a preset to quickly access it later."
               )
               .font(.caption)
               .foregroundStyle(.secondary)
@@ -322,8 +321,7 @@ struct PresetPickerView: View {
           Section {
             if favoriteTokens.isEmpty {
               Text(
-                "Tap the star on any preset to add it here.",
-                comment: "Empty favorites hint"
+                "Tap the star on any preset to add it here."
               )
               .font(.subheadline)
               .foregroundStyle(.secondary)
@@ -336,7 +334,7 @@ struct PresetPickerView: View {
               .onDelete(perform: deleteFavorites)
             }
           } header: {
-            Text("Favorites", comment: "Picker section header for favorited presets")
+            Text("Favorites")
           }
 
           // ALL PRESETS — Quick Mix and All Blankie Sounds are fixed rows at the
@@ -355,7 +353,7 @@ struct PresetPickerView: View {
             .onMove(perform: reorderAllPresets)
             .onDelete(perform: deleteAllPresets)
           } header: {
-            Text("All Presets", comment: "Picker section header for non-favorited presets")
+            Text("All Presets")
           }
         }
       }
@@ -373,7 +371,7 @@ struct PresetPickerView: View {
               Button {
                 isEditMode.toggle()
               } label: {
-                Text(isEditMode ? "Done" : "Edit", comment: "Edit mode toggle button")
+                Text(isEditMode ? "Done" : "Edit")
               }
             }
           }
@@ -416,8 +414,7 @@ struct PresetPickerView: View {
       } message: {
         if let preset = presetToDelete {
           Text(
-            "Are you sure you want to delete '\(preset.name)'? This action cannot be undone.",
-            comment: "Delete preset confirmation message"
+            "Are you sure you want to delete '\(preset.name)'? This action cannot be undone."
           )
         }
       }

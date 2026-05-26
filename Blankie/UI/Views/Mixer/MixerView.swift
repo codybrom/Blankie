@@ -432,7 +432,7 @@ private struct AnimationTrigger: Equatable {
     /// timer caption only shows while actively playing.
     var topBarCaption: String? {
       if !audioManager.isGloballyPlaying && audioManager.hasSelectedSounds {
-        return String(localized: "Paused", comment: "Top bar caption when playback is paused")
+        return String(localized: "Paused")
       }
       if timerManager.isTimerActive {
         return timerTopBarText

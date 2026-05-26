@@ -49,11 +49,11 @@ struct SoundSelectionView: View {
       VStack(spacing: 0) {
         // Hint header: make it obvious this is a tap-to-toggle multi-select.
         HStack {
-          Text("Tap a sound to add or remove it from this preset", comment: "Sound selection hint")
+          Text("Tap a sound to add or remove it from this preset")
             .font(.callout)
             .foregroundStyle(.secondary)
           Spacer()
-          Text("\(selectedSounds.count) selected", comment: "Selected sounds count")
+          Text("\(selectedSounds.count) selected")
             .font(.callout.weight(.medium))
             .foregroundStyle(.secondary)
             .monospacedDigit()

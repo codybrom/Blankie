@@ -204,7 +204,7 @@ extension AboutView {
           .accessibilityAddTraits(.isButton)
         #endif
 
-      Text(LocalizedStringKey("Version \(appVersion) (\(buildNumber))"), comment: "Version string")
+      Text(LocalizedStringKey("Version \(appVersion) (\(buildNumber))"))
         .font(.system(size: 12))
         .foregroundStyle(.secondary)
     }
@@ -220,7 +220,7 @@ extension AboutView {
       Link(destination: URL(string: "https://github.com/codybrom/blankie")!) {
         HStack(spacing: 4) {
           Image(systemName: "star.fill").foregroundStyle(.yellow)
-          Text("Star on GitHub", comment: "Star on GitHub label")
+          Text("Star on GitHub")
         }
       }
       .handCursor()
@@ -228,7 +228,7 @@ extension AboutView {
       Link(destination: URL(string: "https://github.com/codybrom/blankie/issues")!) {
         HStack(spacing: 4) {
           Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-          Text("Report an Issue", comment: "Report an issue label")
+          Text("Report an Issue")
         }
       }
       .handCursor()
@@ -245,7 +245,6 @@ extension AboutView {
     VStack(spacing: 12) {
       ExpandableSection(
         title: "Sound Credits",
-        comment: "Expandable section title: Sound Credits",
         isExpanded: $isSoundCreditsExpanded,
         onExpand: {
           isLicenseExpanded = false
@@ -261,7 +260,6 @@ extension AboutView {
 
       ExpandableSection(
         title: "Software License",
-        comment: "Expandable section title: Software License",
         isExpanded: $isLicenseExpanded,
         onExpand: {
           isSoundCreditsExpanded = false
@@ -273,7 +271,6 @@ extension AboutView {
 
       ExpandableSection(
         title: "Acknowledgements",
-        comment: "Expandable section title: Acknowledgements",
         isExpanded: $isAcknowledgementsExpanded,
         onExpand: {
           isSoundCreditsExpanded = false
@@ -289,7 +286,7 @@ extension AboutView {
     Link(destination: URL(string: "https://blankie.rest/faq")!) {
       HStack {
         Image(systemName: "questionmark.circle").foregroundColor(.accentColor)
-        Text("Blankie Help", comment: "Help and FAQ link label").foregroundColor(.primary)
+        Text("Blankie Help").foregroundColor(.primary)
         Spacer()
         Image(systemName: "safari").foregroundColor(.secondary)
       }
@@ -331,7 +328,7 @@ extension AboutView {
           }
           .buttonStyle(.plain)
         }
-        .navigationTitle(Text("Choose App Icon", comment: "App icon selection dialog title"))
+        .navigationTitle(Text("Choose App Icon"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
@@ -349,16 +346,16 @@ extension AboutView {
       options.append(
         AppIconOption(
           name: nil,
-          displayName: NSLocalizedString("Default", comment: "Default app icon option"),
+          displayName: String(localized: "Default"),
           image: primaryImage
         ))
 
       let knownAlternates: [(key: String, displayName: String)] = [
         (
-          "BlankieAltIcon", NSLocalizedString("Alternative", comment: "Alternative app icon option")
+          "BlankieAltIcon", String(localized: "Alternative")
         ),
-        ("BlankieClassicIcon", NSLocalizedString("Classic", comment: "Classic app icon option")),
-        ("BetaIcon", NSLocalizedString("Beta", comment: "Beta app icon option")),
+        ("BlankieClassicIcon", String(localized: "Classic")),
+        ("BetaIcon", String(localized: "Beta")),
       ]
 
       for alternate in knownAlternates {

@@ -16,16 +16,14 @@ struct SettingsView: View {
         if Bundle.main.isTestFlightOrDebug {
           Section(
             header: Text(
-              "Thanks for Testing Blankie!",
-              comment: "Settings section header for beta tester feedback")
+              "Thanks for Testing Blankie!")
           ) {
             Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
               HStack {
                 Image(systemName: "sparkles")
                   .foregroundColor(.accentColor)
                 Text(
-                  "Add Your Name to the Beta Tester Credits",
-                  comment: "Beta tester credits form link label"
+                  "Add Your Name to the Beta Tester Credits"
                 )
                 .foregroundColor(.primary)
                 Spacer()
@@ -39,18 +37,18 @@ struct SettingsView: View {
         }
 
         Section(
-          header: Text("Sounds", comment: "Settings section header for sound management")
+          header: Text("Sounds")
         ) {
           NavigationLink(destination: SoundManagementView()) {
             HStack {
-              Text("Manage Sounds", comment: "Sound management label")
+              Text("Manage Sounds")
               Spacer()
             }
           }
         }
 
         Section(
-          header: Text("Appearance", comment: "Settings section header for appearance options")
+          header: Text("Appearance")
         ) {
           #if os(iOS) || os(visionOS)
             // View mode (Grid / List). This is the app-wide default. It's
@@ -72,18 +70,17 @@ struct SettingsView: View {
                 set: { globalSettings.setShowingListView($0) }
               )
             ) {
-              Text("Grid", comment: "View mode: tile/grid").tag(false)
-              Text("List", comment: "View mode: list").tag(true)
+              Text("Grid").tag(false)
+              Text("List").tag(true)
             } label: {
-              Text("View Mode", comment: "View mode picker label")
+              Text("View Mode")
             }
             .pickerStyle(.segmented)
             .disabled(pickerLocked)
 
             if presetOverride != nil {
               Text(
-                "This preset uses its own view mode. Change it in Edit Preset.",
-                comment: "Caption shown when the active preset overrides the app-wide view mode"
+                "This preset uses its own view mode. Change it in Edit Preset."
               )
               .font(.caption)
               .foregroundColor(.secondary)
@@ -100,7 +97,7 @@ struct SettingsView: View {
               Text(mode.localizedName).tag(mode)
             }
           } label: {
-            Text("Appearance", comment: "Appearance picker label")
+            Text("Appearance")
           }
 
           VStack(alignment: .leading, spacing: 8) {
@@ -121,7 +118,7 @@ struct SettingsView: View {
               set: { globalSettings.setShowSoundNames($0) }
             )
           ) {
-            Text("Show Labels", comment: "Toggle for showing sound labels")
+            Text("Show Labels")
           }
 
           Toggle(
@@ -131,8 +128,7 @@ struct SettingsView: View {
             )
           ) {
             Text(
-              "Show Progress Borders",
-              comment: "Toggle for showing progress borders around playing sounds")
+              "Show Progress Borders")
           }
 
           #if os(iOS) || os(visionOS)
@@ -141,7 +137,7 @@ struct SettingsView: View {
             // every drag frame; the binding's setter updates the published value
             // live so the slider stays responsive.
             VStack(alignment: .leading, spacing: 8) {
-              Text("Background Blur", comment: "Label for the background artwork blur slider")
+              Text("Background Blur")
               Slider(
                 value: Binding(
                   // Persist on each (stepped) change so VoiceOver/keyboard
@@ -153,7 +149,7 @@ struct SettingsView: View {
                 in: 0...20,
                 step: 5,
                 label: {
-                  Text("Background Blur", comment: "Accessibility label for background blur slider")
+                  Text("Background Blur")
                 },
                 minimumValueLabel: {
                   // Small dot -> large dot encodes "less -> more" without text,
@@ -182,7 +178,7 @@ struct SettingsView: View {
         }
 
         Section(
-          header: Text("Lock Screen", comment: "Settings section header for lock screen options")
+          header: Text("Lock Screen")
         ) {
           Toggle(
             isOn: Binding(
@@ -190,18 +186,18 @@ struct SettingsView: View {
               set: { globalSettings.setLockScreenBackgroundEnabled($0) }
             )
           ) {
-            Text("Animated Background", comment: "Toggle for lock-screen animated artwork")
+            Text("Animated Background")
           }
         }
 
         Section(
-          header: Text("About", comment: "Settings section header for about")
+          header: Text("About")
         ) {
           Button {
             showingAbout = true
           } label: {
             HStack {
-              Text("About Blankie", comment: "About button label")
+              Text("About Blankie")
               Spacer()
               Image(systemName: "chevron.right")
                 .font(.caption)
@@ -212,7 +208,7 @@ struct SettingsView: View {
 
         #if DEBUG
           Section(
-            header: Text("Debug", comment: "Settings section header for debug options")
+            header: Text("Debug")
           ) {
             Button {
               showingOnboarding = true
@@ -220,7 +216,7 @@ struct SettingsView: View {
               HStack {
                 Image(systemName: "ladybug.fill")
                   .foregroundColor(.orange)
-                Text("Show Onboarding", comment: "Debug button to show onboarding")
+                Text("Show Onboarding")
                 Spacer()
               }
             }

@@ -71,7 +71,7 @@ struct PreferencesView: View {
         Button(
           action: { globalSettings.setAccentColor(nil) },
           label: {
-            Text("System", comment: "System accent color option")
+            Text("System")
               .padding(.horizontal, 8)
               .padding(.vertical, 4)
               .background(
@@ -132,19 +132,19 @@ struct PreferencesView: View {
     Form {
       Section {
         HStack(spacing: 16) {
-          Text("Appearance", comment: "Appearance label in preferences")
+          Text("Appearance")
             .frame(width: 100, alignment: .leading)
           appearanceButtons
         }
 
         HStack(alignment: .top, spacing: 16) {
-          Text("Accent Color", comment: "Accent color label in preferences")
+          Text("Accent Color")
             .frame(width: 100, alignment: .leading)
           colorButtons
         }
 
         HStack(spacing: 16) {
-          Text("Language", comment: "Language picker label")
+          Text("Language")
             .frame(width: 100, alignment: .leading)
           languageMenu
         }
@@ -167,7 +167,7 @@ struct PreferencesView: View {
         )
         .tint(accentColorForUI)
       } header: {
-        Text("Appearance", comment: "Appearance section header")
+        Text("Appearance")
       }
 
       Section {
@@ -175,7 +175,7 @@ struct PreferencesView: View {
           showingHiddenSounds = true
         }) {
           HStack(spacing: 16) {
-            Text("Manage Sounds", comment: "Sound management label")
+            Text("Manage Sounds")
               .frame(width: 100, alignment: .leading)
             VStack(alignment: .leading, spacing: 2) {
               Text("Import custom sounds and manage hidden sounds")
@@ -190,7 +190,7 @@ struct PreferencesView: View {
         }
         .buttonStyle(.plain)
       } header: {
-        Text("Sounds", comment: "Sounds section header")
+        Text("Sounds")
       }
 
       Section {
@@ -206,7 +206,7 @@ struct PreferencesView: View {
         #endif
         .tint(accentColorForUI)
       } header: {
-        Text("Behavior", comment: "Behavior section header")
+        Text("Behavior")
       }
     }
     .formStyle(.grouped)
@@ -219,22 +219,21 @@ struct PreferencesView: View {
       }
     }
     .alert(
-      Text("Language Changed", comment: "Language change alert title"),
+      Text("Language Changed"),
       isPresented: $showingRestartAlert
     ) {
       Button {
         Language.restartApp()
       } label: {
-        Text("Restart Now", comment: "Restart now button")
+        Text("Restart Now")
       }
       Button(role: .cancel) {
       } label: {
-        Text("Later", comment: "Cancel restart button")
+        Text("Later")
       }
     } message: {
       Text(
-        "You will need to restart Blankie for the language change to take effect.",
-        comment: "Language change restart message"
+        "You will need to restart Blankie for the language change to take effect."
       )
     }
     .sheet(isPresented: $showingHiddenSounds) {

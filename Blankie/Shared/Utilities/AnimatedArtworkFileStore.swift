@@ -19,13 +19,16 @@ enum AnimatedArtworkFileStore {
     "\(directoryName)/\(id.uuidString).\(fileExtension)"
   }
 
-  static func makeRelativePreviewPath(for id: UUID, fileExtension: String = "jpg", suffix: String = "") -> String {
+  static func makeRelativePreviewPath(
+    for id: UUID, fileExtension: String = "jpg", suffix: String = ""
+  ) -> String {
     let fileName = suffix.isEmpty ? id.uuidString : "\(id.uuidString)\(suffix)"
     return "\(directoryName)/\(fileName).\(fileExtension)"
   }
 
   static func absoluteURL(for relativePath: String) -> URL {
-    let trimmed = relativePath.hasPrefix("\(directoryName)/")
+    let trimmed =
+      relativePath.hasPrefix("\(directoryName)/")
       ? String(relativePath.dropFirst(directoryName.count + 1))
       : relativePath
     return documentsDirectoryURL().appendingPathComponent(directoryName).appendingPathComponent(

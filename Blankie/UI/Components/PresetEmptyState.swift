@@ -16,12 +16,11 @@ struct PresetEmptyState: View {
         .font(.system(size: 48))
         .foregroundStyle(.secondary)
 
-      Text("No Custom Presets", comment: "Empty state title")
+      Text("No Custom Presets")
         .font(.headline)
 
       Text(
-        "Save your current sound configuration as a preset to quickly access it later.",
-        comment: "Empty state subtitle"
+        "Save your current sound configuration as a preset to quickly access it later."
       )
       .font(.caption)
       .foregroundStyle(.secondary)

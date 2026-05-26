@@ -19,7 +19,7 @@ import SwiftUI
           showingAbout = true
           appState.isAboutViewPresented = true
         } label: {
-          Text("About Blankie", comment: "About menu command")
+          Text("About Blankie")
         }
       }
 

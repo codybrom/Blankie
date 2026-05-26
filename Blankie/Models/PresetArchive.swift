@@ -58,7 +58,7 @@ struct CustomSoundMetadata: Codable, Identifiable {
   let fileName: String
   let originalFileName: String
   let title: String
-  let systemIconName: String? // Made optional for backwards compatibility
+  let systemIconName: String?  // Made optional for backwards compatibility
   let lufsValue: Double?
   let sha256Hash: String?
   let credits: SoundCredits?

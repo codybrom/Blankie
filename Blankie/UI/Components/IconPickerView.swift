@@ -54,7 +54,7 @@ struct IconPickerView: View {
             Image(systemName: "magnifyingglass")
               .foregroundStyle(.secondary)
             TextField(text: $iconSearchText) {
-              Text("Search icons...", comment: "Icon search field placeholder")
+              Text("Search icons...")
             }
             .textFieldStyle(.plain)
 
@@ -83,7 +83,7 @@ struct IconPickerView: View {
           if iconSearchText.isEmpty {
             Picker(
               selection: $selectedIconCategory,
-              label: Text("Category", comment: "Icon category picker label")
+              label: Text("Category")
             ) {
               ForEach(Array(iconCategories.keys).sorted(), id: \.self) { category in
                 Text(category).tag(category)
@@ -106,11 +106,10 @@ struct IconPickerView: View {
               Image(systemName: "questionmark.square.dashed")
                 .font(.largeTitle)
                 .foregroundStyle(.tertiary)
-              Text("No matching icons found", comment: "No icon search results message")
+              Text("No matching icons found")
                 .font(.headline)
               Text(
-                "Try a different search term",
-                comment: "No icon search results suggestion"
+                "Try a different search term"
               )
               .font(.caption)
               .foregroundStyle(.secondary)

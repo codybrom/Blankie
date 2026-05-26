@@ -52,7 +52,7 @@ struct VolumeControlsView: View {
 
               audioManager.resetSounds()
             }) {
-              Text("Reset", comment: "Reset sounds button")
+              Text("Reset")
             }
             .disabled(isAtDefaultVolumes)
             .sensoryFeedback(.success, trigger: isAtDefaultVolumes)
@@ -62,7 +62,7 @@ struct VolumeControlsView: View {
             Button {
               dismiss()
             } label: {
-              Text("Done", comment: "Volume controls done button")
+              Text("Done")
             }
           }
         }
@@ -76,7 +76,7 @@ struct VolumeControlsView: View {
   private var popoverContent: some View {
     VStack(spacing: 16) {
       VStack(alignment: .leading, spacing: 4) {
-        Text("All Sounds", comment: "Volume slider label")
+        Text("All Sounds")
           .font(.caption)
         Slider(
           value: Binding(
@@ -117,7 +117,7 @@ struct VolumeControlsView: View {
         // For now, reset to global defaults
         audioManager.resetSounds()
       } label: {
-        Text("Reset", comment: "Reset sounds button")
+        Text("Reset")
       }
       .font(.caption)
       .disabled(isAtDefaultVolumes)
@@ -131,7 +131,7 @@ struct VolumeControlsView: View {
     VStack(spacing: 24) {
       // All Sounds slider
       VStack(alignment: .leading, spacing: 8) {
-        Text("All Sounds", comment: "Volume section header")
+        Text("All Sounds")
           .font(.headline)
 
         HStack {
@@ -160,7 +160,7 @@ struct VolumeControlsView: View {
           .padding(.horizontal)
 
         VStack(alignment: .leading, spacing: 16) {
-          Text("Active Sounds", comment: "Active sounds section header")
+          Text("Active Sounds")
             .font(.headline)
             .padding(.horizontal)
 

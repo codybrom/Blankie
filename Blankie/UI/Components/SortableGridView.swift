@@ -73,13 +73,16 @@ where
           // own global origin.
           .offset(
             x: draggingStartRect.minX - gridOrigin.x,
-            y: draggingStartRect.minY - gridOrigin.y)
+            y: draggingStartRect.minY - gridOrigin.y
+          )
           .offset(draggingOffset)
       }
     }
     // Block interaction with the grid while a tile is in flight.
     .allowsHitTesting(draggingItem == nil)
-    .onGeometryChange(for: CGPoint.self) { $0.frame(in: .global).origin } action: {
+    .onGeometryChange(for: CGPoint.self) {
+      $0.frame(in: .global).origin
+    } action: {
       gridOrigin = $0
     }
   }

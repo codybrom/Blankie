@@ -94,7 +94,7 @@ struct SoundSheet: View {
         handleFileImport(result: result)
       }
       .alert(
-        Text("Import Error", comment: "Import error alert title"),
+        Text("Import Error"),
         isPresented: $showingError,
         presenting: importError
       ) { _ in
@@ -103,7 +103,7 @@ struct SoundSheet: View {
         Text(error.localizedDescription)
       }
       .alert(
-        Text("Delete Sound", comment: "Delete sound confirmation alert title"),
+        Text("Delete Sound"),
         isPresented: $showingDeleteConfirmation
       ) {
         Button("Delete", role: .destructive) {
@@ -112,12 +112,11 @@ struct SoundSheet: View {
         Button("Cancel", role: .cancel) {}
       } message: {
         Text(
-          "Are you sure you want to delete this sound? This action cannot be undone.",
-          comment: "Delete sound confirmation message"
+          "Are you sure you want to delete this sound? This action cannot be undone."
         )
       }
       .alert(
-        Text("Reset to Defaults", comment: "Reset confirmation alert title"),
+        Text("Reset to Defaults"),
         isPresented: $showingResetConfirmation
       ) {
         Button("Reset", role: .destructive) {
@@ -128,8 +127,7 @@ struct SoundSheet: View {
         Button("Cancel", role: .cancel) {}
       } message: {
         Text(
-          "Are you sure you want to reset all customizations for this sound?",
-          comment: "Reset confirmation message"
+          "Are you sure you want to reset all customizations for this sound?"
         )
       }
       .overlay(alignment: .center) {

@@ -16,7 +16,7 @@ struct SoundFileSelector: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text("Sound File", comment: "Sound file section header")
+      Text("Sound File")
         .font(.headline)
 
       if let selectedFile = selectedFile {
@@ -35,7 +35,7 @@ struct SoundFileSelector: View {
             Button {
               isImporting = true
             } label: {
-              Text("Change", comment: "Change file button")
+              Text("Change")
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
@@ -59,7 +59,7 @@ struct SoundFileSelector: View {
           HStack {
             Image(systemName: "plus.circle.fill")
               .font(.title2)
-            Text("Select Sound File", comment: "Select sound file button label")
+            Text("Select Sound File")
               .font(.headline)
           }
           .frame(maxWidth: .infinity)

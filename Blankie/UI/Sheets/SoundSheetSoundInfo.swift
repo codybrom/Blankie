@@ -11,10 +11,10 @@ extension CleanSoundSheetForm {
   @ViewBuilder
   var soundInformationSection: some View {
     if let soundInfo = getSoundInfo() {
-      Section(header: Text("Sound Information", comment: "Sound information section header")) {
+      Section(header: Text("Sound Information")) {
         // Channels
         HStack {
-          Text("Channels", comment: "Audio channels label")
+          Text("Channels")
           Spacer()
           Text(soundInfo.channelsText)
             .foregroundColor(.secondary)
@@ -22,7 +22,7 @@ extension CleanSoundSheetForm {
 
         // Duration
         HStack {
-          Text("Duration", comment: "Audio duration label")
+          Text("Duration")
           Spacer()
           Text(soundInfo.durationText)
             .foregroundColor(.secondary)
@@ -30,7 +30,7 @@ extension CleanSoundSheetForm {
 
         // File Size
         HStack {
-          Text("File Size", comment: "File size label")
+          Text("File Size")
           Spacer()
           Text(soundInfo.fileSizeText)
             .foregroundColor(.secondary)
@@ -38,7 +38,7 @@ extension CleanSoundSheetForm {
 
         // File Format
         HStack {
-          Text("Format", comment: "File format label")
+          Text("Format")
           Spacer()
           Text(soundInfo.formatText)
             .foregroundColor(.secondary)
@@ -52,7 +52,7 @@ extension CleanSoundSheetForm {
         // Credited Author (if available)
         if let author = soundInfo.creditedAuthor {
           HStack {
-            Text("Author", comment: "Sound author label")
+            Text("Author")
             Spacer()
             Text(author)
               .foregroundColor(.secondary)
@@ -62,7 +62,7 @@ extension CleanSoundSheetForm {
         // Description (if available)
         if let description = soundInfo.description {
           VStack(alignment: .leading, spacing: 4) {
-            Text("Description", comment: "Sound description label")
+            Text("Description")
             Text(description)
               .font(.caption)
               .foregroundColor(.secondary)
@@ -77,7 +77,7 @@ extension CleanSoundSheetForm {
     // LUFS (if available)
     if let lufs = normInfo.lufs {
       HStack {
-        Text("Loudness (LUFS)", comment: "Audio LUFS loudness label")
+        Text("Loudness (LUFS)")
         Spacer()
         Text(lufs)
           .foregroundColor(.secondary)
@@ -87,7 +87,7 @@ extension CleanSoundSheetForm {
     // Peak Level (if available)
     if let peak = normInfo.peak {
       HStack {
-        Text("Peak Level", comment: "Audio peak level label")
+        Text("Peak Level")
         Spacer()
         Text(peak)
           .foregroundColor(.secondary)
@@ -96,7 +96,7 @@ extension CleanSoundSheetForm {
 
     // Normalization Factor
     HStack {
-      Text("Normalization Factor", comment: "Audio normalization factor label")
+      Text("Normalization Factor")
       Spacer()
       Text(normInfo.factor)
         .foregroundColor(.secondary)
@@ -104,7 +104,7 @@ extension CleanSoundSheetForm {
 
     // Normalization Gain in dB
     HStack {
-      Text("Normalization Gain", comment: "Audio normalization gain label")
+      Text("Normalization Gain")
       Spacer()
       Text(normInfo.gain)
         .foregroundColor(.secondary)

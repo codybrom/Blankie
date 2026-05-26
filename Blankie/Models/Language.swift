@@ -44,7 +44,7 @@ struct Language: Hashable, Identifiable, Equatable {
 
     // Show "System (Language)" where System is in the current app language
     let displayName =
-      "\(NSLocalizedString("System", comment: "System default language option")) (\(languageName))"
+      "\(String(localized:"System")) (\(languageName))"
 
     debugLog("🌐 System language: code=\(languageCode), name=\(languageName)")
 

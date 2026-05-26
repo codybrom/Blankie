@@ -218,8 +218,9 @@ final class MigrationTests: XCTestCase {
         let migratedFile2 = newCustomSoundsURL.appendingPathComponent("test-sound-2.wav")
 
         // Check if files were migrated (may not work in test environment if app group unavailable)
-        if fileManager.fileExists(atPath: migratedFile1.path) &&
-           fileManager.fileExists(atPath: migratedFile2.path) {
+        if fileManager.fileExists(atPath: migratedFile1.path)
+          && fileManager.fileExists(atPath: migratedFile2.path)
+        {
           print("✅ Custom sound files migrated to app group")
         } else {
           print("ℹ️ App group not available in test environment - file migration skipped")

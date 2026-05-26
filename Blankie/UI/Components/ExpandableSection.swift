@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ExpandableSection<Content: View>: View {
   let title: String
-  let comment: String
   @Binding var isExpanded: Bool
   let onExpand: () -> Void
   let content: Content
@@ -17,13 +16,11 @@ struct ExpandableSection<Content: View>: View {
 
   init(
     title: String,
-    comment: String,
     isExpanded: Binding<Bool>,
     onExpand: @escaping () -> Void,
     @ViewBuilder content: () -> Content
   ) {
     self.title = title
-    self.comment = comment
     self._isExpanded = isExpanded
     self.onExpand = onExpand
     self.content = content()

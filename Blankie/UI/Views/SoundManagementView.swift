@@ -68,7 +68,7 @@ struct SoundManagementView: View {
         }
       }
       .alert(
-        Text("Delete Sound", comment: "Delete sound confirmation alert title"),
+        Text("Delete Sound"),
         isPresented: $showingDeleteConfirmation
       ) {
         Button("Cancel", role: .cancel) {}
@@ -79,8 +79,7 @@ struct SoundManagementView: View {
         }
       } message: {
         Text(
-          "Are you sure you want to delete '\(selectedSound?.title ?? "this sound")'? This action cannot be undone.",
-          comment: "Delete custom sound confirmation message"
+          "Are you sure you want to delete '\(selectedSound?.title ?? "this sound")'? This action cannot be undone."
         )
       }
   }
@@ -178,12 +177,11 @@ struct SoundManagementView: View {
         .font(.system(size: 32))
         .foregroundColor(.secondary)
 
-      Text("No Custom Sounds", comment: "Empty state title for custom sounds")
+      Text("No Custom Sounds")
         .font(.headline)
 
       Text(
-        "Import your own sounds to personalize your mix.",
-        comment: "Empty state description for custom sounds"
+        "Import your own sounds to personalize your mix."
       )
       .foregroundStyle(.secondary)
       .multilineTextAlignment(.center)
@@ -192,7 +190,7 @@ struct SoundManagementView: View {
       Button {
         showingFilePicker = true
       } label: {
-        Text("Import Sound", comment: "Import sound button label")
+        Text("Import Sound")
       }
       .buttonStyle(.borderedProminent)
       .controlSize(.small)
@@ -233,8 +231,7 @@ struct SoundManagementView: View {
           macSectionHeader("Custom Sounds", count: customSounds.count)
         } footer: {
           Text(
-            "Import M4A, MP3, WAV, or other audio files to mix in your own sounds.",
-            comment: "Custom sounds section footer"
+            "Import M4A, MP3, WAV, or other audio files to mix in your own sounds."
           )
           .font(.caption)
           .foregroundStyle(.secondary)
@@ -285,8 +282,8 @@ struct SoundManagementView: View {
           Image(systemName: "pencil")
         }
         .buttonStyle(.borderless)
-        .help(Text("Edit Sound", comment: "Tooltip for editing a sound"))
-        .accessibilityLabel(Text("Edit Sound", comment: "Tooltip for editing a sound"))
+        .help(Text("Edit Sound"))
+        .accessibilityLabel(Text("Edit Sound"))
 
         if isCustom {
           Button {
@@ -297,8 +294,8 @@ struct SoundManagementView: View {
               .foregroundStyle(.red)
           }
           .buttonStyle(.borderless)
-          .help(Text("Delete Sound", comment: "Tooltip for deleting a sound"))
-          .accessibilityLabel(Text("Delete Sound", comment: "Tooltip for deleting a sound"))
+          .help(Text("Delete Sound"))
+          .accessibilityLabel(Text("Delete Sound"))
         }
       }
       .padding(.vertical, 4)
@@ -322,12 +319,11 @@ struct SoundManagementView: View {
           .font(.system(size: 40))
           .foregroundStyle(.secondary)
 
-        Text("No Custom Sounds", comment: "Empty state title for custom sounds")
+        Text("No Custom Sounds")
           .font(.headline)
 
         Text(
-          "Import your own sounds to personalize your mix.",
-          comment: "Empty state description for custom sounds"
+          "Import your own sounds to personalize your mix."
         )
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
@@ -388,7 +384,7 @@ private struct PlaybackSettingsSection: View {
 
   var body: some View {
     Section(
-      header: Text("Playback", comment: "Settings section header for playback options")
+      header: Text("Playback")
     ) {
       Toggle(
         "Autoplay on Open",

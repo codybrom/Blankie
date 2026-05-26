@@ -39,7 +39,7 @@ import SwiftUI
         showingGallery = true
       } label: {
         HStack {
-          Text("Lock Screen Animation", comment: "Button to select animated artwork")
+          Text("Lock Screen Animation")
           Spacer()
           if let identifier = selectedBundledIdentifier,
             let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == identifier })
@@ -47,7 +47,7 @@ import SwiftUI
             Text(asset.displayName)
               .foregroundColor(.secondary)
           } else {
-            Text("None", comment: "No animated artwork selected")
+            Text("None")
               .foregroundColor(.secondary)
           }
           Image(systemName: "chevron.right")
@@ -724,9 +724,9 @@ import SwiftUI
           } label: {
             Group {
               if case .downloading = resourceState {
-                Text("Downloading...", comment: "Button label while video is downloading")
+                Text("Downloading...")
               } else {
-                Text("Choose", comment: "Button to select animated artwork")
+                Text("Choose")
               }
             }
             .font(.headline)
@@ -917,8 +917,7 @@ import SwiftUI
 
     var body: some View {
       Text(
-        "Animated artwork editing is available on iOS",
-        comment: "Fallback text when feature unavailable"
+        "Animated artwork editing is available on iOS"
       )
       .font(.subheadline)
       .foregroundColor(.secondary)

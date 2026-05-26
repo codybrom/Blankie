@@ -24,10 +24,10 @@ struct PresetPicker: View {
           Text(
             presetManager.hasCustomPresets
               ? (presetManager.currentPreset?.isDefault == true
-                ? String(localized: "Blankie", comment: "Default preset displayed as Blankie")
+                ? String(localized: "Blankie")
                 : (presetManager.currentPreset?.name
-                  ?? String(localized: "Blankie", comment: "Default preset displayed as Blankie")))
-              : String(localized: "Presets", comment: "Presets menu title")
+                  ?? String(localized: "Blankie")))
+              : String(localized: "Presets")
           )
           .fontWeight(.bold)
           Image(systemName: "chevron.down")
@@ -54,7 +54,7 @@ struct PresetPicker: View {
               showingPresetPopover = false
             }) {
               Label(
-                String(localized: "New Preset", comment: "New preset button"), systemImage: "plus")
+                String(localized: "New Preset"), systemImage: "plus")
             }
             .buttonStyle(.plain)
             .padding(8)

@@ -131,7 +131,9 @@ extension AudioManager {
     let result = favorites + rest
     // Nothing to cycle (no favorites and no custom presets): fall back to the
     // default preset so next/previous still re-applies something.
-    if result.isEmpty, let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {
+    if result.isEmpty,
+      let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault })
+    {
       return [defaultPreset]
     }
     return result

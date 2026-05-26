@@ -32,10 +32,10 @@ struct SoundIconSelector: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack {
-        Text("Icon", comment: "Icon selection label")
+        Text("Icon")
           .font(.headline)
         Spacer()
-        Text("Selected:", comment: "Selected icon label")
+        Text("Selected:")
         Image(systemName: selectedIcon)
           .font(.title2)
           .foregroundStyle(.tint)
@@ -47,7 +47,7 @@ struct SoundIconSelector: View {
           Image(systemName: "magnifyingglass")
             .foregroundStyle(.secondary)
           TextField(text: $iconSearchText) {
-            Text("Search icons...", comment: "Icon search field placeholder")
+            Text("Search icons...")
           }
           .textFieldStyle(.plain)
         }
@@ -66,7 +66,7 @@ struct SoundIconSelector: View {
         if iconSearchText.isEmpty {
           Picker(
             selection: $selectedIconCategory,
-            label: Text("Category", comment: "Icon category picker label")
+            label: Text("Category")
           ) {
             ForEach(Array(iconCategories.keys).sorted(), id: \.self) { category in
               Text(category).tag(category)
@@ -84,11 +84,10 @@ struct SoundIconSelector: View {
             Image(systemName: "questionmark.square.dashed")
               .font(.largeTitle)
               .foregroundStyle(.tertiary)
-            Text("No matching icons found", comment: "No icon search results message")
+            Text("No matching icons found")
               .font(.headline)
             Text(
-              "Try a different search term",
-              comment: "No icon search results suggestion"
+              "Try a different search term"
             )
             .font(.caption)
             .foregroundStyle(.secondary)

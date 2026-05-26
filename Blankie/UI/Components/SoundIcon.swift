@@ -242,7 +242,7 @@ struct SoundIcon: View {
       SoundSheet(mode: .edit(sound))
     }
     .alert(
-      Text("Delete Sound", comment: "Delete sound confirmation alert title"),
+      Text("Delete Sound"),
       isPresented: $showingDeleteConfirmation
     ) {
       Button("Cancel", role: .cancel) {}
@@ -255,8 +255,7 @@ struct SoundIcon: View {
       }
     } message: {
       Text(
-        "Are you sure you want to delete '\(sound.title)'? This action cannot be undone.",
-        comment: "Delete custom sound confirmation message"
+        "Are you sure you want to delete '\(sound.title)'? This action cannot be undone."
       )
     }
   }

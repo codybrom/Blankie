@@ -178,9 +178,9 @@ final class SwiftDataMigrationTests: XCTestCase {
     UserDefaults.shared.set("dark", forKey: UserDefaultsKeys.appearance)
 
     // 2. Setup conflicting data in standard UserDefaults
-    UserDefaults.standard.set(0.5, forKey: UserDefaultsKeys.volume) // Different value
-    UserDefaults.standard.set("light", forKey: UserDefaultsKeys.appearance) // Different value
-    UserDefaults.standard.set(true, forKey: UserDefaultsKeys.autoPlayOnLaunch) // New value
+    UserDefaults.standard.set(0.5, forKey: UserDefaultsKeys.volume)  // Different value
+    UserDefaults.standard.set("light", forKey: UserDefaultsKeys.appearance)  // Different value
+    UserDefaults.standard.set(true, forKey: UserDefaultsKeys.autoPlayOnLaunch)  // New value
 
     // 3. Run migration
     AppDataMigrator.performAllMigrations()

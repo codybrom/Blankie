@@ -352,7 +352,7 @@ extension EditPresetSheet {
         )
       ) {
         Label {
-          Text("Favorite", comment: "Preset editor toggle to favorite a preset")
+          Text("Favorite")
         } icon: {
           Image(systemName: "star")
             .foregroundColor(activeAccentColor)
@@ -360,8 +360,7 @@ extension EditPresetSheet {
       }
     } footer: {
       Text(
-        "Favorites appear in the iPad sidebar and CarPlay.",
-        comment: "Footer explaining the Favorite toggle")
+        "Favorites appear in the iPad sidebar and CarPlay.")
     }
   }
 }

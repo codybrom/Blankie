@@ -10,7 +10,7 @@ import SwiftUI
 struct DeveloperSection: View {
   var body: some View {
     VStack(spacing: 4) {
-      Text("Developed By", comment: "Developed by label")
+      Text("Developed By")
         .font(.system(size: 13, weight: .bold))
 
       VStack(spacing: 8) {
@@ -20,7 +20,7 @@ struct DeveloperSection: View {
         HStack(spacing: 8) {
 
           Link(destination: URL(string: "https://www.codybrom.com")!) {
-            Text("Website", comment: "Website link label")
+            Text("Website")
           }
           .foregroundColor(.accentColor)
           .handCursor()
@@ -48,7 +48,7 @@ struct ContributorSection: View {
   let contributors: [String]
   var body: some View {
     VStack(spacing: 8) {  // Standardized spacing
-      Text("Contributors", comment: "Contributors section title")
+      Text("Contributors")
         .font(.system(size: 13, weight: .bold))
         .padding(.bottom, 4)  // Add some space between title and content
 
@@ -74,7 +74,7 @@ struct TranslatorSection: View {
   let translators: [String: [String]]
   var body: some View {
     VStack(spacing: 8) {  // Standardized spacing
-      Text("Translations", comment: "Translations section title")
+      Text("Translations")
         .font(.system(size: 13, weight: .bold))
         .padding(.bottom, 4)  // Same spacing after title
 

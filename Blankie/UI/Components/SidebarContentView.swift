@@ -80,7 +80,7 @@ import SwiftUI
             Button {
               showingPresetPicker = true
             } label: {
-              Text("More Presets", comment: "Sidebar link to open the full presets list")
+              Text("More Presets")
                 .foregroundColor(activeAccent)
             }
             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
@@ -98,7 +98,7 @@ import SwiftUI
                 .padding(.vertical, 4)
                 .contentShape(Rectangle())
                 .accessibilityLabel(
-                  Text("New Preset", comment: "Sidebar button to create a new preset"))
+                  Text("New Preset"))
             }
             .buttonStyle(.borderless)
           }
@@ -274,7 +274,7 @@ import SwiftUI
           showingSettings = true
         } label: {
           Label {
-            Text("Settings", comment: "Sidebar settings link")
+            Text("Settings")
           } icon: {
             Image(systemName: "gearshape")
           }
