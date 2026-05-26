@@ -94,7 +94,7 @@ See our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF
 
 ## License
 
-© 2025 Cody Bromley and contributors. All rights reserved.
+© 2026 Cody Bromley and contributors. All rights reserved.
 
 - **Source code**: [MIT License](LICENSE)
 - **Logo/Icon**: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
