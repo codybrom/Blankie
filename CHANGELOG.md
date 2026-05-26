@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-05-25
+## [1.1.0] - 2026-05-26
 
 Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below are primary for those platforms with the macOS app inheriting platform bug fixes.
 
@@ -32,7 +32,7 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 
 - Migrated all audio from MP3 to M4A (AAC)
 - Rebuilt the documentation website on Astro 6
-- **Breaking**: minimum requirements are now iOS 26 and macOS 15.5
+- **Breaking**: minimum requirements are now iOS 26 and macOS 15.6
 
 ## [1.0.13] - 2025-10-27
 
