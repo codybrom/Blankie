@@ -20,8 +20,6 @@ import SwiftUI
     private func configureWindowAppearance() {
       DispatchQueue.main.async {
         if let window = NSApplication.shared.windows.first {
-          window.isOpaque = false
-          window.backgroundColor = NSColor.clear
           window.hasShadow = true
           window.titlebarAppearsTransparent = false
         }
@@ -158,7 +156,7 @@ import SwiftUI
 
       // Initialize core app systems synchronously for CarPlay compatibility
       // This MUST complete before CarPlay can connect
-      #if CARPLAY_ENABLED
+      #if CARPLAY_ENABLED && canImport(CarPlay)
         debugLog("🚗 IOSAppDelegate: Performing synchronous CarPlay initialization...")
 
         // Bridge CarPlay connection state into AudioManager. Must start before
@@ -194,7 +192,7 @@ import SwiftUI
       return true
     }
 
-    #if CARPLAY_ENABLED
+    #if CARPLAY_ENABLED && canImport(CarPlay)
       @MainActor
       private func initializeAppCoreAsync() async {
         // Load custom sounds with proper SwiftData coordination
@@ -206,7 +204,7 @@ import SwiftUI
     #endif
 
     func applicationDidBecomeActive(_: UIApplication) {
-      #if CARPLAY_ENABLED
+      #if CARPLAY_ENABLED && canImport(CarPlay)
         // Re-establish CarPlay connection if needed after app becomes active
         // This is crucial for CarPlay apps that were force quit or when device was locked
         if CarPlayInterfaceController.shared.isConnected {

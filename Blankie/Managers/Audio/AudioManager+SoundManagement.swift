@@ -38,14 +38,6 @@ extension AudioManager {
     moveSound(from: sourceIndex, to: destinationIndex)
   }
 
-  /// Move visible sounds from source indices to destination (for List's onMove)
-  @MainActor
-  func moveVisibleSounds(from source: IndexSet, to destination: Int) {
-    sounds.move(fromOffsets: source, toOffset: destination)
-    objectWillChange.send()
-    debugLog("🎵 AudioManager: Moved sounds from \(source) to \(destination)")
-  }
-
   /// Apply volume settings to all playing sounds by triggering volume updates
   func applyVolumeSettings() {
     debugLog("🎵 AudioManager: Updating volumes for volume settings change")

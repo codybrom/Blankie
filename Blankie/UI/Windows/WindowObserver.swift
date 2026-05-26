@@ -41,14 +41,22 @@
         object: nil)
     }
 
+    /// Only the real app window should be tracked. Popovers, menus, and
+    /// tooltips are borderless `NSWindow`s; reacting to them re-rendered the
+    /// open popover (dropping native slider knobs) and corrupted the saved
+    /// window frame.
+    private func isMainWindow(_ window: NSWindow) -> Bool {
+      window.styleMask.contains(.titled)
+    }
+
     @objc private func windowDidEndResize(_ notification: Notification) {
-      if let window = notification.object as? NSWindow {
+      if let window = notification.object as? NSWindow, isMainWindow(window) {
         debouncedSaveWindowFrame(window)
       }
     }
 
     @objc private func windowDidEndMove(_ notification: Notification) {
-      if let window = notification.object as? NSWindow {
+      if let window = notification.object as? NSWindow, isMainWindow(window) {
         debouncedSaveWindowFrame(window)
       }
     }
@@ -88,13 +96,19 @@
     }
 
     @objc private func windowDidBecomeKey(_ notification: Notification) {
+      // Ignore popovers/menus so opening them doesn't republish (which
+      // re-renders the open popover and drops native slider knobs).
+      guard let window = notification.object as? NSWindow, isMainWindow(window) else { return }
       debugLog("🪟 Window became key")
       DispatchQueue.main.async {
-        self.hasVisibleWindow = true
+        if !self.hasVisibleWindow {
+          self.hasVisibleWindow = true
+        }
       }
     }
 
     @objc private func windowDidClose(_ notification: Notification) {
+      guard let window = notification.object as? NSWindow, isMainWindow(window) else { return }
       debugLog("🪟 Window closing")
       DispatchQueue.main.async {
         self.checkVisibleWindows()
@@ -103,8 +117,11 @@
 
     private func checkVisibleWindows() {
       debugLog("🪟 Checking visible windows")
-      hasVisibleWindow = NSApp.windows.contains { window in
-        window.isVisible && !window.isMiniaturized
+      let visible = NSApp.windows.contains { window in
+        window.isVisible && !window.isMiniaturized && isMainWindow(window)
+      }
+      if hasVisibleWindow != visible {
+        hasVisibleWindow = visible
       }
     }
   }

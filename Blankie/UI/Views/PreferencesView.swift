@@ -22,7 +22,7 @@ struct PreferencesView: View {
       if let nsColor = NSColor(accentColorForUI).usingColorSpace(.sRGB) {
         let brightness =
           (0.299 * nsColor.redComponent) + (0.587 * nsColor.greenComponent)
-            + (0.114 * nsColor.blueComponent)
+          + (0.114 * nsColor.blueComponent)
         return brightness > 0.5 ? .black : .white
       }
       return .white
@@ -89,10 +89,21 @@ struct PreferencesView: View {
         Spacer()
       }
 
-      SpectrumColorPicker(selectedColor: $globalSettings.customAccentColor)
+      #if os(macOS)
+        // The "System" button above handles the no-accent state, so the circle
+        // row only offers the concrete colors.
+        AccentColorCirclePicker(
+          selectedColor: $globalSettings.customAccentColor, allowSystem: false
+        )
         .onChange(of: globalSettings.customAccentColor) { _, newColor in
           globalSettings.setAccentColor(newColor)
         }
+      #else
+        SpectrumColorPicker(selectedColor: $globalSettings.customAccentColor)
+          .onChange(of: globalSettings.customAccentColor) { _, newColor in
+            globalSettings.setAccentColor(newColor)
+          }
+      #endif
     }
   }
 
@@ -155,24 +166,6 @@ struct PreferencesView: View {
           )
         )
         .tint(accentColorForUI)
-
-        HStack(spacing: 16) {
-          Text("Icon Size", comment: "Icon size picker label")
-            .frame(width: 100, alignment: .leading)
-          Picker(
-            "Icon Size",
-            selection: Binding(
-              get: { globalSettings.iconSize },
-              set: { globalSettings.setIconSize($0) }
-            )
-          ) {
-            ForEach(IconSize.allCases, id: \.self) { size in
-              Text(size.label).tag(size)
-            }
-          }
-          .pickerStyle(.segmented)
-          .labelsHidden()
-        }
       } header: {
         Text("Appearance", comment: "Appearance section header")
       }
@@ -209,7 +202,7 @@ struct PreferencesView: View {
           )
         )
         #if os(macOS)
-        .help("If enabled, Blankie will immediately play your most recent preset on launch")
+          .help("If enabled, Blankie will immediately play your most recent preset on launch")
         #endif
         .tint(accentColorForUI)
       } header: {
@@ -222,7 +215,7 @@ struct PreferencesView: View {
     .onChange(of: globalSettings.needsRestartForLanguageChange) { _, _ in
       if globalSettings.needsRestartForLanguageChange {
         showingRestartAlert = true
-        globalSettings.needsRestartForLanguageChange = false // reset
+        globalSettings.needsRestartForLanguageChange = false  // reset
       }
     }
     .alert(
@@ -234,7 +227,8 @@ struct PreferencesView: View {
       } label: {
         Text("Restart Now", comment: "Restart now button")
       }
-      Button(role: .cancel) {} label: {
+      Button(role: .cancel) {
+      } label: {
         Text("Later", comment: "Cancel restart button")
       }
     } message: {

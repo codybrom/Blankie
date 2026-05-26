@@ -41,39 +41,53 @@ extension AudioManager {
 
     // For CarPlay, try to load custom sounds even if protected data isn't available
     // This allows CarPlay to function when the device is locked
-    if !UIApplication.shared.isProtectedDataAvailable {
-      debugLog(
-        "⚠️ AudioManager: Protected data not available, attempting to load custom sounds anyway for CarPlay"
-      )
-    }
+    #if !os(macOS)
+      if !UIApplication.shared.isProtectedDataAvailable {
+        debugLog(
+          "⚠️ AudioManager: Protected data not available, attempting to load custom sounds anyway for CarPlay"
+        )
+      }
+    #endif
 
-    // Load custom sounds to complete the sound library
-    debugLog("🎵 AudioManager: Loading custom sounds with SwiftData coordination...")
-    loadCustomSounds()
+    // Load custom sounds once. This can be called more than once at launch
+    // (the CarPlay build fires it from IOSAppDelegate, and AppSetup fires it
+    // for every scheme); a second full load would tear down and re-create the
+    // custom Sound objects the active preset/UI already holds, leaving the
+    // originals playing with no way to stop them. PresetManager still gets
+    // (re-)initialized below in either case.
+    if hasLoadedCustomSounds {
+      debugLog("🎵 AudioManager: Custom sounds already loaded, skipping reload")
+    } else {
+      debugLog("🎵 AudioManager: Loading custom sounds with SwiftData coordination...")
+      loadCustomSounds()
+      hasLoadedCustomSounds = true
+    }
 
     // Initialize PresetManager with ALL sounds loaded
     await PresetManager.shared.initializePresetManager()
   }
 
-  /// Wait for protected data to become available before accessing SwiftData
-  /// This prevents crashes during CarPlay cold start on locked devices
-  @MainActor
-  private func waitForProtectedDataAvailability() async {
-    guard !UIApplication.shared.isProtectedDataAvailable else {
-      debugLog("✅ AudioManager: Protected data already available")
-      return
-    }
+  #if !os(macOS)
+    /// Wait for protected data to become available before accessing SwiftData
+    /// This prevents crashes during CarPlay cold start on locked devices
+    @MainActor
+    private func waitForProtectedDataAvailability() async {
+      guard !UIApplication.shared.isProtectedDataAvailable else {
+        debugLog("✅ AudioManager: Protected data already available")
+        return
+      }
 
-    debugLog("⚠️ AudioManager: Protected data not available, waiting...")
+      debugLog("⚠️ AudioManager: Protected data not available, waiting...")
 
-    // Use AsyncStream for Swift 6 compliance
-    for await _ in NotificationCenter.default.notifications(
-      named: UIApplication.protectedDataDidBecomeAvailableNotification)
-    {
-      debugLog("✅ AudioManager: Protected data became available")
-      break
+      // Use AsyncStream for Swift 6 compliance
+      for await _ in NotificationCenter.default.notifications(
+        named: UIApplication.protectedDataDidBecomeAvailableNotification)
+      {
+        debugLog("✅ AudioManager: Protected data became available")
+        break
+      }
     }
-  }
+  #endif
 
   func setupCustomSoundObservers() {
     // Observe custom sound changes

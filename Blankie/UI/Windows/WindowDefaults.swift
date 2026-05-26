@@ -53,8 +53,7 @@
       showingAbout: Binding<Bool>,
       showingShortcuts: Binding<Bool>,
       showingNewPresetPopover: Binding<Bool>,
-      presetName: Binding<String>,
-      showingSettings: Binding<Bool>
+      presetName: Binding<String>
     ) -> some View {
       ContentView(
         showingAbout: showingAbout,

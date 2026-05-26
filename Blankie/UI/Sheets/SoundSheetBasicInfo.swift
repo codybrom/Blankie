@@ -29,16 +29,48 @@ extension CleanSoundSheetForm {
 
   @ViewBuilder
   var nameRow: some View {
-    HStack {
-      Text("Name", comment: "Display name field label")
-      Spacer()
-      HStack {
-        TextField(text: $soundName) {
-          Text("Sound Name", comment: "Sound name text field placeholder")
+    #if os(macOS)
+      // LabeledContent keeps the label and field aligned in a grouped form; a
+      // trailing-aligned plain TextField renders the prompt and value together
+      // on macOS.
+      LabeledContent {
+        HStack(spacing: 6) {
+          // Use `prompt:` (placeholder) — the label-closure initializer renders
+          // its text as a visible field label, which collides with the
+          // LabeledContent "Name" label.
+          TextField(
+            "Sound Name",
+            text: $soundName,
+            prompt: Text("Sound Name", comment: "Sound name text field placeholder")
+          )
+          .labelsHidden()
+          .textFieldStyle(.plain)
+
+          if !soundName.isEmpty {
+            Button {
+              soundName = ""
+            } label: {
+              Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.secondary)
+                .imageScale(.small)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Clear Name")
+          }
         }
-        .multilineTextAlignment(.trailing)
-        .textFieldStyle(.plain)
-        #if os(iOS)
+      } label: {
+        Text("Name", comment: "Display name field label")
+      }
+    #else
+      HStack {
+        Text("Name", comment: "Display name field label")
+        Spacer()
+        HStack {
+          TextField(text: $soundName) {
+            Text("Sound Name", comment: "Sound name text field placeholder")
+          }
+          .multilineTextAlignment(.trailing)
+          .textFieldStyle(.plain)
           .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
               Spacer()
@@ -48,21 +80,21 @@ extension CleanSoundSheetForm {
               }
             }
           }
-        #endif
 
-        if !soundName.isEmpty {
-          Button {
-            soundName = ""
-          } label: {
-            Image(systemName: "xmark.circle.fill")
-              .foregroundColor(.secondary)
-              .imageScale(.small)
+          if !soundName.isEmpty {
+            Button {
+              soundName = ""
+            } label: {
+              Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.secondary)
+                .imageScale(.small)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Clear Name")
           }
-          .buttonStyle(.plain)
-          .accessibilityLabel("Clear Name")
         }
       }
-    }
+    #endif
   }
 
   @ViewBuilder
@@ -86,14 +118,34 @@ extension CleanSoundSheetForm {
 
   @ViewBuilder
   var aboutRow: some View {
-    if let currentSound = getCurrentSound() {
-      NavigationLink(destination: SoundAboutSheet(sound: currentSound)) {
-        HStack {
-          Text("About & Sharing", comment: "About and sharing button label")
-          Spacer()
+    #if os(macOS)
+      // No NavigationStack wraps the macOS sheet, so present About as its own
+      // sheet rather than a (dead) NavigationLink.
+      if getCurrentSound() != nil {
+        Button {
+          showingAboutSheet = true
+        } label: {
+          HStack {
+            Text("About & Sharing", comment: "About and sharing button label")
+            Spacer()
+            Image(systemName: "chevron.right")
+              .font(.caption)
+              .foregroundStyle(.tertiary)
+          }
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+      }
+    #else
+      if let currentSound = getCurrentSound() {
+        NavigationLink(destination: SoundAboutSheet(sound: currentSound)) {
+          HStack {
+            Text("About & Sharing", comment: "About and sharing button label")
+            Spacer()
+          }
         }
       }
-    }
+    #endif
   }
 
   private func getCurrentSound() -> Sound? {
@@ -109,24 +161,52 @@ extension CleanSoundSheetForm {
   var actionSection: some View {
     if shouldShowActionSection {
       Section {
-        if case .edit = mode {
-          Button(action: { showingResetConfirmation = true }) {
-            HStack {
+        #if os(macOS)
+          // Full-width borderless rows; a default Button in a grouped form
+          // renders as a cramped bordered pill.
+          if case .edit = mode {
+            Button {
+              showingResetConfirmation = true
+            } label: {
               Text("Reset to Defaults")
-                .foregroundColor(.accentColor)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .foregroundStyle(globalSettings.customAccentColor ?? .accentColor)
           }
-        }
 
-        // Delete button for custom sounds
-        if case .edit(let sound) = mode, sound.isCustom {
-          Button(action: { showingDeleteConfirmation = true }) {
-            HStack {
+          if case .edit(let sound) = mode, sound.isCustom {
+            Button {
+              showingDeleteConfirmation = true
+            } label: {
               Text("Delete Sound")
-                .foregroundColor(.red)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.red)
+          }
+        #else
+          if case .edit = mode {
+            Button(action: { showingResetConfirmation = true }) {
+              HStack {
+                Text("Reset to Defaults")
+                  .foregroundColor(.accentColor)
+              }
             }
           }
-        }
+
+          // Delete button for custom sounds
+          if case .edit(let sound) = mode, sound.isCustom {
+            Button(action: { showingDeleteConfirmation = true }) {
+              HStack {
+                Text("Delete Sound")
+                  .foregroundColor(.red)
+              }
+            }
+          }
+        #endif
       }
     }
   }

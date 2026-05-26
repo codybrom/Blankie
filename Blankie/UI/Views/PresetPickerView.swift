@@ -363,29 +363,31 @@ struct PresetPickerView: View {
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif
-      .toolbar {
-        ToolbarItem(placement: .topBarLeading) {
-          Button("Close") { dismiss() }
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-          if presetManager.hasCustomPresets {
-            Button {
-              isEditMode.toggle()
-            } label: {
-              Text(isEditMode ? "Done" : "Edit", comment: "Edit mode toggle button")
+      #if os(iOS)
+        .toolbar {
+          ToolbarItem(placement: .topBarLeading) {
+            Button("Close") { dismiss() }
+          }
+          ToolbarItem(placement: .topBarTrailing) {
+            if presetManager.hasCustomPresets {
+              Button {
+                isEditMode.toggle()
+              } label: {
+                Text(isEditMode ? "Done" : "Edit", comment: "Edit mode toggle button")
+              }
+            }
+          }
+          ToolbarItem(placement: .topBarTrailing) {
+            if !isEditMode {
+              Button {
+                showingNewPresetSheet = true
+              } label: {
+                Label("New Preset", systemImage: "plus")
+              }
             }
           }
         }
-        ToolbarItem(placement: .topBarTrailing) {
-          if !isEditMode {
-            Button {
-              showingNewPresetSheet = true
-            } label: {
-              Label("New Preset", systemImage: "plus")
-            }
-          }
-        }
-      }
+      #endif
       #if os(iOS)
         .environment(\.editMode, .constant(isEditMode ? EditMode.active : EditMode.inactive))
       #endif

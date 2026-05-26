@@ -12,6 +12,11 @@ struct SoundIcon: View {
   @ObservedObject var sound: Sound
   @ObservedObject var globalSettings = GlobalSettings.shared
   @ObservedObject var audioManager = AudioManager.shared
+  #if os(macOS)
+    // macOS honors the current preset's accent (see `accentColor`); observe the
+    // manager so the grid re-tints when the active preset's color changes.
+    @ObservedObject var presetManager = PresetManager.shared
+  #endif
   @Environment(\.colorScheme) private var colorScheme
   let maxWidth: CGFloat
 
@@ -66,7 +71,12 @@ struct SoundIcon: View {
   }
 
   var accentColor: Color {
-    globalSettings.customAccentColor ?? .accentColor
+    #if os(macOS)
+      // Prefer the active preset's accent, falling back to the global setting.
+      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    #else
+      globalSettings.customAccentColor ?? .accentColor
+    #endif
   }
 
   var iconColor: Color {
@@ -113,7 +123,10 @@ struct SoundIcon: View {
     return weightedFont
   }
 
-  var body: some View {
+  /// Icon circle + name label as one group (the inner icon keeps its
+  /// tap-to-toggle). In the macOS grid the reorder gesture is attached by the
+  /// enclosing `SortableGridView` cell, not here.
+  private var iconAndLabel: some View {
     VStack(spacing: configuration.spacing) {
       ZStack {
         Circle()
@@ -174,6 +187,15 @@ struct SoundIcon: View {
           .foregroundColor(.primary)
           .contentShape(Rectangle())
       }
+    }
+  }
+
+  var body: some View {
+    VStack(spacing: configuration.spacing) {
+      // Icon + label are the reorder drag region (large hit area, tap still
+      // toggles); the slider below is intentionally outside it so a reorder
+      // drag never hijacks the slider's gesture.
+      iconAndLabel
 
       Slider(
         value: Binding(

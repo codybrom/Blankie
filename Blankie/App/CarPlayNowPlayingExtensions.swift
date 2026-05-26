@@ -5,7 +5,10 @@
 //  Created by Cody Bromley on 9/20/25.
 //
 
-#if CARPLAY_ENABLED
+// `canImport(CarPlay)` keeps this out of the macOS build: CarPlay ships only on
+// iOS, so even when CARPLAY_ENABLED is defined the `import CarPlay` must not be
+// parsed where the framework doesn't exist.
+#if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
   import MediaPlayer

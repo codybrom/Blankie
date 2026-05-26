@@ -235,12 +235,18 @@ extension AudioManager {
     var savedState: [String: (isSelected: Bool, volume: Float)] = [:]
 
     for sound in customSoundsToRemove {
-      // Save the current state before removal
+      // Save the current state before removal so it can be restored onto the
+      // new instance.
       savedState[sound.fileName] = (isSelected: sound.isSelected, volume: sound.volume)
 
-      if sound.isSelected {
-        sound.pause(immediate: true)
-      }
+      // Stop and deselect unconditionally. This instance is leaving `sounds`
+      // but may still be retained (a grid tile, or a pending auto-play closure
+      // from `Sound.isSelected.didSet`). If we leave it selected, that closure
+      // can call `play()` on it after removal — and since it is no longer in
+      // `sounds`, nothing (pauseAll / disable loop / updatePlayingSounds) can
+      // ever stop it. Clearing `isSelected` also makes those closures no-op.
+      sound.pause(immediate: true)
+      sound.isSelected = false
     }
     sounds.removeAll(where: { $0.isCustom })
 

@@ -44,36 +44,104 @@ struct SoundSelectionView: View {
     selectedSounds.removeAll()
   }
 
-  private func soundRowContent(for sound: Sound) -> some View {
-    HStack(spacing: 12) {
-      let isRowSelected = selectedSounds.contains(sound.fileName)
+  #if os(macOS)
+    var body: some View {
+      VStack(spacing: 0) {
+        // Hint header: make it obvious this is a tap-to-toggle multi-select.
+        HStack {
+          Text("Tap a sound to add or remove it from this preset", comment: "Sound selection hint")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+          Spacer()
+          Text("\(selectedSounds.count) selected", comment: "Selected sounds count")
+            .font(.callout.weight(.medium))
+            .foregroundStyle(.secondary)
+            .monospacedDigit()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
 
-      Image(systemName: sound.systemIconName)
-        .foregroundColor(isRowSelected ? .accentColor : .white)
-        .frame(width: 20)
+        Divider()
 
-      Text(sound.title)
-
-      Spacer()
-
-      Image(systemName: isRowSelected ? "checkmark" : "")
-        .foregroundStyle(.accent)
-    }
-  }
-
-  var body: some View {
-    List {
-      ForEach(orderedSounds, id: \.id) { sound in
-        soundRowContent(for: sound)
-          .contentShape(Rectangle())
-          .onTapGesture {
-            handleSoundToggle(sound)
+        ScrollView {
+          LazyVStack(spacing: 0) {
+            ForEach(orderedSounds, id: \.id) { sound in
+              macRow(for: sound)
+              if sound.id != orderedSounds.last?.id {
+                Divider().padding(.leading, 52)
+              }
+            }
           }
+        }
+      }
+      .frame(minWidth: 380, minHeight: 440)
+      .navigationTitle("Sounds")
+      .toolbar {
+        ToolbarItem(placement: .primaryAction) {
+          Button("Clear All") { handleClearAll() }
+            .disabled(selectedSounds.isEmpty)
+        }
       }
     }
-    .listStyle(.plain)
-    .navigationTitle("Sounds")
-    #if os(iOS)
+
+    private func macRow(for sound: Sound) -> some View {
+      let isSelected = selectedSounds.contains(sound.fileName)
+      return Button {
+        handleSoundToggle(sound)
+      } label: {
+        HStack(spacing: 12) {
+          Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+            .font(.title3)
+            .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+            .frame(width: 24)
+
+          Image(systemName: sound.systemIconName)
+            .font(.body)
+            .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+            .frame(width: 22)
+
+          Text(sound.title)
+            .foregroundStyle(.primary)
+
+          Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
+        .background(isSelected ? AnyShapeStyle(.tint.opacity(0.12)) : AnyShapeStyle(.clear))
+      }
+      .buttonStyle(.plain)
+    }
+  #else
+    private func soundRowContent(for sound: Sound) -> some View {
+      HStack(spacing: 12) {
+        let isRowSelected = selectedSounds.contains(sound.fileName)
+
+        Image(systemName: sound.systemIconName)
+          .foregroundColor(isRowSelected ? .accentColor : .white)
+          .frame(width: 20)
+
+        Text(sound.title)
+
+        Spacer()
+
+        Image(systemName: isRowSelected ? "checkmark" : "")
+          .foregroundStyle(.accent)
+      }
+    }
+
+    var body: some View {
+      List {
+        ForEach(orderedSounds, id: \.id) { sound in
+          soundRowContent(for: sound)
+            .contentShape(Rectangle())
+            .onTapGesture {
+              handleSoundToggle(sound)
+            }
+        }
+      }
+      .listStyle(.plain)
+      .navigationTitle("Sounds")
       .navigationBarTitleDisplayMode(.inline)
       .navigationBarItems(
         trailing: Button("Clear All") {
@@ -81,15 +149,6 @@ struct SoundSelectionView: View {
         }
         .disabled(selectedSounds.isEmpty)
       )
-    #else
-      .toolbar {
-        ToolbarItem(placement: .primaryAction) {
-          Button("Clear All") {
-            handleClearAll()
-          }
-          .disabled(selectedSounds.isEmpty)
-        }
-      }
-    #endif
-  }
+    }
+  #endif
 }

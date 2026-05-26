@@ -12,6 +12,10 @@ class AppState: ObservableObject {
 
   @Published var isAboutViewPresented = false
   @Published var hideInactiveSounds = false
+  /// Drives the macOS "Manage Sounds" sheet from the toolbar menu.
+  @Published var showingManageSounds = false
+  /// Drives the macOS menu-bar import file picker (ContentView hosts it).
+  @Published var showingImport = false
 
   private init() {
     hideInactiveSounds = UserDefaults.standard.bool(forKey: "hideInactiveSounds")

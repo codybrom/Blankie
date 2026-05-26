@@ -32,7 +32,11 @@ extension EditPresetSheet {
       // Name field
       LabeledContent("Name") {
         TextField("Required", text: $presetName)
-          .multilineTextAlignment(.trailing)
+          #if os(iOS)
+            // Trailing alignment looks right on iOS; on macOS it renders the
+            // prompt and value at the same time, so leave the default there.
+            .multilineTextAlignment(.trailing)
+          #endif
           .onChange(of: presetName) { _, _ in
             applyChangesInstantly()
           }
@@ -42,7 +46,9 @@ extension EditPresetSheet {
       if !preset.isDefault {
         LabeledContent("Creator") {
           TextField("Optional", text: $creatorName)
-            .multilineTextAlignment(.trailing)
+            #if os(iOS)
+              .multilineTextAlignment(.trailing)
+            #endif
             .onChange(of: creatorName) { _, _ in
               applyChangesInstantly()
             }
@@ -67,28 +73,37 @@ extension EditPresetSheet {
   var visualsSection: some View {
     Section("Appearance") {
       // Per-preset view mode: Default falls back to the app-wide setting.
-      Picker(
-        "View Mode",
-        selection: Binding<PresetViewModeSelection>(
-          get: { PresetViewModeSelection(viewModeOverride) },
-          set: { viewModeOverride = $0.asOptional }
-        )
-      ) {
-        Text("Default", comment: "Follow app-wide view-mode setting").tag(
-          PresetViewModeSelection.useDefault)
-        Text("Grid", comment: "Tile/grid view mode").tag(PresetViewModeSelection.grid)
-        Text("List", comment: "List view mode").tag(PresetViewModeSelection.list)
-      }
-      .onChange(of: viewModeOverride) { _, _ in
-        applyChangesInstantly()
-      }
+      // macOS has a single grid layout, so the override is meaningless there.
+      #if !os(macOS)
+        Picker(
+          "View Mode",
+          selection: Binding<PresetViewModeSelection>(
+            get: { PresetViewModeSelection(viewModeOverride) },
+            set: { viewModeOverride = $0.asOptional }
+          )
+        ) {
+          Text("Default", comment: "Follow app-wide view-mode setting").tag(
+            PresetViewModeSelection.useDefault)
+          Text("Grid", comment: "Tile/grid view mode").tag(PresetViewModeSelection.grid)
+          Text("List", comment: "List view mode").tag(PresetViewModeSelection.list)
+        }
+        .onChange(of: viewModeOverride) { _, _ in
+          applyChangesInstantly()
+        }
+      #endif
 
       // Accent Color
       Toggle("Accent Color", isOn: $useCustomTheme)
 
       if useCustomTheme {
-        SpectrumColorPicker(selectedColor: $accentColor)
-          .padding(.vertical, 4)
+        #if os(macOS)
+          // macOS uses the circle swatches (no System swatch — the toggle above
+          // already handles the off state).
+          AccentColorCirclePicker(selectedColor: $accentColor, allowSystem: false)
+        #else
+          SpectrumColorPicker(selectedColor: $accentColor)
+            .padding(.vertical, 4)
+        #endif
       }
 
       // Artwork field
@@ -121,46 +136,52 @@ extension EditPresetSheet {
       // Background blur override. Off = follow the app-wide default; on reveals
       // a slider, mirroring the Accent Color toggle above. Persist the slider
       // only on drag-end so we don't run the full preset save on every frame.
-      Toggle("Custom Background Blur", isOn: $useCustomBlur)
-        .onChange(of: useCustomBlur) { _, _ in
-          applyChangesInstantly()
-        }
-
-      if useCustomBlur {
-        Slider(
-          value: $blurOverride,
-          in: 0...20,
-          step: 5,
-          label: {
-            Text("Background Blur", comment: "Accessibility label for background blur slider")
-          },
-          minimumValueLabel: {
-            // Small dot -> large dot encodes "less -> more" without text.
-            Image(systemName: "circle.fill")
-              .font(.system(size: 8))
-              .foregroundStyle(.secondary)
-              .accessibilityHidden(true)
-          },
-          maximumValueLabel: {
-            Image(systemName: "circle.fill")
-              .font(.system(size: 15))
-              .foregroundStyle(.secondary)
-              .accessibilityHidden(true)
-          },
-          onEditingChanged: { editing in
-            if !editing {
-              applyChangesInstantly()
-            }
+      // The macOS window doesn't use a blurred backdrop, so hide this there.
+      #if !os(macOS)
+        Toggle("Custom Background Blur", isOn: $useCustomBlur)
+          .onChange(of: useCustomBlur) { _, _ in
+            applyChangesInstantly()
           }
-        )
-        .padding(.vertical, 4)
-      }
 
-      AnimatedArtworkPicker(
-        artwork: $animatedArtwork,
-        staticArtworkPath: $staticArtworkPath,
-        onChange: { applyChangesInstantly() }
-      )
+        if useCustomBlur {
+          Slider(
+            value: $blurOverride,
+            in: 0...20,
+            step: 5,
+            label: {
+              Text("Background Blur", comment: "Accessibility label for background blur slider")
+            },
+            minimumValueLabel: {
+              // Small dot -> large dot encodes "less -> more" without text.
+              Image(systemName: "circle.fill")
+                .font(.system(size: 8))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            },
+            maximumValueLabel: {
+              Image(systemName: "circle.fill")
+                .font(.system(size: 15))
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            },
+            onEditingChanged: { editing in
+              if !editing {
+                applyChangesInstantly()
+              }
+            }
+          )
+          .padding(.vertical, 4)
+        }
+      #endif
+
+      // Animated artwork editing is iOS-only; hide it on macOS.
+      #if !os(macOS)
+        AnimatedArtworkPicker(
+          artwork: $animatedArtwork,
+          staticArtworkPath: $staticArtworkPath,
+          onChange: { applyChangesInstantly() }
+        )
+      #endif
     }
     .onChange(of: artworkData) { _, _ in
       applyChangesInstantly()
@@ -259,6 +280,10 @@ extension EditPresetSheet {
             }
             .buttonStyle(.plain)
           #else
+            // macOS has no editMode, so `.onMove` below is inert. Make each row
+            // drag-reorderable with onDrag/onDrop instead, carrying the row's
+            // index and routing through `moveSound` (which also persists).
+            let rowIndex = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }) ?? 0
             HStack(spacing: 12) {
               Image(systemName: sound.systemIconName)
                 .font(.title3)
@@ -269,8 +294,19 @@ extension EditPresetSheet {
                 .font(.body)
 
               Spacer()
+
+              Image(systemName: "line.3.horizontal")
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
             }
             .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .onDrag {
+              NSItemProvider(object: String(rowIndex) as NSString)
+            }
+            .onDrop(of: [.text], isTargeted: nil) { providers in
+              handleMacSoundDrop(providers, to: rowIndex)
+            }
           #endif
         }
         .onMove { from, to in
@@ -285,7 +321,9 @@ extension EditPresetSheet {
           .font(.caption)
       }
     }
-    .environment(\.editMode, .constant(.active))
+    #if os(iOS)
+      .environment(\.editMode, .constant(.active))
+    #endif
   }
 
   var orderedSelectedSounds: [Sound] {
@@ -312,6 +350,26 @@ extension EditPresetSheet {
     // Trigger UI update to save changes
     applyChangesInstantly(skipRefresh: true)
   }
+
+  #if os(macOS)
+    /// Reads the dragged row's index from the provider and reorders onto the
+    /// dropped-on row. Bridges the macOS drag-and-drop index pair into the
+    /// `move(fromOffsets:toOffset:)` semantics `moveSound` expects.
+    func handleMacSoundDrop(_ providers: [NSItemProvider], to destination: Int) -> Bool {
+      guard let provider = providers.first else { return false }
+      provider.loadObject(ofClass: NSString.self) { object, _ in
+        guard let string = object as? String, let source = Int(string) else { return }
+        DispatchQueue.main.async {
+          guard source != destination else { return }
+          // toOffset inserts *before* the index, so dropping below the source
+          // needs +1 to land after the target row.
+          let target = source < destination ? destination + 1 : destination
+          moveSound(from: IndexSet(integer: source), to: target)
+        }
+      }
+      return true
+    }
+  #endif
 }
 
 // MARK: - Delete Section

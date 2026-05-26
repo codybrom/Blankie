@@ -113,6 +113,23 @@ struct AppSetup {
       }
     #endif
 
+    // Load custom sounds and initialize PresetManager. This runs on every
+    // platform/scheme: it fires when a UI scene appears, which is the only
+    // trigger for macOS and the iOS *Universal* build. The CarPlay build also
+    // calls loadCustomSoundsWhenReady() from its AppDelegate to cover a
+    // headless CarPlay cold-start (no UI scene), so on that build a normal
+    // launch reaches this point twice. That overlap is safe because
+    // loadCustomSoundsWhenReady() is idempotent: its `hasLoadedCustomSounds`
+    // guard skips re-instantiating custom Sound objects (re-creating them
+    // would orphan the originals the active preset/UI still holds, leaving
+    // them playing with no way to stop them), while still (re-)initializing
+    // PresetManager. Without this call, PresetManager.isLoading never clears
+    // and the preset picker is stuck on "Loading Presets…". The model context
+    // was set just above, so the load can proceed immediately.
+    Task { @MainActor in
+      await AudioManager.shared.loadCustomSoundsWhenReady()
+    }
+
     // Configure TipKit for preset onboarding
     configureTipKit()
   }

@@ -1,12 +1,12 @@
 import Foundation
 
-#if canImport(FoundationModels)
+#if canImport(FoundationModels) && !os(macOS)
   import FoundationModels
 #endif
 
 /// Generates preset names using Apple's Foundation Models.
 public enum AIPresetNameGenerator {
-  #if canImport(FoundationModels)
+  #if canImport(FoundationModels) && !os(macOS)
     @Generable(description: "A short, memorable preset name")
     struct AIPresetName {
       @Guide(description: "2-4 word preset name based on mood and atmosphere")
@@ -16,7 +16,7 @@ public enum AIPresetNameGenerator {
 
   /// Checks if Foundation Models are available on this device.
   public static var isAvailable: Bool {
-    #if canImport(FoundationModels)
+    #if canImport(FoundationModels) && !os(macOS)
       let model = SystemLanguageModel(useCase: .general)
       return model.isAvailable && model.supportsLocale(Locale.current)
     #else
@@ -36,7 +36,7 @@ public enum AIPresetNameGenerator {
       return ""
     }
 
-    #if canImport(FoundationModels)
+    #if canImport(FoundationModels) && !os(macOS)
       // Initialize model for general content generation
       let model = SystemLanguageModel(useCase: .general)
 

@@ -42,8 +42,7 @@ import SwiftUI
                 showingAbout: $showingAbout,
                 showingShortcuts: .constant(false),
                 showingNewPresetPopover: .constant(false),
-                presetName: .constant(""),
-                showingSettings: .constant(false)
+                presetName: .constant("")
               )
 
               let hostingView = NSHostingView(rootView: contentView)
@@ -55,6 +54,13 @@ import SwiftUI
         }
         .disabled(hasWindow)
         .keyboardShortcut("n", modifiers: .command)
+
+        Divider()
+
+        Button("Import") {
+          appState.showingImport = true
+        }
+        .keyboardShortcut("i", modifiers: .command)
       }
 
       CommandGroup(after: .toolbar) {
@@ -65,30 +71,6 @@ import SwiftUI
           }
         }
         .keyboardShortcut("h", modifiers: [.control, .command])
-
-        Button(GlobalSettings.shared.showSoundNames ? "Hide Labels" : "Show Labels") {
-          withAnimation {
-            GlobalSettings.shared.setShowSoundNames(!GlobalSettings.shared.showSoundNames)
-          }
-        }
-        .keyboardShortcut("n", modifiers: [.control, .command])
-
-        Divider()
-
-        Menu("Icon Size") {
-          ForEach(IconSize.allCases, id: \.self) { size in
-            Button(size.label) {
-              withAnimation {
-                GlobalSettings.shared.setIconSize(size)
-              }
-            }
-            .keyboardShortcut(
-              size == .small ? "1" : size == .medium ? "2" : "3",
-              modifiers: [.control, .command]
-            )
-            .disabled(GlobalSettings.shared.iconSize == size)
-          }
-        }
       }
 
       // Add Help menu command

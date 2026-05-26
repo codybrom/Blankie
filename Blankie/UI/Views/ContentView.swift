@@ -23,184 +23,139 @@ import UniformTypeIdentifiers
     @State private var showingVolumePopover = false
     @State private var showingColorPicker = false
     @State private var showingPreferences = false
-    @State private var isDragTargeted = false
-    @StateObject private var dropzoneManager = DropzoneManager()
 
-    // Use appState.hideInactiveSounds and visibility filtering
     private var filteredSounds: [Sound] {
-      let visibleSounds = audioManager.getVisibleSounds()
-      return visibleSounds.filter { sound in
-        !appState.hideInactiveSounds || sound.isSelected
+      let visible = audioManager.getVisibleSounds().filter { sound in
+        // A custom preset shows only its own sounds.
+        // The default preset (or no preset) shows all sounds.
+        let inCurrentPreset: Bool
+        if let preset = presetManager.currentPreset, !preset.isDefault {
+          inCurrentPreset = preset.soundStates.contains { $0.fileName == sound.fileName }
+        } else {
+          inCurrentPreset = true
+        }
+        return inCurrentPreset && (!appState.hideInactiveSounds || sound.isSelected)
       }
+
+      // Sort by the active order so the grid is stable and reorders persist
+      // across launches (mirrors iOS MixerView). A custom preset uses its own
+      // `soundOrder`; otherwise the global `defaultSoundOrder`.
+      let order: [String]
+      if let preset = presetManager.currentPreset, !preset.isDefault,
+        let soundOrder = preset.soundOrder
+      {
+        order = soundOrder
+      } else {
+        order = audioManager.defaultSoundOrder
+      }
+      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+      return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
     }
 
     var textColor: Color {
       audioManager.isGloballyPlaying ? .primary : .secondary
     }
 
-    // Define constant sizes based on icon size preference
-    private var itemWidth: CGFloat {
-      switch globalSettings.iconSize {
-      case .small:
-        return 100
-      case .medium:
-        return 120
-      case .large:
-        return 150
-      }
-    }
-
-    private var minimumSpacing: CGFloat {
-      switch globalSettings.iconSize {
-      case .small:
-        return 8
-      case .medium:
-        return 10
-      case .large:
-        return 12
-      }
-    }
-
-    private var hideShowButton: some View {
-      Button(action: {
-        withAnimation {
-          appState.hideInactiveSounds.toggle()
-          UserDefaults.standard.set(appState.hideInactiveSounds, forKey: "hideInactiveSounds")
-        }
-      }) {
-        Image(systemName: appState.hideInactiveSounds ? "eye.slash" : "eye")
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: 20, height: 20)
-          .foregroundColor(.primary)
-      }
-      .buttonStyle(.borderless)
-      .help(appState.hideInactiveSounds ? "Show All Sounds" : "Hide Inactive Sounds")
+    /// Active accent: the current preset's color takes precedence over the
+    /// global setting, matching the grid tiles and iOS behavior.
+    private var activeAccent: Color {
+      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
     var body: some View {
-      ZStack {
-        VStack(spacing: 0) {
-          if !audioManager.isGloballyPlaying {
-            HStack {
-              Image(systemName: "pause.circle.fill")
-              Text("Playback Paused", comment: "Playback paused banner")
-                .font(.subheadline.weight(.medium))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
-            .background(.ultraThinMaterial)
-            .foregroundStyle(.secondary)
-          }
-          // Main content
-          GeometryReader { geometry in
-            ScrollView(.vertical, showsIndicators: true) {
-              LazyVGrid(
-                columns: calculateColumns(for: geometry.size.width),
-                spacing: minimumSpacing
-              ) {
-                ForEach(Array(filteredSounds.enumerated()), id: \.element.id) { index, sound in
-                  DraggableSoundIcon(
-                    sound: sound,
-                    maxWidth: itemWidth,
-                    dragIndex: index,
-                    onDrop: { sourceIndex in
-                      audioManager.moveVisibleSound(from: sourceIndex, to: index)
-                    }
-                  )
-                }
-              }
-              .padding()
-              .animation(.easeInOut, value: filteredSounds.count)
-            }
-            .frame(maxHeight: .infinity)
-          }
-
-          // App bar
-          VStack(spacing: 0) {
-            Rectangle()
-              .frame(height: 1)
-              .foregroundColor(Color.gray.opacity(0.2))
-
-            HStack(spacing: 24) {
-              // Timer button
-              CompactTimerButton()
-
-              // Volume button with popover
-              Button(action: {
-                showingVolumePopover.toggle()
-              }) {
-                Image(systemName: "speaker.wave.2.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 20, height: 20)
-                  .foregroundColor(.primary)
-              }
-              .buttonStyle(.borderless)
-              .popover(isPresented: $showingVolumePopover) {
-                VolumeControlsView(style: .popover)
-              }
-
-              // Play/Pause button
-              Button(action: {
-                audioManager.togglePlayback()
-              }) {
-                ZStack {
-                  Circle()
-                    .fill(
-                      globalSettings.customAccentColor?.opacity(0.2)
-                        ?? Color.accentColor.opacity(0.2)
-                    )
-                    .frame(width: 50, height: 50)
-
-                  Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 20, height: 20)
-                    .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-                    .contentTransition(
-                      .symbolEffect(
-                        .replace.magic(fallback: .downUp.byLayer), options: .nonRepeating
-                      )
-                    )
-                    .offset(x: audioManager.isGloballyPlaying ? 0 : 2)
-                }
-              }
-              .buttonStyle(.borderless)
-
-              // Color picker menu
-              Button(action: {
-                showingColorPicker.toggle()
-              }) {
-                Image(systemName: "paintpalette.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 20, height: 20)
-                  .foregroundColor(.primary)
-              }
-              .buttonStyle(.borderless)
-              .popover(isPresented: $showingColorPicker) {
-                ColorPickerView()
-                  .padding()
-              }
-
-              hideShowButton
-            }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
+      VStack(spacing: 0) {
+        if !audioManager.isGloballyPlaying {
+          HStack {
+            Image(systemName: "pause.circle.fill")
+            Text("Playback Paused", comment: "Playback paused banner")
+              .font(
+                Locale.current.identifier.hasPrefix("zh")
+                  ? .system(size: 16, weight: .medium, design: .rounded)
+                  : .system(.subheadline, design: .rounded))
           }
           .frame(maxWidth: .infinity)
-          .background(Color(NSColor.windowBackgroundColor).opacity(0.3))
+          .padding(.vertical, 6)
           .background(.ultraThinMaterial)
+          .foregroundStyle(.secondary)
         }
-        .background(.ultraThickMaterial)
-        .background(Color.black.opacity(0.25))
-        .dropzone(
-          manager: dropzoneManager,
-          isDragTargeted: $isDragTargeted,
-          globalSettings: globalSettings
+
+        // Main content: the shared long-press lift-and-reorder grid (same
+        // engine as iOS), with SoundIcon tiles.
+        MacSoundGridView(
+          sounds: filteredSounds,
+          onMove: { from, to in
+            moveSounds(from: from, to: to)
+          }
         )
-      } // End of ZStack
+        .padding()
+        .frame(maxHeight: .infinity)
+
+        // App bar
+        VStack(spacing: 0) {
+          Rectangle()
+            .frame(height: 1)
+            .foregroundColor(Color.gray.opacity(0.2))
+
+          HStack(spacing: 16) {
+            // Volume button with popover
+            Button(action: {
+              showingVolumePopover.toggle()
+            }) {
+              Image(systemName: "speaker.wave.2.fill")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 20, height: 20)
+                .foregroundColor(.primary)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityIdentifier("volumeButton")
+            .popover(isPresented: $showingVolumePopover, arrowEdge: .top) {
+              VolumePopoverView()
+            }
+
+            // Play/Pause button
+            Button(action: {
+              audioManager.togglePlayback()
+            }) {
+              ZStack {
+                Circle()
+                  .fill(activeAccent.opacity(0.2))
+                  .frame(width: 50, height: 50)
+
+                Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .frame(width: 20, height: 20)
+                  .foregroundColor(activeAccent)
+                  .offset(x: audioManager.isGloballyPlaying ? 0 : 2)
+              }
+            }
+            .buttonStyle(.borderless)
+
+            // Color picker menu
+            Button(action: {
+              showingColorPicker.toggle()
+            }) {
+              Image(systemName: "paintpalette.fill")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 20, height: 20)
+                .foregroundColor(.primary)
+            }
+            .buttonStyle(.borderless)
+            .popover(isPresented: $showingColorPicker) {
+              ColorPickerView()
+                .padding()
+            }
+          }
+          .padding(.vertical, 12)
+          .padding(.horizontal, 16)
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color(NSColor.windowBackgroundColor).opacity(0.3))
+        .background(.ultraThinMaterial)
+      }
+
       .ignoresSafeArea(.container, edges: .horizontal)
       .animation(.easeInOut(duration: 0.2), value: audioManager.isGloballyPlaying)
       .sheet(isPresented: $showingShortcuts) {
@@ -211,13 +166,25 @@ import UniformTypeIdentifiers
       .sheet(isPresented: $showingAbout) {
         AboutView()
       }
-      .sheet(
-        isPresented: $dropzoneManager.showingSoundSheet,
-        onDismiss: {
-          dropzoneManager.hideSheet()
+      .sheet(isPresented: $appState.showingManageSounds) {
+        NavigationStack {
+          SoundManagementView()
+            .toolbar {
+              ToolbarItem(placement: .cancellationAction) {
+                Button("Done") { appState.showingManageSounds = false }
+              }
+            }
         }
-      ) {
-        SoundSheet(mode: .add, preselectedFile: dropzoneManager.selectedFileURL)
+      }
+      // Menu-bar import (File ▸ Import Sound or Preset). Accepts audio and
+      // .blankie files; AudioFileImporter routes audio → add-sound sheet
+      // (presented by SharedAppModifiers) and .blankie → preset import.
+      .fileImporter(
+        isPresented: $appState.showingImport,
+        allowedContentTypes: [.audio, .mp3, .wav, .mpeg4Audio, .blankiePreset],
+        allowsMultipleSelection: false
+      ) { result in
+        handleMenuImport(result)
       }
       .onAppear {
         setupResetHandler()
@@ -237,61 +204,45 @@ import UniformTypeIdentifiers
       .modifier(AudioErrorHandler())
     }
 
-    private func calculateColumns(for availableWidth: CGFloat) -> [GridItem] {
-      let numberOfColumns = max(2, Int(availableWidth / (itemWidth + minimumSpacing)))
-      return Array(
-        repeating: GridItem(.fixed(itemWidth), spacing: minimumSpacing), count: numberOfColumns
-      )
-    }
-
     private func setupResetHandler() {
       audioManager.onReset = { @MainActor in
         showingVolumePopover = false
       }
     }
-  }
 
-  struct DraggableSoundIcon: View {
-    @ObservedObject var sound: Sound
-    let maxWidth: CGFloat
-    let dragIndex: Int
-    let onDrop: (Int) -> Void
+    /// Persist a grid reorder. `source`/`destination` are indices into the
+    /// displayed (`filteredSounds`) order, so we reorder that list of file names
+    /// and write the complete order back — to the current custom preset, or to
+    /// the global default order. Mirrors iOS `MixerView.moveItems`; the grid then
+    /// re-sorts from the persisted order. (The old path moved the full `sounds`
+    /// array using filtered-subset indices and never persisted, so it moved the
+    /// wrong sound and was lost on relaunch.)
+    private func moveSounds(from source: IndexSet, to destination: Int) {
+      var newOrder = filteredSounds.map(\.fileName)
+      newOrder.move(fromOffsets: source, toOffset: destination)
+      let displayed = Set(newOrder)
 
-    @State private var isDragging = false
-    @State private var dragOffset = CGSize.zero
-
-    var body: some View {
-      SoundIcon(sound: sound, maxWidth: maxWidth)
-        .scaleEffect(isDragging ? 1.05 : 1.0)
-        .offset(dragOffset)
-        .opacity(isDragging ? 0.8 : 1.0)
-        .contentShape(Rectangle())
-        .onDrag {
-          DispatchQueue.main.async {
-            isDragging = true
-          }
-          return NSItemProvider(object: "\(dragIndex)" as NSString)
+      if let preset = presetManager.currentPreset, !preset.isDefault {
+        // Keep any preset sounds not currently displayed (e.g. hidden) at the end.
+        var complete = newOrder
+        for state in preset.soundStates where !displayed.contains(state.fileName) {
+          complete.append(state.fileName)
         }
-        .onDrop(of: [.text], isTargeted: nil) { providers in
-          guard let provider = providers.first else { return false }
-
-          provider.loadObject(ofClass: NSString.self) { object, _ in
-            guard let sourceIndexString = object as? String,
-                  let sourceIndex = Int(sourceIndexString)
-            else { return }
-
-            DispatchQueue.main.async {
-              if sourceIndex != dragIndex {
-                onDrop(sourceIndex)
-              }
-              isDragging = false
-              dragOffset = .zero
-            }
-          }
-          return true
+        presetManager.updateCurrentPresetWithOrder(complete)
+      } else {
+        var complete = newOrder
+        for fileName in audioManager.defaultSoundOrder where !displayed.contains(fileName) {
+          complete.append(fileName)
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isDragging)
-        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: dragOffset)
+        audioManager.defaultSoundOrder = complete
+        UserDefaults.standard.set(complete, forKey: "defaultSoundOrder")
+        audioManager.objectWillChange.send()
+      }
+    }
+
+    private func handleMenuImport(_ result: Result<[URL], Error>) {
+      guard case .success(let urls) = result, let url = urls.first else { return }
+      AudioFileImporter.shared.handleIncomingFile(url)
     }
   }
 

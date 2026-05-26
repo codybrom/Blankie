@@ -133,6 +133,14 @@ struct EditPresetSheet: View {
       .onChange(of: useCustomTheme) { _, _ in
         applyChangesInstantly()
       }
+      #if os(macOS)
+        // macOS edits sounds via an inline NavigationLink (no sheet to close),
+        // so there's no dismiss event to apply on. Apply whenever the selection
+        // set changes instead. iOS keeps its sheet-close trigger below.
+        .onChange(of: selectedSounds) { _, _ in
+          applyChangesInstantly()
+        }
+      #endif
       #if os(iOS) || os(visionOS)
         .sheet(isPresented: $showingSoundSelection) {
           soundSelectionSheet
@@ -190,11 +198,21 @@ struct EditPresetSheet: View {
         orderedSounds: orderedSounds,
         editingPreset: preset
       )
-      .navigationBarItems(
-        leading: Button("Done") {
-          showingSoundSelection = false
+      #if os(iOS)
+        .navigationBarItems(
+          leading: Button("Done") {
+            showingSoundSelection = false
+          }
+        )
+      #else
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Done") {
+              showingSoundSelection = false
+            }
+          }
         }
-      )
+      #endif
       .navigationDestination(for: Sound.self) { sound in
         SoundSheet(mode: .edit(sound), embedInNavigation: false)
       }

@@ -27,7 +27,7 @@ struct SpectrumColorPicker: View {
   // Initialize slider value based on selected color
   private func updateSliderValue() {
     if let selectedColor = selectedColor,
-       let accentColor = spectrumColors.firstIndex(where: { $0.color == selectedColor })
+      let accentColor = spectrumColors.firstIndex(where: { $0.color == selectedColor })
     {
       sliderValue = Double(accentColor)
     } else {
@@ -73,12 +73,13 @@ struct SpectrumColorPicker: View {
       shape
         .fill(
           LinearGradient(
-            gradient: Gradient(colors: {
-              var colors = spectrumColors.compactMap { $0.color }
-              if let first = colors.first { colors.insert(first, at: 0) }
-              if let last = colors.last { colors.append(last) }
-              return colors
-            }()),
+            gradient: Gradient(
+              colors: {
+                var colors = spectrumColors.compactMap { $0.color }
+                if let first = colors.first { colors.insert(first, at: 0) }
+                if let last = colors.last { colors.append(last) }
+                return colors
+              }()),
             startPoint: .leading,
             endPoint: .trailing
           )
@@ -108,7 +109,10 @@ struct SpectrumColorPicker: View {
     // Base shadow for depth
     .shadow(color: .black.opacity(0.14), radius: 8, x: 0, y: 4)
     // Color glow while dragging
-    .shadow(color: (currentColor.color ?? .blue).opacity(isDragging ? 0.55 : 0), radius: isDragging ? 18 : 0, x: 0, y: 0)
+    .shadow(
+      color: (currentColor.color ?? .blue).opacity(isDragging ? 0.55 : 0),
+      radius: isDragging ? 18 : 0, x: 0, y: 0
+    )
     .animation(.easeInOut(duration: 0.18), value: isDragging)
   }
 
@@ -139,52 +143,67 @@ struct SpectrumColorPicker: View {
     }
   }
 
+  // Base slider: native tick marks on OSes that support them, plain slider otherwise.
+  @ViewBuilder
+  private var baseSlider: some View {
+    if #available(macOS 26.0, *) {
+      Slider(
+        value: $sliderValue,
+        in: 0...Double(spectrumColors.count - 1)
+      ) {
+        Text("Accent Color")
+      } ticks: {
+        SliderTickContentForEach(
+          stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
+          id: \.self
+        ) { value in
+          SliderTick(value)
+        }
+      }
+    } else {
+      Slider(
+        value: $sliderValue,
+        in: 0...Double(spectrumColors.count - 1)
+      ) {
+        Text("Accent Color")
+      }
+    }
+  }
+
   // Color slider with ticks
   @ViewBuilder
   private var slider: some View {
-    Slider(
-      value: $sliderValue,
-      in: 0 ... Double(spectrumColors.count - 1)
-    ) {
-      Text("Accent Color")
-    } ticks: {
-      SliderTickContentForEach(
-        stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
-        id: \.self
-      ) { value in
-        SliderTick(value)
+    baseSlider
+      .onChange(of: sliderValue) { _, newValue in
+        handleSliderValueChange(newValue)
       }
-    }
-    .onChange(of: sliderValue) { _, newValue in
-      handleSliderValueChange(newValue)
-    }
-    .tint(.clear)
-    .frame(height: 44)
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 0)
-        .onChanged { _ in
-          if !isDragging {
-            isDragging = true
-            currentColorName = currentColor.name
-            withAnimation(.easeIn(duration: 0.2)) {
-              showingChip = true
+      .tint(.clear)
+      .frame(height: 44)
+      .simultaneousGesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { _ in
+            if !isDragging {
+              isDragging = true
+              currentColorName = currentColor.name
+              withAnimation(.easeIn(duration: 0.2)) {
+                showingChip = true
+              }
             }
           }
-        }
-        .onEnded { _ in
-          isDragging = false
-          selectedColor = currentColor.color
-          withAnimation(.easeOut(duration: 0.2)) {
-            showingChip = false
-          }
+          .onEnded { _ in
+            isDragging = false
+            selectedColor = currentColor.color
+            withAnimation(.easeOut(duration: 0.2)) {
+              showingChip = false
+            }
 
-          #if os(iOS)
-            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-            impactFeedback.prepare()
-            impactFeedback.impactOccurred()
-          #endif
-        }
-    )
+            #if os(iOS)
+              let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+              impactFeedback.prepare()
+              impactFeedback.impactOccurred()
+            #endif
+          }
+      )
   }
 
   // Track overlay view
@@ -218,7 +237,7 @@ struct SpectrumColorPicker: View {
         slider
       }
       .frame(height: 44)
-      .padding(.horizontal, 20) // Match padding with other form elements
+      .padding(.horizontal, 20)  // Match padding with other form elements
     }
     .frame(height: 44)
     .onAppear {
@@ -279,5 +298,9 @@ struct SpectrumColorPicker: View {
     Spacer()
   }
   .padding()
-  .background(Color(.systemGroupedBackground))
+  #if os(macOS)
+    .background(Color(nsColor: .windowBackgroundColor))
+  #else
+    .background(Color(.systemGroupedBackground))
+  #endif
 }

@@ -5,7 +5,7 @@
 //  Created by Assistant on 12/21/24.
 //
 
-#if CARPLAY_ENABLED
+#if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
   import SwiftUI

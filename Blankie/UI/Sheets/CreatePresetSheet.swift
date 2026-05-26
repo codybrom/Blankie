@@ -40,7 +40,10 @@ struct CreatePresetSheet: View {
         errorSection
         creatorSection
         artworkSection
-        animatedArtworkSection
+        // Animated artwork editing is iOS-only; hide the section on macOS.
+        #if !os(macOS)
+          animatedArtworkSection
+        #endif
         soundsSection
       }
       .navigationTitle("New Preset")
@@ -220,7 +223,7 @@ extension CreatePresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: nil
           )
         ) {
           HStack {

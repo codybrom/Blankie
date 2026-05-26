@@ -39,6 +39,9 @@ struct SoundAboutSheet: View {
       // Combined Details Section
       detailsSection
     }
+    #if os(macOS)
+      .formStyle(.grouped)
+    #endif
     .navigationTitle("About \(sound.title)")
     #if !os(macOS)
       .navigationBarTitleDisplayMode(.inline)

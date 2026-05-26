@@ -148,6 +148,7 @@
 				F913505D2D233A43003C85BE /* Resources */,
 				F921EDC02D27408E00D4F3D3 /* Run Script */,
 				F9C0AF052E0DAF7000E4530D /* Frameworks */,
+				B1A5500DEC0FFEE0DEADBEEF /* Opt macOS out of Liquid Glass */,
 			);
 			buildRules = (
 			);
@@ -297,6 +298,22 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		B1A5500DEC0FFEE0DEADBEEF /* Opt macOS out of Liquid Glass */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			name = "Opt macOS out of Liquid Glass";
+			shellPath = /bin/sh;
+			shellScript = (
+				"# The macOS app uses the legacy (pre-Liquid Glass) appearance to match the",
+				"# original macOS design; iOS keeps Liquid Glass. UIDesignRequiresCompatibility",
+				"# isn't a curated INFOPLIST_KEY and the Info.plist is shared with iOS, so inject",
+				"# it into the built Info.plist for macOS builds only.",
+				"if [ \"${PLATFORM_NAME}\" = \"macosx\" ] && [ -f \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\" ]; then",
+				"  /usr/bin/plutil -replace UIDesignRequiresCompatibility -bool true \"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"",
+				"fi",
+				"",
+			);
+		};
 		F921EDC02D27408E00D4F3D3 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -747,7 +764,8 @@
 				MARKETING_VERSION = 1.1.0;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
 				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
-				OTHER_SWIFT_FLAGS = "-DCARPLAY_ENABLED";
+				"OTHER_SWIFT_FLAGS[sdk=iphoneos*]" = "-DCARPLAY_ENABLED";
+				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-DCARPLAY_ENABLED";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -928,7 +946,8 @@
 				MARKETING_VERSION = 1.1.0;
 				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
 				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
-				"OTHER_SWIFT_FLAGS[arch=*]" = "-DCARPLAY_ENABLED";
+				"OTHER_SWIFT_FLAGS[sdk=iphoneos*]" = "-DCARPLAY_ENABLED";
+				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-DCARPLAY_ENABLED";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";

@@ -14,6 +14,9 @@ class AudioFileImporter: ObservableObject {
 
   @Published var showingSoundSheet = false
   @Published var fileToImport: URL?
+  /// True while a preset archive is being imported (no sheet covers this, so a
+  /// global indicator does). Audio imports are covered by the add-sound sheet.
+  @Published var isProcessingImport = false
 
   func handleIncomingFile(_ url: URL) {
     // Handle direct file imports via URL scheme or document picker
@@ -72,7 +75,9 @@ class AudioFileImporter: ObservableObject {
   }
 
   private func handleBlankiePresetImport(_ url: URL) {
+    isProcessingImport = true
     Task {
+      defer { isProcessingImport = false }
       do {
         let preset = try await PresetImporter.shared.importArchive(from: url)
         debugLog("📦 AudioFileImporter: Successfully imported preset '\(preset.name)'")

@@ -3,7 +3,7 @@
 //  Blankie
 //
 
-#if CARPLAY_ENABLED
+#if CARPLAY_ENABLED && canImport(CarPlay)
 
   import Combine
   import Foundation

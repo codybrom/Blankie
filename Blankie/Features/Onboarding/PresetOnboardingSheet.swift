@@ -2,7 +2,7 @@
 //  PresetOnboardingSheet.swift
 //  Blankie
 //
-//  Created by Claude Code
+//  Created by Cody Bromley on 10/23/25.
 //
 
 import SwiftUI
@@ -48,14 +48,18 @@ struct PresetOnboardingSheet: View {
                 .tag(index)
             }
           }
-          .tabViewStyle(.page(indexDisplayMode: .never))
+          #if !os(macOS)
+            .tabViewStyle(.page(indexDisplayMode: .never))
+          #endif
           .animation(.easeInOut, value: currentStep)
 
           // Navigation buttons
           navigationButtons
         }
       }
-      .navigationBarHidden(true)
+      #if !os(macOS)
+        .navigationBarHidden(true)
+      #endif
       .onChange(of: currentStep) { _, newStep in
         // Stop sound previews when leaving sound selection step
         if newStep != 2 {  // step 2 is selectSounds

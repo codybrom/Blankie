@@ -49,8 +49,7 @@ struct BlankieApp: App {
           showingAbout: $showingAbout,
           showingShortcuts: $showingShortcuts,
           showingNewPresetPopover: $showingNewPresetPopover,
-          presetName: $presetName,
-          showingSettings: .constant(false)
+          presetName: $presetName
         )
         .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -132,8 +131,7 @@ struct BlankieApp: App {
                 showingAbout: .constant(false),
                 showingShortcuts: .constant(false),
                 showingNewPresetPopover: .constant(false),
-                presetName: .constant(""),
-                showingSettings: .constant(false)
+                presetName: .constant("")
               )
               .frame(width: 450, height: 450)
             #else

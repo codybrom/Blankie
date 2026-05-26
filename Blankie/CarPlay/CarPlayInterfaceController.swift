@@ -5,7 +5,7 @@
 // Created by Cody Bromley on 6/7/25.
 //
 
-#if CARPLAY_ENABLED
+#if CARPLAY_ENABLED && canImport(CarPlay)
 
   @preconcurrency import CarPlay
   import Combine

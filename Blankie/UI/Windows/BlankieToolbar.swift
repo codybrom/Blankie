@@ -13,8 +13,6 @@ import SwiftUI
     @Binding var showingShortcuts: Bool
     @Binding var showingNewPresetPopover: Bool
     @Binding var presetName: String
-    @State private var showingImportSoundSheet = false
-    @State private var showingSoundManagement = false
 
     @ObservedObject private var appState = AppState.shared
     @StateObject private var audioManager = AudioManager.shared
@@ -29,10 +27,8 @@ import SwiftUI
 
       ToolbarItem(placement: .primaryAction) {
         Menu {
-          Button {
-            showingSoundManagement = true
-          } label: {
-            Text("Manage Sounds", comment: "Menu item to manage sounds")
+          Button("Manage Sounds") {
+            appState.showingManageSounds = true
           }
           .keyboardShortcut("o", modifiers: .command)
 
@@ -43,7 +39,7 @@ import SwiftUI
             }
           } label: {
             HStack {
-              Text("Hide Inactive Sounds", comment: "Toggle to hide sounds that are not active")
+              Text("Hide Inactive Sounds")
               if appState.hideInactiveSounds {
                 Spacer()
                 Image(systemName: "checkmark")
@@ -52,49 +48,28 @@ import SwiftUI
           }
           .keyboardShortcut("h", modifiers: [.control, .command])
 
-          Button {
-            withAnimation {
-              GlobalSettings.shared.setShowSoundNames(!GlobalSettings.shared.showSoundNames)
-            }
-          } label: {
-            HStack {
-              Text("Show Labels", comment: "Toggle to show/hide labels")
-              if GlobalSettings.shared.showSoundNames {
-                Spacer()
-                Image(systemName: "checkmark")
-              }
-            }
-          }
-          .keyboardShortcut("n", modifiers: [.control, .command])
-
           Divider()
 
-          Button {
+          Button("About Blankie") {
             showingAbout = true
             appState.isAboutViewPresented = true
-          } label: {
-            Text("About Blankie", comment: "Menu item to show about window")
           }
 
-          Button {
+          Button("Keyboard Shortcuts") {
             showingShortcuts = true
-          } label: {
-            Text("Keyboard Shortcuts", comment: "Menu item to show keyboard shortcuts")
           }
           .keyboardShortcut("?", modifiers: [.command, .shift])
 
           SettingsLink {
-            Text("Preferences", comment: "Preferences menu item")
+            Text("Preferences...", comment: "Preferences menu item")
           }
           .keyboardShortcut(",", modifiers: .command)
 
           Divider()
 
-          Button {
+          Button("Quit Blankie") {
             audioManager.pauseAll()
             exit(0)
-          } label: {
-            Text("Quit Blankie", comment: "Menu item to quit the application")
           }
           .keyboardShortcut("q", modifiers: .command)
         } label: {
@@ -102,22 +77,6 @@ import SwiftUI
         }
         .menuIndicator(.hidden)
         .menuStyle(.borderlessButton)
-        .sheet(isPresented: $showingImportSoundSheet) {
-          SoundSheet(mode: .add)
-        }
-        .sheet(isPresented: $showingSoundManagement) {
-          NavigationStack {
-            SoundManagementView()
-              .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                  Button("Done") {
-                    showingSoundManagement = false
-                  }
-                }
-              }
-          }
-          .frame(width: 500, height: 600)
-        }
       }
     }
   }

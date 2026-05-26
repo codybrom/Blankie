@@ -27,6 +27,9 @@ struct CleanSoundSheetForm: View {
 
   @ObservedObject var globalSettings = GlobalSettings.shared
   @State var showingIconPicker = false
+  #if os(macOS)
+    @State var showingAboutSheet = false
+  #endif
 
   var body: some View {
     Form {
@@ -51,13 +54,36 @@ struct CleanSoundSheetForm: View {
       // Actions Section (Reset/Delete)
       actionSection
     }
+    #if os(macOS)
+      .formStyle(.grouped)
+    #endif
     .sheet(isPresented: $showingIconPicker) {
       NavigationStack {
         IconPickerView(selectedIcon: $selectedIcon)
       }
     }
     #if os(macOS)
-      .frame(minHeight: 500)
+      .sheet(isPresented: $showingAboutSheet) {
+        if let sound = currentSoundForAbout {
+          NavigationStack {
+            SoundAboutSheet(sound: sound)
+            .toolbar {
+              ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { showingAboutSheet = false }
+              }
+            }
+          }
+          .frame(minWidth: 420, minHeight: 480)
+        }
+      }
     #endif
   }
+
+  #if os(macOS)
+    /// The sound whose "About & Sharing" detail to present (edit mode only).
+    private var currentSoundForAbout: Sound? {
+      if case .edit(let sound) = mode { return sound }
+      return nil
+    }
+  #endif
 }

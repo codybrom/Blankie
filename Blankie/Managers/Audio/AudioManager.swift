@@ -69,6 +69,12 @@ class AudioManager: ObservableObject {
   var modelContext: ModelContext?
   var nowPlayingManager: NowPlayingManager!
   @MainActor var isInitializing = true
+  /// Set once custom sounds have been loaded from SwiftData. Guards against a
+  /// second full reload — on the CarPlay build both `IOSAppDelegate` and
+  /// `AppSetup` call `loadCustomSoundsWhenReady()`, and re-running the load
+  /// would re-instantiate custom `Sound` objects that the UI/preset still
+  /// references, orphaning the originals (which then can't be stopped).
+  @MainActor var hasLoadedCustomSounds = false
   var customSoundObserver: AnyCancellable?
   #if os(iOS) || os(visionOS)
     var audioSessionObserversSetup = false

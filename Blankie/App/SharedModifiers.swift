@@ -43,6 +43,15 @@ struct SharedAppModifiers: ViewModifier {
             audioFileImporter.clearImport()
           }
       }
+      #if os(macOS)
+        // Preset archive import is async with no sheet of its own, so show a
+        // global processing indicator while it runs.
+        .overlay {
+          if audioFileImporter.isProcessingImport {
+            SoundSheetProcessingOverlay(progressMessage: "Importing")
+          }
+        }
+      #endif
   }
 }
 

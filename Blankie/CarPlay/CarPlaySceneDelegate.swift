@@ -5,7 +5,7 @@
 // Created by Cody Bromley on 4/18/25.
 //
 
-#if CARPLAY_ENABLED
+#if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
   import Foundation

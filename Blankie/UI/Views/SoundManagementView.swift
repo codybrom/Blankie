@@ -86,11 +86,15 @@ struct SoundManagementView: View {
   }
 
   private var mainContentView: some View {
-    Form {
-      playbackSettingsSection
-      builtInSoundsSection
-      customSoundsSection
-    }
+    #if os(macOS)
+      macContent
+    #else
+      Form {
+        playbackSettingsSection
+        builtInSoundsSection
+        customSoundsSection
+      }
+    #endif
   }
 
   @ViewBuilder
@@ -206,6 +210,142 @@ struct SoundManagementView: View {
       }
     )
   }
+
+  #if os(macOS)
+    private var macAccent: Color {
+      globalSettings.customAccentColor ?? .accentColor
+    }
+
+    /// macOS layout: a roomy grouped list focused on sound management. The
+    /// global "Autoplay on Open" toggle lives in the parent Preferences window,
+    /// so it's intentionally omitted here.
+    private var macContent: some View {
+      List {
+        Section {
+          if customSounds.isEmpty {
+            macEmptyState
+          } else {
+            ForEach(customSounds) { sound in
+              macSoundRow(sound: sound, isCustom: true)
+            }
+          }
+        } header: {
+          macSectionHeader("Custom Sounds", count: customSounds.count)
+        } footer: {
+          Text(
+            "Import M4A, MP3, WAV, or other audio files to mix in your own sounds.",
+            comment: "Custom sounds section footer"
+          )
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        }
+
+        Section {
+          ForEach(builtInSounds) { sound in
+            macSoundRow(sound: sound, isCustom: false)
+          }
+        } header: {
+          macSectionHeader("Built-in Sounds", count: builtInSounds.count)
+        }
+      }
+      .listStyle(.inset)
+      .frame(minWidth: 540, minHeight: 560)
+    }
+
+    private func macSectionHeader(_ title: LocalizedStringKey, count: Int) -> some View {
+      HStack {
+        Text(title)
+        Spacer()
+        Text("\(count)")
+          .foregroundStyle(.secondary)
+          .monospacedDigit()
+      }
+      .font(.headline)
+    }
+
+    private func macSoundRow(sound: Sound, isCustom: Bool) -> some View {
+      HStack(spacing: 12) {
+        Image(systemName: sound.systemIconName)
+          .font(.title3)
+          .foregroundStyle(.secondary)
+          .frame(width: 26)
+
+        Text(
+          isCustom
+            ? LocalizedStringKey(stringLiteral: sound.title) : LocalizedStringKey(sound.title)
+        )
+        .foregroundStyle(.primary)
+
+        Spacer()
+
+        Button {
+          selectedSound = sound
+          showingEditSheet = true
+        } label: {
+          Image(systemName: "pencil")
+        }
+        .buttonStyle(.borderless)
+        .help(Text("Edit Sound", comment: "Tooltip for editing a sound"))
+        .accessibilityLabel(Text("Edit Sound", comment: "Tooltip for editing a sound"))
+
+        if isCustom {
+          Button {
+            selectedSound = sound
+            showingDeleteConfirmation = true
+          } label: {
+            Image(systemName: "trash")
+              .foregroundStyle(.red)
+          }
+          .buttonStyle(.borderless)
+          .help(Text("Delete Sound", comment: "Tooltip for deleting a sound"))
+          .accessibilityLabel(Text("Delete Sound", comment: "Tooltip for deleting a sound"))
+        }
+      }
+      .padding(.vertical, 4)
+      .contextMenu {
+        Button("Edit Sound", systemImage: "pencil") {
+          selectedSound = sound
+          showingEditSheet = true
+        }
+        if isCustom {
+          Button("Delete Sound", systemImage: "trash", role: .destructive) {
+            selectedSound = sound
+            showingDeleteConfirmation = true
+          }
+        }
+      }
+    }
+
+    private var macEmptyState: some View {
+      VStack(spacing: 12) {
+        Image(systemName: "waveform.circle")
+          .font(.system(size: 40))
+          .foregroundStyle(.secondary)
+
+        Text("No Custom Sounds", comment: "Empty state title for custom sounds")
+          .font(.headline)
+
+        Text(
+          "Import your own sounds to personalize your mix.",
+          comment: "Empty state description for custom sounds"
+        )
+        .foregroundStyle(.secondary)
+        .multilineTextAlignment(.center)
+        .font(.subheadline)
+
+        Button {
+          showingFilePicker = true
+        } label: {
+          Label("Import Sound", systemImage: "plus")
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(macAccent)
+        .padding(.top, 4)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 32)
+    }
+  #endif
 
   private func deleteSound(_ sound: Sound) {
     guard sound.isCustom,

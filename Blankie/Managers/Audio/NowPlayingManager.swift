@@ -143,7 +143,9 @@ final class NowPlayingManager {
       // CRITICAL: Load static artwork synchronously to avoid double-publishing
       // If we load async, the artwork loads after we publish, triggering a second update that restarts animated artwork
       await loadStaticArtworkSync(from: preset, fallbackArtworkId: artworkId)
-      updateAnimatedArtwork(for: preset)
+      #if os(iOS)
+        updateAnimatedArtwork(for: preset)
+      #endif
       lastPresetId = preset?.id
 
       // Full update when preset changes (only published once, after both artworks are ready)

@@ -14,11 +14,14 @@ struct EditableCreditsView: View {
 
   var body: some View {
     Group {
-      // Original Work Title
+      // Original Work Title.
+      // prompt + labelsHidden: on macOS a bare titleKey renders as a visible
+      // label next to the value; this keeps it a placeholder only (no-op on iOS).
       HStack {
         Text("Original Work")
         Spacer()
-        TextField("Title", text: $editableCredits.soundName)
+        TextField("Title", text: $editableCredits.soundName, prompt: Text("Title"))
+          .labelsHidden()
           .multilineTextAlignment(.trailing)
           .textFieldStyle(.plain)
           .foregroundColor(.secondary)
@@ -28,7 +31,8 @@ struct EditableCreditsView: View {
       HStack {
         Text("Author")
         Spacer()
-        TextField("Author name", text: $editableCredits.author)
+        TextField("Author name", text: $editableCredits.author, prompt: Text("Author name"))
+          .labelsHidden()
           .multilineTextAlignment(.trailing)
           .textFieldStyle(.plain)
           .foregroundColor(.secondary)
@@ -38,7 +42,8 @@ struct EditableCreditsView: View {
       HStack {
         Text("Source URL")
         Spacer()
-        TextField("https://...", text: $editableCredits.sourceUrl)
+        TextField("https://...", text: $editableCredits.sourceUrl, prompt: Text("https://..."))
+          .labelsHidden()
           .multilineTextAlignment(.trailing)
           .textFieldStyle(.plain)
           .foregroundColor(.secondary)
@@ -60,8 +65,10 @@ struct EditableCreditsView: View {
         VStack(alignment: .leading, spacing: 8) {
           Text("License Details")
           TextField(
-            "Describe the license terms", text: $editableCredits.customLicenseText, axis: .vertical
+            "Describe the license terms", text: $editableCredits.customLicenseText,
+            prompt: Text("Describe the license terms"), axis: .vertical
           )
+          .labelsHidden()
           .textFieldStyle(.plain)
           .foregroundColor(.secondary)
           .lineLimit(3...6)
@@ -69,13 +76,16 @@ struct EditableCreditsView: View {
           HStack {
             Text("License URL")
             Spacer()
-            TextField("https://...", text: $editableCredits.customLicenseUrl)
-              .multilineTextAlignment(.trailing)
-              .textFieldStyle(.plain)
-              .foregroundColor(.secondary)
-              #if !os(macOS)
-                .keyboardType(.URL)
-              #endif
+            TextField(
+              "https://...", text: $editableCredits.customLicenseUrl, prompt: Text("https://...")
+            )
+            .labelsHidden()
+            .multilineTextAlignment(.trailing)
+            .textFieldStyle(.plain)
+            .foregroundColor(.secondary)
+            #if !os(macOS)
+              .keyboardType(.URL)
+            #endif
           }
         }
       }

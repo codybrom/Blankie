@@ -39,8 +39,8 @@ struct SoundSheetMacOSLayout: View {
         Text(title)
           .font(.title2.bold())
       }
-      .padding(.top, 20)
-      .padding(.bottom, 16)
+      .padding(.top, 32)
+      .padding(.bottom, 18)
 
       Divider()
 
@@ -63,7 +63,6 @@ struct SoundSheetMacOSLayout: View {
         isDisappearing: $isDisappearing
       )
 
-      Spacer()
       Divider()
 
       HStack {
@@ -100,6 +99,21 @@ struct SoundSheetMacOSLayout: View {
       }
       .padding()
     }
-    .frame(width: 450, height: mode.isAdd ? 600 : 580)
+    .frame(width: 480, height: sheetHeight)
+  }
+
+  /// Height sized to fit the grouped form so it doesn't scroll. macOS 14.6
+  /// predates `.presentationSizing(.fitted)` and a `Form` won't self-size to
+  /// content, so this is tuned per mode/content: custom sounds add a Delete
+  /// row, and the volume slider only appears when Sound Check is off.
+  private var sheetHeight: CGFloat {
+    let base: CGFloat
+    switch mode {
+    case .add:
+      base = 620
+    case .edit(let sound):
+      base = sound.isCustom ? 700 : 640
+    }
+    return base + (normalizeAudio ? 0 : 96)
   }
 }
