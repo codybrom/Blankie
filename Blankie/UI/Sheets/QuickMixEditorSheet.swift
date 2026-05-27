@@ -23,7 +23,7 @@ import SwiftUI
         List {
           Section {
             Text(
-              "Quick Mix is a simple soundboard for quick access in CarPlay and beyond. Unlike presets, it doesn't remember your sounds or volumes, and can't use custom sounds."
+              "Quick Mix is a simple soundboard for quick access in CarPlay and beyond. Unlike presets, it doesn't have customizable volume, doesn't remember your sounds, and can't use custom sounds."
             )
             .font(.subheadline)
             .foregroundStyle(.secondary)

@@ -196,6 +196,7 @@ struct SoundIcon: View {
       // toggles); the slider below is intentionally outside it so a reorder
       // drag never hijacks the slider's gesture.
       iconAndLabel
+        .reorderHandle()
 
       Slider(
         value: Binding(

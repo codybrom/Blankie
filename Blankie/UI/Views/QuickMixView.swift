@@ -44,7 +44,6 @@ import SwiftUI
             }
           }
           .padding()
-          .padding(.top, 44)
         }
       }
     }

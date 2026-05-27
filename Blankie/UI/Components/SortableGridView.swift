@@ -11,9 +11,15 @@
 //    • Elements don't have to carry their own `position` — callers wrap their
 //      model in a tiny `SortableGridProtocol` value (see SortableSound) so the
 //      `Sound` model stays untouched.
-//    • Reordering needs a brief long-press before the drag, so adjusting the
-//      inline volume slider (an immediate drag, no hold) never starts a tile
-//      move — no per-control exclusion needed.
+//    • The reorder gesture is attached per-tile via `.reorderHandle()` on just
+//      the tile's icon/tap-zone, never the whole cell. A brief long-press
+//      preroll alone wasn't enough to protect an inline volume slider: the
+//      composed long-press→drag still claimed the touch in the gesture arena
+//      and starved the slider's own drag (the slider would grab but not move,
+//      while the tile never actually reordered). Scoping the gesture off the
+//      slider region is the real fix. `SortableGridView` injects the per-cell
+//      callbacks through the environment, so the generic content API and its
+//      callers stay unchanged.
 //
 //  Pure SwiftUI and identical on every platform (long-press → drag), so the
 //  lift/swap/commit behavior is shared.
@@ -95,6 +101,16 @@ where
     LazyVGrid(columns: columns, spacing: config.spacing) {
       ForEach($items) { $item in
         content(item)
+          // Hand each tile its reorder callbacks via the environment; the tile
+          // attaches the gesture to just its icon/tap-zone with `.reorderHandle()`
+          // so it never overlaps the inline volume slider.
+          .environment(
+            \.reorderHandlers,
+            ReorderHandlers(
+              onChanged: { location in handleReorderChange(location, item: item) },
+              onEnd: { handleReorderEnd() }
+            )
+          )
           .opacity(draggingItem?.id == item.id ? 0 : 1)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
           .onGeometryChange(for: CGRect.self) {
@@ -102,10 +118,6 @@ where
           } action: { newValue in
             item.position = newValue
           }
-          .reorderGesture(
-            onChanged: { location in handleReorderChange(location, item: item) },
-            onEnd: { handleReorderEnd() }
-          )
       }
     }
   }
@@ -189,25 +201,54 @@ struct SortableGridConfig {
   var previewScale: CGFloat = 1.06
 }
 
-extension View {
-  /// Attaches the reorder gesture: a long-press preroll then a drag, reporting
-  /// the finger/cursor location in `.global` space (matching the cells'
-  /// `frame(in: .global)`). The preroll is what keeps an immediate slider drag
-  /// (no hold) from ever starting a tile move, so no per-control exclusion is
-  /// needed. Pure SwiftUI, identical on every platform.
-  fileprivate func reorderGesture(
-    onChanged: @escaping (CGPoint) -> Void,
-    onEnd: @escaping () -> Void
-  ) -> some View {
-    gesture(
+// MARK: - Scoped reorder handle
+
+/// Per-cell reorder callbacks, injected by `SortableGridView` into each cell's
+/// environment so a tile can attach the long-press→drag gesture to just its
+/// drag-region (the icon/tap-zone), leaving sibling controls like the inline
+/// volume slider fully interactive.
+struct ReorderHandlers {
+  var onChanged: (CGPoint) -> Void = { _ in }
+  var onEnd: () -> Void = {}
+}
+
+private struct ReorderHandlersKey: EnvironmentKey {
+  static let defaultValue = ReorderHandlers()
+}
+
+extension EnvironmentValues {
+  var reorderHandlers: ReorderHandlers {
+    get { self[ReorderHandlersKey.self] }
+    set { self[ReorderHandlersKey.self] = newValue }
+  }
+}
+
+struct ReorderHandleModifier: ViewModifier {
+  @Environment(\.reorderHandlers) private var handlers
+
+  func body(content: Content) -> some View {
+    content.gesture(
       LongPressGesture(minimumDuration: 0.16)
         .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
         .onChanged { value in
           if case .second(true, let drag?) = value {
-            onChanged(drag.location)
+            handlers.onChanged(drag.location)
           }
         }
-        .onEnded { _ in onEnd() }
+        .onEnded { _ in handlers.onEnd() }
     )
+  }
+}
+
+extension View {
+  /// Attaches the reorder gesture (long-press preroll → drag) to *this* region
+  /// only, pulling the per-cell callbacks from the environment that
+  /// `SortableGridView` set. Put it on a tile's icon/tap-zone so the gesture
+  /// never overlaps an inline volume slider — the slider's own drag stays
+  /// uncontested in the gesture arena. The finger is reported in `.global`
+  /// (matching the cells' `frame(in: .global)`). Pure SwiftUI, identical on
+  /// every platform.
+  func reorderHandle() -> some View {
+    modifier(ReorderHandleModifier())
   }
 }

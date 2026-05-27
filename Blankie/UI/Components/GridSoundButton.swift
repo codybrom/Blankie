@@ -35,6 +35,12 @@ import SwiftUI
     /// override, recomputed on each `QuickMixView` re-render.
     var isActive: Bool { isActiveOverride ?? sound.isSelected }
 
+    /// Quick Mix is the only caller that passes an explicit `isActive` override
+    /// (the grid passes nil). Use that to tell the two apart: Quick Mix is a
+    /// membership picker — tap to add/remove — with no per-sound volume, so its
+    /// tiles omit the slider entirely.
+    private var isQuickMix: Bool { isActiveOverride != nil }
+
     init(
       sound: Sound,
       isActive: Bool? = nil,
@@ -98,8 +104,14 @@ import SwiftUI
           .frame(maxWidth: .infinity)
           .contentShape(Rectangle())
           .onTapGesture { onTap() }
+          // Reorder drags start from the icon/title only, never the slider
+          // below — so adjusting volume can't be hijacked by the tile move.
+          .reorderHandle()
 
-          volumeSlider
+          // Quick Mix is membership-only; per-sound volume lives in the grid.
+          if !isQuickMix {
+            volumeSlider
+          }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
@@ -182,10 +194,8 @@ import SwiftUI
         in: 0...1
       )
       .tint(isLit ? accentColor : .gray)
-      // Track the tile's active state, not raw selection: in Quick Mix a sound
-      // selected by a prior preset would otherwise expose an enabled slider
-      // that edits the base mix. In the grid `isActive == sound.isSelected`, so
-      // this is unchanged there.
+      // Only rendered in the grid (Quick Mix omits it). Disable for sounds that
+      // aren't selected so the slider can't edit an inactive sound.
       .disabled(!isActive)
       .padding(.horizontal, 4)
     }

@@ -83,8 +83,11 @@ import SwiftUI
         if #available(iOS 26.0, *) {
           GlassEffectContainer(spacing: 20) {
             HStack(spacing: 20) {
-              // Left button
-              if audioManager.soloModeSound != nil || audioManager.isQuickMix {
+              // Left button. Solo mode keeps a Back arrow (the only way out);
+              // Quick Mix instead shows the Now Playing toggle like the normal
+              // mixer — you leave Quick Mix by picking a preset (title → picker
+              // or the iPad sidebar), which calls `exitQuickMix()`.
+              if audioManager.soloModeSound != nil {
                 Button {
                   withAnimation(.easeInOut(duration: 0.2)) {
                     if audioManager.soloModeSound != nil {
@@ -110,12 +113,14 @@ import SwiftUI
                   }
                 } label: {
                   // While Now Playing is up, this button returns to the mixer,
-                  // so the icon should preview the destination view mode: a grid
-                  // glyph when the mixer is in grid mode, a list glyph in list
-                  // mode. (`music.note.list` is shown when Now Playing is hidden.)
+                  // so the icon previews the destination view mode: a grid glyph
+                  // in grid mode, a list glyph in list mode. Quick Mix always
+                  // returns to a grid, so it ignores the list preference.
+                  // (`music.note.list` is shown when Now Playing is hidden.)
                   Image(
                     systemName: showingNowPlaying
-                      ? (effectiveUseListView ? "list.bullet" : "square.grid.2x2")
+                      ? (effectiveUseListView && !audioManager.isQuickMix
+                        ? "list.bullet" : "square.grid.2x2")
                       : "music.note.list"
                   )
                   .font(.system(size: 22))
@@ -147,8 +152,9 @@ import SwiftUI
         } else {
           // Fallback for iOS 25 and earlier
           HStack(spacing: 20) {
-            // Left button
-            if audioManager.soloModeSound != nil || audioManager.isQuickMix {
+            // Left button. Solo mode keeps a Back arrow; Quick Mix shows the
+            // Now Playing toggle (leave via the preset picker / sidebar).
+            if audioManager.soloModeSound != nil {
               Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                   if audioManager.soloModeSound != nil {
@@ -175,7 +181,8 @@ import SwiftUI
               } label: {
                 Image(
                   systemName: showingNowPlaying
-                    ? (effectiveUseListView ? "list.bullet" : "square.grid.2x2")
+                    ? (effectiveUseListView && !audioManager.isQuickMix
+                      ? "list.bullet" : "square.grid.2x2")
                     : "music.note.list"
                 )
                 .font(.system(size: 22))
