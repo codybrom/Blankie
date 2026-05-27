@@ -4,8 +4,8 @@ This guide will help you set up your development environment for contributing to
 
 ## Prerequisites
 
-- macOS 14.6 or later
-- Xcode 16 or later
+- macOS 26 or later (required for certain Xcode 26 features used in the project)
+- Xcode 26 or later
 - An Apple Developer account (free or paid)
 
 ## Setup Instructions
