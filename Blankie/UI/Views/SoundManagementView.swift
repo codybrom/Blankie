@@ -89,16 +89,10 @@ struct SoundManagementView: View {
       macContent
     #else
       Form {
-        playbackSettingsSection
         builtInSoundsSection
         customSoundsSection
       }
     #endif
-  }
-
-  @ViewBuilder
-  private var playbackSettingsSection: some View {
-    PlaybackSettingsSection(globalSettings: globalSettings)
   }
 
   @ViewBuilder
@@ -377,97 +371,6 @@ struct SoundManagementView: View {
       debugLog("❌ SoundManagementView: File import failed: \(error)")
     }
   }
-}
-
-private struct PlaybackSettingsSection: View {
-  @ObservedObject var globalSettings: GlobalSettings
-
-  var body: some View {
-    Section(
-      header: Text("Playback")
-    ) {
-      Toggle(
-        "Autoplay on Open",
-        isOn: Binding(
-          get: { globalSettings.autoPlayOnLaunch },
-          set: { globalSettings.setAutoPlayOnLaunch($0) }
-        )
-      )
-      .tint(globalSettings.customAccentColor ?? .accentColor)
-
-      #if os(iOS) || os(visionOS)
-        mixWithOthersSection
-      #endif
-    }
-  }
-
-  #if os(iOS) || os(visionOS)
-    @ViewBuilder
-    private var mixWithOthersSection: some View {
-      VStack(alignment: .leading, spacing: 8) {
-        Toggle(
-          "Mix with Other Audio",
-          isOn: Binding(
-            get: { globalSettings.mixWithOthers },
-            set: { globalSettings.setMixWithOthers($0) }
-          )
-        )
-        .tint(globalSettings.customAccentColor ?? .accentColor)
-
-        if globalSettings.mixWithOthers {
-          mixWithOthersDetails
-        } else {
-          Text("Blankie pauses other audio and responds to device media controls")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-      }
-    }
-
-    @ViewBuilder
-    private var mixWithOthersDetails: some View {
-      VStack(alignment: .leading, spacing: 8) {
-        HStack {
-          Image(systemName: "exclamationmark.triangle.fill")
-            .foregroundColor(.orange)
-            .font(.caption)
-          Text("Device media controls won't pause Blankie")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(.orange.opacity(0.1))
-        .cornerRadius(6)
-
-        VStack(alignment: .leading, spacing: 8) {
-          HStack {
-            Text("Blankie Volume with Media")
-              .font(.subheadline)
-            Spacer()
-            Text(
-              globalSettings.volumeWithOtherAudio.formatted(.percent.precision(.fractionLength(0)))
-            )
-            .font(.caption)
-            .foregroundColor(.secondary)
-          }
-
-          Slider(
-            value: Binding(
-              get: { globalSettings.volumeWithOtherAudio },
-              set: { globalSettings.setVolumeWithOtherAudio($0) }
-            ),
-            in: 0.0...1.0
-          )
-          .tint(globalSettings.customAccentColor ?? .accentColor)
-
-          Text("Other media plays at system volume")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-      }
-    }
-  #endif
 }
 
 #Preview {

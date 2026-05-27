@@ -39,6 +39,10 @@ struct SettingsView: View {
           }
         }
 
+        #if os(iOS) || os(visionOS)
+          PlaybackSettingsSection(globalSettings: globalSettings)
+        #endif
+
         Section(
           header: Text("Sounds")
         ) {
@@ -50,8 +54,58 @@ struct SettingsView: View {
           }
         }
 
+        // Always-active visual settings: applied globally, with no per-preset
+        // override.
         Section(
           header: Text("Appearance")
+        ) {
+          Picker(
+            selection: Binding(
+              get: { globalSettings.appearance },
+              set: { globalSettings.setAppearance($0) }
+            )
+          ) {
+            ForEach(AppearanceMode.allCases, id: \.self) { mode in
+              Text(mode.localizedName).tag(mode)
+            }
+          } label: {
+            Text("Appearance")
+          }
+
+          Toggle(
+            isOn: Binding(
+              get: { globalSettings.showSoundNames },
+              set: { globalSettings.setShowSoundNames($0) }
+            )
+          ) {
+            Text("Show Labels")
+          }
+
+          Toggle(
+            isOn: Binding(
+              get: { globalSettings.showProgressBorder },
+              set: { globalSettings.setShowProgressBorder($0) }
+            )
+          ) {
+            Text(
+              "Show Progress Borders")
+          }
+
+          // Animated preset artwork as the Lock Screen / Now Playing background.
+          Toggle(
+            isOn: Binding(
+              get: { globalSettings.lockScreenBackgroundEnabled },
+              set: { globalSettings.setLockScreenBackgroundEnabled($0) }
+            )
+          ) {
+            Text("Lock Screen Animations")
+          }
+        }
+
+        // App-wide defaults a preset inherits and can override in Edit Preset
+        // (view mode, accent color, background blur).
+        Section(
+          header: Text("Preset Defaults")
         ) {
           #if os(iOS) || os(visionOS)
             // View mode (Grid / List). This is the app-wide default. It's
@@ -90,19 +144,6 @@ struct SettingsView: View {
             }
           #endif
 
-          Picker(
-            selection: Binding(
-              get: { globalSettings.appearance },
-              set: { globalSettings.setAppearance($0) }
-            )
-          ) {
-            ForEach(AppearanceMode.allCases, id: \.self) { mode in
-              Text(mode.localizedName).tag(mode)
-            }
-          } label: {
-            Text("Appearance")
-          }
-
           VStack(alignment: .leading, spacing: 8) {
             Text("Accent Color")
             SpectrumColorPicker(
@@ -114,25 +155,6 @@ struct SettingsView: View {
               ))
           }
           .padding(.vertical, 4)
-
-          Toggle(
-            isOn: Binding(
-              get: { globalSettings.showSoundNames },
-              set: { globalSettings.setShowSoundNames($0) }
-            )
-          ) {
-            Text("Show Labels")
-          }
-
-          Toggle(
-            isOn: Binding(
-              get: { globalSettings.showProgressBorder },
-              set: { globalSettings.setShowProgressBorder($0) }
-            )
-          ) {
-            Text(
-              "Show Progress Borders")
-          }
 
           #if os(iOS) || os(visionOS)
             // App-wide default blur for preset background artwork. Persist only
@@ -178,19 +200,6 @@ struct SettingsView: View {
             }
             .padding(.vertical, 4)
           #endif
-        }
-
-        Section(
-          header: Text("Lock Screen")
-        ) {
-          Toggle(
-            isOn: Binding(
-              get: { globalSettings.lockScreenBackgroundEnabled },
-              set: { globalSettings.setLockScreenBackgroundEnabled($0) }
-            )
-          ) {
-            Text("Animated Background")
-          }
         }
 
         Section(
@@ -248,6 +257,99 @@ struct SettingsView: View {
       }
     }
   }
+}
+
+// Playback preferences (Autoplay, Mix with Other Audio). Lives in the main iOS
+// Settings list, above Sounds — not under Manage Sounds.
+private struct PlaybackSettingsSection: View {
+  @ObservedObject var globalSettings: GlobalSettings
+
+  var body: some View {
+    Section(
+      header: Text("Playback")
+    ) {
+      Toggle(
+        "Autoplay on Open",
+        isOn: Binding(
+          get: { globalSettings.autoPlayOnLaunch },
+          set: { globalSettings.setAutoPlayOnLaunch($0) }
+        )
+      )
+      .tint(globalSettings.customAccentColor ?? .accentColor)
+
+      #if os(iOS) || os(visionOS)
+        mixWithOthersSection
+      #endif
+    }
+  }
+
+  #if os(iOS) || os(visionOS)
+    @ViewBuilder
+    private var mixWithOthersSection: some View {
+      VStack(alignment: .leading, spacing: 8) {
+        Toggle(
+          "Mix with Other Audio",
+          isOn: Binding(
+            get: { globalSettings.mixWithOthers },
+            set: { globalSettings.setMixWithOthers($0) }
+          )
+        )
+        .tint(globalSettings.customAccentColor ?? .accentColor)
+
+        if globalSettings.mixWithOthers {
+          mixWithOthersDetails
+        } else {
+          Text("Blankie pauses other audio and responds to device media controls")
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+      }
+    }
+
+    @ViewBuilder
+    private var mixWithOthersDetails: some View {
+      VStack(alignment: .leading, spacing: 8) {
+        HStack {
+          Image(systemName: "exclamationmark.triangle.fill")
+            .foregroundColor(.orange)
+            .font(.caption)
+          Text("Device media controls won't pause Blankie")
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(.orange.opacity(0.1))
+        .cornerRadius(6)
+
+        VStack(alignment: .leading, spacing: 8) {
+          HStack {
+            Text("Blankie Volume with Media")
+              .font(.subheadline)
+            Spacer()
+            Text(
+              globalSettings.volumeWithOtherAudio.formatted(.percent.precision(.fractionLength(0)))
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
+          }
+
+          Slider(
+            value: Binding(
+              get: { globalSettings.volumeWithOtherAudio },
+              set: { globalSettings.setVolumeWithOtherAudio($0) }
+            ),
+            in: 0.0...1.0
+          )
+          .tint(globalSettings.customAccentColor ?? .accentColor)
+
+          Text("Other media plays at system volume")
+            .font(.caption)
+            .foregroundColor(.secondary)
+        }
+      }
+    }
+  #endif
 }
 
 // Preview Provider
