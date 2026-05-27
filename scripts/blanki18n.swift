@@ -1,5 +1,4 @@
 #!/usr/bin/swift
-
 ///
 /// blanki18n
 /// By Cody Bromley
@@ -119,7 +118,13 @@ func readTranslationFile(at path: String) -> [CSVRow] {
   } else if path.hasSuffix(".csv") {
     // Try multiple encodings (UTF-8, Mac Central European Roman, MacRoman, Windows-1252, ISO Latin-2)
     // Mac Central European Roman is for Central/Eastern European languages like Hungarian
-    let encodings: [String.Encoding] = [.utf8, String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.macCentralEurRoman.rawValue))), .macOSRoman, .windowsCP1252, .isoLatin2]
+    let encodings: [String.Encoding] = [
+      .utf8,
+      String.Encoding(
+        rawValue: CFStringConvertEncodingToNSStringEncoding(
+          CFStringEncoding(CFStringEncodings.macCentralEurRoman.rawValue))), .macOSRoman,
+      .windowsCP1252, .isoLatin2,
+    ]
 
     for encoding in encodings {
       if let fileData = try? String(contentsOfFile: path, encoding: encoding) {

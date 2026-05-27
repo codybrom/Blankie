@@ -38,7 +38,7 @@ extension Sound {
     // Create AVURLAsset to extract audio metadata
     let asset = AVURLAsset(url: url)
 
-    // Since deployment target is iOS 16+, we can use async loading directly
+    // Since deployment target is iOS 26+, we can use async loading directly
     extractAudioMetadataAsync(from: asset)
   }
 
