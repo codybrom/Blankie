@@ -1,9 +1,12 @@
 {
     "contributors": [],
     "translators": {
-        "Deutsch": [],
+        "Deutsch": [
+            "H. Rapp"
+        ],
         "Español": [
-            "Chuskas"
+            "Chuskas",
+            "Dizz7"
         ],
         "Français": [
             "Richard_M"
@@ -13,6 +16,9 @@
         ],
         "Magyar": [
             "Balázs"
+        ],
+        "Polski": [
+            "Kristopheros"
         ],
         "Português": [
             "Júlio Coelho"

@@ -25,13 +25,15 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - Drag to reorder sounds in both grid and list views
 - Interactive onboarding on first launch
 - Settings to toggle sound name labels and the progress border around playing sounds
-- English (United Kingdom) localization (now 12 languages total)
+- Polish (Polski) translation support - thanks to **Kristopheros** (now 12 languages total)
 - CodeQL security scanning workflows
 
 ### Changed
 
 - Migrated all audio from MP3 to M4A (AAC)
 - Rebuilt the documentation website on Astro 6
+- Improved German (Deutsch) translations - thanks to **H. Rapp**
+- Improved Spanish (Español) translations - thanks to **Dizz7**
 - **Breaking**: minimum requirements are now iOS 26 and macOS 15.6
 
 ## [1.0.13] - 2025-10-27

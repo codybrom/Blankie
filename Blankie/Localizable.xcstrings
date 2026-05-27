@@ -61,6 +61,12 @@
             "value" : "%1$@ (기본 제공%2$@)"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$@ (Wbudowany%2$@)"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -138,6 +144,12 @@
             "value" : "%@ (사용자 추가 • 직접 추가함)"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%@ (Własny • Dodany przez Ciebie)"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -210,6 +222,12 @@
           }
         },
         "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "%lld"
@@ -292,6 +310,12 @@
             "value" : "%lld개 선택됨"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybrano %lld"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -367,6 +391,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 %1$lld개%2$@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%1$lld dźwięk%2$@"
           }
         },
         "pt-PT" : {
@@ -446,6 +476,12 @@
             "value" : "소리 %lld개"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld dźwięków"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -521,6 +557,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 %lld개"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "%lld dźwięków"
           }
         },
         "pt-PT" : {
@@ -601,6 +643,12 @@
             "value" : "© 2026 Cody Bromley 및 기여자. 모든 권리 보유."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "© 2026 Cody Bromley i współautorzy. Wszelkie prawa zastrzeżone."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -677,6 +725,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "+%lld개 더"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+%lld więcej"
           }
         },
         "pt-PT" : {
@@ -756,6 +810,12 @@
             "value" : "정보"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O aplikacji"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -831,6 +891,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "정보 및 공유"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Informacje i udostępnianie"
           }
         },
         "pt-PT" : {
@@ -910,6 +976,12 @@
             "value" : "%@ 소개"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O %@"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -936,7 +1008,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Über Blankie"
           }
         },
@@ -988,6 +1060,12 @@
             "value" : "Blankie 소개"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Blankie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1014,7 +1092,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Akzentfarbe"
           }
         },
@@ -1064,6 +1142,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "포인트 색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolor akcentujący"
           }
         },
         "pt-PT" : {
@@ -1143,6 +1227,12 @@
             "value" : "재생 중인 소리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aktywne dźwięki"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -1220,6 +1310,12 @@
             "value" : "시간 추가"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dodaj więcej czasu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -1246,7 +1342,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ton hinzufügen (Kommt bald!)"
           }
         },
@@ -1296,6 +1392,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "소리 추가 (준비 중!)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj dźwięk (Wkrótce!)"
           }
         },
         "pt-PT" : {
@@ -1376,6 +1478,12 @@
             "value" : "즐겨찾기에 추가"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dodaj do ulubionych"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -1451,6 +1559,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "베타 테스터 크레딧에 이름 추가하기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dodaj swoje imię do podziękowań dla beta testerów"
           }
         },
         "pt-PT" : {
@@ -1531,6 +1645,12 @@
             "value" : "나만의 소리와 배경 추가하기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dodawaj własne dźwięki i tła"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -1606,6 +1726,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "추가됨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dodano"
           }
         },
         "pt-PT" : {
@@ -1685,6 +1811,12 @@
             "value" : "모든 프리셋"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wszystkie presety"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -1711,7 +1843,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Alle Klänge"
           }
         },
@@ -1761,6 +1893,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "모든 소리"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wszystkie dźwięki"
           }
         },
         "pt-PT" : {
@@ -1840,6 +1978,12 @@
             "value" : "다른 사람이 이 소리를 편집하도록 허용"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zezwól innym na edycję tego dźwięku"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -1915,6 +2059,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다른 사람이 이 소리를 다시 공유하도록 허용"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zezwól innym na ponowne udostępnianie tego dźwięku"
           }
         },
         "pt-PT" : {
@@ -1994,6 +2144,12 @@
             "value" : "대체"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Alternatywna"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -2020,7 +2176,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Immer angehalten starten"
           }
         },
@@ -2070,6 +2226,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "항상 일시정지로 시작"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wstrzymaj przy uruchomieniu"
           }
         },
         "pt-PT" : {
@@ -2150,6 +2312,12 @@
             "value" : "움직이는 아트워크"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Animowana grafika"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -2225,6 +2393,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "움직이는 아트워크 편집은 iOS에서 사용할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Edycja animowanej grafiki jest dostępna na iOS"
           }
         },
         "pt-PT" : {
@@ -2304,6 +2478,12 @@
             "value" : "움직이는 배경"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Animowane tło"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -2330,7 +2510,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aussehen"
           }
         },
@@ -2382,6 +2562,12 @@
             "value" : "테마 설정"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wygląd"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2408,7 +2594,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sind Sie sicher, dass Sie '%@' löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden"
           }
         },
@@ -2458,6 +2644,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "'%@'을(를) 삭제하시겠어요? 이 작업은 취소할 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czy na pewno chcesz usunąć \"%@\"? Tej czynności nie można cofnąć."
           }
         },
         "pt-PT" : {
@@ -2537,6 +2729,12 @@
             "value" : "\"%@\"을(를) 삭제하시겠어요? 이 작업은 취소할 수 없습니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Czy na pewno chcesz usunąć \"%@\"? Tej czynności nie można cofnąć."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -2612,6 +2810,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "이 소리를 삭제하시겠어요? 이 작업은 취소할 수 없습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Czy na pewno chcesz usunąć ten dźwięk? Tej czynności nie można cofnąć."
           }
         },
         "pt-PT" : {
@@ -2691,6 +2895,12 @@
             "value" : "이 소리의 모든 설정을 초기화하시겠어요?"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Czy na pewno chcesz zresetować wszystkie dostosowania tego dźwięku?"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -2766,6 +2976,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "아트워크"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grafika"
           }
         },
         "pt-PT" : {
@@ -2845,6 +3061,12 @@
             "value" : "%@에"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "o %@"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -2920,6 +3142,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "오디오"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dźwięk"
           }
         },
         "pt-PT" : {
@@ -2999,6 +3227,12 @@
             "value" : "제작자"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Autor"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -3074,6 +3308,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "제작자 이름"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Imię autora"
           }
         },
         "pt-PT" : {
@@ -3153,6 +3393,12 @@
             "value" : "자동"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Automatyczny"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -3228,6 +3474,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "열 때 자동 재생"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Autoodtwarzanie po otwarciu"
           }
         },
         "pt-PT" : {
@@ -3308,6 +3560,12 @@
             "value" : "뒤로"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wstecz"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -3385,6 +3643,12 @@
             "value" : "배경 흐림"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rozmycie tła"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -3411,8 +3675,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Interaktion"
+            "state" : "translated",
+            "value" : "Verhalten beim Start"
           }
         },
         "en" : {
@@ -3461,6 +3725,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "동작 설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zachowanie"
           }
         },
         "pt-PT" : {
@@ -3538,6 +3808,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "베타"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Beta"
           }
         },
         "pt-PT" : {
@@ -3618,6 +3894,12 @@
             "value" : "새소리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ptaki"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -3648,7 +3930,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Blankie-Hilfe"
           }
         },
@@ -3698,6 +3980,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blankie 도움말"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomoc Blankie"
           }
         },
         "pt-PT" : {
@@ -3777,6 +4065,12 @@
             "value" : "Blankie가 다른 오디오를 일시정지하고 기기의 미디어 컨트롤에 반응합니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie wstrzymuje inny dźwięk i reaguje na elementy sterowania multimediami urządzenia"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -3803,8 +4097,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Blankie-Einstellungen"
+            "state" : "translated",
+            "value" : "Einstellungen"
           }
         },
         "en" : {
@@ -3853,6 +4147,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blankie 설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustawienia Blankie"
           }
         },
         "pt-PT" : {
@@ -3932,6 +4232,12 @@
             "value" : "미디어 재생 시 Blankie 음량"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Głośność Blankie podczas multimediów"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -4009,6 +4315,12 @@
             "value" : "타이머가 끝나면 Blankie가 정지됩니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie zatrzyma się po upływie czasu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -4038,7 +4350,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Blau"
           }
         },
@@ -4088,6 +4400,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "파랑"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niebieski"
           }
         },
         "pt-PT" : {
@@ -4168,6 +4486,12 @@
             "value" : "배"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Łódź"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4194,7 +4518,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Braun"
           }
         },
@@ -4244,6 +4568,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "갈색"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brązowy"
           }
         },
         "pt-PT" : {
@@ -4323,6 +4653,12 @@
             "value" : "기본 제공 소리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wbudowane dźwięki"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -4349,7 +4685,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Von"
           }
         },
@@ -4399,6 +4735,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "제작"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autor"
           }
         },
         "pt-PT" : {
@@ -4479,6 +4821,12 @@
             "value" : "취소"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anuluj"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -4554,6 +4902,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "타이머 취소"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Anuluj minutnik"
           }
         },
         "pt-PT" : {
@@ -4633,6 +4987,12 @@
             "value" : "카테고리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kategoria"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -4708,6 +5068,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "변경"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zmień"
           }
         },
         "pt-PT" : {
@@ -4788,6 +5154,12 @@
             "value" : "앱 아이콘 변경"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zmień ikonę aplikacji"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -4863,6 +5235,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "채널"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kanały"
           }
         },
         "pt-PT" : {
@@ -4942,6 +5320,12 @@
             "value" : "선택"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -5017,6 +5401,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "앱 아이콘 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz ikonę aplikacji"
           }
         },
         "pt-PT" : {
@@ -5097,6 +5487,12 @@
             "value" : "아트워크 선택"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz grafikę"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -5172,6 +5568,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "아이콘 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz ikonę"
           }
         },
         "pt-PT" : {
@@ -5252,6 +5654,12 @@
             "value" : "소리 선택"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz dźwięki"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -5327,6 +5735,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "이 프리셋에 포함할 소리를 선택하세요. 원하는 만큼 선택할 수 있어요!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz dźwięki, które chcesz dodać do tego presetu. Możesz wybrać ich dowolnie wiele!"
           }
         },
         "pt-PT" : {
@@ -5407,6 +5821,12 @@
             "value" : "도시 소리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miasto"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5482,6 +5902,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "클래식"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Klasyczna"
           }
         },
         "pt-PT" : {
@@ -5561,6 +5987,12 @@
             "value" : "없음"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Brak"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -5636,6 +6068,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "모두 지우기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wyczyść wszystko"
           }
         },
         "pt-PT" : {
@@ -5716,6 +6154,12 @@
             "value" : "이름 지우기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wyczyść nazwę"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -5742,7 +6186,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Schließen"
           }
         },
@@ -5794,6 +6238,12 @@
             "value" : "닫기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamknij"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5820,8 +6270,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Fenster Schließen"
+            "state" : "translated",
+            "value" : "Fenster schließen"
           }
         },
         "en" : {
@@ -5872,6 +6322,12 @@
             "value" : "창 닫기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zamknij okno"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -5898,7 +6354,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cody Bromley und Mitwirkende. Alle Rechte vorbehalten."
           }
         },
@@ -5948,6 +6404,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cody Bromley 및 기여자. 모든 권리 보유."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cody Bromley i współautorzy. Wszelkie prawa zastrzeżone."
           }
         },
         "pt-PT" : {
@@ -6028,6 +6490,12 @@
             "value" : "카페"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kawiarnia"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -6103,6 +6571,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "색상"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kolor"
           }
         },
         "pt-PT" : {
@@ -6182,6 +6656,12 @@
             "value" : "CarPlay에 연결됨"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Połączono z CarPlay"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -6208,7 +6688,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mitwirkende"
           }
         },
@@ -6258,6 +6738,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "기여자"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Współautorzy"
           }
         },
         "pt-PT" : {
@@ -6335,6 +6821,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "만들기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Utwórz"
           }
         },
         "pt-PT" : {
@@ -6415,6 +6907,12 @@
             "value" : "프리셋 만들기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Utwórz preset"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -6490,6 +6988,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "첫 프리셋 만들기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Utwórz swój pierwszy preset"
           }
         },
         "pt-PT" : {
@@ -6569,6 +7073,12 @@
             "value" : "제작자"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Twórca"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -6644,6 +7154,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "크레딧"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Podziękowania"
           }
         },
         "pt-PT" : {
@@ -6723,6 +7239,12 @@
             "value" : "현재 테마"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bieżący motyw"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -6800,6 +7322,12 @@
             "value" : "사용자 지정"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Własna"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -6875,6 +7403,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "재생 중 화면용 사용자 지정 아트워크"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Własna grafika dla ekranu Teraz odtwarzane"
           }
         },
         "pt-PT" : {
@@ -6955,6 +7489,12 @@
             "value" : "사용자 지정 배경 흐림"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Własne rozmycie tła"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -7030,6 +7570,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "사용자 소리"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Własne dźwięki"
           }
         },
         "pt-PT" : {
@@ -7109,6 +7655,12 @@
             "value" : "사용자 지정"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dostosuj"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -7184,6 +7736,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 사용자 지정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dostosuj dźwięk"
           }
         },
         "pt-PT" : {
@@ -7264,6 +7822,12 @@
             "value" : "프리셋 사용자 지정"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dostosuj swój preset"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -7290,7 +7854,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cyan"
           }
         },
@@ -7342,6 +7906,12 @@
             "value" : "청록"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turkusowy"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7368,7 +7938,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dunkel"
           }
         },
@@ -7420,6 +7990,12 @@
             "value" : "다크 모드"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciemny"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7446,7 +8022,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Standard"
           }
         },
@@ -7498,6 +8074,12 @@
             "value" : "기본"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślny"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7524,7 +8106,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Löschen"
           }
         },
@@ -7576,6 +8158,12 @@
             "value" : "삭제"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -7602,7 +8190,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Voreinstellung löschen"
           }
         },
@@ -7652,6 +8240,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프리셋 삭제"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń preset"
           }
         },
         "pt-PT" : {
@@ -7731,6 +8325,12 @@
             "value" : "소리 삭제"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usuń dźwięk"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -7806,6 +8406,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "라이선스 조건을 설명하세요"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Opisz warunki licencji"
           }
         },
         "pt-PT" : {
@@ -7885,6 +8491,12 @@
             "value" : "설명"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Opis"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -7962,6 +8574,12 @@
             "value" : "세부 정보"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Szczegóły"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -7988,7 +8606,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Entwickelt von"
           }
         },
@@ -8038,6 +8656,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "만든 사람"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autor"
           }
         },
         "pt-PT" : {
@@ -8117,6 +8741,12 @@
             "value" : "기기의 미디어 컨트롤로 Blankie가 일시정지되지 않습니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Elementy sterowania multimediami urządzenia nie wstrzymają Blankie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -8192,6 +8822,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "완료"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gotowe"
           }
         },
         "pt-PT" : {
@@ -8271,6 +8907,12 @@
             "value" : "동영상 다운로드 중..."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pobieranie wideo..."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -8346,6 +8988,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다운로드 중..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pobieranie..."
           }
         },
         "pt-PT" : {
@@ -8426,6 +9074,12 @@
             "value" : "소리를 드래그하여 프리셋에 표시되는 순서를 바꿀 수 있어요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Przeciągaj dźwięki, aby zmienić ich kolejność w presecie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -8501,6 +9155,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "슬라이더를 드래그하여 색상을 선택하세요"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Przeciągnij suwak, aby wybrać kolor"
           }
         },
         "pt-PT" : {
@@ -8581,6 +9241,12 @@
             "value" : "드래그하여 순서 변경, 스와이프하여 제거"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Przeciągnij, aby zmienić kolejność, przesuń palcem, aby usunąć"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -8656,6 +9322,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "길이"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Czas trwania"
           }
         },
         "pt-PT" : {
@@ -8736,6 +9408,12 @@
             "value" : "예: 마음챙김 명상"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "np. Uważna medytacja"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -8813,6 +9491,12 @@
             "value" : "편집"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Edytuj"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -8839,7 +9523,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Voreinstellung bearbeiten"
           }
         },
@@ -8889,6 +9573,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프리셋 편집"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytuj preset"
           }
         },
         "pt-PT" : {
@@ -8969,6 +9659,12 @@
             "value" : "Quick Mix 편집"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Edytuj Quick Mix"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -9046,6 +9742,12 @@
             "value" : "소리 편집"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Edytuj dźwięk"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -9072,7 +9774,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bearbeitet von"
           }
         },
@@ -9124,6 +9826,12 @@
             "value" : "편집자"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edytowane przez"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9150,7 +9858,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Fehler"
           }
         },
@@ -9200,6 +9908,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "오류"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Błąd"
           }
         },
         "pt-PT" : {
@@ -9279,6 +9993,12 @@
             "value" : "솔로 모드 종료"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wyjdź z trybu Solo"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -9354,6 +10074,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "동영상을 불러오지 못했습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nie udało się załadować wideo"
           }
         },
         "pt-PT" : {
@@ -9433,6 +10159,12 @@
             "value" : "즐겨찾기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ulubiony"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -9508,6 +10240,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "즐겨찾기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ulubione"
           }
         },
         "pt-PT" : {
@@ -9587,6 +10325,12 @@
             "value" : "즐겨찾기는 iPad 사이드바와 CarPlay에 표시됩니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ulubione pojawiają się na pasku bocznym iPada i w CarPlay."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -9662,6 +10406,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "파일 크기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rozmiar pliku"
           }
         },
         "pt-PT" : {
@@ -9742,6 +10492,12 @@
             "value" : "벽난로"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kominek"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -9819,6 +10575,12 @@
             "value" : "더 많은 설정 옵션을 사용하려면 새 프리셋을 만드세요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Aby uzyskać więcej opcji dostosowania, utwórz nowy preset"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -9894,6 +10656,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "형식"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Format"
           }
         },
         "pt-PT" : {
@@ -9974,6 +10742,12 @@
             "value" : "다시 생성"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wygeneruj kolejną"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10050,6 +10824,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다른 이름 생성"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wygeneruj kolejną nazwę"
           }
         },
         "pt-PT" : {
@@ -10130,6 +10910,12 @@
             "value" : "다른 프리셋 이름 생성"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wygeneruj kolejną nazwę presetu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10206,6 +10992,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다른 이름 생성 중"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Generowanie kolejnej nazwy"
           }
         },
         "pt-PT" : {
@@ -10286,6 +11078,12 @@
             "value" : "생성 중..."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Generowanie..."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10361,6 +11159,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "시작하기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rozpocznij"
           }
         },
         "pt-PT" : {
@@ -10441,6 +11245,12 @@
             "value" : "기억하기 쉬운 이름을 지어 주세요"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nadaj mu zapadającą w pamięć nazwę"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10467,7 +11277,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Grün"
           }
         },
@@ -10517,6 +11327,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "초록"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zielony"
           }
         },
         "pt-PT" : {
@@ -10596,6 +11412,12 @@
             "value" : "그리드"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Siatka"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10622,7 +11444,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Inaktive Töne ausblenden"
           }
         },
@@ -10672,6 +11494,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "사용하지 않는 소리 숨기기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ukryj nieaktywne dźwięki"
           }
         },
         "pt-PT" : {
@@ -10751,6 +11579,12 @@
             "value" : "재생 중 화면 숨기기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ukryj Teraz odtwarzane"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10828,6 +11662,12 @@
             "value" : "시간"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Godziny"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -10900,6 +11740,12 @@
           }
         },
         "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "https://..."
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "https://..."
@@ -10982,6 +11828,12 @@
             "value" : "아이콘"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ikona"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -11008,7 +11860,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Wenn deaktiviert, wird Blankie Ihre letzte Voreinstellung beim Start sofort abspielen"
           }
         },
@@ -11058,6 +11910,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "비활성화하면 Blankie 실행 시 최근 프리셋이 바로 재생됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeśli wyłączone, Blankie uruchomi ostatnio używany preset przy starcie"
           }
         },
         "pt-PT" : {
@@ -11138,6 +11996,12 @@
             "value" : "활성화하면 Blankie 실행 시 최근 프리셋이 바로 재생됩니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Jeśli włączone, Blankie natychmiast uruchomi ostatnio używany preset przy starcie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -11213,6 +12077,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "가져오기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importuj"
           }
         },
         "pt-PT" : {
@@ -11292,6 +12162,12 @@
             "value" : "사용자 소리 가져오기 및 숨긴 소리 관리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importuj własne dźwięki i zarządzaj ukrytymi dźwiękami"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -11367,6 +12243,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "가져오기 오류"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Błąd importu"
           }
         },
         "pt-PT" : {
@@ -11446,6 +12328,12 @@
             "value" : "M4A, MP3, WAV 등 오디오 파일을 가져와 나만의 소리를 믹스하세요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importuj pliki M4A, MP3, WAV lub inne pliki audio, aby dodać własne dźwięki do miksu."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -11521,6 +12409,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 가져오기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importuj dźwięk"
           }
         },
         "pt-PT" : {
@@ -11601,6 +12495,12 @@
             "value" : "나만의 소리와 배경 가져오기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importuj własne dźwięki i tła"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -11676,6 +12576,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "나만의 소리를 가져와 믹스를 개인화하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importuj własne dźwięki, aby spersonalizować swój miks."
           }
         },
         "pt-PT" : {
@@ -11756,6 +12662,12 @@
             "value" : "가져오는 중"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importowanie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -11831,6 +12743,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 가져오는 중…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Importowanie dźwięku…"
           }
         },
         "pt-PT" : {
@@ -11910,6 +12828,12 @@
             "value" : "향후 업데이트에서는 이 설정을 통해 다른 사람이 소리의 크레딧을 편집하거나 이 소리를 프리셋의 일부로 내보낼 수 있는지 제어할 수 있게 됩니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "W przyszłej aktualizacji te ustawienia pozwolą Ci decydować, czy inni mogą edytować podziękowania za dźwięk lub eksportować ten dźwięk jako część presetu."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -11936,7 +12860,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Indigo"
           }
         },
@@ -11988,6 +12912,12 @@
             "value" : "남색"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indygo"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12013,7 +12943,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Inspiriert von Blanket von Rafael Mardojai CM"
           }
         },
@@ -12065,6 +12995,12 @@
             "value" : "이 앱은 Rafael Mardojai CM의 Blanket에서 영감을 받았습니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspirowane Blanket autorstwa Rafaela Mardojai CM"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12091,7 +13027,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tastaturbefehle"
           }
         },
@@ -12143,6 +13079,12 @@
             "value" : "단축키"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skróty klawiaturowe"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12168,7 +13110,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sprache"
           }
         },
@@ -12220,6 +13162,12 @@
             "value" : "언어 설정"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Język"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12245,7 +13193,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sprache geändert"
           }
         },
@@ -12263,8 +13211,8 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Idioma cambiado"
+            "state" : "translated",
+            "value" : "Idioma Cambiado"
           }
         },
         "fr" : {
@@ -12297,6 +13245,12 @@
             "value" : "언어가 변경되었습니다"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmiana języka"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12322,7 +13276,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Später"
           }
         },
@@ -12340,8 +13294,8 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Más tarde"
+            "state" : "translated",
+            "value" : "Después"
           }
         },
         "fr" : {
@@ -12374,6 +13328,12 @@
             "value" : "나중에"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Później"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -12400,7 +13360,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Erfahren Sie mehr über die MIT-Lizenz"
           }
         },
@@ -12450,6 +13410,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "MIT 라이선스 자세히 알아보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dowiedz się więcej o licencji MIT"
           }
         },
         "pt-PT" : {
@@ -12529,6 +13495,12 @@
             "value" : "라이선스"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Licencja"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -12604,6 +13576,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "라이선스 세부 정보"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Szczegóły licencji"
           }
         },
         "pt-PT" : {
@@ -12683,6 +13661,12 @@
             "value" : "라이선스 URL"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adres URL licencji"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -12709,7 +13693,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Hell"
           }
         },
@@ -12759,6 +13743,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "라이트 모드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jasny"
           }
         },
         "pt-PT" : {
@@ -12836,6 +13826,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "목록"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lista"
           }
         },
         "pt-PT" : {
@@ -12916,6 +13912,12 @@
             "value" : "언제 어디서나 오프라인으로 들으세요"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Słuchaj offline, zawsze i wszędzie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -12993,6 +13995,12 @@
             "value" : "종속성 불러오는 중..."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ładowanie zależności..."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -13019,7 +14027,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Voreinstellungen laden ..."
           }
         },
@@ -13069,6 +14077,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프리셋 불러오는 중..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ładowanie presetów..."
           }
         },
         "pt-PT" : {
@@ -13148,6 +14162,12 @@
             "value" : "동영상 불러오는 중..."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ładowanie wideo..."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -13223,6 +14243,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "잠금 화면"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ekran blokady"
           }
         },
         "pt-PT" : {
@@ -13302,6 +14328,12 @@
             "value" : "잠금 화면 애니메이션"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Animacja ekranu blokady"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -13377,6 +14409,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 반복"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zapętl dźwięk"
           }
         },
         "pt-PT" : {
@@ -13457,6 +14495,12 @@
             "value" : "잠금 화면에서 반복 재생됩니다"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pętle odtwarzają się na ekranie blokady"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -13534,6 +14578,12 @@
             "value" : "음량 (LUFS)"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Głośność (LUFS)"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -13606,6 +14656,12 @@
           }
         },
         "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "LUFS"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "LUFS"
@@ -13688,6 +14744,12 @@
             "value" : "소리 관리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zarządzaj dźwiękami"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -13765,6 +14827,12 @@
             "value" : "보통"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Średnia"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -13791,7 +14859,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Einstellungen..."
           }
         },
@@ -13843,6 +14911,12 @@
             "value" : "설정..."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferencje..."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13869,7 +14943,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Minze"
           }
         },
@@ -13919,6 +14993,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "민트"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miętowy"
           }
         },
         "pt-PT" : {
@@ -13996,6 +15076,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "분"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Minuty"
           }
         },
         "pt-PT" : {
@@ -14076,6 +15162,12 @@
             "value" : "소리별 음량을 개별 조절하며 믹스하기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Miksuj dźwięki z osobnymi regulacjami głośności"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -14151,6 +15243,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다른 오디오와 함께 재생"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Miksuj z innym dźwiękiem"
           }
         },
         "pt-PT" : {
@@ -14230,6 +15328,12 @@
             "value" : "프리셋 더 보기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Więcej presetów"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -14305,6 +15409,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "이름"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nazwa"
           }
         },
         "pt-PT" : {
@@ -14385,6 +15495,12 @@
             "value" : "프리셋 이름 짓기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nazwij swój preset"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -14411,7 +15527,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Neue Voreinstellung"
           }
         },
@@ -14463,6 +15579,12 @@
             "value" : "새 프리셋 만들기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowy preset"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -14489,7 +15611,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Neues Fenster"
           }
         },
@@ -14539,6 +15661,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "새 창 열기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowe okno"
           }
         },
         "pt-PT" : {
@@ -14619,6 +15747,12 @@
             "value" : "다음"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dalej"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -14696,6 +15830,12 @@
             "value" : "광고, 추적, 구독 없음"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Bez reklam, śledzenia i subskrypcji"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -14722,7 +15862,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Keine eigenen Voreinstellungen"
           }
         },
@@ -14772,6 +15912,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프리셋이 없습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak własnych presetów"
           }
         },
         "pt-PT" : {
@@ -14851,6 +15997,12 @@
             "value" : "사용자 소리 없음"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Brak własnych dźwięków"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -14926,6 +16078,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "사용자 소리 없음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Brak własnych dźwięków"
           }
         },
         "pt-PT" : {
@@ -15005,6 +16163,12 @@
             "value" : "일치하는 아이콘이 없습니다"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nie znaleziono pasujących ikon"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15080,6 +16244,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 없음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Brak dźwięków"
           }
         },
         "pt-PT" : {
@@ -15159,6 +16329,12 @@
             "value" : "선택된 소리 없음"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nie wybrano dźwięków"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15234,6 +16410,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "파형 데이터 없음"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Brak danych przebiegu"
           }
         },
         "pt-PT" : {
@@ -15313,6 +16495,12 @@
             "value" : "없음"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Brak"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15388,6 +16576,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "정규화 계수"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Współczynnik normalizacji"
           }
         },
         "pt-PT" : {
@@ -15467,6 +16661,12 @@
             "value" : "정규화 게인"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wzmocnienie normalizacji"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15544,6 +16744,12 @@
             "value" : "재생 중"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Teraz odtwarzane"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15570,7 +16776,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "OK"
           }
         },
@@ -15620,6 +16826,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "확인"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
           }
         },
         "pt-PT" : {
@@ -15699,6 +16911,12 @@
             "value" : "선택 사항"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Opcjonalne"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15725,7 +16943,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Orange"
           }
         },
@@ -15775,6 +16993,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "주황"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomarańczowy"
           }
         },
         "pt-PT" : {
@@ -15854,6 +17078,12 @@
             "value" : "원작"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dzieło oryginalne"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -15929,6 +17159,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다른 미디어는 시스템 음량으로 재생됩니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inne multimedia odtwarzają się z głośnością systemową"
           }
         },
         "pt-PT" : {
@@ -16008,6 +17244,12 @@
             "value" : "일시정지"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wstrzymaj"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -16085,6 +17327,12 @@
             "value" : "일시정지됨"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wstrzymano"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -16160,6 +17408,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "최대 레벨"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Poziom szczytowy"
           }
         },
         "pt-PT" : {
@@ -16240,6 +17494,12 @@
             "value" : "첫 믹스에 사용할 소리를 골라 보세요"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz kilka dźwięków do swojego pierwszego miksu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -16266,7 +17526,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Rosa"
           }
         },
@@ -16316,6 +17576,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "분홍"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Różowy"
           }
         },
         "pt-PT" : {
@@ -16396,6 +17662,12 @@
             "value" : "핑크 노이즈"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Różowy szum"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16473,6 +17745,12 @@
             "value" : "재생"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Odtwarzaj"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -16499,8 +17777,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sounds Abspielen/Pausieren"
+            "state" : "translated",
+            "value" : "Sounds abspielen/pausieren"
           }
         },
         "en" : {
@@ -16549,6 +17827,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "재생/일시정지"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odtwarzaj/Wstrzymaj dźwięki"
           }
         },
         "pt-PT" : {
@@ -16628,6 +17912,12 @@
             "value" : "재생"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Odtwarzanie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -16654,8 +17944,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Wiedergabe Pausiert"
+            "state" : "translated",
+            "value" : "Wiedergabe pausiert"
           }
         },
         "en" : {
@@ -16704,6 +17994,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "일시정지 중"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odtwarzanie wstrzymane"
           }
         },
         "pt-PT" : {
@@ -16781,6 +18077,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "재생 중"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Odtwarzanie"
           }
         },
         "pt-PT" : {
@@ -16861,6 +18163,12 @@
             "value" : "설정"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preferencje"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -16936,6 +18244,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다운로드 준비 중..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Przygotowywanie pobierania..."
           }
         },
         "pt-PT" : {
@@ -17016,6 +18330,12 @@
             "value" : "프리셋 이름"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nazwa presetu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -17042,8 +18362,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Voreingestellter Name"
+            "state" : "translated",
+            "value" : "Name der Voreinstellung "
           }
         },
         "en" : {
@@ -17094,6 +18414,12 @@
             "value" : "프리셋 이름"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nazwa presetu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17120,8 +18446,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Voreinstellung Name darf nicht leer sein"
+            "state" : "translated",
+            "value" : "Bitte geben Sie einen Namen ein."
           }
         },
         "en" : {
@@ -17170,6 +18496,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프리셋 이름을 입력해 주세요"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nazwa presetu nie może być pusta"
           }
         },
         "pt-PT" : {
@@ -17250,6 +18582,12 @@
             "value" : "프리셋 이름 입력란"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pole wprowadzania nazwy presetu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -17276,7 +18614,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Voreinstellungen"
           }
         },
@@ -17328,6 +18666,12 @@
             "value" : "프리셋"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Presety"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17354,7 +18698,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Public Domain"
           }
         },
@@ -17406,6 +18750,12 @@
             "value" : "Public Domain"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domena publiczna"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17432,7 +18782,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lila"
           }
         },
@@ -17482,6 +18832,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "보라"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fioletowy"
           }
         },
         "pt-PT" : {
@@ -17556,6 +18912,12 @@
           }
         },
         "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Quick Mix"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Quick Mix"
@@ -17639,6 +19001,12 @@
             "value" : "Quick Mix는 CarPlay 등에서 빠르게 사용할 수 있는 간단한 사운드보드입니다. 프리셋과 달리 소리나 음량을 기억하지 않으며, 사용자 소리는 사용할 수 없습니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Quick Mix to prosta tablica dźwięków zapewniająca szybki dostęp w CarPlay i nie tylko. W przeciwieństwie do presetów nie zapamiętuje dźwięków ani głośności i nie może używać własnych dźwięków."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -17714,6 +19082,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "프리셋으로 저장하지 않고 빠르게 소리를 믹스하세요. 이것저것 시도해 보기에 딱 좋아요!"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Szybko miksuj dźwięki bez zapisywania ich jako preset. Idealne do eksperymentowania!"
           }
         },
         "pt-PT" : {
@@ -17794,6 +19168,12 @@
             "value" : "종료"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyjdź"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -17820,8 +19200,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Quit Blankie"
+            "state" : "translated",
+            "value" : "Blankie beenden"
           }
         },
         "en" : {
@@ -17870,6 +19250,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blankie 종료"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyjdź z Blankie"
           }
         },
         "pt-PT" : {
@@ -17950,6 +19336,12 @@
             "value" : "빗소리"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deszcz"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -18025,6 +19417,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "시작 위치 무작위로"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Losuj pozycję początkową"
           }
         },
         "pt-PT" : {
@@ -18104,6 +19502,12 @@
             "value" : "최근"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ostatnie"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -18130,7 +19534,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Rot"
           }
         },
@@ -18180,6 +19584,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "빨강"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Czerwony"
           }
         },
         "pt-PT" : {
@@ -18260,6 +19670,12 @@
             "value" : "아트워크 제거"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usuń grafikę"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -18337,6 +19753,12 @@
             "value" : "다운로드 제거"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usuń pobrane"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -18412,6 +19834,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다운로드한 동영상을 제거하시겠어요?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usunąć pobrane wideo?"
           }
         },
         "pt-PT" : {
@@ -18492,6 +19920,12 @@
             "value" : "즐겨찾기에서 제거"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usuń z ulubionych"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -18518,8 +19952,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Voreinstellung Umbenennen"
+            "state" : "translated",
+            "value" : "Voreinstellung umbenennen"
           }
         },
         "en" : {
@@ -18568,6 +20002,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "프리셋 이름 변경"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmień nazwę presetu"
           }
         },
         "pt-PT" : {
@@ -18647,6 +20087,12 @@
             "value" : "순서 변경"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zmień kolejność"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -18673,8 +20119,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ein Problem Melden"
+            "state" : "translated",
+            "value" : "Ein Problem melden"
           }
         },
         "en" : {
@@ -18723,6 +20169,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "문제 신고"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zgłoś problem"
           }
         },
         "pt-PT" : {
@@ -18802,6 +20254,12 @@
             "value" : "필수"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wymagane"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -18879,6 +20337,12 @@
             "value" : "초기화"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Resetuj"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -18905,7 +20369,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Töne zurücksetzen"
           }
         },
@@ -18955,6 +20419,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "소리 초기화"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj dźwięki"
           }
         },
         "pt-PT" : {
@@ -19034,6 +20504,12 @@
             "value" : "기본값으로 초기화"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Przywróć domyślne"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -19111,6 +20587,12 @@
             "value" : "기본값으로 초기화"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Przywróć domyślne"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -19136,8 +20618,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Jetzt neu starten"
+            "state" : "translated",
+            "value" : "Neu starten"
           }
         },
         "en" : {
@@ -19154,8 +20636,8 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Reiniciar ahora"
+            "state" : "translated",
+            "value" : "Reiniciar Ahora"
           }
         },
         "fr" : {
@@ -19186,6 +20668,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "지금 재시작"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uruchom ponownie teraz"
           }
         },
         "pt-PT" : {
@@ -19266,6 +20754,12 @@
             "value" : "저장"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19292,7 +20786,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Speichern Sie Ihre aktuelle Soundkonfiguration als Voreinstellung, um später schnell darauf zugreifen zu können."
           }
         },
@@ -19342,6 +20836,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "현재 소리 설정을 프리셋으로 저장해 두면, 나중에 바로 불러올 수 있어요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz obecną konfigurację dźwięków jako preset, aby szybko mieć do niej dostęp później."
           }
         },
         "pt-PT" : {
@@ -19421,6 +20921,12 @@
             "value" : "좋아하는 소리 조합을 프리셋으로 저장해 두면, 나중에 바로 불러올 수 있어요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zapisuj ulubione kombinacje dźwięków jako presety, aby szybko mieć do nich dostęp później."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -19498,6 +21004,12 @@
             "value" : "변경 사항 저장 중..."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zapisywanie zmian..."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -19573,6 +21085,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "아이콘 검색..."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Szukaj ikon..."
           }
         },
         "pt-PT" : {
@@ -19653,6 +21171,12 @@
             "value" : "소리를 2개 이상 선택하세요"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz co najmniej 2 dźwięki"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -19728,6 +21252,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "이미지 선택"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz obraz"
           }
         },
         "pt-PT" : {
@@ -19807,6 +21337,12 @@
             "value" : "소리 파일 선택"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz plik dźwiękowy"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -19884,6 +21420,12 @@
             "value" : "프리셋에 사용할 소리 선택"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybierz dźwięki do swojego presetu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -19959,6 +21501,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "선택됨:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wybrano:"
           }
         },
         "pt-PT" : {
@@ -20039,6 +21587,12 @@
             "value" : "타이머를 설정해 자동으로 페이드아웃하기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ustaw minutnik, aby automatycznie wyciszyć"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20114,6 +21668,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "타이머 설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ustaw minutnik"
           }
         },
         "pt-PT" : {
@@ -20193,6 +21753,12 @@
             "value" : "설정"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ustawienia"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20270,6 +21836,12 @@
             "value" : "공유 권한"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uprawnienia udostępniania"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20296,7 +21868,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Alle Töne anzeigen"
           }
         },
@@ -20346,6 +21918,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "모든 소리 보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż wszystkie dźwięki"
           }
         },
         "pt-PT" : {
@@ -20425,6 +22003,12 @@
             "value" : "레이블 표시"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pokaż etykiety"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20500,6 +22084,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "재생 중 화면 표시"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pokaż Teraz odtwarzane"
           }
         },
         "pt-PT" : {
@@ -20579,6 +22169,12 @@
             "value" : "진행 표시 테두리 표시"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pokaż obramowanie postępu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20656,6 +22252,12 @@
             "value" : "진행 표시 테두리 표시"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pokaż obramowania postępu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20731,6 +22333,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "재생 중 정보에 표시됩니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pokazuje się w informacjach Teraz odtwarzane"
           }
         },
         "pt-PT" : {
@@ -20811,6 +22419,12 @@
             "value" : "건너뛰기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pomiń"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -20837,7 +22451,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lizenz"
           }
         },
@@ -20887,6 +22501,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "소프트웨어 라이선스"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licencja oprogramowania"
           }
         },
         "pt-PT" : {
@@ -20966,6 +22586,12 @@
             "value" : "솔로"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Solo"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -21041,6 +22667,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "솔로 모드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tryb Solo"
           }
         },
         "pt-PT" : {
@@ -21120,6 +22752,12 @@
             "value" : "솔로 모드 - %@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tryb Solo - %@"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -21195,6 +22833,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "사운드 체크"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sound Check"
           }
         },
         "pt-PT" : {
@@ -21274,6 +22918,12 @@
             "value" : "사운드 체크는 서로 다른 소리의 음량을 조정하여 같은 음량으로 재생되도록 합니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sound Check dostosowuje głośność między różnymi dźwiękami, aby odtwarzały się z tą samą głośnością."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -21300,8 +22950,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sound-Credits"
+            "state" : "translated",
+            "value" : "Sound Credits"
           }
         },
         "en" : {
@@ -21350,6 +23000,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "소리 출처"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podziękowania za dźwięki"
           }
         },
         "pt-PT" : {
@@ -21429,6 +23085,12 @@
             "value" : "소리 파일"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Plik dźwiękowy"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -21504,6 +23166,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리 정보"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Informacje o dźwięku"
           }
         },
         "pt-PT" : {
@@ -21583,6 +23251,12 @@
             "value" : "소리 이름"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nazwa dźwięku"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -21658,6 +23332,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dźwięki"
           }
         },
         "pt-PT" : {
@@ -21738,6 +23418,12 @@
             "value" : "소리 (%lld/8)"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dźwięki (%lld/8)"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -21816,6 +23502,12 @@
             "value" : "원본 URL"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adres URL źródła"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -21842,8 +23534,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Star auf GitHub"
+            "state" : "translated",
+            "value" : "Star on GitHub"
           }
         },
         "en" : {
@@ -21892,6 +23584,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "GitHub에 별 남기기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj gwiazdkę na GitHub"
           }
         },
         "pt-PT" : {
@@ -21972,6 +23670,12 @@
             "value" : "타이머 시작"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Uruchom minutnik"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -22048,6 +23752,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "타이머 정지"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zatrzymaj minutnik"
           }
         },
         "pt-PT" : {
@@ -22128,6 +23838,12 @@
             "value" : "정지까지"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zatrzymanie za"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -22205,6 +23921,12 @@
             "value" : "%@에 정지"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zatrzyma się o %@"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -22280,6 +24002,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "%@ 후 정지"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zatrzyma się za %@"
           }
         },
         "pt-PT" : {
@@ -22360,6 +24088,12 @@
             "value" : "폭풍"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Burza"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -22436,6 +24170,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "시냇물"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strumień"
           }
         },
         "pt-PT" : {
@@ -22516,6 +24256,12 @@
             "value" : "여름 밤"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letnia noc"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -22593,6 +24339,12 @@
             "value" : "프리셋 전환"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Przełączaj między presetami"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -22619,7 +24371,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "System"
           }
         },
@@ -22669,6 +24421,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "시스템"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Systemowy"
           }
         },
         "pt-PT" : {
@@ -22746,6 +24504,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "소리를 탭하여 이 프리셋에 추가하거나 제거하세요"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stuknij dźwięk, aby dodać go do tego presetu lub usunąć"
           }
         },
         "pt-PT" : {
@@ -22826,6 +24590,12 @@
             "value" : "여기를 탭하면 저장된 프리셋 사이를 빠르게 전환하고 소리 모음에 접근할 수 있어요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stuknij tutaj, aby szybko przełączać się między zapisanymi presetami i uzyskać dostęp do swoich kolekcji dźwięków."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -22904,6 +24674,12 @@
             "value" : "슬라이더 아이콘을 탭하면 프리셋의 이름, 아트워크, 설정을 편집할 수 있어요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stuknij ikonę suwaka, aby edytować nazwę, grafikę i ustawienia presetu."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -22979,6 +24755,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "프리셋의 별을 탭하면 여기에 추가됩니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stuknij gwiazdkę przy dowolnym presecie, aby dodać go tutaj."
           }
         },
         "pt-PT" : {
@@ -23059,6 +24841,12 @@
             "value" : "탭하여 기본, 클래식, 베타 중에서 선택하세요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Stuknij, aby wybrać Domyślną, Klasyczną lub Beta."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -23085,7 +24873,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Blaugrün"
           }
         },
@@ -23135,6 +24923,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "청록"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Błękitny"
           }
         },
         "pt-PT" : {
@@ -23214,6 +25008,12 @@
             "value" : "Blankie를 테스트해 주셔서 감사합니다!"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dziękujemy za testowanie Blankie!"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -23240,8 +25040,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Die Standardvorgabe kann nicht umbenannt werden"
+            "state" : "translated",
+            "value" : "Die Standardvoreinstellung kann nicht umbenannt werden"
           }
         },
         "en" : {
@@ -23290,6 +25090,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "기본 프리셋은 이름을 바꿀 수 없습니다"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Domyślny preset nie może zostać zmieniony"
           }
         },
         "pt-PT" : {
@@ -23369,6 +25175,12 @@
             "value" : "테마"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Motyw"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -23444,6 +25256,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "이 프리셋은 자체 보기 모드를 사용합니다. 프리셋 편집에서 변경하세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ten preset używa własnego trybu widoku. Zmień go w Edytuj preset."
           }
         },
         "pt-PT" : {
@@ -23523,6 +25341,12 @@
             "value" : "이 동영상은 현재 잠금 화면용으로 선택되어 있습니다. 제거하면 선택도 함께 해제됩니다. 나중에 다시 다운로드할 수 있습니다."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "To wideo jest obecnie wybrane dla Twojego ekranu blokady. Usunięcie go spowoduje również jego odznaczenie. Możesz pobrać je ponownie później."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -23598,6 +25422,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "이렇게 하면 기기의 저장 공간이 확보됩니다. 나중에 다시 다운로드할 수 있습니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "To zwolni miejsce na Twoim urządzeniu. Możesz pobrać je ponownie później."
           }
         },
         "pt-PT" : {
@@ -23678,6 +25508,12 @@
             "value" : "타이머"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Minutnik"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -23754,6 +25590,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "제목"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tytuł"
           }
         },
         "pt-PT" : {
@@ -23834,6 +25676,12 @@
             "value" : "기차"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pociąg"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -23860,7 +25708,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Übersetzungen"
           }
         },
@@ -23910,6 +25758,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "번역"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tłumaczenia"
           }
         },
         "pt-PT" : {
@@ -23987,6 +25841,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "다른 검색어로 시도해 보세요"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Spróbuj innego wyszukiwanego hasła"
           }
         },
         "pt-PT" : {
@@ -24067,6 +25927,12 @@
             "value" : "Quick Mix 사용해 보기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wypróbuj Quick Mix"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -24143,6 +26009,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "즐겨찾기 해제"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Usuń z ulubionych"
           }
         },
         "pt-PT" : {
@@ -24223,6 +26095,12 @@
             "value" : "이 이름 사용"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Użyj tej nazwy"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -24301,6 +26179,12 @@
             "value" : "이 프리셋 이름 사용"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Użyj tej nazwy presetu"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -24327,7 +26211,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Version %@ (%@)"
           }
         },
@@ -24377,6 +26261,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "버전 %@ (%@)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wersja %@ (%@)"
           }
         },
         "pt-PT" : {
@@ -24454,6 +26344,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "보기 모드"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tryb widoku"
           }
         },
         "pt-PT" : {
@@ -24534,6 +26430,12 @@
             "value" : "프리셋 보기"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wyświetl preset"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -24611,6 +26513,12 @@
             "value" : "음량"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Głośność"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -24686,6 +26594,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "음량 조정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Regulacja głośności"
           }
         },
         "pt-PT" : {
@@ -24766,6 +26680,12 @@
             "value" : "파도"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fale"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -24792,7 +26712,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Webseite"
           }
         },
@@ -24842,6 +26762,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "웹사이트"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strona www"
           }
         },
         "pt-PT" : {
@@ -24922,6 +26848,12 @@
             "value" : "다음은 무엇일까요?"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Co dalej?"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -24998,6 +26930,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "화이트 노이즈"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biały szum"
           }
         },
         "pt-PT" : {
@@ -25078,6 +27016,12 @@
             "value" : "바람"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiatr"
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
@@ -25104,7 +27048,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Gelb"
           }
         },
@@ -25154,6 +27098,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "노랑"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Żółty"
           }
         },
         "pt-PT" : {
@@ -25234,6 +27184,12 @@
             "value" : "이름을 직접 수정하거나 다른 추천을 받아 볼 수 있어요."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Możesz edytować nazwę lub wypróbować inną propozycję."
+          }
+        },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -25259,7 +27215,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sie müssen Blankie neu starten, damit die Sprachänderung wirksam wird."
           }
         },
@@ -25277,8 +27233,8 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Deberás reiniciar Blankie para que el cambio de idioma surta efecto."
+            "state" : "translated",
+            "value" : "Debes reiniciar Blankie para que los cambios de idioma se apliquen."
           }
         },
         "fr" : {
@@ -25309,6 +27265,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "언어 변경을 적용하려면 Blankie를 다시 시작해 주세요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Musisz uruchomić ponownie Blankie, aby zmiana języka weszła w życie."
           }
         },
         "pt-PT" : {
@@ -25386,6 +27348,12 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "이 프리셋에 포함될 소리"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Twój preset będzie zawierał"
           }
         },
         "pt-PT" : {

@@ -262,6 +262,7 @@
 				it,
 				ja,
 				ko,
+				pl,
 				"pt-PT",
 				tr,
 				"zh-Hans",
