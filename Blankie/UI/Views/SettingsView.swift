@@ -9,11 +9,14 @@ struct SettingsView: View {
   #endif
   @State private var showingAbout = false
   @State private var showingOnboarding = false
+  // Populated asynchronously from `Bundle.main.isTestFlightOrDebug` (StoreKit
+  // AppTransaction). Starts `false` so App Store users never flash beta UI.
+  @State private var showBetaTesterUI = false
 
   var body: some View {
     NavigationStack {
       Form {
-        if Bundle.main.isTestFlightOrDebug {
+        if showBetaTesterUI {
           Section(
             header: Text(
               "Thanks for Testing Blankie!")
@@ -224,6 +227,9 @@ struct SettingsView: View {
         #endif
       }
       .navigationTitle("Settings")
+      .task {
+        showBetaTesterUI = await Bundle.main.isTestFlightOrDebug
+      }
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
