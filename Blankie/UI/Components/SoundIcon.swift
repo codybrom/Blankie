@@ -128,55 +128,53 @@ struct SoundIcon: View {
   /// enclosing `SortableGridView` cell, not here.
   private var iconAndLabel: some View {
     VStack(spacing: configuration.spacing) {
-      ZStack {
-        Circle()
-          .fill(backgroundFill)
-          .frame(width: configuration.iconSize, height: configuration.iconSize)
-
-        // Progress border (inner border)
-        if globalSettings.showProgressBorder && sound.isSelected && audioManager.isGloballyPlaying {
-          let borderSize = configuration.iconSize - configuration.borderWidth
-
-          // Background track
+        ZStack {
           Circle()
-            .stroke(Color.gray.opacity(0.3), lineWidth: configuration.borderWidth)
-            .frame(width: borderSize, height: borderSize)
+            .fill(backgroundFill)
+            .frame(width: configuration.iconSize, height: configuration.iconSize)
 
-          // Progress indicator with TimelineView for 30 FPS updates
-          TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
+          // Progress border (inner border)
+          if globalSettings.showProgressBorder && sound.isSelected && audioManager.isGloballyPlaying {
+            let borderSize = configuration.iconSize - configuration.borderWidth
+
+            // Background track
             Circle()
-              .trim(from: 0, to: max(0.01, getCurrentProgress()))  // Ensure minimum visibility
-              .stroke(
-                accentColor,
-                style: StrokeStyle(lineWidth: configuration.borderWidth, lineCap: .round)
-              )
+              .stroke(Color.gray.opacity(0.3), lineWidth: configuration.borderWidth)
               .frame(width: borderSize, height: borderSize)
-              .rotationEffect(.degrees(-90))
-          }
-        }
 
-        Image(systemName: sound.systemIconName)
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: configuration.iconSize * 0.64, height: configuration.iconSize * 0.64)
-          .foregroundColor(iconColor)
-      }
-      .frame(width: configuration.iconSize, height: configuration.iconSize)
-      .contentShape(Circle())
-      .gesture(
-        TapGesture()
-          .onEnded { _ in
-            // If global playback is paused and this sound is already selected,
-            // start global playback instead of deselecting the sound
-            if !audioManager.isGloballyPlaying && sound.isSelected {
-              audioManager.setGlobalPlaybackState(true)
-            } else {
-              sound.toggle()
+            // Progress indicator with TimelineView for 30 FPS updates
+            TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
+              Circle()
+                .trim(from: 0, to: max(0.01, getCurrentProgress()))  // Ensure minimum visibility
+                .stroke(
+                  accentColor,
+                  style: StrokeStyle(lineWidth: configuration.borderWidth, lineCap: .round)
+                )
+                .frame(width: borderSize, height: borderSize)
+                .rotationEffect(.degrees(-90))
             }
           }
-      )
-      .accessibilityIdentifier("sound-\(sound.fileName)")
-      .sensoryFeedback(.selection, trigger: sound.isSelected)
+
+          Image(systemName: sound.systemIconName)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: configuration.iconSize * 0.64, height: configuration.iconSize * 0.64)
+            .foregroundColor(iconColor)
+        }
+        .frame(width: configuration.iconSize, height: configuration.iconSize)
+        .contentShape(Circle())
+        .accessibilityIdentifier("sound-\(sound.fileName)")
+        .accessibilityAddTraits(.isButton)
+        .onTapGesture {
+          // If global playback is paused and this sound is already selected,
+          // start global playback instead of deselecting the sound
+          if !audioManager.isGloballyPlaying && sound.isSelected {
+            audioManager.setGlobalPlaybackState(true)
+          } else {
+            sound.toggle()
+          }
+        }
+        .sensoryFeedback(.selection, trigger: sound.isSelected)
 
       if globalSettings.showSoundNames {
         Text(LocalizedStringKey(sound.title))

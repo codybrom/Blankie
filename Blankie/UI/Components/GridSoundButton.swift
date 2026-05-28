@@ -88,7 +88,6 @@ import SwiftUI
       // it implicitly: its 50pt icon is a tiny fraction of a short, wide row.)
       GlassEffectContainer(spacing: 0) {
         VStack(spacing: 12) {
-          // Tap zone: everything above the slider.
           VStack(spacing: 12) {
             iconView
 
@@ -103,7 +102,10 @@ import SwiftUI
           }
           .frame(maxWidth: .infinity)
           .contentShape(Rectangle())
-          .onTapGesture { onTap() }
+          .accessibilityAddTraits(.isButton)
+          .onTapGesture {
+            onTap()
+          }
           // Reorder drags start from the icon/title only, never the slider
           // below — so adjusting volume can't be hijacked by the tile move.
           .reorderHandle()

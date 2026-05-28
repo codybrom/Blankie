@@ -59,6 +59,7 @@ where
         ScrollView(.vertical) {
           gridContent
         }
+        .scrollDisabled(isDragging)
       } else {
         gridContent
       }
@@ -85,12 +86,12 @@ where
       }
     }
     // Block interaction with the grid while a tile is in flight.
-    .allowsHitTesting(draggingItem == nil)
     .onGeometryChange(for: CGPoint.self) {
       $0.frame(in: .global).origin
     } action: {
       gridOrigin = $0
     }
+
   }
 
   @ViewBuilder
@@ -107,6 +108,7 @@ where
           .environment(
             \.reorderHandlers,
             ReorderHandlers(
+              onStart: { handleReorderStart(item: item) },
               onChanged: { location in handleReorderChange(location, item: item) },
               onEnd: { handleReorderEnd() }
             )
@@ -124,6 +126,15 @@ where
 
   // MARK: - Shared reorder handlers
 
+  private func handleReorderStart(item: Data.Element) {
+    if draggingItem == nil {
+      draggingItem = item
+      draggingStartRect = item.position
+      draggingStartLocation = CGPoint(x: item.position.midX, y: item.position.midY)
+      isDragging = true
+    }
+  }
+
   /// Called continuously while a tile is being dragged. `location` is in
   /// `.global` space.
   private func handleReorderChange(_ location: CGPoint, item: Data.Element) {
@@ -131,9 +142,7 @@ where
       draggingItem = item
       draggingStartRect = item.position
       draggingStartLocation = location
-      DispatchQueue.main.async {
-        isDragging = true
-      }
+      isDragging = true
     }
 
     // `location` and the cell rects are both in .global, so the preview offset
@@ -151,6 +160,7 @@ where
 
   /// Called when the drag gesture ends: settle the lifted preview, then drop it.
   private func handleReorderEnd() {
+    guard draggingItem != nil else { return }
     onDraggingChange(.zero, .zero, false)
     DispatchQueue.main.async {
       withAnimation(
@@ -208,6 +218,7 @@ struct SortableGridConfig {
 /// drag-region (the icon/tap-zone), leaving sibling controls like the inline
 /// volume slider fully interactive.
 struct ReorderHandlers {
+  var onStart: () -> Void = {}
   var onChanged: (CGPoint) -> Void = { _ in }
   var onEnd: () -> Void = {}
 }
@@ -223,20 +234,84 @@ extension EnvironmentValues {
   }
 }
 
+#if os(iOS)
+import UIKit
+
+struct ReorderLongPressGesture: UIGestureRecognizerRepresentable {
+  typealias UIGestureRecognizerType = UILongPressGestureRecognizer
+
+  var minimumPressDuration: TimeInterval = 0.35
+  var allowableMovement: CGFloat = 15.0
+
+  var onStart: () -> Void
+  var onChanged: (CGPoint) -> Void
+  var onEnd: () -> Void
+
+  func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
+    let recognizer = UILongPressGestureRecognizer()
+    recognizer.minimumPressDuration = minimumPressDuration
+    recognizer.allowableMovement = allowableMovement
+    return recognizer
+  }
+
+  func updateUIGestureRecognizer(_ recognizer: UILongPressGestureRecognizer, context: Context) {
+    recognizer.minimumPressDuration = minimumPressDuration
+    recognizer.allowableMovement = allowableMovement
+  }
+
+  func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
+    let globalLocation = context.converter.location(in: .global)
+    
+    switch recognizer.state {
+    case .began:
+      print("👉 [Gesture Debug] UIKit LongPress began! Triggering pickup.")
+      onStart()
+      onChanged(globalLocation)
+    case .changed:
+      onChanged(globalLocation)
+    case .ended, .cancelled, .failed:
+      print("👉 [Gesture Debug] UIKit LongPress ended/cancelled/failed: state=\(recognizer.state.rawValue)")
+      onEnd()
+    default:
+      break
+    }
+  }
+}
+#endif
+
 struct ReorderHandleModifier: ViewModifier {
   @Environment(\.reorderHandlers) private var handlers
+  @State private var hasStartedDragging = false
 
   func body(content: Content) -> some View {
-    content.gesture(
-      LongPressGesture(minimumDuration: 0.16)
-        .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
-        .onChanged { value in
-          if case .second(true, let drag?) = value {
-            handlers.onChanged(drag.location)
+    #if os(iOS)
+    content
+      .gesture(
+        ReorderLongPressGesture(
+          onStart: { handlers.onStart() },
+          onChanged: { handlers.onChanged($0) },
+          onEnd: { handlers.onEnd() }
+        )
+      )
+    #else
+    content
+      .gesture(
+        DragGesture(minimumDistance: 5, coordinateSpace: .global)
+          .onChanged { value in
+            if !hasStartedDragging {
+              handlers.onStart()
+              hasStartedDragging = true
+            }
+            handlers.onChanged(value.location)
           }
-        }
-        .onEnded { _ in handlers.onEnd() }
-    )
+          .onEnded { _ in
+            if hasStartedDragging {
+              handlers.onEnd()
+              hasStartedDragging = false
+            }
+          }
+      )
+    #endif
   }
 }
 
