@@ -33,6 +33,7 @@ struct SpectrumColorPicker: View {
     } else {
       sliderValue = 0
     }
+    currentColorName = currentColor.name
   }
 
   // Get color for current slider value
@@ -146,27 +147,56 @@ struct SpectrumColorPicker: View {
   // Base slider: native tick marks on OSes that support them, plain slider otherwise.
   @ViewBuilder
   private var baseSlider: some View {
+    let onEditing: (Bool) -> Void = { editing in
+      if editing {
+        if !isDragging {
+          isDragging = true
+          currentColorName = currentColor.name
+          withAnimation(.easeIn(duration: 0.2)) {
+            showingChip = true
+          }
+        }
+      } else {
+        isDragging = false
+        selectedColor = currentColor.color
+        withAnimation(.easeOut(duration: 0.2)) {
+          showingChip = false
+        }
+
+        #if os(iOS)
+          let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+          impactFeedback.prepare()
+          impactFeedback.impactOccurred()
+        #endif
+      }
+    }
+
     if #available(macOS 26.0, *) {
       Slider(
         value: $sliderValue,
-        in: 0...Double(spectrumColors.count - 1)
-      ) {
-        Text("Accent Color")
-      } ticks: {
-        SliderTickContentForEach(
-          stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
-          id: \.self
-        ) { value in
-          SliderTick(value)
-        }
-      }
+        in: 0...Double(spectrumColors.count - 1),
+        label: {
+          Text("Accent Color")
+        },
+        ticks: {
+          SliderTickContentForEach(
+            stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
+            id: \.self
+          ) { value in
+            SliderTick(value)
+          }
+        },
+        onEditingChanged: onEditing
+      )
     } else {
       Slider(
         value: $sliderValue,
-        in: 0...Double(spectrumColors.count - 1)
-      ) {
-        Text("Accent Color")
-      }
+        in: 0...Double(spectrumColors.count - 1),
+        onEditingChanged: onEditing,
+        label: {
+          Text("Accent Color")
+        }
+      )
     }
   }
 
@@ -179,31 +209,6 @@ struct SpectrumColorPicker: View {
       }
       .tint(.clear)
       .frame(height: 44)
-      .simultaneousGesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { _ in
-            if !isDragging {
-              isDragging = true
-              currentColorName = currentColor.name
-              withAnimation(.easeIn(duration: 0.2)) {
-                showingChip = true
-              }
-            }
-          }
-          .onEnded { _ in
-            isDragging = false
-            selectedColor = currentColor.color
-            withAnimation(.easeOut(duration: 0.2)) {
-              showingChip = false
-            }
-
-            #if os(iOS)
-              let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-              impactFeedback.prepare()
-              impactFeedback.impactOccurred()
-            #endif
-          }
-      )
   }
 
   // Track overlay view
@@ -229,6 +234,7 @@ struct SpectrumColorPicker: View {
 
             // Show color chip overlay when dragging
             colorChip(geometry: geometry)
+
           }
           .frame(height: 4)
         }

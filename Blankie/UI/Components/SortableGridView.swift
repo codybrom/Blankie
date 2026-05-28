@@ -235,48 +235,52 @@ extension EnvironmentValues {
 }
 
 #if os(iOS)
-import UIKit
+  import UIKit
 
-struct ReorderLongPressGesture: UIGestureRecognizerRepresentable {
-  typealias UIGestureRecognizerType = UILongPressGestureRecognizer
+  struct ReorderLongPressGesture: UIGestureRecognizerRepresentable {
+    typealias UIGestureRecognizerType = UILongPressGestureRecognizer
 
-  var minimumPressDuration: TimeInterval = 0.35
-  var allowableMovement: CGFloat = 15.0
+    var minimumPressDuration: TimeInterval = 0.35
+    var allowableMovement: CGFloat = 15.0
 
-  var onStart: () -> Void
-  var onChanged: (CGPoint) -> Void
-  var onEnd: () -> Void
+    var onStart: () -> Void
+    var onChanged: (CGPoint) -> Void
+    var onEnd: () -> Void
 
-  func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
-    let recognizer = UILongPressGestureRecognizer()
-    recognizer.minimumPressDuration = minimumPressDuration
-    recognizer.allowableMovement = allowableMovement
-    return recognizer
-  }
+    func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
+      let recognizer = UILongPressGestureRecognizer()
+      recognizer.minimumPressDuration = minimumPressDuration
+      recognizer.allowableMovement = allowableMovement
+      return recognizer
+    }
 
-  func updateUIGestureRecognizer(_ recognizer: UILongPressGestureRecognizer, context: Context) {
-    recognizer.minimumPressDuration = minimumPressDuration
-    recognizer.allowableMovement = allowableMovement
-  }
+    func updateUIGestureRecognizer(_ recognizer: UILongPressGestureRecognizer, context: Context) {
+      recognizer.minimumPressDuration = minimumPressDuration
+      recognizer.allowableMovement = allowableMovement
+    }
 
-  func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
-    let globalLocation = context.converter.location(in: .global)
-    
-    switch recognizer.state {
-    case .began:
-      print("👉 [Gesture Debug] UIKit LongPress began! Triggering pickup.")
-      onStart()
-      onChanged(globalLocation)
-    case .changed:
-      onChanged(globalLocation)
-    case .ended, .cancelled, .failed:
-      print("👉 [Gesture Debug] UIKit LongPress ended/cancelled/failed: state=\(recognizer.state.rawValue)")
-      onEnd()
-    default:
-      break
+    func handleUIGestureRecognizerAction(
+      _ recognizer: UILongPressGestureRecognizer, context: Context
+    ) {
+      let globalLocation = context.converter.location(in: .global)
+
+      switch recognizer.state {
+      case .began:
+        print("👉 [Gesture Debug] UIKit LongPress began! Triggering pickup.")
+        onStart()
+        onChanged(globalLocation)
+      case .changed:
+        onChanged(globalLocation)
+      case .ended, .cancelled, .failed:
+        print(
+          "👉 [Gesture Debug] UIKit LongPress ended/cancelled/failed: state=\(recognizer.state.rawValue)"
+        )
+        onEnd()
+      default:
+        break
+      }
     }
   }
-}
 #endif
 
 struct ReorderHandleModifier: ViewModifier {
@@ -285,32 +289,32 @@ struct ReorderHandleModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     #if os(iOS)
-    content
-      .gesture(
-        ReorderLongPressGesture(
-          onStart: { handlers.onStart() },
-          onChanged: { handlers.onChanged($0) },
-          onEnd: { handlers.onEnd() }
+      content
+        .gesture(
+          ReorderLongPressGesture(
+            onStart: { handlers.onStart() },
+            onChanged: { handlers.onChanged($0) },
+            onEnd: { handlers.onEnd() }
+          )
         )
-      )
     #else
-    content
-      .gesture(
-        DragGesture(minimumDistance: 5, coordinateSpace: .global)
-          .onChanged { value in
-            if !hasStartedDragging {
-              handlers.onStart()
-              hasStartedDragging = true
+      content
+        .gesture(
+          DragGesture(minimumDistance: 5, coordinateSpace: .global)
+            .onChanged { value in
+              if !hasStartedDragging {
+                handlers.onStart()
+                hasStartedDragging = true
+              }
+              handlers.onChanged(value.location)
             }
-            handlers.onChanged(value.location)
-          }
-          .onEnded { _ in
-            if hasStartedDragging {
-              handlers.onEnd()
-              hasStartedDragging = false
+            .onEnded { _ in
+              if hasStartedDragging {
+                handlers.onEnd()
+                hasStartedDragging = false
+              }
             }
-          }
-      )
+        )
     #endif
   }
 }

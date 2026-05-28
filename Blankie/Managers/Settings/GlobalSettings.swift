@@ -24,6 +24,7 @@ extension UserDefaults {
   static var shared: UserDefaults {
     AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
   }
+
 }
 
 enum UserDefaultsKeys {
@@ -50,7 +51,7 @@ enum UserDefaultsKeys {
 
 /// Default blur (in points) applied to a preset's background artwork behind the
 /// mixer. Presets may override this with their own `backgroundBlurRadius`.
-let defaultBackgroundBlurRadius: Double = 20
+let defaultBackgroundBlurRadius: Double = 15
 
 class GlobalSettings: ObservableObject {
   @Published var needsRestartForLanguageChange = false

@@ -39,25 +39,12 @@ struct SettingsView: View {
           }
         }
 
-        #if os(iOS) || os(visionOS)
-          PlaybackSettingsSection(globalSettings: globalSettings)
-        #endif
-
-        Section(
-          header: Text("Sounds")
-        ) {
-          NavigationLink(destination: SoundManagementView()) {
-            HStack {
-              Text("Manage Sounds")
-              Spacer()
-            }
-          }
-        }
+        PlaybackSettingsSection(globalSettings: globalSettings)
 
         // Always-active visual settings: applied globally, with no per-preset
         // override.
         Section(
-          header: Text("Appearance")
+          header: Text("Display")
         ) {
           Picker(
             selection: Binding(
@@ -78,7 +65,7 @@ struct SettingsView: View {
               set: { globalSettings.setShowSoundNames($0) }
             )
           ) {
-            Text("Show Labels")
+            Text("Show Sound Names")
           }
 
           Toggle(
@@ -100,12 +87,18 @@ struct SettingsView: View {
           ) {
             Text("Lock Screen Animations")
           }
+
         }
 
         // App-wide defaults a preset inherits and can override in Edit Preset
         // (view mode, accent color, background blur).
         Section(
-          header: Text("Preset Defaults")
+          header: VStack(alignment: .leading, spacing: 4) {
+            Text("Customization Defaults")
+            Text("Presets can override these options.")
+              .font(.caption)
+              .textCase(.none)
+          }
         ) {
           #if os(iOS) || os(visionOS)
             // View mode (Grid / List). This is the app-wide default. It's
@@ -117,23 +110,27 @@ struct SettingsView: View {
               audioManager.isQuickMix ? nil : presetManager.currentPreset?.viewMode
             let pickerLocked = audioManager.isQuickMix || presetOverride != nil
 
-            Picker(
-              selection: Binding(
-                get: {
-                  if audioManager.isQuickMix { return false }
-                  if let presetOverride { return presetOverride == .list }
-                  return globalSettings.showingListView
-                },
-                set: { globalSettings.setShowingListView($0) }
-              )
-            ) {
-              Text("Grid").tag(false)
-              Text("List").tag(true)
-            } label: {
+            VStack(alignment: .leading, spacing: 8) {
               Text("View Mode")
+              Picker(
+                selection: Binding(
+                  get: {
+                    if audioManager.isQuickMix { return false }
+                    if let presetOverride { return presetOverride == .list }
+                    return globalSettings.showingListView
+                  },
+                  set: { globalSettings.setShowingListView($0) }
+                )
+              ) {
+                Text("Grid").tag(false)
+                Text("List").tag(true)
+              } label: {
+                Text("View Mode")
+              }
+              .pickerStyle(.segmented)
+              .disabled(pickerLocked)
             }
-            .pickerStyle(.segmented)
-            .disabled(pickerLocked)
+            .padding(.vertical, 4)
 
             if presetOverride != nil {
               Text(
@@ -162,53 +159,32 @@ struct SettingsView: View {
             // every drag frame; the binding's setter updates the published value
             // live so the slider stays responsive.
             VStack(alignment: .leading, spacing: 8) {
-              Text("Background Blur")
-              Slider(
-                value: Binding(
-                  // Persist on each (stepped) change so VoiceOver/keyboard
-                  // adjustments save too — not only on drag-end. step:5 means
-                  // just a handful of writes per drag.
+              Text("Background Artwork Blur")
+              Picker(
+                "Background Artwork Blur",
+                selection: Binding(
                   get: { globalSettings.backgroundBlurRadius },
                   set: { globalSettings.setBackgroundBlurRadius($0) }
-                ),
-                in: 0...20,
-                step: 5,
-                label: {
-                  Text("Background Blur")
-                },
-                minimumValueLabel: {
-                  // Small dot -> large dot encodes "less -> more" without text,
-                  // so there's nothing to localize. The slider's accessibility
-                  // label/value already convey meaning, so hide these caps.
-                  Image(systemName: "circle.fill")
-                    .font(.system(size: 8))
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-                },
-                maximumValueLabel: {
-                  Image(systemName: "circle.fill")
-                    .font(.system(size: 15))
-                    .foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-                },
-                onEditingChanged: { editing in
-                  if !editing {
-                    globalSettings.setBackgroundBlurRadius(globalSettings.backgroundBlurRadius)
-                  }
-                }
-              )
+                )
+              ) {
+                Text("None").tag(0.0)
+                Text("Low").tag(7.5)
+                Text("High").tag(15.0)
+              }
+              .pickerStyle(.segmented)
             }
             .padding(.vertical, 4)
           #endif
         }
 
-        Section(
-          header: Text("About")
-        ) {
+        Section {
           Button {
             showingAbout = true
           } label: {
             HStack {
+              Image("blankie.symbol")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundColor(.accentColor)
               Text("About Blankie")
               Spacer()
               Image(systemName: "chevron.right")
@@ -262,24 +238,34 @@ struct SettingsView: View {
 // Playback preferences (Autoplay, Mix with Other Audio). Lives in the main iOS
 // Settings list, above Sounds — not under Manage Sounds.
 private struct PlaybackSettingsSection: View {
+  #if os(iOS) || os(visionOS)
+    @ObservedObject private var audioManager = AudioManager.shared
+  #endif
   @ObservedObject var globalSettings: GlobalSettings
 
   var body: some View {
     Section(
-      header: Text("Playback")
+      header: Text("Playback & Sounds")
     ) {
-      Toggle(
-        "Autoplay on Open",
-        isOn: Binding(
-          get: { globalSettings.autoPlayOnLaunch },
-          set: { globalSettings.setAutoPlayOnLaunch($0) }
-        )
-      )
-      .tint(globalSettings.customAccentColor ?? .accentColor)
-
       #if os(iOS) || os(visionOS)
+        Toggle(
+          "Autoplay on Open",
+          isOn: Binding(
+            get: { globalSettings.autoPlayOnLaunch },
+            set: { globalSettings.setAutoPlayOnLaunch($0) }
+          )
+        )
+        .tint(globalSettings.customAccentColor ?? .accentColor)
+
         mixWithOthersSection
       #endif
+
+      NavigationLink(destination: SoundManagementView()) {
+        HStack {
+          Text("Manage Sounds")
+          Spacer()
+        }
+      }
     }
   }
 
@@ -294,14 +280,30 @@ private struct PlaybackSettingsSection: View {
             set: { globalSettings.setMixWithOthers($0) }
           )
         )
+        .disabled(audioManager.isCarPlayConnected)
         .tint(globalSettings.customAccentColor ?? .accentColor)
 
-        if globalSettings.mixWithOthers {
+        Text("When enabled, Blankie plays alongside other apps, but can't use media controls.")
+          .font(.caption)
+          .foregroundColor(.secondary)
+
+        if audioManager.isCarPlayConnected {
+          HStack {
+            Image(systemName: "car.fill")
+              .foregroundColor(.blue)
+              .font(.caption)
+            Text("This is unavailable while connected to CarPlay")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+          .padding(.vertical, 4)
+          .padding(.horizontal, 8)
+          .background(Color.blue.opacity(0.1))
+          .cornerRadius(6)
+        }
+
+        if globalSettings.mixWithOthers && !audioManager.isCarPlayConnected {
           mixWithOthersDetails
-        } else {
-          Text("Blankie pauses other audio and responds to device media controls")
-            .font(.caption)
-            .foregroundColor(.secondary)
         }
       }
     }
@@ -309,44 +311,32 @@ private struct PlaybackSettingsSection: View {
     @ViewBuilder
     private var mixWithOthersDetails: some View {
       VStack(alignment: .leading, spacing: 8) {
+        Divider()
+          .padding(.vertical, 4)
+
         HStack {
-          Image(systemName: "exclamationmark.triangle.fill")
-            .foregroundColor(.orange)
-            .font(.caption)
-          Text("Device media controls won't pause Blankie")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-        .padding(.vertical, 4)
-        .padding(.horizontal, 8)
-        .background(.orange.opacity(0.1))
-        .cornerRadius(6)
-
-        VStack(alignment: .leading, spacing: 8) {
-          HStack {
-            Text("Blankie Volume with Media")
-              .font(.subheadline)
-            Spacer()
-            Text(
-              globalSettings.volumeWithOtherAudio.formatted(.percent.precision(.fractionLength(0)))
-            )
-            .font(.caption)
-            .foregroundColor(.secondary)
-          }
-
-          Slider(
-            value: Binding(
-              get: { globalSettings.volumeWithOtherAudio },
-              set: { globalSettings.setVolumeWithOtherAudio($0) }
-            ),
-            in: 0.0...1.0
+          Text("Blankie Volume with Media")
+            .font(.subheadline)
+          Spacer()
+          Text(
+            globalSettings.volumeWithOtherAudio.formatted(.percent.precision(.fractionLength(0)))
           )
-          .tint(globalSettings.customAccentColor ?? .accentColor)
-
-          Text("Other media plays at system volume")
-            .font(.caption)
-            .foregroundColor(.secondary)
+          .font(.caption)
+          .foregroundColor(.secondary)
         }
+
+        Slider(
+          value: Binding(
+            get: { globalSettings.volumeWithOtherAudio },
+            set: { globalSettings.setVolumeWithOtherAudio($0) }
+          ),
+          in: 0.0...1.0
+        )
+        .tint(globalSettings.customAccentColor ?? .accentColor)
+
+        Text("Other media plays at system volume")
+          .font(.caption)
+          .foregroundColor(.secondary)
       }
     }
   #endif

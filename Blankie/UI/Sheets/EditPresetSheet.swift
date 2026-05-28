@@ -387,7 +387,7 @@ extension EditPresetSheet {
     useCustomBlur = preset.backgroundBlurRadius != nil
     // Seed the slider with the effective value so enabling the override doesn't
     // jump the background: the preset's own value if set, else the app default.
-    blurOverride = preset.backgroundBlurRadius ?? globalSettings.backgroundBlurRadius
+    blurOverride = min(preset.backgroundBlurRadius ?? globalSettings.backgroundBlurRadius, 15)
 
     // Load existing images if they exist
     Task {

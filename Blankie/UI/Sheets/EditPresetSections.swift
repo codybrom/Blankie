@@ -138,39 +138,22 @@ extension EditPresetSheet {
       // only on drag-end so we don't run the full preset save on every frame.
       // The macOS window doesn't use a blurred backdrop, so hide this there.
       #if !os(macOS)
-        Toggle("Custom Background Blur", isOn: $useCustomBlur)
+        Toggle("Custom Background Artwork Blur", isOn: $useCustomBlur)
           .onChange(of: useCustomBlur) { _, _ in
             applyChangesInstantly()
           }
 
         if useCustomBlur {
-          Slider(
-            value: $blurOverride,
-            in: 0...20,
-            step: 5,
-            label: {
-              Text("Background Blur")
-            },
-            minimumValueLabel: {
-              // Small dot -> large dot encodes "less -> more" without text.
-              Image(systemName: "circle.fill")
-                .font(.system(size: 8))
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-            },
-            maximumValueLabel: {
-              Image(systemName: "circle.fill")
-                .font(.system(size: 15))
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-            },
-            onEditingChanged: { editing in
-              if !editing {
-                applyChangesInstantly()
-              }
-            }
-          )
+          Picker("Background Artwork Blur", selection: $blurOverride) {
+            Text("None").tag(0.0)
+            Text("Low").tag(7.5)
+            Text("High").tag(15.0)
+          }
+          .pickerStyle(.segmented)
           .padding(.vertical, 4)
+          .onChange(of: blurOverride) { _, _ in
+            applyChangesInstantly()
+          }
         }
       #endif
 

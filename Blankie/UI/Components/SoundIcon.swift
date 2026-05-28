@@ -128,53 +128,53 @@ struct SoundIcon: View {
   /// enclosing `SortableGridView` cell, not here.
   private var iconAndLabel: some View {
     VStack(spacing: configuration.spacing) {
-        ZStack {
+      ZStack {
+        Circle()
+          .fill(backgroundFill)
+          .frame(width: configuration.iconSize, height: configuration.iconSize)
+
+        // Progress border (inner border)
+        if globalSettings.showProgressBorder && sound.isSelected && audioManager.isGloballyPlaying {
+          let borderSize = configuration.iconSize - configuration.borderWidth
+
+          // Background track
           Circle()
-            .fill(backgroundFill)
-            .frame(width: configuration.iconSize, height: configuration.iconSize)
+            .stroke(Color.gray.opacity(0.3), lineWidth: configuration.borderWidth)
+            .frame(width: borderSize, height: borderSize)
 
-          // Progress border (inner border)
-          if globalSettings.showProgressBorder && sound.isSelected && audioManager.isGloballyPlaying {
-            let borderSize = configuration.iconSize - configuration.borderWidth
-
-            // Background track
+          // Progress indicator with TimelineView for 30 FPS updates
+          TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
             Circle()
-              .stroke(Color.gray.opacity(0.3), lineWidth: configuration.borderWidth)
+              .trim(from: 0, to: max(0.01, getCurrentProgress()))  // Ensure minimum visibility
+              .stroke(
+                accentColor,
+                style: StrokeStyle(lineWidth: configuration.borderWidth, lineCap: .round)
+              )
               .frame(width: borderSize, height: borderSize)
-
-            // Progress indicator with TimelineView for 30 FPS updates
-            TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
-              Circle()
-                .trim(from: 0, to: max(0.01, getCurrentProgress()))  // Ensure minimum visibility
-                .stroke(
-                  accentColor,
-                  style: StrokeStyle(lineWidth: configuration.borderWidth, lineCap: .round)
-                )
-                .frame(width: borderSize, height: borderSize)
-                .rotationEffect(.degrees(-90))
-            }
-          }
-
-          Image(systemName: sound.systemIconName)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: configuration.iconSize * 0.64, height: configuration.iconSize * 0.64)
-            .foregroundColor(iconColor)
-        }
-        .frame(width: configuration.iconSize, height: configuration.iconSize)
-        .contentShape(Circle())
-        .accessibilityIdentifier("sound-\(sound.fileName)")
-        .accessibilityAddTraits(.isButton)
-        .onTapGesture {
-          // If global playback is paused and this sound is already selected,
-          // start global playback instead of deselecting the sound
-          if !audioManager.isGloballyPlaying && sound.isSelected {
-            audioManager.setGlobalPlaybackState(true)
-          } else {
-            sound.toggle()
+              .rotationEffect(.degrees(-90))
           }
         }
-        .sensoryFeedback(.selection, trigger: sound.isSelected)
+
+        Image(systemName: sound.systemIconName)
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(width: configuration.iconSize * 0.64, height: configuration.iconSize * 0.64)
+          .foregroundColor(iconColor)
+      }
+      .frame(width: configuration.iconSize, height: configuration.iconSize)
+      .contentShape(Circle())
+      .accessibilityIdentifier("sound-\(sound.fileName)")
+      .accessibilityAddTraits(.isButton)
+      .onTapGesture {
+        // If global playback is paused and this sound is already selected,
+        // start global playback instead of deselecting the sound
+        if !audioManager.isGloballyPlaying && sound.isSelected {
+          audioManager.setGlobalPlaybackState(true)
+        } else {
+          sound.toggle()
+        }
+      }
+      .sensoryFeedback(.selection, trigger: sound.isSelected)
 
       if globalSettings.showSoundNames {
         Text(LocalizedStringKey(sound.title))
