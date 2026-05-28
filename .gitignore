@@ -87,3 +87,5 @@ notes
 # SourceKit-LSP / xcode-build-server (local, machine-specific)
 buildServer.json
 .compile
+
+scheduled_tasks.lock
