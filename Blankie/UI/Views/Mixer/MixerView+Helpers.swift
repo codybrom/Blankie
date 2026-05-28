@@ -72,13 +72,16 @@ import SwiftUI
     @ViewBuilder
     var presetBackgroundView: some View {
       let preset = presetManager.currentPreset
+      // Solo is its own thing — it shouldn't inherit the last preset's artwork.
+      // It uses the shared accent gradient (app accent), like Quick Mix.
+      let isSolo = audioManager.soloModeSound != nil
 
       GeometryReader { geometry in
         ZStack {
           // Layer 1: Animated artwork preview image (blurred) — only when
-          // a custom artwork exists. Presets without artwork fall through
-          // to the shared accent gradient (same look as Quick Mix).
-          if preset != nil,
+          // a custom artwork exists (and not in solo mode). Presets without
+          // artwork fall through to the shared accent gradient.
+          if !isSolo, preset != nil,
             let artworkImage = backgroundImage
           {
             Image(uiImage: artworkImage)
@@ -96,11 +99,13 @@ import SwiftUI
               )
           }
           // Layer 2: Shared accent gradient — matches Quick Mix so the
-          // default preset, custom accent presets, and Quick Mix all read
-          // as variants of the same surface.
+          // default preset, custom accent presets, solo mode, and Quick Mix
+          // all read as variants of the same surface.
           else {
             SoundSurfaceBackground(
-              accent: preset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+              accent: isSolo
+                ? (globalSettings.customAccentColor ?? .accentColor)
+                : (preset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
             )
           }
         }

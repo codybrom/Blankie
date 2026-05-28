@@ -112,42 +112,15 @@ class AudioManager: ObservableObject {
         await self.analyzeCustomSoundsIfNeeded()
       }
 
-      // Restore solo mode if it was saved
-      if let savedSoloFileName = GlobalSettings.shared.getSavedSoloModeFileName(),
-        let soloSound = self.sounds.first(where: { $0.fileName == savedSoloFileName })
-      {
-        debugLog("🎵 AudioManager: Restoring solo mode for '\(soloSound.title)'")
-        self.enterSoloMode(for: soloSound)
-      } else if GlobalSettings.shared.autoPlayOnLaunch {
-        let hasSelectedSounds = self.sounds.contains { $0.isSelected }
-        if hasSelectedSounds {
-          // Set initial state
-          self.isGloballyPlaying = true
-
-          // Start playback
-          self.playSelected()
-
-          // Update Now Playing info with full preset details
-          let currentPreset = PresetManager.shared.currentPreset
-          self.nowPlayingManager.updateInfo(
-            preset: currentPreset,
-            presetName: currentPreset?.name,
-            creatorName: currentPreset?.creatorName,
-            artworkId: currentPreset?.artworkId,
-            isPlaying: true
-          )
-        }
+      // Restore solo mode if it was saved (respecting auto-play). A custom solo
+      // sound may not be loaded yet here; restoreSoloModeIfNeeded() reports true
+      // so we don't fall back to the preset prematurely, and
+      // loadCustomSoundsWhenReady() finishes (or abandons) the restore once
+      // custom sounds load.
+      if self.restoreSoloModeIfNeeded() {
+        // Solo restored (or pending a still-loading custom sound).
       } else {
-        // Ensure we're in a paused state
-        self.isGloballyPlaying = false
-        let currentPreset = PresetManager.shared.currentPreset
-        self.nowPlayingManager.updateInfo(
-          preset: currentPreset,
-          presetName: currentPreset?.name,
-          creatorName: currentPreset?.creatorName,
-          artworkId: currentPreset?.artworkId,
-          isPlaying: false
-        )
+        self.applyPresetLaunchState()
       }
     }
   }

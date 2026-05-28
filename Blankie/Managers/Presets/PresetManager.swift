@@ -477,6 +477,16 @@ extension PresetManager {
     let wasPlaying = AudioManager.shared.isGloballyPlaying
 
     Task { @MainActor in
+      // A solo sound owns playback (e.g. restored at launch). Don't let preset
+      // application start/stop sounds underneath it — the preset is already
+      // recorded as current (preparePresetApplication) for when solo is left.
+      // Applying sound states here would auto-start the preset's sounds via
+      // the isSelected didSet while the solo sound is playing.
+      guard AudioManager.shared.soloModeSound == nil else {
+        prefetchNearbyAnimatedArtwork(currentPreset: preset)
+        return
+      }
+
       if wasPlaying {
         AudioManager.shared.pauseAll()
         // Allow audio system to process pause before applying new sounds

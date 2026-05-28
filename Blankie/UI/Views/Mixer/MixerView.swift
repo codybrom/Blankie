@@ -128,6 +128,11 @@ private struct AnimationTrigger: Equatable {
         )
         soundsUpdateTrigger += 1
       }
+      .onChange(of: audioManager.isQuickMix) { _, isQuickMix in
+        // Quick Mix is a grid-first mode — entering it (e.g. from the preset
+        // picker) always lands on the mixer, never the Now Playing view.
+        if isQuickMix { showingNowPlaying = false }
+      }
       .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
         // Preset content changed (sounds added/removed)
         if let oldCount = oldValue, let newCount = newValue, oldCount != newCount {
@@ -179,6 +184,7 @@ private struct AnimationTrigger: Equatable {
                 showingPresetPicker: $showingPresetPicker,
                 showingTimer: $showingTimer,
                 presetToEdit: $presetToEdit,
+                soundToEdit: $soundToEdit,
                 showingQuickMixEditor: $showingQuickMixEditor
               )
               .transition(.opacity)
@@ -257,6 +263,7 @@ private struct AnimationTrigger: Equatable {
               showingPresetPicker: $showingPresetPicker,
               showingTimer: $showingTimer,
               presetToEdit: $presetToEdit,
+              soundToEdit: $soundToEdit,
               showingQuickMixEditor: $showingQuickMixEditor
             )
             .transition(.opacity)

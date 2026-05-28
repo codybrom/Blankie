@@ -88,6 +88,75 @@ struct PresetPickerRow: View {
   }
 }
 
+/// A row that solos a single sound. Mirrors `PresetPickerRow`: tap to enter
+/// solo mode, with an always-visible favorite star (a solo sound is starred
+/// under the `solo:<fileName>` token).
+struct SoloPickerRow: View {
+  let sound: Sound
+  let isEditMode: Bool
+  let onSelection: (() -> Void)?
+  @ObservedObject private var audioManager = AudioManager.shared
+  @ObservedObject private var globalSettings = GlobalSettings.shared
+  @Environment(\.dismiss) private var dismiss
+
+  init(sound: Sound, isEditMode: Bool, onSelection: (() -> Void)? = nil) {
+    self.sound = sound
+    self.isEditMode = isEditMode
+    self.onSelection = onSelection
+  }
+
+  private var starToken: String {
+    GlobalSettings.soloToken(forFileName: sound.fileName)
+  }
+
+  var body: some View {
+    HStack {
+      HStack(spacing: 8) {
+        Image(systemName: sound.systemIconName)
+          .foregroundColor(.accentColor)
+          .frame(width: 20)
+
+        Text(sound.title)
+          .foregroundColor(.primary)
+
+        if audioManager.soloModeSound?.id == sound.id {
+          Image(systemName: "checkmark")
+            .foregroundColor(.accentColor)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
+      .onTapGesture {
+        if !isEditMode { soloSound() }
+      }
+
+      if !isEditMode {
+        Button {
+          globalSettings.toggleStarred(starToken)
+        } label: {
+          Image(systemName: globalSettings.isStarred(starToken) ? "star.fill" : "star")
+            .foregroundStyle(
+              globalSettings.isStarred(starToken)
+                ? (globalSettings.customAccentColor ?? .accentColor)
+                : .secondary)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(
+          globalSettings.isStarred(starToken)
+            ? Text("Remove from Favorites") : Text("Add to Favorites"))
+      }
+    }
+  }
+
+  private func soloSound() {
+    Task { @MainActor in
+      audioManager.toggleSoloMode(for: sound)
+      dismiss()
+      onSelection?()
+    }
+  }
+}
+
 struct PresetPickerView: View {
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
@@ -112,11 +181,21 @@ struct PresetPickerView: View {
       }
   }
 
+  /// Non-favorited sounds, alphabetical by title, for the fixed Sounds (solo)
+  /// section. Favorited sounds appear in the Favorites section instead — the
+  /// same split presets use, so nothing shows twice.
+  private var soloSounds: [Sound] {
+    audioManager.sounds
+      .filter { !globalSettings.isStarred(GlobalSettings.soloToken(forFileName: $0.fileName)) }
+      .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+  }
+
   // MARK: - Favorites / All Presets model
 
   /// Favorited tokens in saved order, dropping any whose preset no longer exists.
   private var favoriteTokens: [String] {
     globalSettings.starredItems.filter { token in
+      if audioManager.sound(forSoloToken: token) != nil { return true }
       switch token {
       case GlobalSettings.allSoundsToken: return presetManager.presets.contains { $0.isDefault }
       default: return presetManager.presets.contains { $0.id.uuidString == token }
@@ -192,7 +271,10 @@ struct PresetPickerView: View {
   /// Ordering the full set avoids leaving favorited presets with stale `order`
   /// values that collide with the new sequence.
   private func applyCustomOrder(_ reorderedNonFavoriteIDs: [String]) {
-    let favoritedCustomIDs = favoriteTokens.filter { $0 != GlobalSettings.allSoundsToken }
+    // Only real custom presets carry an `order`; drop All Blankie Sounds and
+    // solo-sound tokens, which aren't part of the custom-preset ordering.
+    let customIDs = Set(sortedCustomPresets.map(\.id.uuidString))
+    let favoritedCustomIDs = favoriteTokens.filter { customIDs.contains($0) }
     let fullOrder = favoritedCustomIDs + reorderedNonFavoriteIDs
     let orderByID = Dictionary(uniqueKeysWithValues: fullOrder.enumerated().map { ($1, $0) })
     var presets = presetManager.presets
@@ -209,14 +291,18 @@ struct PresetPickerView: View {
 
   @ViewBuilder
   private func tokenRow(_ token: String) -> some View {
-    switch token {
-    case GlobalSettings.allSoundsToken:
-      if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
-        PresetPickerRow(preset: defaultPreset, isEditMode: isEditMode) { dismiss() }
-      }
-    default:
-      if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
-        PresetPickerRow(preset: preset, isEditMode: isEditMode) { dismiss() }
+    if let sound = audioManager.sound(forSoloToken: token) {
+      SoloPickerRow(sound: sound, isEditMode: isEditMode) { dismiss() }
+    } else {
+      switch token {
+      case GlobalSettings.allSoundsToken:
+        if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
+          PresetPickerRow(preset: defaultPreset, isEditMode: isEditMode) { dismiss() }
+        }
+      default:
+        if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
+          PresetPickerRow(preset: preset, isEditMode: isEditMode) { dismiss() }
+        }
       }
     }
   }
@@ -247,22 +333,6 @@ struct PresetPickerView: View {
         }
       }
     }
-  }
-
-  @ViewBuilder
-  private func soloIndicatorRow(_ soloSound: Sound) -> some View {
-    HStack {
-      HStack(spacing: 8) {
-        Image(systemName: "headphones.circle.fill")
-          .foregroundColor(.accentColor)
-        Text("Solo Mode - \(soloSound.title)")
-          .foregroundColor(.secondary)
-      }
-      Spacer()
-      Image(systemName: "checkmark")
-        .foregroundColor(.accentColor)
-    }
-    .listRowBackground(Color.secondary.opacity(0.1))
   }
 
   var body: some View {
@@ -312,11 +382,6 @@ struct PresetPickerView: View {
           }
           .listRowBackground(Color.clear)
         } else {
-          // Solo mode status (not part of the favorites list)
-          if let soloSound = audioManager.soloModeSound {
-            soloIndicatorRow(soloSound)
-          }
-
           // FAVORITES — tap a row's star to add/remove; reorder via Edit.
           Section {
             if favoriteTokens.isEmpty {
@@ -354,6 +419,16 @@ struct PresetPickerView: View {
             .onDelete(perform: deleteAllPresets)
           } header: {
             Text("All Presets")
+          }
+
+          // SOUNDS — solo a single sound. Listed alphabetically and fixed
+          // (not reorderable); tap the star to favorite a sound.
+          Section {
+            ForEach(soloSounds, id: \.id) { sound in
+              SoloPickerRow(sound: sound, isEditMode: isEditMode) { dismiss() }
+            }
+          } header: {
+            Text("Sounds")
           }
         }
       }

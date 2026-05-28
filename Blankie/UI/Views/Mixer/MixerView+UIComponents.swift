@@ -83,58 +83,33 @@ import SwiftUI
         if #available(iOS 26.0, *) {
           GlassEffectContainer(spacing: 20) {
             HStack(spacing: 20) {
-              // Left button. Solo mode keeps a Back arrow (the only way out);
-              // Quick Mix instead shows the Now Playing toggle like the normal
-              // mixer — you leave Quick Mix by picking a preset (title → picker
-              // or the iPad sidebar), which calls `exitQuickMix()`.
-              if audioManager.soloModeSound != nil {
-                Button {
-                  withAnimation(.easeInOut(duration: 0.2)) {
-                    if audioManager.soloModeSound != nil {
-                      audioManager.exitSoloMode()
-                    } else if audioManager.isQuickMix {
-                      audioManager.exitQuickMix()
-                    }
-                  }
-                } label: {
-                  Image(systemName: "arrow.backward")
-                    .font(.system(size: 22))
-                    .foregroundColor(.primary)
-                    .frame(width: 56, height: 56)
+              Button {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                  showingNowPlaying.toggle()
                 }
-                .accessibilityLabel("Back")
-                .buttonStyle(.plain)
-                .contentShape(Circle())
-                .glassEffect(.regular.interactive(), in: .circle)
-              } else {
-                Button {
-                  withAnimation(.easeInOut(duration: 0.3)) {
-                    showingNowPlaying.toggle()
-                  }
-                } label: {
-                  // While Now Playing is up, this button returns to the mixer,
-                  // so the icon previews the destination view mode: a grid glyph
-                  // in grid mode, a list glyph in list mode. Quick Mix always
-                  // returns to a grid, so it ignores the list preference.
-                  // (`music.note.list` is shown when Now Playing is hidden.)
-                  Image(
-                    systemName: showingNowPlaying
-                      ? (effectiveUseListView && !audioManager.isQuickMix
-                        ? "list.bullet" : "square.grid.2x2")
-                      : "music.note.list"
-                  )
-                  .font(.system(size: 22))
-                  .foregroundColor(.primary)
-                  .contentTransition(.symbolEffect(.replace))
-                  .frame(width: 56, height: 56)
-                }
-                .accessibilityLabel(
-                  showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
+              } label: {
+                // While Now Playing is up, this button returns to the mixer,
+                // so the icon previews the destination view mode: a grid glyph
+                // in grid mode, a list glyph in list mode. Quick Mix always
+                // returns to a grid, so it ignores the list preference.
+                // (`music.note.list` is shown when Now Playing is hidden.)
+                Image(
+                  systemName: showingNowPlaying
+                    ? (effectiveUseListView && !audioManager.isQuickMix
+                      ? "list.bullet" : "square.grid.2x2")
+                    : "music.note.list"
                 )
-                .buttonStyle(.plain)
-                .contentShape(Circle())
-                .glassEffect(.regular.interactive(), in: .circle)
+                .font(.system(size: 22))
+                .foregroundColor(.primary)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(width: 56, height: 56)
               }
+              .accessibilityLabel(
+                showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
+              )
+              .buttonStyle(.plain)
+              .contentShape(Circle())
+              .glassEffect(.regular.interactive(), in: .circle)
 
               // Play/Pause button (always visible)
               playPauseButton
@@ -152,50 +127,27 @@ import SwiftUI
         } else {
           // Fallback for iOS 25 and earlier
           HStack(spacing: 20) {
-            // Left button. Solo mode keeps a Back arrow; Quick Mix shows the
-            // Now Playing toggle (leave via the preset picker / sidebar).
-            if audioManager.soloModeSound != nil {
-              Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                  if audioManager.soloModeSound != nil {
-                    audioManager.exitSoloMode()
-                  } else if audioManager.isQuickMix {
-                    audioManager.exitQuickMix()
-                  }
-                }
-              } label: {
-                Image(systemName: "arrow.backward")
-                  .font(.system(size: 22))
-                  .foregroundColor(.primary)
-                  .frame(width: 56, height: 56)
+            Button {
+              withAnimation(.easeInOut(duration: 0.3)) {
+                showingNowPlaying.toggle()
               }
-              .accessibilityLabel("Back")
-              .buttonStyle(.plain)
-              .contentShape(Circle())
-              .modernGlassEffect(cornerRadius: 28)
-            } else {
-              Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                  showingNowPlaying.toggle()
-                }
-              } label: {
-                Image(
-                  systemName: showingNowPlaying
-                    ? (effectiveUseListView && !audioManager.isQuickMix
-                      ? "list.bullet" : "square.grid.2x2")
-                    : "music.note.list"
-                )
-                .font(.system(size: 22))
-                .foregroundColor(.primary)
-                .frame(width: 56, height: 56)
-              }
-              .accessibilityLabel(
-                showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
+            } label: {
+              Image(
+                systemName: showingNowPlaying
+                  ? (effectiveUseListView && !audioManager.isQuickMix
+                    ? "list.bullet" : "square.grid.2x2")
+                  : "music.note.list"
               )
-              .buttonStyle(.plain)
-              .contentShape(Circle())
-              .modernGlassEffect(cornerRadius: 28)
+              .font(.system(size: 22))
+              .foregroundColor(.primary)
+              .frame(width: 56, height: 56)
             }
+            .accessibilityLabel(
+              showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
+            )
+            .buttonStyle(.plain)
+            .contentShape(Circle())
+            .modernGlassEffect(cornerRadius: 28)
 
             // Play/Pause button (always visible)
             playPauseButton
@@ -294,7 +246,16 @@ import SwiftUI
     /// Mix. Renders nothing when there's nothing to edit.
     @ViewBuilder
     var editPresetButton: some View {
-      if audioManager.isQuickMix {
+      if let soloSound = audioManager.soloModeSound {
+        Button {
+          soundToEdit = soloSound
+        } label: {
+          Image(systemName: "slider.horizontal.3")
+            .font(.system(size: 18))
+            .foregroundColor(.secondary)
+        }
+        .accessibilityLabel("Edit Sound")
+      } else if audioManager.isQuickMix {
         Button {
           showingQuickMixEditor = true
         } label: {
@@ -496,23 +457,6 @@ import SwiftUI
                 .contentShape(Rectangle())
             }
             .accessibilityLabel("Timer")
-            .buttonStyle(.borderless)
-          }
-
-          // Exit solo mode button (if in solo mode)
-          if audioManager.soloModeSound != nil {
-            Button {
-              withAnimation(.easeInOut(duration: 0.3)) {
-                audioManager.exitSoloMode()
-              }
-            } label: {
-              Image(systemName: "xmark")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.secondary)
-                .frame(width: 32, height: 32)
-                .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Exit Solo Mode")
             .buttonStyle(.borderless)
           }
 

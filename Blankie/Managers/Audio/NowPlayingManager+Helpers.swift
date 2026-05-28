@@ -80,6 +80,32 @@ extension NowPlayingManager {
     return nil
   }
 
+  /// Render a soloed sound's SF Symbol into lock-screen artwork: the app-accent
+  /// glyph centered on a dark card, mirroring the in-app placeholder. Returns
+  /// nil on platforms where it isn't rendered (caller falls back to default).
+  func soloArtwork(for sound: Sound) -> MPMediaItemArtwork? {
+    #if os(iOS) || os(visionOS)
+      let side: CGFloat = 512
+      let accent = UIColor(GlobalSettings.shared.customAccentColor ?? Color.accentColor)
+      let config = UIImage.SymbolConfiguration(pointSize: side * 0.4, weight: .regular)
+      guard
+        let symbol = UIImage(systemName: sound.systemIconName, withConfiguration: config)?
+          .withTintColor(accent, renderingMode: .alwaysOriginal)
+      else { return nil }
+
+      let renderer = UIGraphicsImageRenderer(size: CGSize(width: side, height: side))
+      let image = renderer.image { _ in
+        UIColor(white: 0.11, alpha: 1).setFill()
+        UIRectFill(CGRect(x: 0, y: 0, width: side, height: side))
+        let target = symbol.size
+        symbol.draw(at: CGPoint(x: (side - target.width) / 2, y: (side - target.height) / 2))
+      }
+      return MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+    #else
+      return nil
+    #endif
+  }
+
   func loadArtwork() -> MPMediaItemArtwork? {
     #if os(iOS) || os(visionOS)
       if let imageUrl = Bundle.main.url(forResource: "NowPlaying", withExtension: "png"),

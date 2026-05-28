@@ -36,6 +36,7 @@ extension AudioManager {
       debugLog("⚠️ AudioManager: Model context not ready - built-in sounds only")
       // Initialize PresetManager with built-in sounds only
       await PresetManager.shared.initializePresetManager()
+      reconcileLaunchPlaybackState()
       return
     }
 
@@ -65,6 +66,26 @@ extension AudioManager {
 
     // Initialize PresetManager with ALL sounds loaded
     await PresetManager.shared.initializePresetManager()
+
+    reconcileLaunchPlaybackState()
+  }
+
+  /// Once every sound and preset is loaded, drop favorites whose target no
+  /// longer exists, and finish (or abandon) a deferred solo restore — falling
+  /// back to the preset if the saved solo sound turns out to be gone. Runs on
+  /// every `loadCustomSoundsWhenReady()` path (including the no-model-context
+  /// one); it's idempotent and safe to re-run.
+  @MainActor
+  private func reconcileLaunchPlaybackState() {
+    GlobalSettings.shared.pruneStarredItems(
+      validPresetIDs: Set(PresetManager.shared.presets.map { $0.id.uuidString }),
+      validSoundFileNames: Set(sounds.map { $0.fileName }))
+
+    let hadSavedSolo = GlobalSettings.shared.getSavedSoloModeFileName() != nil
+    let soloRestored = restoreSoloModeIfNeeded(soundsFullyLoaded: true)
+    if hadSavedSolo, !soloRestored, soloModeSound == nil, !isGloballyPlaying {
+      applyPresetLaunchState()
+    }
   }
 
   #if !os(macOS)

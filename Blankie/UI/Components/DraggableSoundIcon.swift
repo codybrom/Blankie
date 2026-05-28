@@ -170,11 +170,10 @@ private struct DragAnimationTrigger: Equatable {
             // Disable tap when in edit mode
             guard editMode == .inactive else { return }
 
-            // If this sound is in solo mode, exit solo mode
+            // Tapping the soloed sound toggles playback — it does NOT exit solo.
+            // Solo is left by choosing another sound or preset.
             if AudioManager.shared.soloModeSound?.id == sound.id {
-              withAnimation(.easeInOut(duration: 0.3)) {
-                AudioManager.shared.exitSoloMode()
-              }
+              AudioManager.shared.togglePlayback()
             } else {
               // If global playback is paused and this sound is already selected,
               // start global playback instead of deselecting the sound

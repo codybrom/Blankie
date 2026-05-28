@@ -19,6 +19,7 @@ import SwiftUI
     @Binding var showingPresetPicker: Bool
     @Binding var showingTimer: Bool
     @Binding var presetToEdit: Preset?
+    @Binding var soundToEdit: Sound?
     @Binding var showingQuickMixEditor: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
@@ -57,10 +58,8 @@ import SwiftUI
             } else {
               LinearGradient(
                 colors: [
-                  (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
-                    ?? .accentColor).opacity(0.6),
-                  (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
-                    ?? .accentColor).opacity(0.3),
+                  accentColor.opacity(0.6),
+                  accentColor.opacity(0.3),
                   Color.black.opacity(0.8),
                 ],
                 startPoint: .topLeading,
@@ -115,6 +114,8 @@ import SwiftUI
 
         artworkView(size: artworkSize)
           .padding(.horizontal, 32)
+          .contentShape(Rectangle())
+          .onTapGesture { audioManager.togglePlayback() }
 
         Spacer()
 
@@ -146,6 +147,8 @@ import SwiftUI
         VStack {
           Spacer()
           artworkView(size: artworkSize)
+            .contentShape(Rectangle())
+            .onTapGesture { audioManager.togglePlayback() }
           Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -179,15 +182,15 @@ import SwiftUI
     @ViewBuilder
     private func artworkView(size: CGFloat) -> some View {
       if let soloSound = audioManager.soloModeSound {
-        Circle()
+        // Solo has no preset artwork: use the same placeholder card as a
+        // no-artwork preset, but with the sound's own icon and the app accent.
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
           .fill(Color.white.opacity(0.1))
           .frame(width: size, height: size)
           .overlay {
             Image(systemName: soloSound.systemIconName)
               .font(.system(size: size * 0.35))
-              .foregroundColor(
-                presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
-                  ?? .accentColor)
+              .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
           }
           .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
       } else if let image = backgroundImage {
@@ -291,26 +294,33 @@ import SwiftUI
 
     // MARK: - Actions Row
 
+    /// Accent used throughout Now Playing. Solo mode is its own thing, so it
+    /// uses the app accent instead of carrying over the last preset's accent.
     private var accentColor: Color {
-      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+      if audioManager.soloModeSound != nil {
+        return globalSettings.customAccentColor ?? .accentColor
+      }
+      return presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+        ?? .accentColor
     }
 
     /// Starred token for the current context, or nil when favoriting doesn't
-    /// apply. Mirrors the sidebar: the default preset maps to `allSoundsToken`,
-    /// custom presets to their UUID string. Quick Mix isn't favoritable and
-    /// Solo isn't a preset, so both return nil (the star is hidden).
+    /// apply. Solo sounds favorite under their `solo:` token; the default preset
+    /// maps to `allSoundsToken`, custom presets to their UUID. Quick Mix isn't
+    /// favoritable, so it returns nil (the star is hidden).
     private var favoriteToken: String? {
-      guard audioManager.soloModeSound == nil, !audioManager.isQuickMix,
-        let preset = presetManager.currentPreset
-      else { return nil }
+      if let solo = audioManager.soloModeSound {
+        return GlobalSettings.soloToken(forFileName: solo.fileName)
+      }
+      guard !audioManager.isQuickMix, let preset = presetManager.currentPreset else { return nil }
       return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
     }
 
-    /// Whether the row has something to edit: a preset, or Quick Mix. Solo mode
-    /// has no edit target here.
+    /// Whether the row has something to edit: a solo sound, a preset, or Quick
+    /// Mix.
     private var canEditCurrent: Bool {
-      audioManager.soloModeSound == nil
-        && (audioManager.isQuickMix || presetManager.currentPreset != nil)
+      audioManager.soloModeSound != nil || audioManager.isQuickMix
+        || presetManager.currentPreset != nil
     }
 
     /// Favorite / Timer / Edit controls shown above the volume slider. Favorite
@@ -341,17 +351,24 @@ import SwiftUI
 
         if canEditCurrent {
           Button {
-            if audioManager.isQuickMix {
+            if let solo = audioManager.soloModeSound {
+              soundToEdit = solo
+            } else if audioManager.isQuickMix {
               showingQuickMixEditor = true
             } else if let preset = presetManager.currentPreset {
               presetToEdit = preset
             }
           } label: {
-            Image(systemName: "slider.vertical.3")
-              .foregroundColor(.white.opacity(0.7))
+            Image(
+              systemName: audioManager.soloModeSound != nil
+                ? "slider.horizontal.3" : "slider.vertical.3"
+            )
+            .foregroundColor(.white.opacity(0.7))
           }
           .accessibilityLabel(
-            audioManager.isQuickMix ? Text("Edit Quick Mix") : Text("Edit Preset"))
+            audioManager.soloModeSound != nil
+              ? Text("Edit Sound")
+              : (audioManager.isQuickMix ? Text("Edit Quick Mix") : Text("Edit Preset")))
         }
       }
       .font(.system(size: 22))
@@ -383,6 +400,7 @@ import SwiftUI
       showingPresetPicker: .constant(false),
       showingTimer: .constant(false),
       presetToEdit: .constant(nil),
+      soundToEdit: .constant(nil),
       showingQuickMixEditor: .constant(false)
     )
   }

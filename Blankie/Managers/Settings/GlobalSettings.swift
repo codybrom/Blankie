@@ -61,6 +61,20 @@ class GlobalSettings: ObservableObject {
   static let allSoundsToken = "allSounds"
   static let quickMixToken = "quickMix"
 
+  /// Prefix for solo-sound tokens. A soloed sound is starred as
+  /// `"solo:<fileName>"`, using the sound's stable `fileName` as its identity.
+  static let soloTokenPrefix = "solo:"
+
+  /// The starred token for soloing the given sound file.
+  static func soloToken(forFileName fileName: String) -> String {
+    soloTokenPrefix + fileName
+  }
+
+  /// The sound file name encoded in a solo token, or nil if it isn't one.
+  static func soloFileName(fromToken token: String) -> String? {
+    token.hasPrefix(soloTokenPrefix) ? String(token.dropFirst(soloTokenPrefix.count)) : nil
+  }
+
   @Published var volume: Double
   @Published var appearance: AppearanceMode
   @Published var customAccentColor: Color?
@@ -74,7 +88,8 @@ class GlobalSettings: ObservableObject {
   @Published var lockPortraitOrientationiOS: Bool
   @Published var quickMixSoundFileNames: [String]
   /// Ordered list of starred items shown in the iPad sidebar and CarPlay.
-  /// Tokens: `allSoundsToken`, `quickMixToken`, or a preset's UUID string.
+  /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
+  /// solo-sound token (`soloToken(forFileName:)`).
   /// Order = display order; membership = starred.
   @Published var starredItems: [String]
   @Published var availableLanguages: [Language] = []

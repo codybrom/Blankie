@@ -46,6 +46,7 @@ final class NowPlayingManager {
   private var lastObservedDuration: TimeInterval = 0
   private var cancellables = Set<AnyCancellable>()
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
+  private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
 
   init() {
     // Don't setup immediately to avoid triggering audio session
@@ -131,22 +132,36 @@ final class NowPlayingManager {
       "🎵 NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )
 
-    // Check if preset changed to determine if we need full update
+    // A full (artwork) update is needed when the preset OR the solo sound
+    // changes. Solo sounds have no preset, so tracking only the preset id would
+    // miss solo→solo transitions and leave the previous sound's icon up.
+    let soloSoundId = AudioManager.shared.soloModeSound?.id
     let presetChanged = preset?.id != lastPresetId
+    let soloChanged = soloSoundId != lastSoloSoundId
 
     updateBasicInfo(displayInfo: displayInfo)
     updateAlbumAndDuration(creatorName: resolvedCreatorName)
     updatePlaybackRate(isPlaying: isPlaying)
 
-    // Only update artwork when preset changes to avoid restarting animated artwork
-    if presetChanged {
-      // CRITICAL: Load static artwork synchronously to avoid double-publishing
-      // If we load async, the artwork loads after we publish, triggering a second update that restarts animated artwork
-      await loadStaticArtworkSync(from: preset, fallbackArtworkId: artworkId)
-      #if os(iOS)
-        updateAnimatedArtwork(for: preset)
-      #endif
+    // Only update artwork when the preset/solo sound changes, to avoid
+    // restarting animated artwork on every incremental tick.
+    if presetChanged || soloChanged {
+      if let soloSound = AudioManager.shared.soloModeSound {
+        // Solo mode: show the sound's own icon, not the last preset's artwork.
+        applySoloArtwork(for: soloSound)
+        #if os(iOS)
+          removeAnimatedArtwork()
+        #endif
+      } else {
+        // CRITICAL: Load static artwork synchronously to avoid double-publishing
+        // If we load async, the artwork loads after we publish, triggering a second update that restarts animated artwork
+        await loadStaticArtworkSync(from: preset, fallbackArtworkId: artworkId)
+        #if os(iOS)
+          updateAnimatedArtwork(for: preset)
+        #endif
+      }
       lastPresetId = preset?.id
+      lastSoloSoundId = soloSoundId
 
       // Full update when preset changes (only published once, after both artworks are ready)
       MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
@@ -181,6 +196,18 @@ final class NowPlayingManager {
       startProgressUpdates()
     } else {
       stopProgressUpdates()
+    }
+  }
+
+  /// Set the lock-screen artwork to the soloed sound's rendered icon. Clears
+  /// the cached preset-artwork identity so returning to a preset reloads it.
+  private func applySoloArtwork(for sound: Sound) {
+    currentArtworkId = nil
+    currentStaticArtworkPath = nil
+    if let artwork = soloArtwork(for: sound) {
+      nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+    } else if let fallback = loadArtwork() {
+      nowPlayingInfo[MPMediaItemPropertyArtwork] = fallback
     }
   }
 
@@ -414,6 +441,8 @@ final class NowPlayingManager {
     staticArtworkTask = nil
     currentArtworkId = nil
     currentStaticArtworkPath = nil
+    lastPresetId = nil
+    lastSoloSoundId = nil
     #if os(iOS)
       removeAnimatedArtwork()
     #endif

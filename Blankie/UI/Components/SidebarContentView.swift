@@ -125,14 +125,18 @@ import SwiftUI
     // was deleted before pruning runs) render nothing.
     @ViewBuilder
     private func starredRow(for token: String) -> some View {
-      switch token {
-      case GlobalSettings.allSoundsToken:
-        if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
-          allSoundsRow(defaultPreset)
-        }
-      default:
-        if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
-          presetRow(preset)
+      if let sound = audioManager.sound(forSoloToken: token) {
+        soloRow(sound)
+      } else {
+        switch token {
+        case GlobalSettings.allSoundsToken:
+          if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
+            allSoundsRow(defaultPreset)
+          }
+        default:
+          if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
+            presetRow(preset)
+          }
         }
       }
     }
@@ -145,7 +149,9 @@ import SwiftUI
       // this once they've loaded.
       guard !presetManager.isLoading, !presetManager.presets.isEmpty else { return }
       let validIDs = Set(presetManager.presets.map { $0.id.uuidString })
-      globalSettings.pruneStarredItems(validPresetIDs: validIDs)
+      let validSounds = Set(audioManager.sounds.map { $0.fileName })
+      globalSettings.pruneStarredItems(
+        validPresetIDs: validIDs, validSoundFileNames: validSounds)
     }
 
     // All Sounds row
@@ -259,6 +265,27 @@ import SwiftUI
           } label: {
             Label("Delete", systemImage: "trash")
           }
+        }
+      }
+    }
+
+    // Favorited solo sound — tap to solo it. Only favorited sounds reach the
+    // sidebar, so the leading icon is always a star.
+    private func soloRow(_ sound: Sound) -> some View {
+      Button(action: {
+        Task { @MainActor in
+          AudioManager.shared.toggleSoloMode(for: sound)
+        }
+      }) {
+        HStack {
+          leadingIcon(typeIcon: sound.systemIconName, isFavorite: true)
+
+          Text(sound.title)
+            .foregroundColor(.primary)
+
+          Spacer()
+
+          rowIndicator(isCurrent: audioManager.soloModeSound?.id == sound.id)
         }
       }
     }

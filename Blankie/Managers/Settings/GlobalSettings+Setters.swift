@@ -97,6 +97,9 @@ extension GlobalSettings {
   func setStarredItems(_ value: [String]) {
     starredItems = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.starredItems)
+    // A favorited solo sound participates in lock-screen next/previous, so the
+    // command availability depends on the favorites list — refresh it here.
+    AudioManager.shared.updateNextPreviousCommandState()
   }
 
   /// Whether the given token (`allSoundsToken`, `quickMixToken`, or a preset
@@ -121,11 +124,16 @@ extension GlobalSettings {
   }
 
   /// Drop tokens for presets that no longer exist. `allSoundsToken` and
-  /// `quickMixToken` are always retained.
+  /// `quickMixToken` are always retained. Solo-sound tokens are retained when
+  /// `validSoundFileNames` is nil (caller doesn't know the sound list) or when
+  /// their file name is still present.
   @MainActor
-  func pruneStarredItems(validPresetIDs: Set<String>) {
+  func pruneStarredItems(validPresetIDs: Set<String>, validSoundFileNames: Set<String>? = nil) {
     let pruned = starredItems.filter { token in
-      token == GlobalSettings.allSoundsToken
+      if let fileName = GlobalSettings.soloFileName(fromToken: token) {
+        return validSoundFileNames?.contains(fileName) ?? true
+      }
+      return token == GlobalSettings.allSoundsToken
         || token == GlobalSettings.quickMixToken
         || validPresetIDs.contains(token)
     }

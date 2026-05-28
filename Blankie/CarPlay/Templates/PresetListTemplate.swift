@@ -235,6 +235,9 @@
     private static func addFavoritesSection(to sections: inout [CPListSection]) {
       let presets = PresetManager.shared.presets
       let items: [CPListItem] = GlobalSettings.shared.starredItems.compactMap { token in
+        if let sound = AudioManager.shared.sound(forSoloToken: token) {
+          return createSoloItem(sound)
+        }
         switch token {
         case GlobalSettings.allSoundsToken:
           guard let defaultPreset = presets.first(where: { $0.isDefault }) else { return nil }
@@ -310,6 +313,32 @@
       sections.append(
         CPListSection(items: [emptyItem])
       )
+    }
+
+    // Favorited solo sound — selecting it enters solo mode for that sound.
+    private static func createSoloItem(_ sound: Sound) -> CPListItem {
+      let isActive = AudioManager.shared.soloModeSound?.id == sound.id
+
+      let item = CPListItem(
+        text: sound.title,
+        detailText: sound.isCustom ? "Custom sound" : "Solo sound"
+      )
+
+      item.playingIndicatorLocation = .leading
+      item.isPlaying = isActive
+
+      item.handler = { _, completion in
+        Task {
+          await MainActor.run {
+            AudioManager.shared.enterSoloMode(for: sound)
+            CarPlayInterfaceController.shared.updateAllTemplates()
+            CarPlayInterfaceController.shared.showNowPlaying()
+          }
+          completion()
+        }
+      }
+
+      return item
     }
 
     private static func createAllSoundsItem(_ preset: Preset) -> CPListItem {

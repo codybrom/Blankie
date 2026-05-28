@@ -61,6 +61,14 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
             return
           }
 
+          // In solo mode only the soloed sound may sound; other sounds keep
+          // their selection but must stay silent. Without this, a preset's
+          // selected sounds auto-play alongside a restored solo sound.
+          if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
+            debugLog("🎵 Sound: Skipping auto-play for '\(self.fileName)' - solo mode active")
+            return
+          }
+
           // Check if playback is active, or will become active soon
           if AudioManager.shared.isGloballyPlaying {
             debugLog(
@@ -84,6 +92,13 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
               }
 
               guard AudioManager.shared.isGloballyPlaying else { return }
+
+              // Re-check solo here too: it may have been entered during the yield.
+              if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
+                debugLog(
+                  "🎵 Sound: Skipping delayed auto-play for '\(self.fileName)' - solo mode active")
+                return
+              }
 
               debugLog(
                 "🎵 Sound: Auto-playing newly selected sound '\(self.fileName)' after auto-start")
