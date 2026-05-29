@@ -39,12 +39,16 @@ private struct AnimationTrigger: Equatable {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var body: some View {
-      Group {
-        if isLargeDevice {
-          iPadLayout
-        } else {
-          iPhoneLayout
+      ZStack {
+        Group {
+          if isLargeDevice {
+            iPadLayout
+          } else {
+            iPhoneLayout
+          }
         }
+        
+        nowPlayingOverlay
       }
       .sheet(isPresented: $showingPresetPicker) {
         PresetPickerView()
@@ -174,31 +178,11 @@ private struct AnimationTrigger: Equatable {
       } detail: {
         NavigationStack {
           ZStack {
-            if showingNowPlaying {
-              NowPlayingSheet(
-                onDismiss: {
-                  withAnimation(.easeInOut(duration: 0.3)) {
-                    showingNowPlaying = false
-                  }
-                },
-                showingPresetPicker: $showingPresetPicker,
-                showingTimer: $showingTimer,
-                presetToEdit: $presetToEdit,
-                soundToEdit: $soundToEdit,
-                showingQuickMixEditor: $showingQuickMixEditor
-              )
-              .transition(.opacity)
-            } else {
-              ZStack {
-                presetBackgroundView
-                VStack(spacing: 0) {
-                  mainContentView
-                }
-              }
-              .transition(.opacity)
+            presetBackgroundView
+            VStack(spacing: 0) {
+              mainContentView
             }
           }
-          .animation(.easeInOut(duration: 0.3), value: showingNowPlaying)
           .navigationBarTitleDisplayMode(.inline)
           .toolbar {
             ToolbarItem(placement: .principal) {
@@ -209,21 +193,17 @@ private struct AnimationTrigger: Equatable {
                   HStack(spacing: 4) {
                     Text(navigationTitle)
                       .font(.headline)
-                      .foregroundColor(showingNowPlaying ? .white : .primary)
+                      .foregroundColor(.primary)
                     Image(systemName: "chevron.down")
                       .font(.caption2.weight(.semibold))
-                      .foregroundColor(showingNowPlaying ? .white.opacity(0.5) : .secondary)
+                      .foregroundColor(.secondary)
                   }
                   if let caption = topBarCaption {
                     Text(caption)
                       .font(.caption2)
-                      .foregroundColor(showingNowPlaying ? .white.opacity(0.6) : .secondary)
+                      .foregroundColor(.secondary)
                   }
                 }
-                // Over the Now Playing artwork the toolbar has no material
-                // backing, so add a soft shadow to keep the title legible on
-                // bright or dark regions of arbitrary artwork.
-                .shadow(color: .black.opacity(showingNowPlaying ? 0.4 : 0), radius: 2, y: 1)
               }
               .sensoryFeedback(.selection, trigger: showingPresetPicker)
             }
@@ -232,9 +212,7 @@ private struct AnimationTrigger: Equatable {
             // while Now Playing is showing so it doesn't compete with the
             // NowPlayingSheet chrome.
             ToolbarItem(placement: .confirmationAction) {
-              if !showingNowPlaying {
-                editPresetButton
-              }
+              editPresetButton
             }
           }
           .toolbarBackground(.hidden, for: .navigationBar)
@@ -253,28 +231,21 @@ private struct AnimationTrigger: Equatable {
     private var iPhoneLayout: some View {
       NavigationStack {
         ZStack {
-          if showingNowPlaying {
-            NowPlayingSheet(
-              onDismiss: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                  showingNowPlaying = false
-                }
-              },
-              showingPresetPicker: $showingPresetPicker,
-              showingTimer: $showingTimer,
-              presetToEdit: $presetToEdit,
-              soundToEdit: $soundToEdit,
-              showingQuickMixEditor: $showingQuickMixEditor
-            )
-            .transition(.opacity)
-          } else {
-            ZStack {
-              presetBackgroundView
-              VStack(spacing: 0) {
-                mainContentView
-              }
-            }
-            .transition(.opacity)
+          // Background layer
+          presetBackgroundView
+
+          #if os(iOS)
+          // Hidden volume view to globally suppress the system volume HUD
+          // when physical hardware buttons are pressed.
+          SystemVolumeSlider()
+            .frame(width: 0, height: 0)
+            .opacity(0.001)
+            .allowsHitTesting(false)
+          #endif
+
+          // Main content
+          VStack(spacing: 0) {
+            mainContentView
           }
         }
         .onGeometryChange(for: Bool.self) { geo in
@@ -290,14 +261,12 @@ private struct AnimationTrigger: Equatable {
             } label: {
               HStack(spacing: 4) {
                 Text(navigationTitle)
-                  .font(showingNowPlaying ? .title3.weight(.semibold) : .headline)
-                  .foregroundColor(showingNowPlaying ? .white : .primary)
+                  .font(.headline)
+                  .foregroundColor(.primary)
                   .lineLimit(1)
                 Image(systemName: "chevron.down")
-                  .font(
-                    showingNowPlaying ? .caption.weight(.semibold) : .caption2.weight(.semibold)
-                  )
-                  .foregroundColor(showingNowPlaying ? .white.opacity(0.5) : .secondary)
+                  .font(.caption2.weight(.semibold))
+                  .foregroundColor(.secondary)
               }
               .padding(.vertical, 6)
             }
@@ -306,11 +275,9 @@ private struct AnimationTrigger: Equatable {
             if let caption = topBarCaption {
               Text(caption)
                 .font(.caption2)
-                .foregroundColor(showingNowPlaying ? .white.opacity(0.6) : .secondary)
+                .foregroundColor(.secondary)
             }
           }
-          .shadow(color: .black.opacity(showingNowPlaying ? 0.4 : 0), radius: 2, y: 1)
-          .padding(.top, showingNowPlaying && isLandscape ? 8 : 0)
           .padding(.bottom, 8)
           // Reserve horizontal space so a long centered title doesn't run under
           // the trailing edit button overlay.
@@ -320,32 +287,40 @@ private struct AnimationTrigger: Equatable {
           // the mixer view — on Now Playing the edit control lives in the
           // actions row instead.
           .overlay(alignment: .trailing) {
-            if !showingNowPlaying {
-              editPresetButton
-                .padding(.trailing, 16)
-            }
+            editPresetButton
+              .padding(.trailing, 16)
           }
           .background {
-            if !showingNowPlaying {
-              Rectangle().fill(.ultraThinMaterial)
-                .ignoresSafeArea(edges: [.top, .horizontal])
-            }
+            Rectangle().fill(.ultraThinMaterial)
+              .ignoresSafeArea(edges: [.top, .horizontal])
           }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-          if showingNowPlaying && isLandscape {
-            HStack(spacing: 0) {
-              Spacer()
-                .frame(maxWidth: .infinity)
-              bottomToolbar
-                .frame(maxWidth: .infinity)
-            }
-          } else {
-            bottomToolbar
-          }
+          bottomToolbar
         }
-        .animation(.easeInOut(duration: 0.3), value: showingNowPlaying)
         .navigationBarHidden(true)
+      }
+    }
+
+    @ViewBuilder
+    private var nowPlayingOverlay: some View {
+      if showingNowPlaying {
+        NowPlayingSheet(
+          onDismiss: {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+              showingNowPlaying = false
+            }
+          },
+          showingPresetPicker: $showingPresetPicker,
+          showingTimer: $showingTimer,
+          presetToEdit: $presetToEdit,
+          soundToEdit: $soundToEdit,
+          showingQuickMixEditor: $showingQuickMixEditor,
+          backgroundImage: backgroundImage
+        )
+        .ignoresSafeArea()
+        .transition(.move(edge: .bottom))
+        .zIndex(100)
       }
     }
 

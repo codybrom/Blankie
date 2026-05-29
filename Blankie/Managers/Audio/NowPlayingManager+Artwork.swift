@@ -80,12 +80,11 @@ extension NowPlayingManager {
       }
     #endif
 
-    // No artwork or same as current
-    if targetArtworkId == nil, currentArtworkId != nil || currentStaticArtworkPath != nil {
-      currentArtworkId = nil
-      currentStaticArtworkPath = nil
-      updateArtwork(artworkData: nil)
-    }
+    // No artwork found — always apply the Blankie fallback so presets without
+    // artwork still show the NowPlaying.png icon on the lock screen / CarPlay.
+    currentArtworkId = nil
+    currentStaticArtworkPath = nil
+    updateArtwork(artworkData: nil)
   }
 
   /// Legacy async version - only use when not publishing immediately after
@@ -209,14 +208,11 @@ extension NowPlayingManager {
       }
     #endif
 
-    // No artwork at all - clear everything
-    let hadStaticArtworkPath = currentStaticArtworkPath != nil
+    // No artwork found — always apply the Blankie fallback so presets without
+    // artwork still show the NowPlaying.png icon on the lock screen / CarPlay.
     currentStaticArtworkPath = nil
     currentArtworkId = nil
-
-    if hadStaticArtworkPath {
-      updateArtwork(artworkData: nil)
-    }
+    updateArtwork(artworkData: nil)
   }
 
   func updateArtwork(artworkData: Data?) {

@@ -60,3 +60,22 @@ class SoundCreditsManager: ObservableObject {
     return soundDataMap[soundTitle]
   }
 }
+
+extension Sound {
+  /// The credited author to display for this sound, or `nil` when there isn't
+  /// one. Custom sounds use their stored credit; built-in sounds look the author
+  /// up by their original title. Empty strings are treated as absent.
+  @MainActor var creditedAuthor: String? {
+    if isCustom {
+      guard let dataID = customSoundDataID,
+        let data = CustomSoundManager.shared.getCustomSound(by: dataID),
+        let author = data.creditAuthor, !author.isEmpty
+      else { return nil }
+      return author
+    }
+    guard let author = SoundCreditsManager.shared.getAuthor(for: originalTitle),
+      !author.isEmpty
+    else { return nil }
+    return author
+  }
+}

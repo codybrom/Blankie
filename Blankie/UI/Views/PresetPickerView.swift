@@ -432,7 +432,7 @@ struct PresetPickerView: View {
           }
         }
       }
-      .navigationTitle("Presets")
+      .navigationTitle("Library")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
       #endif

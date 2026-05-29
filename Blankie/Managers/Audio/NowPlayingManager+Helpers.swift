@@ -18,10 +18,8 @@ extension NowPlayingManager {
     if let soloSound = AudioManager.shared.soloModeSound {
       // Check if the sound has a creator/credited author
       let artist: String
-      if let author = SoundCreditsManager.shared.getAuthor(for: soloSound.title),
-        !author.isEmpty
-      {
-        artist = "Sound by \(author)"
+      if let resolvedAuthor = soloSound.creditedAuthor {
+        artist = "Sound by \(resolvedAuthor)"
       } else {
         artist = "Blankie"
       }
@@ -66,19 +64,29 @@ extension NowPlayingManager {
 
     #if os(iOS) || os(visionOS)
       if let image = UIImage(data: artworkData) {
-        return MPMediaItemArtwork(boundsSize: image.size) { _ in
-          return image
-        }
+        return Self.makeArtwork(from: image)
       }
     #elseif os(macOS)
       if let image = NSImage(data: artworkData) {
-        return MPMediaItemArtwork(boundsSize: image.size) { _ in
-          return image
-        }
+        return Self.makeArtwork(from: image)
       }
     #endif
     return nil
   }
+
+  /// Wraps a pre-rendered image in `MPMediaItemArtwork`. Declared `nonisolated`
+  /// so the request handler closure does NOT inherit `NowPlayingManager`'s
+  /// `@MainActor` isolation — MediaPlayer invokes that handler from a background
+  /// queue, and an isolated closure would force an `unsafeForcedSync` hop.
+  #if os(iOS) || os(visionOS)
+    nonisolated static func makeArtwork(from image: UIImage) -> MPMediaItemArtwork {
+      MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+    }
+  #elseif os(macOS)
+    nonisolated static func makeArtwork(from image: NSImage) -> MPMediaItemArtwork {
+      MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+    }
+  #endif
 
   /// Render a soloed sound's SF Symbol into lock-screen artwork: the app-accent
   /// glyph centered on a dark card, mirroring the in-app placeholder. Returns
@@ -93,14 +101,17 @@ extension NowPlayingManager {
           .withTintColor(accent, renderingMode: .alwaysOriginal)
       else { return nil }
 
-      let renderer = UIGraphicsImageRenderer(size: CGSize(width: side, height: side))
+      let format = UIGraphicsImageRendererFormat.preferred()
+      format.opaque = true
+      let renderer = UIGraphicsImageRenderer(
+        size: CGSize(width: side, height: side), format: format)
       let image = renderer.image { _ in
         UIColor(white: 0.11, alpha: 1).setFill()
         UIRectFill(CGRect(x: 0, y: 0, width: side, height: side))
         let target = symbol.size
         symbol.draw(at: CGPoint(x: (side - target.width) / 2, y: (side - target.height) / 2))
       }
-      return MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+      return Self.makeArtwork(from: image)
     #else
       return nil
     #endif
@@ -108,24 +119,41 @@ extension NowPlayingManager {
 
   func loadArtwork() -> MPMediaItemArtwork? {
     #if os(iOS) || os(visionOS)
-      if let imageUrl = Bundle.main.url(forResource: "NowPlaying", withExtension: "png"),
-        let imageData = try? Data(contentsOf: imageUrl),
-        let image = UIImage(data: imageData)
-      {
-        return MPMediaItemArtwork(boundsSize: image.size) { _ in
-          return image
-        }
+      let side: CGFloat = 512
+      let accent = GlobalSettings.shared.customAccentColor
+      let accentColor = accent ?? Color.accentColor
+
+      // Render the same BrandedBlankieIcon view used in-app so the palette
+      // gradient and inner circles look identical on the lock screen / CarPlay.
+      let card = ZStack {
+        Color(white: 0.11)
+        BrandedBlankieIcon(size: side * 0.5, color: accentColor)
       }
+      .frame(width: side, height: side)
+
+      let renderer = ImageRenderer(content: card)
+      renderer.scale = 1
+      renderer.isOpaque = true
+      guard let image = renderer.uiImage else { return nil }
+      return Self.makeArtwork(from: image)
     #elseif os(macOS)
-      if let imageUrl = Bundle.main.url(forResource: "NowPlaying", withExtension: "png"),
-        let imageData = try? Data(contentsOf: imageUrl),
-        let image = NSImage(data: imageData)
-      {
-        return MPMediaItemArtwork(boundsSize: image.size) { _ in
-          return image
-        }
+      let side: CGFloat = 512
+      let accent = GlobalSettings.shared.customAccentColor
+      let accentColor = accent ?? Color.accentColor
+
+      let card = ZStack {
+        Color(white: 0.11)
+        BrandedBlankieIcon(size: side * 0.5, color: accentColor)
       }
+      .frame(width: side, height: side)
+
+      let renderer = ImageRenderer(content: card)
+      renderer.scale = 1
+      renderer.isOpaque = true
+      guard let image = renderer.nsImage else { return nil }
+      return Self.makeArtwork(from: image)
+    #else
+      return nil
     #endif
-    return nil
   }
 }

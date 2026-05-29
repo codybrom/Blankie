@@ -34,7 +34,6 @@ import SwiftUI
         let soundOrder = currentPreset.soundOrder
       {
         // Use preset's sound order for custom presets
-        debugLog("🔍 FilteredSounds: Using preset order: \(soundOrder)")
         let orderDict = Dictionary(uniqueKeysWithValues: soundOrder.enumerated().map { ($1, $0) })
 
         return filteredSounds.sorted { sound1, sound2 in
@@ -44,7 +43,6 @@ import SwiftUI
         }
       } else {
         // Use default sound order for default preset or no preset
-        debugLog("🔍 FilteredSounds: Using default order: \(audioManager.defaultSoundOrder)")
         let orderDict = Dictionary(
           uniqueKeysWithValues: audioManager.defaultSoundOrder.enumerated().map { ($1, $0) })
 

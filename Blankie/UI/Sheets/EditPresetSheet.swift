@@ -264,7 +264,7 @@ extension EditPresetSheet {
                 } else {
                   SharePreview(
                     presetName,
-                    image: Image("NowPlaying"),
+                    image: Image("BlankieAppIconDisplay"),
                     icon: Image(systemName: "doc.fill")
                   )
                 }
@@ -278,16 +278,16 @@ extension EditPresetSheet {
                 } else {
                   SharePreview(
                     presetName,
-                    image: Image("NowPlaying"),
+                    image: Image("BlankieAppIconDisplay"),
                     icon: Image(systemName: "doc.fill")
                   )
                 }
               #endif
             } else {
-              // Use the default Now Playing image
+              // Use the app icon as the default share preview image
               SharePreview(
                 presetName,
-                image: Image("NowPlaying"),
+                image: Image("BlankieAppIconDisplay"),
                 icon: Image(systemName: "doc.fill")
               )
             }

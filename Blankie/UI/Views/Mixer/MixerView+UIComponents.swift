@@ -84,7 +84,7 @@ import SwiftUI
           GlassEffectContainer(spacing: 20) {
             HStack(spacing: 20) {
               Button {
-                withAnimation(.easeInOut(duration: 0.3)) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                   showingNowPlaying.toggle()
                 }
               } label: {
@@ -93,12 +93,7 @@ import SwiftUI
                 // in grid mode, a list glyph in list mode. Quick Mix always
                 // returns to a grid, so it ignores the list preference.
                 // (`music.note.list` is shown when Now Playing is hidden.)
-                Image(
-                  systemName: showingNowPlaying
-                    ? (effectiveUseListView && !audioManager.isQuickMix
-                      ? "list.bullet" : "square.grid.2x2")
-                    : "music.note.list"
-                )
+                Image(systemName: "music.note.list")
                 .font(.system(size: 22))
                 .foregroundColor(.primary)
                 .contentTransition(.symbolEffect(.replace))
@@ -128,16 +123,11 @@ import SwiftUI
           // Fallback for iOS 25 and earlier
           HStack(spacing: 20) {
             Button {
-              withAnimation(.easeInOut(duration: 0.3)) {
+              withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 showingNowPlaying.toggle()
               }
             } label: {
-              Image(
-                systemName: showingNowPlaying
-                  ? (effectiveUseListView && !audioManager.isQuickMix
-                    ? "list.bullet" : "square.grid.2x2")
-                  : "music.note.list"
-              )
+              Image(systemName: "music.note.list")
               .font(.system(size: 22))
               .foregroundColor(.primary)
               .frame(width: 56, height: 56)

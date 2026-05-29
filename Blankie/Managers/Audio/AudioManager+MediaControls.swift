@@ -116,13 +116,10 @@ extension AudioManager {
   }
 
   /// Destinations the lock-screen / CarPlay next & previous commands cycle
-  /// through: favorites in their saved order (Quick Mix is skipped — it has its
-  /// own controls; favorited solo sounds are included), then every other custom
-  /// preset by order. Falls back to the default preset when there's nothing
-  /// else, so next/previous always re-applies something.
+  /// through: exclusively favorited items in their saved order.
   private var navigableItems: [NavigableItem] {
     let presets = PresetManager.shared.presets
-    let favorites: [NavigableItem] = GlobalSettings.shared.starredItems.compactMap { token in
+    return GlobalSettings.shared.starredItems.compactMap { token in
       if GlobalSettings.soloFileName(fromToken: token) != nil {
         return sound(forSoloToken: token).map { NavigableItem.solo($0) }
       }
@@ -135,23 +132,6 @@ extension AudioManager {
         return presets.first { $0.id.uuidString == token }.map { NavigableItem.preset($0) }
       }
     }
-    let favoritePresetIDs = Set(
-      favorites.compactMap { item -> UUID? in
-        if case .preset(let preset) = item { return preset.id }
-        return nil
-      })
-    // Only presets backfill the cycle — non-favorited solo sounds stay out of
-    // next/previous (a favorited solo sound is already in `favorites`).
-    let rest: [NavigableItem] =
-      presets
-      .filter { !$0.isDefault && !favoritePresetIDs.contains($0.id) }
-      .sorted { ($0.order ?? Int.max) < ($1.order ?? Int.max) }
-      .map { NavigableItem.preset($0) }
-    let result = favorites + rest
-    if result.isEmpty, let defaultPreset = presets.first(where: { $0.isDefault }) {
-      return [.preset(defaultPreset)]
-    }
-    return result
   }
 
   /// Index of the currently-playing destination within `items`: the soloed
@@ -199,7 +179,7 @@ extension AudioManager {
   }
 
   @MainActor
-  private func navigateToNextPreset() {
+  func navigateToNextPreset() {
     let items = navigableItems
     guard !items.isEmpty else { return }
     // No locatable current item → start at the first.
@@ -208,7 +188,7 @@ extension AudioManager {
   }
 
   @MainActor
-  private func navigateToPreviousPreset() {
+  func navigateToPreviousPreset() {
     let items = navigableItems
     guard !items.isEmpty else { return }
     // No locatable current item → start at the last.
@@ -221,21 +201,21 @@ extension AudioManager {
     apply(items[previousIndex])
   }
 
-  /// Update next/previous command availability. Enabled when there's more than
-  /// one destination to cycle and the current one is locatable: in solo mode
-  /// that means the soloed sound is favorited (otherwise it isn't in the list);
-  /// Quick Mix is never part of the cycle.
-  func updateNextPreviousCommandState() {
-    let commandCenter = MPRemoteCommandCenter.shared()
+  var canNavigateNextPrevious: Bool {
     let items = navigableItems
-    // Enable whenever there's somewhere to go. When the current item is in the
-    // cycle (a favorite, or the current preset) we need more than one item to
-    // move. When it isn't — a non-favorited solo sound, or the default preset —
-    // any item is a valid destination: next starts at the top of favorites and
-    // works through from there.
     let hasLocatableCurrent = currentNavigableIndex(in: items) != nil
     let canNavigate = hasLocatableCurrent ? items.count > 1 : !items.isEmpty
-    let enableNextPrev = !isQuickMix && canNavigate
+    return !isQuickMix && canNavigate
+  }
+
+  /// Update next/previous command availability. The cycle is favorites-only, so
+  /// this is enabled when there's somewhere to go: with a locatable current item
+  /// (a favorited preset, or in solo mode a favorited sound) we need more than
+  /// one favorite; otherwise any favorite is a valid destination. Quick Mix is
+  /// never part of the cycle.
+  func updateNextPreviousCommandState() {
+    let commandCenter = MPRemoteCommandCenter.shared()
+    let enableNextPrev = canNavigateNextPrevious
 
     commandCenter.nextTrackCommand.isEnabled = enableNextPrev
     commandCenter.previousTrackCommand.isEnabled = enableNextPrev
