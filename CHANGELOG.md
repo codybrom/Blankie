@@ -17,6 +17,7 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - **CarPlay support** - a tabbed in-car interface with Presets (Recent, Favorites, and All), a Quick Mix sound grid, and a full Sounds list, plus a Now Playing screen with animated artwork, one-tap favoriting, and an in-car sound editor
 - **Custom sounds** - import your own audio files and play them alongside the built-in library, with automatic loudness matching so they sit at a comparable volume
 - **Favorites** - star presets or individual sounds to promote them in the iPad sidebar and CarPlay and step through them with system-wide Now Playing next/previous controls
+- **Single sound playback** (iPhone and iPad) - play and favorite any sound on its own without making a preset
 - **Quick Mix** - a lightweight soundboard for starting sounds quickly without saving a preset
 - **Sleep timer** - stop playback after a set time, with the option to add more time on the fly
 - Animated lock-screen artwork for presets, downloaded on demand to keep the app download small
