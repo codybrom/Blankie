@@ -364,9 +364,11 @@ struct SoundManagementView: View {
         return
       }
 
-      // Otherwise, it's an audio file for custom sound
-      selectedFileURL = url
-      showingImportSheet = true
+      // Otherwise, it's an audio file for custom sound. Stage an app-owned copy
+      // so previewing the not-yet-saved sound can load it after the picker's
+      // security scope ends.
+      selectedFileURL = AudioFileImporter.shared.stagedTempCopy(of: url)
+      showingImportSheet = selectedFileURL != nil
     case .failure(let error):
       debugLog("❌ SoundManagementView: File import failed: \(error)")
     }

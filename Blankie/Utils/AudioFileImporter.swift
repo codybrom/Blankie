@@ -38,34 +38,38 @@ class AudioFileImporter: ObservableObject {
       return
     }
 
-    // Start accessing security-scoped resource
+    // Copy to an app-owned temp location so the file outlives the picker's
+    // security scope and stays readable (AVAudioPlayer, preview-before-save).
+    guard let tempFileURL = stagedTempCopy(of: url) else {
+      ErrorReporter.shared.report(AudioError.fileNotFound)
+      return
+    }
+    fileToImport = tempFileURL
+    showingSoundSheet = true
+  }
+
+  /// Copies a (possibly security-scoped) file into an app-owned temp location
+  /// and returns the new URL. A URL handed back by a document picker is only
+  /// readable while its security scope is held; copying gives a stable URL that
+  /// `AVAudioPlayer` can load later — e.g. when previewing a not-yet-saved
+  /// imported sound. Returns nil if the copy fails.
+  func stagedTempCopy(of url: URL) -> URL? {
     let didStartAccessing = url.startAccessingSecurityScopedResource()
     debugLog("🔐 AudioFileImporter: Security-scoped access started: \(didStartAccessing)")
-
-    // Copy the file to a temporary location that the app owns
-    let tempDir = FileManager.default.temporaryDirectory
-    let tempFileURL = tempDir.appendingPathComponent(url.lastPathComponent)
-
-    do {
-      // Remove existing temp file if needed
-      try? FileManager.default.removeItem(at: tempFileURL)
-
-      // Copy the file to temp directory
-      try FileManager.default.copyItem(at: url, to: tempFileURL)
-      debugLog(
-        "✅ AudioFileImporter: Copied file to temp directory: \(tempFileURL.lastPathComponent)")
-
-      // Store the temp file URL and show the sound sheet
-      fileToImport = tempFileURL
-      showingSoundSheet = true
-    } catch {
-      debugLog("❌ AudioFileImporter: Failed to copy file: \(error)")
-      ErrorReporter.shared.report(AudioError.loadFailed(error))
+    defer {
+      if didStartAccessing { url.stopAccessingSecurityScopedResource() }
     }
 
-    // Stop accessing the security-scoped resource
-    if didStartAccessing {
-      url.stopAccessingSecurityScopedResource()
+    let tempFileURL = FileManager.default.temporaryDirectory
+      .appendingPathComponent(url.lastPathComponent)
+    do {
+      try? FileManager.default.removeItem(at: tempFileURL)
+      try FileManager.default.copyItem(at: url, to: tempFileURL)
+      debugLog("✅ AudioFileImporter: Staged temp copy: \(tempFileURL.lastPathComponent)")
+      return tempFileURL
+    } catch {
+      debugLog("❌ AudioFileImporter: Failed to stage temp copy: \(error)")
+      return nil
     }
   }
 
