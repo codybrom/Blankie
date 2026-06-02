@@ -16,7 +16,7 @@ struct SettingsView: View {
   // Compact badge marking a Theme Default the active preset overrides, used in
   // place of a full explanatory caption.
   private var overriddenByPresetBadge: some View {
-    Text("Overridden by Preset")
+    Text("Changed by Preset")
       .font(.caption2.weight(.semibold))
       .textCase(.uppercase)
       .foregroundColor(.secondary)
@@ -122,7 +122,7 @@ struct SettingsView: View {
         // (view mode, accent color, background blur).
         Section(
           header: VStack(alignment: .leading, spacing: 4) {
-            Text("Theme Defaults")
+            Text("Theme")
             Text("Presets can override these options.")
               .font(.caption)
               .textCase(.none)

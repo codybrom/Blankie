@@ -24,7 +24,7 @@ extension EditPresetSheet {
   }
 }
 
-// MARK: - Basic Details Section (Name, Creator)
+// MARK: - Basic Details Section (Name, Creator, Favorite, Artwork)
 
 extension EditPresetSheet {
   var basicDetailsSection: some View {
@@ -55,6 +55,63 @@ extension EditPresetSheet {
         }
       }
 
+      Toggle(
+        isOn: Binding(
+          get: { globalSettings.isStarred(starToken) },
+          set: { _ in globalSettings.toggleStarred(starToken) }
+        )
+      ) {
+        Label {
+          Text("Favorite")
+        } icon: {
+          Image(systemName: "star")
+            .foregroundColor(activeAccentColor)
+        }
+      }
+      // Without this the row separator insets to the label text, leaving a gap
+      // under the star. Pin it to the row's leading edge like the plain rows.
+      .alignmentGuide(.listRowSeparatorLeading) { dimensions in
+        dimensions[.leading]
+      }
+
+      // Artwork field
+      LabeledContent("Artwork") {
+        HStack(spacing: 8) {
+          if artworkData != nil {
+            Button {
+              artworkData = nil
+              artworkId = nil
+              // Apply changes to persist the removal
+              applyChangesInstantly()
+            } label: {
+              Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Remove Artwork")
+          }
+
+          Button {
+            showingImagePicker = true
+          } label: {
+            artworkPreview
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel("Choose Artwork")
+        }
+      }
+
+      // Animated artwork editing is iOS-only; hide it on macOS.
+      #if !os(macOS)
+        AnimatedArtworkPicker(
+          artwork: $animatedArtwork,
+          staticArtworkPath: $staticArtworkPath,
+          onChange: { applyChangesInstantly() }
+        )
+      #endif
+    }
+    .onChange(of: artworkData) { _, _ in
+      applyChangesInstantly()
     }
   }
 
@@ -67,11 +124,11 @@ extension EditPresetSheet {
   }
 }
 
-// MARK: - Visuals Section (Accent Color, Artwork, Lockscreen)
+// MARK: - Visuals Section (View Mode, Accent Color, Background Blur)
 
 extension EditPresetSheet {
   var visualsSection: some View {
-    Section("Appearance") {
+    Section("Theme Overrides") {
       // Per-preset view mode: Default falls back to the app-wide setting.
       // macOS has a single grid layout, so the override is meaningless there.
       #if !os(macOS)
@@ -106,68 +163,37 @@ extension EditPresetSheet {
         #endif
       }
 
-      // Artwork field
-      LabeledContent("Artwork") {
-        HStack(spacing: 8) {
-          if artworkData != nil {
-            Button {
-              artworkData = nil
-              artworkId = nil
-              // Apply changes to persist the removal
-              applyChangesInstantly()
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .foregroundColor(.secondary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Remove Artwork")
-          }
-
-          Button {
-            showingImagePicker = true
-          } label: {
-            artworkPreview
-          }
-          .buttonStyle(.plain)
-          .accessibilityLabel("Choose Artwork")
-        }
-      }
-
-      // Background blur override. Off = follow the app-wide default; on reveals
-      // a slider, mirroring the Accent Color toggle above. Persist the slider
-      // only on drag-end so we don't run the full preset save on every frame.
-      // The macOS window doesn't use a blurred backdrop, so hide this there.
+      // Background blur override. "Default" stores nil and follows the app-wide
+      // blur; the other segments override it per-preset. The macOS window doesn't
+      // use a blurred backdrop, so hide this there.
       #if !os(macOS)
-        Toggle("Custom Background Artwork Blur", isOn: $useCustomBlur)
-          .onChange(of: useCustomBlur) { _, _ in
-            applyChangesInstantly()
-          }
-
-        if useCustomBlur {
-          Picker("Background Artwork Blur", selection: $blurOverride) {
-            Text("None").tag(0.0)
-            Text("Low").tag(7.5)
-            Text("High").tag(15.0)
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Background Artwork Blur")
+          Picker(
+            "Background Artwork Blur",
+            selection: Binding<Double?>(
+              get: { useCustomBlur ? blurOverride : nil },
+              set: { newValue in
+                if let radius = newValue {
+                  useCustomBlur = true
+                  blurOverride = radius
+                } else {
+                  useCustomBlur = false
+                }
+                applyChangesInstantly()
+              }
+            )
+          ) {
+            Text("Default").tag(Double?.none)
+            Text("None").tag(Double?(0.0))
+            Text("Low").tag(Double?(7.5))
+            Text("High").tag(Double?(15.0))
           }
           .pickerStyle(.segmented)
-          .padding(.vertical, 4)
-          .onChange(of: blurOverride) { _, _ in
-            applyChangesInstantly()
-          }
+          .labelsHidden()
         }
+        .padding(.vertical, 4)
       #endif
-
-      // Animated artwork editing is iOS-only; hide it on macOS.
-      #if !os(macOS)
-        AnimatedArtworkPicker(
-          artwork: $animatedArtwork,
-          staticArtworkPath: $staticArtworkPath,
-          onChange: { applyChangesInstantly() }
-        )
-      #endif
-    }
-    .onChange(of: artworkData) { _, _ in
-      applyChangesInstantly()
     }
   }
 }
@@ -297,11 +323,14 @@ extension EditPresetSheet {
         }
       }
     } header: {
-      Text("Sounds")
-    } footer: {
-      if !selectedSounds.isEmpty {
-        Text("Drag sounds to reorder how they appear in the preset")
-          .font(.caption)
+      VStack(alignment: .leading, spacing: 4) {
+        Text("Sounds")
+        if !selectedSounds.isEmpty {
+          Text("Drag sounds to reorder how they appear in the preset")
+            .font(.caption)
+            .textCase(nil)
+            .foregroundStyle(.secondary)
+        }
       }
     }
     #if os(iOS)

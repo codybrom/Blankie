@@ -326,7 +326,6 @@ extension EditPresetSheet {
     Group {
       errorSection
       basicDetailsSection
-      starSection
       soundsSection
       visualsSection
       deleteSection
@@ -335,29 +334,8 @@ extension EditPresetSheet {
 
   // The default preset shares the "allSounds" token; custom presets use their
   // UUID string.
-  private var starToken: String {
+  var starToken: String {
     preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
-  }
-
-  var starSection: some View {
-    Section {
-      Toggle(
-        isOn: Binding(
-          get: { globalSettings.isStarred(starToken) },
-          set: { _ in globalSettings.toggleStarred(starToken) }
-        )
-      ) {
-        Label {
-          Text("Favorite")
-        } icon: {
-          Image(systemName: "star")
-            .foregroundColor(activeAccentColor)
-        }
-      }
-    } footer: {
-      Text(
-        "Favorites appear in the iPad sidebar and CarPlay.")
-    }
   }
 }
 
