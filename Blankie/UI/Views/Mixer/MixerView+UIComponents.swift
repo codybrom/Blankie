@@ -94,10 +94,10 @@ import SwiftUI
                 // returns to a grid, so it ignores the list preference.
                 // (`music.note.list` is shown when Now Playing is hidden.)
                 Image(systemName: "music.note.list")
-                .font(.system(size: 22))
-                .foregroundColor(.primary)
-                .contentTransition(.symbolEffect(.replace))
-                .frame(width: 56, height: 56)
+                  .font(.system(size: 22))
+                  .foregroundColor(.primary)
+                  .contentTransition(.symbolEffect(.replace))
+                  .frame(width: 56, height: 56)
               }
               .accessibilityLabel(
                 showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
@@ -128,9 +128,9 @@ import SwiftUI
               }
             } label: {
               Image(systemName: "music.note.list")
-              .font(.system(size: 22))
-              .foregroundColor(.primary)
-              .frame(width: 56, height: 56)
+                .font(.system(size: 22))
+                .foregroundColor(.primary)
+                .frame(width: 56, height: 56)
             }
             .accessibilityLabel(
               showingNowPlaying ? Text("Hide Now Playing") : Text("Show Now Playing")
@@ -195,76 +195,58 @@ import SwiftUI
 
     @ViewBuilder
     var menuButton: some View {
-      // iPad keeps a direct Timer button here; Settings is in the sidebar.
-      // iPhone has no sidebar, so this slot is its Settings button. Timer moved
-      // to the Now Playing actions row, and Edit to the top-bar / actions row.
-      if isLargeDevice {
+      // Bottom play-controls slot, identical on iPhone and iPad: the Edit
+      // affordance (Quick Mix / preset). In solo mode there's no preset to edit
+      // (the solo sound is edited by tapping it), so the slot shows the Timer
+      // instead. Settings lives in the top bar on iPhone and the sidebar on
+      // iPad — never in this slot.
+      if audioManager.soloModeSound != nil {
         timerButton
       } else {
-        settingsButton
+        editControlButton
       }
     }
 
-    private var settingsButton: some View {
+    /// What the bottom-toolbar Edit button targets: the Quick Mix editor or the
+    /// current preset. `nil` when there's nothing to edit (the button renders
+    /// disabled rather than vanishing, so the fixed 3-button row never
+    /// collapses). Solo mode never reaches here — `menuButton` shows the Timer.
+    private var editTarget: (icon: String, label: String, action: () -> Void)? {
+      if audioManager.isQuickMix {
+        return ("slider.vertical.3", "Edit Quick Mix", { showingQuickMixEditor = true })
+      } else if let currentPreset = presetManager.currentPreset {
+        return ("slider.vertical.3", "Edit Preset", { presetToEdit = currentPreset })
+      } else {
+        return nil
+      }
+    }
+
+    private var editControlButton: some View {
+      let target = editTarget
       let button = Button {
-        showingSettings = true
+        target?.action()
       } label: {
-        Image(systemName: "gearshape")
+        Image(systemName: target?.icon ?? "slider.vertical.3")
           .font(.system(size: 22))
           .foregroundColor(.primary)
           .frame(width: 56, height: 56)
       }
-      .accessibilityLabel("Blankie Settings")
+      .accessibilityLabel(target?.label ?? "Edit Preset")
       .buttonStyle(.plain)
       .contentShape(Circle())
+      .disabled(target == nil)
 
       if #available(iOS 26.0, *) {
         return
           button
           .glassEffect(.regular.interactive(), in: .circle)
-          .sensoryFeedback(.selection, trigger: showingSettings)
       } else {
         return
           button
           .modernGlassEffect(cornerRadius: 28)
-          .sensoryFeedback(.selection, trigger: showingSettings)
       }
     }
 
-    /// Trailing Edit affordance shared by the iPad nav bar and the iPhone top
-    /// bar: edits the current preset, or opens the Quick Mix editor in Quick
-    /// Mix. Renders nothing when there's nothing to edit.
-    @ViewBuilder
-    var editPresetButton: some View {
-      if let soloSound = audioManager.soloModeSound {
-        Button {
-          soundToEdit = soloSound
-        } label: {
-          Image(systemName: "slider.horizontal.3")
-            .font(.system(size: 18))
-            .foregroundColor(.secondary)
-        }
-        .accessibilityLabel("Edit Sound")
-      } else if audioManager.isQuickMix {
-        Button {
-          showingQuickMixEditor = true
-        } label: {
-          Image(systemName: "slider.vertical.3")
-            .font(.system(size: 18))
-            .foregroundColor(.secondary)
-        }
-        .accessibilityLabel("Edit Quick Mix")
-      } else if let currentPreset = presetManager.currentPreset {
-        Button {
-          presetToEdit = currentPreset
-        } label: {
-          Image(systemName: "slider.vertical.3")
-            .font(.system(size: 18))
-            .foregroundColor(.secondary)
-        }
-        .accessibilityLabel("Edit Preset")
-      }
-    }
 
     private var timerButton: some View {
       let button = Button {

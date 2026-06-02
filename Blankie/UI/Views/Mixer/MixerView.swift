@@ -47,11 +47,11 @@ private struct AnimationTrigger: Equatable {
             iPhoneLayout
           }
         }
-        
+
         nowPlayingOverlay
       }
       .sheet(isPresented: $showingPresetPicker) {
-        PresetPickerView()
+        LibraryView()
           .presentationDetents([.large])
       }
       .sheet(item: $soundToEdit) { sound in
@@ -81,7 +81,7 @@ private struct AnimationTrigger: Equatable {
         NavigationStack {
           SoundManagementView()
             .toolbar {
-              ToolbarItem(placement: .cancellationAction) {
+              ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
                   showingSoundManagement = false
                 }
@@ -207,13 +207,6 @@ private struct AnimationTrigger: Equatable {
               }
               .sensoryFeedback(.selection, trigger: showingPresetPicker)
             }
-
-            // Edit button is only meaningful on the grid/list view — hide it
-            // while Now Playing is showing so it doesn't compete with the
-            // NowPlayingSheet chrome.
-            ToolbarItem(placement: .confirmationAction) {
-              editPresetButton
-            }
           }
           .toolbarBackground(.hidden, for: .navigationBar)
           // Playback controls must be reachable at every size class. Without
@@ -235,12 +228,12 @@ private struct AnimationTrigger: Equatable {
           presetBackgroundView
 
           #if os(iOS)
-          // Hidden volume view to globally suppress the system volume HUD
-          // when physical hardware buttons are pressed.
-          SystemVolumeSlider()
-            .frame(width: 0, height: 0)
-            .opacity(0.001)
-            .allowsHitTesting(false)
+            // Hidden volume view to globally suppress the system volume HUD
+            // when physical hardware buttons are pressed.
+            SystemVolumeSlider()
+              .frame(width: 0, height: 0)
+              .opacity(0.001)
+              .allowsHitTesting(false)
           #endif
 
           // Main content
@@ -253,52 +246,32 @@ private struct AnimationTrigger: Equatable {
         } action: { newValue in
           isLandscape = newValue
         }
-        .safeAreaInset(edge: .top) {
-          VStack(spacing: 0) {
-            // Tappable preset title
+        .navigationTitle(navigationTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .if(topBarCaption != nil) { $0.navigationSubtitle(topBarCaption ?? "") }
+        .toolbar {
+          ToolbarItem(placement: .topBarTrailing) {
             Button {
               showingPresetPicker = true
             } label: {
-              HStack(spacing: 4) {
-                Text(navigationTitle)
-                  .font(.headline)
-                  .foregroundColor(.primary)
-                  .lineLimit(1)
-                Image(systemName: "chevron.down")
-                  .font(.caption2.weight(.semibold))
-                  .foregroundColor(.secondary)
-              }
-              .padding(.vertical, 6)
+              Image(systemName: "square.stack")
             }
+            .accessibilityLabel("Library")
             .sensoryFeedback(.selection, trigger: showingPresetPicker)
-
-            if let caption = topBarCaption {
-              Text(caption)
-                .font(.caption2)
-                .foregroundColor(.secondary)
+          }
+          ToolbarItem(placement: .topBarTrailing) {
+            Button {
+              showingSettings = true
+            } label: {
+              Image(systemName: "gearshape")
             }
-          }
-          .padding(.bottom, 8)
-          // Reserve horizontal space so a long centered title doesn't run under
-          // the trailing edit button overlay.
-          .padding(.horizontal, 48)
-          .frame(maxWidth: .infinity)
-          // Trailing Edit affordance, mirroring iPad's nav-bar button. Only on
-          // the mixer view — on Now Playing the edit control lives in the
-          // actions row instead.
-          .overlay(alignment: .trailing) {
-            editPresetButton
-              .padding(.trailing, 16)
-          }
-          .background {
-            Rectangle().fill(.ultraThinMaterial)
-              .ignoresSafeArea(edges: [.top, .horizontal])
+            .accessibilityLabel("Blankie Settings")
+            .sensoryFeedback(.selection, trigger: showingSettings)
           }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
           bottomToolbar
         }
-        .navigationBarHidden(true)
       }
     }
 

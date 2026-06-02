@@ -1,5 +1,6 @@
 import SwiftUI
 import TipKit
+import UniformTypeIdentifiers
 
 struct PresetPickerRow: View {
   let preset: Preset
@@ -25,11 +26,12 @@ struct PresetPickerRow: View {
     HStack {
       // Tap target: applies the preset (disabled while editing, where taps
       // belong to reorder/delete).
-      HStack(spacing: 8) {
-        if preset.isDefault {
-          Image(systemName: "square.stack")
-            .foregroundColor(.accentColor)
-        }
+      HStack(spacing: 10) {
+        PresetThumbnail(
+          artworkId: preset.artworkId,
+          fallbackSystemImage: preset.isDefault ? "square.stack" : "music.note",
+          tint: preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+        )
 
         Text(preset.displayName)
           .foregroundColor(.primary)
@@ -111,10 +113,12 @@ struct SoloPickerRow: View {
 
   var body: some View {
     HStack {
-      HStack(spacing: 8) {
-        Image(systemName: sound.systemIconName)
-          .foregroundColor(.accentColor)
-          .frame(width: 20)
+      HStack(spacing: 10) {
+        PresetThumbnail(
+          artworkId: nil,
+          fallbackSystemImage: sound.systemIconName,
+          tint: globalSettings.customAccentColor ?? .accentColor
+        )
 
         Text(sound.title)
           .foregroundColor(.primary)
@@ -157,7 +161,7 @@ struct SoloPickerRow: View {
   }
 }
 
-struct PresetPickerView: View {
+struct LibraryView: View {
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
@@ -165,6 +169,9 @@ struct PresetPickerView: View {
   @State private var showingNewPresetSheet = false
   @State private var presetToDelete: Preset?
   @State private var isEditMode = false
+  @State private var showingSoundFilePicker = false
+  @State private var importedSoundURL: URL?
+  @State private var showingImportSoundSheet = false
   @Environment(\.dismiss) private var dismiss
 
   // TipKit tips
@@ -320,10 +327,12 @@ struct PresetPickerView: View {
         dismiss()
       }
     } label: {
-      HStack(spacing: 8) {
-        Image(systemName: "square.grid.2x2")
-          .foregroundColor(.accentColor)
-          .frame(width: 20)
+      HStack(spacing: 10) {
+        PresetThumbnail(
+          artworkId: nil,
+          fallbackSystemImage: "square.grid.2x2",
+          tint: globalSettings.customAccentColor ?? .accentColor
+        )
         Text("Quick Mix")
           .foregroundColor(.primary)
         Spacer()
@@ -439,7 +448,14 @@ struct PresetPickerView: View {
       #if os(iOS)
         .toolbar {
           ToolbarItem(placement: .topBarLeading) {
-            Button("Close") { dismiss() }
+            // Standard close affordance: HIG advises against a text "Close"
+            // label in favor of the familiar close symbol.
+            Button {
+              dismiss()
+            } label: {
+              Image(systemName: "xmark")
+            }
+            .accessibilityLabel(Text("Close"))
           }
           ToolbarItem(placement: .topBarTrailing) {
             if presetManager.hasCustomPresets {
@@ -452,10 +468,19 @@ struct PresetPickerView: View {
           }
           ToolbarItem(placement: .topBarTrailing) {
             if !isEditMode {
-              Button {
-                showingNewPresetSheet = true
+              Menu {
+                Button {
+                  showingNewPresetSheet = true
+                } label: {
+                  Label("New Preset", systemImage: "rectangle.stack.badge.plus")
+                }
+                Button {
+                  showingSoundFilePicker = true
+                } label: {
+                  Label("Import", systemImage: "square.and.arrow.down")
+                }
               } label: {
-                Label("New Preset", systemImage: "plus")
+                Label("Add", systemImage: "plus")
               }
             }
           }
@@ -466,6 +491,29 @@ struct PresetPickerView: View {
       #endif
       .sheet(isPresented: $showingNewPresetSheet) {
         CreatePresetSheet(isPresented: $showingNewPresetSheet)
+      }
+      .fileImporter(
+        isPresented: $showingSoundFilePicker,
+        allowedContentTypes: [.audio, .blankiePreset],
+        allowsMultipleSelection: false
+      ) { result in
+        guard case .success(let urls) = result, let url = urls.first else { return }
+        // A .blankie file is a preset archive — hand it to the importer, which
+        // detects the type and imports it as a preset. Anything else is audio →
+        // preselect it in the add-sound sheet.
+        if url.pathExtension.lowercased() == "blankie" {
+          AudioFileImporter.shared.handleIncomingFile(url)
+        } else {
+          // Stage an app-owned copy so previewing the not-yet-saved sound can
+          // load it after the picker's security scope ends.
+          importedSoundURL = AudioFileImporter.shared.stagedTempCopy(of: url)
+          showingImportSoundSheet = importedSoundURL != nil
+        }
+      }
+      .sheet(isPresented: $showingImportSoundSheet) {
+        if let url = importedSoundURL {
+          SoundSheet(mode: .add, preselectedFile: url)
+        }
       }
       .alert(
         "Delete Preset",
@@ -494,12 +542,73 @@ struct PresetPickerView: View {
         }
       }
     }
+    // Carry the app accent into the sheet explicitly. A presented sheet doesn't
+    // reliably keep the tint it inherited at presentation across later
+    // re-renders (e.g. favoriting a row or toggling Edit), so the row icons and
+    // checkmarks — which use `.accentColor` — would snap back to the system blue
+    // while the stars (which read `customAccentColor` directly) stayed tinted.
+    // Setting the tint locally on the sheet's own hierarchy keeps them in sync.
+    .tint(globalSettings.customAccentColor ?? .accentColor)
+  }
+}
+
+/// CarPlay-style leading artwork squircle for picker rows. Loads the preset's
+/// saved artwork asynchronously (cached by `PresetArtworkManager`); when there
+/// is no artwork — solo sounds, Quick Mix, or a preset without a custom image —
+/// it shows the supplied glyph on a faintly tinted squircle so every row keeps
+/// the same leading footprint.
+struct PresetThumbnail: View {
+  let artworkId: UUID?
+  let fallbackSystemImage: String
+  let tint: Color
+
+  @Environment(\.displayScale) private var displayScale
+  @State private var image: PlatformImage?
+
+  private let size: CGFloat = 36
+  private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 9, style: .continuous) }
+
+  var body: some View {
+    Group {
+      if let image {
+        platformImage(image)
+          .resizable()
+          .aspectRatio(contentMode: .fill)
+      } else {
+        shape
+          .fill(tint.opacity(0.15))
+          .overlay {
+            Image(systemName: fallbackSystemImage)
+              .font(.system(size: 16, weight: .medium))
+              .foregroundStyle(tint)
+          }
+      }
+    }
+    .frame(width: size, height: size)
+    .clipShape(shape)
+    .overlay { shape.strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5) }
+    .task(id: artworkId) {
+      guard let artworkId else {
+        image = nil
+        return
+      }
+      image = await PresetArtworkManager.shared.loadThumbnail(
+        id: artworkId, maxPixelSize: size * displayScale)
+    }
+  }
+
+  private func platformImage(_ img: PlatformImage) -> Image {
+    #if os(macOS)
+      Image(nsImage: img)
+    #else
+      Image(uiImage: img)
+    #endif
   }
 }
 
 // Preview Provider
-struct PresetPickerView_Previews: PreviewProvider {
+struct LibraryView_Previews: PreviewProvider {
   static var previews: some View {
-    PresetPickerView()
+    LibraryView()
   }
 }

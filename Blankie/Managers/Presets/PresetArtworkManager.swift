@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import ImageIO
 import SwiftData
 import SwiftUI
 
@@ -28,6 +29,11 @@ class PresetArtworkManager: ObservableObject {
 
   private var modelContext: ModelContext?
   private var imageCache: [UUID: PlatformImage] = [:]
+  /// Small downscaled thumbnails for list rows (preset picker), keyed by
+  /// "<id>@<maxPixelSize>" so different display sizes don't collide. Kept
+  /// separate from `imageCache` so we don't hold full-resolution images for
+  /// tiny squircles.
+  private var thumbnailCache: [String: PlatformImage] = [:]
 
   @MainActor
   func setModelContext(_ context: ModelContext) {
@@ -174,6 +180,54 @@ class PresetArtworkManager: ObservableObject {
         return nil
       }
     }.value
+  }
+
+  /// Load a small, downscaled thumbnail of a preset's artwork for list rows.
+  /// Decodes straight to `maxPixelSize` via ImageIO (never holding the full
+  /// image) and caches the result. `maxPixelSize` is in pixels — pass
+  /// points × displayScale.
+  func loadThumbnail(id: UUID, maxPixelSize: CGFloat) async -> PlatformImage? {
+    let key = "\(id.uuidString)@\(Int(maxPixelSize.rounded()))"
+    if let cached = thumbnailCache[key] { return cached }
+
+    guard let data = await loadArtworkData(id: id) else { return nil }
+
+    // Decode off the main actor — ImageIO downsampling reads and resamples the
+    // source image, which can stutter scrolling if done on the main thread. The
+    // detached task hands back a Sendable CGImage; the PlatformImage wrapper is
+    // built back here on the main actor (UIImage/NSImage aren't both Sendable).
+    let maxPixel = max(1, maxPixelSize)
+    let cgImage = await Task.detached(priority: .userInitiated) {
+      Self.downsampledCGImage(data: data, maxPixelSize: maxPixel)
+    }.value
+    guard let cgImage else { return nil }
+
+    #if canImport(UIKit)
+      let thumb = UIImage(cgImage: cgImage)
+    #else
+      let thumb = NSImage(cgImage: cgImage, size: .zero)
+    #endif
+    thumbnailCache[key] = thumb
+    return thumb
+  }
+
+  /// Downsample data to a CGImage no larger than `maxPixelSize` on its longest
+  /// edge. Returns a Sendable CGImage so it can
+  /// run on a detached task and be wrapped into a `PlatformImage` on the main actor
+  nonisolated private static func downsampledCGImage(data: Data, maxPixelSize: CGFloat) -> CGImage?
+  {
+    let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+    guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions) else {
+      return nil
+    }
+    let thumbnailOptions =
+      [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceShouldCacheImmediately: true,
+        kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+      ] as CFDictionary
+    return CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions)
   }
 
   /// Delete artwork for a preset
