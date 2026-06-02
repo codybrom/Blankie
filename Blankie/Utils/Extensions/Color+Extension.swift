@@ -80,6 +80,17 @@ enum AppearanceMode: String, CaseIterable {
     }
   }
 
+  /// The SwiftUI color scheme to force, or `nil` to follow the system. Used by
+  /// `preferredColorScheme` so views (including presented sheets) react when the
+  /// appearance setting changes.
+  var colorScheme: ColorScheme? {
+    switch self {
+    case .system: return nil
+    case .light: return .light
+    case .dark: return .dark
+    }
+  }
+
   var displayName: String {
     localizedName
   }

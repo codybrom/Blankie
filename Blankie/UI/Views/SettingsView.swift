@@ -13,6 +13,32 @@ struct SettingsView: View {
   // AppTransaction). Starts `false` so App Store users never flash beta UI.
   @State private var showBetaTesterUI = false
 
+  // Compact badge marking a Theme Default the active preset overrides, used in
+  // place of a full explanatory caption.
+  private var overriddenByPresetBadge: some View {
+    Text("Overridden by Preset")
+      .font(.caption2.weight(.semibold))
+      .textCase(.uppercase)
+      .foregroundColor(.secondary)
+      .padding(.horizontal, 6)
+      .padding(.vertical, 2)
+      .background(Capsule().fill(Color.secondary.opacity(0.15)))
+  }
+
+  #if os(iOS) || os(visionOS)
+    // A preset can override these app-wide defaults (`nil` = follow global).
+    // Quick Mix is tile-only and carries no preset, so it never overrides.
+    private var presetViewModeOverride: PresetViewMode? {
+      audioManager.isQuickMix ? nil : presetManager.currentPreset?.viewMode
+    }
+    private var accentColorOverridden: Bool {
+      !audioManager.isQuickMix && presetManager.currentPreset?.accentColorName != nil
+    }
+    private var blurOverridden: Bool {
+      !audioManager.isQuickMix && presetManager.currentPreset?.backgroundBlurRadius != nil
+    }
+  #endif
+
   var body: some View {
     NavigationStack {
       Form {
@@ -94,7 +120,7 @@ struct SettingsView: View {
         // (view mode, accent color, background blur).
         Section(
           header: VStack(alignment: .leading, spacing: 4) {
-            Text("Customization Defaults")
+            Text("Theme Defaults")
             Text("Presets can override these options.")
               .font(.caption)
               .textCase(.none)
@@ -106,12 +132,16 @@ struct SettingsView: View {
             // locked while the active preset carries its own view-mode
             // override — otherwise the control would show/edit a value that
             // doesn't match what's on screen (the override wins).
-            let presetOverride =
-              audioManager.isQuickMix ? nil : presetManager.currentPreset?.viewMode
+            let presetOverride = presetViewModeOverride
             let pickerLocked = audioManager.isQuickMix || presetOverride != nil
 
             VStack(alignment: .leading, spacing: 8) {
-              Text("View Mode")
+              HStack(spacing: 6) {
+                Text("View Mode")
+                if presetOverride != nil {
+                  overriddenByPresetBadge
+                }
+              }
               Picker(
                 selection: Binding(
                   get: {
@@ -131,25 +161,28 @@ struct SettingsView: View {
               .disabled(pickerLocked)
             }
             .padding(.vertical, 4)
-
-            if presetOverride != nil {
-              Text(
-                "This preset uses its own view mode. Change it in Edit Preset."
-              )
-              .font(.caption)
-              .foregroundColor(.secondary)
-            }
           #endif
 
           VStack(alignment: .leading, spacing: 8) {
-            Text("Accent Color")
+            HStack(spacing: 6) {
+              Text("Accent Color")
+              #if os(iOS) || os(visionOS)
+                if accentColorOverridden {
+                  overriddenByPresetBadge
+                }
+              #endif
+            }
             SpectrumColorPicker(
               selectedColor: Binding(
                 get: { globalSettings.customAccentColor },
                 // Use the setter so the choice persists (assigning the
                 // @Published directly never writes to UserDefaults).
                 set: { globalSettings.setAccentColor($0) }
-              ))
+              )
+            )
+            #if os(iOS) || os(visionOS)
+              .disabled(accentColorOverridden)
+            #endif
           }
           .padding(.vertical, 4)
 
@@ -159,7 +192,12 @@ struct SettingsView: View {
             // every drag frame; the binding's setter updates the published value
             // live so the slider stays responsive.
             VStack(alignment: .leading, spacing: 8) {
-              Text("Background Artwork Blur")
+              HStack(spacing: 6) {
+                Text("Background Artwork Blur")
+                if blurOverridden {
+                  overriddenByPresetBadge
+                }
+              }
               Picker(
                 "Background Artwork Blur",
                 selection: Binding(
@@ -172,6 +210,7 @@ struct SettingsView: View {
                 Text("High").tag(15.0)
               }
               .pickerStyle(.segmented)
+              .disabled(blurOverridden)
             }
             .padding(.vertical, 4)
           #endif
@@ -212,13 +251,17 @@ struct SettingsView: View {
         #endif
       }
       .navigationTitle("Settings")
+      // Presented as a sheet, this view has its own presentation context, so it
+      // won't pick up the window's color scheme when appearance changes while
+      // it's open. Apply it here too so dark/light flips the sheet immediately.
+      .preferredColorScheme(globalSettings.appearance.colorScheme)
       .task {
         showBetaTesterUI = await Bundle.main.isTestFlightOrDebug
       }
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
+          ToolbarItem(placement: .confirmationAction) {
             Button("Done") {
               dismiss()
             }
