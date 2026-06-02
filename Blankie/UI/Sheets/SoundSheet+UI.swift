@@ -75,21 +75,41 @@ extension SoundSheet {
     .navigationTitle(title)
     #if !os(macOS)
       .navigationBarTitleDisplayMode(.inline)
-      .navigationBarBackButtonHidden(true)
-      .navigationBarItems(
-        leading: leadingNavigationButton,
-        trailing: trailingNavigationButton
-      )
+      // The modal presentation is the root of its own NavigationStack, so it
+      // hides the (absent) back button and offers a custom "Done" to dismiss
+      // the sheet. When the editor is pushed instead — e.g. Edit Sound opened
+      // from Edit Preset — keep the standard Back button; a "Done" there reads
+      // like a modal dismiss dropped into the middle of a navigation push.
+      .navigationBarBackButtonHidden(embedInNavigation)
+      .toolbar {
+        if embedInNavigation {
+          ToolbarItem(placement: .topBarLeading) { leadingNavigationButton }
+        }
+        ToolbarItem(placement: .topBarTrailing) { trailingNavigationButton }
+      }
     #endif
   }
 
   @ViewBuilder
   var leadingNavigationButton: some View {
-    Button("Done") {
-      if isPreviewing {
-        stopPreview()
+    switch mode {
+    case .add:
+      // Adding: this button abandons the import (nothing is saved), so it's a
+      // clear "Cancel" paired with the trailing Save — not "Done".
+      Button("Cancel", role: .cancel) {
+        if isPreviewing {
+          stopPreview()
+        }
+        dismiss()
       }
-      dismiss()
+    case .edit:
+      // Editing applies changes live, so dismissing simply finishes — "Done".
+      Button("Done") {
+        if isPreviewing {
+          stopPreview()
+        }
+        dismiss()
+      }
     }
   }
 

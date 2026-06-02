@@ -78,11 +78,13 @@ struct CreatePresetSheet: View {
               orderedSounds: orderedSounds,
               editingPreset: nil
             )
-            .navigationBarItems(
-              leading: Button("Done") {
-                showingSoundSelection = false
+            .toolbar {
+              ToolbarItem(placement: .confirmationAction) {
+                Button("Done") {
+                  showingSoundSelection = false
+                }
               }
-            )
+            }
           }
         }
         .sheet(isPresented: $showingImagePicker) {

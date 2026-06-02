@@ -82,14 +82,17 @@
         if let defaultPreset = defaultPreset {
           let currentSoundscapeItem = createCurrentSoundscapeItem(defaultPreset)
           sections.append(
-            CPListSection(items: [currentSoundscapeItem], header: "Presets", sectionIndexTitle: "P")
+            CPListSection(
+              items: [currentSoundscapeItem], header: String(localized: "Presets"),
+              sectionIndexTitle: "P")
           )
         }
       } else if !customPresets.isEmpty {
         // Has custom presets - only show custom presets, not default
         let presetItems = customPresets.map { createPresetListItem($0) }
         sections.append(
-          CPListSection(items: presetItems, header: "Presets", sectionIndexTitle: "P"))
+          CPListSection(
+            items: presetItems, header: String(localized: "Presets"), sectionIndexTitle: "P"))
       }
 
       // Individual sounds section
@@ -97,7 +100,9 @@
       let soundItems = allSounds.map { createSoundListItem($0) }
       if !soundItems.isEmpty {
         sections.append(
-          CPListSection(items: soundItems, header: "Individual Sounds", sectionIndexTitle: "S"))
+          CPListSection(
+            items: soundItems, header: String(localized: "Sounds"),
+            sectionIndexTitle: "S"))
       }
 
       return CPListTemplate(title: "Blankie", sections: sections)
@@ -109,20 +114,13 @@
       let activeIndicator = isActive ? " ✓" : ""
 
       let item = CPListItem(
-        text: "Current Soundscape\(activeIndicator)", detailText: getPresetDetailText(preset))
+        text: "\(String(localized: "Current Soundscape"))\(activeIndicator)",
+        detailText: getPresetDetailText(preset))
 
       // Use a weak capture to avoid the 'self' in concurrently-executing code error
-      item.handler = { _, completion in
-        Task {
-          do {
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              // Always ensure playback starts when selecting a preset in CarPlay
-              AudioManager.shared.setGlobalPlaybackState(true)
-            }
-          } catch {
-            debugLog("🚗 CarPlay: Error applying preset: \(error)")
-          }
+      item.handler = { [weak self] _, completion in
+        Task { @MainActor in
+          self?.applyPresetAndStartPlayback(preset)
           completion()
         }
       }
@@ -143,17 +141,9 @@
         text: "\(preset.name)\(activeIndicator)", detailText: getPresetDetailText(preset))
 
       // Use a weak capture to avoid the 'self' in concurrently-executing code error
-      item.handler = { _, completion in
-        Task {
-          do {
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              // Always ensure playback starts when selecting a preset in CarPlay
-              AudioManager.shared.setGlobalPlaybackState(true)
-            }
-          } catch {
-            debugLog("🚗 CarPlay: Error applying preset: \(error)")
-          }
+      item.handler = { [weak self] _, completion in
+        Task { @MainActor in
+          self?.applyPresetAndStartPlayback(preset)
           completion()
         }
       }
@@ -164,17 +154,19 @@
     private func getPresetDetailText(_ preset: Preset) -> String {
       let activeSounds = preset.soundStates.filter { $0.isSelected }
       if activeSounds.isEmpty {
-        return "No active sounds"
+        return String(localized: "No active sounds")
       } else {
         // List the first few sound names
         let soundNames = activeSounds.prefix(3).map { soundState in
           AudioManager.shared.sounds.first { $0.fileName == soundState.fileName }?.title
             ?? soundState.fileName
         }
+        let joined = soundNames.joined(separator: ", ")
         if activeSounds.count > 3 {
-          return "\(soundNames.joined(separator: ", ")) and \(activeSounds.count - 3) more"
+          let remaining = activeSounds.count - 3
+          return String(localized: "\(joined) and \(remaining) more")
         } else {
-          return soundNames.joined(separator: ", ")
+          return joined
         }
       }
     }
@@ -183,12 +175,12 @@
       let isInSoloMode = AudioManager.shared.soloModeSound?.id == sound.id
       let activeIndicator = isInSoloMode ? " ✓" : ""
 
-      // Use icon name if sound names are hidden
-      let displayText = GlobalSettings.shared.showSoundNames ? sound.title : sound.systemIconName
-
+      // Always show the sound's real name in the car. "Show Sound Names" is a
+      // phone-screen preference; surfacing the raw SF Symbol identifier (e.g.
+      // "cloud.rain") to a driver is neither useful nor HIG-compliant.
       let item = CPListItem(
-        text: "\(displayText)\(activeIndicator)",
-        detailText: sound.isCustom ? "Custom sound" : nil
+        text: "\(sound.title)\(activeIndicator)",
+        detailText: sound.isCustom ? String(localized: "Custom sound") : nil
       )
 
       // Use a weak capture to avoid the 'self' in concurrently-executing code error
@@ -201,6 +193,23 @@
       }
 
       return item
+    }
+
+    /// Apply a preset, start playback, then surface the Now Playing screen —
+    /// mirrors the individual-sound path so CarPlay shows Now Playing once audio
+    /// is ready. Kept on the main actor so `self` access is concurrency-safe
+    /// under the Swift 6 language mode.
+    @MainActor
+    private func applyPresetAndStartPlayback(_ preset: Preset) {
+      do {
+        try PresetManager.shared.applyPreset(preset)
+        // Always ensure playback starts when selecting a preset in CarPlay.
+        AudioManager.shared.setGlobalPlaybackState(true)
+        interfaceController?.pushTemplate(
+          CPNowPlayingTemplate.shared, animated: true, completion: nil)
+      } catch {
+        debugLog("🚗 CarPlay: Error applying preset: \(error)")
+      }
     }
 
     @MainActor

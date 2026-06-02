@@ -102,15 +102,19 @@ struct EditPresetSheet: View {
       .navigationTitle(preset.isDefault ? "View Preset" : "Edit Preset")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationBarItems(
-          leading: Button("Done") { isPresented = nil },
-          trailing: exportButton
-        )
+        .toolbar {
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Done") { isPresented = nil }
+          }
+          ToolbarItem(placement: .topBarTrailing) {
+            exportButton
+          }
+        }
       #else
         .formStyle(.grouped)
         .frame(minWidth: 400, idealWidth: 500, minHeight: preset.isDefault ? 200 : 300)
         .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
+          ToolbarItem(placement: .confirmationAction) {
             Button("Done") { isPresented = nil }
             .keyboardShortcut(.escape)
           }
@@ -198,21 +202,13 @@ struct EditPresetSheet: View {
         orderedSounds: orderedSounds,
         editingPreset: preset
       )
-      #if os(iOS)
-        .navigationBarItems(
-          leading: Button("Done") {
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") {
             showingSoundSelection = false
           }
-        )
-      #else
-        .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
-            Button("Done") {
-              showingSoundSelection = false
-            }
-          }
         }
-      #endif
+      }
       .navigationDestination(for: Sound.self) { sound in
         SoundSheet(mode: .edit(sound), embedInNavigation: false)
       }

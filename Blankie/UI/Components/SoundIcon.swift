@@ -165,6 +165,9 @@ struct SoundIcon: View {
       .contentShape(Circle())
       .accessibilityIdentifier("sound-\(sound.fileName)")
       .accessibilityAddTraits(.isButton)
+      // Name the control for VoiceOver/Voice Control even when the visible title
+      // is hidden by "Show Sound Names" (the identifier above is test-only).
+      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
       .onTapGesture {
         // If global playback is paused and this sound is already selected,
         // start global playback instead of deselecting the sound

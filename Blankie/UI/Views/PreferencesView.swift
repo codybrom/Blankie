@@ -240,7 +240,7 @@ struct PreferencesView: View {
       NavigationStack {
         SoundManagementView()
           .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
+            ToolbarItem(placement: .confirmationAction) {
               Button("Done") {
                 showingHiddenSounds = false
               }

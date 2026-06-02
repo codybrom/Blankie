@@ -77,7 +77,7 @@ import SwiftUI
         .navigationTitle("Edit Quick Mix")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
+          ToolbarItem(placement: .confirmationAction) {
             Button("Done") {
               globalSettings.setQuickMixSoundFileNames(selectedSounds)
               dismiss()

@@ -85,6 +85,9 @@ struct SoundSheetMacOSLayout: View {
           .disabled(isDisabled)
           .keyboardShortcut(.return)
         } else {
+          // macOS convention: the lone confirm/dismiss button sits bottom-right.
+          Spacer()
+
           Button("Done") {
             if isPreviewing {
               stopPreview()
@@ -93,8 +96,6 @@ struct SoundSheetMacOSLayout: View {
           }
           .buttonStyle(.bordered)
           .keyboardShortcut(.escape)
-
-          Spacer()
         }
       }
       .padding()

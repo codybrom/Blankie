@@ -32,10 +32,16 @@ import SwiftUI
         .navigationTitle("Timer")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          ToolbarItem(placement: .navigationBarTrailing) {
-            Button("Done") {
+          // The primary action ("Start Timer" / "Cancel Timer") lives in the
+          // content; this toolbar button only dismisses, so it's a leading
+          // Close rather than a trailing "Done".
+          ToolbarItem(placement: .topBarLeading) {
+            Button {
               dismiss()
+            } label: {
+              Image(systemName: "xmark")
             }
+            .accessibilityLabel(Text("Close"))
           }
         }
       }

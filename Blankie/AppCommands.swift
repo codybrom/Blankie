@@ -12,8 +12,16 @@ import SwiftUI
     @Binding var showingAbout: Bool
     @Binding var hasWindow: Bool
     @StateObject private var appState = AppState.shared
+    @StateObject private var audioManager = AudioManager.shared
 
     var body: some Commands {
+      CommandMenu("Controls") {
+        Button(audioManager.isGloballyPlaying ? "Pause" : "Play") {
+          audioManager.togglePlayback()
+        }
+        .disabled(!audioManager.hasSelectedSounds)
+      }
+
       CommandGroup(replacing: .appInfo) {
         Button {
           showingAbout = true

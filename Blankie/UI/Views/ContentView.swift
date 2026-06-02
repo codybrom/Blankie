@@ -109,6 +109,7 @@ import UniformTypeIdentifiers
             }
             .buttonStyle(.borderless)
             .accessibilityIdentifier("volumeButton")
+            .accessibilityLabel("Volume")
             .popover(isPresented: $showingVolumePopover, arrowEdge: .top) {
               VolumePopoverView()
             }
@@ -131,6 +132,7 @@ import UniformTypeIdentifiers
               }
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel(audioManager.isGloballyPlaying ? "Pause" : "Play")
 
             // Color picker menu
             Button(action: {
@@ -143,6 +145,7 @@ import UniformTypeIdentifiers
                 .foregroundColor(.primary)
             }
             .buttonStyle(.borderless)
+            .accessibilityLabel("Accent Color")
             .popover(isPresented: $showingColorPicker) {
               ColorPickerView()
                 .padding()
@@ -170,7 +173,7 @@ import UniformTypeIdentifiers
         NavigationStack {
           SoundManagementView()
             .toolbar {
-              ToolbarItem(placement: .cancellationAction) {
+              ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { appState.showingManageSounds = false }
               }
             }

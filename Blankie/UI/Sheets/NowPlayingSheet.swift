@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import AVKit
 import MediaPlayer
 import SwiftUI
 
@@ -481,11 +482,13 @@ import SwiftUI
             let displayName: String = {
               let name = preset.name
               if name == "Default" || name.starts(with: "Preset ") {
-                return "Custom Mix"
+                // Static literal so it's extracted into the catalog and
+                // localized here; real preset names render verbatim below.
+                return String(localized: "Custom Mix")
               }
               return name
             }()
-            Text(displayName)
+            Text(verbatim: displayName)
               .font(.title2)
               .fontWeight(.bold)
               .foregroundColor(.white)
@@ -613,9 +616,18 @@ import SwiftUI
         .accessibilityLabel(Text("Back to Mixer"))
         .frame(maxWidth: .infinity)
 
-        // Middle: Empty space for future AirPlay
-        Spacer()
-          .frame(maxWidth: .infinity)
+        // Middle: AirPlay / audio output route picker. The Playing Audio HIG
+        // asks apps to permit rerouting of audio output when possible; this is
+        // the system-standard control for it.
+        #if os(iOS)
+          AirPlayRoutePickerView()
+            .frame(width: 44, height: 44)
+            .accessibilityLabel(Text("AirPlay"))
+            .frame(maxWidth: .infinity)
+        #else
+          Spacer()
+            .frame(maxWidth: .infinity)
+        #endif
 
         // Right: Timer
         Button {
@@ -715,5 +727,24 @@ import SwiftUI
       }
     }
   }
+
+  // MARK: - AirPlay Route Picker
+
+  #if os(iOS)
+    /// System AirPlay / output-route button, tinted to match the white-on-glass
+    /// Now Playing controls. Tapping it presents the system route picker.
+    struct AirPlayRoutePickerView: UIViewRepresentable {
+      func makeUIView(context: Context) -> AVRoutePickerView {
+        let picker = AVRoutePickerView(frame: .zero)
+        picker.tintColor = UIColor.white.withAlphaComponent(0.7)
+        picker.activeTintColor = UIColor.white
+        picker.prioritizesVideoDevices = false
+        picker.overrideUserInterfaceStyle = .dark
+        return picker
+      }
+
+      func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
+    }
+  #endif
 
 #endif

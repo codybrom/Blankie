@@ -92,7 +92,7 @@ import SwiftUI
             iconView
 
             if globalSettings.showSoundNames {
-              Text(sound.title)
+              Text(LocalizedStringKey(sound.title))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.primary)
@@ -103,6 +103,10 @@ import SwiftUI
           .frame(maxWidth: .infinity)
           .contentShape(Rectangle())
           .accessibilityAddTraits(.isButton)
+          // Label the tile explicitly so VoiceOver/Voice Control name it even
+          // when "Show Sound Names" hides the visible title (otherwise the only
+          // accessible text is the SF Symbol's derived name).
+          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
           .onTapGesture {
             onTap()
           }
