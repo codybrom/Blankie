@@ -50,6 +50,12 @@ private struct AnimationTrigger: Equatable {
 
         nowPlayingOverlay
       }
+      // Drive the Now Playing open/close off the value change rather than a
+      // withAnimation inside the tap handler. A withAnimation bound to the
+      // button's gesture transaction can be cut short by a quick tap, parking
+      // the move transition partway; an implicit value animation always runs
+      // to completion. (dragOffset keeps its own animation — untouched.)
+      .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingNowPlaying)
       .sheet(isPresented: $showingPresetPicker) {
         LibraryView()
           .presentationDetents([.large])
@@ -280,9 +286,7 @@ private struct AnimationTrigger: Equatable {
       if showingNowPlaying {
         NowPlayingSheet(
           onDismiss: {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-              showingNowPlaying = false
-            }
+            showingNowPlaying = false
           },
           showingPresetPicker: $showingPresetPicker,
           showingTimer: $showingTimer,

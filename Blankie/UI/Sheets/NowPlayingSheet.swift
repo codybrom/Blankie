@@ -82,54 +82,62 @@ import SwiftUI
 
     var body: some View {
       ZStack {
-        ZStack {
-          // Background
-          Color.black
-            .overlay {
-              if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
-                let image = backgroundImage
-              {
-                Image(uiImage: image)
-                  .resizable()
-                  .aspectRatio(contentMode: .fill)
-                  .frame(maxWidth: .infinity, maxHeight: .infinity)
-                  .clipped()
-                  .blur(radius: 40)
-                  .opacity(0.4)
-              } else {
-                LinearGradient(
-                  colors: [
-                    accentColor.opacity(0.6),
-                    accentColor.opacity(0.3),
-                    Color.black.opacity(0.8),
-                  ],
-                  startPoint: .topLeading,
-                  endPoint: .bottomTrailing
-                )
-              }
+        // Full-bleed background: fills the whole sheet including the top safe
+        // area (behind the Dynamic Island), so the open sheet reads as a true
+        // full-screen surface rather than a card with the mixer peeking above.
+        // Rounded top corners still show as the sheet is dragged down.
+        Color.black
+          .overlay {
+            if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
+              let image = backgroundImage
+            {
+              Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .blur(radius: 40)
+                .opacity(0.4)
+            } else {
+              LinearGradient(
+                colors: [
+                  accentColor.opacity(0.6),
+                  accentColor.opacity(0.3),
+                  Color.black.opacity(0.8),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+              )
             }
-            .ignoresSafeArea()
-
-          // Content
-          expandedPlayerView(screenSize)
-            .sensoryFeedback(.impact(weight: .heavy, intensity: 1.0), trigger: currentPage)
-        }
-        .clipShape(
-          UnevenRoundedRectangle(
-            topLeadingRadius: 38,
-            bottomLeadingRadius: 0,
-            bottomTrailingRadius: 0,
-            topTrailingRadius: 38,
-            style: .continuous
+          }
+          .clipShape(
+            UnevenRoundedRectangle(
+              topLeadingRadius: 38,
+              bottomLeadingRadius: 0,
+              bottomTrailingRadius: 0,
+              topTrailingRadius: 38,
+              style: .continuous
+            )
           )
-        )
-        .padding(.top, safeAreaInsets.top > 0 ? safeAreaInsets.top : 10)
+          .ignoresSafeArea()
+
+        // Content stays within the top safe area so the drag handle and
+        // everything below it sit clear of the Dynamic Island.
+        expandedPlayerView(screenSize)
+          .sensoryFeedback(.impact(weight: .heavy, intensity: 1.0), trigger: currentPage)
+          .padding(.top, safeAreaInsets.top > 0 ? safeAreaInsets.top : 10)
       }
       .frame(width: screenSize.width, height: screenSize.height)
       .ignoresSafeArea()
       .offset(y: dragOffset)
-      .gesture(dismissDrag)
+      // Only allow the dismiss drag once the sheet is fully presented. During
+      // the open window the gesture is masked off, so a leftover touch from a
+      // just-completed swipe-to-close can't be picked up as a phantom downward
+      // drag that parks the reopened sheet partway.
+      .gesture(dismissDrag, including: isFullyPresented ? .all : .none)
       .onAppear {
+        // Start every presentation from a clean offset.
+        dragOffset = 0
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
           isFullyPresented = true
         }
@@ -149,6 +157,9 @@ import SwiftUI
         .onEnded { value in
           guard isFullyPresented else { return }
           if value.translation.height > 150 || value.predictedEndTranslation.height > 200 {
+            // Reset before dismissing so no stale offset can carry into the
+            // next presentation.
+            dragOffset = 0
             onDismiss?()
           } else {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {

@@ -84,9 +84,7 @@ import SwiftUI
           GlassEffectContainer(spacing: 20) {
             HStack(spacing: 20) {
               Button {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                  showingNowPlaying.toggle()
-                }
+                showingNowPlaying.toggle()
               } label: {
                 // While Now Playing is up, this button returns to the mixer,
                 // so the icon previews the destination view mode: a grid glyph
@@ -123,9 +121,7 @@ import SwiftUI
           // Fallback for iOS 25 and earlier
           HStack(spacing: 20) {
             Button {
-              withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                showingNowPlaying.toggle()
-              }
+              showingNowPlaying.toggle()
             } label: {
               Image(systemName: "music.note.list")
                 .font(.system(size: 22))
