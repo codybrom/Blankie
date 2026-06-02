@@ -35,8 +35,9 @@ class AudioAnalyzer {
   /// Target LUFS level for normalization
   static let targetLUFS: Float = -27.0
 
-  /// Minimum LUFS to prevent over-amplification of very quiet sounds
-  static let minimumLUFS: Float = -50.0
+  /// Below this LUFS a sound is left un-normalized (treated as silence/noise).
+  /// Kept under the quietest real sound (boat ≈ -49.85) so none sit on the cliff.
+  static let minimumLUFS: Float = -60.0
 
   /// Maximum gain to apply (in dB) to prevent excessive amplification
   static let maxGainDB: Float = 18.0
@@ -112,22 +113,17 @@ class AudioAnalyzer {
   /// - Parameter lufs: The measured integrated LUFS
   /// - Returns: Linear gain factor to apply
   static func calculateLUFSNormalizationFactor(lufs: Float) -> Float {
-    // Don't normalize if already at or above target
-    guard lufs < targetLUFS else { return 1.0 }
-
-    // Don't normalize sounds quieter than minimum (too quiet)
+    // Don't touch sounds too quiet to be real signal (avoid amplifying noise/silence)
     guard lufs > minimumLUFS else { return 1.0 }
 
-    // Calculate required gain in dB
+    // Two-way loudness match toward the target: positive gain boosts quiet
+    // sounds, negative gain attenuates loud ones, so built-in and custom sounds
+    // land at the same perceived level. Cap only the boost (attenuation is always
+    // safe); the soft limiter guards any residual clipping when boosting.
     let requiredGainDB = targetLUFS - lufs
-
-    // Limit the gain
     let limitedGainDB = min(requiredGainDB, maxGainDB)
 
-    // Convert dB to linear gain
-    let linearGain = pow(10, limitedGainDB / 20)
-
-    return linearGain
+    return pow(10, limitedGainDB / 20)
   }
 
   /// Analyze RMS (Root Mean Square) level for more perceptual loudness
@@ -266,10 +262,12 @@ class AudioAnalyzer {
     if let lufsData = lufsResult {
       normalizationFactor = lufsData.normalizationFactor
 
-      // Check if applying gain would push true peak above -1 dBTP
+      // Check if the gain we actually apply (after caps) would push true peak
+      // above -1 dBTP. Attenuated (loud) sounds get a factor < 1, so this stays
+      // safe; only boosted sounds can trip the limiter.
       if let truePeak = truePeakdBTP {
-        let gainDB = targetLUFS - (lufsData.lufs)
-        let predictedTruePeak = truePeak + gainDB
+        let appliedGainDB = 20 * log10(normalizationFactor)
+        let predictedTruePeak = truePeak + appliedGainDB
         needsLimiter = predictedTruePeak > -1.0
 
         if needsLimiter {

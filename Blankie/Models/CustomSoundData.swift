@@ -118,7 +118,9 @@ class CustomSoundData {
       lufs: detectedLUFS,
       normalizationFactor: normalizationFactor,
       moods: moods,
-      duration: duration
+      duration: duration,
+      truePeakdBTP: nil,  // custom sounds get true-peak/limiter from their cached PlaybackProfile
+      needsLimiter: nil
     )
   }
 }

@@ -104,8 +104,8 @@ extension AudioManager {
       defaultOrder: soundData.defaultOrder,
       lufs: lufs,
       normalizationFactor: normalizationFactor,
-      truePeakdBTP: cachedProfile?.truePeakdBTP,
-      needsLimiter: cachedProfile?.needsLimiter ?? false,
+      truePeakdBTP: cachedProfile?.truePeakdBTP ?? soundData.truePeakdBTP,
+      needsLimiter: cachedProfile?.needsLimiter ?? soundData.needsLimiter ?? false,
       duration: soundData.duration
     )
   }
