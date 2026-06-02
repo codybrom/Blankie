@@ -16,8 +16,10 @@ import SwiftUI
 
     /// The accent driving the action buttons. Mirrors the precedence used by
     /// the Now Playing sheet so the timer's button matches the surrounding UI.
+    /// `themingPreset` is nil during solo / Quick Mix, so those use the app
+    /// accent (the timer is reachable from solo mode's bottom toolbar).
     private var accentColor: Color {
-      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
     var body: some View {

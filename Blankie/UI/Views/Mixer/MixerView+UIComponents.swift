@@ -39,12 +39,12 @@ import SwiftUI
           if audioManager.soloModeSound != nil {
             Image(systemName: "headphones.circle.fill")
               .foregroundColor(
-                presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+                presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor
                   ?? .accentColor)
           } else if audioManager.isQuickMix {
             Image(systemName: "square.grid.2x2.fill")
               .foregroundColor(
-                presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+                presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor
                   ?? .accentColor)
           }
           Text(navigationTitle)
@@ -163,7 +163,7 @@ import SwiftUI
           .font(.system(size: 26))
           .foregroundColor(
             audioManager.hasSelectedSounds
-              ? (presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+              ? (presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor
                 ?? .accentColor)
               : .secondary
           )
@@ -246,7 +246,6 @@ import SwiftUI
           .modernGlassEffect(cornerRadius: 28)
       }
     }
-
 
     private var timerButton: some View {
       let button = Button {

@@ -11,10 +11,11 @@ import SwiftUI
     @State private var showingListView = false
     @State private var showingCreatePreset = false
 
-    /// The sidebar follows the active preset's theme: its accent, then the
-    /// app-wide custom accent, then the system accent.
+    /// The sidebar follows the theming preset: its accent, then the app-wide
+    /// custom accent, then the system accent. `themingPreset` is nil during
+    /// solo / Quick Mix, so those use the app accent.
     private var activeAccent: Color {
-      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
     /// Trailing now-playing indicator: play/pause for the active item.

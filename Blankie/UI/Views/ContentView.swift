@@ -56,10 +56,11 @@ import UniformTypeIdentifiers
       audioManager.isGloballyPlaying ? .primary : .secondary
     }
 
-    /// Active accent: the current preset's color takes precedence over the
-    /// global setting, matching the grid tiles and iOS behavior.
+    /// Active accent: the theming preset's color takes precedence over the
+    /// global setting, matching the grid tiles and iOS behavior. `themingPreset`
+    /// is nil during solo / Quick Mix, so those use the app accent.
     private var activeAccent: Color {
-      presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
     var body: some View {

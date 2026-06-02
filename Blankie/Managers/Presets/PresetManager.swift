@@ -29,6 +29,22 @@ class PresetManager: ObservableObject {
   @Published private(set) var isLoading: Bool = true
   @Published private(set) var error: Error?
 
+  /// The preset whose theme (accent, blur, view mode) should drive the UI, or
+  /// nil when none should. Quick Mix already clears `currentPreset`, but solo
+  /// mode preserves it so the preset can be restored on exit — and during solo
+  /// the preset's theme must not apply (solo has its own app-accent identity).
+  /// Centralizing the rule here keeps accent resolution and the Settings
+  /// "Overridden by Preset" badges in agreement.
+  ///
+  /// Views reading this must also observe `AudioManager` so SwiftUI
+  /// re-evaluates when solo / Quick Mix state changes.
+  @MainActor
+  var themingPreset: Preset? {
+    let audio = AudioManager.shared
+    if audio.soloModeSound != nil || audio.isQuickMix { return nil }
+    return currentPreset
+  }
+
   private var cancellables = Set<AnyCancellable>()
   private var isInitialLoad = true
 

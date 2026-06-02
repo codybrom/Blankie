@@ -58,13 +58,14 @@ import SwiftUI
         }
     }
 
-    // Prefer the current preset's accent so tiles match the preset theme; fall
-    // back to the app-wide custom accent, then the system accent. Read without
+    // Prefer the theming preset's accent so tiles match the preset theme; fall
+    // back to the app-wide custom accent, then the system accent. `themingPreset`
+    // is nil during solo / Quick Mix, so those use the app accent. Read without
     // observing PresetManager (which republishes on every sound-state save) —
-    // the grid's parent re-renders on preset changes, so this stays current
-    // without each tile subscribing.
+    // the grid's parent re-renders on preset changes, and this tile already
+    // observes AudioManager, so solo / Quick Mix changes stay current too.
     private var accentColor: Color {
-      PresetManager.shared.currentPreset?.accentColor ?? globalSettings.customAccentColor
+      PresetManager.shared.themingPreset?.accentColor ?? globalSettings.customAccentColor
         ?? .accentColor
     }
 

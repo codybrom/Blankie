@@ -27,15 +27,17 @@ struct SettingsView: View {
 
   #if os(iOS) || os(visionOS)
     // A preset can override these app-wide defaults (`nil` = follow global).
-    // Quick Mix is tile-only and carries no preset, so it never overrides.
+    // `themingPreset` is nil under Quick Mix (tile-only, no preset) and solo
+    // mode (preserves its preset for restore but uses the app accent), so
+    // neither shows these controls as overridden.
     private var presetViewModeOverride: PresetViewMode? {
-      audioManager.isQuickMix ? nil : presetManager.currentPreset?.viewMode
+      presetManager.themingPreset?.viewMode
     }
     private var accentColorOverridden: Bool {
-      !audioManager.isQuickMix && presetManager.currentPreset?.accentColorName != nil
+      presetManager.themingPreset?.accentColorName != nil
     }
     private var blurOverridden: Bool {
-      !audioManager.isQuickMix && presetManager.currentPreset?.backgroundBlurRadius != nil
+      presetManager.themingPreset?.backgroundBlurRadius != nil
     }
   #endif
 
