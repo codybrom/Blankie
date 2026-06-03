@@ -48,8 +48,9 @@ struct ArchiveCompatibility: Codable {
   }
 
   func isCompatible(with currentVersion: String) -> Bool {
-    // Simple version comparison - in production would use proper version parsing
-    return currentVersion >= minimumBlankieVersion
+    // Numeric comparison so multi-digit version segments order correctly
+    // (e.g. "1.10.0" > "1.9.0"); plain String >= is lexicographic.
+    return currentVersion.compare(minimumBlankieVersion, options: .numeric) != .orderedAscending
   }
 }
 
