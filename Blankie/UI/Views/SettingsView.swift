@@ -130,12 +130,11 @@ struct SettingsView: View {
         ) {
           #if os(iOS) || os(visionOS)
             // View mode (Grid / List). This is the app-wide default. It's
-            // locked to Grid while in Quick Mix (tile-only by design), and
-            // locked while the active preset carries its own view-mode
-            // override — otherwise the control would show/edit a value that
-            // doesn't match what's on screen (the override wins).
+            // locked to Grid while in Quick Mix (tile-only by design). A preset
+            // override no longer locks the control — the badge marks it, and the
+            // picker still shows/edits the app-wide default like Accent and Blur.
             let presetOverride = presetViewModeOverride
-            let pickerLocked = audioManager.isQuickMix || presetOverride != nil
+            let pickerLocked = audioManager.isQuickMix
 
             VStack(alignment: .leading, spacing: 8) {
               HStack(spacing: 6) {
@@ -148,7 +147,6 @@ struct SettingsView: View {
                 selection: Binding(
                   get: {
                     if audioManager.isQuickMix { return false }
-                    if let presetOverride { return presetOverride == .list }
                     return globalSettings.showingListView
                   },
                   set: { globalSettings.setShowingListView($0) }
@@ -182,9 +180,6 @@ struct SettingsView: View {
                 set: { globalSettings.setAccentColor($0) }
               )
             )
-            #if os(iOS) || os(visionOS)
-              .disabled(accentColorOverridden)
-            #endif
           }
           .padding(.vertical, 4)
 
@@ -212,7 +207,6 @@ struct SettingsView: View {
                 Text("High").tag(15.0)
               }
               .pickerStyle(.segmented)
-              .disabled(blurOverridden)
             }
             .padding(.vertical, 4)
           #endif
@@ -253,6 +247,11 @@ struct SettingsView: View {
         #endif
       }
       .navigationTitle("Settings")
+      // Tint the whole form once so icons that use `Color.accentColor` (e.g. the
+      // About Blankie symbol) resolve from the same environment as the toggles.
+      // Without this, interacting with a tinted row propagates its tint to the
+      // list and the static icons "snap" from system blue to the custom accent.
+      .tint(globalSettings.customAccentColor ?? .accentColor)
       // Presented as a sheet, this view has its own presentation context, so it
       // won't pick up the window's color scheme when appearance changes while
       // it's open. Apply it here too so dark/light flips the sheet immediately.

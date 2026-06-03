@@ -249,7 +249,12 @@ import SwiftUI
       } label: {
         Image(systemName: "timer")
           .font(.system(size: 22))
-          .foregroundColor(timerManager.isTimerActive ? .accentColor : .primary)
+          .foregroundColor(
+            timerManager.isTimerActive
+              ? (presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor
+                ?? .accentColor)
+              : .primary
+          )
           .frame(width: 56, height: 56)
       }
       .accessibilityLabel("Timer")

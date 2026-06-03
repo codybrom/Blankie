@@ -61,6 +61,7 @@ import SwiftUI
 
 struct AboutView: View {
   @ObservedObject private var creditsManager = SoundCreditsManager.shared
+  @ObservedObject private var globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
   @State private var isSoundCreditsExpanded = false
   @State private var isLicenseExpanded = false
@@ -140,6 +141,10 @@ struct AboutView: View {
         try? Tips.configure()
       #endif
     }
+    // Tint the About content once so link/help icons that use Color.accentColor
+    // resolve from the same environment as tinted rows (e.g. InspirationSection),
+    // so one interaction can't flip them between system blue and the app accent.
+    .tint(globalSettings.customAccentColor ?? .accentColor)
   }
 }
 
@@ -336,6 +341,7 @@ extension AboutView {
           }
         }
       }
+      .tint(globalSettings.customAccentColor ?? .accentColor)
       .presentationDetents([.medium])
     }
 

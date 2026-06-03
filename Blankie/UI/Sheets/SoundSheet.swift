@@ -155,6 +155,11 @@ struct SoundSheet: View {
       .onDisappear {
         handleOnDisappear()
       }
+      // Tint the whole sheet so accent-colored icons (selected sound icon,
+      // icon-picker highlight, Reset button) resolve from one stable environment
+      // and don't flip when a tinted control is touched. Sound editing is
+      // app-global (no preset), so use the app accent.
+      .tint(GlobalSettings.shared.customAccentColor ?? .accentColor)
   }
 
   private var baseContent: some View {

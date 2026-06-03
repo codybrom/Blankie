@@ -82,6 +82,9 @@ struct SoundSelectionView: View {
             .disabled(selectedSounds.isEmpty)
         }
       }
+      // Rows style their selection via the environment tint (.tint / .accent), so
+      // anchor it to the app accent for a stable, consistent selection color.
+      .tint(GlobalSettings.shared.customAccentColor ?? .accentColor)
     }
 
     private func macRow(for sound: Sound) -> some View {
@@ -149,6 +152,7 @@ struct SoundSelectionView: View {
         }
         .disabled(selectedSounds.isEmpty)
       )
+      .tint(GlobalSettings.shared.customAccentColor ?? .accentColor)
     }
   #endif
 }

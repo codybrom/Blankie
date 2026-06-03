@@ -89,6 +89,9 @@ import SwiftUI
       .onAppear {
         selectedSounds = globalSettings.quickMixSoundFileNames
       }
+      // Quick Mix has no preset, so use the app accent. Tinting the whole sheet
+      // keeps the accent-colored sound icons stable across interactions.
+      .tint(globalSettings.customAccentColor ?? .accentColor)
     }
   }
 
@@ -97,6 +100,7 @@ import SwiftUI
   struct QuickMixSoundPicker: View {
     @Binding var selectedSounds: [String]
     @ObservedObject private var audioManager = AudioManager.shared
+    @ObservedObject private var globalSettings = GlobalSettings.shared
 
     private var builtInSounds: [Sound] {
       audioManager.sounds.filter { !$0.isCustom }.sorted { $0.title < $1.title }
@@ -131,6 +135,7 @@ import SwiftUI
       }
       .navigationTitle("Choose Sounds")
       .navigationBarTitleDisplayMode(.inline)
+      .tint(globalSettings.customAccentColor ?? .accentColor)
     }
   }
 

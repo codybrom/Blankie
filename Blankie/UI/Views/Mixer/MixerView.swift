@@ -226,6 +226,13 @@ private struct AnimationTrigger: Equatable {
       .navigationSplitViewStyle(.balanced)
     }
 
+    // Toolbar buttons (Library, Settings) carry no explicit color, so they fall
+    // back to the system tint. Resolve the same effective accent the rest of the
+    // UI uses so they inherit the preset's theme override.
+    private var toolbarAccentColor: Color {
+      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    }
+
     @ViewBuilder
     private var iPhoneLayout: some View {
       NavigationStack {
@@ -262,6 +269,7 @@ private struct AnimationTrigger: Equatable {
             } label: {
               Image(systemName: "square.stack")
             }
+            .tint(toolbarAccentColor)
             .accessibilityLabel("Library")
             .sensoryFeedback(.selection, trigger: showingPresetPicker)
           }
@@ -271,6 +279,7 @@ private struct AnimationTrigger: Equatable {
             } label: {
               Image(systemName: "gearshape")
             }
+            .tint(toolbarAccentColor)
             .accessibilityLabel("Blankie Settings")
             .sensoryFeedback(.selection, trigger: showingSettings)
           }
