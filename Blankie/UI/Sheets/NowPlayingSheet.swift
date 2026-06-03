@@ -19,7 +19,6 @@ import SwiftUI
 
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
-    @Binding var showingLibrarySheet: Bool
     @Binding var showingTimer: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
@@ -777,7 +776,6 @@ import SwiftUI
 
     var body: some View {
       NowPlayingSheet(
-        showingLibrarySheet: .constant(false),
         showingTimer: .constant(false)
       )
     }

@@ -3,7 +3,7 @@ import TipKit
 import UniformTypeIdentifiers
 
 /// Shared "now playing" treatment for Library rows. iPad sidebar rows highlight
-/// the whole row and tint the title with the active accent; iPhone sheet rows
+/// the whole row and tint the title with the active accent; iPhone page rows
 /// show an animated equalizer glyph in place of the old checkmark.
 enum LibraryRowStyle {
   static func titleColor(
@@ -12,26 +12,35 @@ enum LibraryRowStyle {
     presentation == .sidebar && isCurrent ? accent : .primary
   }
 
-  /// Highlight only the active row, and only in the sidebar — an inset rounded
-  /// pill, like the system sidebar selection. `nil` falls back to the list's
-  /// default row background.
+  /// Row backdrop. Sidebar: an inset accent pill behind only the active row,
+  /// like the system sidebar selection. Page: a uniform dark glass card —
+  /// material blur, so the artwork backdrop glows through without making the
+  /// row read as transparent. `nil` falls back to the list's default row
+  /// background.
   static func rowBackground(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
   ) -> AnyView? {
-    guard presentation == .sidebar && isCurrent else { return nil }
-    return AnyView(
-      RoundedRectangle(cornerRadius: 10, style: .continuous)
-        .fill(accent.opacity(0.15))
-        .padding(.horizontal, 10)
-        .padding(.vertical, 2)
-    )
+    switch presentation {
+    case .sidebar:
+      guard isCurrent else { return nil }
+      return AnyView(
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+          .fill(accent.opacity(0.15))
+          .padding(.horizontal, 10)
+          .padding(.vertical, 2)
+      )
+    case .page:
+      return AnyView(Rectangle().fill(.regularMaterial))
+    case .sheet:
+      return nil
+    }
   }
 
   @ViewBuilder
   static func nowPlayingIndicator(
     isCurrent: Bool, isPlaying: Bool, accent: Color, presentation: LibraryView.Presentation
   ) -> some View {
-    if isCurrent && presentation == .sheet {
+    if isCurrent && presentation != .sidebar {
       EqualizerIcon(isPlaying: isPlaying, accent: accent)
     }
   }
@@ -325,19 +334,30 @@ struct SoloPickerRow: View {
 }
 
 struct LibraryView: View {
-  /// Where this Library is rendered. As a `.sheet` (iPhone) it wraps itself in a
-  /// `NavigationStack`, shows a close button, and dismisses on selection. As a
-  /// `.sidebar` (iPad) it relies on the enclosing `NavigationSplitView` for the
-  /// nav bar, has no close button, and stays put when a row is tapped.
+  /// Where this Library is rendered. As a `.page` (iPhone) it's the ROOT of
+  /// the mixer's `NavigationStack` — the mixer is pushed on top of it, so
+  /// selecting a row navigates forward to the mixer via `onSelection`. As a
+  /// `.sidebar` (iPad) it relies on the enclosing `NavigationSplitView` for
+  /// the nav bar and stays put when a row is tapped. As a `.sheet` it's a
+  /// self-contained modal with its own `NavigationStack` and close button.
   enum Presentation {
     case sheet
     case sidebar
+    case page
   }
 
   var presentation: Presentation = .sheet
-  /// Sidebar-only: opens the full Settings sheet from a trailing toolbar gear.
-  /// nil in the sheet presentation, where Settings isn't surfaced here.
+  /// Opens the full Settings sheet from a toolbar gear (leading on the iPhone
+  /// page, trailing in the iPad sidebar). nil in the sheet presentation, where
+  /// Settings isn't surfaced here.
   var onOpenSettings: (() -> Void)?
+  /// Page-only: called after a row applies its selection so the owner can
+  /// navigate forward to the mixer (the Library is the stack root, so there
+  /// is nothing to dismiss).
+  var onSelection: (() -> Void)?
+  /// Page-only: the current preset's background artwork (loaded by the
+  /// mixer), reused here so the Library shares Now Playing's backdrop.
+  var backgroundImage: PlatformImage?
 
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
@@ -350,6 +370,7 @@ struct LibraryView: View {
   @State private var importedSoundURL: URL?
   @State private var showingImportSoundSheet = false
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.colorScheme) private var systemColorScheme
 
   // TipKit tips
   private let createFirstPresetTip = CreateFirstPresetTip()
@@ -473,12 +494,68 @@ struct LibraryView: View {
 
   // MARK: - Row builders
 
-  /// As a sheet, selecting a row dismisses the Library; as a sidebar it stays
-  /// open. Rows gate their own `dismiss()` on `dismissOnSelect`, so the sidebar
-  /// passes `false` and a nil selection callback.
+  /// As a sheet, selecting a row dismisses the Library; as the root page it
+  /// navigates forward to the mixer via `onSelection`; as a sidebar it stays
+  /// put. Rows gate their own `dismiss()` on `dismissOnSelect` — only the
+  /// sheet has anything to dismiss.
   private var dismissOnSelect: Bool { presentation == .sheet }
   private var onSelect: (() -> Void)? {
-    presentation == .sheet ? { dismiss() } : nil
+    switch presentation {
+    case .sheet: return { dismiss() }
+    case .page: return onSelection
+    case .sidebar: return nil
+    }
+  }
+
+  // MARK: - Page backdrop
+
+  /// Now Playing's accent rule: the preset accent, except solo mode (and any
+  /// preset-less state), which uses the app accent.
+  private var pageAccent: Color {
+    if audioManager.soloModeSound != nil {
+      return globalSettings.customAccentColor ?? .accentColor
+    }
+    return presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
+      ?? .accentColor
+  }
+
+  /// Page-only backdrop mirroring Now Playing: a black base with the preset's
+  /// blurred artwork, falling back to an accent gradient (solo and Quick Mix
+  /// always use the gradient, like Now Playing does).
+  private var pageBackground: some View {
+    Color.black
+      .overlay {
+        if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
+          let image = backgroundImage
+        {
+          #if os(macOS)
+            Image(nsImage: image)
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+              .blur(radius: 40)
+              .opacity(0.4)
+          #else
+            Image(uiImage: image)
+              .resizable()
+              .aspectRatio(contentMode: .fill)
+              .blur(radius: 40)
+              .opacity(0.4)
+          #endif
+        } else {
+          LinearGradient(
+            colors: [
+              pageAccent.opacity(0.6),
+              pageAccent.opacity(0.3),
+              Color.black.opacity(0.8),
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+          )
+        }
+      }
+      .clipped()
+      .ignoresSafeArea()
+      .accessibilityHidden(true)
   }
 
   @ViewBuilder
@@ -547,11 +624,21 @@ struct LibraryView: View {
     Group {
       switch presentation {
       case .sheet:
-        // iPhone: a self-contained modal with its own nav bar + close button.
+        // A self-contained modal with its own nav bar + close button.
         NavigationStack { libraryList }
       case .sidebar:
         // iPad: the enclosing NavigationSplitView supplies the nav bar.
         libraryList
+      case .page:
+        // iPhone: the enclosing NavigationStack supplies the nav bar. The
+        // list sits on Now Playing's backdrop instead of the system grouped
+        // gray, with a dark bar scheme so its controls stay legible over it.
+        libraryList
+          .scrollContentBackground(.hidden)
+          .background { pageBackground }
+          #if os(iOS) || os(visionOS)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+          #endif
       }
     }
     // Carry the app accent into the sheet explicitly. A presented sheet doesn't
@@ -616,6 +703,11 @@ struct LibraryView: View {
             )
             .font(.subheadline)
             .foregroundStyle(.secondary)
+            // Match the picker rows' glass on the page (nil elsewhere, keeping
+            // the default background).
+            .listRowBackground(
+              LibraryRowStyle.rowBackground(
+                isCurrent: false, accent: .clear, presentation: presentation))
           } else {
             ForEach(favoriteTokens, id: \.self) { token in
               tokenRow(token)
@@ -660,9 +752,10 @@ struct LibraryView: View {
         }
       }
     }
-    // The sheet keeps its "Library" title; the sidebar is self-evidently the
-    // library, so it omits the title to leave the bar for the controls.
-    .navigationTitle(presentation == .sheet ? Text("Library") : Text(verbatim: ""))
+    // The sheet and pushed page keep their "Library" title; the sidebar is
+    // self-evidently the library, so it omits the title to leave the bar for
+    // the controls.
+    .navigationTitle(presentation == .sidebar ? Text(verbatim: "") : Text("Library"))
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
     #endif
@@ -714,9 +807,13 @@ struct LibraryView: View {
             .tint(Color.primary)
           }
         }
-        // Sidebar only: Settings as a trailing-edge gear.
+        // Settings gear, opening the Settings sheet. On the page it sits in
+        // the leading corner — the Library is the stack root, so no back
+        // button competes for that edge — leaving the trailing edge to
+        // Edit/Add. In the sidebar the leading edge belongs to the sidebar
+        // toggle, so the gear stays trailing.
         if let onOpenSettings {
-          ToolbarItem(placement: .topBarTrailing) {
+          ToolbarItem(placement: presentation == .page ? .topBarLeading : .topBarTrailing) {
             Button {
               onOpenSettings()
             } label: {
@@ -730,6 +827,10 @@ struct LibraryView: View {
     #if os(iOS)
       .environment(\.editMode, .constant(isEditMode ? EditMode.active : EditMode.inactive))
     #endif
+    // Page-only: the always-dark reading Now Playing uses, so row text stays
+    // legible over the dark backdrop. Applied here — inside the sheet/alert
+    // modifiers — so presented sheets keep the system appearance.
+    .environment(\.colorScheme, presentation == .page ? .dark : systemColorScheme)
     .sheet(isPresented: $showingNewPresetSheet) {
       CreatePresetSheet(isPresented: $showingNewPresetSheet)
     }

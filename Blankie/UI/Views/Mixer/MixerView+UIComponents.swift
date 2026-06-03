@@ -31,34 +31,6 @@ import SwiftUI
       return "Blankie"
     }
 
-    var presetButton: some View {
-      Button(action: {
-        showingLibrarySheet = true
-      }) {
-        HStack(spacing: 4) {
-          if audioManager.soloModeSound != nil {
-            Image(systemName: "headphones.circle.fill")
-              .foregroundColor(
-                presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor
-                  ?? .accentColor)
-          } else if audioManager.isQuickMix {
-            Image(systemName: "square.grid.2x2.fill")
-              .foregroundColor(
-                presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor
-                  ?? .accentColor)
-          }
-          Text(navigationTitle)
-            .font(.title2)
-            .fontWeight(.semibold)
-            .foregroundColor(.primary)
-          Image(systemName: "chevron.down")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
-      }
-      .sensoryFeedback(.selection, trigger: showingLibrarySheet)
-    }
-
     // MARK: - Toolbar Components
 
     var bottomToolbar: some View {
@@ -192,8 +164,8 @@ import SwiftUI
       // Bottom play-controls slot, identical on iPhone and iPad: the Edit
       // affordance (Quick Mix / preset). In solo mode there's no preset to edit
       // (the solo sound is edited by tapping it), so the slot shows the Timer
-      // instead. Settings lives in the top bar on iPhone and the sidebar on
-      // iPad — never in this slot.
+      // instead. Settings lives in the Library's toolbar on both platforms —
+      // never in this slot.
       if audioManager.soloModeSound != nil {
         timerButton
       } else {
@@ -338,7 +310,7 @@ import SwiftUI
     let editMode: EditMode
     @Binding var showingTimer: Bool
     @Binding var presetToEdit: Preset?
-    @Binding var showingLibrarySheet: Bool
+    @Binding var showingLibrary: Bool
 
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
@@ -452,7 +424,7 @@ import SwiftUI
       .contentShape(Rectangle())
       .onTapGesture {
         // Tap on the main bar opens preset picker
-        showingLibrarySheet = true
+        showingLibrary = true
       }
       .popoverTip(SwitchPresetsTip(), arrowEdge: .bottom)
     }

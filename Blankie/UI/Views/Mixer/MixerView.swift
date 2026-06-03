@@ -8,13 +8,22 @@ private struct AnimationTrigger: Equatable {
   let listView: Bool
 }
 
+/// The iPhone stack's pushed pages. The Library is the stack ROOT (spatially
+/// to the left); the mixer is the only pushed destination.
+private enum IPhonePage: Hashable {
+  case mixer
+}
+
 #if os(iOS) || os(visionOS)
   struct MixerView: View {
     @StateObject var audioManager = AudioManager.shared
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
-    @State var showingLibrarySheet = false
+    /// iPhone navigation path. The Library is the stack's root and the app
+    /// launches with the mixer pushed on top, so the mixer's back button (or
+    /// an edge swipe) leads left to the Library.
+    @State private var iPhonePath: [IPhonePage] = [.mixer]
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State var showingSoundManagement = false
     @State var showingSettings = false
@@ -55,10 +64,6 @@ private struct AnimationTrigger: Equatable {
       // the move transition partway; an implicit value animation always runs
       // to completion. (dragOffset keeps its own animation — untouched.)
       .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingNowPlaying)
-      .sheet(isPresented: $showingLibrarySheet) {
-        LibraryView()
-          .presentationDetents([.large])
-      }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()  // Prevent accidental dismissal
@@ -205,60 +210,54 @@ private struct AnimationTrigger: Equatable {
 
     @ViewBuilder
     private var iPhoneLayout: some View {
-      NavigationStack {
-        ZStack {
-          // Background layer
-          presetBackgroundView
+      // The Library is the stack's ROOT, to the LEFT of the mixer: the app
+      // launches with the mixer pushed on top, the mixer's back button slides
+      // left to the Library, and selecting any Library row pushes the mixer
+      // again. Settings is a further push from the Library's leading gear —
+      // as the root, the Library has no back button competing for that edge.
+      NavigationStack(path: $iPhonePath) {
+        LibraryView(
+          presentation: .page,
+          onOpenSettings: { showingSettings = true },
+          onSelection: { iPhonePath = [.mixer] },
+          backgroundImage: backgroundImage
+        )
+        .navigationDestination(for: IPhonePage.self) { _ in
+          mixerPage
+        }
+      }
+    }
 
-          #if os(iOS)
-            // Hidden volume view to globally suppress the system volume HUD
-            // when physical hardware buttons are pressed.
-            SystemVolumeSlider()
-              .frame(width: 0, height: 0)
-              .opacity(0.001)
-              .allowsHitTesting(false)
-          #endif
+    @ViewBuilder
+    private var mixerPage: some View {
+      ZStack {
+        // Background layer
+        presetBackgroundView
 
-          // Main content
-          VStack(spacing: 0) {
-            mainContentView
-          }
+        #if os(iOS)
+          // Hidden volume view to globally suppress the system volume HUD
+          // when physical hardware buttons are pressed.
+          SystemVolumeSlider()
+            .frame(width: 0, height: 0)
+            .opacity(0.001)
+            .allowsHitTesting(false)
+        #endif
+
+        // Main content
+        VStack(spacing: 0) {
+          mainContentView
         }
-        .onGeometryChange(for: Bool.self) { geo in
-          geo.size.width > geo.size.height
-        } action: { newValue in
-          isLandscape = newValue
-        }
-        .navigationTitle(navigationTitle)
-        .navigationBarTitleDisplayMode(.inline)
-        .if(topBarCaption != nil) { $0.navigationSubtitle(topBarCaption ?? "") }
-        .toolbar {
-          ToolbarItem(placement: .topBarTrailing) {
-            Button {
-              showingLibrarySheet = true
-            } label: {
-              Image(systemName: "square.stack")
-            }
-            // Monochrome to match the iPad sidebar's bar buttons; accent stays
-            // in content, not the toolbar.
-            .tint(Color.primary)
-            .accessibilityLabel("Library")
-            .sensoryFeedback(.selection, trigger: showingLibrarySheet)
-          }
-          ToolbarItem(placement: .topBarTrailing) {
-            Button {
-              showingSettings = true
-            } label: {
-              Image(systemName: "gearshape")
-            }
-            .tint(Color.primary)
-            .accessibilityLabel("Blankie Settings")
-            .sensoryFeedback(.selection, trigger: showingSettings)
-          }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-          bottomToolbar
-        }
+      }
+      .onGeometryChange(for: Bool.self) { geo in
+        geo.size.width > geo.size.height
+      } action: { newValue in
+        isLandscape = newValue
+      }
+      .navigationTitle(navigationTitle)
+      .navigationBarTitleDisplayMode(.inline)
+      .if(topBarCaption != nil) { $0.navigationSubtitle(topBarCaption ?? "") }
+      .safeAreaInset(edge: .bottom, spacing: 0) {
+        bottomToolbar
       }
     }
 
@@ -269,7 +268,6 @@ private struct AnimationTrigger: Equatable {
           onDismiss: {
             showingNowPlaying = false
           },
-          showingLibrarySheet: $showingLibrarySheet,
           showingTimer: $showingTimer,
           backgroundImage: backgroundImage
         )

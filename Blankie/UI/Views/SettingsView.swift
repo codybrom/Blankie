@@ -46,8 +46,11 @@ struct SettingsView: View {
   #endif
 
   var body: some View {
-    NavigationStack {
-      Form {
+    NavigationStack { settingsForm }
+  }
+
+  private var settingsForm: some View {
+    Form {
         // App identity header (icon, name, developer) with the About link and
         // beta/debug rows grouped beneath it, like a standard iOS settings card.
         Section {
@@ -320,7 +323,6 @@ struct SettingsView: View {
       .sheet(isPresented: $showingOnboarding) {
         PresetOnboardingSheet(isPresented: $showingOnboarding)
       }
-    }
   }
 }
 
