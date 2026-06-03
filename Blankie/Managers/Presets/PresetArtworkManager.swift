@@ -94,21 +94,26 @@ class PresetArtworkManager: ObservableObject {
       }
     )
 
+    // Replace any existing record so the saved artwork gets a NEW id. The whole
+    // display layer treats artworkId as the artwork's content identity — views
+    // reload via `.task(id: artworkId)` and images are memo-cached by id — so
+    // reusing the id on an edit left every surface (mixer, Now Playing, lock
+    // screen, library thumbnails) showing the stale cached image until relaunch.
     if let existingArtwork = try context.fetch(descriptor).first {
-      // Update existing artwork
-      existingArtwork.imageData = imageData
-      existingArtwork.updatedAt = Date()
-      try context.save()
-      debugLog("📸 PresetArtworkManager: Updated \(type.rawValue) for preset \(presetId)")
-      return existingArtwork.id
-    } else {
-      // Create new artwork
-      let artwork = PresetArtwork(presetId: presetId, imageData: imageData, type: type)
-      context.insert(artwork)
-      try context.save()
-      debugLog("📸 PresetArtworkManager: Saved new \(type.rawValue) for preset \(presetId)")
-      return artwork.id
+      context.delete(existingArtwork)
+      imageCache.removeValue(forKey: existingArtwork.id)
     }
+
+    let artwork = PresetArtwork(presetId: presetId, imageData: imageData, type: type)
+    context.insert(artwork)
+    try context.save()
+
+    // Warm the cache under the new id so the new image appears immediately.
+    if let image = PlatformImage(data: imageData) {
+      imageCache[artwork.id] = image
+    }
+    debugLog("📸 PresetArtworkManager: Saved \(type.rawValue) for preset \(presetId)")
+    return artwork.id
   }
 
   /// Load artwork by ID

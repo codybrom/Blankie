@@ -422,8 +422,8 @@ extension EditPresetSheet {
         }
       }
 
-      // Cache thumbnail for CarPlay if artwork exists
-      if updatedPreset.artworkId != nil {
+      // Cache thumbnail for CarPlay if the preset has static or animated artwork
+      if updatedPreset.artworkId != nil || updatedPreset.animatedArtwork != nil {
         await presetManager.cacheThumbnail(for: updatedPreset)
       }
     }

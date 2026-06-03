@@ -29,6 +29,7 @@ struct PresetPickerRow: View {
       HStack(spacing: 10) {
         PresetThumbnail(
           artworkId: preset.artworkId,
+          preset: preset,
           fallbackSystemImage: preset.isDefault ? "square.stack" : "music.note",
           tint: preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
         )
@@ -116,6 +117,7 @@ struct SoloPickerRow: View {
       HStack(spacing: 10) {
         PresetThumbnail(
           artworkId: nil,
+          preset: nil,
           fallbackSystemImage: sound.systemIconName,
           tint: globalSettings.customAccentColor ?? .accentColor
         )
@@ -330,6 +332,7 @@ struct LibraryView: View {
       HStack(spacing: 10) {
         PresetThumbnail(
           artworkId: nil,
+          preset: nil,
           fallbackSystemImage: "square.grid.2x2",
           tint: globalSettings.customAccentColor ?? .accentColor
         )
@@ -559,6 +562,7 @@ struct LibraryView: View {
 /// the same leading footprint.
 struct PresetThumbnail: View {
   let artworkId: UUID?
+  let preset: Preset?
   let fallbackSystemImage: String
   let tint: Color
 
@@ -587,13 +591,20 @@ struct PresetThumbnail: View {
     .frame(width: size, height: size)
     .clipShape(shape)
     .overlay { shape.strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5) }
-    .task(id: artworkId) {
-      guard let artworkId else {
+    .task(
+      id:
+        "\(artworkId?.uuidString ?? "nil")-\(preset?.animatedArtwork?.squarePreviewPath ?? preset?.animatedArtwork?.previewPath ?? "nil")"
+    ) {
+      if let artworkId {
+        image = await PresetArtworkManager.shared.loadThumbnail(
+          id: artworkId, maxPixelSize: size * displayScale)
+      } else if let preset, preset.animatedArtwork != nil {
+        // No static artwork — fall back to the animated artwork's preview image,
+        // the same art the mixer / Now Playing / lock screen show.
+        image = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+      } else {
         image = nil
-        return
       }
-      image = await PresetArtworkManager.shared.loadThumbnail(
-        id: artworkId, maxPixelSize: size * displayScale)
     }
   }
 

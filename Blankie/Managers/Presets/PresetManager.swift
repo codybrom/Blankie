@@ -975,8 +975,6 @@ extension PresetManager {
   @MainActor
   func cacheThumbnail(for preset: Preset) async {
     #if os(iOS)
-      guard let artworkId = preset.artworkId else { return }
-
       // Check if thumbnail is already cached
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
@@ -984,9 +982,10 @@ extension PresetManager {
         return  // Already cached
       }
 
-      // Load the full artwork
-      guard let artworkData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
-        let fullImage = UIImage(data: artworkData)
+      // Source image: static artwork if present, else the animated artwork's
+      // preview — so presets with only animated artwork still get a CarPlay
+      // thumbnail (matching the mixer / Now Playing / library picker).
+      guard let fullImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
       else { return }
 
       // Generate a thumbnail for CarPlay (44x44 points)
