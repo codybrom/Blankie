@@ -23,6 +23,7 @@ struct AnimatedWaveformView: View {
         .contentTransition(.symbolEffect(.replace))
     }
     .animation(.smooth(duration: 0.4), value: Date.now)
+    .accessibilityHidden(true)
   }
 
   private func waveformSymbol(for position: Int) -> String {

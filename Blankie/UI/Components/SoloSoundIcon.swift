@@ -61,6 +61,11 @@ import SwiftUI
       }
       .frame(width: iconSize, height: iconSize)
       .contentShape(Circle())
+      .accessibilityElement(children: .ignore)
+      .accessibilityAddTraits(.isButton)
+      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityValue(Text(AudioManager.shared.isGloballyPlaying ? "Playing" : "Paused"))
+      .accessibilityHint(Text("Plays or pauses the sound"))
       .onTapGesture {
         // This icon only ever shows the soloed sound, so a tap toggles
         // playback rather than deselecting it.

@@ -30,6 +30,9 @@ import SwiftUI
           )
           .frame(width: 200)
           .tint(accentColor)
+          .accessibilityLabel(Text("All Sounds"))
+          .accessibilityValue(
+            Text(globalSettings.volume.formatted(.percent.precision(.fractionLength(0)))))
         }
 
         // Only show middle divider if there are active sounds
@@ -50,6 +53,9 @@ import SwiftUI
               )
               .frame(width: 200)
               .tint(accentColor)
+              .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+              .accessibilityValue(
+                Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))))
             }
           }
         }

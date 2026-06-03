@@ -222,6 +222,7 @@ extension CreatePresetSheet {
             Image(systemName: "chevron.right")
               .foregroundStyle(.tertiary)
               .imageScale(.small)
+              .accessibilityHidden(true)
           }
         }
         .buttonStyle(.plain)

@@ -74,6 +74,8 @@ struct SoundWaveformView: View {
       }
     }
     .frame(height: height)
+    // Decorative waveform visualization has no interactive controls
+    .accessibilityHidden(true)
   }
 
   private func loadWaveform(width: CGFloat) {
@@ -107,7 +109,8 @@ struct SoundWaveformView: View {
     return nil
   }
 
-  private func extractAndDownsampleAudio(from url: URL, targetWidth: CGFloat) async throws
+  nonisolated private func extractAndDownsampleAudio(from url: URL, targetWidth: CGFloat)
+    async throws
     -> [Float]
   {
     let file = try AVAudioFile(forReading: url)
@@ -133,7 +136,7 @@ struct SoundWaveformView: View {
     return downsample(samples, to: barCount)
   }
 
-  private func downsample(_ samples: [Float], to targetCount: Int) -> [Float] {
+  nonisolated private func downsample(_ samples: [Float], to targetCount: Int) -> [Float] {
     guard samples.count > targetCount else {
       return samples.map { abs($0) }
     }

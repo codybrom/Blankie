@@ -63,6 +63,7 @@ struct AboutView: View {
   @ObservedObject private var creditsManager = SoundCreditsManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var isSoundCreditsExpanded = false
   @State private var isLicenseExpanded = false
   @State private var isAcknowledgementsExpanded = false
@@ -109,23 +110,23 @@ struct AboutView: View {
         linksSection
 
         InspirationSection()
-        Divider().padding(.horizontal, 40)
+        Divider().padding(.horizontal, 40).accessibilityHidden(true)
         DeveloperSection()
 
         if !contributors.isEmpty {
-          Divider().padding(.horizontal, 40)
+          Divider().padding(.horizontal, 40).accessibilityHidden(true)
           ContributorSection(contributors: contributors)
         }
 
         if !translators.isEmpty {
-          Divider().padding(.horizontal, 40)
+          Divider().padding(.horizontal, 40).accessibilityHidden(true)
           TranslatorSection(translators: translators)
         }
 
-        Divider().padding(.horizontal, 40)
+        Divider().padding(.horizontal, 40).accessibilityHidden(true)
         copyrightText
         creditsAndLicenseSection
-        Divider().padding(.horizontal, 40)
+        Divider().padding(.horizontal, 40).accessibilityHidden(true)
         helpSection
       }
       .padding(20)
@@ -163,6 +164,7 @@ extension AboutView {
         }
         .buttonStyle(.plain)
         .help("Close")
+        .accessibilityLabel(Text("Close"))
         .keyboardShortcut(.defaultAction)
       }
       .padding(.bottom, -8)
@@ -185,6 +187,7 @@ extension AboutView {
                 showingIconChooser = appIconOptions.count > 1
               }
               .accessibilityAddTraits(.isButton)
+              .accessibilityLabel(Text("Change app icon"))
           }
           .popoverTip(AppIconChangeTip(), arrowEdge: .bottom)
         }
@@ -193,6 +196,8 @@ extension AboutView {
           Image(nsImage: appIcon)
             .resizable()
             .frame(width: 128, height: 128)
+            // Non-interactive on macOS; give it a description rather than a bare image.
+            .accessibilityLabel(Text("Blankie app icon"))
         }
       #endif
     }
@@ -201,25 +206,30 @@ extension AboutView {
   private var appInfoSection: some View {
     VStack(spacing: 8) {
       Text(verbatim: "Blankie")
-        .font(.system(size: 24, weight: .medium, design: .rounded))
+        .font(.system(.title2, design: .rounded).weight(.medium))
         #if os(iOS)
           .onTapGesture {
             appIconOptions = getAvailableAppIcons()
             showingIconChooser = appIconOptions.count > 1
           }
           .accessibilityAddTraits(.isButton)
+          .accessibilityHint(Text("Change app icon"))
         #endif
 
       Text(LocalizedStringKey("Version \(appVersion) (\(buildNumber))"))
-        .font(.system(size: 12))
+        .font(.caption)
         .foregroundStyle(.secondary)
     }
   }
 
   private var linksSection: some View {
-    HStack(spacing: 16) {
+    let linksLayout =
+      dynamicTypeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 16))
+    return linksLayout {
       HStack(spacing: 4) {
         Image(systemName: "globe")
+          .accessibilityHidden(true)
         Link("blankie.rest", destination: URL(string: "https://blankie.rest")!).handCursor()
       }
 
@@ -239,7 +249,7 @@ extension AboutView {
       }
       .handCursor()
     }
-    .font(.system(size: 12))
+    .font(.caption)
   }
 
   private var copyrightText: some View {
@@ -292,9 +302,11 @@ extension AboutView {
     Link(destination: URL(string: "https://blankie.rest/faq")!) {
       HStack {
         Image(systemName: "questionmark.circle").foregroundColor(.accentColor)
+          .accessibilityHidden(true)
         Text("Blankie Help").foregroundColor(.primary)
         Spacer()
         Image(systemName: "safari").foregroundColor(.secondary)
+          .accessibilityHidden(true)
       }
       .padding(.vertical, 8)
       .padding(.horizontal, 16)
@@ -323,16 +335,21 @@ extension AboutView {
                   .aspectRatio(contentMode: .fit)
                   .frame(width: 60, height: 60)
                   .cornerRadius(13)
+                  .accessibilityHidden(true)
               }
               Text(option.displayName).foregroundColor(.primary)
               Spacer()
               if option.name == UIApplication.shared.alternateIconName {
-                Image(systemName: "checkmark").foregroundColor(.accentColor)
+                Image(systemName: "checkmark")
+                  .foregroundColor(.accentColor)
+                  .accessibilityHidden(true)
               }
             }
             .contentShape(Rectangle())
           }
           .buttonStyle(.plain)
+          .accessibilityAddTraits(
+            option.name == UIApplication.shared.alternateIconName ? [.isSelected] : [])
         }
         .navigationTitle(Text("Choose App Icon"))
         .navigationBarTitleDisplayMode(.inline)

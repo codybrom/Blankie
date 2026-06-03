@@ -143,6 +143,7 @@ struct PresetPickerRow: View {
           fallbackSystemImage: preset.isDefault ? "square.stack" : "music.note",
           tint: accent
         )
+        .accessibilityHidden(true)
 
         Text(preset.displayName)
           .foregroundColor(
@@ -158,6 +159,12 @@ struct PresetPickerRow: View {
       .onTapGesture {
         if !isEditMode { applyPreset() }
       }
+      // Merge the row into a single element so VoiceOver exposes the tap as an
+      // activation (an un-combined container drops the .onTapGesture action).
+      .accessibilityElement(children: .combine)
+      .accessibilityLabel(Text(preset.displayName))
+      .accessibilityAddTraits(.isButton)
+      .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
 
       // Always-visible favorite toggle (hidden in edit mode, where the reorder
       // handle takes the trailing edge).
@@ -255,6 +262,7 @@ struct SoloPickerRow: View {
           fallbackSystemImage: sound.systemIconName,
           tint: accent
         )
+        .accessibilityHidden(true)
 
         Text(sound.title)
           .foregroundColor(
@@ -270,6 +278,12 @@ struct SoloPickerRow: View {
       .onTapGesture {
         if !isEditMode { soloSound() }
       }
+      // Merge the row into a single element so VoiceOver exposes the tap as an
+      // activation (an un-combined container drops the .onTapGesture action).
+      .accessibilityElement(children: .combine)
+      .accessibilityLabel(Text(sound.title))
+      .accessibilityAddTraits(.isButton)
+      .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
 
       if !isEditMode {
         Button {
@@ -512,6 +526,7 @@ struct LibraryView: View {
           fallbackSystemImage: "square.grid.2x2",
           tint: accent
         )
+        .accessibilityHidden(true)
         Text("Quick Mix")
           .foregroundColor(
             LibraryRowStyle.titleColor(
@@ -522,6 +537,7 @@ struct LibraryView: View {
           accent: accent, presentation: presentation)
       }
     }
+    .accessibilityAddTraits(audioManager.isQuickMix ? [.isSelected] : [])
     .listRowBackground(
       LibraryRowStyle.rowBackground(
         isCurrent: audioManager.isQuickMix, accent: accent, presentation: presentation))
@@ -574,6 +590,7 @@ struct LibraryView: View {
             Image(systemName: "star.circle")
               .font(.system(size: 48))
               .foregroundStyle(.secondary)
+              .accessibilityHidden(true)
 
             Text("No Custom Presets")
               .font(.headline)

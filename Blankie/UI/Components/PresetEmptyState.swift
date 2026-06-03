@@ -15,6 +15,7 @@ struct PresetEmptyState: View {
       Image(systemName: "star.circle")
         .font(.system(size: 48))
         .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
 
       Text("No Custom Presets")
         .font(.headline)

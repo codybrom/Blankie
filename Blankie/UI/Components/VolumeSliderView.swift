@@ -23,5 +23,9 @@ struct VolumeSliderView: View {
     .frame(width: width)
     .tint(tintColor)
     .disabled(!isEnabled)
+    .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+    .accessibilityValue(
+      Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
+    )
   }
 }

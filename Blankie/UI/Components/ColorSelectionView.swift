@@ -47,6 +47,7 @@ struct ColorSelectionView: View {
     VStack(alignment: .leading, spacing: 8) {
       Text("Color")
         .font(.headline)
+        .accessibilityHidden(true)
 
       VStack(spacing: 8) {
         // Default option - styled like PreferencesView
@@ -69,6 +70,7 @@ struct ColorSelectionView: View {
             }
           )
           .buttonStyle(.plain)
+          .accessibilityAddTraits(selectedColor == nil ? .isSelected : [])
 
           // First row of colors
           ForEach(Array(AccentColor.allCases.filter { $0 != .system }.prefix(5)), id: \.self) {
@@ -91,6 +93,8 @@ struct ColorSelectionView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(accentColor.name)
+            .accessibilityAddTraits(selectedColor == accentColor ? .isSelected : [])
           }
         }
 
@@ -116,10 +120,15 @@ struct ColorSelectionView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(accentColor.name)
+            .accessibilityAddTraits(selectedColor == accentColor ? .isSelected : [])
           }
         }
       }
       .padding(.vertical, 4)
+      // Group the swatches so VoiceOver announces a "Color" group
+      .accessibilityElement(children: .contain)
+      .accessibilityLabel(Text("Color"))
     }
   }
 }

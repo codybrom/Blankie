@@ -23,6 +23,7 @@ struct SoundFileSelector: View {
         HStack {
           Image(systemName: "doc.fill")
             .foregroundStyle(.tint)
+            .accessibilityHidden(true)
           VStack(alignment: .leading) {
             Text(selectedFile.lastPathComponent)
               .lineLimit(1)
@@ -30,6 +31,7 @@ struct SoundFileSelector: View {
               .font(.caption)
               .foregroundStyle(.secondary)
           }
+          .accessibilityElement(children: .combine)
           Spacer()
           if !hideChangeButton {
             Button {
@@ -59,6 +61,7 @@ struct SoundFileSelector: View {
           HStack {
             Image(systemName: "plus.circle.fill")
               .font(.title2)
+              .accessibilityHidden(true)
             Text("Select Sound File")
               .font(.headline)
           }

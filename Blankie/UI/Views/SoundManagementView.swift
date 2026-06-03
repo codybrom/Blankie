@@ -170,6 +170,7 @@ struct SoundManagementView: View {
       Image(systemName: "waveform.circle")
         .font(.system(size: 32))
         .foregroundColor(.secondary)
+        .accessibilityHidden(true)
 
       Text("No Custom Sounds")
         .font(.headline)
@@ -260,6 +261,7 @@ struct SoundManagementView: View {
           .font(.title3)
           .foregroundStyle(.secondary)
           .frame(width: 26)
+          .accessibilityHidden(true)
 
         Text(
           isCustom
@@ -312,6 +314,7 @@ struct SoundManagementView: View {
         Image(systemName: "waveform.circle")
           .font(.system(size: 40))
           .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
 
         Text("No Custom Sounds")
           .font(.headline)

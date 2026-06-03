@@ -65,6 +65,10 @@
           let known = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.position) })
           items = newSounds.map { SortableSoundMac(sound: $0, position: known[$0.id] ?? .zero) }
         }
+        // Announce the grid as one container ("Sounds, N items") so VoiceOver can
+        // summarize it; .contain keeps each tile individually navigable.
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text("Sounds"))
       }
     }
 

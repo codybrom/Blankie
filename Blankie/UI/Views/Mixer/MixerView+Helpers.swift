@@ -107,6 +107,7 @@ import SwiftUI
             )
           }
         }
+        .accessibilityHidden(true)
       }
       .ignoresSafeArea()
       .task(

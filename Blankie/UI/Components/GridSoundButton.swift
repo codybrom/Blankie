@@ -99,11 +99,14 @@ import SwiftUI
                 .foregroundColor(.primary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
+                .accessibilityHidden(true)
             }
           }
           .frame(maxWidth: .infinity)
           .contentShape(Rectangle())
+          .accessibilityElement(children: .ignore)
           .accessibilityAddTraits(.isButton)
+          .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
           // Label the tile explicitly so VoiceOver/Voice Control name it even
           // when "Show Sound Names" hides the visible title (otherwise the only
           // accessible text is the SF Symbol's derived name).
@@ -154,6 +157,10 @@ import SwiftUI
       // toggling while paused and fired one haptic per active tile on every
       // global play/pause.
       .sensoryFeedback(.selection, trigger: sound.isSelected)
+      .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+      .accessibilityShowsLargeContentViewer {
+        Label(LocalizedStringKey(sound.title), systemImage: sound.systemIconName)
+      }
     }
 
     // MARK: - Icon
@@ -168,6 +175,7 @@ import SwiftUI
             color: accentColor
           )
           .allowsHitTesting(false)
+          .accessibilityHidden(true)
         }
 
         Image(systemName: sound.systemIconName)
@@ -205,6 +213,10 @@ import SwiftUI
       // aren't selected so the slider can't edit an inactive sound.
       .disabled(!isActive)
       .padding(.horizontal, 4)
+      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityValue(
+        Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
+      )
     }
 
   }

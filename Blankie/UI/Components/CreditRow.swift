@@ -18,8 +18,13 @@ struct CreditRow: View {
       // Attribution line
       attributionView
     }
-    .font(.system(size: 12))
+    .font(.caption)
     .padding(.vertical, 4)
+    // Make each credit one navigable container named for the sound, so VoiceOver
+    // announces it as a unit ("Rain, group") with the source/license links as
+    // items inside rather than loose siblings that bleed into the next credit.
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel(Text(credit.name))
   }
 
   // Extracted view for the sound name line
@@ -27,23 +32,20 @@ struct CreditRow: View {
     HStack(spacing: 4) {
       Text(credit.name)
         .fontWeight(.bold)
+        // The container is labeled with the sound name and doesn't need re-announced
+        .accessibilityHidden(true)
 
       Text(verbatim: " — ")
         .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
 
       if let soundUrl = credit.soundUrl {
         // With link case
-        Text(credit.soundName)
+        Link(credit.soundName, destination: soundUrl)
           .foregroundColor(.accentColor)
           .underline()
-          .onTapGesture {
-            #if os(macOS)
-              NSWorkspace.shared.open(soundUrl)
-            #else
-              UIApplication.shared.open(soundUrl)
-            #endif
-          }
           .handCursor()
+          .accessibilityHint(Text("Opens the sound source"))
       } else {
         // Without link case
         Text(credit.soundName)
@@ -55,12 +57,17 @@ struct CreditRow: View {
   // Extracted view for the attribution line
   private var attributionView: some View {
     HStack(spacing: 4) {
-      Text("By")
-        .foregroundStyle(.secondary)
-      Text(credit.author)
+      // Group "By <author>" into a single VoiceOver element
+      HStack(spacing: 4) {
+        Text("By")
+          .foregroundStyle(.secondary)
+        Text(credit.author)
+      }
+      .accessibilityElement(children: .combine)
 
       if let licenseUrl = credit.license.url {
         Text(verbatim: "•").foregroundStyle(.secondary)
+          .accessibilityHidden(true)
         Link(credit.license.linkText, destination: licenseUrl)
           .help(licenseUrl.absoluteString)
           .foregroundColor(.accentColor)

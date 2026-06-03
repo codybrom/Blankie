@@ -11,6 +11,8 @@ struct TimerView: View {
   @StateObject private var timerManager = TimerManager.shared
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var colorScheme
+  // Scales the countdown with Dynamic Type while keeping its default size.
+  @ScaledMetric(relativeTo: .title) private var countdownFontSize: CGFloat = 32
 
   private var accentColor: Color {
     #if os(macOS)
@@ -40,9 +42,10 @@ struct TimerView: View {
       Image(systemName: "timer")
         .font(.system(size: 48))
         .foregroundStyle(accentColor)
+        .accessibilityHidden(true)
 
       Text(timerManager.formatRemainingTime())
-        .font(.system(size: 32, weight: .light, design: .rounded))
+        .font(.system(size: countdownFontSize, weight: .light, design: .rounded))
         .monospacedDigit()
 
       Text("Blankie will pause when timer expires")
@@ -68,6 +71,7 @@ struct TimerView: View {
       Image(systemName: "timer.circle")
         .font(.system(size: 48))
         .foregroundStyle(accentColor)
+        .accessibilityHidden(true)
 
       Text("Set Timer")
         .font(.headline)

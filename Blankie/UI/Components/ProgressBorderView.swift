@@ -32,6 +32,7 @@ struct ProgressBorderView: View {
         .drawingGroup()  // Composite to offscreen buffer for better performance
         .padding(-borderWidth)  // Remove padding after to maintain original size
     }
+    .accessibilityHidden(true)
   }
 
   private func getCurrentProgress() -> Double {

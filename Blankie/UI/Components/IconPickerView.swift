@@ -53,6 +53,7 @@ struct IconPickerView: View {
           HStack {
             Image(systemName: "magnifyingglass")
               .foregroundStyle(.secondary)
+              .accessibilityHidden(true)
             TextField(text: $iconSearchText) {
               Text("Search icons...")
             }
@@ -66,6 +67,7 @@ struct IconPickerView: View {
                   .foregroundStyle(.secondary)
               }
               .buttonStyle(.plain)
+              .accessibilityLabel(Text("Clear search"))
             }
           }
           .padding(8)
@@ -106,6 +108,7 @@ struct IconPickerView: View {
               Image(systemName: "questionmark.square.dashed")
                 .font(.largeTitle)
                 .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
               Text("No matching icons found")
                 .font(.headline)
               Text(
@@ -151,6 +154,9 @@ struct IconPickerView: View {
                 }
                 .buttonStyle(.plain)
                 .help(iconName)
+                // Read the symbol name without VoiceOver speaking each "dot".
+                .accessibilityLabel(Text(iconName.replacingOccurrences(of: ".", with: " ")))
+                .accessibilityAddTraits(selectedIcon == iconName ? .isSelected : [])
                 .id(iconName)  // Add ID for scrolling
               }
             }

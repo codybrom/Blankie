@@ -30,6 +30,7 @@ struct BrandedBlankieIcon: View {
           endPoint: .bottomTrailing
         )
       )
+      .accessibilityHidden(true)
   }
 }
 

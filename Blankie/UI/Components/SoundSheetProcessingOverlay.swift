@@ -14,6 +14,7 @@ struct SoundSheetProcessingOverlay: View {
     ZStack {
       Color.black.opacity(0.3)
         .ignoresSafeArea()
+        .accessibilityHidden(true)
 
       VStack(spacing: 12) {
         ProgressView()
@@ -22,6 +23,8 @@ struct SoundSheetProcessingOverlay: View {
           .font(.headline)
       }
       .padding(24)
+      // Read the spinner + status message as a single VoiceOver announcement.
+      .accessibilityElement(children: .combine)
       .background(
         Group {
           #if os(macOS)

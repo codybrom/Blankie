@@ -69,6 +69,8 @@ where
         draggingPreview(draggingItem)
           .disabled(true)
           .allowsHitTesting(false)
+          // Transient floating copy of the lifted tile. Hide duplicate from assistive technologies
+          .accessibilityHidden(true)
           .frame(width: draggingStartRect.width, height: draggingStartRect.height)
           .animation(.snappy(duration: 0.3, extraBounce: 0)) { content in
             content

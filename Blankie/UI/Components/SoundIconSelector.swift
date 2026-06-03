@@ -39,6 +39,8 @@ struct SoundIconSelector: View {
         Image(systemName: selectedIcon)
           .font(.title2)
           .foregroundStyle(.tint)
+          // Name the current icon so "Selected:" isn't announced without a value.
+          .accessibilityLabel(Text(selectedIcon.replacingOccurrences(of: ".", with: " ")))
       }
 
       // Search and category picker
@@ -46,6 +48,7 @@ struct SoundIconSelector: View {
         HStack {
           Image(systemName: "magnifyingglass")
             .foregroundStyle(.secondary)
+            .accessibilityHidden(true)
           TextField(text: $iconSearchText) {
             Text("Search icons...")
           }
@@ -84,6 +87,7 @@ struct SoundIconSelector: View {
             Image(systemName: "questionmark.square.dashed")
               .font(.largeTitle)
               .foregroundStyle(.tertiary)
+              .accessibilityHidden(true)
             Text("No matching icons found")
               .font(.headline)
             Text(
@@ -126,6 +130,9 @@ struct SoundIconSelector: View {
               }
               .buttonStyle(.plain)
               .help(iconName)
+              // Read the symbol name without VoiceOver speaking each "dot".
+              .accessibilityLabel(Text(iconName.replacingOccurrences(of: ".", with: " ")))
+              .accessibilityAddTraits(selectedIcon == iconName ? .isSelected : [])
             }
           }
           .padding(4)

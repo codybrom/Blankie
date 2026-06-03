@@ -68,10 +68,11 @@ import UniformTypeIdentifiers
         if !audioManager.isGloballyPlaying {
           HStack {
             Image(systemName: "pause.circle.fill")
+              .accessibilityHidden(true)
             Text("Playback Paused")
               .font(
                 Locale.current.identifier.hasPrefix("zh")
-                  ? .system(size: 16, weight: .medium, design: .rounded)
+                  ? .system(.callout, design: .rounded).weight(.medium)
                   : .system(.subheadline, design: .rounded))
           }
           .frame(maxWidth: .infinity)

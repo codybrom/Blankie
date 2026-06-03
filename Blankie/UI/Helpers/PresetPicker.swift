@@ -32,6 +32,7 @@ struct PresetPicker: View {
           .fontWeight(.bold)
           Image(systemName: "chevron.down")
             .imageScale(.small)
+            .accessibilityHidden(true)
         }
       }
       .buttonStyle(.plain)
@@ -155,11 +156,15 @@ private struct PresetRow: View {
           if presetManager.currentPreset?.id == preset.id {
             Image(systemName: "checkmark")
               .foregroundStyle(.blue)
+              .accessibilityHidden(true)
           }
         }
       }
       .buttonStyle(.plain)
       .frame(maxWidth: .infinity)
+      // Selection is conveyed by the trait (the checkmark above is hidden).
+      .accessibilityAddTraits(
+        presetManager.currentPreset?.id == preset.id ? [.isSelected] : [])
 
       // Only show edit and delete buttons for non-default presets
       if !preset.isDefault {

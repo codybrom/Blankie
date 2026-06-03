@@ -40,13 +40,14 @@ struct ExpandableSection<Content: View>: View {
         }) {
           HStack {
             Text(title)
-              .font(.system(size: 13, weight: .bold))
+              .font(.footnote.weight(.bold))
             Spacer()
             Image(systemName: "chevron.right")
               .foregroundColor(.secondary)
               .imageScale(.small)
               .rotationEffect(.degrees(isExpanded ? 90 : 0))
               .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isExpanded)
+              .accessibilityHidden(true)
           }
           .frame(maxWidth: .infinity)
           .padding(.vertical, 8)
@@ -59,6 +60,8 @@ struct ExpandableSection<Content: View>: View {
         }
         .buttonStyle(.plain)
         .handCursor()
+        .accessibilityValue(Text(isExpanded ? "Expanded" : "Collapsed"))
+        .accessibilityHint(Text(isExpanded ? "Collapses this section" : "Expands this section"))
         .onHover { hovering in
           isHovering = hovering
         }
@@ -67,6 +70,7 @@ struct ExpandableSection<Content: View>: View {
         if isExpanded {
           Divider()
             .padding(.horizontal, -8)
+            .accessibilityHidden(true)
 
           content
             .padding(.top, 12)

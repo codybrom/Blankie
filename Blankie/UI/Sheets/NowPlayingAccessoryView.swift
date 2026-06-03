@@ -56,6 +56,7 @@ import SwiftUI
                 }
             }
           }
+          .accessibilityHidden(true)
 
           // Now playing info
           VStack(alignment: .leading, spacing: 2) {
@@ -100,6 +101,7 @@ import SwiftUI
           .disabled(!audioManager.hasSelectedSounds)
           .font(.title3)
           .foregroundStyle(Color.primary)
+          .accessibilityLabel(audioManager.isGloballyPlaying ? Text("Pause") : Text("Play"))
         }
         .padding(.leading, 10)
         .padding(.trailing, 16)
@@ -107,6 +109,10 @@ import SwiftUI
         .contentShape(.rect)
       }
       .buttonStyle(.plain)
+      .accessibilityHint(Text("Opens the full player"))
+      #if os(iOS)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+      #endif
       .task {
         // Load background image
         if let preset = presetManager.currentPreset {

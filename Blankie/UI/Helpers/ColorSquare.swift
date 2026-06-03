@@ -55,5 +55,7 @@ struct ColorSquare: View {
         }
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(color.name)
+    .accessibilityAddTraits(isSelected ? .isSelected : [])
   }
 }

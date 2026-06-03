@@ -16,7 +16,6 @@ private struct AnimationTrigger: Equatable {
     @StateObject var timerManager = TimerManager.shared
     @State var showingLibrarySheet = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
-    @State private var showingThemePicker = false
     @State var showingSoundManagement = false
     @State var showingSettings = false
     @State var showingQuickMixEditor = false
@@ -80,9 +79,6 @@ private struct AnimationTrigger: Equatable {
         }
       }
 
-      .sheet(isPresented: $showingThemePicker) {
-        ThemePickerSheet(isPresented: $showingThemePicker)
-      }
       .sheet(isPresented: $showingSoundManagement) {
         NavigationStack {
           SoundManagementView()
@@ -280,6 +276,10 @@ private struct AnimationTrigger: Equatable {
         .ignoresSafeArea()
         .transition(.move(edge: .bottom))
         .zIndex(100)
+        // The Now Playing surface is a custom z-stacked overlay, not a system
+        // sheet, so VoiceOver would otherwise still reach the mixer behind it.
+        // .isModal makes assistive tech ignore the sibling content underneath.
+        .accessibilityAddTraits(.isModal)
       }
     }
 

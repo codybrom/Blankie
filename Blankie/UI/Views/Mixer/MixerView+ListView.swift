@@ -60,6 +60,7 @@ import SwiftUI
             color: accentColor
           )
           .allowsHitTesting(false)
+          .accessibilityHidden(true)
         }
 
         Image(systemName: sound.systemIconName)
@@ -78,6 +79,18 @@ import SwiftUI
         in: .circle
       )
       .opacity(sound.isSelected ? 1.0 : 0.4)
+      // VoiceOver focuses this to toggle the sound in/out of the mix and the volume slider below stays a separate adjustable element.
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityAddTraits(.isButton)
+      .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
+      .accessibilityAction {
+        if !audioManager.isGloballyPlaying && sound.isSelected {
+          audioManager.setGlobalPlaybackState(true)
+        } else {
+          sound.toggle()
+        }
+      }
     }
 
     private var soundRowControls: some View {
@@ -93,6 +106,8 @@ import SwiftUI
                   Locale.current.scriptCategory == .standard ? .regular : .thin)
               )
               .foregroundColor(.primary)
+              // The row already exposes the title as its accessibility label so we hide the visible copy to prevent VoiceOver reading it twice
+              .accessibilityHidden(true)
 
             Spacer()
 
@@ -100,6 +115,8 @@ import SwiftUI
               .font(.caption)
               .foregroundColor(.secondary)
               .monospacedDigit()
+              // The slider already announces this percentage as its value so  we hide the visible text to prevent VoiceOver from reading it twice
+              .accessibilityHidden(true)
           }
         }
 
@@ -115,6 +132,10 @@ import SwiftUI
           sound.isSelected ? accentColor : .gray
         )
         .disabled(!sound.isSelected)
+        .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+        .accessibilityValue(
+          Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
+        )
 
         if !globalSettings.showSoundNames {
           Spacer()

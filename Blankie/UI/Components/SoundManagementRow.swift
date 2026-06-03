@@ -29,6 +29,7 @@ struct SoundManagementRow: View {
           Image(systemName: "chevron.right")
             .font(.caption)
             .foregroundColor(.secondary)
+            .accessibilityHidden(true)
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
@@ -80,6 +81,7 @@ struct SoundManagementRowContent: View {
     Image(systemName: sound.systemIconName)
       .font(.body)
       .foregroundStyle(.primary)
+      .accessibilityHidden(true)
   }
 
   private var soundInfo: some View {
@@ -124,6 +126,7 @@ extension SoundManagementRow {
       .font(.title2)
       .frame(width: 32)
       .foregroundStyle(.primary)
+      .accessibilityHidden(true)
   }
 
   private var soundInfo: some View {

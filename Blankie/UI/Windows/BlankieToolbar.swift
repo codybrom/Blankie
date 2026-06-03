@@ -63,6 +63,7 @@ import SwiftUI
         }
         .menuIndicator(.hidden)
         .menuStyle(.borderlessButton)
+        .accessibilityLabel(Text("Menu"))
       }
     }
   }

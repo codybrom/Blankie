@@ -165,21 +165,39 @@ struct SoundIcon: View {
       }
       .frame(width: configuration.iconSize, height: configuration.iconSize)
       .contentShape(Circle())
+      // Represent as one button element so the icon name isn't announced
+      .accessibilityElement(children: .ignore)
       .accessibilityIdentifier("sound-\(sound.fileName)")
       .accessibilityAddTraits(.isButton)
+      .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
       // Name the control for VoiceOver/Voice Control even when the visible title
       // is hidden by "Show Sound Names" (the identifier above is test-only).
       .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
       .onTapGesture {
-        // If global playback is paused and this sound is already selected,
-        // start global playback instead of deselecting the sound
-        if !audioManager.isGloballyPlaying && sound.isSelected {
-          audioManager.setGlobalPlaybackState(true)
-        } else {
-          sound.toggle()
-        }
+        activateTile()
       }
       .sensoryFeedback(.selection, trigger: sound.isSelected)
+      #if os(macOS)
+        // Volume is the separate to let VoiceOver/keyboard handle with a reliable rotor
+        .accessibilityAction { DispatchQueue.main.async { activateTile() } }
+        .focusable()
+        .onKeyPress(.return) {
+          DispatchQueue.main.async { activateTile() }
+          return .handled
+        }
+        .onKeyPress(.space) {
+          DispatchQueue.main.async { activateTile() }
+          return .handled
+        }
+        .onKeyPress(.upArrow) {
+          DispatchQueue.main.async { adjustVolume(.increment) }
+          return .handled
+        }
+        .onKeyPress(.downArrow) {
+          DispatchQueue.main.async { adjustVolume(.decrement) }
+          return .handled
+        }
+      #endif
 
       if globalSettings.showSoundNames {
         Text(LocalizedStringKey(sound.title))
@@ -189,9 +207,33 @@ struct SoundIcon: View {
           .frame(maxWidth: maxWidth - 20, minHeight: 32)  // Consistent padding and height for all sizes
           .foregroundColor(.primary)
           .contentShape(Rectangle())
+          // Hide so VoiceOver only reads once
+          .accessibilityHidden(true)
       }
     }
   }
+
+  /// The tile's primary action, shared by the mouse tap, the keyboard (Return/Space), and the VoiceOver action: toggle the sound in/out of the mix, or — when global playback is paused and this sound is already selected — resume playback instead of deselecting it.
+  private func activateTile() {
+    if !audioManager.isGloballyPlaying && sound.isSelected {
+      audioManager.setGlobalPlaybackState(true)
+    } else {
+      sound.toggle()
+    }
+  }
+
+  #if os(macOS)
+    /// Volume nudge for the tile's VoiceOver adjustable action and the Up/Down arrow keys. No-op when the sound is off (its slider is disabled then).
+    private func adjustVolume(_ direction: AccessibilityAdjustmentDirection) {
+      guard sound.isSelected else { return }
+      let step: Float = 0.05
+      switch direction {
+      case .increment: sound.volume = min(1, sound.volume + step)
+      case .decrement: sound.volume = max(0, sound.volume - step)
+      @unknown default: break
+      }
+    }
+  #endif
 
   var body: some View {
     VStack(spacing: configuration.spacing) {
@@ -213,6 +255,10 @@ struct SoundIcon: View {
           ? (sound.isSelected ? (accentColor) : .gray) : .gray
       )
       .disabled(!sound.isSelected)
+      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityValue(
+        Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
+      )
     }
     .padding(.vertical, configuration.padding.top)
     .padding(.horizontal, configuration.padding.leading)

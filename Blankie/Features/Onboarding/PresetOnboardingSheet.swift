@@ -105,10 +105,11 @@ struct PresetOnboardingSheet: View {
             isActive: step == .welcome
           )
           .padding(.bottom, 8)
+          .accessibilityHidden(true)
 
         // Title
         Text(step.title)
-          .font(.system(size: 28, weight: .bold))
+          .font(.title.weight(.bold))
           .multilineTextAlignment(.leading)
 
         // Description
@@ -210,11 +211,13 @@ struct PresetOnboardingSheet: View {
           .foregroundStyle(
             isSelected
               ? (globalSettings.customAccentColor ?? .accentColor) : .secondary.opacity(0.5))
+          .accessibilityHidden(true)
 
         // Sound icon
         Image(systemName: sound.systemIconName)
           .font(.system(size: 20))  // Slightly smaller
           .foregroundStyle(isSelected ? .primary : .secondary)
+          .accessibilityHidden(true)
 
         // Sound info
         VStack(alignment: .leading, spacing: 4) {
@@ -237,6 +240,8 @@ struct PresetOnboardingSheet: View {
             .clipShape(Circle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(
+          previewingSound == sound.fileName ? Text("Stop Preview") : Text("Preview"))
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 12)
@@ -254,6 +259,8 @@ struct PresetOnboardingSheet: View {
       )
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+    .accessibilityAddTraits(isSelected ? [.isSelected] : [])
   }
 
   private var namePresetContent: some View {
@@ -356,6 +363,7 @@ struct PresetOnboardingSheet: View {
     .padding(.horizontal, 40)
     .padding(.top, 20)
     .padding(.bottom, 16)
+    .accessibilityHidden(true)
   }
 
   private var navigationButtons: some View {

@@ -131,6 +131,7 @@ import SwiftUI
             )
           )
           .ignoresSafeArea()
+          .accessibilityHidden(true)
 
         // Content stays within the top safe area so the drag handle and
         // everything below it sit clear of the Dynamic Island.
@@ -396,6 +397,7 @@ import SwiftUI
       .animation(
         .spring(response: 0.4, dampingFraction: 0.6), value: audioManager.isGloballyPlaying
       )
+      .accessibilityHidden(true)
     }
 
     private var currentProgressAnchor: (elapsed: TimeInterval, duration: TimeInterval)? {
@@ -452,6 +454,7 @@ import SwiftUI
           }
         }
         .frame(height: 6)
+        .accessibilityHidden(true)
 
         // Labels
         HStack {
@@ -466,6 +469,7 @@ import SwiftUI
               HStack(spacing: 3) {
                 Text(formatTime(duration))
                 Image(systemName: "repeat")
+                  .accessibilityHidden(true)
               }
             } else {
               Text("--:--")
@@ -488,10 +492,12 @@ import SwiftUI
         Image(systemName: "speaker.fill")
           .foregroundColor(.gray)
           .font(.caption)
+          .accessibilityHidden(true)
 
         #if os(iOS)
           SystemVolumeSlider()
             .frame(height: 30)
+            .accessibilityLabel(Text("Volume"))
         #else
           Slider(
             value: Binding(
@@ -507,11 +513,15 @@ import SwiftUI
           )
           .tint(.white.opacity(0.7))
           .sliderThumbVisibility(isEditingVolume ? .visible : .hidden)
+          .accessibilityLabel(Text("Volume"))
+          .accessibilityValue(
+            Text(Double(globalSettings.volume).formatted(.percent.precision(.fractionLength(0)))))
         #endif
 
         Image(systemName: "speaker.wave.3.fill")
           .foregroundColor(.gray)
           .font(.caption)
+          .accessibilityHidden(true)
       }
       .padding(.horizontal, 32)
     }
@@ -591,6 +601,7 @@ import SwiftUI
               .lineLimit(1)
           }
         }
+        .accessibilityElement(children: .combine)
 
         Spacer()
 
@@ -609,6 +620,9 @@ import SwiftUI
                 .clipShape(Circle())
             }
             .accessibilityLabel(starred ? Text("Unfavorite") : Text("Favorite"))
+            #if os(iOS)
+              .frame(minWidth: 44, minHeight: 44)
+            #endif
           }
         }
       }
@@ -632,6 +646,9 @@ import SwiftUI
               .foregroundColor(.white.opacity(0.8))
           }
           .accessibilityLabel(Text("Previous"))
+          #if os(iOS)
+            .frame(minWidth: 44, minHeight: 44)
+          #endif
         } else {
           Color.clear.frame(width: 32, height: 32)
         }
@@ -655,6 +672,9 @@ import SwiftUI
               .foregroundColor(.white.opacity(0.8))
           }
           .accessibilityLabel(Text("Next"))
+          #if os(iOS)
+            .frame(minWidth: 44, minHeight: 44)
+          #endif
         } else {
           Color.clear.frame(width: 32, height: 32)
         }
@@ -677,6 +697,9 @@ import SwiftUI
             .font(.system(size: 20, weight: .medium))
         }
         .accessibilityLabel(Text("Back to Mixer"))
+        #if os(iOS)
+          .frame(minHeight: 44)
+        #endif
         .frame(maxWidth: .infinity)
 
         // Middle: AirPlay / audio output route picker. The Playing Audio HIG
@@ -701,6 +724,9 @@ import SwiftUI
             .font(.system(size: 20, weight: .medium))
         }
         .accessibilityLabel(Text("Timer"))
+        #if os(iOS)
+          .frame(minHeight: 44)
+        #endif
         .frame(maxWidth: .infinity)
       }
       .padding(.horizontal, 32)
@@ -723,6 +749,7 @@ import SwiftUI
       Capsule()
         .fill(Color.white.opacity(0.3))
         .frame(width: 48, height: 5)
+        .accessibilityHidden(true)
     }
 
     // MARK: - Helper Methods

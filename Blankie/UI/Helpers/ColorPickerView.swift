@@ -26,6 +26,7 @@ struct ColorPickerView: View {
           HStack {
             Image(systemName: mode.icon)
               .frame(width: 16, height: 16)
+              .accessibilityHidden(true)
 
             Text(mode.localizedName)
               .foregroundColor(.primary)
@@ -35,12 +36,14 @@ struct ColorPickerView: View {
             if globalSettings.appearance == mode {
               Image(systemName: "checkmark")
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
             }
           }
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .padding(.vertical, 4)
+        .accessibilityAddTraits(globalSettings.appearance == mode ? .isSelected : [])
       }
 
       Divider()
@@ -58,6 +61,7 @@ struct ColorPickerView: View {
             Circle()
               .fill(color.color ?? .accentColor)
               .frame(width: 16, height: 16)
+              .accessibilityHidden(true)
 
             Text(color.name)
               .foregroundColor(.primary)
@@ -69,12 +73,17 @@ struct ColorPickerView: View {
             {
               Image(systemName: "checkmark")
                 .foregroundColor(.blue)
+                .accessibilityHidden(true)
             }
           }
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .padding(.vertical, 4)
+        .accessibilityAddTraits(
+          (color == .system && globalSettings.customAccentColor == nil)
+            || (color.color == globalSettings.customAccentColor) ? .isSelected : []
+        )
       }
     }
     .frame(width: 200)

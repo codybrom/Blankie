@@ -87,6 +87,9 @@ struct VolumeControlsView: View {
         )
         .frame(width: 200)
         .tint(accentColor)
+        .accessibilityLabel(Text("All Sounds"))
+        .accessibilityValue(
+          Text(globalSettings.volume.formatted(.percent.precision(.fractionLength(0)))))
       }
 
       if audioManager.sounds.contains(where: \.isSelected) {
@@ -105,6 +108,9 @@ struct VolumeControlsView: View {
             )
             .frame(width: 200)
             .tint(accentColor)
+            .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+            .accessibilityValue(
+              Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))))
           }
         }
       }
@@ -137,6 +143,7 @@ struct VolumeControlsView: View {
         HStack {
           Image(systemName: "speaker.wave.1.fill")
             .foregroundColor(.secondary)
+            .accessibilityHidden(true)
 
           Slider(
             value: Binding(
@@ -146,9 +153,13 @@ struct VolumeControlsView: View {
             in: 0...1
           )
           .tint(accentColor)
+          .accessibilityLabel(Text("All Sounds"))
+          .accessibilityValue(
+            Text(globalSettings.volume.formatted(.percent.precision(.fractionLength(0)))))
 
           Image(systemName: "speaker.wave.3.fill")
             .foregroundColor(.secondary)
+            .accessibilityHidden(true)
         }
       }
       .padding(.horizontal)
@@ -175,11 +186,14 @@ struct VolumeControlsView: View {
                     .font(.callout)
                 }
               }
+              .accessibilityElement(children: .combine)
+              .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
 
               HStack {
                 Image(systemName: "speaker.wave.1.fill")
                   .foregroundColor(.secondary)
                   .font(.caption)
+                  .accessibilityHidden(true)
 
                 Slider(
                   value: Binding(
@@ -188,10 +202,14 @@ struct VolumeControlsView: View {
                   ), in: 0...1
                 )
                 .tint(accentColor)
+                .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+                .accessibilityValue(
+                  Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))))
 
                 Image(systemName: "speaker.wave.3.fill")
                   .foregroundColor(.secondary)
                   .font(.caption)
+                  .accessibilityHidden(true)
               }
             }
             .padding(.horizontal)

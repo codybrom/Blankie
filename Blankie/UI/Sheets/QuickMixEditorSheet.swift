@@ -54,8 +54,11 @@ import SwiftUI
                     Image(systemName: sound.systemIconName)
                       .foregroundColor(.accentColor)
                       .frame(width: 20)
+                      .accessibilityHidden(true)
                     Text(sound.title)
                   }
+                  .accessibilityElement(children: .combine)
+                  .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
                 }
               }
               .onMove { from, to in
@@ -122,16 +125,20 @@ import SwiftUI
               Image(systemName: sound.systemIconName)
                 .foregroundColor(isSelected ? .accentColor : .secondary)
                 .frame(width: 20)
+                .accessibilityHidden(true)
               Text(sound.title)
                 .foregroundColor(.primary)
               Spacer()
               if isSelected {
                 Image(systemName: "checkmark")
                   .foregroundStyle(.accent)
+                  .accessibilityHidden(true)
               }
             }
           }
           .disabled(!isSelected && selectedSounds.count >= 8)
+          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+          .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         }
       }
       .navigationTitle("Choose Sounds")

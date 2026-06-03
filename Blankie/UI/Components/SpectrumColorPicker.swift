@@ -209,6 +209,7 @@ struct SpectrumColorPicker: View {
       }
       .tint(.clear)
       .frame(height: 44)
+      .accessibilityValue(Text(currentColor.name))
   }
 
   // Track overlay view
@@ -239,6 +240,7 @@ struct SpectrumColorPicker: View {
           .frame(height: 4)
         }
         .frame(height: 4)
+        .accessibilityHidden(true)
 
         slider
       }

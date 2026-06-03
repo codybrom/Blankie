@@ -13,6 +13,8 @@ import SwiftUI
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var globalSettings = GlobalSettings.shared
     @Environment(\.dismiss) private var dismiss
+    // Scales the large countdown with Dynamic Type while keeping its default size.
+    @ScaledMetric(relativeTo: .largeTitle) private var countdownFontSize: CGFloat = 48
 
     /// The accent driving the action buttons. Mirrors the precedence used by
     /// the Now Playing sheet so the timer's button matches the surrounding UI.
@@ -59,7 +61,7 @@ import SwiftUI
           .foregroundColor(.secondary)
 
         Text(timerManager.formatRemainingTime())
-          .font(.system(size: 48, weight: .light, design: .rounded))
+          .font(.system(size: countdownFontSize, weight: .light, design: .rounded))
           .monospacedDigit()
 
         if let endTime = timerManager.getEndTime() {
@@ -118,6 +120,9 @@ import SwiftUI
               )
           )
       }
+      #if os(iOS)
+        .frame(minWidth: 44, minHeight: 44)
+      #endif
     }
 
     private var timerSelectionContent: some View {
@@ -141,6 +146,7 @@ import SwiftUI
           Text(verbatim: ":")
             .font(.largeTitle)
             .padding(.top, 20)
+            .accessibilityHidden(true)
 
           VStack {
             Text("Minutes")

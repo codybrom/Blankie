@@ -41,30 +41,6 @@ struct PreferencesView: View {
     #endif
   }
 
-  var appearanceButtons: some View {
-    HStack(spacing: 8) {
-      ForEach(AppearanceMode.allCases, id: \.self) { mode in
-        Button(
-          action: { globalSettings.setAppearance(mode) },
-          label: {
-            HStack(spacing: 4) {
-              Image(systemName: mode.icon)
-              Text(mode.localizedName)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-              globalSettings.appearance == mode ? accentColorForUI : Color.secondary.opacity(0.2)
-            )
-            .foregroundColor(globalSettings.appearance == mode ? textColorForAccent : .primary)
-            .cornerRadius(6)
-          }
-        )
-        .buttonStyle(.plain)
-      }
-    }
-  }
-
   var colorButtons: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(spacing: 8) {
@@ -124,30 +100,30 @@ struct PreferencesView: View {
       }
     }
     .pickerStyle(.menu)
-    .labelsHidden()
-    .frame(width: 220)
   }
 
   var body: some View {
     Form {
       Section {
-        HStack(spacing: 16) {
+        Picker(
+          selection: Binding(
+            get: { globalSettings.appearance },
+            set: { globalSettings.setAppearance($0) }
+          )
+        ) {
+          ForEach(AppearanceMode.allCases, id: \.self) { mode in
+            Text(mode.localizedName).tag(mode)
+          }
+        } label: {
           Text("Appearance")
-            .frame(width: 100, alignment: .leading)
-          appearanceButtons
         }
+        .pickerStyle(.segmented)
 
-        HStack(alignment: .top, spacing: 16) {
-          Text("Accent Color")
-            .frame(width: 100, alignment: .leading)
+        LabeledContent("Accent Color") {
           colorButtons
         }
 
-        HStack(spacing: 16) {
-          Text("Language")
-            .frame(width: 100, alignment: .leading)
-          languageMenu
-        }
+        languageMenu
 
         Toggle(
           "Show Labels",
@@ -186,6 +162,7 @@ struct PreferencesView: View {
             Image(systemName: "chevron.right")
               .foregroundColor(.secondary)
               .font(.caption)
+              .accessibilityHidden(true)
           }
         }
         .buttonStyle(.plain)
