@@ -16,8 +16,6 @@ struct SoundAboutSheet: View {
   let sound: Sound
 
   @State private var editableCredits = EditableCredits()
-  @State private var allowOthersToEdit = true
-  @State private var allowOthersToReshare = true
   @State private var selectedLicense: License?
 
   var body: some View {
@@ -29,11 +27,6 @@ struct SoundAboutSheet: View {
         } else {
           builtInCreditsView
         }
-      }
-
-      if sound.isCustom {
-        // Permissions Section (Custom Sounds Only)
-        permissionsSection
       }
 
       // Combined Details Section
@@ -64,18 +57,6 @@ struct SoundAboutSheet: View {
   }
   private var builtInCreditsView: some View {
     BuiltInCreditsView(sound: sound, creditsManager: creditsManager)
-  }
-  @ViewBuilder
-  private var permissionsSection: some View {
-    Section(
-      header: Text("Sharing Permissions"),
-      footer: Text(
-        "In a future update these settings will allow you to control if others can edit a sound's credits or export this sound as a part of a preset."
-      )
-    ) {
-      Toggle("Allow others to edit this sound", isOn: $allowOthersToEdit)
-      Toggle("Allow others to re-share this sound", isOn: $allowOthersToReshare)
-    }
   }
   @ViewBuilder
   private var detailsSection: some View {
