@@ -184,6 +184,10 @@ struct SoundSheet: View {
   private func handleOnAppear() {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
     debugLog("🎵 SoundSheet: handleOnAppear called for '\(soundName)'")
+
+    if case .edit(let sound) = mode, sound.channelCount == nil {
+      sound.loadSound()
+    }
   }
 
   private func handleOnDisappear() {

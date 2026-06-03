@@ -239,13 +239,11 @@ extension EditPresetSheet {
           showingSoundSelection = true
         } label: {
           HStack {
-            Text("Manage Sounds")
-            Spacer()
-            Text("\(selectedSounds.count)")
-              .foregroundStyle(.secondary)
+            LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
             Image(systemName: "chevron.right")
               .foregroundStyle(.tertiary)
               .imageScale(.small)
+              .accessibilityHidden(true)
           }
         }
       #else
@@ -254,12 +252,7 @@ extension EditPresetSheet {
             selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: preset
           )
         ) {
-          HStack {
-            Text("Manage Sounds")
-            Spacer()
-            Text("\(selectedSounds.count)")
-              .foregroundStyle(.secondary)
-          }
+          LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
         }
       #endif
 
@@ -270,45 +263,41 @@ extension EditPresetSheet {
       } else {
         ForEach(orderedSelectedSounds) { sound in
           #if os(iOS)
-            Button {
-              navPath.append(sound)
-            } label: {
-              HStack(spacing: 12) {
-                Image(systemName: sound.systemIconName)
-                  .font(.title3)
-                  .foregroundColor(activeAccentColor)
-                  .frame(width: 24)
-
-                Text(sound.title)
-                  .font(.body)
+            NavigationLink(value: SoundEditDestination(fileName: sound.fileName)) {
+              HStack {
+                Label {
+                  Text(sound.title)
+                } icon: {
+                  Image(systemName: sound.systemIconName)
+                    .foregroundColor(activeAccentColor)
+                }
 
                 Spacer()
+
+                SoundCreditInfoButton(sound: sound)
               }
-              .padding(.vertical, 4)
-              .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
           #else
             // macOS has no editMode, so `.onMove` below is inert. Make each row
             // drag-reorderable with onDrag/onDrop instead, carrying the row's
             // index and routing through `moveSound` (which also persists).
             let rowIndex = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }) ?? 0
-            HStack(spacing: 12) {
-              Image(systemName: sound.systemIconName)
-                .font(.title3)
-                .foregroundColor(activeAccentColor)
-                .frame(width: 24)
-
-              Text(sound.title)
-                .font(.body)
+            HStack {
+              Label {
+                Text(sound.title)
+              } icon: {
+                Image(systemName: sound.systemIconName)
+                  .foregroundColor(activeAccentColor)
+              }
 
               Spacer()
+
+              SoundCreditInfoButton(sound: sound)
 
               Image(systemName: "line.3.horizontal")
                 .foregroundStyle(.tertiary)
                 .accessibilityHidden(true)
             }
-            .padding(.vertical, 4)
             .contentShape(Rectangle())
             .onDrag {
               NSItemProvider(object: String(rowIndex) as NSString)
@@ -326,7 +315,7 @@ extension EditPresetSheet {
       VStack(alignment: .leading, spacing: 4) {
         Text("Sounds")
         if !selectedSounds.isEmpty {
-          Text("Drag sounds to reorder how they appear in the preset")
+          Text("Drag sounds to reorder")
             .font(.caption)
             .textCase(nil)
             .foregroundStyle(.secondary)

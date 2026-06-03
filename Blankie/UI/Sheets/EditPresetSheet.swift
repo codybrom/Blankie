@@ -14,6 +14,14 @@ extension UTType {
   static let blankie = UTType(exportedAs: "com.codybrom.blankie.preset")
 }
 
+/// Value-type navigation key for pushing Edit Sound. Pushing the `Sound`
+/// class itself into the NavigationStack path can hand the destination a
+/// zeroed reference on re-render (EXC_BAD_ACCESS), so navigate by fileName
+/// and resolve the live instance at the destination.
+struct SoundEditDestination: Hashable {
+  let fileName: String
+}
+
 // MARK: - Exportable Preset
 
 struct ExportablePreset: Transferable {
@@ -84,6 +92,40 @@ struct EditPresetSheet: View {
   @State var navPath = NavigationPath()
   @Environment(\.dismiss) private var dismiss
 
+  init(preset: Preset, isPresented: Binding<Preset?>) {
+    self.preset = preset
+    _isPresented = isPresented
+
+    // Seed editing state before first render. Populating it in onAppear
+    // tripped the accent/theme onChange handlers, dirtying the preset (and
+    // re-saving its artwork under a new ID) on every open.
+    _presetName = State(initialValue: preset.name)
+    _creatorName = State(initialValue: preset.creatorName ?? "")
+    _moods = State(initialValue: Set(preset.moods ?? []))
+    _selectedSounds = State(initialValue: Set(preset.soundStates.map(\.fileName)))
+    let order: [String]
+    if let presetOrder = preset.soundOrder {
+      order = presetOrder
+    } else if preset.isDefault {
+      order = AudioManager.shared.defaultSoundOrder
+    } else {
+      order = preset.soundStates.map(\.fileName)
+    }
+    _soundOrder = State(initialValue: order)
+    _artworkId = State(initialValue: preset.artworkId)
+    _animatedArtwork = State(initialValue: preset.animatedArtwork)
+    _staticArtworkPath = State(initialValue: preset.staticArtworkPath)
+    _accentColor = State(initialValue: preset.accentColor)
+    _useCustomTheme = State(initialValue: preset.accentColor != nil)
+    _viewModeOverride = State(initialValue: preset.viewMode)
+    _useCustomBlur = State(initialValue: preset.backgroundBlurRadius != nil)
+    // Seed the slider with the effective value so enabling the override doesn't
+    // jump the background: the preset's own value if set, else the app default.
+    _blurOverride = State(
+      initialValue: min(
+        preset.backgroundBlurRadius ?? GlobalSettings.shared.backgroundBlurRadius, 15))
+  }
+
   var orderedSounds: [Sound] {
     audioManager.sounds.sorted {
       $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
@@ -109,7 +151,7 @@ struct EditPresetSheet: View {
           }
           ToolbarItem(placement: .topBarTrailing) {
             exportButton
-              .tint(Color.primary)
+            .tint(Color.primary)
           }
         }
       #else
@@ -125,8 +167,10 @@ struct EditPresetSheet: View {
           }
         }
       #endif
-      .navigationDestination(for: Sound.self) { sound in
-        SoundSheet(mode: .edit(sound), embedInNavigation: false)
+      .navigationDestination(for: SoundEditDestination.self) { destination in
+        if let sound = audioManager.sounds.first(where: { $0.fileName == destination.fileName }) {
+          SoundSheet(mode: .edit(sound), embedInNavigation: false)
+        }
       }
       .onAppear(perform: setupInitialValues)
       .onDisappear {
@@ -212,8 +256,10 @@ struct EditPresetSheet: View {
           .tint(Color.primary)
         }
       }
-      .navigationDestination(for: Sound.self) { sound in
-        SoundSheet(mode: .edit(sound), embedInNavigation: false)
+      .navigationDestination(for: SoundEditDestination.self) { destination in
+        if let sound = audioManager.sounds.first(where: { $0.fileName == destination.fileName }) {
+          SoundSheet(mode: .edit(sound), embedInNavigation: false)
+        }
       }
     }
   }
@@ -294,6 +340,8 @@ extension EditPresetSheet {
         ) {
           Image(systemName: "square.and.arrow.up")
         }
+        // The ShareLink label is icon-only so we must name it for VoiceOver.
+        .accessibilityLabel(Text("Share Preset"))
         .onDisappear {
           // Clean up the exported file when share sheet dismisses
           cleanupExportedFile()
@@ -344,29 +392,6 @@ extension EditPresetSheet {
 
 extension EditPresetSheet {
   func setupInitialValues() {
-    presetName = preset.name
-    creatorName = preset.creatorName ?? ""
-    moods = Set(preset.moods ?? [])
-    selectedSounds = Set(preset.soundStates.map(\.fileName))
-    if let order = preset.soundOrder {
-      soundOrder = order
-    } else if preset.isDefault {
-      soundOrder = audioManager.defaultSoundOrder
-    } else {
-      soundOrder = preset.soundStates.map(\.fileName)
-    }
-    artworkId = preset.artworkId
-    animatedArtwork = preset.animatedArtwork
-    staticArtworkPath = preset.staticArtworkPath
-    accentColor = preset.accentColor
-    useCustomTheme = preset.accentColor != nil
-    viewModeOverride = preset.viewMode
-    useCustomBlur = preset.backgroundBlurRadius != nil
-    // Seed the slider with the effective value so enabling the override doesn't
-    // jump the background: the preset's own value if set, else the app default.
-    blurOverride = min(preset.backgroundBlurRadius ?? globalSettings.backgroundBlurRadius, 15)
-
-    // Load existing images if they exist
     Task {
       if let id = artworkId {
         if let image = await PresetArtworkManager.shared.loadArtwork(id: id) {

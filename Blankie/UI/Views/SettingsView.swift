@@ -52,7 +52,8 @@ struct SettingsView: View {
             Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
               HStack {
                 Image(systemName: "sparkles")
-                  .foregroundColor(.accentColor)
+                  .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                  .accessibilityHidden(true)
                 Text(
                   "Add Your Name to the Beta Tester Credits"
                 )
@@ -61,6 +62,7 @@ struct SettingsView: View {
                 Image(systemName: "arrow.up.right")
                   .font(.caption)
                   .foregroundColor(.secondary)
+                  .accessibilityHidden(true)
               }
             }
             .handCursor()
@@ -219,12 +221,14 @@ struct SettingsView: View {
             HStack {
               Image("blankie.symbol")
                 .symbolRenderingMode(.hierarchical)
-                .foregroundColor(.accentColor)
+                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                .accessibilityHidden(true)
               Text("About Blankie")
               Spacer()
               Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .accessibilityHidden(true)
             }
           }
         }
@@ -239,6 +243,7 @@ struct SettingsView: View {
               HStack {
                 Image(systemName: "ladybug.fill")
                   .foregroundColor(.orange)
+                  .accessibilityHidden(true)
                 Text("Show Onboarding")
                 Spacer()
               }
@@ -247,10 +252,6 @@ struct SettingsView: View {
         #endif
       }
       .navigationTitle("Settings")
-      // Tint the whole form once so icons that use `Color.accentColor` (e.g. the
-      // About Blankie symbol) resolve from the same environment as the toggles.
-      // Without this, interacting with a tinted row propagates its tint to the
-      // list and the static icons "snap" from system blue to the custom accent.
       .tint(globalSettings.customAccentColor ?? .accentColor)
       // Presented as a sheet, this view has its own presentation context, so it
       // won't pick up the window's color scheme when appearance changes while
@@ -337,6 +338,7 @@ private struct PlaybackSettingsSection: View {
             Image(systemName: "car.fill")
               .foregroundColor(.blue)
               .font(.caption)
+              .accessibilityHidden(true)
             Text("This is unavailable while connected to CarPlay")
               .font(.caption)
               .foregroundColor(.secondary)
@@ -368,6 +370,7 @@ private struct PlaybackSettingsSection: View {
           )
           .font(.caption)
           .foregroundColor(.secondary)
+          .accessibilityHidden(true)
         }
 
         Slider(
@@ -378,6 +381,12 @@ private struct PlaybackSettingsSection: View {
           in: 0.0...1.0
         )
         .tint(globalSettings.customAccentColor ?? .accentColor)
+        .accessibilityLabel(Text("Blankie Volume with Media"))
+        .accessibilityValue(
+          Text(
+            globalSettings.volumeWithOtherAudio.formatted(.percent.precision(.fractionLength(0)))
+          )
+        )
 
         Text("Other media plays at system volume")
           .font(.caption)

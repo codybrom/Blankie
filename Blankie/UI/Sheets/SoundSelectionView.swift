@@ -98,16 +98,19 @@ struct SoundSelectionView: View {
             .font(.title3)
             .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
             .frame(width: 24)
+            .accessibilityHidden(true)
 
-          Image(systemName: sound.systemIconName)
-            .font(.body)
-            .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
-            .frame(width: 22)
-
-          Text(sound.title)
-            .foregroundStyle(.primary)
+          Label {
+            Text(sound.title)
+              .foregroundStyle(.primary)
+          } icon: {
+            Image(systemName: sound.systemIconName)
+              .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+          }
 
           Spacer()
+
+          SoundCreditInfoButton(sound: sound)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -115,22 +118,29 @@ struct SoundSelectionView: View {
         .background(isSelected ? AnyShapeStyle(.tint.opacity(0.12)) : AnyShapeStyle(.clear))
       }
       .buttonStyle(.plain)
+      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+      .accessibilityHint("Adds or removes this sound from the preset")
     }
   #else
     private func soundRowContent(for sound: Sound) -> some View {
       HStack(spacing: 12) {
         let isRowSelected = selectedSounds.contains(sound.fileName)
 
-        Image(systemName: sound.systemIconName)
-          .foregroundColor(isRowSelected ? .accentColor : .white)
-          .frame(width: 20)
-
-        Text(sound.title)
+        Label {
+          Text(sound.title)
+        } icon: {
+          Image(systemName: sound.systemIconName)
+            .foregroundStyle(isRowSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.white))
+        }
 
         Spacer()
 
+        SoundCreditInfoButton(sound: sound)
+
         Image(systemName: isRowSelected ? "checkmark" : "")
-          .foregroundStyle(.accent)
+          .foregroundStyle(.tint)
+          .accessibilityHidden(true)
       }
     }
 
@@ -142,6 +152,11 @@ struct SoundSelectionView: View {
             .onTapGesture {
               handleSoundToggle(sound)
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAddTraits(selectedSounds.contains(sound.fileName) ? [.isSelected] : [])
+            .accessibilityHint("Adds or removes this sound from the preset")
         }
       }
       .listStyle(.plain)

@@ -16,14 +16,6 @@ extension CleanSoundSheetForm {
 
       // Icon
       iconRow
-
-      // About
-      switch mode {
-      case .edit:
-        aboutRow
-      case .add:
-        EmptyView()
-      }
     }
   }
 
@@ -114,47 +106,6 @@ extension CleanSoundSheetForm {
       }
     }
     .buttonStyle(.plain)
-  }
-
-  @ViewBuilder
-  var aboutRow: some View {
-    #if os(macOS)
-      // No NavigationStack wraps the macOS sheet, so present About as its own
-      // sheet rather than a (dead) NavigationLink.
-      if getCurrentSound() != nil {
-        Button {
-          showingAboutSheet = true
-        } label: {
-          HStack {
-            Text("About & Sharing")
-            Spacer()
-            Image(systemName: "chevron.right")
-              .font(.caption)
-              .foregroundStyle(.tertiary)
-          }
-          .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-      }
-    #else
-      if let currentSound = getCurrentSound() {
-        NavigationLink(destination: SoundAboutSheet(sound: currentSound)) {
-          HStack {
-            Text("About & Sharing")
-            Spacer()
-          }
-        }
-      }
-    #endif
-  }
-
-  private func getCurrentSound() -> Sound? {
-    switch mode {
-    case .edit(let sound):
-      return sound
-    case .add:
-      return nil
-    }
   }
 
   @ViewBuilder

@@ -25,6 +25,7 @@ struct EditableCreditsView: View {
           .multilineTextAlignment(.trailing)
           .textFieldStyle(.plain)
           .foregroundColor(.secondary)
+          .accessibilityLabel("Original Work")
       }
 
       // Author/Creator
@@ -36,6 +37,7 @@ struct EditableCreditsView: View {
           .multilineTextAlignment(.trailing)
           .textFieldStyle(.plain)
           .foregroundColor(.secondary)
+          .accessibilityLabel("Author")
       }
 
       // Source URL
@@ -50,6 +52,7 @@ struct EditableCreditsView: View {
           #if !os(macOS)
             .keyboardType(.URL)
           #endif
+          .accessibilityLabel("Source URL")
       }
 
       // License
@@ -72,6 +75,7 @@ struct EditableCreditsView: View {
           .textFieldStyle(.plain)
           .foregroundColor(.secondary)
           .lineLimit(3...6)
+          .accessibilityLabel("License Details")
 
           HStack {
             Text("License URL")
@@ -86,6 +90,7 @@ struct EditableCreditsView: View {
             #if !os(macOS)
               .keyboardType(.URL)
             #endif
+            .accessibilityLabel("License URL")
           }
         }
       }
@@ -95,51 +100,6 @@ struct EditableCreditsView: View {
     }
     .onChange(of: selectedLicense) { _, _ in
       onChange()
-    }
-  }
-}
-
-struct BuiltInCreditsView: View {
-  let sound: Sound
-  let creditsManager: SoundCreditsManager
-
-  var body: some View {
-    Group {
-      if let soundCredit = creditsManager.credits.first(where: { $0.name == sound.title }) {
-        // Original Work
-        HStack {
-          Text("Original Work")
-          Spacer()
-          if let url = soundCredit.soundUrl {
-            Link(soundCredit.soundName, destination: url)
-              .foregroundColor(.accentColor)
-          } else {
-            Text(soundCredit.soundName)
-              .foregroundColor(.secondary)
-          }
-        }
-
-        // Author
-        HStack {
-          Text("Author")
-          Spacer()
-          Text(soundCredit.author)
-            .foregroundColor(.secondary)
-        }
-
-        // License
-        HStack {
-          Text("License")
-          Spacer()
-          if let url = soundCredit.license.url {
-            Link(soundCredit.license.linkText, destination: url)
-              .foregroundColor(.accentColor)
-          } else {
-            Text(soundCredit.license.linkText)
-              .foregroundColor(.secondary)
-          }
-        }
-      }
     }
   }
 }

@@ -28,7 +28,7 @@ struct CleanSoundSheetForm: View {
   @ObservedObject var globalSettings = GlobalSettings.shared
   @State var showingIconPicker = false
   #if os(macOS)
-    @State var showingAboutSheet = false
+    @State var showingCreditsEditor = false
   #endif
 
   var body: some View {
@@ -51,6 +51,12 @@ struct CleanSoundSheetForm: View {
       // Audio Processing (includes preview)
       audioProcessingSection
 
+      // Credits (read-only)
+      creditsSection
+
+      // Technical Details (edit mode only)
+      technicalDetailsSection
+
       // Actions Section (Reset/Delete)
       actionSection
     }
@@ -63,25 +69,25 @@ struct CleanSoundSheetForm: View {
       }
     }
     #if os(macOS)
-      .sheet(isPresented: $showingAboutSheet) {
-        if let sound = currentSoundForAbout {
+      .sheet(isPresented: $showingCreditsEditor) {
+        if let sound = currentEditSound {
           NavigationStack {
-            SoundAboutSheet(sound: sound)
+            SoundCreditsEditorView(sound: sound)
             .toolbar {
               ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { showingAboutSheet = false }
+                Button("Done") { showingCreditsEditor = false }
               }
             }
           }
-          .frame(minWidth: 420, minHeight: 480)
+          .frame(minWidth: 420, minHeight: 420)
         }
       }
     #endif
   }
 
   #if os(macOS)
-    /// The sound whose "About & Sharing" detail to present (edit mode only).
-    private var currentSoundForAbout: Sound? {
+    /// The sound whose credits editor to present (edit mode only).
+    private var currentEditSound: Sound? {
       if case .edit(let sound) = mode { return sound }
       return nil
     }

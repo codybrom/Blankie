@@ -53,6 +53,7 @@ import SwiftUI
           Image(systemName: "chevron.right")
             .foregroundStyle(.tertiary)
             .imageScale(.small)
+            .accessibilityHidden(true)
         }
       }
       .buttonStyle(.plain)
@@ -234,8 +235,25 @@ import SwiftUI
 
     var body: some View {
       NavigationStack {
-        VStack(spacing: 0) {
-          // Category filter
+        ScrollView {
+          LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+            ForEach(filteredAssets) { asset in
+              GalleryCard(
+                asset: asset,
+                isSelected: selectedIdentifier == asset.id,
+                onTap: {
+                  previewingAsset = asset
+                },
+                onUncache: {
+                  handleUncache(asset: asset)
+                }
+              )
+            }
+          }
+          .padding()
+        }
+        .safeAreaBar(edge: .top, spacing: 0) {
+          // Category filter floats over the scrolling grid with the system scroll edge effect
           if !categories.isEmpty {
             ScrollView(.horizontal, showsIndicators: false) {
               HStack(spacing: 12) {
@@ -256,25 +274,6 @@ import SwiftUI
               }
               .padding()
             }
-            .background(Color(uiColor: .systemBackground))
-          }
-
-          ScrollView {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-              ForEach(filteredAssets) { asset in
-                GalleryCard(
-                  asset: asset,
-                  isSelected: selectedIdentifier == asset.id,
-                  onTap: {
-                    previewingAsset = asset
-                  },
-                  onUncache: {
-                    handleUncache(asset: asset)
-                  }
-                )
-              }
-            }
-            .padding()
           }
         }
         .navigationTitle("Lock Screen Animation")
@@ -358,8 +357,7 @@ import SwiftUI
     var isCached: Bool {
       // Can only uncache if the resource is actually in ODR storage
       // (not just selected/copied to Documents)
-      let actualODRState = odrManager.getResourceState(asset.id)
-      if case .available = actualODRState {
+      if case .available = resourceState {
         return true
       }
       return false
@@ -432,10 +430,13 @@ import SwiftUI
               }
               Spacer()
             }
+            .accessibilityHidden(true)
           }
         }
       }
       .buttonStyle(.plain)
+      .accessibilityLabel(Text(asset.displayName))
+      .accessibilityAddTraits(isSelected ? [.isSelected] : [])
       .contextMenu {
         if isCached {
           Button(role: .destructive) {
@@ -559,213 +560,204 @@ import SwiftUI
       return false
     }
 
+    private var accentColor: Color {
+      PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared.customAccentColor
+        ?? .accentColor
+    }
+
     var body: some View {
-      ZStack {
-        Color.black.ignoresSafeArea()
+      NavigationStack {
+        ZStack {
+          Color.black.ignoresSafeArea()
 
-        if let player = player {
-          VideoPlayer(player: player)
-            .ignoresSafeArea()
-            .disabled(true)
-        }
+          if let player = player {
+            VideoPlayer(player: player)
+              .ignoresSafeArea()
+              .disabled(true)
+          }
 
-        // Loading indicator while downloading/loading
-        if isLoading {
-          VStack(spacing: 16) {
-            switch resourceState {
-            case .notDownloaded:
-              ProgressView()
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                .scaleEffect(1.5)
+          // Loading indicator while downloading/loading
+          if isLoading {
+            VStack(spacing: 16) {
+              switch resourceState {
+              case .notDownloaded:
+                ProgressView()
+                  .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                  .scaleEffect(1.5)
 
-              Text("Preparing download...")
-                .foregroundColor(.white)
-                .font(.subheadline)
-
-            case .downloading(let progress):
-              ZStack {
-                Circle()
-                  .stroke(Color.white.opacity(0.3), lineWidth: 4)
-                  .frame(width: 80, height: 80)
-
-                Circle()
-                  .trim(from: 0, to: progress)
-                  .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                  .frame(width: 80, height: 80)
-                  .rotationEffect(.degrees(-90))
-                  .animation(.linear(duration: 0.2), value: progress)
-
-                Text(Double(progress).formatted(.percent.precision(.fractionLength(0))))
-                  .font(.title3)
-                  .fontWeight(.semibold)
+                Text("Preparing download...")
                   .foregroundColor(.white)
-              }
+                  .font(.subheadline)
 
-              Text("Downloading video...")
-                .foregroundColor(.white)
-                .font(.subheadline)
+              case .downloading(let progress):
+                ZStack {
+                  Circle()
+                    .stroke(Color.white.opacity(0.3), lineWidth: 4)
+                    .frame(width: 80, height: 80)
 
-            case .available:
-              // Video is available but player not ready yet
-              ProgressView()
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                .scaleEffect(1.5)
+                  Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .frame(width: 80, height: 80)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 0.2), value: progress)
 
-              Text("Loading video...")
-                .foregroundColor(.white)
-                .font(.subheadline)
+                  Text(Double(progress).formatted(.percent.precision(.fractionLength(0))))
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                }
 
-            case .failed(let error):
-              VStack(spacing: 12) {
-                Image(systemName: "exclamationmark.triangle.fill")
-                  .font(.largeTitle)
-                  .foregroundColor(.red)
-
-                Text("Failed to load video")
+                Text("Downloading video...")
                   .foregroundColor(.white)
-                  .font(.headline)
+                  .font(.subheadline)
 
-                Text(error.localizedDescription)
-                  .foregroundColor(.secondary)
-                  .font(.caption)
-                  .multilineTextAlignment(.center)
-                  .padding(.horizontal, 32)
+              case .available:
+                // Video is available but player not ready yet
+                ProgressView()
+                  .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                  .scaleEffect(1.5)
+
+                Text("Loading video...")
+                  .foregroundColor(.white)
+                  .font(.subheadline)
+
+              case .failed(let error):
+                VStack(spacing: 12) {
+                  Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.largeTitle)
+                    .foregroundColor(.red)
+
+                  Text("Failed to load video")
+                    .foregroundColor(.white)
+                    .font(.headline)
+
+                  Text(error.localizedDescription)
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                }
               }
             }
           }
-        }
 
-        VStack {
-          HStack {
-            Button {
-              onDismiss()
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .font(.title)
-                .foregroundColor(.white)
-                .shadow(radius: 4)
-            }
-            .padding()
-
+          VStack {
             Spacer()
 
-            if isCached {
-              Button {
-                showingDeleteConfirmation = true
-              } label: {
-                Image(systemName: "trash.circle.fill")
-                  .font(.title)
-                  .foregroundColor(.white)
-                  .shadow(radius: 4)
+            // Info overlay
+            if showInfo {
+              VStack(alignment: .leading, spacing: 8) {
+                Text(asset.displayName)
+                  .font(.title2)
+                  .fontWeight(.semibold)
+
+                Text(asset.description)
+                  .font(.subheadline)
+                  .foregroundColor(.secondary)
+
+                if !asset.credit.artist.isEmpty || !asset.credit.source.isEmpty {
+                  Divider()
+                    .padding(.vertical, 4)
+
+                  if !asset.credit.artist.isEmpty {
+                    Label(asset.credit.artist, systemImage: "person.fill")
+                      .font(.caption)
+                  }
+
+                  if !asset.credit.source.isEmpty, let url = URL(string: asset.credit.source) {
+                    Link(destination: url) {
+                      Label(asset.credit.source, systemImage: "link")
+                        .font(.caption)
+                        .foregroundColor(accentColor)
+                    }
+                  }
+
+                  if !asset.credit.license.isEmpty {
+                    Text(asset.credit.license)
+                      .font(.caption2)
+                      .foregroundColor(.secondary)
+                  }
+                }
               }
               .padding()
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .background(.thickMaterial)
+              .cornerRadius(16)
+              .padding(.horizontal, 32)
+              .padding(.bottom, 16)
+              .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
+            Button {
+              onSelect()
+            } label: {
+              Group {
+                if case .downloading = resourceState {
+                  Text("Downloading...")
+                } else {
+                  Text("Choose")
+                }
+              }
+              .font(.headline)
+              .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glassProminent)
+            .controlSize(.large)
+            .tint(accentColor)
+            .disabled(!isCached)
+            .padding(.horizontal, 32)
+            .padding(.bottom, 32)
+          }
+        }
+        .toolbar {
+          ToolbarItem(placement: .topBarLeading) {
+            Button(role: .close) {
+              onDismiss()
+            }
+          }
+          if isCached {
+            ToolbarItem(placement: .topBarTrailing) {
+              Button(role: .destructive) {
+                showingDeleteConfirmation = true
+              } label: {
+                Label("Remove Download", systemImage: "trash")
+              }
+            }
+          }
+          ToolbarItem(placement: .topBarTrailing) {
             Button {
               withAnimation {
                 showInfo.toggle()
               }
             } label: {
-              Image(systemName: "info.circle.fill")
-                .font(.title)
-                .foregroundColor(.white)
-                .shadow(radius: 4)
+              Label("Information", systemImage: "info.circle")
             }
-            .padding()
           }
-
-          Spacer()
-
-          // Info overlay
-          if showInfo {
-            VStack(alignment: .leading, spacing: 8) {
-              Text(asset.displayName)
-                .font(.title2)
-                .fontWeight(.semibold)
-
-              Text(asset.description)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-              if !asset.credit.artist.isEmpty || !asset.credit.source.isEmpty {
-                Divider()
-                  .padding(.vertical, 4)
-
-                if !asset.credit.artist.isEmpty {
-                  Label(asset.credit.artist, systemImage: "person.fill")
-                    .font(.caption)
-                }
-
-                if !asset.credit.source.isEmpty, let url = URL(string: asset.credit.source) {
-                  Link(destination: url) {
-                    Label(asset.credit.source, systemImage: "link")
-                      .font(.caption)
-                      .foregroundColor(.accentColor)
-                  }
-                }
-
-                if !asset.credit.license.isEmpty {
-                  Text(asset.credit.license)
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                }
-              }
-            }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(.ultraThinMaterial)
-            .cornerRadius(16)
-            .padding(.horizontal, 32)
-            .padding(.bottom, 16)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+        .onAppear {
+          setupPlayer()
+        }
+        .onDisappear {
+          setupTask?.cancel()
+          setupTask = nil
+          if let loopObserver {
+            NotificationCenter.default.removeObserver(loopObserver)
           }
-
-          Button {
-            onSelect()
-          } label: {
-            Group {
-              if case .downloading = resourceState {
-                Text("Downloading...")
-              } else {
-                Text("Choose")
-              }
-            }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
+          loopObserver = nil
+          player?.pause()
+          player = nil
+        }
+        .alert("Remove Downloaded Video?", isPresented: $showingDeleteConfirmation) {
+          Button("Remove Download", role: .destructive) {
+            odrManager.releaseResource(asset.id)
+            onDelete()
+            onDismiss()
           }
-          .buttonStyle(.glassProminent)
-          .controlSize(.large)
-          .tint(
-            PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared
-              .customAccentColor ?? .accentColor
-          )
-          .disabled(!isCached)
-          .padding(.horizontal, 32)
-          .padding(.bottom, 32)
+          Button("Cancel", role: .cancel) {}
+        } message: {
+          Text("This will free up space on your device. You can download it again later.")
         }
-      }
-      .onAppear {
-        setupPlayer()
-      }
-      .onDisappear {
-        setupTask?.cancel()
-        setupTask = nil
-        if let loopObserver {
-          NotificationCenter.default.removeObserver(loopObserver)
-        }
-        loopObserver = nil
-        player?.pause()
-        player = nil
-      }
-      .alert("Remove Downloaded Video?", isPresented: $showingDeleteConfirmation) {
-        Button("Remove Download", role: .destructive) {
-          odrManager.releaseResource(asset.id)
-          onDelete()
-          onDismiss()
-        }
-        Button("Cancel", role: .cancel) {}
-      } message: {
-        Text("This will free up space on your device. You can download it again later.")
       }
     }
 

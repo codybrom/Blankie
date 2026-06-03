@@ -25,6 +25,7 @@ extension CleanSoundSheetForm {
             Circle()
               .fill(isPreviewing ? Color.red.opacity(0.1) : Color.secondary.opacity(0.1))
               .frame(width: 44, height: 44)
+              .accessibilityHidden(true)
 
             Image(systemName: isPreviewing ? "stop.fill" : "play.fill")
               .font(.system(size: 18, weight: .medium))
@@ -36,6 +37,7 @@ extension CleanSoundSheetForm {
           }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(isPreviewing ? Text("Stop Preview") : Text("Play Preview"))
         .disabled(isDisappearing)
         .scaleEffect(isPreviewing ? 1.1 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isPreviewing)
@@ -49,6 +51,7 @@ extension CleanSoundSheetForm {
             progress: $previewProgress,
             isPlaying: isPreviewing
           )
+          .accessibilityHidden(true)
         } else if case .edit(let sound) = mode {
           if sound.isCustom,
             let customSoundDataID = sound.customSoundDataID,
@@ -62,6 +65,7 @@ extension CleanSoundSheetForm {
               progress: $previewProgress,
               isPlaying: isPreviewing
             )
+            .accessibilityHidden(true)
           } else {
             // Built-in sound - use sound directly
             SoundWaveformView(
@@ -70,6 +74,7 @@ extension CleanSoundSheetForm {
               progress: $previewProgress,
               isPlaying: isPreviewing
             )
+            .accessibilityHidden(true)
           }
         }
       }
@@ -91,22 +96,25 @@ extension CleanSoundSheetForm {
       .tint(globalSettings.customAccentColor ?? .accentColor)
 
       Toggle(isOn: $normalizeAudio) {
-        VStack(alignment: .leading, spacing: 2) {
-          Text(
-            "Sound Check"
-          )
-          Text(
-            "Sound Check adjusts the loudness between different sounds to play at the same volume."
-          )
-          .font(.caption)
-          .foregroundColor(.secondary)
-        }
+        Text("Sound Check")
+        Text(
+          "Sound Check adjusts the loudness between different sounds to play at the same volume."
+        )
       }
       .tint(globalSettings.customAccentColor ?? .accentColor)
 
       // Volume Adjustment (only visible when normalization is OFF)
       if !normalizeAudio {
         volumeAdjustmentView
+      }
+    }
+  }
+
+  @ViewBuilder
+  var technicalDetailsSection: some View {
+    if case .edit(let sound) = mode {
+      Section(header: Text("Technical Details")) {
+        SoundDetailsRows(sound: sound)
       }
     }
   }
@@ -120,6 +128,7 @@ extension CleanSoundSheetForm {
         Text(volumePercentageText)
           .font(.caption)
           .foregroundColor(.secondary)
+          .accessibilityHidden(true)
       }
 
       HStack {
@@ -129,9 +138,12 @@ extension CleanSoundSheetForm {
         )
         .font(.caption)
         .foregroundColor(.secondary)
+        .accessibilityHidden(true)
 
         Slider(value: $volumeAdjustment, in: 0.5...8.0, step: 0.01)
           .tint(globalSettings.customAccentColor ?? .accentColor)
+          .accessibilityLabel(Text("Volume Adjustment"))
+          .accessibilityValue(Text(volumePercentageText))
 
         Text(
           (7.0).formatted(
@@ -139,6 +151,7 @@ extension CleanSoundSheetForm {
         )
         .font(.caption)
         .foregroundColor(.secondary)
+        .accessibilityHidden(true)
       }
     }
   }

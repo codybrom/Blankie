@@ -32,6 +32,16 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   let fileURL: URL?
   let dateAdded: Date?
   let customSoundDataID: UUID?  // For linking to SwiftData if needed
+  private var _customSoundData: CustomSoundData?
+
+  /// SwiftData record backing a custom sound, fetched once then reused (the model object stays live).
+  @MainActor var customSoundData: CustomSoundData? {
+    guard let id = customSoundDataID else { return nil }
+    if _customSoundData == nil {
+      _customSoundData = CustomSoundManager.shared.getCustomSound(by: id)
+    }
+    return _customSoundData
+  }
 
   // Computed properties that respect customizations
   var title: String {

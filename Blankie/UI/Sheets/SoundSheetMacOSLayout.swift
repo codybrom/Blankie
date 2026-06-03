@@ -103,17 +103,13 @@ struct SoundSheetMacOSLayout: View {
     .frame(width: 480, height: sheetHeight)
   }
 
-  /// Height sized to fit the grouped form so it doesn't scroll. macOS 14.6
-  /// predates `.presentationSizing(.fitted)` and a `Form` won't self-size to
-  /// content, so this is tuned per mode/content: custom sounds add a Delete
-  /// row, and the volume slider only appears when Sound Check is off.
   private var sheetHeight: CGFloat {
     let base: CGFloat
     switch mode {
     case .add:
       base = 620
     case .edit(let sound):
-      base = sound.isCustom ? 700 : 640
+      base = sound.isCustom ? 820 : 800
     }
     return base + (normalizeAudio ? 0 : 96)
   }
