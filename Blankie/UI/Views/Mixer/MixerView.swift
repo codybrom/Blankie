@@ -28,14 +28,13 @@ private enum IPhonePage: Hashable {
     @State var showingSoundManagement = false
     @State var showingSettings = false
     @State var showingQuickMixEditor = false
-    @State var showingTimer = false
     @State var soundToEdit: Sound?
     @State var presetToEdit: Preset?
     @State var soundsUpdateTrigger = 0
-    @State var playPauseTrigger = 0
-    @State var menuTrigger = 0
     @State var showingNowPlaying = false
     @State private var isLandscape = false
+    /// Anchors the zoom transition between the mini bar and the Now Playing cover.
+    @Namespace private var nowPlayingNamespace
 
     // Performance optimization: cached state properties
     @State var cachedFilteredSounds: [Sound] = []
@@ -47,23 +46,20 @@ private enum IPhonePage: Hashable {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
 
     var body: some View {
-      ZStack {
-        Group {
-          if isLargeDevice {
-            iPadLayout
-          } else {
-            iPhoneLayout
-          }
+      Group {
+        if isLargeDevice {
+          iPadLayout
+        } else {
+          iPhoneLayout
         }
-
-        nowPlayingOverlay
       }
-      // Drive the Now Playing open/close off the value change rather than a
-      // withAnimation inside the tap handler. A withAnimation bound to the
-      // button's gesture transaction can be cut short by a quick tap, parking
-      // the move transition partway; an implicit value animation always runs
-      // to completion. (dragOffset keeps its own animation — untouched.)
-      .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingNowPlaying)
+      .fullScreenCover(isPresented: $showingNowPlaying) {
+        NowPlayingSheet(
+          onDismiss: { showingNowPlaying = false },
+          backgroundImage: backgroundImage
+        )
+        .navigationTransition(.zoom(sourceID: "nowPlaying", in: nowPlayingNamespace))
+      }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()  // Prevent accidental dismissal
@@ -106,10 +102,6 @@ private enum IPhonePage: Hashable {
       }
       .sheet(isPresented: $showingQuickMixEditor) {
         QuickMixEditorSheet()
-      }
-      .sheet(isPresented: $showingTimer) {
-        TimerSheetView()
-          .presentationDetents([.medium, .large])
       }
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
@@ -197,12 +189,17 @@ private enum IPhonePage: Hashable {
           // The NavigationSplitView owns the sidebar toggle and keeps it
           // available in the detail when collapsed, so we add no reveal control.
           .toolbarBackground(.hidden, for: .navigationBar)
-          // Playback controls must be reachable at every size class. Without
-          // this, iPad at regular horizontal size shows no play/pause at all
-          // (compact width falls back to iPhoneLayout, which does include it).
-          .safeAreaInset(edge: .bottom, spacing: 0) {
-            bottomToolbar
+          .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+              topTrailingToolbarButton
+            }
           }
+        }
+        // Playback controls must be reachable at every size class. Without
+        // this, iPad at regular horizontal size shows no play/pause at all
+        // (compact width falls back to iPhoneLayout, which does include it).
+        .nowPlayingBottomBar {
+          nowPlayingBar
         }
       }
       .navigationSplitViewStyle(.balanced)
@@ -226,6 +223,19 @@ private enum IPhonePage: Hashable {
           mixerPage
         }
       }
+      // Attached to the stack, not a page, so the bar persists across the
+      // Library root and the pushed mixer.
+      .nowPlayingBottomBar {
+        nowPlayingBar
+      }
+    }
+
+    /// Mini player pinned above the bottom safe area; the zoom transition into
+    /// the Now Playing cover originates from it.
+    private var nowPlayingBar: some View {
+      NowPlayingBar(expandPlayer: $showingNowPlaying)
+        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+        .padding(.horizontal, 16)
     }
 
     @ViewBuilder
@@ -256,28 +266,10 @@ private enum IPhonePage: Hashable {
       .navigationTitle(navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
       .if(topBarCaption != nil) { $0.navigationSubtitle(topBarCaption ?? "") }
-      .safeAreaInset(edge: .bottom, spacing: 0) {
-        bottomToolbar
-      }
-    }
-
-    @ViewBuilder
-    private var nowPlayingOverlay: some View {
-      if showingNowPlaying {
-        NowPlayingSheet(
-          onDismiss: {
-            showingNowPlaying = false
-          },
-          showingTimer: $showingTimer,
-          backgroundImage: backgroundImage
-        )
-        .ignoresSafeArea()
-        .transition(.move(edge: .bottom))
-        .zIndex(100)
-        // The Now Playing surface is a custom z-stacked overlay, not a system
-        // sheet, so VoiceOver would otherwise still reach the mixer behind it.
-        // .isModal makes assistive tech ignore the sibling content underneath.
-        .accessibilityAddTraits(.isModal)
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          topTrailingToolbarButton
+        }
       }
     }
 
@@ -385,6 +377,17 @@ private enum IPhonePage: Hashable {
         transform(self)
       } else {
         self
+      }
+    }
+
+    /// `safeAreaBar` keeps scroll edge effects correct under the mini player
+    /// on iOS 26; earlier systems fall back to a plain safe-area inset.
+    @ViewBuilder
+    func nowPlayingBottomBar<Bar: View>(@ViewBuilder _ bar: () -> Bar) -> some View {
+      if #available(iOS 26.0, *) {
+        safeAreaBar(edge: .bottom) { bar() }
+      } else {
+        safeAreaInset(edge: .bottom) { bar() }
       }
     }
   }

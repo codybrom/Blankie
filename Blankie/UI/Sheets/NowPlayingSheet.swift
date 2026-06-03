@@ -12,21 +12,17 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
 
-  enum NowPlayingPage: Int {
-    case nowPlaying = 0
-    case mixer = 1
-  }
-
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
-    @Binding var showingTimer: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var timerManager = TimerManager.shared
 
     @StateObject private var globalSettings = GlobalSettings.shared
-    @State private var dragOffset: CGFloat = .zero
+    /// Presented from inside the cover — a sheet attached to the base
+    /// hierarchy can't present over a fullScreenCover.
+    @State private var showingTimer = false
     var backgroundImage: PlatformImage?
 
     #if CARPLAY_ENABLED && canImport(CarPlay)
@@ -78,11 +74,9 @@ import SwiftUI
       #endif
       return EdgeInsets()
     }
-    @State private var currentPage: NowPlayingPage = .nowPlaying
     @State private var isEditingVolume = false
     @State private var playPauseTrigger = 0
     @State private var favoriteHapticTrigger = 0
-    @State private var isFullyPresented = false
 
     private var artworkTaskID: String {
       let solo = audioManager.soloModeSound?.id.uuidString ?? ""
@@ -92,10 +86,10 @@ import SwiftUI
 
     var body: some View {
       ZStack {
-        // Full-bleed background: fills the whole sheet including the top safe
-        // area (behind the Dynamic Island), so the open sheet reads as a true
-        // full-screen surface rather than a card with the mixer peeking above.
-        // Rounded top corners still show as the sheet is dragged down.
+        // Full-bleed background: fills the whole cover including the top safe
+        // area (behind the Dynamic Island), so the open player reads as a true
+        // full-screen surface. Rounded top corners still show while the zoom
+        // transition is mid-flight.
         Color.black
           .overlay {
             if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
@@ -135,49 +129,14 @@ import SwiftUI
         // Content stays within the top safe area so the drag handle and
         // everything below it sit clear of the Dynamic Island.
         expandedPlayerView(screenSize)
-          .sensoryFeedback(.impact(weight: .heavy, intensity: 1.0), trigger: currentPage)
           .padding(.top, safeAreaInsets.top > 0 ? safeAreaInsets.top : 10)
       }
       .frame(width: screenSize.width, height: screenSize.height)
       .ignoresSafeArea()
-      .offset(y: dragOffset)
-      // Only allow the dismiss drag once the sheet is fully presented. During
-      // the open window the gesture is masked off, so a leftover touch from a
-      // just-completed swipe-to-close can't be picked up as a phantom downward
-      // drag that parks the reopened sheet partway.
-      .gesture(dismissDrag, including: isFullyPresented ? .all : .none)
-      .onAppear {
-        // Start every presentation from a clean offset.
-        dragOffset = 0
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-          isFullyPresented = true
-        }
+      .sheet(isPresented: $showingTimer) {
+        TimerSheetView()
+          .presentationDetents([.medium, .large])
       }
-    }
-
-    /// Drag-to-dismiss for the whole sheet: drag down past the threshold to
-    /// dismiss, otherwise spring back.
-    private var dismissDrag: some Gesture {
-      DragGesture()
-        .onChanged { value in
-          guard isFullyPresented else { return }
-          if value.translation.height > 0 {
-            dragOffset = value.translation.height
-          }
-        }
-        .onEnded { value in
-          guard isFullyPresented else { return }
-          if value.translation.height > 150 || value.predictedEndTranslation.height > 200 {
-            // Reset before dismissing so no stale offset can carry into the
-            // next presentation.
-            dragOffset = 0
-            onDismiss?()
-          } else {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-              dragOffset = 0
-            }
-          }
-        }
     }
 
     // MARK: - Now Playing View
@@ -686,20 +645,30 @@ import SwiftUI
 
     @ViewBuilder
     private var bottomActionsRow: some View {
-      HStack {
-        // Left: Dismiss to Grid/List view
+      if #available(iOS 26.0, *) {
+        GlassEffectContainer(spacing: 20) {
+          bottomActionsContent
+        }
+      } else {
+        bottomActionsContent
+      }
+    }
+
+    private var bottomActionsContent: some View {
+      HStack(spacing: 20) {
+        // Left: collapse back to the mini bar
         Button {
           onDismiss?()
         } label: {
-          Image(systemName: globalSettings.showingListView ? "list.bullet" : "square.grid.2x2")
+          Image(systemName: "chevron.down")
             .foregroundColor(.white.opacity(0.7))
             .font(.system(size: 20, weight: .medium))
+            .frame(width: 56, height: 56)
+            .contentShape(Circle())
         }
-        .accessibilityLabel(Text("Back to Mixer"))
-        #if os(iOS)
-          .frame(minHeight: 44)
-        #endif
-        .frame(maxWidth: .infinity)
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Close"))
+        .modifier(NowPlayingActionGlass())
 
         // Middle: AirPlay / audio output route picker. The Playing Audio HIG
         // asks apps to permit rerouting of audio output when possible; this is
@@ -708,10 +677,9 @@ import SwiftUI
           AirPlayRoutePickerView()
             .frame(width: 44, height: 44)
             .accessibilityLabel(Text("AirPlay"))
-            .frame(maxWidth: .infinity)
-        #else
-          Spacer()
-            .frame(maxWidth: .infinity)
+            .frame(width: 56, height: 56)
+            .contentShape(Circle())
+            .modifier(NowPlayingActionGlass())
         #endif
 
         // Right: Timer
@@ -721,14 +689,13 @@ import SwiftUI
           Image(systemName: "timer")
             .foregroundColor(timerManager.isTimerActive ? accentColor : .white.opacity(0.7))
             .font(.system(size: 20, weight: .medium))
+            .frame(width: 56, height: 56)
+            .contentShape(Circle())
         }
+        .buttonStyle(.plain)
         .accessibilityLabel(Text("Timer"))
-        #if os(iOS)
-          .frame(minHeight: 44)
-        #endif
-        .frame(maxWidth: .infinity)
+        .modifier(NowPlayingActionGlass())
       }
-      .padding(.horizontal, 32)
     }
 
     // MARK: - Expanded Player View
@@ -759,6 +726,18 @@ import SwiftUI
 
   }
 
+  /// Liquid Glass circle for the bottom action buttons; material fallback for
+  /// earlier systems.
+  private struct NowPlayingActionGlass: ViewModifier {
+    func body(content: Content) -> some View {
+      if #available(iOS 26.0, *) {
+        content.glassEffect(.regular.interactive(), in: .circle)
+      } else {
+        content.modernGlassEffect(cornerRadius: 28)
+      }
+    }
+  }
+
   struct NowPlayingPreviewWrapper: View {
     init() {
       // Inject mock state so the preview isn't empty
@@ -775,9 +754,7 @@ import SwiftUI
     }
 
     var body: some View {
-      NowPlayingSheet(
-        showingTimer: .constant(false)
-      )
+      NowPlayingSheet()
     }
   }
 
@@ -824,15 +801,21 @@ import SwiftUI
   // MARK: - AirPlay Route Picker
 
   #if os(iOS)
-    /// System AirPlay / output-route button, tinted to match the white-on-glass
-    /// Now Playing controls. Tapping it presents the system route picker.
+    /// System AirPlay / output-route button. Defaults match the white-on-glass
+    /// Now Playing controls; the mini bar passes adaptive label colors instead.
     struct AirPlayRoutePickerView: UIViewRepresentable {
+      var tint: UIColor = UIColor.white.withAlphaComponent(0.7)
+      var activeTint: UIColor = .white
+      var forcesDarkAppearance = true
+
       func makeUIView(context: Context) -> AVRoutePickerView {
         let picker = AVRoutePickerView(frame: .zero)
-        picker.tintColor = UIColor.white.withAlphaComponent(0.7)
-        picker.activeTintColor = UIColor.white
+        picker.tintColor = tint
+        picker.activeTintColor = activeTint
         picker.prioritizesVideoDevices = false
-        picker.overrideUserInterfaceStyle = .dark
+        if forcesDarkAppearance {
+          picker.overrideUserInterfaceStyle = .dark
+        }
         return picker
       }
 

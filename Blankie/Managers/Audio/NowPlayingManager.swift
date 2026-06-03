@@ -224,8 +224,14 @@ final class NowPlayingManager {
     }
   }
 
-  private func updateSoloModeInfo(soloSound _: Sound) {
-    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie (Solo Mode)"
+  private func updateSoloModeInfo(soloSound: Sound) {
+    // Only add an album line when the artist line is a credited author;
+    // otherwise the artist already says "Blankie" and the album is redundant.
+    if soloSound.creditedAuthor != nil {
+      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie"
+    } else {
+      nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyAlbumTitle)
+    }
     applyProgressAnchorToInfo()
   }
 
@@ -235,14 +241,16 @@ final class NowPlayingManager {
   }
 
   private func updateAlbumTitle(creatorName: String?) {
-    if creatorName != nil {
-      let activeSounds = AudioManager.shared.sounds.filter { $0.player?.isPlaying == true }
-      if !activeSounds.isEmpty {
-        let soundNames = activeSounds.map { $0.title }.joined(separator: ", ")
-        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = soundNames
-      } else {
-        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie"
-      }
+    // Without a creator the artist line already lists the sounds (or
+    // "Blankie"), so an extra album line is redundant.
+    guard creatorName != nil else {
+      nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyAlbumTitle)
+      return
+    }
+    let activeSounds = AudioManager.shared.sounds.filter { $0.player?.isPlaying == true }
+    if !activeSounds.isEmpty {
+      let soundNames = activeSounds.map { $0.title }.joined(separator: ", ")
+      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = soundNames
     } else {
       nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie"
     }
