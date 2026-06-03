@@ -377,12 +377,10 @@ private struct AnimationTrigger: Equatable {
         let formatter = DateComponentsFormatter()
         formatter.unitsStyle = .full
         formatter.allowedUnits = [.second]
-        return "Stops in \(formatter.string(from: timerManager.remainingTime) ?? "0 seconds")"
+        return "Pausing in \(formatter.string(from: timerManager.remainingTime) ?? "0 seconds")"
       } else {
-        let endTime = Date().addingTimeInterval(timerManager.remainingTime)
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return "Stops at \(formatter.string(from: endTime))"
+        let endTime = timerManager.getEndTime() ?? Date()
+        return "Pausing at \(endTime.formatted(date: .omitted, time: .shortened))"
       }
     }
 

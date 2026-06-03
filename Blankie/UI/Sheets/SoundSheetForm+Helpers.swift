@@ -117,8 +117,7 @@ extension CleanSoundSheetForm {
 
         // Get peak level
         if let peakLevel = customSound.detectedPeakLevel {
-          let percentage = Int(peakLevel * 100)
-          peakStr = "\(percentage)%"
+          peakStr = Double(peakLevel).formatted(.percent.precision(.fractionLength(0)))
           if normFactor == 1.0 {
             normFactor = AudioAnalyzer.calculateNormalizationFactor(peakLevel: peakLevel)
           }
@@ -215,10 +214,7 @@ extension CleanSoundSheetForm {
 
   private func getDurationText(from duration: TimeInterval?) -> String {
     guard let duration = duration else { return "Unknown" }
-
-    let minutes = Int(duration) / 60
-    let seconds = Int(duration) % 60
-    return String(format: "%d:%02d", minutes, seconds)
+    return duration.minuteSecondClock
   }
 
   private func getFileSizeText(from fileSize: Int64?) -> String {

@@ -53,7 +53,7 @@ import SwiftUI
       VStack(spacing: 20) {
         Spacer()
 
-        Text("Stopping in")
+        Text("Pausing in")
           .font(.headline)
           .foregroundColor(.secondary)
 
@@ -62,7 +62,7 @@ import SwiftUI
           .monospacedDigit()
 
         if let endTime = timerManager.getEndTime() {
-          Text("at \(endTime, formatter: timeFormatter)")
+          Text("at \(endTime.formatted(date: .omitted, time: .shortened))")
             .font(.subheadline)
             .foregroundColor(.secondary)
         }
@@ -96,12 +96,6 @@ import SwiftUI
 
         Spacer()
       }
-    }
-
-    private var timeFormatter: DateFormatter {
-      let formatter = DateFormatter()
-      formatter.timeStyle = .short
-      return formatter
     }
 
     private func timeAdjustmentButton(_ label: String, minutes: Int) -> some View {
@@ -181,7 +175,7 @@ import SwiftUI
         .padding(.horizontal)
         .disabled(timerManager.selectedHours == 0 && timerManager.selectedMinutes == 0)
 
-        Text("Blankie will stop when timer expires")
+        Text("Blankie will pause when timer expires")
           .font(.body)
           .foregroundColor(.secondary)
           .multilineTextAlignment(.center)

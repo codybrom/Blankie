@@ -17,11 +17,8 @@ struct SoundDetailsSection: View {
         HStack {
           Text("Added")
           Spacer()
-          Text(
-            DateFormatter.localizedString(
-              from: sound.dateAdded ?? Date(), dateStyle: .medium, timeStyle: .none)
-          )
-          .foregroundColor(.secondary)
+          Text((sound.dateAdded ?? Date()).formatted(date: .abbreviated, time: .omitted))
+            .foregroundColor(.secondary)
         }
       }
 
@@ -30,7 +27,7 @@ struct SoundDetailsSection: View {
         HStack {
           Text("Duration")
           Spacer()
-          Text(getDurationText(from: duration))
+          Text(duration.minuteSecondClock)
             .foregroundColor(.secondary)
         }
       }
@@ -98,12 +95,6 @@ struct SoundDetailsSection: View {
     default:
       return "\(channels) (Multichannel)"
     }
-  }
-
-  private func getDurationText(from duration: TimeInterval) -> String {
-    let minutes = Int(duration) / 60
-    let seconds = Int(duration) % 60
-    return String(format: "%d:%02d", minutes, seconds)
   }
 
   private func getFileSizeText(from fileSize: Int64) -> String {

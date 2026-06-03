@@ -392,11 +392,11 @@ import SwiftUI
             // Show timer info in caption if active, otherwise show play status
             if timerManager.isTimerActive {
               if timerManager.remainingTime < 60 {
-                Text("Stops in \(formatTime(timerManager.remainingTime))")
+                Text("Pausing in \(formatTime(timerManager.remainingTime))")
                   .font(.caption2)
                   .foregroundStyle(.secondary)
               } else {
-                Text("Stops at \(formatEndTime())")
+                Text("Pausing at \(formatEndTime())")
                   .font(.caption2)
                   .foregroundStyle(.secondary)
               }
@@ -477,10 +477,8 @@ import SwiftUI
     }
 
     private func formatEndTime() -> String {
-      let endTime = Date().addingTimeInterval(timerManager.remainingTime)
-      let formatter = DateFormatter()
-      formatter.timeStyle = .short
-      return formatter.string(from: endTime)
+      (timerManager.getEndTime() ?? Date())
+        .formatted(date: .omitted, time: .shortened)
     }
   }
 

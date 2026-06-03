@@ -45,7 +45,7 @@ struct TimerView: View {
         .font(.system(size: 32, weight: .light, design: .rounded))
         .monospacedDigit()
 
-      Text("Blankie will stop when timer expires")
+      Text("Blankie will pause when timer expires")
         .font(.caption)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
@@ -72,7 +72,7 @@ struct TimerView: View {
       Text("Set Timer")
         .font(.headline)
 
-      Text("Blankie will stop when timer expires")
+      Text("Blankie will pause when timer expires")
         .font(.caption)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)

@@ -99,8 +99,12 @@ class TimerManager: ObservableObject {
   }
 
   func getEndTime() -> Date? {
-    guard isTimerActive else { return nil }
-    return Date().addingTimeInterval(remainingTime)
+    guard isTimerActive, let startTime else { return nil }
+    // Anchor to the fixed stop instant (start + duration). Re-deriving
+    // `now + remainingTime` each render drifts by the sub-second gap between
+    // the 1 Hz tick and the render, so a stop time near a minute boundary makes
+    // the "Stops/Pausing at" label flash between adjacent minutes.
+    return startTime.addingTimeInterval(selectedDuration)
   }
 
   func addTime(minutes: Int) {
