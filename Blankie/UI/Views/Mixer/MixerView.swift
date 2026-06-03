@@ -290,9 +290,6 @@ private struct AnimationTrigger: Equatable {
           },
           showingPresetPicker: $showingPresetPicker,
           showingTimer: $showingTimer,
-          presetToEdit: $presetToEdit,
-          soundToEdit: $soundToEdit,
-          showingQuickMixEditor: $showingQuickMixEditor,
           backgroundImage: backgroundImage
         )
         .ignoresSafeArea()

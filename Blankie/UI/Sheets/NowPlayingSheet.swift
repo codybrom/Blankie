@@ -21,9 +21,6 @@ import SwiftUI
     var onDismiss: (() -> Void)?
     @Binding var showingPresetPicker: Bool
     @Binding var showingTimer: Bool
-    @Binding var presetToEdit: Preset?
-    @Binding var soundToEdit: Sound?
-    @Binding var showingQuickMixEditor: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
@@ -32,6 +29,20 @@ import SwiftUI
     @StateObject private var globalSettings = GlobalSettings.shared
     @State private var dragOffset: CGFloat = .zero
     var backgroundImage: PlatformImage?
+
+    #if CARPLAY_ENABLED && canImport(CarPlay)
+      @ObservedObject private var carPlayInterface = CarPlayInterface.shared
+    #endif
+
+    /// CarPlay routes audio (and volume) to the car, so the in-app volume bar
+    /// has nothing to control there — hide the whole row when connected.
+    private var isCarPlayConnected: Bool {
+      #if CARPLAY_ENABLED && canImport(CarPlay)
+        return carPlayInterface.isConnected
+      #else
+        return false
+      #endif
+    }
 
     #if os(iOS)
       /// The app's own window — the foreground-active scene's key window, with
@@ -218,10 +229,12 @@ import SwiftUI
         Spacer()
           .frame(maxHeight: 32)
 
-        volumeSlider
+        if !isCarPlayConnected {
+          volumeSlider
 
-        Spacer()
-          .frame(maxHeight: 32)
+          Spacer()
+            .frame(maxHeight: 32)
+        }
 
         bottomActionsRow
 
@@ -265,10 +278,12 @@ import SwiftUI
           Spacer()
             .frame(maxHeight: 32)
 
-          volumeSlider
+          if !isCarPlayConnected {
+            volumeSlider
 
-          Spacer()
-            .frame(maxHeight: 32)
+            Spacer()
+              .frame(maxHeight: 32)
+          }
 
           bottomActionsRow
 
@@ -384,11 +399,18 @@ import SwiftUI
           if timerManager.isTimerActive {
             Text("Pausing at \(timerEndTimeString)")
             Spacer()
-            Text(formatTime(timerManager.remainingTime))
+            Text(formatTime(-timerManager.remainingTime))
           } else {
             Text(duration > 0 ? formatTime(elapsed) : "--:--")
             Spacer()
-            Text(duration > 0 ? formatTime(duration) : "--:--")
+            if duration > 0 {
+              HStack(spacing: 3) {
+                Text(formatTime(duration))
+                Image(systemName: "repeat")
+              }
+            } else {
+              Text("--:--")
+            }
           }
         }
         .font(.caption2.monospacedDigit())
@@ -398,10 +420,8 @@ import SwiftUI
     }
 
     private var timerEndTimeString: String {
-      let endTime = Date().addingTimeInterval(timerManager.remainingTime)
-      let formatter = DateFormatter()
-      formatter.timeStyle = .short
-      return formatter.string(from: endTime)
+      (timerManager.getEndTime() ?? Date())
+        .formatted(date: .omitted, time: .shortened)
     }
 
     private var volumeSlider: some View {
@@ -449,13 +469,6 @@ import SwiftUI
       }
       guard !audioManager.isQuickMix, let preset = presetManager.currentPreset else { return nil }
       return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
-    }
-
-    /// Whether the row has something to edit: a solo sound, a preset, or Quick
-    /// Mix.
-    private var canEditCurrent: Bool {
-      audioManager.soloModeSound != nil || audioManager.isQuickMix
-        || presetManager.currentPreset != nil
     }
 
     // MARK: - Actions Row
@@ -537,26 +550,6 @@ import SwiftUI
                 .clipShape(Circle())
             }
             .accessibilityLabel(starred ? Text("Unfavorite") : Text("Favorite"))
-          }
-
-          if canEditCurrent {
-            Button {
-              if let solo = audioManager.soloModeSound {
-                soundToEdit = solo
-              } else if audioManager.isQuickMix {
-                showingQuickMixEditor = true
-              } else if let preset = presetManager.currentPreset {
-                presetToEdit = preset
-              }
-            } label: {
-              Image(systemName: "ellipsis")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white.opacity(0.7))
-                .frame(width: 32, height: 32)
-                .background(Color.white.opacity(0.15))
-                .clipShape(Circle())
-            }
-            .accessibilityLabel(Text("Settings"))
           }
         }
       }
@@ -676,9 +669,7 @@ import SwiftUI
     // MARK: - Helper Methods
 
     private func formatTime(_ timeInterval: TimeInterval) -> String {
-      let minutes = Int(timeInterval) / 60
-      let seconds = Int(timeInterval) % 60
-      return String(format: "%d:%02d", minutes, seconds)
+      timeInterval.minuteSecondClock
     }
 
   }
@@ -701,10 +692,7 @@ import SwiftUI
     var body: some View {
       NowPlayingSheet(
         showingPresetPicker: .constant(false),
-        showingTimer: .constant(false),
-        presetToEdit: .constant(nil),
-        soundToEdit: .constant(nil),
-        showingQuickMixEditor: .constant(false)
+        showingTimer: .constant(false)
       )
     }
   }
@@ -718,9 +706,19 @@ import SwiftUI
   }
 
   // MARK: - System Volume Slider
+
+  final class CenteredVolumeView: MPVolumeView {
+    override func volumeSliderRect(forBounds bounds: CGRect) -> CGRect {
+      let rect = super.volumeSliderRect(forBounds: bounds)
+      return CGRect(
+        x: rect.minX, y: bounds.midY - rect.height / 2,
+        width: rect.width, height: rect.height)
+    }
+  }
+
   struct SystemVolumeSlider: UIViewRepresentable {
     func makeUIView(context: Context) -> MPVolumeView {
-      let volumeView = MPVolumeView(frame: .zero)
+      let volumeView = CenteredVolumeView(frame: .zero)
       // Hide the thumb for a clean bar look. This is a method on MPVolumeView
       // itself, so it works even before the internal UISlider subview exists
       // (the subview is created lazily after layout).
@@ -754,6 +752,13 @@ import SwiftUI
         return picker
       }
 
+      // The system route / "Share Audio" sheet this button presents is rendered
+      // outside the app's window — it never enters the window's presentation
+      // chain, and dark window/VC overrides don't reach it (verified on device).
+      // Per Apple's "Choosing a specific interface style for your iOS app", only a
+      // process-level Info.plist UIUserInterfaceStyle = Dark forces system sheets
+      // dark (i.e. making the whole app dark-only), so there is intentionally no
+      // per-sheet appearance override here.
       func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
     }
   #endif
