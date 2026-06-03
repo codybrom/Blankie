@@ -132,25 +132,31 @@ extension EditPresetSheet {
       // Per-preset view mode: Default falls back to the app-wide setting.
       // macOS has a single grid layout, so the override is meaningless there.
       #if !os(macOS)
-        Picker(
-          "View Mode",
-          selection: Binding<PresetViewModeSelection>(
-            get: { PresetViewModeSelection(viewModeOverride) },
-            set: { viewModeOverride = $0.asOptional }
-          )
-        ) {
-          Text("Default").tag(
-            PresetViewModeSelection.useDefault)
-          Text("Grid").tag(PresetViewModeSelection.grid)
-          Text("List").tag(PresetViewModeSelection.list)
-        }
-        .onChange(of: viewModeOverride) { _, _ in
-          applyChangesInstantly()
+        VStack(alignment: .leading, spacing: 8) {
+          Text("View Mode")
+          Picker(
+            "View Mode",
+            selection: Binding<PresetViewModeSelection>(
+              get: { PresetViewModeSelection(viewModeOverride) },
+              set: { viewModeOverride = $0.asOptional }
+            )
+          ) {
+            Text("Default").tag(
+              PresetViewModeSelection.useDefault)
+            Text("Grid").tag(PresetViewModeSelection.grid)
+            Text("List").tag(PresetViewModeSelection.list)
+          }
+          .pickerStyle(.segmented)
+          .labelsHidden()
+          .onChange(of: viewModeOverride) { _, _ in
+            applyChangesInstantly()
+          }
         }
       #endif
 
       // Accent Color
       Toggle("Accent Color", isOn: $useCustomTheme)
+        .listRowSeparator(useCustomTheme ? .hidden : .automatic, edges: .bottom)
 
       if useCustomTheme {
         #if os(macOS)
