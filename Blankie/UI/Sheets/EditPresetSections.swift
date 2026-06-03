@@ -154,29 +154,31 @@ extension EditPresetSheet {
         }
       #endif
 
-      // Accent Color
-      Toggle("Accent Color", isOn: $useCustomTheme)
-        .listRowSeparator(useCustomTheme ? .hidden : .automatic, edges: .bottom)
+      // Accent Color. The toggle and picker share one list row so no separator
+      // (or extra row padding) appears between them when the picker is shown.
+      VStack(alignment: .leading, spacing: 12) {
+        Toggle("Accent Color", isOn: $useCustomTheme)
 
-      if useCustomTheme {
-        #if os(macOS)
-          // macOS uses the circle swatches (no System swatch — the toggle above
-          // already handles the off state).
-          AccentColorCirclePicker(selectedColor: $accentColor, allowSystem: false)
-        #else
-          SpectrumColorPicker(selectedColor: $accentColor)
-            .padding(.vertical, 4)
-        #endif
+        if useCustomTheme {
+          #if os(macOS)
+            // macOS uses the circle swatches (no System swatch — the toggle
+            // above already handles the off state).
+            AccentColorCirclePicker(selectedColor: $accentColor, allowSystem: false)
+          #else
+            SpectrumColorPicker(selectedColor: $accentColor)
+          #endif
+        }
       }
 
       // Background blur override. "Default" stores nil and follows the app-wide
-      // blur; the other segments override it per-preset. The macOS window doesn't
-      // use a blurred backdrop, so hide this there.
+      // blur; Off/On override it per-preset (On = the single app-wide blur
+      // value). The macOS window doesn't use a blurred backdrop, so hide this
+      // there.
       #if !os(macOS)
         VStack(alignment: .leading, spacing: 8) {
-          Text("Background Artwork Blur")
+          Text("Blur Background")
           Picker(
-            "Background Artwork Blur",
+            "Blur Background",
             selection: Binding<Double?>(
               get: { useCustomBlur ? blurOverride : nil },
               set: { newValue in
@@ -191,9 +193,8 @@ extension EditPresetSheet {
             )
           ) {
             Text("Default").tag(Double?.none)
-            Text("None").tag(Double?(0.0))
-            Text("Low").tag(Double?(7.5))
-            Text("High").tag(Double?(15.0))
+            Text("Off").tag(Double?(0.0))
+            Text("On").tag(Double?(defaultBackgroundBlurRadius))
           }
           .pickerStyle(.segmented)
           .labelsHidden()

@@ -73,12 +73,18 @@ extension GlobalSettings {
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockScreenBackgroundEnabled) as? Bool
       ?? true
 
-    // Background blur radius (default 15). Read via `object` rather than
+    // Background blur (default on). Read via `object` rather than
     // `double(forKey:)` so a deliberately-saved 0 ("no blur") isn't mistaken
-    // for "unset" and reset back to the default.
+    // for "unset" and reset back to the default. Blur is now on/off, so
+    // migrate any legacy radius (e.g. the old "High" 15) to the single value.
     let loadedBlur =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.backgroundBlurRadius) as? Double
-    backgroundBlurRadius = min(loadedBlur ?? defaultBackgroundBlurRadius, 15)
+    let normalizedBlur = (loadedBlur ?? defaultBackgroundBlurRadius) > 0
+      ? defaultBackgroundBlurRadius : 0
+    backgroundBlurRadius = normalizedBlur
+    if let loadedBlur, loadedBlur != normalizedBlur {
+      UserDefaults.shared.set(normalizedBlur, forKey: UserDefaultsKeys.backgroundBlurRadius)
+    }
   }
 
   func loadPlatformSettings() {

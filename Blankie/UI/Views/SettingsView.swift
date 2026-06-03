@@ -268,31 +268,23 @@ struct SettingsView: View {
           .padding(.vertical, 4)
 
           #if os(iOS) || os(visionOS)
-            // App-wide default blur for preset background artwork. Persist only
-            // on drag-end (onEditingChanged) to avoid writing UserDefaults on
-            // every drag frame; the binding's setter updates the published value
-            // live so the slider stays responsive.
-            VStack(alignment: .leading, spacing: 8) {
+            // App-wide default blur for preset background artwork. On/off:
+            // on applies `defaultBackgroundBlurRadius`, off is no blur.
+            Toggle(
+              isOn: Binding(
+                get: { globalSettings.backgroundBlurRadius > 0 },
+                set: {
+                  globalSettings.setBackgroundBlurRadius($0 ? defaultBackgroundBlurRadius : 0)
+                }
+              )
+            ) {
               HStack(spacing: 6) {
-                Text("Background Artwork Blur")
+                Text("Blur Background")
                 if blurOverridden {
                   overriddenByPresetBadge
                 }
               }
-              Picker(
-                "Background Artwork Blur",
-                selection: Binding(
-                  get: { globalSettings.backgroundBlurRadius },
-                  set: { globalSettings.setBackgroundBlurRadius($0) }
-                )
-              ) {
-                Text("None").tag(0.0)
-                Text("Low").tag(7.5)
-                Text("High").tag(15.0)
-              }
-              .pickerStyle(.segmented)
             }
-            .padding(.vertical, 4)
           #endif
         }
 

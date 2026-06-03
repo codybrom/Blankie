@@ -119,11 +119,10 @@ struct EditPresetSheet: View {
     _useCustomTheme = State(initialValue: preset.accentColor != nil)
     _viewModeOverride = State(initialValue: preset.viewMode)
     _useCustomBlur = State(initialValue: preset.backgroundBlurRadius != nil)
-    // Seed the slider with the effective value so enabling the override doesn't
-    // jump the background: the preset's own value if set, else the app default.
-    _blurOverride = State(
-      initialValue: min(
-        preset.backgroundBlurRadius ?? GlobalSettings.shared.backgroundBlurRadius, 15))
+    // Seed with the effective value so enabling the override doesn't jump the
+    // background; normalize legacy radii (e.g. the old "High" 15) to on/off.
+    let effectiveBlur = preset.backgroundBlurRadius ?? GlobalSettings.shared.backgroundBlurRadius
+    _blurOverride = State(initialValue: effectiveBlur > 0 ? defaultBackgroundBlurRadius : 0)
   }
 
   var orderedSounds: [Sound] {
