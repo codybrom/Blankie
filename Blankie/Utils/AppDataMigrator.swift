@@ -12,8 +12,17 @@ import SwiftData
 enum AppDataMigrator {
   private static let migrationCompletedKey = "unifiedMigrationCompleted"
 
+  /// UserDefaults keys for features that no longer exist so stale values don't linger
+  private static let obsoleteKeys = [
+    "hideInactiveSounds"  // "Hide Inactive Sounds" feature removed in 1.1
+  ]
+
   /// Perform one-time migration of all app data
   static func performAllMigrations() {
+    // Always purge obsolete keys, independent of the one-time migration below,
+    // so users who already migrated on an earlier build still get cleaned up.
+    removeObsoleteUserDefaults()
+
     // Check if unified migration already completed
     guard !UserDefaults.shared.bool(forKey: migrationCompletedKey) else {
       return
@@ -35,6 +44,24 @@ enum AppDataMigrator {
     debugLog("✅ AppDataMigrator: All migrations completed successfully")
   }
 
+  /// Remove UserDefaults entries for features that have been deleted, across
+  /// both the standard and shared (app group) suites.
+  private static func removeObsoleteUserDefaults() {
+    let suites = [UserDefaults.standard, UserDefaults.shared]
+    var removedCount = 0
+
+    for key in obsoleteKeys {
+      for suite in suites where suite.object(forKey: key) != nil {
+        suite.removeObject(forKey: key)
+        removedCount += 1
+      }
+    }
+
+    if removedCount > 0 {
+      debugLog("🧹 AppDataMigrator: Removed \(removedCount) obsolete UserDefaults entries")
+    }
+  }
+
   /// Migrate UserDefaults to app group (from UserDefaults+AppGroup.swift)
   private static func migrateToAppGroup() {
     guard let groupDefaults = AppGroupConfiguration.sharedDefaults else {
@@ -48,7 +75,6 @@ enum AppDataMigrator {
       UserDefaultsKeys.appearance,
       UserDefaultsKeys.accentColor,
       UserDefaultsKeys.autoPlayOnLaunch,
-      UserDefaultsKeys.hideInactiveSounds,
       UserDefaultsKeys.enableSpatialAudio,
       UserDefaultsKeys.language,
       UserDefaultsKeys.mixWithOthers,
@@ -246,7 +272,6 @@ enum AppDataMigrator {
       UserDefaultsKeys.appearance,
       UserDefaultsKeys.accentColor,
       UserDefaultsKeys.autoPlayOnLaunch,
-      UserDefaultsKeys.hideInactiveSounds,
       UserDefaultsKeys.showSoundNames,
       UserDefaultsKeys.iconSize,
       UserDefaultsKeys.showingListView,

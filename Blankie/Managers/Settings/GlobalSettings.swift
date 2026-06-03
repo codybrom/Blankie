@@ -32,7 +32,6 @@ enum UserDefaultsKeys {
   static let appearance = "appearanceMode"
   static let accentColor = "customAccentColor"
   static let autoPlayOnLaunch = "autoPlayOnLaunch"
-  static let hideInactiveSounds = "hideInactiveSounds"
   static let enableSpatialAudio = "enableSpatialAudio"
   static let language = "languagePreference"
   static let mixWithOthers = "mixWithOthers"
@@ -79,7 +78,6 @@ class GlobalSettings: ObservableObject {
   @Published var appearance: AppearanceMode
   @Published var customAccentColor: Color?
   @Published var autoPlayOnLaunch: Bool
-  @Published var hideInactiveSounds: Bool
   @Published var showSoundNames: Bool
   @Published var iconSize: IconSize
   @Published var language: Language
@@ -112,7 +110,6 @@ class GlobalSettings: ObservableObject {
     appearance = .system
     customAccentColor = nil
     autoPlayOnLaunch = false
-    hideInactiveSounds = false
     showSoundNames = true
     iconSize = .medium
     language = .system

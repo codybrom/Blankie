@@ -36,20 +36,6 @@ extension GlobalSettings {
   }
 
   @MainActor
-  func toggleHideInactiveSounds() {
-    hideInactiveSounds.toggle()
-    UserDefaults.shared.set(hideInactiveSounds, forKey: UserDefaultsKeys.hideInactiveSounds)
-    logCurrentSettings()
-  }
-
-  @MainActor
-  func setHideInactiveSounds(_ value: Bool) {
-    hideInactiveSounds = value
-    UserDefaults.shared.set(hideInactiveSounds, forKey: UserDefaultsKeys.hideInactiveSounds)
-    logCurrentSettings()
-  }
-
-  @MainActor
   func setShowSoundNames(_ value: Bool) {
     showSoundNames = value
     UserDefaults.shared.set(showSoundNames, forKey: UserDefaultsKeys.showSoundNames)

@@ -14,7 +14,6 @@ extension GlobalSettings {
     debugLog("  - Appearance: \(appearance.rawValue)")
     debugLog("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")")
     debugLog("  - Autoplay on Open: \(autoPlayOnLaunch)")
-    debugLog("  - Hide Inactive Sounds: \(hideInactiveSounds)")
     debugLog("  - Enable Spatial Audio: \(enableSpatialAudio)")
     debugLog("  - Mix With Others: \(mixWithOthers)")
     debugLog("  - Volume With Other Audio: \(volumeWithOtherAudio)")

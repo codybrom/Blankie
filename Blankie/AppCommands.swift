@@ -71,16 +71,6 @@ import SwiftUI
         .keyboardShortcut("i", modifiers: .command)
       }
 
-      CommandGroup(after: .toolbar) {
-        Button(appState.hideInactiveSounds ? "Show All Sounds" : "Hide Inactive Sounds") {
-          withAnimation {
-            appState.hideInactiveSounds.toggle()
-            UserDefaults.standard.set(appState.hideInactiveSounds, forKey: "hideInactiveSounds")
-          }
-        }
-        .keyboardShortcut("h", modifiers: [.control, .command])
-      }
-
       // Add Help menu command
       CommandGroup(replacing: .help) {
         Button("Blankie Help") {

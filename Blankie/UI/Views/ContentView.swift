@@ -34,7 +34,7 @@ import UniformTypeIdentifiers
         } else {
           inCurrentPreset = true
         }
-        return inCurrentPreset && (!appState.hideInactiveSounds || sound.isSelected)
+        return inCurrentPreset
       }
 
       // Sort by the active order so the grid is stable and reorders persist

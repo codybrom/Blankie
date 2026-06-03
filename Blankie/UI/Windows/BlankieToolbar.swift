@@ -32,22 +32,6 @@ import SwiftUI
           }
           .keyboardShortcut("o", modifiers: .command)
 
-          Button {
-            withAnimation {
-              appState.hideInactiveSounds.toggle()
-              UserDefaults.standard.set(appState.hideInactiveSounds, forKey: "hideInactiveSounds")
-            }
-          } label: {
-            HStack {
-              Text("Hide Inactive Sounds")
-              if appState.hideInactiveSounds {
-                Spacer()
-                Image(systemName: "checkmark")
-              }
-            }
-          }
-          .keyboardShortcut("h", modifiers: [.control, .command])
-
           Divider()
 
           Button("About Blankie") {

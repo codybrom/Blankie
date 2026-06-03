@@ -29,9 +29,6 @@ extension GlobalSettings {
     autoPlayOnLaunch =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.autoPlayOnLaunch) as? Bool ?? false
 
-    // Hide inactive sounds preference
-    hideInactiveSounds = UserDefaults.shared.bool(forKey: UserDefaultsKeys.hideInactiveSounds)
-
     // Show labels preference (default to true)
     showSoundNames =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.showSoundNames) as? Bool ?? true

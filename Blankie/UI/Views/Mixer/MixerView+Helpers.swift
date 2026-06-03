@@ -7,7 +7,7 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   extension MixerView {
-    // Calculate filtered sounds based on current preset and hideInactiveSounds preference
+    // Calculate filtered sounds based on the current preset
     var filteredSounds: [Sound] {
       return filterSounds()
     }

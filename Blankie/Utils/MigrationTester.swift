@@ -30,7 +30,6 @@ struct MigrationTester {
     UserDefaults.standard.set(0.8, forKey: UserDefaultsKeys.volume)
     UserDefaults.standard.set("light", forKey: UserDefaultsKeys.appearance)
     UserDefaults.standard.set(true, forKey: UserDefaultsKeys.autoPlayOnLaunch)
-    UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hideInactiveSounds)
     UserDefaults.standard.set("en", forKey: UserDefaultsKeys.language)
 
     // Simulate sound states

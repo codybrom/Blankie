@@ -62,7 +62,6 @@ enum UITestingHelper {
 
   private static func configureUITestingDefaults() {
     UserDefaults.standard.set(false, forKey: "alwaysStartPaused")
-    UserDefaults.standard.set(false, forKey: "hideInactiveSounds")
 
     if ProcessInfo.processInfo.arguments.contains("-ScreenshotMode") {
       UserDefaults.standard.set(true, forKey: "forceStartPlayback")
