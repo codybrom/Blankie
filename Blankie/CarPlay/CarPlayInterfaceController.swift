@@ -350,6 +350,15 @@
           self?.updatePresetsTemplate()
         }
         .store(in: &cancellables)
+
+      // Refresh list artwork when a preset thumbnail is regenerated or removed
+      // (the thumbnail re-cache finishes after the $presets-driven rebuild).
+      NotificationCenter.default.publisher(for: .presetThumbnailUpdated)
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] _ in
+          self?.updatePresetsTemplate()
+        }
+        .store(in: &cancellables)
     }
 
     // MARK: - Edit Functionality

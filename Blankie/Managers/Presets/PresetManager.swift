@@ -971,14 +971,15 @@ extension PresetManager {
 // MARK: - Thumbnails
 
 extension PresetManager {
-  /// Cache a small thumbnail for quick access
+  /// Cache a small thumbnail for quick access. Pass `force: true` after an
+  /// artwork edit to regenerate an already-cached thumbnail.
   @MainActor
-  func cacheThumbnail(for preset: Preset) async {
+  func cacheThumbnail(for preset: Preset, force: Bool = false) async {
     #if os(iOS)
       // Check if thumbnail is already cached
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
-      if userDefaults.data(forKey: thumbnailKey) != nil {
+      if !force, userDefaults.data(forKey: thumbnailKey) != nil {
         return  // Already cached
       }
 
@@ -1002,6 +1003,7 @@ extension PresetManager {
       {
         userDefaults.set(thumbnailData, forKey: thumbnailKey)
         debugLog("🖼️ PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
+        NotificationCenter.default.post(name: .presetThumbnailUpdated, object: preset.id)
       }
     #endif
   }
@@ -1020,9 +1022,16 @@ extension PresetManager {
     }
   }
 
-  /// Remove cached thumbnail when preset is deleted
-  func removeThumbnail(for _: UUID) {
-    // Let PresetArtworkManager handle its own cache cleanup
-    // No need for manual UserDefaults cleanup
+  /// Remove cached thumbnail when a preset is deleted or its artwork removed
+  func removeThumbnail(for presetId: UUID) {
+    let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
+    userDefaults.removeObject(forKey: "preset_thumb_\(presetId.uuidString)")
+    NotificationCenter.default.post(name: .presetThumbnailUpdated, object: presetId)
   }
+}
+
+extension Notification.Name {
+  /// Posted when a preset's CarPlay thumbnail is regenerated or removed, so
+  /// connected CarPlay list templates can refresh their artwork.
+  static let presetThumbnailUpdated = Notification.Name("presetThumbnailUpdated")
 }

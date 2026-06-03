@@ -450,9 +450,12 @@ extension EditPresetSheet {
         }
       }
 
-      // Cache thumbnail for CarPlay if the preset has static or animated artwork
+      // Regenerate the CarPlay thumbnail (force, so new artwork replaces a
+      // stale cached image), or drop it if the artwork was removed.
       if updatedPreset.artworkId != nil || updatedPreset.animatedArtwork != nil {
-        await presetManager.cacheThumbnail(for: updatedPreset)
+        await presetManager.cacheThumbnail(for: updatedPreset, force: true)
+      } else {
+        presetManager.removeThumbnail(for: updatedPreset.id)
       }
     }
   }
