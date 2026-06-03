@@ -30,7 +30,7 @@ import SwiftUI
           Button("Manage Sounds") {
             appState.showingManageSounds = true
           }
-          .keyboardShortcut("o", modifiers: .command)
+          .keyboardShortcut(.manageSounds)
 
           Divider()
 
@@ -42,14 +42,14 @@ import SwiftUI
           Button("Keyboard Shortcuts") {
             showingShortcuts = true
           }
-          .keyboardShortcut("?", modifiers: [.command, .shift])
+          .keyboardShortcut(.keyboardShortcuts)
 
           SettingsLink {
             Text(
               LocalizedStringResource(
                 "menu.preferences", defaultValue: "Preferences..."))
           }
-          .keyboardShortcut(",", modifiers: .command)
+          .keyboardShortcut(.preferences)
 
           Divider()
 
@@ -57,7 +57,7 @@ import SwiftUI
             audioManager.pauseAll()
             exit(0)
           }
-          .keyboardShortcut("q", modifiers: .command)
+          .keyboardShortcut(.quit)
         } label: {
           Image(systemName: "line.3.horizontal")
         }
