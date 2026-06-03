@@ -13,6 +13,10 @@ struct SettingsView: View {
   // AppTransaction). Starts `false` so App Store users never flash beta UI.
   @State private var showBetaTesterUI = false
 
+  private let appVersion =
+    Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+  private let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+
   // Compact badge marking a Theme Default the active preset overrides, used in
   // place of a full explanatory caption.
   private var overriddenByPresetBadge: some View {
@@ -44,26 +48,101 @@ struct SettingsView: View {
   var body: some View {
     NavigationStack {
       Form {
-        if showBetaTesterUI {
-          Section(
-            header: Text(
-              "Thanks for Testing Blankie!")
-          ) {
-            Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
-              HStack {
-                Image(systemName: "sparkles")
-                  .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-                  .accessibilityHidden(true)
-                Text(
-                  "Add Your Name to the Beta Tester Credits"
-                )
-                .foregroundColor(.primary)
-                Spacer()
-                Image(systemName: "arrow.up.right")
-                  .font(.caption)
-                  .foregroundColor(.secondary)
+        // App identity header (icon, name, developer) with the About link and
+        // beta/debug rows grouped beneath it, like a standard iOS settings card.
+        Section {
+          HStack(spacing: 14) {
+            #if os(iOS)
+              if let appIcon = UIApplication.shared.currentAppIcon {
+                Image(uiImage: appIcon)
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .frame(width: 60, height: 60)
+                  // Match the system app-icon corner ratio (~22.4% of size).
+                  .clipShape(RoundedRectangle(cornerRadius: 13.5, style: .continuous))
                   .accessibilityHidden(true)
               }
+            #else
+              BrandedBlankieIcon(size: 60)
+            #endif
+            VStack(alignment: .leading, spacing: 4) {
+              Text(verbatim: "Blankie")
+                .font(.system(.title3, design: .rounded).weight(.semibold))
+              // Same localized key as the About sheet's version line.
+              Text("Version \(appVersion) (\(buildNumber))")
+                .font(.footnote)
+                .foregroundColor(.secondary)
+              Link(destination: URL(string: "https://forms.gle/iMhDt41LYSjukuMW8")!) {
+                Text("Have Feedback?")
+              }
+              .font(.subheadline)
+              // Borderless keeps the Link its own tap target instead of the
+              // row's hit-testing owning the tap.
+              .buttonStyle(.borderless)
+              .handCursor()
+            }
+          }
+          .padding(.vertical, 4)
+
+          Button {
+            showingAbout = true
+          } label: {
+            Label {
+              Text("About Blankie")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "hand.wave.fill")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+            }
+          }
+
+          #if DEBUG
+            Button {
+              showingOnboarding = true
+            } label: {
+              Label {
+                Text("Show Onboarding")
+                  .foregroundColor(.primary)
+              } icon: {
+                Image(systemName: "ladybug.fill")
+                  .foregroundColor(.orange)
+              }
+            }
+          #endif
+
+          if showBetaTesterUI {
+            // Celebratory call-to-action for beta testers.
+            Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
+              HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                  .font(.title2)
+                  .foregroundStyle(
+                    LinearGradient(
+                      colors: [
+                        globalSettings.customAccentColor ?? .accentColor,
+                        (globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
+                      ],
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
+                  )
+                  .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                  Text("Thanks for Testing Blankie!")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.primary)
+                  Text("Add Your Name to the Beta Tester Credits")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+                Spacer()
+                Image(systemName: "arrow.up.right")
+                  .font(.subheadline.weight(.semibold))
+                  .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                  .accessibilityHidden(true)
+              }
+              .padding(.vertical, 6)
             }
             .handCursor()
           }
@@ -214,42 +293,6 @@ struct SettingsView: View {
           #endif
         }
 
-        Section {
-          Button {
-            showingAbout = true
-          } label: {
-            HStack {
-              Image("blankie.symbol")
-                .symbolRenderingMode(.hierarchical)
-                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-                .accessibilityHidden(true)
-              Text("About Blankie")
-              Spacer()
-              Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .accessibilityHidden(true)
-            }
-          }
-        }
-
-        #if DEBUG
-          Section(
-            header: Text("Debug")
-          ) {
-            Button {
-              showingOnboarding = true
-            } label: {
-              HStack {
-                Image(systemName: "ladybug.fill")
-                  .foregroundColor(.orange)
-                  .accessibilityHidden(true)
-                Text("Show Onboarding")
-                Spacer()
-              }
-            }
-          }
-        #endif
       }
       .navigationTitle("Settings")
       .tint(globalSettings.customAccentColor ?? .accentColor)

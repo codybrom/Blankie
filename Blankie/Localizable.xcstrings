@@ -10402,6 +10402,9 @@
         }
       }
     },
+    "Have Feedback?" : {
+
+    },
     "Hide Now Playing" : {
       "comment" : "A button that hides the Now Playing panel.",
       "localizations" : {
