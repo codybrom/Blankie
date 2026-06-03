@@ -545,6 +545,7 @@ import SwiftUI
     @State private var loadError: String?
     @State private var showingDeleteConfirmation = false
     @State private var setupTask: Task<Void, Never>?
+    @State private var loopObserver: NSObjectProtocol?
     @StateObject private var odrManager = OnDemandResourceManager.shared
 
     var resourceState: ResourceState {
@@ -749,6 +750,10 @@ import SwiftUI
       .onDisappear {
         setupTask?.cancel()
         setupTask = nil
+        if let loopObserver {
+          NotificationCenter.default.removeObserver(loopObserver)
+        }
+        loopObserver = nil
         player?.pause()
         player = nil
       }
@@ -785,7 +790,7 @@ import SwiftUI
             self.player = player
 
             // Loop the video
-            NotificationCenter.default.addObserver(
+            self.loopObserver = NotificationCenter.default.addObserver(
               forName: .AVPlayerItemDidPlayToEndTime,
               object: player.currentItem,
               queue: .main
