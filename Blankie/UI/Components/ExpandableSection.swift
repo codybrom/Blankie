@@ -58,15 +58,9 @@ struct ExpandableSection<Content: View>: View {
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .handCursor()
         .onHover { hovering in
           isHovering = hovering
-          #if os(macOS)
-            if hovering {
-              NSCursor.pointingHand.push()
-            } else {
-              NSCursor.pop()
-            }
-          #endif
         }
 
         // Expanded Content
