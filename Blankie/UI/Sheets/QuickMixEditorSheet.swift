@@ -83,6 +83,7 @@ import SwiftUI
               dismiss()
             }
             .disabled(selectedSounds.isEmpty)
+            .tint(Color.primary)
           }
         }
       }

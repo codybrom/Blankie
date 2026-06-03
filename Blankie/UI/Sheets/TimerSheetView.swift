@@ -43,6 +43,7 @@ import SwiftUI
             } label: {
               Image(systemName: "xmark")
             }
+            .tint(Color.primary)
             .accessibilityLabel(Text("Close"))
           }
         }

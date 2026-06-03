@@ -87,6 +87,7 @@ struct AboutView: View {
             .toolbar {
               ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Close") { dismiss() }
+                  .tint(Color.primary)
               }
             }
         }
@@ -338,6 +339,7 @@ extension AboutView {
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
             Button("Cancel") { showingIconChooser = false }
+              .tint(Color.primary)
           }
         }
       }

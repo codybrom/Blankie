@@ -2,24 +2,134 @@ import SwiftUI
 import TipKit
 import UniformTypeIdentifiers
 
+/// Shared "now playing" treatment for Library rows. iPad sidebar rows highlight
+/// the whole row and tint the title with the active accent; iPhone sheet rows
+/// show an animated equalizer glyph in place of the old checkmark.
+enum LibraryRowStyle {
+  static func titleColor(
+    isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
+  ) -> Color {
+    presentation == .sidebar && isCurrent ? accent : .primary
+  }
+
+  /// Highlight only the active row, and only in the sidebar — an inset rounded
+  /// pill, like the system sidebar selection. `nil` falls back to the list's
+  /// default row background.
+  static func rowBackground(
+    isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
+  ) -> AnyView? {
+    guard presentation == .sidebar && isCurrent else { return nil }
+    return AnyView(
+      RoundedRectangle(cornerRadius: 10, style: .continuous)
+        .fill(accent.opacity(0.15))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 2)
+    )
+  }
+
+  @ViewBuilder
+  static func nowPlayingIndicator(
+    isCurrent: Bool, isPlaying: Bool, accent: Color, presentation: LibraryView.Presentation
+  ) -> some View {
+    if isCurrent && presentation == .sheet {
+      EqualizerIcon(isPlaying: isPlaying, accent: accent)
+    }
+  }
+}
+
+/// Equalizer indicator: a row of bars whose heights continuously tween up and
+/// down (each on its own cadence, so they fall out of phase and read as live
+/// audio levels). When paused they settle to a low resting height.
+private struct EqualizerIcon: View {
+  let isPlaying: Bool
+  let accent: Color
+
+  // Per-bar low/high fractions of the max height and oscillation duration. The
+  // mismatched durations keep the bars from bouncing in lockstep.
+  private struct Bar {
+    let low: CGFloat
+    let high: CGFloat
+    let duration: Double
+  }
+  private static let bars: [Bar] = [
+    Bar(low: 0.35, high: 1.0, duration: 0.50),
+    Bar(low: 0.55, high: 0.8, duration: 0.38),
+    Bar(low: 0.25, high: 0.95, duration: 0.62),
+    Bar(low: 0.5, high: 0.7, duration: 0.46),
+  ]
+
+  private let barWidth: CGFloat = 2.5
+  private let spacing: CGFloat = 2
+  private let maxHeight: CGFloat = 12
+  private let restHeight: CGFloat = 0.3
+
+  @State private var peaked = false
+
+  var body: some View {
+    HStack(alignment: .bottom, spacing: spacing) {
+      ForEach(Self.bars.indices, id: \.self) { index in
+        let bar = Self.bars[index]
+        Capsule()
+          .fill(accent)
+          .frame(width: barWidth, height: maxHeight * height(for: bar))
+          .animation(
+            isPlaying
+              ? .easeInOut(duration: bar.duration).repeatForever(autoreverses: true)
+              : .easeInOut(duration: 0.25),
+            value: peaked)
+      }
+    }
+    .frame(
+      width: CGFloat(Self.bars.count) * barWidth + CGFloat(Self.bars.count - 1) * spacing,
+      height: maxHeight, alignment: .bottom
+    )
+    // Kick off the perpetual oscillation; toggling `peaked` once is enough since
+    // each bar's animation repeats forever (autoreversing between low and high).
+    .onAppear { peaked = true }
+    .accessibilityLabel(Text("Now Playing"))
+  }
+
+  private func height(for bar: Bar) -> CGFloat {
+    guard isPlaying else { return restHeight }
+    return peaked ? bar.high : bar.low
+  }
+}
+
 struct PresetPickerRow: View {
   let preset: Preset
   let isEditMode: Bool
+  let dismissOnSelect: Bool
+  let presentation: LibraryView.Presentation
   let onSelection: (() -> Void)?
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
 
-  init(preset: Preset, isEditMode: Bool, onSelection: (() -> Void)? = nil) {
+  init(
+    preset: Preset, isEditMode: Bool, dismissOnSelect: Bool = true,
+    presentation: LibraryView.Presentation = .sheet,
+    onSelection: (() -> Void)? = nil
+  ) {
     self.preset = preset
     self.isEditMode = isEditMode
+    self.dismissOnSelect = dismissOnSelect
+    self.presentation = presentation
     self.onSelection = onSelection
   }
 
   // The default preset is favorited under the shared "allSounds" token.
   private var starToken: String {
     preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
+  }
+
+  private var accent: Color {
+    preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+  }
+
+  /// This preset is the one currently driving playback (solo mode pre-empts it).
+  private var isCurrent: Bool {
+    audioManager.soloModeSound == nil && presetManager.currentPreset?.id == preset.id
   }
 
   var body: some View {
@@ -31,18 +141,17 @@ struct PresetPickerRow: View {
           artworkId: preset.artworkId,
           preset: preset,
           fallbackSystemImage: preset.isDefault ? "square.stack" : "music.note",
-          tint: preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+          tint: accent
         )
 
         Text(preset.displayName)
-          .foregroundColor(.primary)
+          .foregroundColor(
+            LibraryRowStyle.titleColor(
+              isCurrent: isCurrent, accent: accent, presentation: presentation))
 
-        let isSoloModeActive = audioManager.soloModeSound != nil
-        let isCurrentPreset = presetManager.currentPreset?.id == preset.id
-        if !isSoloModeActive && isCurrentPreset {
-          Image(systemName: "checkmark")
-            .foregroundColor(.accentColor)
-        }
+        LibraryRowStyle.nowPlayingIndicator(
+          isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying,
+          accent: accent, presentation: presentation)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
@@ -59,7 +168,7 @@ struct PresetPickerRow: View {
           Image(systemName: globalSettings.isStarred(starToken) ? "star.fill" : "star")
             .foregroundStyle(
               globalSettings.isStarred(starToken)
-                ? (preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
+                ? accent
                 : .secondary)
         }
         .buttonStyle(.borderless)
@@ -68,21 +177,30 @@ struct PresetPickerRow: View {
             ? Text("Remove from Favorites") : Text("Add to Favorites"))
       }
     }
+    .listRowBackground(
+      LibraryRowStyle.rowBackground(
+        isCurrent: isCurrent, accent: accent, presentation: presentation)
+    )
   }
 
   private func applyPreset() {
     Task {
       do {
         // Exit solo/Quick Mix first so the previous mix doesn't briefly play.
-        if audioManager.soloModeSound != nil {
+        // Entering solo paused this preset's sounds without changing
+        // `currentPreset`, so coming back to that same preset would hit
+        // applyPreset's "already active" short-circuit and never resume them —
+        // leaving everything silent. Force a re-apply when leaving solo.
+        let wasSolo = audioManager.soloModeSound != nil
+        if wasSolo {
           audioManager.exitSoloModeWithoutResuming()
         }
         if audioManager.isQuickMix {
           audioManager.exitQuickMix()
         }
-        try presetManager.applyPreset(preset)
+        try presetManager.applyPreset(preset, forceReapply: wasSolo)
         OnboardingManager.shared.markPresetSwitched()
-        dismiss()
+        if dismissOnSelect { dismiss() }
         onSelection?()
       } catch {
         debugLog("Error applying preset: \(error)")
@@ -97,19 +215,35 @@ struct PresetPickerRow: View {
 struct SoloPickerRow: View {
   let sound: Sound
   let isEditMode: Bool
+  let dismissOnSelect: Bool
+  let presentation: LibraryView.Presentation
   let onSelection: (() -> Void)?
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
 
-  init(sound: Sound, isEditMode: Bool, onSelection: (() -> Void)? = nil) {
+  init(
+    sound: Sound, isEditMode: Bool, dismissOnSelect: Bool = true,
+    presentation: LibraryView.Presentation = .sheet,
+    onSelection: (() -> Void)? = nil
+  ) {
     self.sound = sound
     self.isEditMode = isEditMode
+    self.dismissOnSelect = dismissOnSelect
+    self.presentation = presentation
     self.onSelection = onSelection
   }
 
   private var starToken: String {
     GlobalSettings.soloToken(forFileName: sound.fileName)
+  }
+
+  private var accent: Color {
+    globalSettings.customAccentColor ?? .accentColor
+  }
+
+  private var isCurrent: Bool {
+    audioManager.soloModeSound?.id == sound.id
   }
 
   var body: some View {
@@ -119,16 +253,17 @@ struct SoloPickerRow: View {
           artworkId: nil,
           preset: nil,
           fallbackSystemImage: sound.systemIconName,
-          tint: globalSettings.customAccentColor ?? .accentColor
+          tint: accent
         )
 
         Text(sound.title)
-          .foregroundColor(.primary)
+          .foregroundColor(
+            LibraryRowStyle.titleColor(
+              isCurrent: isCurrent, accent: accent, presentation: presentation))
 
-        if audioManager.soloModeSound?.id == sound.id {
-          Image(systemName: "checkmark")
-            .foregroundColor(.accentColor)
-        }
+        LibraryRowStyle.nowPlayingIndicator(
+          isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying,
+          accent: accent, presentation: presentation)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
@@ -143,7 +278,7 @@ struct SoloPickerRow: View {
           Image(systemName: globalSettings.isStarred(starToken) ? "star.fill" : "star")
             .foregroundStyle(
               globalSettings.isStarred(starToken)
-                ? (globalSettings.customAccentColor ?? .accentColor)
+                ? accent
                 : .secondary)
         }
         .buttonStyle(.borderless)
@@ -152,18 +287,44 @@ struct SoloPickerRow: View {
             ? Text("Remove from Favorites") : Text("Add to Favorites"))
       }
     }
+    .listRowBackground(
+      LibraryRowStyle.rowBackground(
+        isCurrent: isCurrent, accent: accent, presentation: presentation)
+    )
   }
 
   private func soloSound() {
+    // Tapping the sound that's already soloing shouldn't stop it — that would be
+    // a surprising "toggle off". Just close the sheet (iPhone) or do nothing
+    // (sidebar), leaving playback untouched.
+    if isCurrent {
+      if dismissOnSelect { dismiss() }
+      onSelection?()
+      return
+    }
     Task { @MainActor in
       audioManager.toggleSoloMode(for: sound)
-      dismiss()
+      if dismissOnSelect { dismiss() }
       onSelection?()
     }
   }
 }
 
 struct LibraryView: View {
+  /// Where this Library is rendered. As a `.sheet` (iPhone) it wraps itself in a
+  /// `NavigationStack`, shows a close button, and dismisses on selection. As a
+  /// `.sidebar` (iPad) it relies on the enclosing `NavigationSplitView` for the
+  /// nav bar, has no close button, and stays put when a row is tapped.
+  enum Presentation {
+    case sheet
+    case sidebar
+  }
+
+  var presentation: Presentation = .sheet
+  /// Sidebar-only: opens the full Settings sheet from a trailing toolbar gear.
+  /// nil in the sheet presentation, where Settings isn't surfaced here.
+  var onOpenSettings: (() -> Void)?
+
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
@@ -298,26 +459,41 @@ struct LibraryView: View {
 
   // MARK: - Row builders
 
+  /// As a sheet, selecting a row dismisses the Library; as a sidebar it stays
+  /// open. Rows gate their own `dismiss()` on `dismissOnSelect`, so the sidebar
+  /// passes `false` and a nil selection callback.
+  private var dismissOnSelect: Bool { presentation == .sheet }
+  private var onSelect: (() -> Void)? {
+    presentation == .sheet ? { dismiss() } : nil
+  }
+
   @ViewBuilder
   private func tokenRow(_ token: String) -> some View {
     if let sound = audioManager.sound(forSoloToken: token) {
-      SoloPickerRow(sound: sound, isEditMode: isEditMode) { dismiss() }
+      SoloPickerRow(
+        sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+        presentation: presentation, onSelection: onSelect)
     } else {
       switch token {
       case GlobalSettings.allSoundsToken:
         if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
-          PresetPickerRow(preset: defaultPreset, isEditMode: isEditMode) { dismiss() }
+          PresetPickerRow(
+            preset: defaultPreset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+            presentation: presentation, onSelection: onSelect)
         }
       default:
         if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
-          PresetPickerRow(preset: preset, isEditMode: isEditMode) { dismiss() }
+          PresetPickerRow(
+            preset: preset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+            presentation: presentation, onSelection: onSelect)
         }
       }
     }
   }
 
   private var quickMixRow: some View {
-    Button {
+    let accent = globalSettings.customAccentColor ?? .accentColor
+    return Button {
       Task { @MainActor in
         if audioManager.soloModeSound != nil {
           audioManager.exitSoloModeWithoutResuming()
@@ -326,7 +502,7 @@ struct LibraryView: View {
           audioManager.enterQuickMix()
           OnboardingManager.shared.markQuickMixUsed()
         }
-        dismiss()
+        onSelect?()
       }
     } label: {
       HStack(spacing: 10) {
@@ -334,215 +510,32 @@ struct LibraryView: View {
           artworkId: nil,
           preset: nil,
           fallbackSystemImage: "square.grid.2x2",
-          tint: globalSettings.customAccentColor ?? .accentColor
+          tint: accent
         )
         Text("Quick Mix")
-          .foregroundColor(.primary)
+          .foregroundColor(
+            LibraryRowStyle.titleColor(
+              isCurrent: audioManager.isQuickMix, accent: accent, presentation: presentation))
         Spacer()
-        if audioManager.isQuickMix {
-          Image(systemName: "checkmark")
-            .foregroundColor(.accentColor)
-        }
+        LibraryRowStyle.nowPlayingIndicator(
+          isCurrent: audioManager.isQuickMix, isPlaying: audioManager.isGloballyPlaying,
+          accent: accent, presentation: presentation)
       }
     }
+    .listRowBackground(
+      LibraryRowStyle.rowBackground(
+        isCurrent: audioManager.isQuickMix, accent: accent, presentation: presentation))
   }
 
   var body: some View {
-    NavigationStack {
-      List {
-        // Show tip for creating first preset if no custom presets exist
-        if !presetManager.hasCustomPresets {
-          TipView(createFirstPresetTip, arrowEdge: .top) { action in
-            if action.id == "create" {
-              showingNewPresetSheet = true
-            }
-          }
-          .listRowBackground(Color.clear)
-          .listRowSeparator(.hidden)
-        }
-
-        if presetManager.isLoading {
-          // Loading view
-          HStack {
-            Spacer()
-            ProgressView("Loading Presets...")
-            Spacer()
-          }
-          .padding()
-        } else if presetManager.presets.isEmpty {
-          // Empty state
-          HStack {
-            Spacer()
-            VStack(spacing: 12) {
-              Image(systemName: "star.circle")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-
-              Text("No Custom Presets")
-                .font(.headline)
-
-              Text(
-                "Save your current sound configuration as a preset to quickly access it later."
-              )
-              .font(.caption)
-              .foregroundStyle(.secondary)
-              .multilineTextAlignment(.center)
-            }
-            .padding()
-            .frame(maxWidth: 250)
-            Spacer()
-          }
-          .listRowBackground(Color.clear)
-        } else {
-          // FAVORITES — tap a row's star to add/remove; reorder via Edit.
-          Section {
-            if favoriteTokens.isEmpty {
-              Text(
-                "Tap the star on any preset to add it here."
-              )
-              .font(.subheadline)
-              .foregroundStyle(.secondary)
-            } else {
-              ForEach(favoriteTokens, id: \.self) { token in
-                tokenRow(token)
-                  .deleteDisabled(!isDeletable(token))
-              }
-              .onMove(perform: reorderFavorites)
-              .onDelete(perform: deleteFavorites)
-            }
-          } header: {
-            Text("Favorites")
-          }
-
-          // ALL PRESETS — Quick Mix and All Blankie Sounds are fixed rows at the
-          // top; only the custom presets below are reorderable in Edit.
-          Section {
-            // Quick Mix — always available, not favoritable (its own thing).
-            quickMixRow
-
-            if showsDefaultInAllPresets {
-              tokenRow(GlobalSettings.allSoundsToken)
-            }
-
-            ForEach(nonFavoriteCustomTokens, id: \.self) { token in
-              tokenRow(token)
-            }
-            .onMove(perform: reorderAllPresets)
-            .onDelete(perform: deleteAllPresets)
-          } header: {
-            Text("All Presets")
-          }
-
-          // SOUNDS — solo a single sound. Listed alphabetically and fixed
-          // (not reorderable); tap the star to favorite a sound.
-          Section {
-            ForEach(soloSounds, id: \.id) { sound in
-              SoloPickerRow(sound: sound, isEditMode: isEditMode) { dismiss() }
-            }
-          } header: {
-            Text("Sounds")
-          }
-        }
-      }
-      .navigationTitle("Library")
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-      #endif
-      #if os(iOS)
-        .toolbar {
-          ToolbarItem(placement: .topBarLeading) {
-            // Standard close affordance: HIG advises against a text "Close"
-            // label in favor of the familiar close symbol.
-            Button {
-              dismiss()
-            } label: {
-              Image(systemName: "xmark")
-            }
-            .accessibilityLabel(Text("Close"))
-          }
-          ToolbarItem(placement: .topBarTrailing) {
-            if presetManager.hasCustomPresets {
-              Button {
-                isEditMode.toggle()
-              } label: {
-                Text(isEditMode ? "Done" : "Edit")
-              }
-            }
-          }
-          ToolbarItem(placement: .topBarTrailing) {
-            if !isEditMode {
-              Menu {
-                Button {
-                  showingNewPresetSheet = true
-                } label: {
-                  Label("New Preset", systemImage: "rectangle.stack.badge.plus")
-                }
-                Button {
-                  showingSoundFilePicker = true
-                } label: {
-                  Label("Import", systemImage: "square.and.arrow.down")
-                }
-              } label: {
-                Label("Add", systemImage: "plus")
-              }
-            }
-          }
-        }
-      #endif
-      #if os(iOS)
-        .environment(\.editMode, .constant(isEditMode ? EditMode.active : EditMode.inactive))
-      #endif
-      .sheet(isPresented: $showingNewPresetSheet) {
-        CreatePresetSheet(isPresented: $showingNewPresetSheet)
-      }
-      .fileImporter(
-        isPresented: $showingSoundFilePicker,
-        allowedContentTypes: [.audio, .blankiePreset],
-        allowsMultipleSelection: false
-      ) { result in
-        guard case .success(let urls) = result, let url = urls.first else { return }
-        // A .blankie file is a preset archive — hand it to the importer, which
-        // detects the type and imports it as a preset. Anything else is audio →
-        // preselect it in the add-sound sheet.
-        if url.pathExtension.lowercased() == "blankie" {
-          AudioFileImporter.shared.handleIncomingFile(url)
-        } else {
-          // Stage an app-owned copy so previewing the not-yet-saved sound can
-          // load it after the picker's security scope ends.
-          importedSoundURL = AudioFileImporter.shared.stagedTempCopy(of: url)
-          showingImportSoundSheet = importedSoundURL != nil
-        }
-      }
-      .sheet(isPresented: $showingImportSoundSheet) {
-        if let url = importedSoundURL {
-          SoundSheet(mode: .add, preselectedFile: url)
-        }
-      }
-      .alert(
-        "Delete Preset",
-        isPresented: .init(
-          get: { presetToDelete != nil },
-          set: { if !$0 { presetToDelete = nil } }
-        )
-      ) {
-        Button("Cancel", role: .cancel) {
-          presetToDelete = nil
-        }
-
-        Button("Delete", role: .destructive) {
-          if let preset = presetToDelete {
-            Task {
-              presetManager.deletePreset(preset)
-              presetToDelete = nil
-            }
-          }
-        }
-      } message: {
-        if let preset = presetToDelete {
-          Text(
-            "Are you sure you want to delete '\(preset.name)'? This action cannot be undone."
-          )
-        }
+    Group {
+      switch presentation {
+      case .sheet:
+        // iPhone: a self-contained modal with its own nav bar + close button.
+        NavigationStack { libraryList }
+      case .sidebar:
+        // iPad: the enclosing NavigationSplitView supplies the nav bar.
+        libraryList
       }
     }
     // Carry the app accent into the sheet explicitly. A presented sheet doesn't
@@ -552,6 +545,226 @@ struct LibraryView: View {
     // while the stars (which read `customAccentColor` directly) stayed tinted.
     // Setting the tint locally on the sheet's own hierarchy keeps them in sync.
     .tint(globalSettings.customAccentColor ?? .accentColor)
+  }
+
+  @ViewBuilder
+  private var libraryList: some View {
+    List {
+      if !presetManager.hasCustomPresets {
+        TipView(createFirstPresetTip, arrowEdge: .top) { action in
+          if action.id == "create" {
+            showingNewPresetSheet = true
+          }
+        }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+      }
+
+      if presetManager.isLoading {
+        HStack {
+          Spacer()
+          ProgressView("Loading Presets...")
+          Spacer()
+        }
+        .padding()
+      } else if presetManager.presets.isEmpty {
+        HStack {
+          Spacer()
+          VStack(spacing: 12) {
+            Image(systemName: "star.circle")
+              .font(.system(size: 48))
+              .foregroundStyle(.secondary)
+
+            Text("No Custom Presets")
+              .font(.headline)
+
+            Text(
+              "Save your current sound configuration as a preset to quickly access it later."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
+          }
+          .padding()
+          .frame(maxWidth: 250)
+          Spacer()
+        }
+        .listRowBackground(Color.clear)
+      } else {
+        // FAVORITES — tap a row's star to add/remove; reorder via Edit.
+        Section {
+          if favoriteTokens.isEmpty {
+            Text(
+              "Tap the star on any preset to add it here."
+            )
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+          } else {
+            ForEach(favoriteTokens, id: \.self) { token in
+              tokenRow(token)
+                .deleteDisabled(!isDeletable(token))
+            }
+            .onMove(perform: reorderFavorites)
+            .onDelete(perform: deleteFavorites)
+          }
+        } header: {
+          Text("Favorites")
+        }
+
+        // ALL PRESETS — Quick Mix and All Blankie Sounds are fixed rows at the
+        // top; only the custom presets below are reorderable in Edit.
+        Section {
+          // Quick Mix — always available, not favoritable (its own thing).
+          quickMixRow
+
+          if showsDefaultInAllPresets {
+            tokenRow(GlobalSettings.allSoundsToken)
+          }
+
+          ForEach(nonFavoriteCustomTokens, id: \.self) { token in
+            tokenRow(token)
+          }
+          .onMove(perform: reorderAllPresets)
+          .onDelete(perform: deleteAllPresets)
+        } header: {
+          Text("All Presets")
+        }
+
+        // SOUNDS — solo a single sound. Listed alphabetically and fixed
+        // (not reorderable); tap the star to favorite a sound.
+        Section {
+          ForEach(soloSounds, id: \.id) { sound in
+            SoloPickerRow(
+              sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+              presentation: presentation, onSelection: onSelect)
+          }
+        } header: {
+          Text("Sounds")
+        }
+      }
+    }
+    // The sheet keeps its "Library" title; the sidebar is self-evidently the
+    // library, so it omits the title to leave the bar for the controls.
+    .navigationTitle(presentation == .sheet ? Text("Library") : Text(verbatim: ""))
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
+    #if os(iOS)
+      .toolbar {
+        // The close button only makes sense in the sheet; the sidebar is
+        // always present, so it has nothing to dismiss.
+        if presentation == .sheet {
+          ToolbarItem(placement: .topBarLeading) {
+            // Standard close affordance: HIG advises against a text "Close"
+            // label in favor of the familiar close symbol.
+            Button {
+              dismiss()
+            } label: {
+              Image(systemName: "xmark")
+            }
+            // Monochrome to match the system sidebar toggle (which ignores tint);
+            // the accent stays in content, not the bar chrome.
+            .tint(Color.primary)
+            .accessibilityLabel(Text("Close"))
+          }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+          if presetManager.hasCustomPresets {
+            Button {
+              isEditMode.toggle()
+            } label: {
+              Text(isEditMode ? "Done" : "Edit")
+            }
+            .tint(Color.primary)
+          }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+          if !isEditMode {
+            Menu {
+              Button {
+                showingNewPresetSheet = true
+              } label: {
+                Label("New Preset", systemImage: "rectangle.stack.badge.plus")
+              }
+              Button {
+                showingSoundFilePicker = true
+              } label: {
+                Label("Import", systemImage: "square.and.arrow.down")
+              }
+            } label: {
+              Label("Add", systemImage: "plus")
+            }
+            .tint(Color.primary)
+          }
+        }
+        // Sidebar only: Settings as a trailing-edge gear.
+        if let onOpenSettings {
+          ToolbarItem(placement: .topBarTrailing) {
+            Button {
+              onOpenSettings()
+            } label: {
+              Label("Settings", systemImage: "gearshape")
+            }
+            .tint(Color.primary)
+          }
+        }
+      }
+    #endif
+    #if os(iOS)
+      .environment(\.editMode, .constant(isEditMode ? EditMode.active : EditMode.inactive))
+    #endif
+    .sheet(isPresented: $showingNewPresetSheet) {
+      CreatePresetSheet(isPresented: $showingNewPresetSheet)
+    }
+    .fileImporter(
+      isPresented: $showingSoundFilePicker,
+      allowedContentTypes: [.audio, .blankiePreset],
+      allowsMultipleSelection: false
+    ) { result in
+      guard case .success(let urls) = result, let url = urls.first else { return }
+      // A .blankie file is a preset archive — hand it to the importer, which
+      // detects the type and imports it as a preset. Anything else is audio →
+      // preselect it in the add-sound sheet.
+      if url.pathExtension.lowercased() == "blankie" {
+        AudioFileImporter.shared.handleIncomingFile(url)
+      } else {
+        // Stage an app-owned copy so previewing the not-yet-saved sound can
+        // load it after the picker's security scope ends.
+        importedSoundURL = AudioFileImporter.shared.stagedTempCopy(of: url)
+        showingImportSoundSheet = importedSoundURL != nil
+      }
+    }
+    .sheet(isPresented: $showingImportSoundSheet) {
+      if let url = importedSoundURL {
+        SoundSheet(mode: .add, preselectedFile: url)
+      }
+    }
+    .alert(
+      "Delete Preset",
+      isPresented: .init(
+        get: { presetToDelete != nil },
+        set: { if !$0 { presetToDelete = nil } }
+      )
+    ) {
+      Button("Cancel", role: .cancel) {
+        presetToDelete = nil
+      }
+
+      Button("Delete", role: .destructive) {
+        if let preset = presetToDelete {
+          Task {
+            presetManager.deletePreset(preset)
+            presetToDelete = nil
+          }
+        }
+      }
+    } message: {
+      if let preset = presetToDelete {
+        Text(
+          "Are you sure you want to delete '\(preset.name)'? This action cannot be undone."
+        )
+      }
+    }
   }
 }
 

@@ -19,7 +19,7 @@ import SwiftUI
 
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
-    @Binding var showingPresetPicker: Bool
+    @Binding var showingLibrarySheet: Bool
     @Binding var showingTimer: Bool
     @Environment(\.dismiss) private var dismiss
     @StateObject private var audioManager = AudioManager.shared
@@ -182,14 +182,26 @@ import SwiftUI
 
     // MARK: - Now Playing View
 
+    private var isPad: Bool {
+      #if os(iOS)
+        return UIDevice.current.userInterfaceIdiom == .pad
+      #else
+        return false
+      #endif
+    }
+
     @ViewBuilder
     private func nowPlayingView(in size: CGSize) -> some View {
-      // Only use the side-by-side landscape layout when the available area
-      // is meaningfully wider than tall. On iPad with the sidebar visible
-      // the detail pane can end up nearly square, which makes the HStack
-      // artwork+controls layout cramped — fall back to stacked portrait.
       let aspect = size.height > 0 ? size.width / size.height : 1
-      if aspect > 1.6 {
+      if isPad {
+        // iPad: every size class is wide enough that the phone's full-width
+        // stacked layout sprawls, and tall enough that its single flexible
+        // spacer leaves a dead gap under the artwork. Use a centered, balanced
+        // column tuned for the larger canvas.
+        padNowPlaying(in: size)
+      } else if aspect > 1.6 {
+        // Side-by-side landscape only when the area is meaningfully wider than
+        // tall (iPhone landscape) — otherwise the HStack gets cramped.
         landscapeNowPlaying(in: size)
       } else {
         portraitNowPlaying(in: size)
@@ -241,6 +253,53 @@ import SwiftUI
         Spacer()
           .frame(height: max(12, safeAreaInsets.bottom))
       }
+    }
+
+    // MARK: - iPad Layout
+
+    @ViewBuilder
+    private func padNowPlaying(in size: CGSize) -> some View {
+      // Width-capped column so controls and artwork stay readable rather than
+      // stretching across the whole window.
+      let columnWidth = min(size.width - 96, 600)
+      // Cap the artwork by height too so it doesn't dominate in landscape, where
+      // the canvas is short.
+      let artworkSize = max(min(columnWidth, size.height * 0.45), 160)
+
+      VStack(spacing: 0) {
+        // Flexible top and a flexible gap before the bottom row balance the
+        // free vertical space, so the artwork + controls cluster sits centered
+        // instead of pinned to the top with a gap beneath it.
+        Spacer(minLength: 24)
+
+        artworkView(size: artworkSize)
+
+        Spacer().frame(height: 40)
+
+        infoRow
+
+        Spacer().frame(height: 24)
+        playbackProgressBar
+
+        Spacer().frame(height: 32)
+
+        transportControls
+
+        Spacer().frame(height: 32)
+
+        if !isCarPlayConnected {
+          volumeSlider
+        }
+
+        Spacer(minLength: 24)
+
+        bottomActionsRow
+
+        Spacer()
+          .frame(height: max(12, safeAreaInsets.bottom))
+      }
+      .frame(width: columnWidth)
+      .frame(maxWidth: .infinity)
     }
 
     // MARK: - Landscape Layout
@@ -691,7 +750,7 @@ import SwiftUI
 
     var body: some View {
       NowPlayingSheet(
-        showingPresetPicker: .constant(false),
+        showingLibrarySheet: .constant(false),
         showingTimer: .constant(false)
       )
     }

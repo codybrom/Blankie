@@ -73,6 +73,7 @@ import SwiftUI
                 globalSettings.setAppearance(.system)
                 globalSettings.setAccentColor(nil)
               }
+              .tint(Color.primary)
             }
           }
 
@@ -80,6 +81,7 @@ import SwiftUI
             Button("Done") {
               isPresented = false
             }
+            .tint(Color.primary)
           }
         }
       }

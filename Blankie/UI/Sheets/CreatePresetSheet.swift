@@ -50,10 +50,12 @@ struct CreatePresetSheet: View {
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarItems(
-          leading: Button("Cancel") { isPresented = false },
+          leading: Button("Cancel") { isPresented = false }
+            .tint(Color.primary),
           trailing: Button("Create") { createPreset() }
             .fontWeight(.semibold)
             .disabled(presetName.isEmpty || selectedSounds.isEmpty)
+            .tint(Color.primary)
         )
       #else
         .formStyle(.grouped)
@@ -83,6 +85,7 @@ struct CreatePresetSheet: View {
                 Button("Done") {
                   showingSoundSelection = false
                 }
+                .tint(Color.primary)
               }
             }
           }

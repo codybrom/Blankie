@@ -33,7 +33,7 @@ import SwiftUI
 
     var presetButton: some View {
       Button(action: {
-        showingPresetPicker = true
+        showingLibrarySheet = true
       }) {
         HStack(spacing: 4) {
           if audioManager.soloModeSound != nil {
@@ -56,7 +56,7 @@ import SwiftUI
             .foregroundColor(.secondary)
         }
       }
-      .sensoryFeedback(.selection, trigger: showingPresetPicker)
+      .sensoryFeedback(.selection, trigger: showingLibrarySheet)
     }
 
     // MARK: - Toolbar Components
@@ -178,14 +178,12 @@ import SwiftUI
           .glassEffect(.regular.interactive(), in: .circle)
           .disabled(!audioManager.hasSelectedSounds)
           .sensoryFeedback(.selection, trigger: playPauseTrigger)
-          .onLongPressGesture { showingPresetPicker = true }
       } else {
         return
           button
           .modernGlassEffect(cornerRadius: 34)
           .disabled(!audioManager.hasSelectedSounds)
           .sensoryFeedback(.selection, trigger: playPauseTrigger)
-          .onLongPressGesture { showingPresetPicker = true }
       }
     }
 
@@ -340,7 +338,7 @@ import SwiftUI
     let editMode: EditMode
     @Binding var showingTimer: Bool
     @Binding var presetToEdit: Preset?
-    @Binding var showingPresetPicker: Bool
+    @Binding var showingLibrarySheet: Bool
 
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
@@ -454,7 +452,7 @@ import SwiftUI
       .contentShape(Rectangle())
       .onTapGesture {
         // Tap on the main bar opens preset picker
-        showingPresetPicker = true
+        showingLibrarySheet = true
       }
       .popoverTip(SwitchPresetsTip(), arrowEdge: .bottom)
     }

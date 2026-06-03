@@ -80,6 +80,7 @@ struct SoundSelectionView: View {
         ToolbarItem(placement: .primaryAction) {
           Button("Clear All") { handleClearAll() }
             .disabled(selectedSounds.isEmpty)
+            .tint(Color.primary)
         }
       }
       // Rows style their selection via the environment tint (.tint / .accent), so

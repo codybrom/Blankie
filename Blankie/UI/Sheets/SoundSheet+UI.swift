@@ -83,9 +83,13 @@ extension SoundSheet {
       .navigationBarBackButtonHidden(embedInNavigation)
       .toolbar {
         if embedInNavigation {
-          ToolbarItem(placement: .topBarLeading) { leadingNavigationButton }
+          ToolbarItem(placement: .topBarLeading) {
+            leadingNavigationButton.tint(Color.primary)
+          }
         }
-        ToolbarItem(placement: .topBarTrailing) { trailingNavigationButton }
+        ToolbarItem(placement: .topBarTrailing) {
+          trailingNavigationButton.tint(Color.primary)
+        }
       }
     #endif
   }

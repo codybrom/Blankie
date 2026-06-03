@@ -14,7 +14,7 @@ private struct AnimationTrigger: Equatable {
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @StateObject var timerManager = TimerManager.shared
-    @State var showingPresetPicker = false
+    @State var showingLibrarySheet = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State private var showingThemePicker = false
     @State var showingSoundManagement = false
@@ -56,7 +56,7 @@ private struct AnimationTrigger: Equatable {
       // the move transition partway; an implicit value animation always runs
       // to completion. (dragOffset keeps its own animation — untouched.)
       .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showingNowPlaying)
-      .sheet(isPresented: $showingPresetPicker) {
+      .sheet(isPresented: $showingLibrarySheet) {
         LibraryView()
           .presentationDetents([.large])
       }
@@ -178,8 +178,7 @@ private struct AnimationTrigger: Equatable {
     private var iPadLayout: some View {
       NavigationSplitView(columnVisibility: $columnVisibility) {
         SidebarContentView(
-          showingSettings: $showingSettings,
-          showingPresetPicker: $showingPresetPicker
+          showingSettings: $showingSettings
         )
       } detail: {
         NavigationStack {
@@ -189,31 +188,13 @@ private struct AnimationTrigger: Equatable {
               mainContentView
             }
           }
+          // Plain inline title, matching iPhone. The Library now lives in the
+          // sidebar, so the title is no longer a picker trigger.
+          .navigationTitle(navigationTitle)
           .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-            ToolbarItem(placement: .principal) {
-              Button {
-                showingPresetPicker = true
-              } label: {
-                VStack(spacing: 0) {
-                  HStack(spacing: 4) {
-                    Text(navigationTitle)
-                      .font(.headline)
-                      .foregroundColor(.primary)
-                    Image(systemName: "chevron.down")
-                      .font(.caption2.weight(.semibold))
-                      .foregroundColor(.secondary)
-                  }
-                  if let caption = topBarCaption {
-                    Text(caption)
-                      .font(.caption2)
-                      .foregroundColor(.secondary)
-                  }
-                }
-              }
-              .sensoryFeedback(.selection, trigger: showingPresetPicker)
-            }
-          }
+          .if(topBarCaption != nil) { $0.navigationSubtitle(topBarCaption ?? "") }
+          // The NavigationSplitView owns the sidebar toggle and keeps it
+          // available in the detail when collapsed, so we add no reveal control.
           .toolbarBackground(.hidden, for: .navigationBar)
           // Playback controls must be reachable at every size class. Without
           // this, iPad at regular horizontal size shows no play/pause at all
@@ -224,13 +205,6 @@ private struct AnimationTrigger: Equatable {
         }
       }
       .navigationSplitViewStyle(.balanced)
-    }
-
-    // Toolbar buttons (Library, Settings) carry no explicit color, so they fall
-    // back to the system tint. Resolve the same effective accent the rest of the
-    // UI uses so they inherit the preset's theme override.
-    private var toolbarAccentColor: Color {
-      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
     @ViewBuilder
@@ -265,13 +239,15 @@ private struct AnimationTrigger: Equatable {
         .toolbar {
           ToolbarItem(placement: .topBarTrailing) {
             Button {
-              showingPresetPicker = true
+              showingLibrarySheet = true
             } label: {
               Image(systemName: "square.stack")
             }
-            .tint(toolbarAccentColor)
+            // Monochrome to match the iPad sidebar's bar buttons; accent stays
+            // in content, not the toolbar.
+            .tint(Color.primary)
             .accessibilityLabel("Library")
-            .sensoryFeedback(.selection, trigger: showingPresetPicker)
+            .sensoryFeedback(.selection, trigger: showingLibrarySheet)
           }
           ToolbarItem(placement: .topBarTrailing) {
             Button {
@@ -279,7 +255,7 @@ private struct AnimationTrigger: Equatable {
             } label: {
               Image(systemName: "gearshape")
             }
-            .tint(toolbarAccentColor)
+            .tint(Color.primary)
             .accessibilityLabel("Blankie Settings")
             .sensoryFeedback(.selection, trigger: showingSettings)
           }
@@ -297,7 +273,7 @@ private struct AnimationTrigger: Equatable {
           onDismiss: {
             showingNowPlaying = false
           },
-          showingPresetPicker: $showingPresetPicker,
+          showingLibrarySheet: $showingLibrarySheet,
           showingTimer: $showingTimer,
           backgroundImage: backgroundImage
         )

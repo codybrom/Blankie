@@ -266,6 +266,7 @@ struct SettingsView: View {
             Button("Done") {
               dismiss()
             }
+            .tint(Color.primary)
           }
         }
       #endif

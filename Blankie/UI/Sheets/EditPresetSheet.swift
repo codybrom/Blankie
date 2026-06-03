@@ -105,9 +105,11 @@ struct EditPresetSheet: View {
         .toolbar {
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") { isPresented = nil }
+            .tint(Color.primary)
           }
           ToolbarItem(placement: .topBarTrailing) {
             exportButton
+              .tint(Color.primary)
           }
         }
       #else
@@ -207,6 +209,7 @@ struct EditPresetSheet: View {
           Button("Done") {
             showingSoundSelection = false
           }
+          .tint(Color.primary)
         }
       }
       .navigationDestination(for: Sound.self) { sound in
