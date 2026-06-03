@@ -18,6 +18,8 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - **Custom sounds** - import your own audio files and play them alongside the built-in library, with automatic loudness matching so they sit at a comparable volume
 - **Favorites** - star presets or individual sounds to promote them in the iPad sidebar and CarPlay and step through them with system-wide Now Playing next/previous controls
 - **Single sound playback** (iPhone and iPad) - play and favorite any sound on its own without making a preset
+- **Now Playing screen** (iPhone and iPad) - a full-screen view with animated artwork, previous/play/next controls, a system volume slider, and an AirPlay route picker
+- **Library** (iPhone and iPad) - browse presets and sounds with artwork thumbnails, plus an Import menu for new presets, audio files, and `.blankie` files
 - **Quick Mix** - a lightweight soundboard for starting sounds quickly without saving a preset
 - **Sleep timer** - stop playback after a set time, with the option to add more time on the fly
 - Animated lock-screen artwork for presets, downloaded on demand to keep the app download small
@@ -29,17 +31,27 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - **VoiceOver support** - labeled controls throughout, sliders that announce and adjust volume, sounds that announce their selection state, grouped sound credits and color pickers, and a Now Playing screen that properly holds focus
 - **Full keyboard control of the sound grid** (macOS) - Tab to any sound, Space to toggle it, arrow keys to adjust its volume
 - **Dynamic Type support** - text scales to the preferred reading size with adaptive layouts and 44-point minimum touch targets
+- Play/Pause command in the macOS menu bar (Controls menu)
 - Polish (Polski) translation support - thanks to **Kristopheros** (now 12 languages total)
 - CodeQL security scanning workflows
 
 ### Changed
 
 - Migrated all audio from MP3 to M4A (AAC)
+- Re-normalized every built-in sound with two-way K-weighted (LUFS) loudness analysis so the whole library plays at a consistent level
 - Rebuilt Settings and Preferences rows with idiomatic SwiftUI (Picker, LabeledContent, NavigationLink) so assistive technologies handle them natively
 - Rebuilt the documentation website on Astro 6
 - Improved German (Deutsch) translations - thanks to **H. Rapp**
 - Improved Spanish (Español) translations - thanks to **Dizz7**
 - **Breaking**: minimum requirements are now iOS 26 and macOS 15.6
+
+### Fixed
+
+- Audible pop when the fireplace sound loops
+
+### Removed
+
+- macOS — "Hide Inactive Sounds" option: To hide sounds you do not wish to see, make a new preset.
 
 ## [1.0.13] - 2025-10-27
 
