@@ -26,7 +26,7 @@ struct SoundIcon: View {
   private var configuration: Configuration {
     switch globalSettings.iconSize {
     case .small:
-      let iconSize: CGFloat = 75  // Increased to match DraggableSoundIcon
+      let iconSize: CGFloat = 75
       return Configuration(
         iconSize: iconSize,
         sliderWidth: 70,  // Keep slider width the same

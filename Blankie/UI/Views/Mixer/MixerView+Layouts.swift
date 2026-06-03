@@ -15,26 +15,13 @@ import SwiftUI
     func soloModeView(for soloSound: Sound) -> some View {
       VStack {
         Spacer()
-        DraggableSoundIcon(
-          sound: soloSound,
-          maxWidth: 280,
-          index: 0,
-          draggedIndex: .constant(nil),
-          hoveredIndex: .constant(nil),
-          onDragStart: {},
-          onDrop: { _ in },
-          onEditSound: { sound in
-            soundToEdit = sound
-          },
-          isSoloMode: true
-        )
-        .scaleEffect(1.0)
-        .transition(
-          .asymmetric(
-            insertion: .scale.combined(with: .opacity),
-            removal: .scale.combined(with: .opacity)
+        SoloSoundIcon(sound: soloSound)
+          .transition(
+            .asymmetric(
+              insertion: .scale.combined(with: .opacity),
+              removal: .scale.combined(with: .opacity)
+            )
           )
-        )
         Spacer()
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
