@@ -131,3 +131,151 @@ class AudioManager: ObservableObject {
     debugLog("AudioManager: Deinit called, cleanup performed")
   }
 }
+
+// MARK: - Initialization Helpers
+
+extension AudioManager {
+  func setupSoundObservers() {
+    // Clear any existing observers
+    cancellables.removeAll()
+    // Set up new observers for each sound
+    for sound in sounds {
+      sound.objectWillChange
+        .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+        .sink { [weak self] _ in
+          guard let self = self else { return }
+          Task { @MainActor in
+            self.updateHasSelectedSounds()
+            PresetManager.shared.updateCurrentPresetState()
+          }
+        }
+        .store(in: &cancellables)
+    }
+
+    // Update initial state
+    updateHasSelectedSounds()
+  }
+
+  func updateHasSelectedSounds() {
+    let newValue = sounds.contains { $0.isSelected }
+    if hasSelectedSounds != newValue {
+      debugLog("AudioManager: hasSelectedSounds changed from \(hasSelectedSounds) to \(newValue)")
+      hasSelectedSounds = newValue
+
+      // Auto-start playback when sounds are selected and nothing is currently playing
+      // Only auto-start if autoplay is enabled and we're not during initialization
+      if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch
+      {
+        debugLog("AudioManager: Auto-starting playback for selected sounds (autoplay enabled)")
+        Task { @MainActor in
+          setGlobalPlaybackState(true)
+        }
+      } else if newValue && !isGloballyPlaying && !sounds.isEmpty {
+        debugLog(
+          "AudioManager: Selected sounds detected but autoplay disabled - waiting for user")
+      }
+    }
+  }
+
+  #if os(iOS) || os(visionOS)
+    func setupAudioSessionForPlayback() {
+      AudioSessionManager.shared.setupForPlayback(
+        mixWithOthers: GlobalSettings.shared.mixWithOthers,
+        isCarPlayConnected: isCarPlayConnected
+      )
+    }
+  #endif
+}
+
+// MARK: - Persistence
+
+extension AudioManager {
+  func loadSavedState() {
+    guard let state = UserDefaults.shared.array(forKey: "soundState") as? [[String: Any]] else {
+      return
+    }
+    for savedState in state {
+      guard let fileName = savedState["fileName"] as? String,
+        let sound = sounds.first(where: { $0.fileName == fileName })
+      else {
+        continue
+      }
+      // Only update if values have actually changed to avoid unnecessary processing
+      let savedIsSelected = savedState["isSelected"] as? Bool ?? false
+      let savedVolume = savedState["volume"] as? Float ?? 1.0
+
+      if sound.isSelected != savedIsSelected {
+        sound.isSelected = savedIsSelected
+      }
+      if sound.volume != savedVolume {
+        sound.volume = savedVolume
+      }
+    }
+  }
+
+  func saveState() {
+    // Don't save state during Quick Mix mode - volume changes are temporary
+    guard !isQuickMix else {
+      debugLog("AudioManager: Skipping state save during Quick Mix mode")
+      return
+    }
+
+    let state = sounds.map { sound in
+      [
+        "id": sound.id.uuidString,
+        "fileName": sound.fileName,
+        "isSelected": sound.isSelected,
+        "volume": sound.volume,
+      ]
+    }
+    UserDefaults.shared.set(state, forKey: "soundState")
+  }
+
+  func updateDefaultSoundOrder(from source: IndexSet, to destination: Int) {
+    defaultSoundOrder.move(fromOffsets: source, toOffset: destination)
+    UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
+    objectWillChange.send()
+    debugLog("AudioManager: Updated default sound order - moved from \(source) to \(destination)")
+  }
+}
+
+extension AudioManager {
+  // MARK: - Sound Management
+
+  @MainActor
+  func getVisibleSounds() -> [Sound] {
+    sounds
+  }
+
+  /// Move a sound to a new position
+  func moveSound(from sourceIndex: Int, to destinationIndex: Int) {
+    guard sourceIndex < sounds.count && destinationIndex <= sounds.count else {
+      return
+    }
+
+    // Move sound in the array
+    let movedSound = sounds.remove(at: sourceIndex)
+    sounds.insert(movedSound, at: min(destinationIndex, sounds.count))
+
+    objectWillChange.send()
+    debugLog(
+      "AudioManager: Moved sound '\(movedSound.fileName)' from \(sourceIndex) to \(destinationIndex)"
+    )
+  }
+
+  /// Move a visible sound to a new position
+  @MainActor
+  func moveVisibleSound(from sourceIndex: Int, to destinationIndex: Int) {
+    moveSound(from: sourceIndex, to: destinationIndex)
+  }
+
+  /// Apply volume settings to all playing sounds by triggering volume updates
+  func applyVolumeSettings() {
+    debugLog("AudioManager: Updating volumes for volume settings change")
+
+    for sound in sounds where sound.isSelected {
+      // Trigger volume recalculation which will include custom volume settings
+      sound.updateVolume()
+    }
+  }
+}

@@ -143,3 +143,160 @@ class GlobalSettings: ObservableObject {
     logCurrentSettings()
   }
 }
+
+// MARK: - Volume
+
+extension GlobalSettings {
+  func validateVolume(_ volume: Double) -> Double {
+    min(max(volume, 0.0), 1.0)
+  }
+
+  func debouncedSaveVolume(_ newVolume: Double) {
+    volumeDebounceTimer?.invalidate()
+    volumeDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
+      [weak self] _ in
+      self?.saveVolume(newVolume)
+    }
+  }
+
+  private func saveVolume(_ newVolume: Double) {
+    let validVolume = validateVolume(newVolume)
+    UserDefaults.shared.set(validVolume, forKey: UserDefaultsKeys.volume)
+    debugLog("GlobalSettings: Saved volume: \(validVolume)")
+  }
+}
+
+// MARK: - Solo Mode
+
+extension GlobalSettings {
+  @MainActor
+  func saveSoloModeSound(fileName: String?) {
+    if let fileName = fileName {
+      UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.soloModeSoundFileName)
+      debugLog("GlobalSettings: Saved solo mode sound: \(fileName)")
+    } else {
+      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.soloModeSoundFileName)
+      debugLog("GlobalSettings: Cleared solo mode sound")
+    }
+  }
+
+  func getSavedSoloModeFileName() -> String? {
+    return UserDefaults.shared.string(forKey: UserDefaultsKeys.soloModeSoundFileName)
+  }
+}
+
+// MARK: - Platform Settings
+
+extension GlobalSettings {
+  @MainActor
+  func setEnableSpatialAudio(_ value: Bool) {
+    enableSpatialAudio = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.enableSpatialAudio)
+    // Here we would also update the audio engine to enable/disable spatial audio
+    logCurrentSettings()
+  }
+
+  #if os(iOS) || os(visionOS)
+    @MainActor
+    func setMixWithOthers(_ value: Bool) {
+      mixWithOthers = value
+      UserDefaults.shared.set(value, forKey: UserDefaultsKeys.mixWithOthers)
+
+      // Reset volume to 100% when disabling mix with others
+      if !value && volumeWithOtherAudio < 1.0 {
+        volumeWithOtherAudio = 1.0
+        UserDefaults.shared.set(
+          volumeWithOtherAudio, forKey: UserDefaultsKeys.volumeWithOtherAudio)
+      }
+
+      // Update audio session configuration
+      updateAudioSession()
+
+      // Apply the new volume settings to currently playing sounds
+      if AudioManager.shared.isGloballyPlaying {
+        AudioManager.shared.applyVolumeSettings()
+      }
+
+      logCurrentSettings()
+    }
+  #endif
+
+  @MainActor
+  func setVolumeWithOtherAudio(_ level: Double) {
+    volumeWithOtherAudio = max(0.0, min(1.0, level))  // Clamp between 0.0 and 1.0
+    UserDefaults.shared.set(volumeWithOtherAudio, forKey: UserDefaultsKeys.volumeWithOtherAudio)
+    // Apply the new volume level to currently playing sounds
+    if AudioManager.shared.isGloballyPlaying {
+      AudioManager.shared.applyVolumeSettings()
+    }
+    logCurrentSettings()
+  }
+}
+
+// MARK: - Audio Session
+
+#if os(iOS) || os(visionOS)
+  extension GlobalSettings {
+    func updateAudioSession() {
+      do {
+        let wasPlaying = AudioManager.shared.isGloballyPlaying
+
+        // Configure the session based on mixWithOthers setting
+        if mixWithOthers {
+          // Allow mixing with other apps - we handle volume manually
+          let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
+          debugLog("GlobalSettings: Setting Mix mode with manual volume control")
+
+          try AVAudioSession.sharedInstance().setCategory(
+            .playback,
+            mode: .default,
+            options: options
+          )
+        } else {
+          // Exclusive playback mode - no mixing
+          try AVAudioSession.sharedInstance().setCategory(
+            .playback,
+            mode: .default,
+            options: []  // No options means exclusive playback
+          )
+        }
+
+        // Always activate if we're currently playing to ensure we take over
+        if wasPlaying {
+          try AVAudioSession.sharedInstance().setActive(true)
+
+          // Note: We don't call playSelected() here to preserve playback positions
+          // The audio players will automatically continue from their current positions
+
+          // Update Now Playing info
+          AudioManager.shared.updateNowPlayingState()
+        }
+
+        debugLog(
+          "GlobalSettings: Updated audio session with mixWithOthers: \(mixWithOthers), volumeWithOtherAudio: \(volumeWithOtherAudio), activated: \(wasPlaying)"
+        )
+      } catch {
+        debugLog("GlobalSettings: Failed to update audio session: \(error)")
+      }
+    }
+  }
+#endif
+
+// MARK: - Logging
+
+extension GlobalSettings {
+  func logCurrentSettings() {
+    debugLog("\nGlobalSettings: Current State")
+    debugLog("  - Volume: \(volume)")
+    debugLog("  - Appearance: \(appearance.rawValue)")
+    debugLog("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")")
+    debugLog("  - Autoplay on Open: \(autoPlayOnLaunch)")
+    debugLog("  - Enable Spatial Audio: \(enableSpatialAudio)")
+    debugLog("  - Mix With Others: \(mixWithOthers)")
+    debugLog("  - Volume With Other Audio: \(volumeWithOtherAudio)")
+    debugLog("  - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)")
+    debugLog("  - Language: \(language.code)")
+    debugLog(
+      "  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))")
+  }
+}
