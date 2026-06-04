@@ -317,7 +317,7 @@ extension CreatePresetSheet {
     )
 
     debugLog(
-      "🎨 CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "✅" : "❌ None")"
+      "CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "set" : "none")"
     )
 
     return newPreset
@@ -330,10 +330,10 @@ extension CreatePresetSheet {
       let artworkId = try await PresetArtworkManager.shared.saveArtwork(
         data, for: presetId, type: .artwork
       )
-      debugLog("🎨 CreatePresetSheet: Saved artwork with ID: \(artworkId)")
+      debugLog("CreatePresetSheet: Saved artwork with ID: \(artworkId)")
       return artworkId
     } catch {
-      debugLog("❌ CreatePresetSheet: Failed to save artwork: \(error)")
+      debugLog("CreatePresetSheet: Failed to save artwork: \(error)")
       return nil
     }
   }
@@ -377,10 +377,10 @@ extension CreatePresetSheet {
             artworkData = data
           }
         } catch {
-          debugLog("❌ macOS Image Picker: Failed to load image: \(error)")
+          debugLog("macOS Image Picker: Failed to load image: \(error)")
         }
       case .failure(let error):
-        debugLog("❌ macOS Image Picker: Image picker error: \(error)")
+        debugLog("macOS Image Picker: Image picker error: \(error)")
       }
     }
 

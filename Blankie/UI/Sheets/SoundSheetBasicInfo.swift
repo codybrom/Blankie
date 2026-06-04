@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension CleanSoundSheetForm {
+extension SoundSheetForm {
   @ViewBuilder
   var basicInformationSection: some View {
     Section {

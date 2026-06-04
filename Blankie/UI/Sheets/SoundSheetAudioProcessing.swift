@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension CleanSoundSheetForm {
+extension SoundSheetForm {
   @ViewBuilder
   var audioProcessingSection: some View {
     Section(header: Text("Audio")) {
@@ -15,11 +15,7 @@ extension CleanSoundSheetForm {
       HStack(spacing: 12) {
         // Play/Stop button
         Button(action: {
-          debugLog(
-            "🎵 SoundSheetAudioProcessing: Preview button tapped, isPreviewing: \(isPreviewing)")
           togglePreview()
-          debugLog(
-            "🎵 SoundSheetAudioProcessing: After togglePreview(), isPreviewing: \(isPreviewing)")
         }) {
           ZStack {
             Circle()

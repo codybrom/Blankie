@@ -8,7 +8,7 @@
 import SwiftUI
 
 // MARK: - Color Helpers
-extension CleanSoundSheetForm {
+extension SoundSheetForm {
   var textColorForCurrentTheme: Color {
     let color = globalSettings.customAccentColor ?? .accentColor
     #if os(macOS)
@@ -43,7 +43,7 @@ extension CleanSoundSheetForm {
 }
 
 // MARK: - Volume Helpers
-extension CleanSoundSheetForm {
+extension SoundSheetForm {
   var volumePercentageText: String {
     let delta = Double(volumeAdjustment) - 1.0
     return delta.formatted(
@@ -52,25 +52,17 @@ extension CleanSoundSheetForm {
 }
 
 // MARK: - Preview Helpers
-extension CleanSoundSheetForm {
+extension SoundSheetForm {
   func togglePreview() {
-    debugLog("🎵 CleanSoundSheetForm: togglePreview called, current isPreviewing: \(isPreviewing)")
     isPreviewing.toggle()
   }
 
   func startPreview() {
-    debugLog("🎵 CleanSoundSheetForm: startPreview called")
     isPreviewing = true
   }
 
   func stopPreview() {
-    debugLog("🎵 CleanSoundSheetForm: stopPreview called")
     isPreviewing = false
-  }
-
-  func updatePreviewVolume() {
-    debugLog("🎵 CleanSoundSheetForm: updatePreviewVolume called")
-    // Volume updates will be handled by onChange modifiers
   }
 }
 

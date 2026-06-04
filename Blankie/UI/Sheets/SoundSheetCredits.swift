@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension CleanSoundSheetForm {
+extension SoundSheetForm {
   /// Read-only credit rows (edit mode only); custom sounds add an Edit Credits
   /// row, built-in credits are never editable.
   @ViewBuilder

@@ -53,7 +53,7 @@ extension SoundSheet {
   }
 
   var content: some View {
-    CleanSoundSheetForm(
+    SoundSheetForm(
       mode: mode,
       isFilePreselected: isFilePreselected,
       soundName: $soundName,

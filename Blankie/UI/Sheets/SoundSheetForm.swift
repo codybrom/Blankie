@@ -1,5 +1,5 @@
 //
-//  SoundSheetForm+Clean.swift
+//  SoundSheetForm.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 6/4/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CleanSoundSheetForm: View {
+struct SoundSheetForm: View {
   let mode: SoundSheetMode
   let isFilePreselected: Bool
   @Binding var soundName: String

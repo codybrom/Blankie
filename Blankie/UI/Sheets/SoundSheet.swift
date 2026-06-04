@@ -183,7 +183,7 @@ struct SoundSheet: View {
 
   private func handleOnAppear() {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
-    debugLog("🎵 SoundSheet: handleOnAppear called for '\(soundName)'")
+    debugLog("SoundSheet: handleOnAppear called for '\(soundName)'")
 
     if case .edit(let sound) = mode, sound.channelCount == nil {
       sound.loadSound()
@@ -193,17 +193,17 @@ struct SoundSheet: View {
   private func handleOnDisappear() {
     // Mark that we're disappearing to prevent re-entrance
     guard !isDisappearing else {
-      debugLog("🎵 SoundSheet: handleOnDisappear called but already disappearing")
+      debugLog("SoundSheet: handleOnDisappear called but already disappearing")
       return
     }
 
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
     debugLog(
-      "🎵 SoundSheet: handleOnDisappear called for '\(soundName)', isPreviewing: \(isPreviewing)")
+      "SoundSheet: handleOnDisappear called for '\(soundName)', isPreviewing: \(isPreviewing)")
     isDisappearing = true
 
     if isPreviewing {
-      debugLog("🎵 SoundSheet: Stopping preview in onDisappear")
+      debugLog("SoundSheet: Stopping preview in onDisappear")
       stopPreview()
     }
   }
@@ -221,7 +221,3 @@ extension SoundSheetMode {
 #Preview("Add Mode") {
   SoundSheet(mode: .add)
 }
-
-// #Preview("Customize Mode") {
-//   SoundSheet(mode: .customize(Sound.preview))
-// }
