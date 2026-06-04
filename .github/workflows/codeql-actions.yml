@@ -11,13 +11,7 @@ on:
       - "**/action.yaml"
   pull_request:
     branches: ["main"]
-    # ready_for_review so flipping a draft to ready kicks off a scan
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - ".github/workflows/**"
-      - ".github/actions/**"
-      - "**/action.yml"
-      - "**/action.yaml"
   schedule:
     - cron: "15 14 * * 1"
 
