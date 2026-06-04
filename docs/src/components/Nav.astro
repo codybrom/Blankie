@@ -2,7 +2,17 @@
 import { Image } from "astro:assets";
 import icon from "../assets/icon.png";
 import GithubStars from "./GithubStars.astro";
+import { MobileNav, type NavLink } from "./MobileNav";
 const currentPath = Astro.url.pathname;
+
+const navLinks: NavLink[] = [
+  { href: "/features/", label: "Features" },
+  { href: "/faq/", label: "FAQ" },
+  { href: "/i18n/", label: "Translations" },
+  { href: "/contributing/", label: "Contribute" },
+  { href: "/privacy/", label: "Privacy" },
+  { href: "/credits/", label: "Credits" },
+];
 ---
 
 <header
@@ -29,155 +39,22 @@ const currentPath = Astro.url.pathname;
           <span class="ml-3 text-sm tracking-tight">for macOS</span>
         </div>
       </a>
-      <!-- Mobile menu button with hamburger icon -->
-      <button
-        id="mobile-menu-button"
-        aria-label="Toggle navigation menu"
-        aria-expanded="false"
-        aria-controls="mobile-menu"
-        class="md:hidden text-white hover:text-yellow-500 transition-colors duration-200 p-2"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-          role="img"
-        >
-          <title>Menu icon</title>
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-        <span class="sr-only">Toggle menu</span>
-      </button>
 
-      <!-- Medium Screen Navigation (GitHub + Download + Menu) -->
-      <div class="hidden md:flex lg:hidden items-center gap-x-4">
-        <a
-          href="https://github.com/codybrom/blankie"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center text-sm group hover:bg-[#30363d] transition-colors duration-200 rounded-md border border-mid-gray w-fit"
-          title="Star us on GitHub"
-        >
-          <span
-            class="inline-flex items-center gap-1.5 px-3 py-1 font-medium bg-card text-light-gray"
-          >
-            <svg
-              viewBox="0 0 16 16"
-              width="16"
-              height="16"
-              class="inline-block fill-current"
-              aria-hidden="true"
-            >
-              <path
-                d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"
-              ></path>
-            </svg>
-            <span>GitHub Stars</span>
-          </span>
-          <span
-            class="inline-flex items-center px-3 py-1 font-medium bg-card text-light-gray border-l border-mid-gray"
-            id="github-stars-count-medium"
-          >
-            ★
-          </span>
-        </a>
-        <a
-          href="/?section=download"
-          class="bg-primary-blue text-white py-2 px-6 rounded-full text-sm font-normal transition-all duration-300 hover:bg-deep-blue no-underline"
-        >
-          Download
-        </a>
-        <button
-          id="medium-menu-button"
-          aria-label="Toggle navigation menu"
-          aria-expanded="false"
-          aria-controls="medium-menu"
-          class="text-white hover:text-yellow-500 transition-colors duration-200 p-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-            role="img"
-          >
-            <title>Menu icon</title>
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-          <span class="sr-only">Toggle menu</span>
-        </button>
-      </div>
-
-      <!-- Desktop Navigation -->
+      <!-- Desktop Navigation (lg+) -->
       <div class="hidden lg:flex items-center gap-x-4">
-        <a
-          href="/features/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/features/" },
-          ]}
-        >
-          Features
-        </a>
-        <a
-          href="/faq/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/faq/" },
-          ]}
-        >
-          FAQ
-        </a>
-        <a
-          href="/i18n/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/i18n/" },
-          ]}
-        >
-          Translations
-        </a>
-
-        <a
-          href="/contributing/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/contributing/" },
-          ]}
-        >
-          Contribute
-        </a>
-        <a
-          href="/privacy/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/privacy/" },
-          ]}
-        >
-          Privacy
-        </a>
-        <a
-          href="/credits/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/credits/" },
-          ]}
-        >
-          Credits
-        </a>
+        {
+          navLinks.map((link) => (
+            <a
+              href={link.href}
+              class:list={[
+                "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
+                { "text-yellow-500": currentPath === link.href },
+              ]}
+            >
+              {link.label}
+            </a>
+          ))
+        }
         <span class="text-gray-400">•</span>
         <GithubStars />
         <a
@@ -187,133 +64,11 @@ const currentPath = Astro.url.pathname;
           Download
         </a>
       </div>
+
+      <!-- Mobile/Tablet Navigation (<lg): Sheet drawer -->
+      <div class="lg:hidden">
+        <MobileNav client:load currentPath={currentPath} links={navLinks} />
+      </div>
     </nav>
-
-    <!-- Medium Screen Navigation -->
-    <div id="medium-menu" class="hidden">
-      <div class="flex flex-col gap-y-4 pt-4 pb-6">
-        <a
-          href="/features/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/features/" },
-          ]}
-        >
-          Features
-        </a>
-        <a
-          href="/faq/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/faq/" },
-          ]}
-        >
-          FAQ
-        </a>
-        <a
-          href="/i18n/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/i18n/" },
-          ]}
-        >
-          Translations
-        </a>
-        <a
-          href="/contributing/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/contributing/" },
-          ]}
-        >
-          Contribute
-        </a>
-        <a
-          href="/privacy/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/privacy/" },
-          ]}
-        >
-          Privacy
-        </a>
-        <a
-          href="/credits/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/credits/" },
-          ]}
-        >
-          Credits
-        </a>
-      </div>
-    </div>
-
-    <!-- Mobile Navigation -->
-    <div id="mobile-menu" class="hidden md:hidden">
-      <div class="flex flex-col gap-y-4 pt-4 pb-6">
-        <a
-          href="/features/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/features/" },
-          ]}
-        >
-          Features
-        </a>
-        <a
-          href="/faq/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/faq/" },
-          ]}
-        >
-          FAQ
-        </a>
-        <a
-          href="/i18n/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/i18n/" },
-          ]}
-        >
-          Translations
-        </a>
-        <a
-          href="/contributing/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/contributing/" },
-          ]}
-        >
-          Contribute
-        </a>
-        <a
-          href="/privacy/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/privacy/" },
-          ]}
-        >
-          Privacy
-        </a>
-        <a
-          href="/credits/"
-          class:list={[
-            "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
-            { "text-yellow-500": currentPath === "/credits/" },
-          ]}
-        >
-          Credits
-        </a>
-        <GithubStars />
-        <a
-          href="/?section=download"
-          class="bg-primary-blue text-white py-2 px-6 rounded-full text-sm font-normal transition-all duration-300 hover:bg-deep-blue no-underline inline-block text-center"
-        >
-          Download
-        </a>
-      </div>
-    </div>
   </div>
 </header>

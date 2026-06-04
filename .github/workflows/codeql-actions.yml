@@ -1,0 +1,47 @@
+name: "CodeQL (Actions)"
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    # The 'actions' analysis only inspects workflow/action files.
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+      - "**/action.yml"
+      - "**/action.yaml"
+  pull_request:
+    branches: ["main"]
+    # ready_for_review so flipping a draft to ready kicks off a scan
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - ".github/workflows/**"
+      - ".github/actions/**"
+      - "**/action.yml"
+      - "**/action.yaml"
+  schedule:
+    - cron: "15 14 * * 1"
+
+jobs:
+  analyze:
+    name: Analyze (actions)
+    # Don't scan draft PRs (push/schedule are unaffected)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: actions
+          build-mode: none
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:actions"

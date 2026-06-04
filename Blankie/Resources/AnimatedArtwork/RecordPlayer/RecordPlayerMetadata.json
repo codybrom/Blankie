@@ -1,0 +1,11 @@
+{
+  "id": "RecordPlayer",
+  "displayName": "Record Player",
+  "description": "Close up of a vinyl record spinning",
+  "category": "retro",
+  "credit": {
+    "artist": "Matthias Groeneveld",
+    "source": "https://www.pexels.com/video/close-up-view-of-a-vinyl-record-spinning-on-a-turntable-15365453/",
+    "license": "Pexels License"
+  }
+}

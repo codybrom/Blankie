@@ -1,0 +1,11 @@
+{
+  "id": "OceanWaves",
+  "displayName": "Ocean Waves",
+  "description": "Birds eye view of waves rolling in the ocean",
+  "category": "nature",
+  "credit": {
+    "artist": "Ruvim Miksanskiy",
+    "source": "https://www.pexels.com/video/bird-s-eye-view-of-ocean-waves-1918465/",
+    "license": "Pexels License"
+  }
+}

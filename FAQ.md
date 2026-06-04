@@ -27,7 +27,7 @@ There are several ways to get started:
 
 4. **TestFlight (Beta Versions)**
 
-   Get early access to new features by joining our [TestFlight Public Beta](https://testflight.apple.com/join/XgpBpWv8)
+   Get early access to new features — and try Blankie for iPhone, iPad, and CarPlay (new in 1.1, coming to the App Store soon) — by joining our [TestFlight Public Beta](https://testflight.apple.com/join/XgpBpWv8)
 
 ## Is Blankie free?
 
@@ -67,6 +67,7 @@ Blankie is currently available in the following languages:
 - Français (fr)
 - Italiano (it)
 - Magyar (hu)
+- Polski (pl)
 - 日本語 (ja)
 - 한국어 (ko)
 - Português (pt-PT)
@@ -117,13 +118,16 @@ To rename or delete a preset, click the "Presets" dropdown in the titlebar, and 
 
 ## Can I add my own sounds?
 
-Not yet, but custom sound support is planned for a future update. Follow our GitHub repository for updates!
+Yes! As of Blankie 1.1 you can import your own audio files and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins.
 
 ## What customization options are available?
 
-- Hide inactive sounds for a cleaner interface
-- Use keyboard shortcuts for quick access to main functions
-- Customize appearance and auto-start settings in Preferences
+- Import your own sounds and give any sound a custom SF Symbol icon
+- Give each preset its own accent color and Now Playing artwork
+- Set a grid or list layout for your sounds (iOS Only)
+- Star presets as favorites (iOS Only)
+- Set a sleep timer to stop playback automatically (iOS Only)
+- Set whether to auto-play on launch
 
 ## Where can I find keyboard shortcuts?
 
@@ -138,10 +142,10 @@ Open Preferences through either:
 
 ## What is the difference between Blankie and Blanket?
 
-Blankie is a native macOS app inspired by Blanket, but it's completely separate and independently developed:
+Blankie is a native app for Apple platforms inspired by Blanket, but it's completely separate and independently developed:
 
-- Written specifically for macOS using Swift and SwiftUI
-- Designed to feel native on Apple Silicon and Intel Macs
+- Built for macOS, iPhone, iPad, and CarPlay using Swift and SwiftUI
+- Designed to feel native across Mac, iPhone, and iPad
 - Built with different sound mixing and playback technology
 - Independent codebase (though we use some of the same openly licensed sounds)
 

@@ -1,0 +1,90 @@
+name: "CodeQL (Swift)"
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    # Only the Xcode/app build surface — not docs, notes, apple_docs, scripts
+    # (incl. scripts/*.swift), or top-level markdown.
+    paths:
+      - "Blankie/**"
+      - "BlankieTests/**"
+      - "BlankieUITests/**"
+      - "Blankie.xcodeproj/**"
+      - "Blankie.xctestplan"
+      - "Blankie*.plist"
+      - "**/*.entitlements"
+      - "**/*.xcconfig"
+      - ".github/workflows/codeql-swift.yml"
+  pull_request:
+    branches: ["main"]
+    # ready_for_review so flipping a draft to ready kicks off a scan
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "Blankie/**"
+      - "BlankieTests/**"
+      - "BlankieUITests/**"
+      - "Blankie.xcodeproj/**"
+      - "Blankie.xctestplan"
+      - "Blankie*.plist"
+      - "**/*.entitlements"
+      - "**/*.xcconfig"
+      - ".github/workflows/codeql-swift.yml"
+  schedule:
+    - cron: "15 14 * * 1"
+
+jobs:
+  analyze:
+    name: Analyze (swift)
+    # Don't scan draft PRs (push/schedule are unaffected)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: macos-26
+    timeout-minutes: 120
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: swift
+          build-mode: manual
+      - name: Select latest Xcode
+        run: |
+          echo "Installed Xcode versions:"
+          ls -d /Applications/Xcode*.app 2>/dev/null || true
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$LATEST" ]; then LATEST=/Applications/Xcode.app; fi
+          # macos-26's default Xcode is 26.4.1, which can't open the project's
+          # objectVersion=100. Selecting the newest installed Xcode (26.5, the
+          # same build as local) is required so xcodebuild can read it.
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST"
+          xcodebuild -version
+      - name: Build Swift project
+        run: |
+          if [ ! -f "Configuration.xcconfig" ]; then
+            echo "Creating Configuration.xcconfig from example..."
+            cp Configuration.example.xcconfig Configuration.xcconfig
+            sed -i '' 's/YOUR_TEAM_ID_HERE/DUMMY_TEAM/' Configuration.xcconfig
+            sed -i '' 's/com.yournamehere.blankie/com.example.blankie/' Configuration.xcconfig
+          fi
+          # macOS build is currently broken (tracked separately); CodeQL only
+          # needs the Swift source compiled, so build the iOS Simulator variant
+          # of the same sources — no signing required.
+          xcodebuild clean build \
+            -project Blankie.xcodeproj \
+            -scheme "Blankie (Universal)" \
+            -destination "generic/platform=iOS Simulator" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:swift"

@@ -1,0 +1,287 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import { Card } from "@/components/ui/card";
+import {
+  Download,
+  Mail,
+  Newspaper,
+  Check,
+  FileText,
+  Quote,
+} from "lucide-react";
+import icon from "../assets/icon.png";
+import screenshot from "../assets/screenshot.png";
+import promo from "../assets/promo.png";
+import appStore1 from "../assets/app-store-1.png";
+import appStore2 from "../assets/app-store-2.png";
+import appStore3 from "../assets/app-store-3.png";
+import bg4 from "../assets/bg-4.png";
+
+const title = "Press Kit";
+const description =
+  "Press kit for Blankie — the free, open-source ambient sound mixer for iPhone, iPad, Mac, and CarPlay. Facts, screenshots, logos, and contact information.";
+
+// Stable, original-file download links (GitHub raw preserves filenames)
+const raw = "https://raw.githubusercontent.com/codybrom/Blankie/main/docs/src/assets";
+
+const facts: [string, string][] = [
+  ["App name", "Blankie"],
+  ["Developer", "Cody Bromley (independent developer)"],
+  ["Price", "Free — no ads, in-app purchases, subscriptions, or accounts"],
+  ["Platforms", "iPhone, iPad, Mac, CarPlay"],
+  ["Requires", "iOS 26 or later · macOS 15.6 or later"],
+  ["First released", "April 2025 (Mac) · iPhone, iPad & CarPlay coming soon (public TestFlight open now)"],
+  [
+    "Languages",
+    "English, German, Spanish, French, Hungarian, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Simplified Chinese",
+  ],
+  ["Downloads", "10,000+ all-time across the App Store, GitHub, and Homebrew"],
+  ["License", "Open source under MIT (code) · openly licensed sounds"],
+  ["Privacy", "No data collection, no tracking, no analytics — works fully offline"],
+];
+
+const links: [string, string][] = [
+  ["Website", "https://blankie.rest"],
+  ["App Store", "https://apps.apple.com/app/blankie/id6740096581"],
+  ["TestFlight beta", "https://testflight.apple.com/join/XgpBpWv8"],
+  ["Source code (GitHub)", "https://github.com/codybrom/blankie"],
+  ["Homebrew", "https://formulae.brew.sh/cask/blankie"],
+];
+
+const highlights = [
+  "The only actively maintained open-source ambient sound mixer we know of on the App Store — and one of the only ambient apps with CarPlay at any price",
+  "Mix 14 hand-tuned sounds, or import your own audio with automatic loudness matching (two-way K-weighted LUFS analysis)",
+  "Sleep timer with animated lock-screen artwork to drift off to",
+  "Built natively for iOS 26 with Liquid Glass, full VoiceOver and Dynamic Type support",
+  "Free forever — funded only by optional donations, never ads or subscriptions",
+  "Quietly trusted at scale: one institution deployed 500 copies to its managed devices in a single day (March 2026) — we can't tell who, because the app doesn't track anyone",
+];
+
+const coverage: [string, string, string][] = [
+  ["ZDNET", "“…just fantastic.”", "June 2025"],
+  ["Mac & i (heise)", "#1 of “21 Freeware-Perlen für den Mac”", "Issue 1/2026"],
+  ["Mac App Store", "Featured in “Best New Apps and Updates”", "May 2025"],
+  ["Product Hunt", "#4 Product of the Month, Health & Fitness", "May 2025"],
+  ["iFun.de", "“Freie Mac-App mischt individuelle Klanglandschaften”", "April 2025"],
+  ["MacGadget", "Repeat coverage of releases and the iOS beta", "2025–2026"],
+  ["AAPL Ch.", "Mac release coverage (Japan)", "May 2025"],
+];
+
+const assets: { img: ImageMetadata; file: string; label: string }[] = [
+  { img: icon, file: "icon.png", label: "App icon (1024px)" },
+  { img: screenshot, file: "screenshot.png", label: "Mac app (dark)" },
+  { img: promo, file: "promo.png", label: "Promotional banner" },
+  { img: appStore1, file: "app-store-1.png", label: "Store screenshot 1" },
+  { img: appStore2, file: "app-store-2.png", label: "Store screenshot 2" },
+  { img: appStore3, file: "app-store-3.png", label: "Store screenshot 3" },
+];
+---
+
+<Layout title={title} description={description}>
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0">
+      <Image src={bg4} alt="" class="w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-black/75"></div>
+    </div>
+
+    <!-- Hero -->
+    <div class="relative max-w-5xl mx-auto px-5 py-20 text-center mt-16">
+      <Image
+        src={icon}
+        alt="Blankie app icon"
+        width={112}
+        height={112}
+        class="mx-auto mb-6 rounded-[22%] shadow-lg"
+        quality={90}
+      />
+      <h1
+        class="text-4xl md:text-5xl font-semibold leading-tight tracking-tighter"
+      >
+        Blankie Press Kit
+      </h1>
+      <p class="mt-4 text-lg text-gray-200 max-w-2xl mx-auto">
+        Everything you need to write about Blankie — the free, open-source
+        ambient sound mixer for iPhone, iPad, Mac, and CarPlay.
+      </p>
+      <p class="mt-6">
+        <a
+          href="mailto:press@blankie.rest"
+          class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-md bg-secondary text-foreground ring-1 ring-border hover:bg-secondary/80 transition-colors duration-200"
+        >
+          <Mail className="size-4" strokeWidth={1.75} />
+          press@blankie.rest
+        </a>
+      </p>
+    </div>
+
+    <!-- Boilerplate -->
+    <div class="relative max-w-4xl mx-auto px-5 pb-12">
+      <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
+        <Quote className="size-7 text-primary" strokeWidth={1.75} />
+        Boilerplate
+      </h2>
+      <Card className="p-8 mb-4 gap-0">
+        <p class="text-sm uppercase tracking-wide text-gray-400 mb-2">
+          One-liner
+        </p>
+        <p class="text-lg text-gray-100">
+          Blankie is a free, open-source ambient sound mixer for iPhone, iPad,
+          Mac, and CarPlay — no ads, no subscriptions, no accounts, and it works
+          fully offline.
+        </p>
+      </Card>
+      <Card className="p-8 gap-0">
+        <p class="text-sm uppercase tracking-wide text-gray-400 mb-2">
+          Short description
+        </p>
+        <p class="text-gray-100">
+          Blankie helps people focus, relax, and sleep by mixing high-quality
+          ambient sounds — rain, waves, fireplaces, coffee shops, and more —
+          into custom soundscapes. Listeners can import their own audio, which
+          Blankie loudness-matches automatically, set a sleep timer with
+          animated lock-screen artwork, and take their mixes on the road with
+          CarPlay. Inspired by Blanket for Linux and built natively for Apple
+          platforms by independent developer Cody Bromley, Blankie is
+          MIT-licensed, localized in 12 languages, fully accessible with
+          VoiceOver, and free forever — supported only by optional donations.
+        </p>
+      </Card>
+    </div>
+  </section>
+
+  <!-- Fact Sheet -->
+  <section class="relative max-w-4xl mx-auto px-5 py-12">
+    <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
+      <FileText className="size-7 text-primary" strokeWidth={1.75} />
+      Fact Sheet
+    </h2>
+    <Card className="p-8 gap-0">
+      <dl class="divide-y divide-foreground/10">
+        {
+          facts.map(([label, value]) => (
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 py-3">
+              <dt class="font-medium text-gray-400">{label}</dt>
+              <dd class="sm:col-span-2 text-gray-100">{value}</dd>
+            </div>
+          ))
+        }
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 py-3">
+          <dt class="font-medium text-gray-400">Links</dt>
+          <dd class="sm:col-span-2 space-y-1">
+            {
+              links.map(([label, href]) => (
+                <p>
+                  <a
+                    href={href}
+                    class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+                  >
+                    {label}
+                  </a>
+                </p>
+              ))
+            }
+          </dd>
+        </div>
+      </dl>
+    </Card>
+
+    <h3 class="text-xl font-semibold mt-10 mb-4">Why it's a story</h3>
+    <ul class="space-y-3 text-gray-200">
+      {
+        highlights.map((h) => (
+          <li class="flex items-start gap-3">
+            <Check
+              className="size-5 shrink-0 text-primary mt-0.5"
+              strokeWidth={2}
+            />
+            {h}
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- Coverage -->
+  <section class="relative max-w-4xl mx-auto px-5 py-12">
+    <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
+      <Newspaper className="size-7 text-primary" strokeWidth={1.75} />
+      Recognition &amp; Coverage
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {
+        coverage.map(([outlet, note, date]) => (
+          <Card className="p-6 gap-0">
+            <p class="font-semibold">{outlet}</p>
+            <p class="text-gray-300 text-sm mt-1">{note}</p>
+            <p class="text-gray-500 text-xs mt-2">{date}</p>
+          </Card>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- Assets -->
+  <section class="relative max-w-5xl mx-auto px-5 py-12">
+    <h2 class="flex items-center gap-3 text-3xl font-semibold mb-2">
+      <Download className="size-7 text-primary" strokeWidth={1.75} />
+      Images &amp; Assets
+    </h2>
+    <p class="text-gray-300 mb-8">
+      Free to use in coverage of Blankie.
+      Need something specific? Localized screenshots and videos available on request.
+    </p>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+      {
+        assets.map(({ img, file, label }) => (
+          <div class="rounded-xl bg-card ring-1 ring-foreground/10 p-4 flex flex-col">
+            <Image
+              src={img}
+              alt={label}
+              class="rounded-lg w-full h-40 object-contain bg-black/30"
+              quality={80}
+            />
+            <p class="mt-3 text-sm text-gray-200">{label}</p>
+            <a
+              href={`${raw}/${file}`}
+              class="mt-1 text-xs text-yellow-400 hover:text-yellow-300 transition-colors underline"
+              download
+            >
+              Download original
+            </a>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- About the developer -->
+  <section class="relative max-w-4xl mx-auto px-5 py-12 pb-20">
+    <h2 class="text-3xl font-semibold mb-6">About the Developer</h2>
+    <Card className="p-8 gap-0">
+      <p class="text-gray-100">
+        Cody Bromley is an independent developer who built Blankie as a love
+        letter to Blanket for Linux — and to the idea that calm shouldn't have
+        a paywall. He develops Blankie in the open with community contributors
+        and translators around the world. He's happy to talk about indie
+        development, open source on the App Store, audio engineering, or why
+        the app is free forever.
+      </p>
+      <p class="mt-4">
+        <a
+          href="mailto:press@blankie.rest"
+          class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+        >
+          press@blankie.rest
+        </a>
+        <span class="text-gray-500"> · </span>
+        <a
+          href="https://github.com/codybrom"
+          class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+        >
+          github.com/codybrom
+        </a>
+      </p>
+    </Card>
+  </section>
+</Layout>

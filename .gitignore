@@ -83,3 +83,11 @@ releases/*
 .clang-module-cache
 .swift-module-cache
 notes
+
+# SourceKit-LSP / xcode-build-server (local, machine-specific)
+buildServer.json
+.compile
+
+scheduled_tasks.lock
+# blankifi compiled binary cache
+scripts/.build/

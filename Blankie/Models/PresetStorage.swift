@@ -8,89 +8,108 @@
 import Foundation
 
 struct PresetStorage {
-  private static let defaults = UserDefaults.standard
+  private static let defaults = UserDefaults.shared
 
   static let defaultPresetKey = "defaultPreset"
   static let customPresetsKey = "savedPresets"
   static let lastActivePresetIDKey = "lastActivePresetID"
 
   static func saveDefaultPreset(_ preset: Preset) {
-    print("💾 PresetStorage: Saving default preset")
     if let data = try? JSONEncoder().encode(preset) {
       defaults.set(data, forKey: defaultPresetKey)
-      print("💾 PresetStorage: Default preset saved successfully")
-    } else {
-      print("❌ PresetStorage: Failed to save default preset")
     }
   }
 
   static func loadDefaultPreset() -> Preset? {
-    print("💾 PresetStorage: Loading default preset")
     guard let data = defaults.data(forKey: defaultPresetKey),
       let preset = try? JSONDecoder().decode(Preset.self, from: data)
     else {
-      print("💾 PresetStorage: No default preset found")
       return nil
     }
-    print("💾 PresetStorage: Default preset loaded successfully")
     return preset
   }
 
   static func saveCustomPresets(_ presets: [Preset]) {
-    print("💾 PresetStorage: Saving \(presets.count) custom presets")
+    debugLog("💾 PresetStorage: Saving \(presets.count) custom presets")
+
     if let data = try? JSONEncoder().encode(presets) {
       // Add debug logging before saving
-      print("Saving presets:")
+      debugLog("Saving presets:")
       presets.forEach { preset in
-        print("  - '\(preset.name)':")
-        print("    * Active sounds:")
+        debugLog("  - '\(preset.name)':")
+        debugLog("    * Order: \(preset.order ?? -1)")
+        debugLog(
+          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")"
+        )
+        debugLog("    * Creator: \(preset.creatorName ?? "None")")
+        debugLog("    * Active sounds:")
         preset.soundStates
           .filter { $0.isSelected }
           .forEach { state in
-            print("      - \(state.fileName) (Volume: \(state.volume))")
+            debugLog("      - \(state.fileName) (Volume: \(state.volume))")
           }
       }
-      UserDefaults.standard.set(data, forKey: customPresetsKey)
-      print("💾 PresetStorage: Custom presets saved successfully")
+
+      // Check data size
+      let sizeInMB = Double(data.count) / 1024.0 / 1024.0
+      if sizeInMB > 1.0 {
+        debugLog("⚠️ PresetStorage: Large data size: \(String(format: "%.2f", sizeInMB)) MB")
+      }
+
+      defaults.set(data, forKey: customPresetsKey)
+      debugLog("💾 PresetStorage: Custom presets saved successfully")
     }
   }
 
   static func loadCustomPresets() -> [Preset] {
-    print("💾 PresetStorage: Loading custom presets")
-    if let data = UserDefaults.standard.data(forKey: customPresetsKey),
+    debugLog("💾 PresetStorage: Loading custom presets")
+    if let data = defaults.data(forKey: customPresetsKey),
       let presets = try? JSONDecoder().decode([Preset].self, from: data)
     {
-      print("💾 PresetStorage: Loaded \(presets.count) custom presets")
+      debugLog("💾 PresetStorage: Loaded \(presets.count) custom presets")
       // Add debug logging
       presets.forEach { preset in
-        print("  - Loaded preset '\(preset.name)':")
-        print("    * Active sounds:")
+        debugLog("  - Loaded preset '\(preset.name)':")
+        debugLog("    * Order: \(preset.order ?? -1)")
+        debugLog(
+          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")"
+        )
+        debugLog("    * Creator: \(preset.creatorName ?? "None")")
+        debugLog("    * Active sounds:")
         preset.soundStates
           .filter { $0.isSelected }
           .forEach { state in
-            print("      - \(state.fileName) (Volume: \(state.volume))")
+            debugLog("      - \(state.fileName) (Volume: \(state.volume))")
           }
       }
       return presets
     }
-    print("💾 PresetStorage: No custom presets found")
+    debugLog("💾 PresetStorage: No custom presets found")
     return []
   }
 
   static func saveLastActivePresetID(_ id: UUID) {
-    print("💾 PresetStorage: Saving last active preset ID: \(id)")
-    defaults.set(id.uuidString, forKey: lastActivePresetIDKey)
+    // Only save if the ID actually changed
+    let currentId = defaults.string(forKey: lastActivePresetIDKey)
+    let newIdString = id.uuidString
+
+    guard currentId != newIdString else {
+      return  // No change, skip save
+    }
+
+    debugLog("💾 PresetStorage: Saving last active preset ID: \(id)")
+    defaults.set(newIdString, forKey: lastActivePresetIDKey)
   }
 
   static func loadLastActivePresetID() -> UUID? {
-    print("💾 PresetStorage: Loading last active preset ID")
+    debugLog("💾 PresetStorage: Loading last active preset ID")
     guard let idString = defaults.string(forKey: lastActivePresetIDKey),
       let id = UUID(uuidString: idString)
     else {
-      print("💾 PresetStorage: No last active preset ID found")
+      debugLog("💾 PresetStorage: No last active preset ID found")
       return nil
     }
-    print("💾 PresetStorage: Last active preset ID loaded: \(id)")
+    debugLog("💾 PresetStorage: Last active preset ID loaded: \(id)")
     return id
   }
 }

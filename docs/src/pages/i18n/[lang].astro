@@ -7,6 +7,7 @@ import {
   getTranslatorCredits,
 } from "../../utils/i18n-helpers";
 import macAppStoreBadge from "../../assets/download-on-mac-app-store.svg";
+import { Heart } from "lucide-react";
 
 // Define types for the language data
 interface StringItem {
@@ -150,7 +151,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
   <main class="max-w-6xl mx-auto px-5 pt-28 pb-10">
     <div class="mb-6">
       <a
-        href="/i18n"
+        href="/i18n/"
         class="text-yellow-500 hover:text-yellow-400 transition-colors inline-block mb-2"
       >
         ← All Languages
@@ -170,8 +171,15 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
       <div
         class="bg-zinc-900/20 rounded-lg px-4 py-2 border border-dashed border-zinc-800/50 flex items-center justify-between flex-wrap gap-4"
       >
-        <div class="text-lg italic">
-          Blankie ❤️ {getNativeLanguageName(lang || "")}
+        <div class="flex items-center gap-2 text-lg italic">
+          Blankie
+          <Heart
+            className="inline size-4 text-red-500"
+            fill="currentColor"
+            strokeWidth={0}
+          />
+          <span class="sr-only">loves</span>
+          {getNativeLanguageName(lang || "")}
         </div>
         <div class="flex gap-3">
           <a
@@ -304,11 +312,11 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
                 <div class="w-full bg-zinc-950 rounded-full h-6 overflow-hidden shadow-inner">
                   <div class="flex h-full">
                     <div
-                      class="h-full bg-gradient-to-r from-green-600 to-green-500 transition-all duration-500"
+                      class="h-full bg-linear-to-r from-green-600 to-green-500 transition-all duration-500"
                       style={`width: ${langData.statistics.translationPercentage}%`}
                     />
                     <div
-                      class="h-full bg-gradient-to-r from-orange-600 to-orange-500 transition-all duration-500"
+                      class="h-full bg-linear-to-r from-orange-600 to-orange-500 transition-all duration-500"
                       style={`width: ${langData.statistics.needsReviewPercentage}%`}
                     />
                   </div>
@@ -380,7 +388,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
               </div>
 
               <a
-                href="/contributing"
+                href="/contributing/"
                 class="inline-flex items-center px-5 py-2 bg-primary-blue hover:bg-blue-700 text-white font-medium rounded-md transition-colors text-sm no-underline"
               >
                 <svg

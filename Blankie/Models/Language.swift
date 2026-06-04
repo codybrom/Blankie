@@ -21,11 +21,16 @@ struct Language: Hashable, Identifiable, Equatable {
     self.icon = icon
   }
 
+  private static var _cachedSystemLanguage: Language?
+
   static var system: Language {
-    // Read the system's actual language preference from UserDefaults global domain
-    let globalDomain = UserDefaults(suiteName: UserDefaults.globalDomain)
-    let systemLanguages = globalDomain?.object(forKey: "AppleLanguages") as? [String]
-    let systemLanguageCode = systemLanguages?.first ?? "en"
+    // Cache the system language to avoid repeated detection
+    if let cached = _cachedSystemLanguage {
+      return cached
+    }
+
+    // Read the system's actual language preference
+    let systemLanguageCode = Locale.preferredLanguages.first ?? "en"
 
     // For display, we want just the base language code (e.g., "en" from "en-US")
     let languageCode =
@@ -39,14 +44,17 @@ struct Language: Hashable, Identifiable, Equatable {
 
     // Show "System (Language)" where System is in the current app language
     let displayName =
-      "\(NSLocalizedString("System", comment: "System default language option")) (\(languageName))"
+      "\(String(localized:"System")) (\(languageName))"
 
-    print("🌐 System language from global domain: code=\(languageCode), name=\(languageName)")
+    debugLog("🌐 System language: code=\(languageCode), name=\(languageName)")
 
-    return Language(
+    let systemLanguage = Language(
       code: "system",
       displayName: displayName,
       icon: "globe")
+
+    _cachedSystemLanguage = systemLanguage
+    return systemLanguage
   }
 
   static func == (lhs: Language, rhs: Language) -> Bool {
@@ -56,11 +64,11 @@ struct Language: Hashable, Identifiable, Equatable {
   static func getAvailableLanguages() -> [Language] {
     var languages = [Language.system]
 
-    print("🔍 Detecting available app localizations using Bundle.main.localizations")
+    debugLog("🔍 Detecting available app localizations using Bundle.main.localizations")
 
     // Get all localizations from the app bundle
     let bundleLocalizations = Bundle.main.localizations
-    print(
+    debugLog(
       "📄 Found \(bundleLocalizations.count) localizations in bundle: \(bundleLocalizations.joined(separator: ", "))"
     )
 
@@ -79,14 +87,14 @@ struct Language: Hashable, Identifiable, Equatable {
 
     // If we still don't have any languages, try reading from Localizable.xcstrings
     if languages.count <= 1 {
-      print("⚠️ No localizations found in bundle, trying Localizable.xcstrings")
+      debugLog("⚠️ No localizations found in bundle, trying Localizable.xcstrings")
       tryReadXCStringsFile(into: &languages)
     }
 
     // Log the final language list
-    print("🔢 Final language list:")
+    debugLog("🔢 Final language list:")
     for lang in languages {
-      print("- \(lang.code): \(lang.displayName)")
+      debugLog("- \(lang.code): \(lang.displayName)")
     }
 
     // Sort languages by display name but keep system first
@@ -101,11 +109,11 @@ struct Language: Hashable, Identifiable, Equatable {
 
   private static func tryReadXCStringsFile(into languages: inout [Language]) {
     guard let url = Bundle.main.url(forResource: "Localizable", withExtension: "xcstrings") else {
-      print("❌ Localizable.xcstrings not found in bundle")
+      debugLog("❌ Localizable.xcstrings not found in bundle")
       return
     }
 
-    print("📄 Found Localizable.xcstrings at: \(url.path)")
+    debugLog("📄 Found Localizable.xcstrings at: \(url.path)")
 
     // Extract and process language codes from the file
     let langCodes = extractLanguagesFromXCStrings(at: url)
@@ -119,16 +127,16 @@ struct Language: Hashable, Identifiable, Equatable {
 
     do {
       let data = try Data(contentsOf: url)
-      print("📊 Read \(data.count) bytes from file")
+      debugLog("📊 Read \(data.count) bytes from file")
 
       guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-        print("⚠️ Failed to parse JSON from xcstrings file")
+        debugLog("⚠️ Failed to parse JSON from xcstrings file")
         return languageCodes
       }
 
       // Get source language
       if let sourceLanguage = json["sourceLanguage"] as? String {
-        print("🌐 Source language: \(sourceLanguage)")
+        debugLog("🌐 Source language: \(sourceLanguage)")
         languageCodes.insert(sourceLanguage)
       }
 
@@ -146,9 +154,9 @@ struct Language: Hashable, Identifiable, Equatable {
         }
       }
 
-      print("🌐 Found language codes in xcstrings: \(languageCodes.joined(separator: ", "))")
+      debugLog("🌐 Found language codes in xcstrings: \(languageCodes.joined(separator: ", "))")
     } catch {
-      print("❌ Error reading .xcstrings file: \(error)")
+      debugLog("❌ Error reading .xcstrings file: \(error)")
     }
 
     return languageCodes
@@ -169,14 +177,14 @@ struct Language: Hashable, Identifiable, Equatable {
   }
 
   static func applyLanguage(_ language: Language) {
-    print("🌐 Changing language to: \(language.code)")
+    debugLog("🌐 Changing language to: \(language.code)")
 
     // Store the language preference
     if language.code == "system" {
-      print("🌐 Removing AppleLanguages key to use system default")
+      debugLog("🌐 Removing AppleLanguages key to use system default")
       UserDefaults.standard.removeObject(forKey: "AppleLanguages")
     } else {
-      print("🌐 Setting AppleLanguages to: [\(language.code)]")
+      debugLog("🌐 Setting AppleLanguages to: [\(language.code)]")
       UserDefaults.standard.set([language.code], forKey: "AppleLanguages")
     }
 
@@ -191,7 +199,7 @@ struct Language: Hashable, Identifiable, Equatable {
     let value = UserDefaults.standard.object(forKey: "AppleLanguages")
     let languages = value as? [String] ?? Locale.preferredLanguages
 
-    print("🌐 Attempting to refresh localization with languages: \(languages)")
+    debugLog("🌐 Attempting to refresh localization with languages: \(languages)")
 
     // Try to force UI refresh
     // This is a hack and only works partially
@@ -200,19 +208,26 @@ struct Language: Hashable, Identifiable, Equatable {
   }
 
   static func restartApp() {
-    let url = Bundle.main.bundleURL
-    let task = Process()
-    task.launchPath = "/usr/bin/open"
-    task.arguments = ["-n", url.path]
+    #if os(macOS)
+      let url = Bundle.main.bundleURL
+      let task = Process()
+      task.launchPath = "/usr/bin/open"
+      task.arguments = ["-n", url.path]
 
-    // Store a flag to indicate we're restarting
-    UserDefaults.standard.set(true, forKey: "AppIsRestarting")
-    UserDefaults.standard.synchronize()
+      // Store a flag to indicate we're restarting
+      UserDefaults.standard.set(true, forKey: "AppIsRestarting")
+      UserDefaults.standard.synchronize()
 
-    // Allow some time for UserDefaults to sync before quitting
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-      task.launch()
-      NSApplication.shared.terminate(nil)
-    }
+      // Allow some time for UserDefaults to sync before quitting
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        task.launch()
+        NSApplication.shared.terminate(nil)
+      }
+    #else
+      // iOS doesn't support app restart - show message to user instead
+      UserDefaults.standard.set(true, forKey: "LanguageChangePending")
+      UserDefaults.standard.synchronize()
+    // On iOS, the language change will take effect when the app is relaunched
+    #endif
   }
 }

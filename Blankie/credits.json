@@ -1,9 +1,12 @@
 {
     "contributors": [],
     "translators": {
-        "Deutsch": [],
+        "Deutsch": [
+            "H. Rapp"
+        ],
         "Español": [
-            "Chuskas"
+            "Chuskas",
+            "Dizz7"
         ],
         "Français": [
             "Richard_M"
@@ -13,6 +16,9 @@
         ],
         "Magyar": [
             "Balázs"
+        ],
+        "Polski": [
+            "Kristopheros"
         ],
         "Português": [
             "Júlio Coelho"
@@ -29,5 +35,13 @@
         "简体中文": [
             "kur1k0"
         ]
-    }
+    },
+    "dependencies": [
+        {
+            "name": "ZIPFoundation",
+            "author": "Thomas Zoechling",
+            "license": "MIT License",
+            "url": "https://github.com/weichsel/ZIPFoundation"
+        }
+    ]
 }

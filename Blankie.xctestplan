@@ -24,6 +24,13 @@
         "identifier" : "F9ED6BA92D321D3300240F13",
         "name" : "BlankieTests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:Blankie.xcodeproj",
+        "identifier" : "F9ED70DD2D3229AD00240F13",
+        "name" : "BlankieUITests"
+      }
     }
   ],
   "version" : 1

@@ -13,15 +13,11 @@ struct SoundCredit {
   let soundName: String  // Original work title
   let author: String  // Author/creator
   let license: License  // License type
-  let editor: String?  // Editor if modified
   let soundUrl: URL?  // Link to original work
 
   var attributionText: String {
     var text = "\"\(soundName)\""
     text += " by \(author)"
-    if let editor = editor {
-      text += ", edited by \(editor)"
-    }
     return text
   }
 }

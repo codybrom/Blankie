@@ -5,122 +5,135 @@
 //  Created by Cody Bromley on 1/1/25.
 //
 
+import AVFoundation
 import Combine
 import Foundation
 import SwiftUI
 
-private enum UserDefaultsKeys {
+enum IconSize: String, CaseIterable {
+  case small = "Small"
+  case medium = "Medium"
+  case large = "Large"
+
+  var label: String { rawValue }
+}
+
+extension UserDefaults {
+  /// Shared UserDefaults instance for app group
+  /// Falls back to standard UserDefaults if app group is not available
+  static var shared: UserDefaults {
+    AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
+  }
+
+}
+
+enum UserDefaultsKeys {
   static let volume = "globalVolume"
   static let appearance = "appearanceMode"
   static let accentColor = "customAccentColor"
+  static let autoPlayOnLaunch = "autoPlayOnLaunch"
+  static let enableSpatialAudio = "enableSpatialAudio"
   static let language = "languagePreference"
+  static let mixWithOthers = "mixWithOthers"
+  static let volumeWithOtherAudio = "volumeWithOtherAudio"
+  static let showSoundNames = "showSoundNames"
+  static let iconSize = "iconSize"
+  static let soloModeSoundFileName = "soloModeSoundFileName"
+  static let showingListView = "showingListView"
+  static let showProgressBorder = "showProgressBorder"
+  static let lockPortraitOrientationiOS = "lockPortraitOrientationiOS"
+  static let quickMixSoundFileNames = "quickMixSoundFileNames"
+  static let lockScreenBackgroundEnabled = "lockScreenBackgroundEnabled"
+  static let starredItems = "starredItems"
+  static let backgroundBlurRadius = "backgroundBlurRadius"
 }
+
+/// Blur (in points) applied to a preset's background artwork behind the mixer
+/// when "Blur Background" is on. Blur is now on/off: any radius > 0 means on,
+/// at this value. Presets may override this with their own `backgroundBlurRadius`.
+let defaultBackgroundBlurRadius: Double = 7.5
 
 class GlobalSettings: ObservableObject {
   @Published var needsRestartForLanguageChange = false
   static let shared = GlobalSettings()
 
-  @Published private(set) var volume: Double
-  @Published private(set) var appearance: AppearanceMode
-  @Published private(set) var customAccentColor: Color?
-  @Published private(set) var alwaysStartPaused: Bool
-  @Published private(set) var language: Language
-  @Published private(set) var availableLanguages: [Language] = []
+  /// Tokens for the non-preset starrable items. Presets use their UUID string.
+  static let allSoundsToken = "allSounds"
+  static let quickMixToken = "quickMix"
 
-  private var observers = Set<AnyCancellable>()
-  private var volumeDebounceTimer: Timer?
+  /// Prefix for solo-sound tokens. A soloed sound is starred as
+  /// `"solo:<fileName>"`, using the sound's stable `fileName` as its identity.
+  static let soloTokenPrefix = "solo:"
+
+  /// The starred token for soloing the given sound file.
+  static func soloToken(forFileName fileName: String) -> String {
+    soloTokenPrefix + fileName
+  }
+
+  /// The sound file name encoded in a solo token, or nil if it isn't one.
+  static func soloFileName(fromToken token: String) -> String? {
+    token.hasPrefix(soloTokenPrefix) ? String(token.dropFirst(soloTokenPrefix.count)) : nil
+  }
+
+  @Published var volume: Double
+  @Published var appearance: AppearanceMode
+  @Published var customAccentColor: Color?
+  @Published var autoPlayOnLaunch: Bool
+  @Published var showSoundNames: Bool
+  @Published var iconSize: IconSize
+  @Published var language: Language
+  @Published var showingListView: Bool
+  @Published var showProgressBorder: Bool
+  @Published var lockPortraitOrientationiOS: Bool
+  @Published var quickMixSoundFileNames: [String]
+  /// Ordered list of starred items shown in the iPad sidebar and CarPlay.
+  /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
+  /// solo-sound token (`soloToken(forFileName:)`).
+  /// Order = display order; membership = starred.
+  @Published var starredItems: [String]
+  @Published var availableLanguages: [Language] = []
+  @Published var lockScreenBackgroundEnabled: Bool
+  /// App-wide default blur (in points) for preset background artwork. A preset's
+  /// own `backgroundBlurRadius` overrides this when set.
+  @Published var backgroundBlurRadius: Double
+
+  // Platform-specific settings
+  @Published var enableSpatialAudio: Bool = false
+  @Published var mixWithOthers: Bool = false
+  @Published var volumeWithOtherAudio: Double = 0.5  // 0.0 = silent, 1.0 = full volume
+
+  var observers = Set<AnyCancellable>()
+  var volumeDebounceTimer: Timer?
 
   private init() {
-    // Initialize properties directly
-    let savedVolume = UserDefaults.standard.double(forKey: UserDefaultsKeys.volume)
-    volume = savedVolume == 0 ? 1.0 : savedVolume
+    // Initialize required properties first
+    volume = 1.0
+    appearance = .system
+    customAccentColor = nil
+    autoPlayOnLaunch = false
+    showSoundNames = true
+    iconSize = .medium
+    language = .system
+    showingListView = false
+    showProgressBorder = false
+    lockPortraitOrientationiOS = false
+    quickMixSoundFileNames = [
+      "rain", "waves", "fireplace", "white-noise",
+      "wind", "stream", "birds", "coffee-shop",
+    ]
+    starredItems = []
+    availableLanguages = []
+    lockScreenBackgroundEnabled = true
+    backgroundBlurRadius = defaultBackgroundBlurRadius
 
-    appearance =
-      UserDefaults.standard.string(forKey: UserDefaultsKeys.appearance)
-      .flatMap { AppearanceMode(rawValue: $0) } ?? .system
+    // Then load actual values from UserDefaults
+    loadBasicSettings()
+    loadPlatformSettings()
+    loadLanguageSettings()
+    migrateLegacySettings()
 
-    // Load saved accent color
-    if let colorString = UserDefaults.standard.string(forKey: UserDefaultsKeys.accentColor) {
-      customAccentColor = Color(fromString: colorString)
-    } else {
-      customAccentColor = nil
-    }
-
-    // Default to true for alwaysStartPaused if not set
-    alwaysStartPaused = UserDefaults.standard.object(forKey: "alwaysStartPaused") as? Bool ?? true
-
-    // First initialize language with default value
-    language = Language.system
-
-    // Then load available languages
-    availableLanguages = Language.getAvailableLanguages()
-
-    // Finally, try to set the saved language preference
-    let savedLanguageCode = UserDefaults.standard.string(forKey: UserDefaultsKeys.language)
-    if let code = savedLanguageCode,
-      let savedLanguage = availableLanguages.first(where: { $0.code == code })
-    {
-      language = savedLanguage
-    }
-
-    // After initialization, setup observers and update appearance
-    setupObservers()
-    updateAppAppearance()
+    // After initialization, log current settings
     logCurrentSettings()
-  }
-
-  private func validateVolume(_ volume: Double) -> Double {
-    min(max(volume, 0.0), 1.0)
-  }
-
-  private func setupObservers() {
-    _appearance.projectedValue.sink { [weak self] newValue in
-      UserDefaults.standard.setValue(newValue.rawValue, forKey: UserDefaultsKeys.appearance)
-      self?.updateAppAppearance()
-    }.store(in: &observers)
-
-    _customAccentColor.projectedValue.sink { newColor in
-      if let color = newColor {
-        UserDefaults.standard.set(color.toString, forKey: UserDefaultsKeys.accentColor)
-      } else {
-        UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.accentColor)
-      }
-    }.store(in: &observers)
-
-    _alwaysStartPaused.projectedValue.sink { newValue in
-      UserDefaults.standard.set(newValue, forKey: "alwaysStartPaused")
-    }.store(in: &observers)
-
-    _language.projectedValue.sink { newValue in
-      UserDefaults.standard.setValue(newValue.code, forKey: UserDefaultsKeys.language)
-    }.store(in: &observers)
-  }
-
-  private func updateAppAppearance() {
-    DispatchQueue.main.async {
-      switch self.appearance {
-      case .system:
-        NSApp.appearance = nil
-      case .light:
-        NSApp.appearance = NSAppearance(named: .aqua)
-      case .dark:
-        NSApp.appearance = NSAppearance(named: .darkAqua)
-      }
-    }
-  }
-
-  private func debouncedSaveVolume(_ newVolume: Double) {
-    volumeDebounceTimer?.invalidate()
-    volumeDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
-      [weak self] _ in
-      self?.saveVolume(newVolume)
-    }
-  }
-
-  private func saveVolume(_ newVolume: Double) {
-    let validatedVolume = validateVolume(newVolume)
-    UserDefaults.standard.set(validatedVolume, forKey: "globalVolume")
-    print("⚙️ GlobalSettings: Saved volume: \(validatedVolume)")
   }
 
   @MainActor
@@ -129,49 +142,4 @@ class GlobalSettings: ObservableObject {
     debouncedSaveVolume(volume)
     logCurrentSettings()
   }
-
-  @MainActor
-  func setAppearance(_ newAppearance: AppearanceMode) {
-    appearance = newAppearance
-    updateAppAppearance()
-    logCurrentSettings()
-  }
-
-  @MainActor
-  func setAccentColor(_ newColor: Color?) {
-    customAccentColor = newColor
-    logCurrentSettings()
-  }
-
-  @MainActor
-  func setAlwaysStartPaused(_ value: Bool) {
-    alwaysStartPaused = value
-    logCurrentSettings()
-  }
-
-  @MainActor
-  func setLanguage(_ newLanguage: Language) {
-    guard newLanguage.code != language.code else {
-      print("🌐 Language not changed (already set to \(language.code))")
-      return
-    }
-
-    print("🌐 GlobalSettings: Changing language from \(language.code) to \(newLanguage.code)")
-    language = newLanguage
-
-    needsRestartForLanguageChange = true
-    Language.applyLanguage(newLanguage)
-    logCurrentSettings()
-  }
-
-  func logCurrentSettings() {
-    print("\n⚙️ GlobalSettings: Current State")
-    print("  - Volume: \(volume)")
-    print("  - Appearance: \(appearance.rawValue)")
-    print("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")")
-    print("  - Always Start Paused: \(alwaysStartPaused)")
-    print("  - Language: \(language.code)")
-    print("  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))")
-  }
-
 }

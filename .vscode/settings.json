@@ -1,51 +1,96 @@
 {
-  "[swift]": {
-    "editor.defaultFormatter": "vknabel.vscode-apple-swift-format",
-    "editor.formatOnSave": true
-  },
   "astro.content-intellisense": true,
   "astro.language-server.ls-path": "docs/node_modules/@astrojs/language-server/bin/nodeServer.js",
   "astro.trace.server": "messages",
   "astro.updateImportsOnFileMove.enabled": true,
   "cSpell.words": [
+    "autoplay",
     "aybarsnazlica",
+    "Balaji",
+    "Balázs",
     "blanki",
     "blanki8n",
     "Blankie",
+    "carplay",
     "Chuscas",
     "Chuskas",
     "codybrom",
     "Coelho",
     "davnr",
+    "DCARPLAY",
+    "Deinitialized",
     "Deutsch",
+    "Dizz7",
     "Español",
+    "exclamationmark",
     "facebookexternalhit",
+    "favoritable",
+    "favorited",
+    "favoriting",
     "Français",
+    "gearshape",
     "healthcheck",
+    "INFOPLIST",
+    "iphoneos",
+    "iphonesimulator",
     "Italiano",
     "jhk0530",
     "Jinhwan",
     "Júlio",
     "kofi",
+    "Kristopheros",
     "kur1k0",
+    "Lockscreen",
+    "lufs",
     "Mardojai",
+    "nums",
+    "Orientationi",
+    "papaparse",
+    "pbxproj",
+    "Peakd",
     "playform",
+    "Polski",
     "Português",
+    "Rapp",
+    "Reorderable",
     "Sonoma",
+    "SORTABLEGRID",
+    "subheadline",
+    "superview",
     "Türkçe",
     "Twitterbot",
+    "Venkatesh's",
     "xcconfig",
     "xcstrings",
-    "yournamehere",
+    "xmark",
     "yoshida",
-    "日本語",
+    "yournamehere",
     "한국어",
+    "日本語",
     "简体中文"
   ],
   "docker.lsp.experimental.vulnerabilityScanning": false,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "css.lint.unknownAtRules": "ignore",
+  "tailwindCSS.experimental.configFile": {
+    "docs/src/styles/global.css": "docs/**"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll": "always"
   },
+  "[swift]": {
+    "editor.defaultFormatter": "swiftlang.swift-vscode",
+    "editor.formatOnSave": true
+  },
+  "[xml]": {
+    "editor.formatOnSave": false
+  },
+  "xml.format.enabled": false,
   "markdownlint.config": {
     "default": true,
     "MD013": false,
@@ -55,6 +100,11 @@
     "MD033": false,
     "MD041": false
   },
-  "swift.diagnostics": true,
-  "swift.sourcekit-lsp.disable": true
+  "swift.outputChannelLogLevel": "info",
+  "swift.sourcekit-lsp.disable": false,
+  "swift.diagnosticsCollection": "onlySwiftc",
+  "swift.path": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin",
+  "swift.swiftEnvironmentVariables": {
+    "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"
+  }
 }

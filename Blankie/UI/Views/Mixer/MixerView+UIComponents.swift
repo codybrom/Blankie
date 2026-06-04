@@ -1,0 +1,90 @@
+//
+//  MixerView+UIComponents.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 6/8/25.
+//
+
+import SwiftUI
+
+#if os(iOS) || os(visionOS)
+
+  // MARK: - UI Components Extension
+
+  extension MixerView {
+    // MARK: - Navigation Elements
+
+    var navigationTitle: String {
+      if let soloSound = audioManager.soloModeSound {
+        return soloSound.title
+      }
+
+      if audioManager.isQuickMix {
+        return "Quick Mix"
+      }
+
+      if let preset = presetManager.currentPreset {
+        return preset.isDefault ? "Blankie" : preset.name
+      }
+
+      return "Blankie"
+    }
+
+    // MARK: - Top Bar Trailing Button
+
+    /// Top-trailing nav bar slot, identical on iPhone and iPad: the Edit
+    /// affordance for whatever is on screen — the Quick Mix editor, the current
+    /// preset, or the solo sound's editor. The nav bar supplies the Liquid
+    /// Glass treatment.
+    var topTrailingToolbarButton: some View {
+      let target = editTarget
+      return Button {
+        target?.action()
+      } label: {
+        Image(systemName: target?.icon ?? "slider.vertical.3")
+      }
+      // Toolbar buttons draw their symbol from the tint, so the accent has to
+      // be overridden here rather than via foregroundStyle on the label.
+      .tint(.primary)
+      .accessibilityLabel(target?.label ?? "Edit Preset")
+      .disabled(target == nil)
+    }
+
+    /// What the Edit button targets: the solo sound's editor, the Quick Mix
+    /// editor, or the current preset. `nil` when there's nothing to edit (the
+    /// button renders disabled rather than vanishing, so the slot never
+    /// collapses).
+    private var editTarget: (icon: String, label: String, action: () -> Void)? {
+      if let soloSound = audioManager.soloModeSound {
+        return ("slider.vertical.3", "Edit Sound", { soundToEdit = soloSound })
+      } else if audioManager.isQuickMix {
+        return ("slider.vertical.3", "Edit Quick Mix", { showingQuickMixEditor = true })
+      } else if let currentPreset = presetManager.currentPreset {
+        return ("slider.vertical.3", "Edit Preset", { presetToEdit = currentPreset })
+      } else {
+        return nil
+      }
+    }
+  }
+
+  // MARK: - Liquid Glass Effect Extension
+
+  extension View {
+    @ViewBuilder
+    func modernGlassEffect(cornerRadius: CGFloat = 12) -> some View {
+      if #available(iOS 26.0, *) {
+        self.glassEffect(
+          .regular.interactive(), in: .rect(cornerRadius: cornerRadius, style: .continuous))
+      } else {
+        background(
+          .ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+        )
+        .overlay(
+          RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+      }
+    }
+  }
+#endif

@@ -25,11 +25,11 @@ There are many ways you can contribute, including:
 If you'd like to help out with the source code, follow these guidelines:
 
 1. **Fork the Repository:** Start by forking the [Blankie repository](https://github.com/codybrom/blankie) to your GitHub account. You can then clone the forked repository to your local machine.
-2. **Set Up Your Development Configuration:** Follow the [development setup instructions](README.md#development-setup) to create a `Configuration.xcconfig` file with your own development team and bundle identifier (this file is ignored by git to keep your personal settings private). You may not use the same bundle identifier as the main Blankie app and you should not update these fields in configation of the project itself. Please keep your personal settings private.
-3. **Make the Changes:** Write clean and clear code following [Swift.org's guidelines](https://www.swift.org/documentation/api-design-guidelines/). Use appropriate comments and match the existing code style and conventions in the project. Blankie uses `swift-format` with default settings to keep code clean and consistent. You can run it via XCode (Editor > Structure > Format File with ‘swift-format’) or command line to ensure consistent formatting. If you're unsure about style, feel free to ask in an issue or pull request.
+2. **Set Up Your Development Configuration:** Follow the [development setup instructions](README.md#development-setup) to create a `Configuration.xcconfig` file with your own development team and bundle identifier (this file is ignored by git to keep your personal settings private). You may not use the same bundle identifier as the main Blankie app and you should not update these fields in configuration of the project itself. Please keep your personal settings private.
+3. **Make the Changes:** Write clean and clear code following [Swift.org's guidelines](https://www.swift.org/documentation/api-design-guidelines/). Use appropriate comments and match the existing code style and conventions in the project. Blankie uses `swift-format` with default settings to keep code clean and consistent. You can run it via Xcode (Editor > Structure > Format File with ‘swift-format’) or command line to ensure consistent formatting. If you're unsure about style, feel free to ask in an issue or pull request.
     * Keep your changes focused and avoid unrelated changes in the same pull request. PRs that make unnecessary changes or are too large may be rejected or asked to be split into smaller PRs.
     * If you're adding new features, consider opening an issue first to discuss the feature and gather feedback before starting development.
-4. **Test:** Ensure that your changes work correctly without causing issues in other areas. Blankie currently has a few basic unit tests that can be run in XCode to ensure core functions (initial state, sound playback, volume, reset) are performing as expected. You can write additional unit or even UI tests to make sure everything is working before checking in code.
+4. **Test:** Ensure that your changes work correctly without causing issues in other areas. Blankie's test suite (XCTest) covers core audio playback, preset management, the `Sound` model, and the app-data migration paths (UserDefaults and SwiftData into the app group), plus a UI screenshot test across all languages. Run it in Xcode with ⌘U or via the `Blankie.xctestplan` test plan. Please run the tests before submitting, and add new unit or UI tests for any behavior you change.
 5. **Commit Your Changes:** With each commit, write clear commit messages explaining the reason and context for your changes. This will help other collaborators understand the scope of your contributions.
 6. **Create a Pull Request:** Submit a pull request from your branch with a clear explanation of the changes that you've made to the original project repository, along with the links to issues referenced (`Closes #123`, `Fixes #345`) .
 
@@ -48,7 +48,7 @@ Before implementing changes that might alter core functionality in serious ways:
 2. **Maintain Core Requirements**
    * Maintain consistent volume normalization across all sounds
    * Ensure smooth transitions between sound states (play/pause/volume)
-   * Preserve compatibility with macOS media controls
+   * Preserve compatibility with system media controls on every platform (macOS, iOS, iPadOS, and CarPlay)
    * Protect functionality of existing user-saved presets
 
 3. **Implement Carefully**
@@ -97,17 +97,17 @@ You can submit translations in three ways:
 
 2. **Email**: Send your translation files to <i18n@blankie.rest>
 
-3. **Direct Import**: If you're comfortable using a command line and XCode you can use our `blanki18n` tool to import your translations directly into the app. This is the preferred method for developers and contributors who want to test their translations locally.
+3. **Direct Import**: If you're comfortable using a command line and Xcode you can use our `blanki18n` tool to import your translations directly into the app. This is the preferred method for developers and contributors who want to test their translations locally.
 
    ```bash
    # Make the tool executable
-   chmod +x blanki18n.swift
+   chmod +x scripts/blanki18n.swift
    
    # Using interactive mode (will prompt for language code)
-   ./blanki18n.swift path/to/your-translation.[csv|json]
+   ./scripts/blanki18n.swift path/to/your-translation.[csv|json]
    
    # Or specify language code directly
-   ./blanki18n.swift path/to/your-translation.[csv|json] es
+   ./scripts/blanki18n.swift path/to/your-translation.[csv|json] es
    ```
 
    The tool will update `Localizable.xcstrings` directly with your translations for you to build and then test locally. You can then create a pull request with your changes on a fork.
@@ -123,7 +123,7 @@ When adding support for a new language to Blankie, you need to update several fi
 1. **`Blankie/Localizable.xcstrings`**
    * This is the main translation file containing all localized strings
    * Add your new language code as a new localization
-   * Use the `blanki18n` tool to import translations from a JSON or CSV file
+   * Use the `scripts/blanki18n` tool to import translations from a JSON or CSV file
 
 2. **`Blankie.xcodeproj/project.pbxproj`**
    * Add the language to the project's known regions
@@ -157,7 +157,7 @@ When adding support for a new language to Blankie, you need to update several fi
 After updating all the files:
 
 1. Build the project in Xcode to ensure all language files are properly recognized
-2. If the language is different from your system langauge, you can change your system language, switch to the new language in Blankie's Preferences or create a new scheme in Xcode to verify the app displays correctly
+2. If the language is different from your system language, you can change your system language, switch to the new language in Blankie's Preferences or create a new scheme in Xcode to verify the app displays correctly
 3. Check that the translation status page reflects the new language
 4. Verify all credits appear correctly on the About screen
 

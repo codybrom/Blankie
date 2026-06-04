@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": "nature",
+      "displayName": "Nature",
+      "icon": "leaf.fill"
+    },
+    {
+      "id": "urban",
+      "displayName": "Urban",
+      "icon": "building.2.fill"
+    },
+    {
+      "id": "abstract",
+      "displayName": "Abstract",
+      "icon": "sparkles"
+    },
+    {
+      "id": "retro",
+      "displayName": "Retro",
+      "icon": "clock.arrow.trianglehead.counterclockwise.rotate.90"
+    },
+    {
+      "id": "texture",
+      "displayName": "Texture",
+      "icon": "square.grid.3x3.fill"
+    },
+    {
+      "id": "geometric",
+      "displayName": "Geometric",
+      "icon": "triangle.fill"
+    }
+  ]
+}
