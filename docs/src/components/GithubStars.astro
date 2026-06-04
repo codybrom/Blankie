@@ -37,12 +37,12 @@ const formattedInitialStars =
   href={`https://github.com/${REPO}`}
   target="_blank"
   rel="noopener noreferrer"
-  class="inline-flex items-center text-sm group hover:bg-[#30363d] transition-colors duration-200 rounded-md border border-mid-gray w-fit"
+  class="group border-mid-gray inline-flex w-fit items-center rounded-md border text-sm transition-colors duration-200 hover:bg-[#30363d]"
   title="Star us on GitHub"
   id="github-stars-link"
 >
   <span
-    class="inline-flex items-center gap-1.5 px-3 py-1 font-medium bg-card text-light-gray"
+    class="bg-card text-light-gray inline-flex items-center gap-1.5 px-3 py-1 font-medium"
   >
     <svg
       viewBox="0 0 16 16"
@@ -58,7 +58,7 @@ const formattedInitialStars =
     <span>GitHub Stars</span>
   </span>
   <span
-    class="inline-flex items-center px-3 py-1 font-medium bg-card text-light-gray border-l border-mid-gray"
+    class="bg-card text-light-gray border-mid-gray inline-flex items-center border-l px-3 py-1 font-medium"
     id="github-stars-count"
   >
     {formattedInitialStars}
@@ -74,7 +74,9 @@ const formattedInitialStars =
     const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
     const countElement = document.getElementById("github-stars-count");
-    const countElementMedium = document.getElementById("github-stars-count-medium");
+    const countElementMedium = document.getElementById(
+      "github-stars-count-medium",
+    );
     if (!countElement && !countElementMedium) return;
 
     // Check if we have a recent cached value
@@ -88,7 +90,8 @@ const formattedInitialStars =
           // Use cached data if it's less than 6 hours old
           const formattedStars = new Intl.NumberFormat("en-US").format(stars);
           if (countElement) countElement.textContent = formattedStars;
-          if (countElementMedium) countElementMedium.textContent = formattedStars;
+          if (countElementMedium)
+            countElementMedium.textContent = formattedStars;
           return;
         }
       } catch (e) {
@@ -118,7 +121,8 @@ const formattedInitialStars =
         if (stars) {
           const formattedStars = new Intl.NumberFormat("en-US").format(stars);
           if (countElement) countElement.textContent = formattedStars;
-          if (countElementMedium) countElementMedium.textContent = formattedStars;
+          if (countElementMedium)
+            countElementMedium.textContent = formattedStars;
         }
 
         // Cache the result with a timestamp
@@ -127,7 +131,7 @@ const formattedInitialStars =
           JSON.stringify({
             stars,
             timestamp: Date.now(),
-          })
+          }),
         );
       } catch (error) {
         console.error("Failed to update GitHub stars count", error);

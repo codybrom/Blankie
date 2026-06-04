@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import type { ImageMetadata } from "astro";
 import { Image } from "astro:assets";
 import { Card } from "@/components/ui/card";
 import {
@@ -23,7 +24,8 @@ const description =
   "Press kit for Blankie — the free, open-source ambient sound mixer for iPhone, iPad, Mac, and CarPlay. Facts, screenshots, logos, and contact information.";
 
 // Stable, original-file download links (GitHub raw preserves filenames)
-const raw = "https://raw.githubusercontent.com/codybrom/Blankie/main/docs/src/assets";
+const raw =
+  "https://raw.githubusercontent.com/codybrom/Blankie/main/docs/src/assets";
 
 const facts: [string, string][] = [
   ["App name", "Blankie"],
@@ -31,14 +33,20 @@ const facts: [string, string][] = [
   ["Price", "Free — no ads, in-app purchases, subscriptions, or accounts"],
   ["Platforms", "iPhone, iPad, Mac, CarPlay"],
   ["Requires", "iOS 26 or later · macOS 15.6 or later"],
-  ["First released", "April 2025 (Mac) · iPhone, iPad & CarPlay coming soon (public TestFlight open now)"],
+  [
+    "First released",
+    "April 2025 (Mac) · iPhone, iPad & CarPlay coming soon (public TestFlight open now)",
+  ],
   [
     "Languages",
     "English, German, Spanish, French, Hungarian, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Simplified Chinese",
   ],
   ["Downloads", "10,000+ all-time across the App Store, GitHub, and Homebrew"],
   ["License", "Open source under MIT (code) · openly licensed sounds"],
-  ["Privacy", "No data collection, no tracking, no analytics — works fully offline"],
+  [
+    "Privacy",
+    "No data collection, no tracking, no analytics — works fully offline",
+  ],
 ];
 
 const links: [string, string][] = [
@@ -63,7 +71,11 @@ const coverage: [string, string, string][] = [
   ["Mac & i (heise)", "#1 of “21 Freeware-Perlen für den Mac”", "Issue 1/2026"],
   ["Mac App Store", "Featured in “Best New Apps and Updates”", "May 2025"],
   ["Product Hunt", "#4 Product of the Month, Health & Fitness", "May 2025"],
-  ["iFun.de", "“Freie Mac-App mischt individuelle Klanglandschaften”", "April 2025"],
+  [
+    "iFun.de",
+    "“Freie Mac-App mischt individuelle Klanglandschaften”",
+    "April 2025",
+  ],
   ["MacGadget", "Repeat coverage of releases and the iOS beta", "2025–2026"],
   ["AAPL Ch.", "Mac release coverage (Japan)", "May 2025"],
 ];
@@ -81,12 +93,12 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
 <Layout title={title} description={description}>
   <section class="relative overflow-hidden">
     <div class="absolute inset-0">
-      <Image src={bg4} alt="" class="w-full h-full object-cover" />
+      <Image src={bg4} alt="" class="size-full object-cover" />
       <div class="absolute inset-0 bg-black/75"></div>
     </div>
 
     <!-- Hero -->
-    <div class="relative max-w-5xl mx-auto px-5 py-20 text-center mt-16">
+    <div class="relative mx-auto mt-16 max-w-5xl px-5 py-20 text-center">
       <Image
         src={icon}
         alt="Blankie app icon"
@@ -95,19 +107,17 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
         class="mx-auto mb-6 rounded-[22%] shadow-lg"
         quality={90}
       />
-      <h1
-        class="text-4xl md:text-5xl font-semibold leading-tight tracking-tighter"
-      >
+      <h1 class="text-4xl/tight font-semibold tracking-tighter md:text-5xl">
         Blankie Press Kit
       </h1>
-      <p class="mt-4 text-lg text-gray-200 max-w-2xl mx-auto">
+      <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-200">
         Everything you need to write about Blankie — the free, open-source
         ambient sound mixer for iPhone, iPad, Mac, and CarPlay.
       </p>
       <p class="mt-6">
         <a
           href="mailto:press@blankie.rest"
-          class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-md bg-secondary text-foreground ring-1 ring-border hover:bg-secondary/80 transition-colors duration-200"
+          class="bg-secondary text-foreground ring-border hover:bg-secondary/80 inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-medium ring-1 transition-colors duration-200"
         >
           <Mail className="size-4" strokeWidth={1.75} />
           press@blankie.rest
@@ -116,13 +126,13 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
     </div>
 
     <!-- Boilerplate -->
-    <div class="relative max-w-4xl mx-auto px-5 pb-12">
-      <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
-        <Quote className="size-7 text-primary" strokeWidth={1.75} />
+    <div class="relative mx-auto max-w-4xl px-5 pb-12">
+      <h2 class="mb-6 flex items-center gap-3 text-3xl font-semibold">
+        <Quote className="text-primary size-7" strokeWidth={1.75} />
         Boilerplate
       </h2>
-      <Card className="p-8 mb-4 gap-0">
-        <p class="text-sm uppercase tracking-wide text-gray-400 mb-2">
+      <Card className="mb-4 gap-0 p-8">
+        <p class="mb-2 text-sm tracking-wide text-gray-400 uppercase">
           One-liner
         </p>
         <p class="text-lg text-gray-100">
@@ -131,8 +141,8 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
           fully offline.
         </p>
       </Card>
-      <Card className="p-8 gap-0">
-        <p class="text-sm uppercase tracking-wide text-gray-400 mb-2">
+      <Card className="gap-0 p-8">
+        <p class="mb-2 text-sm tracking-wide text-gray-400 uppercase">
           Short description
         </p>
         <p class="text-gray-100">
@@ -151,30 +161,30 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
   </section>
 
   <!-- Fact Sheet -->
-  <section class="relative max-w-4xl mx-auto px-5 py-12">
-    <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
-      <FileText className="size-7 text-primary" strokeWidth={1.75} />
+  <section class="relative mx-auto max-w-4xl px-5 py-12">
+    <h2 class="mb-6 flex items-center gap-3 text-3xl font-semibold">
+      <FileText className="text-primary size-7" strokeWidth={1.75} />
       Fact Sheet
     </h2>
-    <Card className="p-8 gap-0">
-      <dl class="divide-y divide-foreground/10">
+    <Card className="gap-0 p-8">
+      <dl class="divide-foreground/10 divide-y">
         {
           facts.map(([label, value]) => (
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 py-3">
+            <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3">
               <dt class="font-medium text-gray-400">{label}</dt>
-              <dd class="sm:col-span-2 text-gray-100">{value}</dd>
+              <dd class="text-gray-100 sm:col-span-2">{value}</dd>
             </div>
           ))
         }
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 py-3">
+        <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3">
           <dt class="font-medium text-gray-400">Links</dt>
-          <dd class="sm:col-span-2 space-y-1">
+          <dd class="space-y-1 sm:col-span-2">
             {
               links.map(([label, href]) => (
                 <p>
                   <a
                     href={href}
-                    class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+                    class="text-yellow-400 underline transition-colors hover:text-yellow-300"
                   >
                     {label}
                   </a>
@@ -186,7 +196,7 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
       </dl>
     </Card>
 
-    <h3 class="text-xl font-semibold mt-10 mb-4">Why it's a story</h3>
+    <h3 class="mt-10 mb-4 text-xl font-semibold">Why it's a story</h3>
     <ul class="space-y-3 text-gray-200">
       {
         highlights.map((h) => (
@@ -203,18 +213,18 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
   </section>
 
   <!-- Coverage -->
-  <section class="relative max-w-4xl mx-auto px-5 py-12">
-    <h2 class="flex items-center gap-3 text-3xl font-semibold mb-6">
-      <Newspaper className="size-7 text-primary" strokeWidth={1.75} />
+  <section class="relative mx-auto max-w-4xl px-5 py-12">
+    <h2 class="mb-6 flex items-center gap-3 text-3xl font-semibold">
+      <Newspaper className="text-primary size-7" strokeWidth={1.75} />
       Recognition &amp; Coverage
     </h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {
         coverage.map(([outlet, note, date]) => (
           <Card className="p-6 gap-0">
             <p class="font-semibold">{outlet}</p>
-            <p class="text-gray-300 text-sm mt-1">{note}</p>
-            <p class="text-gray-500 text-xs mt-2">{date}</p>
+            <p class="mt-1 text-sm text-gray-300">{note}</p>
+            <p class="mt-2 text-xs text-gray-500">{date}</p>
           </Card>
         ))
       }
@@ -222,29 +232,29 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
   </section>
 
   <!-- Assets -->
-  <section class="relative max-w-5xl mx-auto px-5 py-12">
-    <h2 class="flex items-center gap-3 text-3xl font-semibold mb-2">
-      <Download className="size-7 text-primary" strokeWidth={1.75} />
+  <section class="relative mx-auto max-w-5xl px-5 py-12">
+    <h2 class="mb-2 flex items-center gap-3 text-3xl font-semibold">
+      <Download className="text-primary size-7" strokeWidth={1.75} />
       Images &amp; Assets
     </h2>
-    <p class="text-gray-300 mb-8">
-      Free to use in coverage of Blankie.
-      Need something specific? Localized screenshots and videos available on request.
+    <p class="mb-8 text-gray-300">
+      Free to use in coverage of Blankie. Need something specific? Localized
+      screenshots and videos available on request.
     </p>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-2 gap-6 md:grid-cols-3">
       {
         assets.map(({ img, file, label }) => (
-          <div class="rounded-xl bg-card ring-1 ring-foreground/10 p-4 flex flex-col">
+          <div class="bg-card ring-foreground/10 flex flex-col rounded-xl p-4 ring-1">
             <Image
               src={img}
               alt={label}
-              class="rounded-lg w-full h-40 object-contain bg-black/30"
+              class="h-40 w-full rounded-lg bg-black/30 object-contain"
               quality={80}
             />
             <p class="mt-3 text-sm text-gray-200">{label}</p>
             <a
               href={`${raw}/${file}`}
-              class="mt-1 text-xs text-yellow-400 hover:text-yellow-300 transition-colors underline"
+              class="mt-1 text-xs text-yellow-400 underline transition-colors hover:text-yellow-300"
               download
             >
               Download original
@@ -256,28 +266,28 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
   </section>
 
   <!-- About the developer -->
-  <section class="relative max-w-4xl mx-auto px-5 py-12 pb-20">
-    <h2 class="text-3xl font-semibold mb-6">About the Developer</h2>
-    <Card className="p-8 gap-0">
+  <section class="relative mx-auto max-w-4xl px-5 py-12 pb-20">
+    <h2 class="mb-6 text-3xl font-semibold">About the Developer</h2>
+    <Card className="gap-0 p-8">
       <p class="text-gray-100">
         Cody Bromley is an independent developer who built Blankie as a love
-        letter to Blanket for Linux — and to the idea that calm shouldn't have
-        a paywall. He develops Blankie in the open with community contributors
-        and translators around the world. He's happy to talk about indie
-        development, open source on the App Store, audio engineering, or why
-        the app is free forever.
+        letter to Blanket for Linux — and to the idea that calm shouldn't have a
+        paywall. He develops Blankie in the open with community contributors and
+        translators around the world. He's happy to talk about indie
+        development, open source on the App Store, audio engineering, or why the
+        app is free forever.
       </p>
       <p class="mt-4">
         <a
           href="mailto:press@blankie.rest"
-          class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
         >
           press@blankie.rest
         </a>
         <span class="text-gray-500"> · </span>
         <a
           href="https://github.com/codybrom"
-          class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
         >
           github.com/codybrom
         </a>

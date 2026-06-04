@@ -66,14 +66,14 @@ function getLicenseURL(license: string) {
 ---
 
 <Layout title={title}>
-  <main class="prose prose-lg prose-invert max-w-5xl mx-auto px-5 pt-28 pb-10">
+  <main class="prose prose-lg prose-invert mx-auto max-w-5xl px-5 pt-28 pb-10">
     <div class="prose prose-lg prose-invert max-w-none">
-      <h1 class="text-4xl font-bold mb-8">Credits</h1>
+      <h1 class="mb-8 text-4xl font-bold">Credits</h1>
 
       <!-- Development & License -->
       <section class="mb-12">
-        <h2 class="text-2xl font-semibold mb-4">About Blankie</h2>
-        <div class="bg-dark-gray rounded-lg p-6 shadow-sm space-y-8 not-prose">
+        <h2 class="mb-4 text-2xl font-semibold">About Blankie</h2>
+        <div class="bg-dark-gray not-prose space-y-8 rounded-lg p-6 shadow-sm">
           <div>
             <p class="mb-4">
               Built with <Heart
@@ -83,13 +83,13 @@ function getLicenseURL(license: string) {
               /><span class="sr-only">love</span> by
               <a
                 href="https://github.com/codybrom"
-                class="text-yellow-500 hover:text-yellow-700 transition-colors"
+                class="text-yellow-500 transition-colors hover:text-yellow-700"
               >
                 Cody Bromley
               </a> and inspired by
               <a
                 href="https://github.com/rafaelmardojai/blanket"
-                class="text-yellow-500 hover:text-yellow-700 transition-colors"
+                class="text-yellow-500 transition-colors hover:text-yellow-700"
               >
                 Blanket
               </a>
@@ -106,7 +106,7 @@ function getLicenseURL(license: string) {
               name and all trademark rights are reserved.
             </p>
 
-            <p class="text-mid-gray text-sm my-2">
+            <p class="text-mid-gray my-2 text-sm">
               <i>
                 Blankie is an independent macOS application built without
                 re-using any code from the Blanket project, but it does use some
@@ -125,11 +125,11 @@ function getLicenseURL(license: string) {
                 the
                 <a
                   href="https://choosealicense.com/licenses/mit/"
-                  class="text-yellow-500 hover:text-yellow-700 transition-colors"
+                  class="text-yellow-500 transition-colors hover:text-yellow-700"
                 >
                   MIT License
-                </a> but other components of Blankie (such as sounds, icons, and
-                libraries) may be covered by different licenses as detailed below.
+                </a> but other components of Blankie (such as sounds, icons, and libraries)
+                may be covered by different licenses as detailed below.
               </p>
               <details class="mt-2">
                 <summary
@@ -170,20 +170,20 @@ function getLicenseURL(license: string) {
 
     <!-- Contributors & Translators Section -->
     <section class="mb-12">
-      <h2 class="text-2xl font-semibold mb-4">Contributors & Translators</h2>
-      <div class="bg-dark-gray rounded-lg p-6 shadow-sm space-y-6 not-prose">
+      <h2 class="mb-4 text-2xl font-semibold">Contributors & Translators</h2>
+      <div class="bg-dark-gray not-prose space-y-6 rounded-lg p-6 shadow-sm">
         <!-- Contributors subsection -->
         {
           contributors.length > 0 && (
             <div>
-              <h3 class="text-xl font-medium mb-3">Contributors</h3>
+              <h3 class="mb-3 text-xl font-medium">Contributors</h3>
               <p>
                 Special thanks to the following individuals who have contributed
                 code to Blankie:
               </p>
-              <div class="flex flex-wrap gap-2 mt-3">
+              <div class="mt-3 flex flex-wrap gap-2">
                 {contributors.map((contributor) => (
-                  <span class="px-3 py-1.5 bg-zinc-700/50 rounded-full text-sm">
+                  <span class="rounded-full bg-zinc-700/50 px-3 py-1.5 text-sm">
                     {contributor}
                   </span>
                 ))}
@@ -196,20 +196,20 @@ function getLicenseURL(license: string) {
         {
           Object.keys(translators).length > 0 && (
             <div>
-              <h3 class="text-xl font-medium mb-3">Translators</h3>
+              <h3 class="mb-3 text-xl font-medium">Translators</h3>
               <p>
                 Thanks to the following translators who helped make Blankie
                 accessible in multiple languages:
               </p>
-              <div class="grid gap-4 sm:grid-cols-2 mt-4">
+              <div class="mt-4 grid gap-4 sm:grid-cols-2">
                 {Object.entries(translators).map(
                   ([language, names]) =>
                     names.length > 0 && (
-                      <div class="border border-mid-gray rounded-lg p-3">
+                      <div class="border-mid-gray rounded-lg border p-3">
                         <h4 class="font-medium text-zinc-300">{language}</h4>
-                        <div class="text-sm mt-1">{names.join(", ")}</div>
+                        <div class="mt-1 text-sm">{names.join(", ")}</div>
                       </div>
-                    )
+                    ),
                 )}
               </div>
             </div>
@@ -220,16 +220,14 @@ function getLicenseURL(license: string) {
 
     <!-- Sound Credits -->
     <section class="mb-12">
-      <h2 class="text-2xl font-semibold mb-4">Sound Credits</h2>
-      <div class="bg-dark-gray rounded-lg p-3 shadow-sm overflow-hidden">
+      <h2 class="mb-4 text-2xl font-semibold">Sound Credits</h2>
+      <div class="bg-dark-gray overflow-hidden rounded-lg p-3 shadow-sm">
         <div class="grid gap-6 sm:grid-cols-2">
           {
             sounds.map((sound) => (
-              <div class="px-4 border border-mid-gray rounded-lg w-full overflow-hidden">
-                <p class="text-md text-zinc-300 font-semibold my-1">
-                  {sound.title}
-                </p>
-                <div class="flex justify-between items-center">
+              <div class="border-mid-gray w-full overflow-hidden rounded-lg border px-4">
+                <p class="my-1 font-semibold text-zinc-300">{sound.title}</p>
+                <div class="flex items-center justify-between">
                   <a
                     href={sound.soundUrl}
                     class="text-yellow-500 hover:text-yellow-700 hover:underline"
@@ -239,12 +237,12 @@ function getLicenseURL(license: string) {
                   </a>
                   <a
                     href={getLicenseURL(sound.license)}
-                    class="text-xs px-2 py-0.5 rounded bg-zinc-700/50 text-zinc-300 hover:bg-zinc-700/75"
+                    class="rounded-sm bg-zinc-700/50 px-2 py-0.5 text-xs text-zinc-300 hover:bg-zinc-700/75"
                   >
                     {getLicenseText(sound.license)}
                   </a>
                 </div>
-                <p class="text-xs mt-2">
+                <p class="mt-2 text-xs">
                   by{" "}
                   {sound.authorUrl ? (
                     <a href={sound.authorUrl} class="hover:underline">
@@ -263,40 +261,40 @@ function getLicenseURL(license: string) {
 
     <!-- Assets & Other Credits -->
     <section class="mb-12">
-      <h2 class="text-2xl font-semibold mb-4">Assets & Other Credits</h2>
-      <div class="bg-dark-gray rounded-lg p-6 shadow-sm space-y-8 not-prose">
+      <h2 class="mb-4 text-2xl font-semibold">Assets & Other Credits</h2>
+      <div class="bg-dark-gray not-prose space-y-8 rounded-lg p-6 shadow-sm">
         <!-- App Icon subsection -->
         <div>
-          <h3 class="text-xl font-medium mb-3">App Icon & Logo</h3>
+          <h3 class="mb-3 text-xl font-medium">App Icon & Logo</h3>
           <p>
             The Blankie logo and app icon were created by
             <a
               href="https://github.com/codybrom"
-              class="text-yellow-500 hover:text-yellow-700 transition-colors"
+              class="text-yellow-500 transition-colors hover:text-yellow-700"
             >
               Cody Bromley
             </a>
             and used under the
             <a
               href="https://creativecommons.org/licenses/by/4.0/"
-              class="text-yellow-500 hover:text-yellow-700 transition-colors"
+              class="text-yellow-500 transition-colors hover:text-yellow-700"
             >
               Creative Commons Attribution 4.0 International License
               <img
-                class="h-5.5 inline-block"
+                class="inline-block h-5.5"
                 src={ccSvg.src}
                 alt="Creative Commons"
                 aria-label="Creative Commons License"
               />
               <img
-                class="h-5.5 inline-block"
+                class="inline-block h-5.5"
                 src={bySvg.src}
                 alt="Attribution"
                 aria-label="Attribution Required"
               />
             </a>
           </p>
-          <h3 class="text-lg mt-4 mb-2 font-bold">
+          <h3 class="mt-4 mb-2 text-lg font-bold">
             Exceptions for Attribution
           </h3>
           <p>
@@ -307,7 +305,7 @@ function getLicenseURL(license: string) {
             >
             are met:
           </p>
-          <ul class="list-disc my-2 pl-5">
+          <ul class="my-2 list-disc pl-5">
             <li>
               the icon is not cropped, distorted, recolored or otherwise altered
               in any way
@@ -326,20 +324,20 @@ function getLicenseURL(license: string) {
 
         <!-- Sound Icons subsection -->
         <div>
-          <h3 class="text-xl font-medium mb-3">Sound Icons</h3>
+          <h3 class="mb-3 text-xl font-medium">Sound Icons</h3>
           <p>
             Blankie uses <a
               href="https://developer.apple.com/sf-symbols/"
-              class="text-yellow-500 hover:text-yellow-700 transition-colors"
+              class="text-yellow-500 transition-colors hover:text-yellow-700"
               >SF Symbols</a
             > for sound icons. SF Symbols are provided by Apple as a system resource,
             with usage governed by the <a
               href="https://www.apple.com/legal/sla/docs/xcode.pdf"
-              class="text-yellow-500 hover:text-yellow-700 transition-colors inline-flex items-center gap-1"
+              class="inline-flex items-center gap-1 text-yellow-500 transition-colors hover:text-yellow-700"
             >
               Xcode and Apple SDKs Agreement
               <span
-                class="text-xs px-1.5 py-0.5 bg-zinc-700 rounded-md"
+                class="rounded-md bg-zinc-700 px-1.5 py-0.5 text-xs"
                 aria-label="PDF file">PDF</span
               >
             </a>.
@@ -350,17 +348,18 @@ function getLicenseURL(license: string) {
         {
           dependencies.length > 0 && (
             <div>
-              <h3 class="text-xl font-medium mb-3">Software Dependencies</h3>
+              <h3 class="mb-3 text-xl font-medium">Software Dependencies</h3>
               <div class="space-y-2">
                 {dependencies.map((dependency) => (
                   <p class="text-sm">
                     <a
                       href={dependency.url}
-                      class="text-yellow-500 hover:text-yellow-700 transition-colors"
+                      class="text-yellow-500 transition-colors hover:text-yellow-700"
                     >
                       {dependency.name}
                     </a>{" "}
-                    by {dependency.author}, licensed under the {dependency.license}.
+                    by {dependency.author}, licensed under the{" "}
+                    {dependency.license}.
                   </p>
                 ))}
               </div>
@@ -370,16 +369,16 @@ function getLicenseURL(license: string) {
 
         <!-- Website Content subsection -->
         <div>
-          <h3 class="text-xl font-medium mb-3">Website Content</h3>
+          <h3 class="mb-3 text-xl font-medium">Website Content</h3>
           <p>
             Homepage Video Background: <a
               href="https://www.pexels.com/video/bird-s-eye-view-of-ocean-waves-1918465/"
-              class="text-yellow-500 hover:text-yellow-700 transition-colors"
+              class="text-yellow-500 transition-colors hover:text-yellow-700"
               >Bird's Eye View of Ocean Waves</a
             > by
             <a
               href="https://www.pexels.com/@digitech/"
-              class="text-yellow-500 hover:text-yellow-700 transition-colors"
+              class="text-yellow-500 transition-colors hover:text-yellow-700"
             >
               Ruvim Miksanskiy
             </a>

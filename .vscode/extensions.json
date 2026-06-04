@@ -2,6 +2,8 @@
   "recommendations": [
     "DavidAnson.vscode-markdownlint",
     "streetsidesoftware.code-spell-checker",
-    "astro-build.astro-vscode"
+    "astro-build.astro-vscode",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint"
   ]
 }

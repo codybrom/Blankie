@@ -18,7 +18,7 @@ marked.use(
       { type: "warning", icon: "", title: "WARNING" },
       { type: "caution", icon: "", title: "CAUTION" },
     ],
-  })
+  }),
 );
 
 // Strip inline `{#id}` markers from heading text.

@@ -23,7 +23,7 @@ export function FaqAccordion({ items }: { items: FaqItem[] }) {
         <AccordionItem
           key={i}
           value={`faq-${i}`}
-          className="rounded-lg border-none bg-dark-gray transition-colors hover:bg-zinc-800"
+          className="bg-dark-gray rounded-lg border-none transition-colors hover:bg-zinc-800"
         >
           <AccordionTrigger className="cursor-pointer items-center gap-1.5 px-4 py-3 text-lg font-medium text-gray-100 hover:no-underline">
             {item.question}

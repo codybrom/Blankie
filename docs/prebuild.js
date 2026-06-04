@@ -124,7 +124,7 @@ try {
   // Save source.json
   fs.writeFileSync(
     path.join(outputDir, "source.json"),
-    JSON.stringify(sourceJson, null, 2)
+    JSON.stringify(sourceJson, null, 2),
   );
   console.log(`Created source.json with English strings and comments`);
 
@@ -139,7 +139,7 @@ try {
   });
 
   console.log(
-    `Found ${languages.size} languages: ${Array.from(languages).join(", ")}`
+    `Found ${languages.size} languages: ${Array.from(languages).join(", ")}`,
   );
 
   // Create per-language files
@@ -219,10 +219,10 @@ try {
     const langFileName = `${lang}.json`;
     fs.writeFileSync(
       path.join(outputDir, langFileName),
-      JSON.stringify(langData, null, 2)
+      JSON.stringify(langData, null, 2),
     );
     console.log(
-      `Created language file: ${langFileName} (${langData.statistics.translationPercentage}% translated, ${langData.statistics.needsReviewPercentage}% needs review)`
+      `Created language file: ${langFileName} (${langData.statistics.translationPercentage}% translated, ${langData.statistics.needsReviewPercentage}% needs review)`,
     );
   });
 
@@ -306,19 +306,9 @@ try {
     };
   });
 
-  // Count strings without English translations
-  let totalStringsCount = Object.keys(result.strings).length;
-  let missingEnglishStrings = 0;
-
-  Object.keys(result.strings).forEach((key) => {
-    if (!result.strings[key].en) {
-      missingEnglishStrings++;
-    }
-  });
-
   fs.writeFileSync(
     path.join(outputDir, "languages.json"),
-    JSON.stringify(langIndex, null, 2)
+    JSON.stringify(langIndex, null, 2),
   );
 
   // Print translation summary
@@ -330,7 +320,7 @@ try {
       const stats = langIndex.statistics[lang];
       console.log(
         `${lang}: ${stats.translationPercentage}% translated, ${stats.needsReviewPercentage}% needs review, ${stats.needsTranslationPercentage}% needs translation ` +
-          `(${stats.translatedStrings}/${stats.totalStrings} translated, ${stats.needsReviewStrings}/${stats.totalStrings} needs review, ${stats.needsTranslationStrings}/${stats.totalStrings} needs translation)`
+          `(${stats.translatedStrings}/${stats.totalStrings} translated, ${stats.needsReviewStrings}/${stats.totalStrings} needs review, ${stats.needsTranslationStrings}/${stats.totalStrings} needs translation)`,
       );
     });
   console.log("============================");
@@ -338,11 +328,11 @@ try {
   // Count the generated files
   const generatedFiles = fs.readdirSync(outputDir);
   console.log(
-    `✨ Prebuild: Generated ${generatedFiles.length} localization files\n`
+    `✨ Prebuild: Generated ${generatedFiles.length} localization files\n`,
   );
 } catch (error) {
   console.error(
-    `❌ Prebuild: Localization extraction failed: ${error.message}`
+    `❌ Prebuild: Localization extraction failed: ${error.message}`,
   );
   process.exit(1);
 }

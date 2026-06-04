@@ -7,13 +7,13 @@ interface Props {
 const { videoSrc, posterSrc } = Astro.props;
 ---
 
-<div class="absolute top-0 left-0 right-0 bottom-0 bg-black opacity-80">
+<div class="absolute inset-0 bg-black opacity-80">
   <video
     id="background-video"
     muted
     playsinline
     aria-hidden="true"
-    class="absolute top-1/2 left-1/2 min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 object-cover opacity-40"
+    class="absolute top-1/2 left-1/2 min-h-full min-w-full -translate-1/2 object-cover opacity-40"
     poster={posterSrc}
   >
   </video>
@@ -23,7 +23,7 @@ const { videoSrc, posterSrc } = Astro.props;
   </span>
 </div>
 
-<script define:vars={{ videoSrc }}>
+<script is:inline define:vars={{ videoSrc }}>
   document.addEventListener("DOMContentLoaded", () => {
     const video = document.getElementById("background-video");
 
@@ -51,7 +51,7 @@ const { videoSrc, posterSrc } = Astro.props;
       },
       {
         rootMargin: "100px", // Start loading slightly before video is visible
-      }
+      },
     );
 
     // Start observing the video
