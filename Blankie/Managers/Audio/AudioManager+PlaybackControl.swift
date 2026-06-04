@@ -17,11 +17,11 @@ extension AudioManager {
 
   @MainActor
   func resetSounds() {
-    debugLog("AudioManager: Resetting all sounds")
+    debugLog("AudioManager: Resetting all sounds", .audio)
 
     // First pause all sounds immediately
     for sound in sounds {
-      debugLog("  - Stopping '\(sound.fileName)'")
+      debugLog("  - Stopping '\(sound.fileName)'", .audio)
       sound.pause(immediate: true)
     }
     setGlobalPlaybackState(false)
@@ -38,7 +38,7 @@ extension AudioManager {
 
     // Call the reset callback
     onReset?()
-    debugLog("AudioManager: Reset complete")
+    debugLog("AudioManager: Reset complete", .audio)
   }
 
   public func updateNowPlayingInfoForPreset(
@@ -69,13 +69,13 @@ extension AudioManager {
       guard let self = self else { return }
 
       guard !self.isInitializing || forceUpdate else {
-        debugLog("AudioManager: Ignoring setPlaybackState during initialization")
+        debugLog("AudioManager: Ignoring setPlaybackState during initialization", .audio)
         return
       }
 
       if self.isGloballyPlaying != playing {
         debugLog(
-          "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
+          "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)", .audio
         )
         self.isGloballyPlaying = playing
 
@@ -94,15 +94,15 @@ extension AudioManager {
         )
       } else {
         debugLog(
-          "AudioManager: setPlaybackState called, but state is the same \(playing), ignoring")
+          "AudioManager: setPlaybackState called, but state is the same \(playing), ignoring", .audio)
       }
     }
   }
 
   func playSelected() {
-    debugLog("AudioManager: Playing selected sounds")
+    debugLog("AudioManager: Playing selected sounds", .audio)
     guard isGloballyPlaying else {
-      debugLog("AudioManager: Not playing sounds because global playback is disabled")
+      debugLog("AudioManager: Not playing sounds because global playback is disabled", .audio)
       return
     }
 
@@ -115,7 +115,7 @@ extension AudioManager {
 
     // If in solo mode, play only the solo sound
     if let soloSound = soloModeSound {
-      debugLog("  - In solo mode, playing only '\(soloSound.fileName)'")
+      debugLog("  - In solo mode, playing only '\(soloSound.fileName)'", .audio)
 
       // Play the solo sound at its current volume
       soloSound.play()
@@ -160,7 +160,7 @@ extension AudioManager {
   }
 
   func pauseAll() {
-    debugLog("AudioManager: Pausing all selected sounds")
+    debugLog("AudioManager: Pausing all selected sounds", .audio)
 
     for sound in sounds where sound.isSelected {
       sound.pause()
@@ -174,12 +174,12 @@ extension AudioManager {
   @MainActor
   public func setGlobalPlaybackState(_ playing: Bool, forceUpdate: Bool = false) {
     guard !isInitializing || forceUpdate else {
-      debugLog("AudioManager: Ignoring setPlaybackState during initialization")
+      debugLog("AudioManager: Ignoring setPlaybackState during initialization", .audio)
       return
     }
 
     debugLog(
-      "AudioManager: Setting playback state to \(playing) - Current global state: \(isGloballyPlaying)"
+      "AudioManager: Setting playback state to \(playing) - Current global state: \(isGloballyPlaying)", .audio
     )
 
     // Update state first
@@ -219,7 +219,7 @@ extension AudioManager {
     for sound in sounds {
       if !sound.isSelected, sound.player?.isPlaying == true {
         debugLog(
-          "AudioManager: Stopping deselected sound '\(sound.fileName)' that was still playing")
+          "AudioManager: Stopping deselected sound '\(sound.fileName)' that was still playing", .audio)
         sound.pause(immediate: true)
       }
     }

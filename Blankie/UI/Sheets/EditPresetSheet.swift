@@ -269,15 +269,15 @@ struct EditPresetSheet: View {
       ImagePicker(imageData: $artworkData)
         .onDisappear {
           debugLog(
-            "EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")"
+            "EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")", .ui
           )
           if artworkData != nil {
             // Generate new ID for the new artwork
-            debugLog("EditPresetSheet: Generating new artwork ID and applying changes")
+            debugLog("EditPresetSheet: Generating new artwork ID and applying changes", .ui)
             artworkId = UUID()
             applyChangesInstantly()
           } else {
-            debugLog("EditPresetSheet: No artwork data, user likely cancelled")
+            debugLog("EditPresetSheet: No artwork data, user likely cancelled", .ui)
           }
         }
     #endif
@@ -353,7 +353,7 @@ extension EditPresetSheet {
     if let url = exportedURL {
       // Delete the temporary file
       try? FileManager.default.removeItem(at: url)
-      debugLog("Cleaned up temporary export file: \(url.lastPathComponent)")
+      debugLog("Cleaned up temporary export file: \(url.lastPathComponent)", .ui)
     }
     // Reset the state
     exportedURL = nil
@@ -403,7 +403,7 @@ extension EditPresetSheet {
   }
 
   func applyChangesInstantly(skipRefresh: Bool = false) {
-    debugLog("EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))")
+    debugLog("EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))", .ui)
 
     // Only validate name for non-default presets
     if !preset.isDefault {
@@ -531,7 +531,7 @@ extension EditPresetSheet {
     }
 
     debugLog(
-      "EditPresetSheet: Creating \(states.count) sound states from \(selectedSounds.count) selected sounds"
+      "EditPresetSheet: Creating \(states.count) sound states from \(selectedSounds.count) selected sounds", .ui
     )
 
     return states
@@ -545,17 +545,17 @@ extension EditPresetSheet {
           data, for: preset.id, type: .artwork
         )
         artworkId = savedId
-        debugLog("EditPresetSheet: Saved artwork with ID: \(savedId)")
+        debugLog("EditPresetSheet: Saved artwork with ID: \(savedId)", .ui)
       } catch {
-        debugLog("EditPresetSheet: Failed to save artwork: \(error)")
+        logError("EditPresetSheet: Failed to save artwork: \(error)", .ui)
       }
     } else if artworkId == nil, preset.artworkId != nil {
       // Artwork was deleted - clean up old artwork
       do {
         try await PresetArtworkManager.shared.deleteArtwork(for: preset.artworkId!)
-        debugLog("EditPresetSheet: Deleted old artwork")
+        debugLog("EditPresetSheet: Deleted old artwork", .ui)
       } catch {
-        debugLog("EditPresetSheet: Failed to delete old artwork: \(error)")
+        logError("EditPresetSheet: Failed to delete old artwork: \(error)", .ui)
       }
     }
   }
@@ -570,7 +570,7 @@ extension EditPresetSheet {
       PresetStorage.saveDefaultPreset(defaultPreset)
     }
     PresetStorage.saveCustomPresets(customPresets)
-    debugLog("EditPresetSheet: Presets saved directly without state override")
+    debugLog("EditPresetSheet: Presets saved directly without state override", .ui)
   }
 
   private func deletePreset(_ preset: Preset) {
@@ -603,10 +603,10 @@ extension EditPresetSheet {
             }
           }
         } catch {
-          debugLog("EditPresetSheet: Failed to import image: \(error)")
+          logError("EditPresetSheet: Failed to import image: \(error)", .ui)
         }
       case .failure(let error):
-        debugLog("EditPresetSheet: Failed to import image: \(error)")
+        logError("EditPresetSheet: Failed to import image: \(error)", .ui)
       }
     }
 

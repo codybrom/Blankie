@@ -183,9 +183,9 @@ class PlaybackProfileStore {
         profiles[profile.filename] = profile
       }
 
-      debugLog("PlaybackProfileStore: Loaded \(profiles.count) profiles")
+      debugLog("PlaybackProfileStore: Loaded \(profiles.count) profiles", .presets)
     } catch {
-      debugLog("PlaybackProfileStore: Failed to load profiles: \(error)")
+      logError("PlaybackProfileStore: Failed to load profiles: \(error)", .presets)
     }
   }
 
@@ -197,9 +197,9 @@ class PlaybackProfileStore {
       let data = try encoder.encode(profileArray)
       try data.write(to: storageURL)
 
-      debugLog("PlaybackProfileStore: Saved \(profileArray.count) profiles")
+      debugLog("PlaybackProfileStore: Saved \(profileArray.count) profiles", .presets)
     } catch {
-      debugLog("PlaybackProfileStore: Failed to save profiles: \(error)")
+      logError("PlaybackProfileStore: Failed to save profiles: \(error)", .presets)
     }
   }
 }

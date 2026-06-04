@@ -15,7 +15,7 @@ class ErrorReporter: ObservableObject {
     DispatchQueue.main.async {
       self.lastError = error
       #if DEBUG
-        debugLog("Error reported: \(error.localizedDescription)")
+        logError("Error reported: \(error.localizedDescription)")
       #endif
     }
   }

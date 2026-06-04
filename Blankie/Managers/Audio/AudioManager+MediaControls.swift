@@ -18,7 +18,7 @@ private enum NavigableItem {
 // MARK: - Media Controls
 extension AudioManager {
   func setupMediaControls() {
-    debugLog("AudioManager: Setting up media controls")
+    debugLog("AudioManager: Setting up media controls", .audio)
 
     let commandCenter = MPRemoteCommandCenter.shared()
     configureMediaCommands(commandCenter)
@@ -48,7 +48,7 @@ extension AudioManager {
 
   private func addPlaybackCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
     commandCenter.playCommand.addTarget { [weak self] _ in
-      debugLog("AudioManager: Media key play command received")
+      debugLog("AudioManager: Media key play command received", .audio)
       Task { @MainActor in
         // Only play if we're currently paused
         if !(self?.isGloballyPlaying ?? false) {
@@ -59,7 +59,7 @@ extension AudioManager {
     }
 
     commandCenter.pauseCommand.addTarget { [weak self] _ in
-      debugLog("AudioManager: Media key pause command received")
+      debugLog("AudioManager: Media key pause command received", .audio)
       Task { @MainActor in
         // Only pause if we're currently playing
         if self?.isGloballyPlaying ?? false {
@@ -70,7 +70,7 @@ extension AudioManager {
     }
 
     commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
-      debugLog("AudioManager: Media key toggle command received")
+      debugLog("AudioManager: Media key toggle command received", .audio)
       Task { @MainActor in
         self?.togglePlayback()
       }
@@ -81,14 +81,14 @@ extension AudioManager {
   private func addNavigationCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
     // Next/Previous track commands for preset navigation
     commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-      debugLog("AudioManager: Next track command received")
+      debugLog("AudioManager: Next track command received", .audio)
       guard let self = self else { return .commandFailed }
 
       Task { @MainActor in
         // Quick Mix isn't part of the favorites cycle; solo sounds can be (when
         // favorited), so navigation handles solo itself.
         guard !self.isQuickMix else {
-          debugLog("AudioManager: Skipping next - in quick mix")
+          debugLog("AudioManager: Skipping next - in quick mix", .audio)
           return
         }
 
@@ -98,14 +98,14 @@ extension AudioManager {
     }
 
     commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-      debugLog("AudioManager: Previous track command received")
+      debugLog("AudioManager: Previous track command received", .audio)
       guard let self = self else { return .commandFailed }
 
       Task { @MainActor in
         // Quick Mix isn't part of the favorites cycle; solo sounds can be (when
         // favorited), so navigation handles solo itself.
         guard !self.isQuickMix else {
-          debugLog("AudioManager: Skipping previous - in quick mix")
+          debugLog("AudioManager: Skipping previous - in quick mix", .audio)
           return
         }
 
@@ -161,17 +161,17 @@ extension AudioManager {
       if soloModeSound != nil {
         exitSoloModeWithoutResuming()
       }
-      debugLog("AudioManager: Navigating to preset: \(preset.name)")
+      debugLog("AudioManager: Navigating to preset: \(preset.name)", .audio)
       do {
         try PresetManager.shared.applyPreset(preset)
         if isGloballyPlaying {
           setGlobalPlaybackState(true)
         }
       } catch {
-        debugLog("AudioManager: Failed to apply preset \(preset.name): \(error)")
+        logError("AudioManager: Failed to apply preset \(preset.name): \(error)", .audio)
       }
     case .solo(let sound):
-      debugLog("AudioManager: Navigating to solo sound: \(sound.title)")
+      debugLog("AudioManager: Navigating to solo sound: \(sound.title)", .audio)
       // Respect the current play/pause state, matching preset navigation —
       // skipping onto a solo favorite while paused shouldn't start playback.
       enterSoloMode(for: sound, startPlaying: isGloballyPlaying)
@@ -220,6 +220,6 @@ extension AudioManager {
     commandCenter.nextTrackCommand.isEnabled = enableNextPrev
     commandCenter.previousTrackCommand.isEnabled = enableNextPrev
 
-    debugLog("AudioManager: Next/Previous commands \(enableNextPrev ? "enabled" : "disabled")")
+    debugLog("AudioManager: Next/Previous commands \(enableNextPrev ? "enabled" : "disabled")", .audio)
   }
 }

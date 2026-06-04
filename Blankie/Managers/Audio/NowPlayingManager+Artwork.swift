@@ -42,7 +42,7 @@ extension NowPlayingManager {
           ),
           let data = try? Data(contentsOf: squarePreviewURL)
         {
-          debugLog("NowPlayingManager: Loading bundled square preview for \(bundledId)")
+          debugLog("NowPlayingManager: Loading bundled square preview for \(bundledId)", .nowPlaying)
           currentStaticArtworkPath = nil
           currentArtworkId = nil
           updateArtwork(artworkData: data)
@@ -54,7 +54,7 @@ extension NowPlayingManager {
           AnimatedArtworkFileStore.fileExists(at: squarePreviewPath),
           currentStaticArtworkPath != squarePreviewPath
         {
-          debugLog("NowPlayingManager: Loading cached square preview from Documents")
+          debugLog("NowPlayingManager: Loading cached square preview from Documents", .nowPlaying)
           currentStaticArtworkPath = squarePreviewPath
           currentArtworkId = nil
           let data = try? Data(
@@ -128,7 +128,7 @@ extension NowPlayingManager {
             withExtension: asset.squarePreviewExtension
           )
         {
-          debugLog("NowPlayingManager: Loading bundled square preview for \(bundledId)")
+          debugLog("NowPlayingManager: Loading bundled square preview for \(bundledId)", .nowPlaying)
           currentStaticArtworkPath = nil
           currentArtworkId = nil
           staticArtworkTask = Task.detached(priority: .background) { [weak self] in
@@ -155,7 +155,7 @@ extension NowPlayingManager {
             return
           }
 
-          debugLog("NowPlayingManager: Loading cached square preview from Documents")
+          debugLog("NowPlayingManager: Loading cached square preview from Documents", .nowPlaying)
           currentStaticArtworkPath = squarePreviewPath
           currentArtworkId = nil
           staticArtworkTask = Task.detached(priority: .background) { [weak self] in
@@ -217,22 +217,22 @@ extension NowPlayingManager {
 
   func updateArtwork(artworkData: Data?) {
     debugLog(
-      "NowPlayingManager: Processing artwork data: \(artworkData != nil ? "\(artworkData!.count) bytes" : "None")"
+      "NowPlayingManager: Processing artwork data: \(artworkData != nil ? "\(artworkData!.count) bytes" : "None")", .nowPlaying
     )
     if let customArtwork = loadCustomArtwork(from: artworkData) {
-      debugLog("NowPlayingManager: Custom artwork loaded successfully")
+      debugLog("NowPlayingManager: Custom artwork loaded successfully", .nowPlaying)
       nowPlayingInfo[MPMediaItemPropertyArtwork] = customArtwork
     } else if let defaultArtwork = loadArtwork() {
-      debugLog("NowPlayingManager: Using default artwork")
+      debugLog("NowPlayingManager: Using default artwork", .nowPlaying)
       nowPlayingInfo[MPMediaItemPropertyArtwork] = defaultArtwork
     } else {
-      debugLog("NowPlayingManager: No artwork available")
+      debugLog("NowPlayingManager: No artwork available", .nowPlaying)
     }
   }
 
   /// Load artwork from SwiftData and update Now Playing info
   func loadAndUpdateArtwork(artworkId: UUID, shouldPublish: Bool = true) async {
-    debugLog("NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)")
+    debugLog("NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)", .nowPlaying)
 
     // Load artwork on background thread to prevent UI blocking
     let artworkData: Data? = await Task.detached {
@@ -240,7 +240,7 @@ extension NowPlayingManager {
       let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
       if let imageData = imageData {
         debugLog(
-          "NowPlayingManager: Loaded artwork from SwiftData (\(imageData.count) bytes)"
+          "NowPlayingManager: Loaded artwork from SwiftData (\(imageData.count) bytes)", .nowPlaying
         )
       }
       return imageData
@@ -249,7 +249,7 @@ extension NowPlayingManager {
     // Update artwork in memory on main thread
     await MainActor.run {
       if artworkData == nil {
-        debugLog("NowPlayingManager: No artwork found in SwiftData")
+        debugLog("NowPlayingManager: No artwork found in SwiftData", .nowPlaying)
       }
       updateArtwork(artworkData: artworkData)
 

@@ -312,7 +312,7 @@ struct SoundIcon: View {
     let result = CustomSoundManager.shared.deleteCustomSound(customSoundData)
 
     if case .failure(let error) = result {
-      debugLog("SoundIcon: Failed to delete custom sound: \(error)")
+      logError("SoundIcon: Failed to delete custom sound: \(error)", .ui)
     }
   }
 

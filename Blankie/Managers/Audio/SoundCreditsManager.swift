@@ -19,7 +19,7 @@ class SoundCreditsManager: ObservableObject {
 
   private func loadCredits() {
     guard let url = Bundle.main.url(forResource: "sounds", withExtension: "json") else {
-      debugLog("Error: sounds.json not found in bundle")
+      logError("Error: sounds.json not found in bundle", .sounds)
       return
     }
 
@@ -42,7 +42,7 @@ class SoundCreditsManager: ObservableObject {
         )
       }
     } catch {
-      debugLog("Error loading sounds.json: \(error)")
+      logError("Error loading sounds.json: \(error)", .sounds)
       loadError = error
     }
   }

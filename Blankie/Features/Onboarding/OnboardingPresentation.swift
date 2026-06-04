@@ -29,14 +29,14 @@ struct PresetOnboardingPresenter<Content: View>: View {
             hasCustomPresets: presetManager.hasCustomPresets
           )
           debugLog(
-            "OnboardingPresenter: isLoading->false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)"
+            "OnboardingPresenter: isLoading->false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)", .ui
           )
           showOnboarding = force ? true : shouldShow
         }
       }
       .onAppear {
         if force {
-          debugLog("OnboardingPresenter: force=true, presenting onboarding")
+          debugLog("OnboardingPresenter: force=true, presenting onboarding", .ui)
           showOnboarding = true
           return
         }
@@ -45,11 +45,11 @@ struct PresetOnboardingPresenter<Content: View>: View {
             hasCustomPresets: presetManager.hasCustomPresets
           )
           debugLog(
-            "OnboardingPresenter: onAppear, isLoading=false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)"
+            "OnboardingPresenter: onAppear, isLoading=false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)", .ui
           )
           showOnboarding = shouldShow
         } else {
-          debugLog("OnboardingPresenter: onAppear, waiting for presets to finish loading...")
+          debugLog("OnboardingPresenter: onAppear, waiting for presets to finish loading...", .ui)
         }
       }
   }

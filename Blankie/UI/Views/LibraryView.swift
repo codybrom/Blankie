@@ -219,7 +219,7 @@ struct PresetPickerRow: View {
         if dismissOnSelect { dismiss() }
         onSelection?()
       } catch {
-        debugLog("Error applying preset: \(error)")
+        logError("Error applying preset: \(error)", .ui)
       }
     }
   }

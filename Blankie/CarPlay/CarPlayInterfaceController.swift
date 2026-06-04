@@ -43,17 +43,17 @@
 
     @MainActor
     func setInterfaceController(_ controller: CPInterfaceController) {
-      debugLog("CarPlay: Setting interface controller...")
+      debugLog("CarPlay: Setting interface controller...", .carPlay)
       interfaceController = controller
       isConnected = true
 
       // Initialize app and setup interface
       Task { @MainActor in
-        debugLog("CarPlay: Starting app initialization...")
+        debugLog("CarPlay: Starting app initialization...", .carPlay)
 
         await initializeCarPlayApp()
 
-        debugLog("CarPlay: Setting up interface...")
+        debugLog("CarPlay: Setting up interface...", .carPlay)
         setupTabBarInterface()
       }
 
@@ -91,35 +91,35 @@
     /// Initialize CarPlay app
     @MainActor
     private func initializeCarPlayApp() async {
-      debugLog("CarPlay: Checking initialization state...")
+      debugLog("CarPlay: Checking initialization state...", .carPlay)
       let isProtectedDataAvailable = UIApplication.shared.isProtectedDataAvailable
-      debugLog("CarPlay: Protected data available: \(isProtectedDataAvailable)")
+      debugLog("CarPlay: Protected data available: \(isProtectedDataAvailable)", .carPlay)
 
       // CarPlay should work even when device is locked
       // Skip waiting for protected data - CarPlay needs to function while driving
       if !isProtectedDataAvailable {
-        debugLog("CarPlay: Device is locked, but proceeding anyway for CarPlay functionality")
+        debugLog("CarPlay: Device is locked, but proceeding anyway for CarPlay functionality", .carPlay)
       }
 
       // Ensure the shared container is initialized
       if !SharedModelContainer.shared.isInitialized {
-        debugLog("CarPlay: Initializing shared model container...")
+        debugLog("CarPlay: Initializing shared model container...", .carPlay)
         SharedModelContainer.shared.initialize()
       }
 
       // Set up manager contexts if not already done
       if AudioManager.shared.modelContext == nil {
-        debugLog("CarPlay: Setting up manager contexts...")
+        debugLog("CarPlay: Setting up manager contexts...", .carPlay)
         let context = SharedModelContainer.shared.mainContext
         AudioManager.shared.setModelContext(context)
         PresetArtworkManager.shared.setModelContext(context)
       }
 
       // Load all sounds
-      debugLog("CarPlay: Loading sounds...")
+      debugLog("CarPlay: Loading sounds...", .carPlay)
       await AudioManager.shared.loadCustomSoundsWhenReady()
 
-      debugLog("CarPlay: App initialization complete")
+      debugLog("CarPlay: App initialization complete", .carPlay)
     }
 
     // MARK: - Interface Setup
@@ -138,7 +138,7 @@
         let quickMixTemplate = quickMixTemplate,
         let soundsTemplate = soundsTemplate
       else {
-        debugLog("CarPlay: Failed to create one or more templates")
+        logError("CarPlay: Failed to create one or more templates", .carPlay)
         return
       }
 
@@ -156,10 +156,10 @@
         tabBar, animated: true,
         completion: { success, error in
           if success {
-            debugLog("CarPlay: Successfully set tab bar interface")
+            debugLog("CarPlay: Successfully set tab bar interface", .carPlay)
           } else {
-            debugLog(
-              "CarPlay: Failed to set tab bar interface: \(error?.localizedDescription ?? "unknown error")"
+            logError(
+              "CarPlay: Failed to set tab bar interface: \(error?.localizedDescription ?? "unknown error")", .carPlay
             )
           }
         })
@@ -200,7 +200,7 @@
         // Just update existing templates
         updateAllTemplates()
       } else {
-        debugLog("CarPlay: Root template is not tab bar, reinitializing interface...")
+        debugLog("CarPlay: Root template is not tab bar, reinitializing interface...", .carPlay)
 
         Task { @MainActor in
           await initializeCarPlayApp()

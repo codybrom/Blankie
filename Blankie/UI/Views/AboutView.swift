@@ -27,7 +27,7 @@ import SwiftUI
         if let image = UIImage(named: altName) {
           return image
         }
-        debugLog("AboutView: Unable to load alternate icon image '\(altName)'; falling back")
+        debugLog("AboutView: Unable to load alternate icon image '\(altName)'; falling back", .ui)
       }
 
       // Try primary icon display asset
@@ -398,9 +398,9 @@ extension AboutView {
       guard UIApplication.shared.supportsAlternateIcons else { return }
       UIApplication.shared.setAlternateIconName(name) { error in
         if let error = error {
-          debugLog("AboutView: Failed to set app icon: \(error)")
+          logError("AboutView: Failed to set app icon: \(error)", .ui)
         } else {
-          debugLog("AboutView: App icon changed to \(name ?? "Default")")
+          debugLog("AboutView: App icon changed to \(name ?? "Default")", .ui)
           DispatchQueue.main.async {
             currentIconName = name
           }
@@ -415,7 +415,7 @@ extension AboutView {
 extension AboutView {
   private func loadCredits() {
     guard let url = Bundle.main.url(forResource: "credits", withExtension: "json") else {
-      debugLog("Unable to find credits.json in bundle")
+      debugLog("Unable to find credits.json in bundle", .ui)
       return
     }
 
@@ -426,7 +426,7 @@ extension AboutView {
       contributors = credits.contributors
       translators = credits.translators
     } catch {
-      debugLog("Error loading credits: \(error)")
+      logError("Error loading credits: \(error)", .ui)
     }
   }
 }

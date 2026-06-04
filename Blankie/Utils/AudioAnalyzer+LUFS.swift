@@ -39,7 +39,7 @@ extension AudioAnalyzer {
 
       return (lufs: lufs, normalizationFactor: normalizationFactor)
     } catch {
-      debugLog("AudioAnalyzer: Failed to analyze LUFS: \(error)")
+      logError("AudioAnalyzer: Failed to analyze LUFS: \(error)")
       return nil
     }
   }

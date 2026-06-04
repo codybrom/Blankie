@@ -29,7 +29,7 @@
     static func updateTemplate(_ template: CPListTemplate) {
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
-        debugLog("SoundsListTemplate: No sounds loaded yet")
+        debugLog("SoundsListTemplate: No sounds loaded yet", .carPlay)
         let loadingItem = CPListItem(text: "Loading sounds...", detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])

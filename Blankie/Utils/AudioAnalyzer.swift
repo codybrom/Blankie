@@ -54,7 +54,7 @@ class AudioAnalyzer {
 
       // Read the entire file into a buffer
       guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
-        debugLog("AudioAnalyzer: Failed to create buffer")
+        logError("AudioAnalyzer: Failed to create buffer")
         return nil
       }
 
@@ -83,7 +83,7 @@ class AudioAnalyzer {
       return peakLevel
 
     } catch {
-      debugLog("AudioAnalyzer: Failed to analyze audio file: \(error)")
+      logError("AudioAnalyzer: Failed to analyze audio file: \(error)")
       return nil
     }
   }
@@ -165,7 +165,7 @@ class AudioAnalyzer {
       return averageRMS
 
     } catch {
-      debugLog("AudioAnalyzer: Failed to analyze RMS: \(error)")
+      logError("AudioAnalyzer: Failed to analyze RMS: \(error)")
       return nil
     }
   }
@@ -229,7 +229,7 @@ class AudioAnalyzer {
       return truePeakdBTP
 
     } catch {
-      debugLog("AudioAnalyzer: Failed to analyze true peak: \(error)")
+      logError("AudioAnalyzer: Failed to analyze true peak: \(error)")
       return nil
     }
   }
@@ -306,7 +306,7 @@ class AudioAnalyzer {
       let duration = Double(frameCount) / sampleRate
       return duration
     } catch {
-      debugLog("AudioAnalyzer: Failed to get duration: \(error)")
+      logError("AudioAnalyzer: Failed to get duration: \(error)")
       return nil
     }
   }

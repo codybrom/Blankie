@@ -27,7 +27,7 @@
     static func updateTemplate(_ template: CPListTemplate) {
       // Safety check for initialization
       guard !PresetManager.shared.isLoading else {
-        debugLog("PresetListTemplate: PresetManager still loading, showing loading state")
+        debugLog("PresetListTemplate: PresetManager still loading, showing loading state", .carPlay)
         let loadingItem = CPListItem(text: "Loading presets...", detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])
@@ -106,7 +106,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            debugLog("CarPlay: Error applying preset: \(error)")
+            logError("CarPlay: Error applying preset: \(error)", .carPlay)
           }
           completion()
         }
@@ -155,7 +155,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            debugLog("CarPlay: Error applying preset: \(error)")
+            logError("CarPlay: Error applying preset: \(error)", .carPlay)
           }
           completion()
         }
@@ -382,7 +382,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            debugLog("CarPlay: Error applying All Sounds preset: \(error)")
+            logError("CarPlay: Error applying All Sounds preset: \(error)", .carPlay)
           }
           completion()
         }

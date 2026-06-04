@@ -158,7 +158,7 @@ enum AppDataMigrator {
         debugLog("AppDataMigrator: SwiftData migration completed successfully")
         break
       } catch {
-        debugLog("AppDataMigrator: Failed to migrate store: \(error)")
+        logError("AppDataMigrator: Failed to migrate store: \(error)")
       }
     }
 
@@ -218,7 +218,7 @@ enum AppDataMigrator {
     do {
       try fileManager.createDirectory(at: newCustomSoundsURL, withIntermediateDirectories: true)
     } catch {
-      debugLog("AppDataMigrator: Failed to create custom sounds directory: \(error)")
+      logError("AppDataMigrator: Failed to create custom sounds directory: \(error)")
       return
     }
 
@@ -240,7 +240,7 @@ enum AppDataMigrator {
 
       debugLog("AppDataMigrator: Custom sound migration completed")
     } catch {
-      debugLog("AppDataMigrator: Failed to migrate custom sounds: \(error)")
+      logError("AppDataMigrator: Failed to migrate custom sounds: \(error)")
     }
   }
 

@@ -230,16 +230,16 @@ class SoundCustomizationManager: ObservableObject {
     do {
       let data = try JSONEncoder().encode(Array(customizations.values))
       UserDefaults.shared.set(data, forKey: userDefaultsKey)
-      debugLog("SoundCustomizationManager: Saved \(customizations.count) customizations")
+      debugLog("SoundCustomizationManager: Saved \(customizations.count) customizations", .sounds)
     } catch {
-      debugLog("SoundCustomizationManager: Failed to save customizations: \(error)")
+      logError("SoundCustomizationManager: Failed to save customizations: \(error)", .sounds)
     }
   }
 
   private func loadCustomizations() {
 
     guard let data = UserDefaults.shared.data(forKey: userDefaultsKey) else {
-      debugLog("SoundCustomizationManager: No saved customizations found")
+      debugLog("SoundCustomizationManager: No saved customizations found", .sounds)
       return
     }
 
@@ -247,9 +247,9 @@ class SoundCustomizationManager: ObservableObject {
       let customizationArray = try JSONDecoder().decode([SoundCustomization].self, from: data)
       customizations = Dictionary(
         uniqueKeysWithValues: customizationArray.map { ($0.fileName, $0) })
-      debugLog("SoundCustomizationManager: Loaded \(customizations.count) customizations")
+      debugLog("SoundCustomizationManager: Loaded \(customizations.count) customizations", .sounds)
     } catch {
-      debugLog("SoundCustomizationManager: Failed to load customizations: \(error)")
+      logError("SoundCustomizationManager: Failed to load customizations: \(error)", .sounds)
       customizations = [:]
     }
   }

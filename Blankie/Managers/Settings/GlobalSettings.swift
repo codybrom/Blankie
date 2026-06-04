@@ -162,7 +162,7 @@ extension GlobalSettings {
   private func saveVolume(_ newVolume: Double) {
     let validVolume = validateVolume(newVolume)
     UserDefaults.shared.set(validVolume, forKey: UserDefaultsKeys.volume)
-    debugLog("GlobalSettings: Saved volume: \(validVolume)")
+    debugLog("GlobalSettings: Saved volume: \(validVolume)", .settings)
   }
 }
 
@@ -173,10 +173,10 @@ extension GlobalSettings {
   func saveSoloModeSound(fileName: String?) {
     if let fileName = fileName {
       UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.soloModeSoundFileName)
-      debugLog("GlobalSettings: Saved solo mode sound: \(fileName)")
+      debugLog("GlobalSettings: Saved solo mode sound: \(fileName)", .settings)
     } else {
       UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.soloModeSoundFileName)
-      debugLog("GlobalSettings: Cleared solo mode sound")
+      debugLog("GlobalSettings: Cleared solo mode sound", .settings)
     }
   }
 
@@ -245,7 +245,7 @@ extension GlobalSettings {
         if mixWithOthers {
           // Allow mixing with other apps - we handle volume manually
           let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
-          debugLog("GlobalSettings: Setting Mix mode with manual volume control")
+          debugLog("GlobalSettings: Setting Mix mode with manual volume control", .settings)
 
           try AVAudioSession.sharedInstance().setCategory(
             .playback,
@@ -273,10 +273,10 @@ extension GlobalSettings {
         }
 
         debugLog(
-          "GlobalSettings: Updated audio session with mixWithOthers: \(mixWithOthers), volumeWithOtherAudio: \(volumeWithOtherAudio), activated: \(wasPlaying)"
+          "GlobalSettings: Updated audio session with mixWithOthers: \(mixWithOthers), volumeWithOtherAudio: \(volumeWithOtherAudio), activated: \(wasPlaying)", .settings
         )
       } catch {
-        debugLog("GlobalSettings: Failed to update audio session: \(error)")
+        logError("GlobalSettings: Failed to update audio session: \(error)", .settings)
       }
     }
   }
@@ -286,17 +286,17 @@ extension GlobalSettings {
 
 extension GlobalSettings {
   func logCurrentSettings() {
-    debugLog("\nGlobalSettings: Current State")
-    debugLog("  - Volume: \(volume)")
-    debugLog("  - Appearance: \(appearance.rawValue)")
-    debugLog("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")")
-    debugLog("  - Autoplay on Open: \(autoPlayOnLaunch)")
-    debugLog("  - Enable Spatial Audio: \(enableSpatialAudio)")
-    debugLog("  - Mix With Others: \(mixWithOthers)")
-    debugLog("  - Volume With Other Audio: \(volumeWithOtherAudio)")
-    debugLog("  - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)")
-    debugLog("  - Language: \(language.code)")
+    debugLog("\nGlobalSettings: Current State", .settings)
+    debugLog("  - Volume: \(volume)", .settings)
+    debugLog("  - Appearance: \(appearance.rawValue)", .settings)
+    debugLog("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")", .settings)
+    debugLog("  - Autoplay on Open: \(autoPlayOnLaunch)", .settings)
+    debugLog("  - Enable Spatial Audio: \(enableSpatialAudio)", .settings)
+    debugLog("  - Mix With Others: \(mixWithOthers)", .settings)
+    debugLog("  - Volume With Other Audio: \(volumeWithOtherAudio)", .settings)
+    debugLog("  - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)", .settings)
+    debugLog("  - Language: \(language.code)", .settings)
     debugLog(
-      "  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))")
+      "  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))", .settings)
   }
 }

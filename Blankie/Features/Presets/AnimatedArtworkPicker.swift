@@ -193,7 +193,7 @@ import SwiftUI
       // We must re-establish media controls to ensure play/pause/next/previous work.
       let audioManager = AudioManager.shared
 
-      debugLog("AnimatedArtworkGallery: Restoring audio controls after video preview")
+      debugLog("AnimatedArtworkGallery: Restoring audio controls after video preview", .ui)
 
       Task { @MainActor in
         // Re-register remote command handlers (play, pause, next, previous)
@@ -804,7 +804,7 @@ import SwiftUI
             self.loadError = error.localizedDescription
             self.isLoading = false
           }
-          debugLog("Failed to load video for preview: \(error)")
+          logError("Failed to load video for preview: \(error)", .ui)
         }
       }
     }
@@ -845,7 +845,7 @@ import SwiftUI
     static var allCases: [BundledAnimatedLoop] {
       // Files are copied flat to bundle root, not in AnimatedArtwork subfolder
       guard let resourceURL = Bundle.main.resourceURL else {
-        debugLog("Failed to find bundle resource directory")
+        logError("Failed to find bundle resource directory", .ui)
         return []
       }
 
@@ -856,7 +856,7 @@ import SwiftUI
           options: [.skipsHiddenFiles]
         )
       else {
-        debugLog("Failed to read bundle resource contents")
+        logError("Failed to read bundle resource contents", .ui)
         return []
       }
 
@@ -869,14 +869,14 @@ import SwiftUI
         guard let data = try? Data(contentsOf: metadataURL),
           let artwork = try? JSONDecoder().decode(BundledAnimatedLoop.self, from: data)
         else {
-          debugLog("Failed to load metadata from \(metadataURL.lastPathComponent)")
+          logError("Failed to load metadata from \(metadataURL.lastPathComponent)", .ui)
           continue
         }
 
         artworks.append(artwork)
       }
 
-      debugLog("Loaded \(artworks.count) artworks from bundle resources")
+      debugLog("Loaded \(artworks.count) artworks from bundle resources", .ui)
       return artworks.sorted { $0.id < $1.id }  // Sort alphabetically by ID
     }
   }
@@ -896,7 +896,7 @@ import SwiftUI
         let data = try? Data(contentsOf: categoriesURL),
         let config = try? JSONDecoder().decode(CategoriesConfig.self, from: data)
       else {
-        debugLog("Failed to load categories.json")
+        logError("Failed to load categories.json", .ui)
         return []
       }
       return config.categories

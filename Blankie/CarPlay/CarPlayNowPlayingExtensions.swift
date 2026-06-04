@@ -44,11 +44,11 @@
         }
 
         nowPlayingTemplate.updateNowPlayingButtons([favoriteButton, editButton])
-        debugLog("CarPlay: Now Playing configured with favorite + edit buttons (preset mode)")
+        debugLog("CarPlay: Now Playing configured with favorite + edit buttons (preset mode)", .carPlay)
       } else {
         // Solo mode or Quick Mix: no preset-specific buttons.
         nowPlayingTemplate.updateNowPlayingButtons([])
-        debugLog("CarPlay: Now Playing configured with no custom buttons (solo / Quick Mix)")
+        debugLog("CarPlay: Now Playing configured with no custom buttons (solo / Quick Mix)", .carPlay)
       }
     }
 

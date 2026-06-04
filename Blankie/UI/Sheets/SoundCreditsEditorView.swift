@@ -93,7 +93,7 @@ struct SoundCreditsEditorView: View {
         try modelContext.save()
       }
     } catch {
-      debugLog("Error saving credits: \(error)")
+      logError("Error saving credits: \(error)", .ui)
     }
   }
 }

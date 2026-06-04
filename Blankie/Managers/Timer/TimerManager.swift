@@ -44,7 +44,7 @@ class TimerManager: ObservableObject {
       self?.updateTimer()
     }
 
-    debugLog("TimerManager: Started timer for \(duration) seconds")
+    debugLog("TimerManager: Started timer for \(duration) seconds", .audio)
   }
 
   func stopTimer() {
@@ -55,7 +55,7 @@ class TimerManager: ObservableObject {
     selectedDuration = 0
     startTime = nil
 
-    debugLog("TimerManager: Timer stopped")
+    debugLog("TimerManager: Timer stopped", .audio)
   }
 
   private func updateTimer() {
@@ -70,7 +70,7 @@ class TimerManager: ObservableObject {
   }
 
   private func handleTimerExpired() {
-    debugLog("TimerManager: Timer expired")
+    debugLog("TimerManager: Timer expired", .audio)
 
     // Stop the countdown and pause together on the main actor. Doing the stop
     // synchronously (before this) let a 0.25s progress tick observe the

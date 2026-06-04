@@ -538,7 +538,7 @@ struct PresetOnboardingSheet: View {
         // Dismiss
         dismiss()
       } catch {
-        debugLog("PresetOnboardingSheet: Failed to create preset: \(error)")
+        logError("PresetOnboardingSheet: Failed to create preset: \(error)", .ui)
       }
     }
   }

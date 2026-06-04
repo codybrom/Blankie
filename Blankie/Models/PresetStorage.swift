@@ -30,44 +30,44 @@ struct PresetStorage {
   }
 
   static func saveCustomPresets(_ presets: [Preset]) {
-    debugLog("PresetStorage: Saving \(presets.count) custom presets")
+    debugLog("PresetStorage: Saving \(presets.count) custom presets", .presets)
 
     if let data = try? JSONEncoder().encode(presets) {
       // Check data size
       let sizeInMB = Double(data.count) / 1024.0 / 1024.0
       if sizeInMB > 1.0 {
-        debugLog("PresetStorage: Large data size: \(String(format: "%.2f", sizeInMB)) MB")
+        debugLog("PresetStorage: Large data size: \(String(format: "%.2f", sizeInMB)) MB", .presets)
       }
 
       defaults.set(data, forKey: customPresetsKey)
-      debugLog("PresetStorage: Saved \(presets.count) custom presets (\(data.count) bytes)")
+      debugLog("PresetStorage: Saved \(presets.count) custom presets (\(data.count) bytes)", .presets)
     }
   }
 
   static func loadCustomPresets() -> [Preset] {
-    debugLog("PresetStorage: Loading custom presets")
+    debugLog("PresetStorage: Loading custom presets", .presets)
     if let data = defaults.data(forKey: customPresetsKey),
       let presets = try? JSONDecoder().decode([Preset].self, from: data)
     {
-      debugLog("PresetStorage: Loaded \(presets.count) custom presets")
+      debugLog("PresetStorage: Loaded \(presets.count) custom presets", .presets)
       // Add debug logging
       presets.forEach { preset in
-        debugLog("  - Loaded preset '\(preset.name)':")
-        debugLog("    * Order: \(preset.order ?? -1)")
+        debugLog("  - Loaded preset '\(preset.name)':", .presets)
+        debugLog("    * Order: \(preset.order ?? -1)", .presets)
         debugLog(
-          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")"
+          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")", .presets
         )
-        debugLog("    * Creator: \(preset.creatorName ?? "None")")
-        debugLog("    * Active sounds:")
+        debugLog("    * Creator: \(preset.creatorName ?? "None")", .presets)
+        debugLog("    * Active sounds:", .presets)
         preset.soundStates
           .filter { $0.isSelected }
           .forEach { state in
-            debugLog("      - \(state.fileName) (Volume: \(state.volume))")
+            debugLog("      - \(state.fileName) (Volume: \(state.volume))", .presets)
           }
       }
       return presets
     }
-    debugLog("PresetStorage: No custom presets found")
+    debugLog("PresetStorage: No custom presets found", .presets)
     return []
   }
 
@@ -80,19 +80,19 @@ struct PresetStorage {
       return  // No change, skip save
     }
 
-    debugLog("PresetStorage: Saving last active preset ID: \(id)")
+    debugLog("PresetStorage: Saving last active preset ID: \(id)", .presets)
     defaults.set(newIdString, forKey: lastActivePresetIDKey)
   }
 
   static func loadLastActivePresetID() -> UUID? {
-    debugLog("PresetStorage: Loading last active preset ID")
+    debugLog("PresetStorage: Loading last active preset ID", .presets)
     guard let idString = defaults.string(forKey: lastActivePresetIDKey),
       let id = UUID(uuidString: idString)
     else {
-      debugLog("PresetStorage: No last active preset ID found")
+      debugLog("PresetStorage: No last active preset ID found", .presets)
       return nil
     }
-    debugLog("PresetStorage: Last active preset ID loaded: \(id)")
+    debugLog("PresetStorage: Last active preset ID loaded: \(id)", .presets)
     return id
   }
 }

@@ -14,7 +14,7 @@ extension AudioManager {
   /// - Returns: Number of sounds analyzed
   @MainActor
   func analyzeAllSounds(forceReanalysis: Bool = false) async -> Int {
-    debugLog("AudioManager: Starting batch analysis of all sounds")
+    debugLog("AudioManager: Starting batch analysis of all sounds", .audio)
 
     var analyzedCount = 0
     let allSounds = sounds
@@ -42,7 +42,7 @@ extension AudioManager {
               }
 
               guard let soundURL = url else {
-                debugLog("AudioManager: Could not find URL for \(sound.fileName)")
+                logError("AudioManager: Could not find URL for \(sound.fileName)", .audio)
                 return
               }
 
@@ -52,7 +52,7 @@ extension AudioManager {
               // Create and store playback profile
               if let profile = PlaybackProfile.from(analysis: analysis, filename: profileKey) {
                 PlaybackProfileStore.shared.store(profile)
-                debugLog("AudioManager: Analyzed and stored profile for \(sound.fileName)")
+                debugLog("AudioManager: Analyzed and stored profile for \(sound.fileName)", .audio)
               }
             }
           }
@@ -62,7 +62,7 @@ extension AudioManager {
       analyzedCount += batch.count
     }
 
-    debugLog("AudioManager: Batch analysis complete. Analyzed \(analyzedCount) sounds")
+    debugLog("AudioManager: Batch analysis complete. Analyzed \(analyzedCount) sounds", .audio)
     return analyzedCount
   }
 
@@ -86,7 +86,7 @@ extension AudioManager {
 
     if !customSoundsNeedingAnalysis.isEmpty {
       debugLog(
-        "AudioManager: Found \(customSoundsNeedingAnalysis.count) custom sounds needing analysis")
+        "AudioManager: Found \(customSoundsNeedingAnalysis.count) custom sounds needing analysis", .audio)
 
       for sound in customSoundsNeedingAnalysis {
         guard let url = sound.fileURL else { continue }
@@ -94,7 +94,7 @@ extension AudioManager {
         let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: url)
         if let profile = PlaybackProfile.from(analysis: analysis, filename: sound.fileName) {
           PlaybackProfileStore.shared.store(profile)
-          debugLog("AudioManager: Analyzed custom sound: \(sound.fileName)")
+          debugLog("AudioManager: Analyzed custom sound: \(sound.fileName)", .audio)
         }
       }
     }

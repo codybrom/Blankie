@@ -68,7 +68,7 @@ class AudioFileImporter: ObservableObject {
       debugLog("AudioFileImporter: Staged temp copy: \(tempFileURL.lastPathComponent)")
       return tempFileURL
     } catch {
-      debugLog("AudioFileImporter: Failed to stage temp copy: \(error)")
+      logError("AudioFileImporter: Failed to stage temp copy: \(error)")
       return nil
     }
   }
@@ -86,7 +86,7 @@ class AudioFileImporter: ObservableObject {
         let preset = try await PresetImporter.shared.importArchive(from: url)
         debugLog("AudioFileImporter: Successfully imported preset '\(preset.name)'")
       } catch {
-        debugLog("AudioFileImporter: Failed to import preset: \(error)")
+        logError("AudioFileImporter: Failed to import preset: \(error)")
         // Surface the failure: PresetImporter.ImportError is a LocalizedError,
         // so AudioErrorHandler's alert shows a meaningful message.
         ErrorReporter.shared.report(error)

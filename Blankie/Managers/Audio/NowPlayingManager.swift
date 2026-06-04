@@ -83,7 +83,7 @@ final class NowPlayingManager {
 
   private func setupNowPlaying() {
     guard !isSetup else { return }
-    debugLog("NowPlayingManager: Setting up Now Playing info")
+    debugLog("NowPlayingManager: Setting up Now Playing info", .nowPlaying)
     isSetup = true
 
     nowPlayingInfo[MPMediaItemPropertyTitle] = "Ambient Sounds"
@@ -129,7 +129,7 @@ final class NowPlayingManager {
     let displayInfo = getDisplayInfo(
       presetName: resolvedPresetName, creatorName: resolvedCreatorName)
     debugLog(
-      "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
+      "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)", .nowPlaying
     )
 
     // A full (artwork) update is needed when the preset OR the solo sound
@@ -171,7 +171,7 @@ final class NowPlayingManager {
       let center = MPNowPlayingInfoCenter.default()
 
       if center.nowPlayingInfo != nil {
-        debugLog("NowPlayingManager: Incremental update (preserving animated artwork)")
+        debugLog("NowPlayingManager: Incremental update (preserving animated artwork)", .nowPlaying)
         // Update only non-artwork keys in-place
         center.nowPlayingInfo?[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyTitle]
         center.nowPlayingInfo?[MPMediaItemPropertyArtist] =
@@ -186,7 +186,7 @@ final class NowPlayingManager {
           nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime]
       } else {
         // No existing info (iOS cleared it), do full update
-        debugLog("NowPlayingManager: Full update (iOS cleared nowPlayingInfo)")
+        debugLog("NowPlayingManager: Full update (iOS cleared nowPlayingInfo)", .nowPlaying)
         center.nowPlayingInfo = nowPlayingInfo
       }
     }
@@ -353,7 +353,7 @@ final class NowPlayingManager {
 
     // Update the now playing info
     debugLog(
-      "NowPlayingManager: Updating now playing state to \(isPlaying), playbackRate: \(nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? -1)"
+      "NowPlayingManager: Updating now playing state to \(isPlaying), playbackRate: \(nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? -1)", .nowPlaying
     )
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
 

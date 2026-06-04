@@ -28,12 +28,12 @@ extension AudioManager {
   func loadCustomSoundsWhenReady() async {
     // Load built-in sounds first if not already loaded
     if sounds.isEmpty {
-      debugLog("AudioManager: Loading built-in sounds first...")
+      debugLog("AudioManager: Loading built-in sounds first...", .audio)
       loadSounds()
     }
 
     guard modelContext != nil else {
-      debugLog("AudioManager: Model context not ready - built-in sounds only")
+      debugLog("AudioManager: Model context not ready - built-in sounds only", .audio)
       // Initialize PresetManager with built-in sounds only
       await PresetManager.shared.initializePresetManager()
       reconcileLaunchPlaybackState()
@@ -45,7 +45,7 @@ extension AudioManager {
     #if !os(macOS)
       if !UIApplication.shared.isProtectedDataAvailable {
         debugLog(
-          "AudioManager: Protected data not available, attempting to load custom sounds anyway for CarPlay"
+          "AudioManager: Protected data not available, attempting to load custom sounds anyway for CarPlay", .audio
         )
       }
     #endif
@@ -57,9 +57,9 @@ extension AudioManager {
     // originals playing with no way to stop them. PresetManager still gets
     // (re-)initialized below in either case.
     if hasLoadedCustomSounds {
-      debugLog("AudioManager: Custom sounds already loaded, skipping reload")
+      debugLog("AudioManager: Custom sounds already loaded, skipping reload", .audio)
     } else {
-      debugLog("AudioManager: Loading custom sounds with SwiftData coordination...")
+      debugLog("AudioManager: Loading custom sounds with SwiftData coordination...", .audio)
       loadCustomSounds()
       hasLoadedCustomSounds = true
     }
@@ -94,17 +94,17 @@ extension AudioManager {
     @MainActor
     private func waitForProtectedDataAvailability() async {
       guard !UIApplication.shared.isProtectedDataAvailable else {
-        debugLog("AudioManager: Protected data already available")
+        debugLog("AudioManager: Protected data already available", .audio)
         return
       }
 
-      debugLog("AudioManager: Protected data not available, waiting...")
+      debugLog("AudioManager: Protected data not available, waiting...", .audio)
 
       // Use AsyncStream for Swift 6 compliance
       for await _ in NotificationCenter.default.notifications(
         named: UIApplication.protectedDataDidBecomeAvailableNotification)
       {
-        debugLog("AudioManager: Protected data became available")
+        debugLog("AudioManager: Protected data became available", .audio)
         break
       }
     }
@@ -132,18 +132,18 @@ extension AudioManager {
     guard let currentPreset = PresetManager.shared.currentPreset,
       !currentPreset.isDefault
     else {
-      debugLog("AudioManager: No current custom preset to add new sound to")
+      debugLog("AudioManager: No current custom preset to add new sound to", .audio)
       return
     }
 
     // Get the newest sound (last in the list after loading)
     guard let newestSound = sounds.last else {
-      debugLog("AudioManager: No sounds available to add to preset")
+      debugLog("AudioManager: No sounds available to add to preset", .audio)
       return
     }
 
     debugLog(
-      "AudioManager: Auto-adding '\(newestSound.fileName)' to current preset '\(currentPreset.displayName)'"
+      "AudioManager: Auto-adding '\(newestSound.fileName)' to current preset '\(currentPreset.displayName)'", .audio
     )
 
     // Add the new sound to the current preset as unselected

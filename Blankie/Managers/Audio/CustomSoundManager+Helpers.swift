@@ -46,23 +46,23 @@ extension CustomSoundManager {
           if let value = try await item.load(.value) as? String {
             let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
             if !trimmedValue.isEmpty {
-              debugLog("CustomSoundManager: Found metadata title: '\(trimmedValue)'")
+              debugLog("CustomSoundManager: Found metadata title: '\(trimmedValue)'", .sounds)
               return trimmedValue
             }
           }
         }
       }
 
-      debugLog("ℹ️ CustomSoundManager: No metadata title found in file")
+      debugLog("ℹ️ CustomSoundManager: No metadata title found in file", .sounds)
       return nil
     } catch {
-      debugLog("CustomSoundManager: Failed to extract metadata: \(error)")
+      logError("CustomSoundManager: Failed to extract metadata: \(error)", .sounds)
       return nil
     }
   }
 
   func validateAudioFile(at url: URL) async throws -> Result<Void, Error> {
-    debugLog("CustomSoundManager: Validating audio file at \(url.lastPathComponent)")
+    debugLog("CustomSoundManager: Validating audio file at \(url.lastPathComponent)", .sounds)
 
     // Check file size (max 50MB)
     do {
@@ -70,12 +70,12 @@ extension CustomSoundManager {
       if let fileSize = attributes[.size] as? UInt64 {
         let maxSize: UInt64 = 50 * 1024 * 1024  // 50MB
         if fileSize > maxSize {
-          debugLog("CustomSoundManager: File too large: \(fileSize) bytes")
+          debugLog("CustomSoundManager: File too large: \(fileSize) bytes", .sounds)
           return .failure(CustomSoundError.fileTooLarge)
         }
       }
     } catch {
-      debugLog("CustomSoundManager: Failed to get file attributes: \(error)")
+      logError("CustomSoundManager: Failed to get file attributes: \(error)", .sounds)
       return .failure(CustomSoundError.invalidAudioFile(error))
     }
 
@@ -86,7 +86,7 @@ extension CustomSoundManager {
       // Check if the file has audio tracks
       let audioTracks = try await asset.loadTracks(withMediaType: .audio)
       if audioTracks.isEmpty {
-        debugLog("CustomSoundManager: No audio tracks found in file")
+        debugLog("CustomSoundManager: No audio tracks found in file", .sounds)
         return .failure(CustomSoundError.unsupportedFormat)
       }
 
@@ -95,7 +95,7 @@ extension CustomSoundManager {
       let durationInSeconds = CMTimeGetSeconds(duration)
 
       if durationInSeconds <= 0 || !durationInSeconds.isFinite {
-        debugLog("CustomSoundManager: Invalid duration: \(durationInSeconds)")
+        logError("CustomSoundManager: Invalid duration: \(durationInSeconds)", .sounds)
         return .failure(
           CustomSoundError.invalidAudioFile(
             NSError(
@@ -105,17 +105,17 @@ extension CustomSoundManager {
 
       let maxDuration: Double = 120 * 60  // 120 minutes
       if durationInSeconds > maxDuration {
-        debugLog("CustomSoundManager: Duration too long: \(durationInSeconds) seconds")
+        debugLog("CustomSoundManager: Duration too long: \(durationInSeconds) seconds", .sounds)
         return .failure(CustomSoundError.durationTooLong)
       }
 
-      debugLog("CustomSoundManager: Audio file validated successfully")
-      debugLog("   Duration: \(durationInSeconds) seconds")
-      debugLog("   Audio tracks: \(audioTracks.count)")
+      debugLog("CustomSoundManager: Audio file validated successfully", .sounds)
+      debugLog("   Duration: \(durationInSeconds) seconds", .sounds)
+      debugLog("   Audio tracks: \(audioTracks.count)", .sounds)
 
       return .success(())
     } catch {
-      debugLog("CustomSoundManager: Failed to load audio asset: \(error)")
+      logError("CustomSoundManager: Failed to load audio asset: \(error)", .sounds)
       return .failure(CustomSoundError.invalidAudioFile(error))
     }
   }
@@ -127,7 +127,7 @@ extension CustomSoundManager {
   /// Get the URL for a custom sound file stored in the app's documents directory
   func getURLForCustomSound(_ customSound: CustomSoundData) -> URL? {
     guard let documentsPath = getCustomSoundsDirectoryURL() else {
-      debugLog("CustomSoundManager: Could not get custom sounds directory URL")
+      logError("CustomSoundManager: Could not get custom sounds directory URL", .sounds)
       return nil
     }
 
@@ -139,17 +139,17 @@ extension CustomSoundManager {
       return soundURL
     }
 
-    debugLog("CustomSoundManager: Custom sound file not found: \(fileName) at \(soundURL.path)")
+    debugLog("CustomSoundManager: Custom sound file not found: \(fileName) at \(soundURL.path)", .sounds)
 
     // Debug: List files in the CustomSounds directory
     do {
       let files = try FileManager.default.contentsOfDirectory(atPath: documentsPath.path)
-      debugLog("CustomSoundManager: Files in CustomSounds directory:")
+      debugLog("CustomSoundManager: Files in CustomSounds directory:", .sounds)
       files.forEach { file in
-        debugLog("  - \(file)")
+        debugLog("  - \(file)", .sounds)
       }
     } catch {
-      debugLog("CustomSoundManager: Failed to list files in CustomSounds directory: \(error)")
+      logError("CustomSoundManager: Failed to list files in CustomSounds directory: \(error)", .sounds)
     }
 
     return nil
@@ -165,7 +165,7 @@ extension CustomSoundManager {
   /// Re-analyze the peak level for a custom sound
   func reanalyzePeakLevel(for customSound: CustomSoundData) async -> Float? {
     guard let url = getURLForCustomSound(customSound) else {
-      debugLog("CustomSoundManager: Could not get URL for custom sound")
+      logError("CustomSoundManager: Could not get URL for custom sound", .sounds)
       return nil
     }
 
@@ -184,11 +184,11 @@ extension CustomSoundManager {
         try saveContext()
       }
 
-      debugLog("CustomSoundManager: Re-analyzed peak level: \(peakDB) dB")
+      debugLog("CustomSoundManager: Re-analyzed peak level: \(peakDB) dB", .sounds)
       return peakDB
 
     } catch {
-      debugLog("CustomSoundManager: Failed to re-analyze peak level: \(error)")
+      logError("CustomSoundManager: Failed to re-analyze peak level: \(error)", .sounds)
       return nil
     }
   }
@@ -199,7 +199,7 @@ extension CustomSoundManager {
     let reader = try AVAssetReader(asset: asset)
 
     guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
-      debugLog("CustomSoundManager: No audio track found")
+      debugLog("CustomSoundManager: No audio track found", .sounds)
       throw CustomSoundError.invalidAudioFile(
         NSError(
           domain: "CustomSoundManager", code: -1,

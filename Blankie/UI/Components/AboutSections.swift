@@ -219,7 +219,7 @@ struct AcknowledgementsSection: View {
 
   private func loadDependencies() {
     guard let url = Bundle.main.url(forResource: "credits", withExtension: "json") else {
-      debugLog("Unable to find credits.json in bundle")
+      debugLog("Unable to find credits.json in bundle", .ui)
       return
     }
 
@@ -229,7 +229,7 @@ struct AcknowledgementsSection: View {
       let credits = try decoder.decode(Credits.self, from: data)
       self.dependencies = credits.dependencies ?? []
     } catch {
-      debugLog("Error loading dependencies: \(error)")
+      logError("Error loading dependencies: \(error)", .ui)
     }
   }
 }
