@@ -220,8 +220,8 @@
       // Create tab bar with all three tabs
       let tabBar = CPTabBarTemplate(templates: [
         presetsTemplate,
-        quickMixTemplate,
         soundsTemplate,
+        quickMixTemplate,
       ])
 
       interfaceController.setRootTemplate(
@@ -322,6 +322,16 @@
       NotificationCenter.default.publisher(for: .soundStateChanged)
         .sink { [weak self] _ in
           self?.updateQuickMixTemplate()
+        }
+        .store(in: &cancellables)
+
+      // Refresh the Quick Mix grid when its membership or order changes on
+      // the phone (editor sheet or grid reorder)
+      GlobalSettings.shared.$quickMixSoundFileNames
+        .sink { [weak self] _ in
+          Task { @MainActor in
+            self?.updateQuickMixTemplate()
+          }
         }
         .store(in: &cancellables)
     }
