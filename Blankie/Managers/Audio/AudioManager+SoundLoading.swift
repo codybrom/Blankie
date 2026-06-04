@@ -174,8 +174,9 @@ extension AudioManager {
   func loadCustomSounds() {
     debugLog("AudioManager: Loading custom sounds")
 
-    // Backfill durations for existing custom sounds (runs once for sounds without duration)
-    Task {
+    // Deferred so the one-time duration backfill can't starve launch work.
+    Task(priority: .background) {
+      try? await Task.sleep(for: .seconds(5))
       await CustomSoundManager.shared.backfillDurations()
     }
 
@@ -224,8 +225,9 @@ extension AudioManager {
     // Re-setup observers for the new sounds
     setupSoundObservers()
 
-    // Clean up deleted custom sounds from presets
-    Task { @MainActor in
+    // Deferred so preset cleanup can't starve the preset-apply task.
+    Task(priority: .background) { @MainActor in
+      try? await Task.sleep(for: .seconds(5))
       PresetManager.shared.cleanupDeletedCustomSounds()
     }
   }

@@ -84,11 +84,15 @@ class PresetManager: ObservableObject {
     debugLog("PresetManager: --- Begin Preset Loading After Sound Setup ---")
     await loadPresets()
 
-    // Cache thumbnails for CarPlay after presets are loaded
-    debugLog("PresetManager: Caching thumbnails for CarPlay...")
-    await cacheAllThumbnails()
-
     isInitializing = false
+
+    // Deferred so CarPlay thumbnail caching can't starve the preset-apply task.
+    Task(priority: .background) { @MainActor in
+      try? await Task.sleep(for: .seconds(5))
+      debugLog("PresetManager: Caching thumbnails for CarPlay...")
+      await self.cacheAllThumbnails()
+    }
+
     debugLog("PresetManager: --- End Preset Loading After Sound Setup ---\n")
   }
 
@@ -334,6 +338,7 @@ extension PresetManager {
     let validSoundFileNames = Set(AudioManager.shared.sounds.map(\.fileName))
 
     // Update each preset to remove invalid sound states
+    var didChange = false
     for (index, preset) in presets.enumerated() {
       let validSoundStates = preset.soundStates.filter { soundState in
         validSoundFileNames.contains(soundState.fileName)
@@ -344,6 +349,7 @@ extension PresetManager {
         var updatedPreset = preset
         updatedPreset.soundStates = validSoundStates
         presets[index] = updatedPreset
+        didChange = true
 
         // Update current preset if needed
         if currentPreset?.id == preset.id {
@@ -356,8 +362,9 @@ extension PresetManager {
       }
     }
 
-    // Save the cleaned up presets
-    savePresets()
+    if didChange {
+      savePresets()
+    }
   }
 
   @MainActor
