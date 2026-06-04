@@ -60,8 +60,7 @@
       if isInSoloMode {
         getBackgroundColor(for: sound, isInSoloMode: isInSoloMode).setFill()
       } else {
-        // Use icon color (custom color > accent color > tint color)
-        getIconColor(for: sound).setFill()
+        UIColor.carPlayIconTint.setFill()
       }
       configuredIcon.withRenderingMode(.alwaysTemplate).draw(in: iconRect)
     }
@@ -69,19 +68,19 @@
     private static func getBackgroundColor(for sound: Sound, isInSoloMode: Bool) -> UIColor {
       if isInSoloMode {
         // Use the same color hierarchy as the main app
-        return getIconColor(for: sound)
+        return UIColor.carPlayIconTint
       } else {
         return UIColor.systemGray
       }
     }
+  }
 
-    private static func getIconColor(for sound: Sound) -> UIColor {
-      // First priority: user's accent color
+  extension UIColor {
+    /// Tint for CarPlay sound icons: the user's accent color, falling back to system tint.
+    static var carPlayIconTint: UIColor {
       if let themeColor = GlobalSettings.shared.customAccentColor {
         return UIColor(themeColor)
       }
-
-      // Default: system tint color
       return UIColor.tintColor
     }
   }

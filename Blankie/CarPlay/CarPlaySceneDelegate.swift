@@ -17,14 +17,14 @@
 
     override init() {
       super.init()
-      debugLog("🚗 CarPlaySceneDelegate: INIT CALLED!")
+      debugLog("CarPlaySceneDelegate: init")
     }
 
     func templateApplicationScene(
       _ scene: CPTemplateApplicationScene,
       didConnect interfaceController: CPInterfaceController
     ) {
-      debugLog("🚗 CarPlay: Scene delegate didConnect called!")
+      debugLog("CarPlay: Scene delegate didConnect called!")
       self.interfaceController = interfaceController
 
       // Set up CarPlay interface - the shared controller handles initialization
@@ -35,7 +35,7 @@
       _ scene: CPTemplateApplicationScene,
       didDisconnectInterfaceController interfaceController: CPInterfaceController
     ) {
-      debugLog("🚗 CarPlay: Disconnected!")
+      debugLog("CarPlay: Disconnected!")
       self.interfaceController = nil
       CarPlayInterfaceController.shared.disconnect()
     }

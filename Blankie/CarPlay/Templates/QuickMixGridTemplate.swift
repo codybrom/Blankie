@@ -28,7 +28,7 @@
     static func updateTemplate(_ template: CPGridTemplate) {
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
-        debugLog("🚗 QuickMixGridTemplate: No sounds loaded yet")
+        debugLog("QuickMixGridTemplate: No sounds loaded yet")
         return
       }
 
@@ -116,17 +116,7 @@
       }
 
       // When playing, use the same color hierarchy
-      return getIconColor(for: sound)
-    }
-
-    private static func getIconColor(for sound: Sound) -> UIColor {
-      // First priority: user's accent color
-      if let themeColor = GlobalSettings.shared.customAccentColor {
-        return UIColor(themeColor)
-      }
-
-      // Default: system tint color
-      return UIColor.tintColor
+      return UIColor.carPlayIconTint
     }
 
     private static func handleSoundToggle(_ sound: Sound, button _: CPGridButton) {

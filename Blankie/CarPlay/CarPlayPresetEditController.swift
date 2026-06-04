@@ -27,10 +27,10 @@
       // Push the edit template
       interfaceController.pushTemplate(editTemplate, animated: true) { success, error in
         if success {
-          debugLog("✅ CarPlay: Successfully showed edit sounds interface")
+          debugLog("CarPlay: Successfully showed edit sounds interface")
         } else {
           debugLog(
-            "❌ CarPlay: Failed to show edit sounds interface: \(error?.localizedDescription ?? "unknown error")"
+            "CarPlay: Failed to show edit sounds interface: \(error?.localizedDescription ?? "unknown error")"
           )
         }
       }
