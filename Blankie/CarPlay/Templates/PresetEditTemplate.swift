@@ -2,7 +2,7 @@
 //  PresetEditTemplate.swift
 //  Blankie
 //
-//  Created by Assistant on 12/21/24.
+//  Created by Cody Bromley on 12/21/24.
 //
 
 #if CARPLAY_ENABLED && canImport(CarPlay)

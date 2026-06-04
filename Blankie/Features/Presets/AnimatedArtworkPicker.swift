@@ -2,7 +2,7 @@
 //  AnimatedArtworkPicker.swift
 //  Blankie
 //
-//  Created by Codex on 7/3/25.
+//  Created by Cody Bromley on 7/3/25.
 //
 
 import SwiftUI
