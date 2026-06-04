@@ -148,9 +148,12 @@ extension SoundSheet {
           AudioManager.shared.enterSoloMode(for: previousSolo)
         }
 
-        // Tear down the preview player
-        preview.player?.stop()
-        preview.player = nil
+        // Tear down add mode's temp player; edit mode previews the real Sound,
+        // whose playback exitPreviewMode/enterSoloMode just restored.
+        if case .add = mode {
+          preview.player?.stop()
+          preview.player = nil
+        }
       }
 
       previewSound = nil
