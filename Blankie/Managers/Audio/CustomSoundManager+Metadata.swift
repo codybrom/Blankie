@@ -36,7 +36,7 @@ extension CustomSoundManager {
 
       logExtractedMetadata(metadata)
     } catch {
-      debugLog("⚠️ CustomSoundManager: Failed to extract metadata: \(error)")
+      debugLog("CustomSoundManager: Failed to extract metadata: \(error)")
     }
 
     return metadata
@@ -111,7 +111,7 @@ extension CustomSoundManager {
   }
 
   private func logExtractedMetadata(_ metadata: AudioMetadata) {
-    debugLog("🎵 CustomSoundManager: Extracted metadata:")
+    debugLog("CustomSoundManager: Extracted metadata:")
     debugLog("   Title: \(metadata.title ?? "none")")
     debugLog("   Artist: \(metadata.artist ?? "none")")
     debugLog("   Album: \(metadata.album ?? "none")")

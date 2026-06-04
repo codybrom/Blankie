@@ -18,7 +18,7 @@ import Foundation
         if mixWithOthers {
           // Allow mixing with other apps - we handle volume manually
           let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
-          debugLog("⚙️ GlobalSettings: Setting Mix mode with manual volume control")
+          debugLog("GlobalSettings: Setting Mix mode with manual volume control")
 
           try AVAudioSession.sharedInstance().setCategory(
             .playback,
@@ -46,10 +46,10 @@ import Foundation
         }
 
         debugLog(
-          "⚙️ GlobalSettings: Updated audio session with mixWithOthers: \(mixWithOthers), volumeWithOtherAudio: \(volumeWithOtherAudio), activated: \(wasPlaying)"
+          "GlobalSettings: Updated audio session with mixWithOthers: \(mixWithOthers), volumeWithOtherAudio: \(volumeWithOtherAudio), activated: \(wasPlaying)"
         )
       } catch {
-        debugLog("❌ GlobalSettings: Failed to update audio session: \(error)")
+        debugLog("GlobalSettings: Failed to update audio session: \(error)")
       }
     }
   }

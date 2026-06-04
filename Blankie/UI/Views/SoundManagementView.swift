@@ -351,7 +351,7 @@ struct SoundManagementView: View {
     let result = CustomSoundManager.shared.deleteCustomSound(customSoundData)
 
     if case .failure(let error) = result {
-      debugLog("❌ SoundManagementView: Failed to delete custom sound: \(error)")
+      debugLog("SoundManagementView: Failed to delete custom sound: \(error)")
     }
   }
 
@@ -373,7 +373,7 @@ struct SoundManagementView: View {
       selectedFileURL = AudioFileImporter.shared.stagedTempCopy(of: url)
       showingImportSheet = selectedFileURL != nil
     case .failure(let error):
-      debugLog("❌ SoundManagementView: File import failed: \(error)")
+      debugLog("SoundManagementView: File import failed: \(error)")
     }
   }
 }

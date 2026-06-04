@@ -13,15 +13,15 @@ extension AudioAnalyzer {
   static func analyzeLUFS(at url: URL) async -> (lufs: Float, normalizationFactor: Float)? {
     do {
       // First run basic audio analysis for debugging
-      debugLog("🔍 AudioAnalyzer: Starting LUFS analysis for \(url.lastPathComponent)")
+      debugLog("AudioAnalyzer: Starting LUFS analysis for \(url.lastPathComponent)")
 
       // Get peak and RMS levels for comparison
       if let peakLevel = await analyzePeakLevel(at: url) {
-        debugLog("📊 AudioAnalyzer: Peak level: \(peakLevel) (\(20 * log10(peakLevel)) dBFS)")
+        debugLog("AudioAnalyzer: Peak level: \(peakLevel) (\(20 * log10(peakLevel)) dBFS)")
       }
 
       if let rmsLevel = await analyzeRMSLevel(at: url) {
-        debugLog("📊 AudioAnalyzer: RMS level: \(rmsLevel) (\(20 * log10(rmsLevel)) dBFS)")
+        debugLog("AudioAnalyzer: RMS level: \(rmsLevel) (\(20 * log10(rmsLevel)) dBFS)")
       }
 
       let file = try AVAudioFile(forReading: url)
@@ -29,17 +29,17 @@ extension AudioAnalyzer {
       let integratedLUFS = calculateIntegratedLUFS(from: measurements)
 
       guard let lufs = integratedLUFS else {
-        debugLog("❌ AudioAnalyzer: No measurements above gating threshold")
+        debugLog("AudioAnalyzer: No measurements above gating threshold")
         return nil
       }
 
       let normalizationFactor = calculateLUFSNormalizationFactor(lufs: lufs)
       debugLog(
-        "🎵 AudioAnalyzer: \(url.lastPathComponent) - LUFS: \(lufs), Factor: \(normalizationFactor)")
+        "AudioAnalyzer: \(url.lastPathComponent) - LUFS: \(lufs), Factor: \(normalizationFactor)")
 
       return (lufs: lufs, normalizationFactor: normalizationFactor)
     } catch {
-      debugLog("❌ AudioAnalyzer: Failed to analyze LUFS: \(error)")
+      debugLog("AudioAnalyzer: Failed to analyze LUFS: \(error)")
       return nil
     }
   }
@@ -52,7 +52,7 @@ extension AudioAnalyzer {
     var position: AVAudioFramePosition = 0
 
     debugLog(
-      "🎵 AudioAnalyzer: Processing file for LUFS - Length: \(file.length) frames, Channels: \(channelCount), Sample Rate: \(format.sampleRate)"
+      "AudioAnalyzer: Processing file for LUFS - Length: \(file.length) frames, Channels: \(channelCount), Sample Rate: \(format.sampleRate)"
     )
 
     let filterCoefficients = getKWeightingCoefficients()
@@ -74,7 +74,7 @@ extension AudioAnalyzer {
         measurements.append(loudness)
         // Debug: Log the first few measurements
         if measurements.count <= 5 {
-          debugLog("🎵 AudioAnalyzer: Chunk \(measurements.count) loudness: \(loudness) LUFS")
+          debugLog("AudioAnalyzer: Chunk \(measurements.count) loudness: \(loudness) LUFS")
         }
       }
 
@@ -104,7 +104,7 @@ extension AudioAnalyzer {
 
     let totalPower = channelPowers.reduce(0, +)
     guard totalPower > 0 else {
-      debugLog("⚠️ AudioAnalyzer: Total power is 0")
+      debugLog("AudioAnalyzer: Total power is 0")
       return nil
     }
 
@@ -112,7 +112,7 @@ extension AudioAnalyzer {
 
     // Debug extremely low values
     if loudness < -70 {
-      debugLog("⚠️ AudioAnalyzer: Very low loudness: \(loudness) LUFS (power: \(totalPower))")
+      debugLog("AudioAnalyzer: Very low loudness: \(loudness) LUFS (power: \(totalPower))")
     }
 
     return loudness
@@ -125,7 +125,7 @@ extension AudioAnalyzer {
       let maxMeasurement = measurements.max() ?? -999
       let avgMeasurement = measurements.reduce(0, +) / Float(measurements.count)
       debugLog(
-        "🎵 AudioAnalyzer: LUFS Measurements - Count: \(measurements.count), Min: \(minMeasurement), Max: \(maxMeasurement), Avg: \(avgMeasurement)"
+        "AudioAnalyzer: LUFS Measurements - Count: \(measurements.count), Min: \(minMeasurement), Max: \(maxMeasurement), Avg: \(avgMeasurement)"
       )
     }
 
@@ -134,14 +134,14 @@ extension AudioAnalyzer {
     let absoluteGated = measurements.filter { $0 > -70 }
     guard !absoluteGated.isEmpty else {
       debugLog(
-        "❌ AudioAnalyzer: All \(measurements.count) measurements below -70 LUFS gating threshold")
+        "AudioAnalyzer: All \(measurements.count) measurements below -70 LUFS gating threshold")
 
       // If all measurements are below -70 LUFS, try without gating for very quiet sounds
       if !measurements.isEmpty {
         let linearMeasurements = measurements.map { pow(10, $0 / 10) }
         let meanLinear = linearMeasurements.reduce(0, +) / Float(linearMeasurements.count)
         let ungatedLUFS = 10 * log10(meanLinear)
-        debugLog("🎵 AudioAnalyzer: Ungated LUFS would be: \(ungatedLUFS)")
+        debugLog("AudioAnalyzer: Ungated LUFS would be: \(ungatedLUFS)")
 
         // For very quiet sounds, we might want to use ungated measurement
         // This is a deviation from the standard but necessary for ambient sounds

@@ -28,7 +28,7 @@ extension AudioManager {
 
     objectWillChange.send()
     debugLog(
-      "🎵 AudioManager: Moved sound '\(movedSound.fileName)' from \(sourceIndex) to \(destinationIndex)"
+      "AudioManager: Moved sound '\(movedSound.fileName)' from \(sourceIndex) to \(destinationIndex)"
     )
   }
 
@@ -40,7 +40,7 @@ extension AudioManager {
 
   /// Apply volume settings to all playing sounds by triggering volume updates
   func applyVolumeSettings() {
-    debugLog("🎵 AudioManager: Updating volumes for volume settings change")
+    debugLog("AudioManager: Updating volumes for volume settings change")
 
     for sound in sounds where sound.isSelected {
       // Trigger volume recalculation which will include custom volume settings

@@ -9,7 +9,7 @@ import Foundation
 
 extension GlobalSettings {
   func logCurrentSettings() {
-    debugLog("\n⚙️ GlobalSettings: Current State")
+    debugLog("\nGlobalSettings: Current State")
     debugLog("  - Volume: \(volume)")
     debugLog("  - Appearance: \(appearance.rawValue)")
     debugLog("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")")

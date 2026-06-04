@@ -45,7 +45,7 @@ class AudioManager: ObservableObject {
   @MainActor
   func setCarPlayConnected(_ connected: Bool) {
     guard isCarPlayConnected != connected else { return }
-    debugLog("🎵 AudioManager: CarPlay connection changed to: \(connected)")
+    debugLog("AudioManager: CarPlay connection changed to: \(connected)")
     isCarPlayConnected = connected
 
     #if os(iOS) || os(visionOS)
@@ -81,12 +81,12 @@ class AudioManager: ObservableObject {
   #endif
 
   private init() {
-    debugLog("🎵 AudioManager: Initializing - START")
+    debugLog("AudioManager: Initializing - START")
 
     // Only load sounds and state immediately - delay media controls and observers
-    debugLog("🎵 AudioManager: About to loadSounds()")
+    debugLog("AudioManager: About to loadSounds()")
     loadSounds()
-    debugLog("🎵 AudioManager: About to loadSavedState()")
+    debugLog("AudioManager: About to loadSavedState()")
     loadSavedState()
 
     // Delay media controls and notification setup to avoid triggering audio session
@@ -97,14 +97,14 @@ class AudioManager: ObservableObject {
       // Allow app to fully launch before setting up delayed components
       await Task.yield()
 
-      debugLog("🎵 AudioManager: About to setupMediaControls() (delayed)")
+      debugLog("AudioManager: About to setupMediaControls() (delayed)")
       self.setupMediaControls()
-      debugLog("🎵 AudioManager: About to setupNotificationObservers() (delayed)")
+      debugLog("AudioManager: About to setupNotificationObservers() (delayed)")
       self.setupNotificationObservers()
 
       self.isInitializing = false
 
-      debugLog("🎵 AudioManager: About to setupSoundObservers() (after initialization)")
+      debugLog("AudioManager: About to setupSoundObservers() (after initialization)")
       self.setupSoundObservers()
 
       // Analyze custom sounds that might be missing profiles
@@ -128,6 +128,6 @@ class AudioManager: ObservableObject {
   deinit {
     NotificationCenter.default.removeObserver(self)
     cleanup()
-    debugLog("🎵 AudioManager: Deinit called, cleanup performed")
+    debugLog("AudioManager: Deinit called, cleanup performed")
   }
 }

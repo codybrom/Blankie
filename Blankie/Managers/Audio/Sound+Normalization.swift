@@ -30,7 +30,7 @@ extension Sound {
       // Use detected peak level if available, otherwise use default
       let normalizationFactor = getNormalizationFactor()
       effectiveVolume *= normalizationFactor
-      debugLog("🔊 Sound: Applying normalization factor \(normalizationFactor) to '\(fileName)'")
+      debugLog("Sound: Applying normalization factor \(normalizationFactor) to '\(fileName)'")
       // When normalization is enabled, ignore volume adjustment
     } else {
       // Only apply volume adjustment when normalization is disabled
@@ -46,7 +46,7 @@ extension Sound {
         let excess = (effectiveVolume - softLimitThreshold) / (1.0 - softLimitThreshold)
         let limited = softLimitThreshold + (1.0 - softLimitThreshold) * tanh(excess * 2)
         debugLog(
-          "🔊 Sound: Applying soft limiter to '\(fileName)' - from \(effectiveVolume) to \(limited)")
+          "Sound: Applying soft limiter to '\(fileName)' - from \(effectiveVolume) to \(limited)")
         effectiveVolume = limited
       }
     }
@@ -54,14 +54,14 @@ extension Sound {
     // Only log volume calculations if they actually change the player volume
     if player?.volume != effectiveVolume {
       player?.volume = effectiveVolume
-      debugLog("🔊 Sound: Set player volume for '\(fileName)' to \(effectiveVolume)")
+      debugLog("Sound: Set player volume for '\(fileName)' to \(effectiveVolume)")
 
       // Debounce just the print statement
       updateVolumeLogTimer?.invalidate()
       updateVolumeLogTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
         [weak self] _ in
         guard let self = self else { return }
-        debugLog("🔊 Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)")
+        debugLog("Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)")
       }
     }
     // Remove "Volume already at" logging - too verbose for production
@@ -117,7 +117,7 @@ extension Sound {
       let customSoundDataID = customSoundDataID
     else {
       debugLog(
-        "🔍 Sound: Skipping LUFS analysis for '\(fileName)' - not a custom sound"
+        "Sound: Skipping LUFS analysis for '\(fileName)' - not a custom sound"
       )
       return
     }
@@ -135,12 +135,12 @@ extension Sound {
 
     guard let analysisURL = fileURL else {
       debugLog(
-        "🔍 Sound: Skipping LUFS analysis for '\(fileName)' - already has LUFS data or file not found"
+        "Sound: Skipping LUFS analysis for '\(fileName)' - already has LUFS data or file not found"
       )
       return
     }
 
-    debugLog("🔍 Sound: Starting LUFS analysis for custom sound '\(fileName)'")
+    debugLog("Sound: Starting LUFS analysis for custom sound '\(fileName)'")
 
     if let lufsResult = await AudioAnalyzer.analyzeLUFS(at: analysisURL) {
       // Capture the values we need before the MainActor run
@@ -153,7 +153,7 @@ extension Sound {
         guard let customSoundDataID = self.customSoundDataID,
           let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID)
         else {
-          debugLog("❌ Sound: Could not refetch custom sound data for '\(soundFileName)'")
+          debugLog("Sound: Could not refetch custom sound data for '\(soundFileName)'")
           return
         }
 
@@ -165,7 +165,7 @@ extension Sound {
         do {
           try CustomSoundManager.shared.saveContext()
           debugLog(
-            "✅ Sound: Updated LUFS data for '\(soundFileName)' - LUFS: \(detectedLUFS), Factor: \(normalizationFactor)"
+            "Sound: Updated LUFS data for '\(soundFileName)' - LUFS: \(detectedLUFS), Factor: \(normalizationFactor)"
           )
 
           // Update this Sound's own cached values so `getNormalizationFactor()`
@@ -176,11 +176,11 @@ extension Sound {
           // Trigger volume update to apply new normalization
           self.updateVolume()
         } catch {
-          debugLog("❌ Sound: Failed to save LUFS data for '\(soundFileName)': \(error)")
+          debugLog("Sound: Failed to save LUFS data for '\(soundFileName)': \(error)")
         }
       }
     } else {
-      debugLog("❌ Sound: Failed to analyze LUFS for '\(fileName)'")
+      debugLog("Sound: Failed to analyze LUFS for '\(fileName)'")
     }
   }
 }

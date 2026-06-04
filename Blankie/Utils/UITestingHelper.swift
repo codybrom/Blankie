@@ -19,7 +19,7 @@ enum UITestingHelper {
   static func resetAllDefaults() {
     guard shouldResetForUITesting() else { return }
 
-    debugLog("🧹 UITestingHelper: Resetting all UserDefaults for UI testing")
+    debugLog("UITestingHelper: Resetting all UserDefaults for UI testing")
 
     resetAppBundle()
     resetPresetDefaults()
@@ -33,7 +33,7 @@ enum UITestingHelper {
     UserDefaults.standard.synchronize()
     verifyWindowFrame()
 
-    debugLog("🧹 UITestingHelper: UserDefaults reset complete")
+    debugLog("UITestingHelper: UserDefaults reset complete")
   }
 
   private static func resetAppBundle() {
@@ -129,7 +129,7 @@ enum UITestingHelper {
 
   private static func verifyWindowFrame() {
     if let savedFrame = UserDefaults.standard.dictionary(forKey: "LastWindowFrame") {
-      debugLog("🧹 UITestingHelper: Window frame set to: \(savedFrame)")
+      debugLog("UITestingHelper: Window frame set to: \(savedFrame)")
     }
   }
 }

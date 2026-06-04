@@ -117,7 +117,7 @@ extension GlobalSettings {
     // Migration: Convert old alwaysStartPaused setting to new autoPlayOnLaunch setting
     if let oldValue = UserDefaults.shared.object(forKey: "alwaysStartPaused") as? Bool {
       debugLog(
-        "🔄 GlobalSettings: Migrating alwaysStartPaused(\(oldValue)) to autoPlayOnLaunch(\(!oldValue))"
+        "GlobalSettings: Migrating alwaysStartPaused(\(oldValue)) to autoPlayOnLaunch(\(!oldValue))"
       )
       autoPlayOnLaunch = !oldValue  // Flip the logic
       UserDefaults.shared.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunch)

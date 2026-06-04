@@ -167,28 +167,28 @@ import SwiftUI
 
     // Reorder handler shared by the list and grid views in `mainContentView`.
     func moveItems(from source: IndexSet, to destination: Int) {
-      debugLog("📱 ListView: moveItems called - source: \(source), destination: \(destination)")
+      debugLog("ListView: moveItems called - source: \(source), destination: \(destination)")
 
       // Check if we have a current preset (not default)
       if let preset = presetManager.currentPreset, !preset.isDefault {
-        debugLog("📱 ListView: Moving sounds in preset '\(preset.name)'")
+        debugLog("ListView: Moving sounds in preset '\(preset.name)'")
 
         // Get the actual filtered sounds array that the list is displaying
         let displayedSounds = filteredSounds
-        debugLog("📱 ListView: Displayed sounds count: \(displayedSounds.count)")
-        debugLog("📱 ListView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
+        debugLog("ListView: Displayed sounds count: \(displayedSounds.count)")
+        debugLog("ListView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
 
         // Create a mutable copy of the current order
         var newOrder = displayedSounds.map { $0.fileName }
 
         // Debug: Show what's being moved
         for index in source where index < newOrder.count {
-          debugLog("📱 ListView: Moving '\(newOrder[index])' from index \(index) to \(destination)")
+          debugLog("ListView: Moving '\(newOrder[index])' from index \(index) to \(destination)")
         }
 
         // Apply the move operation
         newOrder.move(fromOffsets: source, toOffset: destination)
-        debugLog("📱 ListView: New order after move: \(newOrder)")
+        debugLog("ListView: New order after move: \(newOrder)")
 
         // Build the complete sound order for the preset
         // Start with the new order of displayed sounds
@@ -200,34 +200,34 @@ import SwiftUI
           completeOrder.append(state.fileName)
         }
 
-        debugLog("📱 ListView: Complete order being sent: \(completeOrder)")
+        debugLog("ListView: Complete order being sent: \(completeOrder)")
 
         // Update the preset with the new order
         presetManager.updateCurrentPresetWithOrder(completeOrder)
 
         // Force UI refresh
         soundsUpdateTrigger += 1
-        debugLog("📱 ListView: UI refresh triggered")
+        debugLog("ListView: UI refresh triggered")
       } else {
         // We're reordering the main sound grid (default preset or no preset)
-        debugLog("📱 ListView: Moving sounds in default view")
+        debugLog("ListView: Moving sounds in default view")
 
         // Get the actual filtered sounds array that the list is displaying
         let displayedSounds = filteredSounds
-        debugLog("📱 ListView: Displayed sounds count: \(displayedSounds.count)")
-        debugLog("📱 ListView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
+        debugLog("ListView: Displayed sounds count: \(displayedSounds.count)")
+        debugLog("ListView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
 
         // Create a mutable copy of the current order
         var newOrder = displayedSounds.map { $0.fileName }
 
         // Debug: Show what's being moved
         for index in source where index < newOrder.count {
-          debugLog("📱 ListView: Moving '\(newOrder[index])' from index \(index) to \(destination)")
+          debugLog("ListView: Moving '\(newOrder[index])' from index \(index) to \(destination)")
         }
 
         // Apply the move operation
         newOrder.move(fromOffsets: source, toOffset: destination)
-        debugLog("📱 ListView: New order after move: \(newOrder)")
+        debugLog("ListView: New order after move: \(newOrder)")
 
         // Build the complete default order
         // Start with the new order of displayed sounds
@@ -239,7 +239,7 @@ import SwiftUI
           completeOrder.append(fileName)
         }
 
-        debugLog("📱 ListView: Complete default order being saved: \(completeOrder)")
+        debugLog("ListView: Complete default order being saved: \(completeOrder)")
 
         // Update the default order
         audioManager.defaultSoundOrder = completeOrder
@@ -248,7 +248,7 @@ import SwiftUI
 
         // Force UI refresh
         soundsUpdateTrigger += 1
-        debugLog("📱 ListView: UI refresh triggered for default view")
+        debugLog("ListView: UI refresh triggered for default view")
       }
     }
 

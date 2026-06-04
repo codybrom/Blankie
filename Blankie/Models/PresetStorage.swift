@@ -30,7 +30,7 @@ struct PresetStorage {
   }
 
   static func saveCustomPresets(_ presets: [Preset]) {
-    debugLog("💾 PresetStorage: Saving \(presets.count) custom presets")
+    debugLog("PresetStorage: Saving \(presets.count) custom presets")
 
     if let data = try? JSONEncoder().encode(presets) {
       // Add debug logging before saving
@@ -53,20 +53,20 @@ struct PresetStorage {
       // Check data size
       let sizeInMB = Double(data.count) / 1024.0 / 1024.0
       if sizeInMB > 1.0 {
-        debugLog("⚠️ PresetStorage: Large data size: \(String(format: "%.2f", sizeInMB)) MB")
+        debugLog("PresetStorage: Large data size: \(String(format: "%.2f", sizeInMB)) MB")
       }
 
       defaults.set(data, forKey: customPresetsKey)
-      debugLog("💾 PresetStorage: Custom presets saved successfully")
+      debugLog("PresetStorage: Custom presets saved successfully")
     }
   }
 
   static func loadCustomPresets() -> [Preset] {
-    debugLog("💾 PresetStorage: Loading custom presets")
+    debugLog("PresetStorage: Loading custom presets")
     if let data = defaults.data(forKey: customPresetsKey),
       let presets = try? JSONDecoder().decode([Preset].self, from: data)
     {
-      debugLog("💾 PresetStorage: Loaded \(presets.count) custom presets")
+      debugLog("PresetStorage: Loaded \(presets.count) custom presets")
       // Add debug logging
       presets.forEach { preset in
         debugLog("  - Loaded preset '\(preset.name)':")
@@ -84,7 +84,7 @@ struct PresetStorage {
       }
       return presets
     }
-    debugLog("💾 PresetStorage: No custom presets found")
+    debugLog("PresetStorage: No custom presets found")
     return []
   }
 
@@ -97,19 +97,19 @@ struct PresetStorage {
       return  // No change, skip save
     }
 
-    debugLog("💾 PresetStorage: Saving last active preset ID: \(id)")
+    debugLog("PresetStorage: Saving last active preset ID: \(id)")
     defaults.set(newIdString, forKey: lastActivePresetIDKey)
   }
 
   static func loadLastActivePresetID() -> UUID? {
-    debugLog("💾 PresetStorage: Loading last active preset ID")
+    debugLog("PresetStorage: Loading last active preset ID")
     guard let idString = defaults.string(forKey: lastActivePresetIDKey),
       let id = UUID(uuidString: idString)
     else {
-      debugLog("💾 PresetStorage: No last active preset ID found")
+      debugLog("PresetStorage: No last active preset ID found")
       return nil
     }
-    debugLog("💾 PresetStorage: Last active preset ID loaded: \(id)")
+    debugLog("PresetStorage: Last active preset ID loaded: \(id)")
     return id
   }
 }

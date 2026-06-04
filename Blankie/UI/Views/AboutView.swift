@@ -27,7 +27,7 @@ import SwiftUI
         if let image = UIImage(named: altName) {
           return image
         }
-        debugLog("⚠️ AboutView: Unable to load alternate icon image '\(altName)'; falling back")
+        debugLog("AboutView: Unable to load alternate icon image '\(altName)'; falling back")
       }
 
       // Try primary icon display asset
@@ -398,9 +398,9 @@ extension AboutView {
       guard UIApplication.shared.supportsAlternateIcons else { return }
       UIApplication.shared.setAlternateIconName(name) { error in
         if let error = error {
-          debugLog("❌ AboutView: Failed to set app icon: \(error)")
+          debugLog("AboutView: Failed to set app icon: \(error)")
         } else {
-          debugLog("✅ AboutView: App icon changed to \(name ?? "Default")")
+          debugLog("AboutView: App icon changed to \(name ?? "Default")")
           DispatchQueue.main.async {
             currentIconName = name
           }

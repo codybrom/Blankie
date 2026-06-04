@@ -139,7 +139,7 @@ struct Preset: Codable, Identifiable, Equatable {
   func validate() -> Bool {
     // Preset must have at least one sound
     guard !soundStates.isEmpty else {
-      debugLog("❌ Preset: Must contain at least one sound")
+      debugLog("Preset: Must contain at least one sound")
       return false
     }
 
@@ -148,19 +148,19 @@ struct Preset: Codable, Identifiable, Equatable {
     let presetSounds = soundStates.map(\.fileName)
 
     for soundFileName in presetSounds where !availableSounds.contains(soundFileName) {
-      debugLog("❌ Preset: References non-existent sound '\(soundFileName)'")
+      debugLog("Preset: References non-existent sound '\(soundFileName)'")
       return false
     }
 
     // Validate volume ranges
     guard soundStates.allSatisfy({ $0.volume >= 0 && $0.volume <= 1 }) else {
-      debugLog("❌ Preset: Invalid volume range")
+      debugLog("Preset: Invalid volume range")
       return false
     }
 
     // Validate name
     guard !name.isEmpty else {
-      debugLog("❌ Preset: Empty name")
+      debugLog("Preset: Empty name")
       return false
     }
 

@@ -23,7 +23,7 @@
           // Use manual volume control when mixing
           let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
           debugLog(
-            "🎵 AudioSessionManager: Setting options to [.mixWithOthers] - MANUAL VOLUME CONTROL")
+            "AudioSessionManager: Setting options to [.mixWithOthers] - MANUAL VOLUME CONTROL")
 
           try AVAudioSession.sharedInstance().setCategory(
             .playback,
@@ -40,10 +40,10 @@
 
         try AVAudioSession.sharedInstance().setActive(true)
         debugLog(
-          "🎵 AudioSessionManager: Audio session activated for playback (mixWithOthers: \(mixWithOthers && !isCarPlayConnected), CarPlay: \(isCarPlayConnected))"
+          "AudioSessionManager: Audio session activated for playback (mixWithOthers: \(mixWithOthers && !isCarPlayConnected), CarPlay: \(isCarPlayConnected))"
         )
       } catch {
-        debugLog("❌ AudioSessionManager: Failed to setup audio session: \(error)")
+        debugLog("AudioSessionManager: Failed to setup audio session: \(error)")
       }
     }
 
@@ -51,16 +51,16 @@
       // Deactivate audio session when stopping to allow other apps to play
       do {
         try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        debugLog("🎵 AudioSessionManager: Audio session deactivated")
+        debugLog("AudioSessionManager: Audio session deactivated")
       } catch {
-        debugLog("❌ AudioSessionManager: Failed to deactivate audio session: \(error)")
+        debugLog("AudioSessionManager: Failed to deactivate audio session: \(error)")
       }
     }
 
     func reactivateForForeground(mixWithOthers: Bool, isPlaying: Bool) {
       // Only configure and activate the audio session if we're actually playing
       guard isPlaying else {
-        debugLog("🎵 AudioSessionManager: Skipping audio session setup - not playing")
+        debugLog("AudioSessionManager: Skipping audio session setup - not playing")
         return
       }
 
@@ -69,7 +69,7 @@
           // Use manual volume control when mixing
           let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
           debugLog(
-            "🎵 AudioSessionManager: Reactivating with [.mixWithOthers] - MANUAL VOLUME CONTROL")
+            "AudioSessionManager: Reactivating with [.mixWithOthers] - MANUAL VOLUME CONTROL")
 
           try AVAudioSession.sharedInstance().setCategory(
             .playback,
@@ -85,9 +85,9 @@
         }
 
         try AVAudioSession.sharedInstance().setActive(true)
-        debugLog("🎵 AudioSessionManager: Audio session reactivated for foreground")
+        debugLog("AudioSessionManager: Audio session reactivated for foreground")
       } catch {
-        debugLog("❌ AudioSessionManager: Failed to reactivate audio session: \(error)")
+        debugLog("AudioSessionManager: Failed to reactivate audio session: \(error)")
       }
     }
   }
