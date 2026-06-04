@@ -40,7 +40,8 @@ struct PresetStorage {
       }
 
       defaults.set(data, forKey: customPresetsKey)
-      debugLog("PresetStorage: Saved \(presets.count) custom presets (\(data.count) bytes)", .presets)
+      debugLog(
+        "PresetStorage: Saved \(presets.count) custom presets (\(data.count) bytes)", .presets)
     }
   }
 
@@ -49,22 +50,19 @@ struct PresetStorage {
     if let data = defaults.data(forKey: customPresetsKey),
       let presets = try? JSONDecoder().decode([Preset].self, from: data)
     {
-      debugLog("PresetStorage: Loaded \(presets.count) custom presets", .presets)
-      // Add debug logging
-      presets.forEach { preset in
-        debugLog("  - Loaded preset '\(preset.name)':", .presets)
-        debugLog("    * Order: \(preset.order ?? -1)", .presets)
-        debugLog(
-          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")", .presets
-        )
-        debugLog("    * Creator: \(preset.creatorName ?? "None")", .presets)
-        debugLog("    * Active sounds:", .presets)
-        preset.soundStates
-          .filter { $0.isSelected }
-          .forEach { state in
-            debugLog("      - \(state.fileName) (Volume: \(state.volume))", .presets)
-          }
-      }
+      let summary = presets.map { preset in
+        let sounds = preset.soundStates.filter { $0.isSelected }
+          .map { "      - \($0.fileName) (Volume: \($0.volume))" }
+        return
+          ([
+            "  - '\(preset.name)':",
+            "    * Order: \(preset.order ?? -1)",
+            "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")",
+            "    * Creator: \(preset.creatorName ?? "None")",
+            "    * Active sounds:",
+          ] + sounds).joined(separator: "\n")
+      }.joined(separator: "\n")
+      debugLog("PresetStorage: Loaded \(presets.count) custom presets\n" + summary, .presets)
       return presets
     }
     debugLog("PresetStorage: No custom presets found", .presets)

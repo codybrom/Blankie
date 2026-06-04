@@ -69,7 +69,8 @@ struct Language: Hashable, Identifiable, Equatable {
     // Get all localizations from the app bundle
     let bundleLocalizations = Bundle.main.localizations
     debugLog(
-      "Found \(bundleLocalizations.count) localizations in bundle: \(bundleLocalizations.joined(separator: ", "))", .settings
+      "Found \(bundleLocalizations.count) localizations in bundle: \(bundleLocalizations.joined(separator: ", "))",
+      .settings
     )
 
     // Parse the language codes and create Language objects
@@ -91,11 +92,10 @@ struct Language: Hashable, Identifiable, Equatable {
       tryReadXCStringsFile(into: &languages)
     }
 
-    // Log the final language list
-    debugLog("Final language list:", .settings)
-    for lang in languages {
-      debugLog("- \(lang.code): \(lang.displayName)", .settings)
-    }
+    debugLog(
+      "Final language list:\n"
+        + languages.map { "- \($0.code): \($0.displayName)" }.joined(separator: "\n"),
+      .settings)
 
     // Sort languages by display name but keep system first
     languages.sort {
@@ -154,7 +154,8 @@ struct Language: Hashable, Identifiable, Equatable {
         }
       }
 
-      debugLog("Found language codes in xcstrings: \(languageCodes.joined(separator: ", "))", .settings)
+      debugLog(
+        "Found language codes in xcstrings: \(languageCodes.joined(separator: ", "))", .settings)
     } catch {
       logError("Error reading .xcstrings file: \(error)", .settings)
     }

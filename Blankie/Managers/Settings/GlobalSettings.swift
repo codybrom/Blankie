@@ -273,7 +273,8 @@ extension GlobalSettings {
         }
 
         debugLog(
-          "GlobalSettings: Updated audio session with mixWithOthers: \(mixWithOthers), volumeWithOtherAudio: \(volumeWithOtherAudio), activated: \(wasPlaying)", .settings
+          "GlobalSettings: Updated audio session with mixWithOthers: \(mixWithOthers), volumeWithOtherAudio: \(volumeWithOtherAudio), activated: \(wasPlaying)",
+          .settings
         )
       } catch {
         logError("GlobalSettings: Failed to update audio session: \(error)", .settings)
@@ -286,17 +287,19 @@ extension GlobalSettings {
 
 extension GlobalSettings {
   func logCurrentSettings() {
-    debugLog("\nGlobalSettings: Current State", .settings)
-    debugLog("  - Volume: \(volume)", .settings)
-    debugLog("  - Appearance: \(appearance.rawValue)", .settings)
-    debugLog("  - Custom Accent Color: \(customAccentColor?.toString ?? "System")", .settings)
-    debugLog("  - Autoplay on Open: \(autoPlayOnLaunch)", .settings)
-    debugLog("  - Enable Spatial Audio: \(enableSpatialAudio)", .settings)
-    debugLog("  - Mix With Others: \(mixWithOthers)", .settings)
-    debugLog("  - Volume With Other Audio: \(volumeWithOtherAudio)", .settings)
-    debugLog("  - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)", .settings)
-    debugLog("  - Language: \(language.code)", .settings)
     debugLog(
-      "  - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))", .settings)
+      """
+      GlobalSettings: Current State
+        - Volume: \(volume)
+        - Appearance: \(appearance.rawValue)
+        - Custom Accent Color: \(customAccentColor?.toString ?? "System")
+        - Autoplay on Open: \(autoPlayOnLaunch)
+        - Enable Spatial Audio: \(enableSpatialAudio)
+        - Mix With Others: \(mixWithOthers)
+        - Volume With Other Audio: \(volumeWithOtherAudio)
+        - Lock Screen Background Enabled: \(lockScreenBackgroundEnabled)
+        - Language: \(language.code)
+        - Available Languages: \(availableLanguages.map { $0.code }.joined(separator: ", "))
+      """, .settings)
   }
 }
