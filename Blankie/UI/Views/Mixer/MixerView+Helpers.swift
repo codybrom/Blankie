@@ -2,6 +2,8 @@
 //  MixerView+Helpers.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 2/22/26.
+//
 
 import SwiftUI
 

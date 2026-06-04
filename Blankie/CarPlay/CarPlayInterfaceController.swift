@@ -5,6 +5,8 @@
 // Created by Cody Bromley on 6/7/25.
 //
 
+import os
+
 #if CARPLAY_ENABLED && canImport(CarPlay)
 
   @preconcurrency import CarPlay
@@ -43,17 +45,17 @@
 
     @MainActor
     func setInterfaceController(_ controller: CPInterfaceController) {
-      debugLog("🚗 CarPlay: Setting interface controller...")
+      Logger.carPlay.debug("CarPlay: Setting interface controller...")
       interfaceController = controller
       isConnected = true
 
       // Initialize app and setup interface
       Task { @MainActor in
-        debugLog("🚗 CarPlay: Starting app initialization...")
+        Logger.carPlay.debug("CarPlay: Starting app initialization...")
 
         await initializeCarPlayApp()
 
-        debugLog("🚗 CarPlay: Setting up interface...")
+        Logger.carPlay.debug("CarPlay: Setting up interface...")
         setupTabBarInterface()
       }
 
@@ -91,107 +93,36 @@
     /// Initialize CarPlay app
     @MainActor
     private func initializeCarPlayApp() async {
-      debugLog("🚗 CarPlay: Checking initialization state...")
+      Logger.carPlay.debug("CarPlay: Checking initialization state...")
       let isProtectedDataAvailable = UIApplication.shared.isProtectedDataAvailable
-      debugLog("🚗 CarPlay: Protected data available: \(isProtectedDataAvailable)")
+      Logger.carPlay.debug("CarPlay: Protected data available: \(isProtectedDataAvailable)")
 
       // CarPlay should work even when device is locked
       // Skip waiting for protected data - CarPlay needs to function while driving
       if !isProtectedDataAvailable {
-        debugLog("🚗 CarPlay: Device is locked, but proceeding anyway for CarPlay functionality")
+        Logger.carPlay.debug(
+          "CarPlay: Device is locked, but proceeding anyway for CarPlay functionality")
       }
 
       // Ensure the shared container is initialized
       if !SharedModelContainer.shared.isInitialized {
-        debugLog("🚗 CarPlay: Initializing shared model container...")
+        Logger.carPlay.debug("CarPlay: Initializing shared model container...")
         SharedModelContainer.shared.initialize()
       }
 
       // Set up manager contexts if not already done
       if AudioManager.shared.modelContext == nil {
-        debugLog("🚗 CarPlay: Setting up manager contexts...")
+        Logger.carPlay.debug("CarPlay: Setting up manager contexts...")
         let context = SharedModelContainer.shared.mainContext
         AudioManager.shared.setModelContext(context)
         PresetArtworkManager.shared.setModelContext(context)
       }
 
       // Load all sounds
-      debugLog("🚗 CarPlay: Loading sounds...")
+      Logger.carPlay.debug("CarPlay: Loading sounds...")
       await AudioManager.shared.loadCustomSoundsWhenReady()
 
-      debugLog("✅ CarPlay: App initialization complete")
-    }
-
-    /// Wait for protected data to become available (when device unlocks)
-    @MainActor
-    private func waitForProtectedDataAvailability() async {
-      guard !UIApplication.shared.isProtectedDataAvailable else { return }
-
-      debugLog("🚗 CarPlay: Waiting for device unlock...")
-
-      return await withCheckedContinuation { continuation in
-        let observerWrapper = ObserverWrapper()
-
-        observerWrapper.observer = NotificationCenter.default.addObserver(
-          forName: UIApplication.protectedDataDidBecomeAvailableNotification,
-          object: nil,
-          queue: .main
-        ) { _ in
-          observerWrapper.handleNotification {
-            debugLog("🚗 CarPlay: Protected data now available - device unlocked!")
-            continuation.resume()
-          }
-        }
-
-        // Clean up observer after 30 seconds to prevent hanging
-        DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
-          observerWrapper.handleTimeout {
-            debugLog("🚗 CarPlay: Timeout waiting for unlock, proceeding anyway...")
-            continuation.resume()
-          }
-        }
-
-        // Double-check if data became available while setting up observer
-        if UIApplication.shared.isProtectedDataAvailable {
-          observerWrapper.handleImmediate {
-            debugLog("🚗 CarPlay: Data became available while setting up observer")
-            continuation.resume()
-          }
-        }
-      }
-    }
-
-    // Helper class to avoid capturing mutable variables
-    private final class ObserverWrapper: @unchecked Sendable {
-      var observer: NSObjectProtocol?
-      var hasResumed = false
-
-      func handleNotification(completion: () -> Void) {
-        guard !hasResumed else { return }
-        hasResumed = true
-        if let observer = observer {
-          NotificationCenter.default.removeObserver(observer)
-        }
-        completion()
-      }
-
-      func handleTimeout(completion: () -> Void) {
-        guard !hasResumed else { return }
-        hasResumed = true
-        if let observer = observer {
-          NotificationCenter.default.removeObserver(observer)
-        }
-        completion()
-      }
-
-      func handleImmediate(completion: () -> Void) {
-        guard !hasResumed else { return }
-        hasResumed = true
-        if let observer = observer {
-          NotificationCenter.default.removeObserver(observer)
-        }
-        completion()
-      }
+      Logger.carPlay.debug("CarPlay: App initialization complete")
     }
 
     // MARK: - Interface Setup
@@ -210,7 +141,7 @@
         let quickMixTemplate = quickMixTemplate,
         let soundsTemplate = soundsTemplate
       else {
-        debugLog("❌ CarPlay: Failed to create one or more templates")
+        Logger.carPlay.error("CarPlay: Failed to create one or more templates")
         return
       }
 
@@ -228,10 +159,10 @@
         tabBar, animated: true,
         completion: { success, error in
           if success {
-            debugLog("✅ CarPlay: Successfully set tab bar interface")
+            Logger.carPlay.debug("CarPlay: Successfully set tab bar interface")
           } else {
-            debugLog(
-              "❌ CarPlay: Failed to set tab bar interface: \(error?.localizedDescription ?? "unknown error")"
+            Logger.carPlay.error(
+              "CarPlay: Failed to set tab bar interface: \(error?.localizedDescription ?? "unknown error", privacy: .public)"
             )
           }
         })
@@ -272,7 +203,7 @@
         // Just update existing templates
         updateAllTemplates()
       } else {
-        debugLog("🚗 CarPlay: Root template is not tab bar, reinitializing interface...")
+        Logger.carPlay.debug("CarPlay: Root template is not tab bar, reinitializing interface...")
 
         Task { @MainActor in
           await initializeCarPlayApp()
@@ -371,11 +302,6 @@
         .store(in: &cancellables)
     }
 
-    // MARK: - Edit Functionality
-
-    // Note: All edit functionality has been moved to CarPlayPresetEditController.swift
-    // The showEditSoundsInterface() method is implemented there as an extension
-
     // MARK: - CPNowPlayingTemplateObserver
 
     func nowPlayingTemplateUpNextButtonTapped(_: CPNowPlayingTemplate) {
@@ -385,8 +311,6 @@
     func nowPlayingTemplateAlbumArtistButtonTapped(_: CPNowPlayingTemplate) {
       // Not used - we're using custom buttons instead
     }
-
-    // MARK: - Helper Methods
   }
 
   // MARK: - Notification Names

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 struct PresetStorage {
   private static let defaults = UserDefaults.shared
@@ -30,61 +31,43 @@ struct PresetStorage {
   }
 
   static func saveCustomPresets(_ presets: [Preset]) {
-    debugLog("💾 PresetStorage: Saving \(presets.count) custom presets")
+    Logger.presets.debug("PresetStorage: Saving \(presets.count) custom presets")
 
     if let data = try? JSONEncoder().encode(presets) {
-      // Add debug logging before saving
-      debugLog("Saving presets:")
-      presets.forEach { preset in
-        debugLog("  - '\(preset.name)':")
-        debugLog("    * Order: \(preset.order ?? -1)")
-        debugLog(
-          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")"
-        )
-        debugLog("    * Creator: \(preset.creatorName ?? "None")")
-        debugLog("    * Active sounds:")
-        preset.soundStates
-          .filter { $0.isSelected }
-          .forEach { state in
-            debugLog("      - \(state.fileName) (Volume: \(state.volume))")
-          }
-      }
-
       // Check data size
       let sizeInMB = Double(data.count) / 1024.0 / 1024.0
       if sizeInMB > 1.0 {
-        debugLog("⚠️ PresetStorage: Large data size: \(String(format: "%.2f", sizeInMB)) MB")
+        Logger.presets.debug(
+          "PresetStorage: Large data size: \(String(format: "%.2f", sizeInMB)) MB")
       }
 
       defaults.set(data, forKey: customPresetsKey)
-      debugLog("💾 PresetStorage: Custom presets saved successfully")
+      Logger.presets.debug(
+        "PresetStorage: Saved \(presets.count) custom presets (\(data.count) bytes)")
     }
   }
 
   static func loadCustomPresets() -> [Preset] {
-    debugLog("💾 PresetStorage: Loading custom presets")
+    Logger.presets.debug("PresetStorage: Loading custom presets")
     if let data = defaults.data(forKey: customPresetsKey),
       let presets = try? JSONDecoder().decode([Preset].self, from: data)
     {
-      debugLog("💾 PresetStorage: Loaded \(presets.count) custom presets")
-      // Add debug logging
-      presets.forEach { preset in
-        debugLog("  - Loaded preset '\(preset.name)':")
-        debugLog("    * Order: \(preset.order ?? -1)")
-        debugLog(
-          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")"
-        )
-        debugLog("    * Creator: \(preset.creatorName ?? "None")")
-        debugLog("    * Active sounds:")
-        preset.soundStates
-          .filter { $0.isSelected }
-          .forEach { state in
-            debugLog("      - \(state.fileName) (Volume: \(state.volume))")
-          }
-      }
+      let summary = presets.map { preset in
+        let sounds = preset.soundStates.filter { $0.isSelected }
+          .map { "      - \($0.fileName) (Volume: \($0.volume))" }
+        return
+          ([
+            "  - '\(preset.name)':",
+            "    * Order: \(preset.order ?? -1)",
+            "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")",
+            "    * Creator: \(preset.creatorName ?? "None")",
+            "    * Active sounds:",
+          ] + sounds).joined(separator: "\n")
+      }.joined(separator: "\n")
+      Logger.presets.debug("PresetStorage: Loaded \(presets.count) custom presets\n\(summary)")
       return presets
     }
-    debugLog("💾 PresetStorage: No custom presets found")
+    Logger.presets.debug("PresetStorage: No custom presets found")
     return []
   }
 
@@ -97,19 +80,19 @@ struct PresetStorage {
       return  // No change, skip save
     }
 
-    debugLog("💾 PresetStorage: Saving last active preset ID: \(id)")
+    Logger.presets.debug("PresetStorage: Saving last active preset ID: \(id)")
     defaults.set(newIdString, forKey: lastActivePresetIDKey)
   }
 
   static func loadLastActivePresetID() -> UUID? {
-    debugLog("💾 PresetStorage: Loading last active preset ID")
+    Logger.presets.debug("PresetStorage: Loading last active preset ID")
     guard let idString = defaults.string(forKey: lastActivePresetIDKey),
       let id = UUID(uuidString: idString)
     else {
-      debugLog("💾 PresetStorage: No last active preset ID found")
+      Logger.presets.debug("PresetStorage: No last active preset ID found")
       return nil
     }
-    debugLog("💾 PresetStorage: Last active preset ID loaded: \(id)")
+    Logger.presets.debug("PresetStorage: Last active preset ID loaded: \(id)")
     return id
   }
 }

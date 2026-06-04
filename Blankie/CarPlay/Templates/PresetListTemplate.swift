@@ -5,6 +5,8 @@
 // Created by Cody Bromley on 6/7/25.
 //
 
+import os
+
 #if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
@@ -27,7 +29,8 @@
     static func updateTemplate(_ template: CPListTemplate) {
       // Safety check for initialization
       guard !PresetManager.shared.isLoading else {
-        debugLog("🚗 PresetListTemplate: PresetManager still loading, showing loading state")
+        Logger.carPlay.debug(
+          "PresetListTemplate: PresetManager still loading, showing loading state")
         let loadingItem = CPListItem(text: "Loading presets...", detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])
@@ -106,7 +109,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            debugLog("🚗 CarPlay: Error applying preset: \(error)")
+            Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
           }
           completion()
         }
@@ -155,7 +158,7 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            debugLog("🚗 CarPlay: Error applying preset: \(error)")
+            Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
           }
           completion()
         }
@@ -382,7 +385,8 @@
               CarPlayInterfaceController.shared.showNowPlaying()
             }
           } catch {
-            debugLog("🚗 CarPlay: Error applying All Sounds preset: \(error)")
+            Logger.carPlay.error(
+              "CarPlay: Error applying All Sounds preset: \(error, privacy: .public)")
           }
           completion()
         }

@@ -9,6 +9,7 @@ import AVFoundation
 import Combine
 import MediaPlayer
 import SwiftUI
+import os
 
 #if os(iOS)
   import UIKit
@@ -83,7 +84,7 @@ final class NowPlayingManager {
 
   private func setupNowPlaying() {
     guard !isSetup else { return }
-    debugLog("🎵 NowPlayingManager: Setting up Now Playing info")
+    Logger.nowPlaying.debug("NowPlayingManager: Setting up Now Playing info")
     isSetup = true
 
     nowPlayingInfo[MPMediaItemPropertyTitle] = "Ambient Sounds"
@@ -128,8 +129,8 @@ final class NowPlayingManager {
 
     let displayInfo = getDisplayInfo(
       presetName: resolvedPresetName, creatorName: resolvedCreatorName)
-    debugLog(
-      "🎵 NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
+    Logger.nowPlaying.debug(
+      "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )
 
     // A full (artwork) update is needed when the preset OR the solo sound
@@ -171,7 +172,8 @@ final class NowPlayingManager {
       let center = MPNowPlayingInfoCenter.default()
 
       if center.nowPlayingInfo != nil {
-        debugLog("🎵 NowPlayingManager: Incremental update (preserving animated artwork)")
+        Logger.nowPlaying.debug(
+          "NowPlayingManager: Incremental update (preserving animated artwork)")
         // Update only non-artwork keys in-place
         center.nowPlayingInfo?[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyTitle]
         center.nowPlayingInfo?[MPMediaItemPropertyArtist] =
@@ -186,7 +188,7 @@ final class NowPlayingManager {
           nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime]
       } else {
         // No existing info (iOS cleared it), do full update
-        debugLog("🎵 NowPlayingManager: Full update (iOS cleared nowPlayingInfo)")
+        Logger.nowPlaying.debug("NowPlayingManager: Full update (iOS cleared nowPlayingInfo)")
         center.nowPlayingInfo = nowPlayingInfo
       }
     }
@@ -352,8 +354,8 @@ final class NowPlayingManager {
     nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 0  // Infinite for ambient sounds
 
     // Update the now playing info
-    debugLog(
-      "🎵 NowPlayingManager: Updating now playing state to \(isPlaying), playbackRate: \(nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? -1)"
+    Logger.nowPlaying.debug(
+      "NowPlayingManager: Updating now playing state to \(isPlaying), playbackRate: \(self.nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? -1)"
     )
     MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
 

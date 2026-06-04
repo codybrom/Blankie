@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import os
 
 class TimerManager: ObservableObject {
   static let shared = TimerManager()
@@ -44,7 +45,7 @@ class TimerManager: ObservableObject {
       self?.updateTimer()
     }
 
-    debugLog("⏱️ TimerManager: Started timer for \(duration) seconds")
+    Logger.audio.debug("TimerManager: Started timer for \(duration) seconds")
   }
 
   func stopTimer() {
@@ -55,7 +56,7 @@ class TimerManager: ObservableObject {
     selectedDuration = 0
     startTime = nil
 
-    debugLog("⏱️ TimerManager: Timer stopped")
+    Logger.audio.debug("TimerManager: Timer stopped")
   }
 
   private func updateTimer() {
@@ -70,7 +71,7 @@ class TimerManager: ObservableObject {
   }
 
   private func handleTimerExpired() {
-    debugLog("⏱️ TimerManager: Timer expired")
+    Logger.audio.debug("TimerManager: Timer expired")
 
     // Stop the countdown and pause together on the main actor. Doing the stop
     // synchronously (before this) let a 0.25s progress tick observe the

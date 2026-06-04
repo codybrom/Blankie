@@ -2,7 +2,7 @@
 //  PresetEditTemplate.swift
 //  Blankie
 //
-//  Created by Assistant on 12/21/24.
+//  Created by Cody Bromley on 12/21/24.
 //
 
 #if CARPLAY_ENABLED && canImport(CarPlay)
@@ -107,8 +107,7 @@
       let renderer = UIGraphicsImageRenderer(size: size)
 
       return renderer.image { _ in
-        // Get the color for this sound
-        let soundColor = getIconColor(for: sound)
+        let soundColor = UIColor.carPlayIconTint
 
         if isPlaying {
           // Draw colored circle background when playing
@@ -148,16 +147,6 @@
         let coloredIcon = configuredIcon.withTintColor(iconColor, renderingMode: .alwaysOriginal)
         coloredIcon.draw(in: iconRect)
       }
-    }
-
-    private static func getIconColor(for sound: Sound) -> UIColor {
-      // First priority: user's accent color
-      if let themeColor = GlobalSettings.shared.customAccentColor {
-        return UIColor(themeColor)
-      }
-
-      // Default: system tint color
-      return UIColor.tintColor
     }
 
     // MARK: - Volume Adjustment Template

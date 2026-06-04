@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import os
 
 /// Editor for a custom sound's credit metadata. Changes save automatically.
 struct SoundCreditsEditorView: View {
@@ -93,7 +94,7 @@ struct SoundCreditsEditorView: View {
         try modelContext.save()
       }
     } catch {
-      debugLog("Error saving credits: \(error)")
+      Logger.ui.error("Error saving credits: \(error, privacy: .public)")
     }
   }
 }

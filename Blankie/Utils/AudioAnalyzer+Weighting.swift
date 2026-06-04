@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Accelerate
+import os
 
 struct KWeightingCoefficients {
   let preFilterA: [Float]
@@ -65,8 +66,8 @@ extension AudioAnalyzer {
       vDSP_measqv(
         Array(UnsafeBufferPointer(start: channelData, count: Int(frameLength))), 1, &inputPower,
         vDSP_Length(frameLength))
-      debugLog(
-        "⚠️ AudioAnalyzer: Channel \(channelIndex) - Input power: \(inputPower), Filtered power: \(power)"
+      Logger.app.debug(
+        "AudioAnalyzer: Channel \(channelIndex) - Input power: \(inputPower), Filtered power: \(power)"
       )
     }
 

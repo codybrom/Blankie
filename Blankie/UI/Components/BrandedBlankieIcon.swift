@@ -2,6 +2,8 @@
 //  BrandedBlankieIcon.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 11/24/25.
+//
 //  Branded Blankie symbol icon with gradient styling
 //
 

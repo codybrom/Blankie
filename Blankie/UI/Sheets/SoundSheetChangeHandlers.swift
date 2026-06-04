@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 struct SoundSheetChangeHandlers: ViewModifier {
   @Binding var isPreviewing: Bool
@@ -23,7 +24,7 @@ struct SoundSheetChangeHandlers: ViewModifier {
   func body(content: Content) -> some View {
     content
       .onChange(of: isPreviewing) { _, previewing in
-        debugLog("🎵 SoundSheetChangeHandlers: isPreviewing changed to: \(previewing)")
+        Logger.ui.debug("SoundSheetChangeHandlers: isPreviewing changed to: \(previewing)")
         if previewing {
           startPreview()
         } else {

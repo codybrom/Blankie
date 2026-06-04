@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import os
 
 struct SoundManagementView: View {
   @Environment(\.modelContext) private var modelContext
@@ -351,7 +352,8 @@ struct SoundManagementView: View {
     let result = CustomSoundManager.shared.deleteCustomSound(customSoundData)
 
     if case .failure(let error) = result {
-      debugLog("❌ SoundManagementView: Failed to delete custom sound: \(error)")
+      Logger.ui.error(
+        "SoundManagementView: Failed to delete custom sound: \(error, privacy: .public)")
     }
   }
 
@@ -373,7 +375,7 @@ struct SoundManagementView: View {
       selectedFileURL = AudioFileImporter.shared.stagedTempCopy(of: url)
       showingImportSheet = selectedFileURL != nil
     case .failure(let error):
-      debugLog("❌ SoundManagementView: File import failed: \(error)")
+      Logger.ui.error("SoundManagementView: File import failed: \(error, privacy: .public)")
     }
   }
 }

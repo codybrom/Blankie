@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import os
 
 extension GlobalSettings {
   func loadBasicSettings() {
@@ -79,7 +80,8 @@ extension GlobalSettings {
     // migrate any legacy radius (e.g. the old "High" 15) to the single value.
     let loadedBlur =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.backgroundBlurRadius) as? Double
-    let normalizedBlur = (loadedBlur ?? defaultBackgroundBlurRadius) > 0
+    let normalizedBlur =
+      (loadedBlur ?? defaultBackgroundBlurRadius) > 0
       ? defaultBackgroundBlurRadius : 0
     backgroundBlurRadius = normalizedBlur
     if let loadedBlur, loadedBlur != normalizedBlur {
@@ -116,8 +118,8 @@ extension GlobalSettings {
   func migrateLegacySettings() {
     // Migration: Convert old alwaysStartPaused setting to new autoPlayOnLaunch setting
     if let oldValue = UserDefaults.shared.object(forKey: "alwaysStartPaused") as? Bool {
-      debugLog(
-        "🔄 GlobalSettings: Migrating alwaysStartPaused(\(oldValue)) to autoPlayOnLaunch(\(!oldValue))"
+      Logger.settings.debug(
+        "GlobalSettings: Migrating alwaysStartPaused(\(oldValue)) to autoPlayOnLaunch(\(!oldValue))"
       )
       autoPlayOnLaunch = !oldValue  // Flip the logic
       UserDefaults.shared.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunch)

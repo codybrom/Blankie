@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Foundation
+import os
 
 // MARK: - ID3 Metadata Extraction
 
@@ -36,7 +37,8 @@ extension CustomSoundManager {
 
       logExtractedMetadata(metadata)
     } catch {
-      debugLog("⚠️ CustomSoundManager: Failed to extract metadata: \(error)")
+      Logger.sounds.error(
+        "CustomSoundManager: Failed to extract metadata: \(error, privacy: .public)")
     }
 
     return metadata
@@ -111,12 +113,12 @@ extension CustomSoundManager {
   }
 
   private func logExtractedMetadata(_ metadata: AudioMetadata) {
-    debugLog("🎵 CustomSoundManager: Extracted metadata:")
-    debugLog("   Title: \(metadata.title ?? "none")")
-    debugLog("   Artist: \(metadata.artist ?? "none")")
-    debugLog("   Album: \(metadata.album ?? "none")")
-    debugLog("   Comment: \(metadata.comment ?? "none")")
-    debugLog("   URL: \(metadata.url ?? "none")")
+    Logger.sounds.debug("CustomSoundManager: Extracted metadata:")
+    Logger.sounds.debug("   Title: \(metadata.title ?? "none")")
+    Logger.sounds.debug("   Artist: \(metadata.artist ?? "none")")
+    Logger.sounds.debug("   Album: \(metadata.album ?? "none")")
+    Logger.sounds.debug("   Comment: \(metadata.comment ?? "none")")
+    Logger.sounds.debug("   URL: \(metadata.url ?? "none")")
   }
 
   private func extractStringValue(from value: Any) -> String? {

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 /// Stores pre-computed loudness analysis results for efficient playback
 struct PlaybackProfile: Codable, Equatable {
@@ -183,9 +184,10 @@ class PlaybackProfileStore {
         profiles[profile.filename] = profile
       }
 
-      debugLog("🎵 PlaybackProfileStore: Loaded \(profiles.count) profiles")
+      Logger.presets.debug("PlaybackProfileStore: Loaded \(self.profiles.count) profiles")
     } catch {
-      debugLog("❌ PlaybackProfileStore: Failed to load profiles: \(error)")
+      Logger.presets.error(
+        "PlaybackProfileStore: Failed to load profiles: \(error, privacy: .public)")
     }
   }
 
@@ -197,9 +199,10 @@ class PlaybackProfileStore {
       let data = try encoder.encode(profileArray)
       try data.write(to: storageURL)
 
-      debugLog("💾 PlaybackProfileStore: Saved \(profileArray.count) profiles")
+      Logger.presets.debug("PlaybackProfileStore: Saved \(profileArray.count) profiles")
     } catch {
-      debugLog("❌ PlaybackProfileStore: Failed to save profiles: \(error)")
+      Logger.presets.error(
+        "PlaybackProfileStore: Failed to save profiles: \(error, privacy: .public)")
     }
   }
 }

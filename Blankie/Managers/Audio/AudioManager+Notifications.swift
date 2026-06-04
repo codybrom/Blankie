@@ -8,6 +8,7 @@
 import AVFoundation
 import Combine
 import SwiftUI
+import os
 
 // MARK: - Notification Observers
 
@@ -32,7 +33,7 @@ extension AudioManager {
     // Call this when we first start playing to setup audio session observers
     func setupAudioSessionObservers() {
       guard !audioSessionObserversSetup else { return }
-      debugLog("🎵 AudioManager: Setting up audio session observers on first playback")
+      Logger.audio.debug("AudioManager: Setting up audio session observers on first playback")
       setupAudioInterruptionObserver()
       setupAudioRouteChangeObserver()
       audioSessionObserversSetup = true
@@ -67,8 +68,9 @@ extension AudioManager {
     }
 
     func handleDidEnterBackground() {
-      debugLog(
-        "🎵 AudioManager: handleDidEnterBackground called - isGloballyPlaying: \(isGloballyPlaying)")
+      Logger.audio.debug(
+        "AudioManager: handleDidEnterBackground called - isGloballyPlaying: \(self.isGloballyPlaying)"
+      )
 
       saveState()
 
@@ -80,8 +82,8 @@ extension AudioManager {
     }
 
     func handleWillEnterForeground() {
-      debugLog(
-        "🎵 AudioManager: handleWillEnterForeground called - isGloballyPlaying: \(isGloballyPlaying)"
+      Logger.audio.debug(
+        "AudioManager: handleWillEnterForeground called - isGloballyPlaying: \(self.isGloballyPlaying)"
       )
 
       AudioSessionManager.shared.reactivateForForeground(
@@ -92,7 +94,7 @@ extension AudioManager {
       // Refresh media controls to ensure iOS hasn't disconnected them
       Task { @MainActor in
         if isGloballyPlaying {
-          debugLog("🎵 AudioManager: Refreshing media controls after foreground")
+          Logger.audio.debug("AudioManager: Refreshing media controls after foreground")
           setupMediaControls()
 
           let currentPreset = PresetManager.shared.currentPreset
@@ -136,7 +138,7 @@ extension AudioManager {
     }
 
     private func handleInterruptionBegan() {
-      debugLog("🎵 AudioManager: Audio interruption began - pausing playback")
+      Logger.audio.debug("AudioManager: Audio interruption began - pausing playback")
       if isGloballyPlaying {
         Task { @MainActor in
           // Update Now Playing info to show paused state with current position
@@ -162,13 +164,13 @@ extension AudioManager {
       if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
         if options.contains(.shouldResume) {
-          debugLog(
-            "🎵 AudioManager: Audio interruption ended with shouldResume flag - resuming playback")
+          Logger.audio.debug(
+            "AudioManager: Audio interruption ended with shouldResume flag - resuming playback")
           Task { @MainActor in
             self.setGlobalPlaybackState(true)
           }
         } else {
-          debugLog("🎵 AudioManager: Audio interruption ended without shouldResume flag")
+          Logger.audio.debug("AudioManager: Audio interruption ended without shouldResume flag")
         }
       }
     }
@@ -193,14 +195,14 @@ extension AudioManager {
 
       switch reason {
       case .oldDeviceUnavailable:
-        debugLog("🎵 AudioManager: Audio route changed - old device unavailable")
+        Logger.audio.debug("AudioManager: Audio route changed - old device unavailable")
         if isGloballyPlaying {
           Task { @MainActor in
             self.setGlobalPlaybackState(false)
           }
         }
       case .newDeviceAvailable:
-        debugLog("🎵 AudioManager: Audio route changed - new device available")
+        Logger.audio.debug("AudioManager: Audio route changed - new device available")
       default:
         break
       }
@@ -224,7 +226,7 @@ extension AudioManager {
   #endif
 
   func handleAppTermination() {
-    debugLog("🎵 AudioManager: App is terminating, cleaning up")
+    Logger.audio.debug("AudioManager: App is terminating, cleaning up")
     cleanup()
   }
 
@@ -239,6 +241,6 @@ extension AudioManager {
     Task { @MainActor in
       nowPlayingManager.clear()
     }
-    debugLog("🎵 AudioManager: Cleanup complete")
+    Logger.audio.debug("AudioManager: Cleanup complete")
   }
 }

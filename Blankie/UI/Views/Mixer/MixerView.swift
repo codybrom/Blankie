@@ -1,5 +1,13 @@
+//
+//  MixerView.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 4/14/25.
+//
+
 import SwiftUI
 import TipKit
+import os
 
 // Animation trigger struct to consolidate multiple animation values
 private struct AnimationTrigger: Equatable {
@@ -28,6 +36,8 @@ private enum IPhonePage: Hashable {
     @State var showingSettings = false
     @State var showingQuickMixEditor = false
     @State var soundToEdit: Sound?
+    /// Keeps the solo backdrop up while sheet preview temporarily exits solo mode.
+    @State private var soloBackdropSound: Sound?
     @State var presetToEdit: Preset?
     @State var soundsUpdateTrigger = 0
     @State var showingNowPlaying = false
@@ -63,19 +73,21 @@ private enum IPhonePage: Hashable {
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()  // Prevent accidental dismissal
           .onAppear {
-            debugLog("🎵 MixerView: SoundSheet appeared for '\(sound.title)'")
+            Logger.ui.debug("MixerView: SoundSheet appeared for '\(sound.title)'")
           }
           .onDisappear {
-            debugLog("🎵 MixerView: SoundSheet disappeared for '\(sound.title)'")
+            Logger.ui.debug("MixerView: SoundSheet disappeared for '\(sound.title)'")
             // Trigger refresh when sound edit is closed in case sound properties changed
             soundsUpdateTrigger += 1
           }
       }
       .onChange(of: soundToEdit) { oldValue, newValue in
         if let sound = newValue {
-          debugLog("🎵 MixerView: SoundSheet will be presented for '\(sound.title)'")
+          soloBackdropSound = audioManager.soloModeSound
+          Logger.ui.debug("MixerView: SoundSheet will be presented for '\(sound.title)'")
         } else if let oldSound = oldValue {
-          debugLog("🎵 MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
+          soloBackdropSound = nil
+          Logger.ui.debug("MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
         }
       }
 
@@ -92,7 +104,7 @@ private enum IPhonePage: Hashable {
         }
         .onDisappear {
           // Trigger refresh when sound management is closed in case sounds were imported
-          debugLog("🔄 MixerView: SoundManagementView closed, triggering refresh")
+          Logger.ui.debug("MixerView: SoundManagementView closed, triggering refresh")
           soundsUpdateTrigger += 1
         }
       }
@@ -106,13 +118,13 @@ private enum IPhonePage: Hashable {
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
           .onDisappear {
             // Trigger refresh when preset edit is closed in case preset was modified
-            debugLog("🔄 MixerView: EditPresetSheet closed, triggering refresh")
+            Logger.ui.debug("MixerView: EditPresetSheet closed, triggering refresh")
             soundsUpdateTrigger += 1
 
             // CRITICAL: Re-establish media controls after sheet dismissal
             // Animated artwork video preview may have caused iOS to disconnect remote command handlers
             // We restore controls regardless of play state since the gallery may have been browsed
-            debugLog("🔄 MixerView: Restoring media controls after sheet dismissal")
+            Logger.ui.debug("MixerView: Restoring media controls after sheet dismissal")
             audioManager.setupMediaControls()
           }
       }
@@ -120,13 +132,13 @@ private enum IPhonePage: Hashable {
       // Listen for changes that should trigger view updates
       .onChange(of: audioManager.sounds.count) { oldValue, newValue in
         // Sound imported or removed
-        debugLog("🔄 MixerView: Sound count changed from \(oldValue) to \(newValue)")
+        Logger.ui.debug("MixerView: Sound count changed from \(oldValue) to \(newValue)")
         soundsUpdateTrigger += 1
       }
       .onChange(of: presetManager.currentPreset?.id) { oldValue, newValue in
         // Preset switched
-        debugLog(
-          "🔄 MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")"
+        Logger.ui.debug(
+          "MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")"
         )
         soundsUpdateTrigger += 1
       }
@@ -138,7 +150,7 @@ private enum IPhonePage: Hashable {
       .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
         // Preset content changed (sounds added/removed)
         if let oldCount = oldValue, let newCount = newValue, oldCount != newCount {
-          debugLog("🔄 MixerView: Preset sound count changed from \(oldCount) to \(newCount)")
+          Logger.ui.debug("MixerView: Preset sound count changed from \(oldCount) to \(newCount)")
           soundsUpdateTrigger += 1
         }
       }
@@ -146,13 +158,13 @@ private enum IPhonePage: Hashable {
         NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))
       ) { _ in
         // Custom sound was imported
-        debugLog("🔄 MixerView: Received CustomSoundImported notification")
+        Logger.ui.debug("MixerView: Received CustomSoundImported notification")
         soundsUpdateTrigger += 1
       }
       .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) {
         _ in
         // Preset was updated
-        debugLog("🔄 MixerView: Received PresetUpdated notification")
+        Logger.ui.debug("MixerView: Received PresetUpdated notification")
         soundsUpdateTrigger += 1
       }
     }
@@ -272,41 +284,21 @@ private enum IPhonePage: Hashable {
 
     // MARK: - Main Content
 
+    private var soloLayoutSound: Sound? {
+      if let solo = audioManager.soloModeSound, audioManager.previewModeSound == nil {
+        return solo
+      }
+      if soundToEdit != nil {
+        return soloBackdropSound
+      }
+      return nil
+    }
+
     @ViewBuilder
     private var mainContentView: some View {
       Group {
-        if let soloSound = audioManager.soloModeSound, soundToEdit == nil,
-          audioManager.previewModeSound == nil
-        {
-          // Solo mode view (only when no SoundSheet is presented and not in preview mode)
+        if let soloSound = soloLayoutSound {
           soloModeView(for: soloSound)
-            .onAppear {
-              debugLog(
-                "🎵 MixerView: Showing solo mode view for '\(soloSound.title)' (no SoundSheet open, no preview)"
-              )
-            }
-        } else if let soloSound = audioManager.soloModeSound,
-          soundToEdit != nil || audioManager.previewModeSound != nil
-        {
-          // Solo mode is active but SoundSheet is open or in preview mode, maintain normal layout
-          Group {
-            if audioManager.isQuickMix {
-              QuickMixView()
-            } else {
-              soundsView
-            }
-          }
-          .onAppear {
-            if audioManager.previewModeSound != nil {
-              debugLog(
-                "🎵 MixerView: Solo mode active for '\(soloSound.title)' but preview mode active - maintaining normal layout"
-              )
-            } else {
-              debugLog(
-                "🎵 MixerView: Solo mode active for '\(soloSound.title)' but SoundSheet is open - maintaining normal layout"
-              )
-            }
-          }
         } else if audioManager.isQuickMix {
           // Quick Mix mode view
           QuickMixView()
@@ -318,20 +310,19 @@ private enum IPhonePage: Hashable {
       .animation(
         .easeInOut(duration: 0.3),
         value: AnimationTrigger(
-          soloMode: soundToEdit == nil && audioManager.previewModeSound == nil
-            ? audioManager.soloModeSound?.id : nil,
+          soloMode: soloLayoutSound?.id,
           quickMix: audioManager.isQuickMix,
           listView: showingListView
         )
       )
       .onChange(of: audioManager.soloModeSound) { oldValue, newValue in
         if let newSolo = newValue {
-          debugLog(
-            "🎵 MixerView: Solo mode started for '\(newSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
+          Logger.ui.debug(
+            "MixerView: Solo mode started for '\(newSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
         } else if let oldSolo = oldValue {
-          debugLog(
-            "🎵 MixerView: Solo mode ended for '\(oldSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
+          Logger.ui.debug(
+            "MixerView: Solo mode ended for '\(oldSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
         }
       }
@@ -361,5 +352,68 @@ private enum IPhonePage: Hashable {
 
   #Preview("iPad") {
     MixerView()
+  }
+#endif
+
+#if os(iOS) || os(visionOS)
+  extension MixerView {
+    // MARK: - Solo Mode View
+
+    @ViewBuilder
+    func soloModeView(for soloSound: Sound) -> some View {
+      VStack {
+        Spacer()
+        SoloSoundIcon(sound: soloSound)
+          .transition(
+            .asymmetric(
+              insertion: .scale.combined(with: .opacity),
+              removal: .scale.combined(with: .opacity)
+            )
+          )
+        Spacer()
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .padding()
+    }
+
+    // MARK: - List View
+
+    @ViewBuilder
+    var listView: some View {
+      soundListView
+    }
+
+    // MARK: - Grid (tile) View
+
+    @ViewBuilder
+    var gridView: some View {
+      SoundGridView(sounds: filteredSounds, onMove: moveItems)
+    }
+
+    /// Resolved view mode for the current context: per-preset override wins
+    /// over the app-wide default. Solo mode and Quick Mix have their own
+    /// rendering paths and don't route through here.
+    var effectiveUseListView: Bool {
+      if let override = presetManager.currentPreset?.viewMode {
+        return override == .list
+      }
+      return showingListView
+    }
+
+    /// Chooses list or grid view based on per-preset override then app
+    /// setting. Grid is the tile layout (matches Quick Mix visually).
+    @ViewBuilder
+    var soundsView: some View {
+      if effectiveUseListView {
+        listView
+      } else {
+        gridView
+      }
+    }
+
+    @ViewBuilder
+    private func soundRow(for sound: Sound) -> some View {
+      SoundRowView(sound: sound, globalSettings: globalSettings, audioManager: audioManager)
+    }
   }
 #endif

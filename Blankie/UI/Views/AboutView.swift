@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 #if os(iOS)
   import TipKit
@@ -27,7 +28,7 @@ import SwiftUI
         if let image = UIImage(named: altName) {
           return image
         }
-        debugLog("⚠️ AboutView: Unable to load alternate icon image '\(altName)'; falling back")
+        Logger.ui.debug("AboutView: Unable to load alternate icon image '\(altName)'; falling back")
       }
 
       // Try primary icon display asset
@@ -398,9 +399,9 @@ extension AboutView {
       guard UIApplication.shared.supportsAlternateIcons else { return }
       UIApplication.shared.setAlternateIconName(name) { error in
         if let error = error {
-          debugLog("❌ AboutView: Failed to set app icon: \(error)")
+          Logger.ui.error("AboutView: Failed to set app icon: \(error, privacy: .public)")
         } else {
-          debugLog("✅ AboutView: App icon changed to \(name ?? "Default")")
+          Logger.ui.debug("AboutView: App icon changed to \(name ?? "Default")")
           DispatchQueue.main.async {
             currentIconName = name
           }
@@ -415,7 +416,7 @@ extension AboutView {
 extension AboutView {
   private func loadCredits() {
     guard let url = Bundle.main.url(forResource: "credits", withExtension: "json") else {
-      debugLog("Unable to find credits.json in bundle")
+      Logger.ui.debug("Unable to find credits.json in bundle")
       return
     }
 
@@ -426,7 +427,7 @@ extension AboutView {
       contributors = credits.contributors
       translators = credits.translators
     } catch {
-      debugLog("Error loading credits: \(error)")
+      Logger.ui.error("Error loading credits: \(error, privacy: .public)")
     }
   }
 }

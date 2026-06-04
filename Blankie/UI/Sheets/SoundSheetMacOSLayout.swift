@@ -44,7 +44,7 @@ struct SoundSheetMacOSLayout: View {
 
       Divider()
 
-      CleanSoundSheetForm(
+      SoundSheetForm(
         mode: mode,
         isFilePreselected: isFilePreselected,
         soundName: $soundName,

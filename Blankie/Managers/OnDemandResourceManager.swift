@@ -2,6 +2,8 @@
 //  OnDemandResourceManager.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 10/17/25.
+//
 //  Manages On-Demand Resources for animated artwork videos
 //
 
@@ -325,7 +327,6 @@ final class OnDemandResourceManager: ObservableObject {
       // Find all *Metadata.json files to discover resource IDs
       let metadataFiles = contents.filter { $0.lastPathComponent.hasSuffix("Metadata.json") }
 
-      var availableCount = 0
       for metadataURL in metadataFiles {
         let filename = metadataURL.deletingPathExtension().lastPathComponent
         guard let resourceId = filename.components(separatedBy: "Metadata").first else {
@@ -337,6 +338,7 @@ final class OnDemandResourceManager: ObservableObject {
         request.conditionallyBeginAccessingResources { [weak self] available in
           guard let self else { return }
           DispatchQueue.main.async {
+            logger.info("ODR \(resourceId): \(available ? "cached" : "not downloaded")")
             if available {
               self.resourceStates[resourceId] = .available
               // Keep the request alive to maintain ODR cache
@@ -346,15 +348,7 @@ final class OnDemandResourceManager: ObservableObject {
             }
           }
         }
-
-        // Also check for immediate availability (already accessed)
-        if activeRequests[resourceId] != nil {
-          resourceStates[resourceId] = .available
-          availableCount += 1
-        }
       }
-
-      logger.info("Found \(availableCount) available ODR resources")
     #endif
   }
 }
@@ -374,7 +368,3 @@ enum ODRError: LocalizedError {
     }
   }
 }
-
-// MARK: - Supporting Types
-
-// (No additional types needed - artwork discovery is dynamic)

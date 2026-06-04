@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import os
 
 extension GlobalSettings {
   @MainActor
@@ -145,11 +146,12 @@ extension GlobalSettings {
   @MainActor
   func setLanguage(_ newLanguage: Language) {
     guard newLanguage.code != language.code else {
-      debugLog("🌐 Language not changed (already set to \(language.code))")
+      Logger.settings.debug("Language not changed (already set to \(self.language.code))")
       return
     }
 
-    debugLog("🌐 GlobalSettings: Changing language from \(language.code) to \(newLanguage.code)")
+    Logger.settings.debug(
+      "GlobalSettings: Changing language from \(self.language.code) to \(newLanguage.code)")
     language = newLanguage
     UserDefaults.shared.setValue(newLanguage.code, forKey: UserDefaultsKeys.language)
 

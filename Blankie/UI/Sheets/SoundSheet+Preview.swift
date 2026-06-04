@@ -6,28 +6,29 @@
 //
 
 import SwiftUI
+import os
 
 extension SoundSheet {
   // MARK: - Preview Methods
 
   internal func startPreview() {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
-    debugLog(
-      "🎵 SoundSheet: Starting preview for '\(soundName)' (isDisappearing: \(isDisappearing))")
+    Logger.ui.debug(
+      "SoundSheet: Starting preview for '\(soundName)' (isDisappearing: \(isDisappearing))")
 
     // Don't start preview if sheet is disappearing
     guard !isDisappearing else {
-      debugLog("🎵 SoundSheet: Skipping preview start - sheet is disappearing")
+      Logger.ui.debug("SoundSheet: Skipping preview start - sheet is disappearing")
       return
     }
 
     Task { @MainActor in
-      debugLog("🎵 SoundSheet: Preview task started for '\(soundName)'")
+      Logger.ui.debug("SoundSheet: Preview task started for '\(soundName)'")
       prepareForPreview()
       createPreviewSound()
       await startPreviewPlayback()
       startPreviewProgressTimer()
-      debugLog("🎵 SoundSheet: Preview started successfully for '\(soundName)'")
+      Logger.ui.debug("SoundSheet: Preview started successfully for '\(soundName)'")
     }
   }
 
@@ -121,25 +122,15 @@ extension SoundSheet {
   private func startPreviewPlayback() async {
     guard let preview = previewSound else { return }
 
-    // Load the sound first
     preview.loadSound()
 
-    // Note: We don't modify isSelected state during preview to avoid triggering auto-play logic
-
-    // No need to apply temporary customization - changes are instant in edit mode
-
-    // Enter preview mode (separate from solo mode)
+    // Leave isSelected untouched during preview so the auto-play path never fires.
     AudioManager.shared.enterPreviewMode(for: preview)
-  }
-
-  private func applyTemporaryCustomizationForPreview() {
-    // No longer needed - changes are applied instantly in edit mode
-    // For add mode, the preview sound is temporary and doesn't need persistent customization
   }
 
   internal func stopPreview() {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
-    debugLog("🎵 SoundSheet: Stopping preview for '\(soundName)'")
+    Logger.ui.debug("SoundSheet: Stopping preview for '\(soundName)'")
 
     // Stop the progress timer
     previewTimer?.invalidate()
@@ -148,29 +139,22 @@ extension SoundSheet {
 
     Task { @MainActor in
       if let preview = previewSound {
-        debugLog("🎵 SoundSheet: Cleaning up preview sound '\(preview.title)'")
+        Logger.ui.debug("SoundSheet: Cleaning up preview sound '\(preview.title)'")
 
         // Exit preview mode (this restores all original states)
         AudioManager.shared.exitPreviewMode()
 
-        // If we had a previous solo mode sound, restore it
         if let previousSolo = previousSoloModeSound {
-          debugLog("🎵 SoundSheet: Restoring previous solo mode for '\(previousSolo.title)'")
+          Logger.ui.debug("SoundSheet: Restoring previous solo mode for '\(previousSolo.title)'")
           AudioManager.shared.enterSoloMode(for: previousSolo)
         }
 
-        // Clean up preview sound for add/edit modes
+        // Tear down add mode's temp player; edit mode previews the real Sound,
+        // whose playback exitPreviewMode/enterSoloMode just restored.
         if case .add = mode {
-          // For add mode, clean up the temporary preview sound
-          preview.player?.stop()
-          preview.player = nil
-        } else if case .edit = mode {
-          // For edit mode, clean up the temporary preview sound
           preview.player?.stop()
           preview.player = nil
         }
-        // For edit mode with built-in sounds, the preview sound is the same as the original sound,
-        // so we don't clean up the player in that case
       }
 
       previewSound = nil
@@ -182,15 +166,15 @@ extension SoundSheet {
   internal func updatePreviewVolume() {
     guard isPreviewing, let preview = previewSound else { return }
 
-    debugLog(
-      "🎵 SoundSheet: Updating preview volume - normalize: \(normalizeAudio), adjustment: \(volumeAdjustment)"
+    Logger.ui.debug(
+      "SoundSheet: Updating preview volume - normalize: \(normalizeAudio), adjustment: \(volumeAdjustment)"
     )
 
     Task { @MainActor in
       // Update the sound's volume based on the current customization
       preview.updateVolume()
 
-      debugLog("🎵 SoundSheet: Preview volume updated with current sheet settings")
+      Logger.ui.debug("SoundSheet: Preview volume updated with current sheet settings")
     }
   }
 

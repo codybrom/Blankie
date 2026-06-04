@@ -46,10 +46,6 @@ struct VolumeControlsView: View {
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
             Button(action: {
-              // TODO: Implement preset default volume restoration
-              // This should restore volumes to the current preset's default settings
-              // For now, reset to global defaults
-
               audioManager.resetSounds()
             }) {
               Text("Reset")
@@ -118,9 +114,6 @@ struct VolumeControlsView: View {
       Divider()
 
       Button {
-        // TODO: Implement preset default volume restoration
-        // This should restore volumes to the current preset's default settings
-        // For now, reset to global defaults
         audioManager.resetSounds()
       } label: {
         Text("Reset")

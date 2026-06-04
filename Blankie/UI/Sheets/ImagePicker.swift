@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 #if os(iOS)
   import UIKit
@@ -40,17 +41,18 @@ import SwiftUI
         _: UIImagePickerController,
         didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
       ) {
-        debugLog("🎨 ImagePicker: User selected an image")
+        Logger.ui.debug("ImagePicker: User selected an image")
         if let image = info[.originalImage] as? UIImage {
-          debugLog("🎨 ImagePicker: Original image size: \(image.size)")
+          Logger.ui.debug("ImagePicker: Original image size: \(String(describing: image.size))")
           // Crop to square and convert to data
           let squareImage = cropToSquare(image: image)
           let imageData = squareImage.jpegData(compressionQuality: 0.8)
-          debugLog("🎨 ImagePicker: Cropped to square, data size: \(imageData?.count ?? 0) bytes")
+          Logger.ui.debug(
+            "ImagePicker: Cropped to square, data size: \(imageData?.count ?? 0) bytes")
           parent.imageData = imageData
-          debugLog("🎨 ImagePicker: Set parent.imageData")
+          Logger.ui.debug("ImagePicker: Set parent.imageData")
         } else {
-          debugLog("❌ ImagePicker: Could not get original image from info")
+          Logger.ui.error("ImagePicker: Could not get original image from info")
         }
         parent.dismiss()
       }

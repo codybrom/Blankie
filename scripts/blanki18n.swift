@@ -62,7 +62,7 @@ func getFilePath() -> String {
   guard CommandLine.arguments.count > 1 else {
     print("Error: Please provide a translation file path")
     print(
-      "Usage: ./blanki8n.swift path/to/translation.[json|csv] [language_code] [--preserve-states]")
+      "Usage: ./blanki18n.swift path/to/translation.[json|csv] [language_code] [--preserve-states]")
     exit(1)
   }
 
@@ -180,8 +180,8 @@ func updateTranslations(
       if preserveStates {
         state = translation.state
       } else {
-        // Default behavior: mark all valid translations as "translated"
-        state = hasValidTranslation ? "translated" : "translated"
+        // Default behavior: valid translations are "translated", placeholders need review
+        state = hasValidTranslation ? "translated" : "needs_review"
       }
 
       // Check if this is actually a change
@@ -233,7 +233,7 @@ func writeUpdatedStrings(
 // MARK: - Main
 
 func main() {
-  print("blanki8n Localization Updater")
+  print("blanki18n Localization Updater")
   print("===================")
 
   let filePath = getFilePath()

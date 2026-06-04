@@ -1,6 +1,14 @@
+//
+//  LibraryView.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 4/14/25.
+//
+
 import SwiftUI
 import TipKit
 import UniformTypeIdentifiers
+import os
 
 /// Shared "now playing" treatment for Library rows. iPad sidebar rows highlight
 /// the whole row and tint the title with the active accent; iPhone page rows
@@ -219,7 +227,7 @@ struct PresetPickerRow: View {
         if dismissOnSelect { dismiss() }
         onSelection?()
       } catch {
-        debugLog("Error applying preset: \(error)")
+        Logger.ui.error("Error applying preset: \(error, privacy: .public)")
       }
     }
   }

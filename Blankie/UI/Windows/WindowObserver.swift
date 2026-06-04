@@ -5,6 +5,8 @@
 //  Created by Cody Bromley on 1/1/25.
 //
 
+import os
+
 #if os(macOS)
   import SwiftUI
 
@@ -76,7 +78,7 @@
         "width": Double(frame.size.width),
         "height": Double(frame.size.height),
       ]
-      debugLog("🪟 Saving final window frame: \(frameDict)")
+      Logger.ui.debug("Saving final window frame: \(frameDict)")
       UserDefaults.standard.set(frameDict, forKey: lastWindowFrameKey)
     }
 
@@ -88,10 +90,10 @@
           width: (frameDict["width"] as? Double ?? WindowDefaults.defaultWidth),
           height: (frameDict["height"] as? Double ?? WindowDefaults.defaultHeight)
         )
-        debugLog("🪟 Retrieved saved frame: \(frame)")
+        Logger.ui.debug("Retrieved saved frame: \(String(describing: frame))")
         return frame
       }
-      debugLog("🪟 Using default frame")
+      Logger.ui.debug("Using default frame")
       return WindowDefaults.defaultFrame
     }
 
@@ -99,7 +101,7 @@
       // Ignore popovers/menus so opening them doesn't republish (which
       // re-renders the open popover and drops native slider knobs).
       guard let window = notification.object as? NSWindow, isMainWindow(window) else { return }
-      debugLog("🪟 Window became key")
+      Logger.ui.debug("Window became key")
       DispatchQueue.main.async {
         if !self.hasVisibleWindow {
           self.hasVisibleWindow = true
@@ -109,14 +111,14 @@
 
     @objc private func windowDidClose(_ notification: Notification) {
       guard let window = notification.object as? NSWindow, isMainWindow(window) else { return }
-      debugLog("🪟 Window closing")
+      Logger.ui.debug("Window closing")
       DispatchQueue.main.async {
         self.checkVisibleWindows()
       }
     }
 
     private func checkVisibleWindows() {
-      debugLog("🪟 Checking visible windows")
+      Logger.ui.debug("Checking visible windows")
       let visible = NSApp.windows.contains { window in
         window.isVisible && !window.isMiniaturized && isMainWindow(window)
       }

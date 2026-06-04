@@ -1,3 +1,10 @@
+//
+//  SettingsView.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 4/14/25.
+//
+
 import SwiftUI
 
 struct SettingsView: View {
@@ -51,270 +58,270 @@ struct SettingsView: View {
 
   private var settingsForm: some View {
     Form {
-        // App identity header (icon, name, developer) with the About link and
-        // beta/debug rows grouped beneath it, like a standard iOS settings card.
-        Section {
-          HStack(spacing: 14) {
-            #if os(iOS)
-              if let appIcon = UIApplication.shared.currentAppIcon {
-                Image(uiImage: appIcon)
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 60, height: 60)
-                  // Match the system app-icon corner ratio (~22.4% of size).
-                  .clipShape(RoundedRectangle(cornerRadius: 13.5, style: .continuous))
-                  .accessibilityHidden(true)
-              }
-            #else
-              BrandedBlankieIcon(size: 60)
-            #endif
-            VStack(alignment: .leading, spacing: 4) {
-              Text(verbatim: "Blankie")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
-              // Same localized key as the About sheet's version line.
-              Text("Version \(appVersion) (\(buildNumber))")
-                .font(.footnote)
-                .foregroundColor(.secondary)
-              Link(destination: URL(string: "https://forms.gle/iMhDt41LYSjukuMW8")!) {
-                Text("Have Feedback?")
-              }
-              .font(.subheadline)
-              // Borderless keeps the Link its own tap target instead of the
-              // row's hit-testing owning the tap.
-              .buttonStyle(.borderless)
-              .handCursor()
+      // App identity header (icon, name, developer) with the About link and
+      // beta/debug rows grouped beneath it, like a standard iOS settings card.
+      Section {
+        HStack(spacing: 14) {
+          #if os(iOS)
+            if let appIcon = UIApplication.shared.currentAppIcon {
+              Image(uiImage: appIcon)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 60, height: 60)
+                // Match the system app-icon corner ratio (~22.4% of size).
+                .clipShape(RoundedRectangle(cornerRadius: 13.5, style: .continuous))
+                .accessibilityHidden(true)
             }
-          }
-          .padding(.vertical, 4)
-
-          Button {
-            showingAbout = true
-          } label: {
-            Label {
-              Text("About Blankie")
-                .foregroundColor(.primary)
-            } icon: {
-              Image(systemName: "hand.wave.fill")
-                .symbolRenderingMode(.hierarchical)
-                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-            }
-          }
-
-          #if DEBUG
-            Button {
-              showingOnboarding = true
-            } label: {
-              Label {
-                Text("Show Onboarding")
-                  .foregroundColor(.primary)
-              } icon: {
-                Image(systemName: "ladybug.fill")
-                  .foregroundColor(.orange)
-              }
-            }
+          #else
+            BrandedBlankieIcon(size: 60)
           #endif
-
-          if showBetaTesterUI {
-            // Celebratory call-to-action for beta testers.
-            Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
-              HStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                  .font(.title2)
-                  .foregroundStyle(
-                    LinearGradient(
-                      colors: [
-                        globalSettings.customAccentColor ?? .accentColor,
-                        (globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
-                      ],
-                      startPoint: .topLeading,
-                      endPoint: .bottomTrailing
-                    )
-                  )
-                  .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                  Text("Thanks for Testing Blankie!")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.primary)
-                  Text("Add Your Name to the Beta Tester Credits")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                }
-                Spacer()
-                Image(systemName: "arrow.up.right")
-                  .font(.subheadline.weight(.semibold))
-                  .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-                  .accessibilityHidden(true)
-              }
-              .padding(.vertical, 6)
+          VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: "Blankie")
+              .font(.system(.title3, design: .rounded).weight(.semibold))
+            // Same localized key as the About sheet's version line.
+            Text("Version \(appVersion) (\(buildNumber))")
+              .font(.footnote)
+              .foregroundColor(.secondary)
+            Link(destination: URL(string: "https://forms.gle/iMhDt41LYSjukuMW8")!) {
+              Text("Have Feedback?")
             }
+            .font(.subheadline)
+            // Borderless keeps the Link its own tap target instead of the
+            // row's hit-testing owning the tap.
+            .buttonStyle(.borderless)
             .handCursor()
           }
         }
+        .padding(.vertical, 4)
 
-        PlaybackSettingsSection(globalSettings: globalSettings)
-
-        // Always-active visual settings: applied globally, with no per-preset
-        // override.
-        Section(
-          header: Text("Display")
-        ) {
-          Picker(
-            selection: Binding(
-              get: { globalSettings.appearance },
-              set: { globalSettings.setAppearance($0) }
-            )
-          ) {
-            ForEach(AppearanceMode.allCases, id: \.self) { mode in
-              Text(mode.localizedName).tag(mode)
-            }
-          } label: {
-            Text("Appearance")
+        Button {
+          showingAbout = true
+        } label: {
+          Label {
+            Text("About Blankie")
+              .foregroundColor(.primary)
+          } icon: {
+            Image(systemName: "hand.wave.fill")
+              .symbolRenderingMode(.hierarchical)
+              .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
           }
-
-          Toggle(
-            isOn: Binding(
-              get: { globalSettings.showSoundNames },
-              set: { globalSettings.setShowSoundNames($0) }
-            )
-          ) {
-            Text("Show Sound Names")
-          }
-
-          Toggle(
-            isOn: Binding(
-              get: { globalSettings.showProgressBorder },
-              set: { globalSettings.setShowProgressBorder($0) }
-            )
-          ) {
-            Text(
-              "Show Progress Borders")
-          }
-
-          // Animated preset artwork as the Lock Screen / Now Playing background.
-          Toggle(
-            isOn: Binding(
-              get: { globalSettings.lockScreenBackgroundEnabled },
-              set: { globalSettings.setLockScreenBackgroundEnabled($0) }
-            )
-          ) {
-            Text("Lock Screen Animations")
-          }
-
         }
 
-        // App-wide defaults a preset inherits and can override in Edit Preset
-        // (view mode, accent color, background blur).
-        Section(
-          header: VStack(alignment: .leading, spacing: 4) {
-            Text("Theme")
-            Text("Presets can override these options.")
-              .font(.caption)
-              .textCase(.none)
-          }
-        ) {
-          #if os(iOS) || os(visionOS)
-            // View mode (Grid / List). This is the app-wide default. It's
-            // locked to Grid while in Quick Mix (tile-only by design). A preset
-            // override no longer locks the control — the badge marks it, and the
-            // picker still shows/edits the app-wide default like Accent and Blur.
-            let presetOverride = presetViewModeOverride
-            let pickerLocked = audioManager.isQuickMix
-
-            VStack(alignment: .leading, spacing: 8) {
-              HStack(spacing: 6) {
-                Text("View Mode")
-                if presetOverride != nil {
-                  overriddenByPresetBadge
-                }
-              }
-              Picker(
-                selection: Binding(
-                  get: {
-                    if audioManager.isQuickMix { return false }
-                    return globalSettings.showingListView
-                  },
-                  set: { globalSettings.setShowingListView($0) }
-                )
-              ) {
-                Text("Grid").tag(false)
-                Text("List").tag(true)
-              } label: {
-                Text("View Mode")
-              }
-              .pickerStyle(.segmented)
-              .disabled(pickerLocked)
+        #if DEBUG
+          Button {
+            showingOnboarding = true
+          } label: {
+            Label {
+              Text("Show Onboarding")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "ladybug.fill")
+                .foregroundColor(.orange)
             }
-            .padding(.vertical, 4)
-          #endif
+          }
+        #endif
+
+        if showBetaTesterUI {
+          // Celebratory call-to-action for beta testers.
+          Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
+            HStack(spacing: 12) {
+              Image(systemName: "sparkles")
+                .font(.title2)
+                .foregroundStyle(
+                  LinearGradient(
+                    colors: [
+                      globalSettings.customAccentColor ?? .accentColor,
+                      (globalSettings.customAccentColor ?? .accentColor).opacity(0.6),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                  )
+                )
+                .accessibilityHidden(true)
+              VStack(alignment: .leading, spacing: 2) {
+                Text("Thanks for Testing Blankie!")
+                  .font(.subheadline.weight(.semibold))
+                  .foregroundColor(.primary)
+                Text("Add Your Name to the Beta Tester Credits")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+              }
+              Spacer()
+              Image(systemName: "arrow.up.right")
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+                .accessibilityHidden(true)
+            }
+            .padding(.vertical, 6)
+          }
+          .handCursor()
+        }
+      }
+
+      PlaybackSettingsSection(globalSettings: globalSettings)
+
+      // Always-active visual settings: applied globally, with no per-preset
+      // override.
+      Section(
+        header: Text("Display")
+      ) {
+        Picker(
+          selection: Binding(
+            get: { globalSettings.appearance },
+            set: { globalSettings.setAppearance($0) }
+          )
+        ) {
+          ForEach(AppearanceMode.allCases, id: \.self) { mode in
+            Text(mode.localizedName).tag(mode)
+          }
+        } label: {
+          Text("Appearance")
+        }
+
+        Toggle(
+          isOn: Binding(
+            get: { globalSettings.showSoundNames },
+            set: { globalSettings.setShowSoundNames($0) }
+          )
+        ) {
+          Text("Show Sound Names")
+        }
+
+        Toggle(
+          isOn: Binding(
+            get: { globalSettings.showProgressBorder },
+            set: { globalSettings.setShowProgressBorder($0) }
+          )
+        ) {
+          Text(
+            "Show Progress Borders")
+        }
+
+        // Animated preset artwork as the Lock Screen / Now Playing background.
+        Toggle(
+          isOn: Binding(
+            get: { globalSettings.lockScreenBackgroundEnabled },
+            set: { globalSettings.setLockScreenBackgroundEnabled($0) }
+          )
+        ) {
+          Text("Lock Screen Animations")
+        }
+
+      }
+
+      // App-wide defaults a preset inherits and can override in Edit Preset
+      // (view mode, accent color, background blur).
+      Section(
+        header: VStack(alignment: .leading, spacing: 4) {
+          Text("Theme")
+          Text("Presets can override these options.")
+            .font(.caption)
+            .textCase(.none)
+        }
+      ) {
+        #if os(iOS) || os(visionOS)
+          // View mode (Grid / List). This is the app-wide default. It's
+          // locked to Grid while in Quick Mix (tile-only by design). A preset
+          // override no longer locks the control — the badge marks it, and the
+          // picker still shows/edits the app-wide default like Accent and Blur.
+          let presetOverride = presetViewModeOverride
+          let pickerLocked = audioManager.isQuickMix
 
           VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-              Text("Accent Color")
-              #if os(iOS) || os(visionOS)
-                if accentColorOverridden {
-                  overriddenByPresetBadge
-                }
-              #endif
-            }
-            SpectrumColorPicker(
-              selectedColor: Binding(
-                get: { globalSettings.customAccentColor },
-                // Use the setter so the choice persists (assigning the
-                // @Published directly never writes to UserDefaults).
-                set: { globalSettings.setAccentColor($0) }
-              )
-            )
-          }
-          .padding(.vertical, 4)
-
-          #if os(iOS) || os(visionOS)
-            // App-wide default blur for preset background artwork. On/off:
-            // on applies `defaultBackgroundBlurRadius`, off is no blur.
-            Toggle(
-              isOn: Binding(
-                get: { globalSettings.backgroundBlurRadius > 0 },
-                set: {
-                  globalSettings.setBackgroundBlurRadius($0 ? defaultBackgroundBlurRadius : 0)
-                }
-              )
-            ) {
-              HStack(spacing: 6) {
-                Text("Blur Background")
-                if blurOverridden {
-                  overriddenByPresetBadge
-                }
+              Text("View Mode")
+              if presetOverride != nil {
+                overriddenByPresetBadge
               }
             }
-          #endif
-        }
-
-      }
-      .navigationTitle("Settings")
-      .tint(globalSettings.customAccentColor ?? .accentColor)
-      // Presented as a sheet, this view has its own presentation context, so it
-      // won't pick up the window's color scheme when appearance changes while
-      // it's open. Apply it here too so dark/light flips the sheet immediately.
-      .preferredColorScheme(globalSettings.appearance.colorScheme)
-      .task {
-        showBetaTesterUI = await Bundle.main.isTestFlightOrDebug
-      }
-      #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-          ToolbarItem(placement: .confirmationAction) {
-            Button("Done") {
-              dismiss()
+            Picker(
+              selection: Binding(
+                get: {
+                  if audioManager.isQuickMix { return false }
+                  return globalSettings.showingListView
+                },
+                set: { globalSettings.setShowingListView($0) }
+              )
+            ) {
+              Text("Grid").tag(false)
+              Text("List").tag(true)
+            } label: {
+              Text("View Mode")
             }
-            .tint(Color.primary)
+            .pickerStyle(.segmented)
+            .disabled(pickerLocked)
           }
+          .padding(.vertical, 4)
+        #endif
+
+        VStack(alignment: .leading, spacing: 8) {
+          HStack(spacing: 6) {
+            Text("Accent Color")
+            #if os(iOS) || os(visionOS)
+              if accentColorOverridden {
+                overriddenByPresetBadge
+              }
+            #endif
+          }
+          SpectrumColorPicker(
+            selectedColor: Binding(
+              get: { globalSettings.customAccentColor },
+              // Use the setter so the choice persists (assigning the
+              // @Published directly never writes to UserDefaults).
+              set: { globalSettings.setAccentColor($0) }
+            )
+          )
         }
-      #endif
-      .sheet(isPresented: $showingAbout) {
-        AboutView()
+        .padding(.vertical, 4)
+
+        #if os(iOS) || os(visionOS)
+          // App-wide default blur for preset background artwork. On/off:
+          // on applies `defaultBackgroundBlurRadius`, off is no blur.
+          Toggle(
+            isOn: Binding(
+              get: { globalSettings.backgroundBlurRadius > 0 },
+              set: {
+                globalSettings.setBackgroundBlurRadius($0 ? defaultBackgroundBlurRadius : 0)
+              }
+            )
+          ) {
+            HStack(spacing: 6) {
+              Text("Blur Background")
+              if blurOverridden {
+                overriddenByPresetBadge
+              }
+            }
+          }
+        #endif
       }
-      .sheet(isPresented: $showingOnboarding) {
-        PresetOnboardingSheet(isPresented: $showingOnboarding)
+
+    }
+    .navigationTitle("Settings")
+    .tint(globalSettings.customAccentColor ?? .accentColor)
+    // Presented as a sheet, this view has its own presentation context, so it
+    // won't pick up the window's color scheme when appearance changes while
+    // it's open. Apply it here too so dark/light flips the sheet immediately.
+    .preferredColorScheme(globalSettings.appearance.colorScheme)
+    .task {
+      showBetaTesterUI = await Bundle.main.isTestFlightOrDebug
+    }
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") {
+            dismiss()
+          }
+          .tint(Color.primary)
+        }
       }
+    #endif
+    .sheet(isPresented: $showingAbout) {
+      AboutView()
+    }
+    .sheet(isPresented: $showingOnboarding) {
+      PresetOnboardingSheet(isPresented: $showingOnboarding)
+    }
   }
 }
 

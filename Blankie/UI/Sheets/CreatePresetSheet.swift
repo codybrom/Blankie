@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 struct CreatePresetSheet: View {
   @Binding var isPresented: Bool
@@ -316,8 +317,8 @@ extension CreatePresetSheet {
       order: customPresetsCount
     )
 
-    debugLog(
-      "🎨 CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "✅" : "❌ None")"
+    Logger.ui.debug(
+      "CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "set" : "none")"
     )
 
     return newPreset
@@ -330,10 +331,10 @@ extension CreatePresetSheet {
       let artworkId = try await PresetArtworkManager.shared.saveArtwork(
         data, for: presetId, type: .artwork
       )
-      debugLog("🎨 CreatePresetSheet: Saved artwork with ID: \(artworkId)")
+      Logger.ui.debug("CreatePresetSheet: Saved artwork with ID: \(artworkId)")
       return artworkId
     } catch {
-      debugLog("❌ CreatePresetSheet: Failed to save artwork: \(error)")
+      Logger.ui.error("CreatePresetSheet: Failed to save artwork: \(error, privacy: .public)")
       return nil
     }
   }
@@ -377,10 +378,10 @@ extension CreatePresetSheet {
             artworkData = data
           }
         } catch {
-          debugLog("❌ macOS Image Picker: Failed to load image: \(error)")
+          Logger.ui.error("macOS Image Picker: Failed to load image: \(error, privacy: .public)")
         }
       case .failure(let error):
-        debugLog("❌ macOS Image Picker: Image picker error: \(error)")
+        Logger.ui.error("macOS Image Picker: Image picker error: \(error, privacy: .public)")
       }
     }
 

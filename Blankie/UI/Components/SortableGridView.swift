@@ -2,6 +2,8 @@
 //  SortableGridView.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 5/24/26.
+//
 //  Long-press-to-reorder grid, adapted from Balaji Venkatesh's "Sortable Grid"
 //  (28/01/26). The dragged tile is lifted into an overlay preview while the
 //  underlying cells swap live as it passes over them; the host commits the
@@ -268,15 +270,11 @@ extension EnvironmentValues {
 
       switch recognizer.state {
       case .began:
-        print("👉 [Gesture Debug] UIKit LongPress began! Triggering pickup.")
         onStart()
         onChanged(globalLocation)
       case .changed:
         onChanged(globalLocation)
       case .ended, .cancelled, .failed:
-        print(
-          "👉 [Gesture Debug] UIKit LongPress ended/cancelled/failed: state=\(recognizer.state.rawValue)"
-        )
         onEnd()
       default:
         break

@@ -8,6 +8,7 @@
 import AVFoundation
 import CoreMedia
 import Foundation
+import os
 
 // MARK: - Metadata Extraction
 extension Sound {
@@ -16,8 +17,9 @@ extension Sound {
       try extractFileMetadata(from: url)
       extractAudioMetadata(from: url)
     } catch {
-      debugLog(
-        "❌ Sound: Failed to extract metadata for '\(fileName)': \(error.localizedDescription)")
+      Logger.sounds.error(
+        "Sound: Failed to extract metadata for '\(self.fileName, privacy: .public)': \(error.localizedDescription, privacy: .public)"
+      )
     }
   }
 
@@ -60,7 +62,8 @@ extension Sound {
 
         logMetadata()
       } catch {
-        debugLog("❌ Sound: Failed to load metadata asynchronously: \(error)")
+        Logger.sounds.error(
+          "Sound: Failed to load metadata asynchronously: \(error, privacy: .public)")
       }
     }
   }
@@ -77,8 +80,8 @@ extension Sound {
   }
 
   private func logMetadata() {
-    debugLog(
-      "📊 Sound: Metadata for '\(fileName)' - Channels: \(channelCount ?? 0), Duration: \(duration ?? 0)s, Size: \(fileSize ?? 0) bytes, Format: \(fileFormat ?? "unknown")"
+    Logger.sounds.debug(
+      "Sound: Metadata for '\(self.fileName)' - Channels: \(self.channelCount ?? 0), Duration: \(self.duration ?? 0)s, Size: \(self.fileSize ?? 0) bytes, Format: \(self.fileFormat ?? "unknown")"
     )
   }
 }

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 /// Interactive onboarding sheet that guides users through creating their first preset
 struct PresetOnboardingSheet: View {
@@ -210,7 +211,8 @@ struct PresetOnboardingSheet: View {
           .font(.system(size: 22))
           .foregroundStyle(
             isSelected
-              ? (globalSettings.customAccentColor ?? .accentColor) : .secondary.opacity(0.5))
+              ? (globalSettings.customAccentColor ?? .accentColor) : .secondary.opacity(0.5)
+          )
           .accessibilityHidden(true)
 
         // Sound icon
@@ -538,7 +540,8 @@ struct PresetOnboardingSheet: View {
         // Dismiss
         dismiss()
       } catch {
-        debugLog("❌ PresetOnboardingSheet: Failed to create preset: \(error)")
+        Logger.ui.error(
+          "PresetOnboardingSheet: Failed to create preset: \(error, privacy: .public)")
       }
     }
   }
