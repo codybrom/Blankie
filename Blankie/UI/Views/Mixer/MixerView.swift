@@ -19,7 +19,6 @@ private enum IPhonePage: Hashable {
     @StateObject var audioManager = AudioManager.shared
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
-    @StateObject var timerManager = TimerManager.shared
     /// iPhone navigation path. The Library is the stack's root and the app
     /// launches with the mixer pushed on top, so the mixer's back button (or
     /// an edge swipe) leads left to the Library.
@@ -185,7 +184,6 @@ private enum IPhonePage: Hashable {
           // sidebar, so the title is no longer a picker trigger.
           .navigationTitle(navigationTitle)
           .navigationBarTitleDisplayMode(.inline)
-          .if(topBarCaption != nil) { $0.navigationSubtitle(topBarCaption ?? "") }
           // The NavigationSplitView owns the sidebar toggle and keeps it
           // available in the detail when collapsed, so we add no reveal control.
           .toolbarBackground(.hidden, for: .navigationBar)
@@ -265,7 +263,6 @@ private enum IPhonePage: Hashable {
       }
       .navigationTitle(navigationTitle)
       .navigationBarTitleDisplayMode(.inline)
-      .if(topBarCaption != nil) { $0.navigationSubtitle(topBarCaption ?? "") }
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           topTrailingToolbarButton
@@ -343,43 +340,9 @@ private enum IPhonePage: Hashable {
     // MARK: - Helper Views
 
     // Helper computed properties are implemented in MixerView+UIComponents.swift
-
-    private var timerTopBarText: String {
-      if timerManager.remainingTime < 60 {
-        let formatter = DateComponentsFormatter()
-        formatter.unitsStyle = .full
-        formatter.allowedUnits = [.second]
-        return "Pausing in \(formatter.string(from: timerManager.remainingTime) ?? "0 seconds")"
-      } else {
-        let endTime = timerManager.getEndTime() ?? Date()
-        return "Pausing at \(endTime.formatted(date: .omitted, time: .shortened))"
-      }
-    }
-
-    /// Small status line rendered under the preset name in the top bar.
-    /// "Paused" takes priority so users always know the global state; the
-    /// timer caption only shows while actively playing.
-    var topBarCaption: String? {
-      if !audioManager.isGloballyPlaying && audioManager.hasSelectedSounds {
-        return String(localized: "Paused")
-      }
-      if timerManager.isTimerActive {
-        return timerTopBarText
-      }
-      return nil
-    }
   }
 
   extension View {
-    @ViewBuilder
-    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-      if condition {
-        transform(self)
-      } else {
-        self
-      }
-    }
-
     /// `safeAreaBar` keeps scroll edge effects correct under the mini player
     /// on iOS 26; earlier systems fall back to a plain safe-area inset.
     @ViewBuilder
