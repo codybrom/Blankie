@@ -33,23 +33,6 @@ struct PresetStorage {
     debugLog("PresetStorage: Saving \(presets.count) custom presets")
 
     if let data = try? JSONEncoder().encode(presets) {
-      // Add debug logging before saving
-      debugLog("Saving presets:")
-      presets.forEach { preset in
-        debugLog("  - '\(preset.name)':")
-        debugLog("    * Order: \(preset.order ?? -1)")
-        debugLog(
-          "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")"
-        )
-        debugLog("    * Creator: \(preset.creatorName ?? "None")")
-        debugLog("    * Active sounds:")
-        preset.soundStates
-          .filter { $0.isSelected }
-          .forEach { state in
-            debugLog("      - \(state.fileName) (Volume: \(state.volume))")
-          }
-      }
-
       // Check data size
       let sizeInMB = Double(data.count) / 1024.0 / 1024.0
       if sizeInMB > 1.0 {
@@ -57,7 +40,7 @@ struct PresetStorage {
       }
 
       defaults.set(data, forKey: customPresetsKey)
-      debugLog("PresetStorage: Custom presets saved successfully")
+      debugLog("PresetStorage: Saved \(presets.count) custom presets (\(data.count) bytes)")
     }
   }
 

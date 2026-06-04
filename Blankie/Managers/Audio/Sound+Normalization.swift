@@ -30,7 +30,6 @@ extension Sound {
       // Use detected peak level if available, otherwise use default
       let normalizationFactor = getNormalizationFactor()
       effectiveVolume *= normalizationFactor
-      debugLog("Sound: Applying normalization factor \(normalizationFactor) to '\(fileName)'")
       // When normalization is enabled, ignore volume adjustment
     } else {
       // Only apply volume adjustment when normalization is disabled

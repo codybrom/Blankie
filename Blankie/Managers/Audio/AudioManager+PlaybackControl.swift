@@ -12,10 +12,7 @@ import SwiftUI
 extension AudioManager {
   /// Toggles the playback state of all selected sounds
   @MainActor func togglePlayback() {
-    debugLog("AudioManager: Toggling playback")
-    debugLog("  - Current state (pre-toggle): \(isGloballyPlaying)")
     setGlobalPlaybackState(!isGloballyPlaying)
-    debugLog("  - New state (post-toggle): \(isGloballyPlaying)")
   }
 
   @MainActor
@@ -135,10 +132,6 @@ extension AudioManager {
 
     // Normal mode: play all selected sounds according to preset
     for sound in sounds where sound.isSelected {
-      debugLog(
-        "  - About to play '\(sound.fileName)', isSelected: \(sound.isSelected), player exists: \(sound.player != nil)"
-      )
-
       // Check if this sound is starting fresh (not paused or playing)
       let wasPlaying = sound.player?.isPlaying == true
       let currentTime = sound.player?.currentTime ?? 0
@@ -151,9 +144,6 @@ extension AudioManager {
       }
 
       sound.play()
-      debugLog(
-        "  - After play call for '\(sound.fileName)', player playing: \(sound.player?.isPlaying ?? false), volume: \(sound.player?.volume ?? 0)"
-      )
     }
 
     // Update Now Playing info with full preset details
@@ -170,19 +160,15 @@ extension AudioManager {
   }
 
   func pauseAll() {
-    debugLog("AudioManager: Pausing all sounds")
-    debugLog("  - Current global play state: \(isGloballyPlaying)")
+    debugLog("AudioManager: Pausing all selected sounds")
 
     for sound in sounds where sound.isSelected {
-      debugLog("  - Pausing '\(sound.fileName)'")
       sound.pause()
     }
 
     // Note: We intentionally do NOT deactivate the audio session here
     // This keeps the Now Playing controls visible on lock screen/control center
     // The session will be deactivated when appropriate (background, termination, etc.)
-
-    debugLog("AudioManager: Pause all complete")
   }
 
   @MainActor

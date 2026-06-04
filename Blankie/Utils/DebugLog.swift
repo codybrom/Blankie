@@ -15,8 +15,12 @@ import Foundation
 /// evaluated, which matters for the high-frequency logging in views like
 /// `MixerView` whose `onChange`/`onAppear` closures interpolate state on every
 /// update.
+#if DEBUG
+  private let debugLogStart = Date()
+#endif
+
 func debugLog(_ message: @autoclosure () -> String) {
   #if DEBUG
-    print(message())
+    print(String(format: "[%8.3f] ", Date().timeIntervalSince(debugLogStart)) + message())
   #endif
 }
