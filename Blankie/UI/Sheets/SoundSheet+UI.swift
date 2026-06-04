@@ -107,23 +107,31 @@ extension SoundSheet {
         dismiss()
       }
     case .edit:
-      // Editing applies changes live, so dismissing simply finishes — "Done".
-      Button("Done") {
-        if isPreviewing {
-          stopPreview()
-        }
-        dismiss()
-      }
+      EmptyView()
     }
   }
 
   @ViewBuilder
   var trailingNavigationButton: some View {
-    if hasChanges {
-      Button("Save") {
-        performAction()
+    switch mode {
+    case .add:
+      if hasChanges {
+        Button("Save") {
+          performAction()
+        }
+        .disabled(isDisabled)
       }
-      .disabled(isDisabled)
+    case .edit:
+      // Editing applies changes live, so dismissing simply finishes — "Done".
+      // Modal only: a pushed editor keeps just its Back button.
+      if embedInNavigation {
+        Button("Done") {
+          if isPreviewing {
+            stopPreview()
+          }
+          dismiss()
+        }
+      }
     }
   }
 

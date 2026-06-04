@@ -28,6 +28,8 @@ private enum IPhonePage: Hashable {
     @State var showingSettings = false
     @State var showingQuickMixEditor = false
     @State var soundToEdit: Sound?
+    /// Keeps the solo backdrop up while sheet preview temporarily exits solo mode.
+    @State private var soloBackdropSound: Sound?
     @State var presetToEdit: Preset?
     @State var soundsUpdateTrigger = 0
     @State var showingNowPlaying = false
@@ -73,8 +75,10 @@ private enum IPhonePage: Hashable {
       }
       .onChange(of: soundToEdit) { oldValue, newValue in
         if let sound = newValue {
+          soloBackdropSound = audioManager.soloModeSound
           debugLog("MixerView: SoundSheet will be presented for '\(sound.title)'")
         } else if let oldSound = oldValue {
+          soloBackdropSound = nil
           debugLog("MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
         }
       }
@@ -272,41 +276,21 @@ private enum IPhonePage: Hashable {
 
     // MARK: - Main Content
 
+    private var soloLayoutSound: Sound? {
+      if let solo = audioManager.soloModeSound, audioManager.previewModeSound == nil {
+        return solo
+      }
+      if soundToEdit != nil {
+        return soloBackdropSound
+      }
+      return nil
+    }
+
     @ViewBuilder
     private var mainContentView: some View {
       Group {
-        if let soloSound = audioManager.soloModeSound, soundToEdit == nil,
-          audioManager.previewModeSound == nil
-        {
-          // Solo mode view (only when no SoundSheet is presented and not in preview mode)
+        if let soloSound = soloLayoutSound {
           soloModeView(for: soloSound)
-            .onAppear {
-              debugLog(
-                "MixerView: Showing solo mode view for '\(soloSound.title)' (no SoundSheet open, no preview)"
-              )
-            }
-        } else if let soloSound = audioManager.soloModeSound,
-          soundToEdit != nil || audioManager.previewModeSound != nil
-        {
-          // Solo mode is active but SoundSheet is open or in preview mode, maintain normal layout
-          Group {
-            if audioManager.isQuickMix {
-              QuickMixView()
-            } else {
-              soundsView
-            }
-          }
-          .onAppear {
-            if audioManager.previewModeSound != nil {
-              debugLog(
-                "MixerView: Solo mode active for '\(soloSound.title)' but preview mode active - maintaining normal layout"
-              )
-            } else {
-              debugLog(
-                "MixerView: Solo mode active for '\(soloSound.title)' but SoundSheet is open - maintaining normal layout"
-              )
-            }
-          }
         } else if audioManager.isQuickMix {
           // Quick Mix mode view
           QuickMixView()
@@ -318,8 +302,7 @@ private enum IPhonePage: Hashable {
       .animation(
         .easeInOut(duration: 0.3),
         value: AnimationTrigger(
-          soloMode: soundToEdit == nil && audioManager.previewModeSound == nil
-            ? audioManager.soloModeSound?.id : nil,
+          soloMode: soloLayoutSound?.id,
           quickMix: audioManager.isQuickMix,
           listView: showingListView
         )
