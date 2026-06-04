@@ -8,6 +8,10 @@
 import Foundation
 import StoreKit
 
+#if canImport(MarketplaceKit)
+  import MarketplaceKit
+#endif
+
 extension Bundle {
   private static let probeAttempts = 3
 
@@ -19,14 +23,20 @@ extension Bundle {
   /// determined) — so beta-only UI auto-hides once the app ships, with no
   /// manual cleanup required.
   ///
-  /// Detection uses StoreKit's `AppTransaction`, whose `environment` reports
+  /// The primary signal is MarketplaceKit's `AppDistributor.current` (iOS
+  /// 17.4+), which reads the install source from local install metadata —
+  /// `.testFlight` vs `.appStore` — with no App Store server round-trip, so it
+  /// works where StoreKit's cache is cold or stuck (real TestFlight installs
+  /// were throwing `StoreKitError.unknown` and never seeing the beta UI).
+  ///
+  /// The fallback is StoreKit's `AppTransaction`, whose `environment` reports
   /// the signing environment: TestFlight installs are signed in `.sandbox`,
-  /// App Store installs in `.production`. This is the only viable signal here —
-  /// the deprecated `appStoreReceiptURL` / `sandboxReceipt` check is `nil` in
-  /// the iOS sandbox for an app without in-app purchases, and a build-time flag
-  /// can't tell a TestFlight build apart from the same binary promoted to the
-  /// App Store. Verification isn't security-critical (cosmetic UI only), so the
-  /// payload is read from both the verified and unverified cases.
+  /// App Store installs in `.production`. (The deprecated `appStoreReceiptURL`
+  /// / `sandboxReceipt` check is `nil` in the iOS sandbox for an app without
+  /// in-app purchases, and a build-time flag can't tell a TestFlight build
+  /// apart from the same binary promoted to the App Store.) Verification isn't
+  /// security-critical (cosmetic UI only), so the payload is read from both
+  /// the verified and unverified cases.
   ///
   /// `AppTransaction.shared`'s first call after a cold launch can throw
   /// `StoreKitError.unknown` ("Unable to Complete Request") before StoreKit has
@@ -40,6 +50,18 @@ extension Bundle {
       #if DEBUG
         return true
       #else
+        #if canImport(MarketplaceKit)
+          if let distributor = try? await AppDistributor.current {
+            switch distributor {
+            case .testFlight:
+              return true
+            case .appStore:
+              return false
+            default:
+              break  // Unexpected source — fall through to the AppTransaction probe.
+            }
+          }
+        #endif
         for attempt in 1...Bundle.probeAttempts {
           do {
             let result = try await AppTransaction.shared
