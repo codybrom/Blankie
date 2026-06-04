@@ -29,7 +29,7 @@ and credited in release notes unless you prefer otherwise.
 
 - Blankie apps for macOS and iOS (including CarPlay) and iPadOS
 - Exported `.blankie` files
-= Build/release tooling in this repository.
+- Build/release tooling in this repository.
 
 ### Out of scope
 
