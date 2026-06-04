@@ -79,6 +79,12 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
             return
           }
 
+          // Already audible — restarting would audibly jump position.
+          if self.player?.isPlaying == true {
+            debugLog("Sound: Skipping auto-play for '\(self.fileName)' - already playing")
+            return
+          }
+
           // Check if playback is active, or will become active soon
           if AudioManager.shared.isGloballyPlaying {
             debugLog(
@@ -107,6 +113,13 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
               if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
                 debugLog(
                   "Sound: Skipping delayed auto-play for '\(self.fileName)' - solo mode active")
+                return
+              }
+
+              // Already audible — restarting would audibly jump position.
+              if self.player?.isPlaying == true {
+                debugLog(
+                  "Sound: Skipping delayed auto-play for '\(self.fileName)' - already playing")
                 return
               }
 

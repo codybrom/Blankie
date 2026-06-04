@@ -48,6 +48,9 @@ class PresetManager: ObservableObject {
   private var cancellables = Set<AnyCancellable>()
   private var isInitialLoad = true
 
+  /// Set by applySoundStates; until then the mixer may not match the preset.
+  var presetStatesApplied = false
+
   // In-flight prefetch for nearby preset animated artwork; cancelled when the
   // current preset changes so stale prefetches don't compete with the new one.
   private var nearbyArtworkPrefetchTask: Task<Void, Never>?
@@ -234,6 +237,9 @@ extension PresetManager {
   @MainActor
   func updateCurrentPresetState() {
     if isInitializing { return }
+
+    // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
+    if AudioManager.shared.soloModeSound != nil || !presetStatesApplied { return }
 
     guard let preset = currentPreset else {
       if !isInitializing {
@@ -679,6 +685,8 @@ extension PresetManager {
         }
       }
     }
+
+    presetStatesApplied = true
   }
 }
 
@@ -761,6 +769,9 @@ extension PresetManager {
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {
+    // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
+    guard AudioManager.shared.soloModeSound == nil, presetStatesApplied else { return }
+
     // Update current preset's state before saving
     if let currentPreset = currentPreset,
       let index = presets.firstIndex(where: { $0.id == currentPreset.id })

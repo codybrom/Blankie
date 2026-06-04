@@ -123,9 +123,12 @@ extension AudioManager {
     // Temporarily mark the sound as selected for solo mode playback
     sound.isSelected = true
 
-    // Ensure the sound is loaded
+    // Ensure the sound is loaded (loading applies a random start position)
     if sound.player == nil {
       sound.loadSound()
+    } else if sound.player?.isPlaying != true {
+      // Re-randomize a reused stopped player; auto-play no longer does this.
+      sound.resetSoundPosition()
     }
 
     // Start playing unless we're restoring into a paused state (e.g. launch
