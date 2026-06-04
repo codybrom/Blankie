@@ -49,10 +49,10 @@ struct DeveloperSection: View {
 struct ContributorSection: View {
   let contributors: [String]
   var body: some View {
-    VStack(spacing: 8) {  // Standardized spacing
+    VStack(spacing: 8) {
       Text("Contributors")
         .font(.footnote.weight(.bold))
-        .padding(.bottom, 4)  // Add some space between title and content
+        .padding(.bottom, 4)
 
       HStack(spacing: 0) {
         ForEach(contributors.indices, id: \.self) { index in
@@ -71,17 +71,17 @@ struct ContributorSection: View {
       .accessibilityElement(children: .combine)
     }
     .frame(maxWidth: .infinity)
-    .padding(.bottom, 4)  // Consistent bottom padding
+    .padding(.bottom, 4)
   }
 }
 
 struct TranslatorSection: View {
   let translators: [String: [String]]
   var body: some View {
-    VStack(spacing: 8) {  // Standardized spacing
+    VStack(spacing: 8) {
       Text("Translations")
         .font(.footnote.weight(.bold))
-        .padding(.bottom, 4)  // Same spacing after title
+        .padding(.bottom, 4)
 
       // Filter out languages without translators
       let translatedLanguages = translators.filter { !$0.value.isEmpty }.keys.sorted()
@@ -141,7 +141,7 @@ struct TranslatorSection: View {
       }
     }
     .frame(maxWidth: .infinity)
-    .padding(.bottom, 4)  // Consistent bottom padding
+    .padding(.bottom, 4)
   }
 }
 

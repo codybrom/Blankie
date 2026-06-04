@@ -268,15 +268,11 @@ extension EnvironmentValues {
 
       switch recognizer.state {
       case .began:
-        print("👉 [Gesture Debug] UIKit LongPress began! Triggering pickup.")
         onStart()
         onChanged(globalLocation)
       case .changed:
         onChanged(globalLocation)
       case .ended, .cancelled, .failed:
-        print(
-          "👉 [Gesture Debug] UIKit LongPress ended/cancelled/failed: state=\(recognizer.state.rawValue)"
-        )
         onEnd()
       default:
         break

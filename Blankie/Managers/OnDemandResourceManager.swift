@@ -374,7 +374,3 @@ enum ODRError: LocalizedError {
     }
   }
 }
-
-// MARK: - Supporting Types
-
-// (No additional types needed - artwork discovery is dynamic)

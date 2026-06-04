@@ -95,12 +95,10 @@ struct SoundIcon: View {
     return sound.isSelected ? (accentColor).opacity(0.2) : .clear
   }
 
-  // Get the script category for proper font styling
   var scriptCategory: Locale.ScriptCategory {
     Locale.current.scriptCategory
   }
 
-  // Compute the appropriate font based on icon size and script category
   var titleFont: Font {
     let baseFont: Font
 
@@ -178,7 +176,7 @@ struct SoundIcon: View {
       }
       .sensoryFeedback(.selection, trigger: sound.isSelected)
       #if os(macOS)
-        // Volume is the separate to let VoiceOver/keyboard handle with a reliable rotor
+        // Volume is a separate VoiceOver stop so the rotor stays reliable
         .accessibilityAction { DispatchQueue.main.async { activateTile() } }
         .focusable()
         .onKeyPress(.return) {
@@ -314,7 +312,7 @@ struct SoundIcon: View {
     let result = CustomSoundManager.shared.deleteCustomSound(customSoundData)
 
     if case .failure(let error) = result {
-      debugLog("❌ SoundIcon: Failed to delete custom sound: \(error)")
+      debugLog("SoundIcon: Failed to delete custom sound: \(error)")
     }
   }
 
