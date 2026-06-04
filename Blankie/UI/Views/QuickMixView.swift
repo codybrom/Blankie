@@ -26,25 +26,31 @@ import SwiftUI
           accent: globalSettings.customAccentColor ?? .accentColor
         )
 
-        ScrollView {
-          LazyVGrid(
-            columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16
-          ) {
-            ForEach(quickMixSounds, id: \.id) { sound in
-              GridSoundButton(
-                sound: sound,
-                isActive: audioManager.isQuickMix && sound.isSelected,
-                onTap: {
-                  if !audioManager.isQuickMix {
-                    audioManager.enterQuickMix()
-                  }
-                  audioManager.toggleQuickMixSound(sound)
+        SoundGridView(
+          sounds: quickMixSounds,
+          onMove: { from, to in
+            var ordered = quickMixSounds.map(\.fileName)
+            ordered.move(fromOffsets: from, toOffset: to)
+            // Carry over stored names that didn't resolve to a displayed sound
+            // (e.g. a renamed built-in), so a reorder never prunes them.
+            let shown = Set(ordered)
+            ordered.append(
+              contentsOf: globalSettings.quickMixSoundFileNames.filter { !shown.contains($0) })
+            globalSettings.setQuickMixSoundFileNames(ordered)
+          },
+          tile: { sound in
+            GridSoundButton(
+              sound: sound,
+              isActive: audioManager.isQuickMix && sound.isSelected,
+              onTap: {
+                if !audioManager.isQuickMix {
+                  audioManager.enterQuickMix()
                 }
-              )
-            }
+                audioManager.toggleQuickMixSound(sound)
+              }
+            )
           }
-          .padding()
-        }
+        )
       }
     }
   }

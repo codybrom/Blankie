@@ -25,13 +25,19 @@ import SwiftUI
   struct SoundGridView: View {
     let sounds: [Sound]
     var onMove: (IndexSet, Int) -> Void
+    var tile: (Sound) -> GridSoundButton
 
     @State private var items: [SortableSound]
     @State private var isDragging = false
 
-    init(sounds: [Sound], onMove: @escaping (IndexSet, Int) -> Void) {
+    init(
+      sounds: [Sound],
+      onMove: @escaping (IndexSet, Int) -> Void,
+      tile: @escaping (Sound) -> GridSoundButton = { GridSoundButton(sound: $0) }
+    ) {
       self.sounds = sounds
       self.onMove = onMove
+      self.tile = tile
       self._items = State(initialValue: sounds.map { SortableSound(sound: $0) })
     }
 
@@ -41,9 +47,9 @@ import SwiftUI
         config: .init(spacing: 16, count: 2),
         items: $items
       ) { item in
-        GridSoundButton(sound: item.sound)
+        tile(item.sound)
       } draggingPreview: { item in
-        GridSoundButton(sound: item.sound)
+        tile(item.sound)
       } onDraggingChange: { _, _, dragging in
         if dragging {
           isDragging = true
