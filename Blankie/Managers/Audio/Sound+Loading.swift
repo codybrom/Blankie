@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import os
 
 extension Sound {
 
@@ -13,14 +14,14 @@ extension Sound {
     if isCustom, let customURL = fileURL {
       // Verify the custom sound file actually exists
       if FileManager.default.fileExists(atPath: customURL.path) {
-        debugLog("Sound: Loading custom sound from: \(customURL.path)", .sounds)
+        Logger.sounds.debug("Sound: Loading custom sound from: \(customURL.path)")
         return customURL
       } else {
-        debugLog("Sound: Custom sound file not found at path: \(customURL.path)", .sounds)
+        Logger.sounds.debug("Sound: Custom sound file not found at path: \(customURL.path)")
         return nil
       }
     } else {
-      debugLog("Sound: Loading built-in sound from bundle", .sounds)
+      Logger.sounds.debug("Sound: Loading built-in sound from bundle")
       return Bundle.main.url(forResource: fileName, withExtension: fileExtension)
     }
   }
@@ -53,20 +54,19 @@ extension Sound {
       let maxPosition = player.duration * 0.75
       let randomPosition = Double.random(in: 0..<maxPosition)
       player.currentTime = randomPosition
-      debugLog(
-        "Sound: Applied random start position: \(randomPosition)s of \(player.duration)s (max 75%)", .sounds
-      )
+      Logger.sounds.debug(
+        "Sound: Applied random start position: \(randomPosition)s of \(player.duration)s (max 75%)")
     }
   }
 
   func validatePlayer(_ player: AVAudioPlayer) -> Bool {
     let prepareSuccess = player.prepareToPlay()
-    debugLog("Sound: Prepare to play result for '\(fileName)': \(prepareSuccess)", .sounds)
-    debugLog("Sound: Player duration: \(player.duration), format: \(player.format)", .sounds)
+    Logger.sounds.debug("Sound: Prepare to play result for '\(self.fileName)': \(prepareSuccess)")
+    Logger.sounds.debug("Sound: Player duration: \(player.duration), format: \(player.format)")
 
     if !prepareSuccess || player.duration <= 0 || !player.duration.isFinite {
-      logError(
-        "Sound: Invalid player state - prepareSuccess: \(prepareSuccess), duration: \(player.duration)", .sounds
+      Logger.sounds.error(
+        "Sound: Invalid player state - prepareSuccess: \(prepareSuccess, privacy: .public), duration: \(player.duration, privacy: .public)"
       )
       return false
     }

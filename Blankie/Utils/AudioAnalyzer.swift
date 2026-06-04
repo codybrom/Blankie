@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Accelerate
+import os
 
 /// Combined audio analysis results
 struct AudioAnalysisResult {
@@ -54,7 +55,7 @@ class AudioAnalyzer {
 
       // Read the entire file into a buffer
       guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
-        logError("AudioAnalyzer: Failed to create buffer")
+        Logger.app.error("AudioAnalyzer: Failed to create buffer")
         return nil
       }
 
@@ -79,11 +80,11 @@ class AudioAnalyzer {
         peakLevel = max(peakLevel, channelPeak)
       }
 
-      debugLog("AudioAnalyzer: Peak level for \(url.lastPathComponent): \(peakLevel)")
+      Logger.app.debug("AudioAnalyzer: Peak level for \(url.lastPathComponent): \(peakLevel)")
       return peakLevel
 
     } catch {
-      logError("AudioAnalyzer: Failed to analyze audio file: \(error)")
+      Logger.app.error("AudioAnalyzer: Failed to analyze audio file: \(error, privacy: .public)")
       return nil
     }
   }
@@ -103,7 +104,7 @@ class AudioAnalyzer {
     // Max 3x gain (9.5 dB) to avoid amplifying noise in quiet files
     let limitedFactor = min(factor, 3.0)
 
-    debugLog(
+    Logger.app.debug(
       "AudioAnalyzer: Peak normalization factor: \(limitedFactor) (peak: \(peakLevel), target: \(targetLevel))"
     )
     return limitedFactor
@@ -161,11 +162,11 @@ class AudioAnalyzer {
       // Average RMS across channels
       let averageRMS = totalRMS / Float(channelCount)
 
-      debugLog("AudioAnalyzer: RMS level for \(url.lastPathComponent): \(averageRMS)")
+      Logger.app.debug("AudioAnalyzer: RMS level for \(url.lastPathComponent): \(averageRMS)")
       return averageRMS
 
     } catch {
-      logError("AudioAnalyzer: Failed to analyze RMS: \(error)")
+      Logger.app.error("AudioAnalyzer: Failed to analyze RMS: \(error, privacy: .public)")
       return nil
     }
   }
@@ -225,11 +226,12 @@ class AudioAnalyzer {
 
       // Convert to dBTP (dB True Peak)
       let truePeakdBTP = globalTruePeak > 0 ? 20 * log10(globalTruePeak) : -Float.infinity
-      debugLog("AudioAnalyzer: True peak for \(url.lastPathComponent): \(truePeakdBTP) dBTP")
+      Logger.app.debug(
+        "AudioAnalyzer: True peak for \(url.lastPathComponent): \(truePeakdBTP) dBTP")
       return truePeakdBTP
 
     } catch {
-      logError("AudioAnalyzer: Failed to analyze true peak: \(error)")
+      Logger.app.error("AudioAnalyzer: Failed to analyze true peak: \(error, privacy: .public)")
       return nil
     }
   }
@@ -240,7 +242,7 @@ class AudioAnalyzer {
   /// - Parameter url: URL of the audio file to analyze
   /// - Returns: Complete analysis results
   static func comprehensiveAnalysis(at url: URL) async -> AudioAnalysisResult {
-    debugLog("AudioAnalyzer: Starting comprehensive analysis for \(url.lastPathComponent)")
+    Logger.app.debug("AudioAnalyzer: Starting comprehensive analysis for \(url.lastPathComponent)")
 
     // Get peak and RMS levels
     let peakLevel = await analyzePeakLevel(at: url)
@@ -271,13 +273,14 @@ class AudioAnalyzer {
         needsLimiter = predictedTruePeak > -1.0
 
         if needsLimiter {
-          debugLog("AudioAnalyzer: Limiter needed - predicted peak: \(predictedTruePeak) dBTP")
+          Logger.app.debug(
+            "AudioAnalyzer: Limiter needed - predicted peak: \(predictedTruePeak) dBTP")
         }
       }
     } else if let peak = peakLevel {
       // Fallback to peak-based normalization
       normalizationFactor = calculateNormalizationFactor(peakLevel: peak)
-      debugLog("AudioAnalyzer: Using peak-based normalization as fallback")
+      Logger.app.debug("AudioAnalyzer: Using peak-based normalization as fallback")
     } else {
       normalizationFactor = 1.0
     }
@@ -306,7 +309,7 @@ class AudioAnalyzer {
       let duration = Double(frameCount) / sampleRate
       return duration
     } catch {
-      logError("AudioAnalyzer: Failed to get duration: \(error)")
+      Logger.app.error("AudioAnalyzer: Failed to get duration: \(error, privacy: .public)")
       return nil
     }
   }

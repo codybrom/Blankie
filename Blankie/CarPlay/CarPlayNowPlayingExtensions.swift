@@ -8,6 +8,8 @@
 // `canImport(CarPlay)` keeps this out of the macOS build: CarPlay ships only on
 // iOS, so even when CARPLAY_ENABLED is defined the `import CarPlay` must not be
 // parsed where the framework doesn't exist.
+import os
+
 #if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
@@ -44,11 +46,13 @@
         }
 
         nowPlayingTemplate.updateNowPlayingButtons([favoriteButton, editButton])
-        debugLog("CarPlay: Now Playing configured with favorite + edit buttons (preset mode)", .carPlay)
+        Logger.carPlay.debug(
+          "CarPlay: Now Playing configured with favorite + edit buttons (preset mode)")
       } else {
         // Solo mode or Quick Mix: no preset-specific buttons.
         nowPlayingTemplate.updateNowPlayingButtons([])
-        debugLog("CarPlay: Now Playing configured with no custom buttons (solo / Quick Mix)", .carPlay)
+        Logger.carPlay.debug(
+          "CarPlay: Now Playing configured with no custom buttons (solo / Quick Mix)")
       }
     }
 

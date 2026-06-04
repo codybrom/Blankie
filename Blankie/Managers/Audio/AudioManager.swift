@@ -10,6 +10,7 @@ import Combine
 import MediaPlayer
 import SwiftData
 import SwiftUI
+import os
 
 class AudioManager: ObservableObject {
   var cancellables = Set<AnyCancellable>()
@@ -45,7 +46,7 @@ class AudioManager: ObservableObject {
   @MainActor
   func setCarPlayConnected(_ connected: Bool) {
     guard isCarPlayConnected != connected else { return }
-    debugLog("AudioManager: CarPlay connection changed to: \(connected)", .audio)
+    Logger.audio.debug("AudioManager: CarPlay connection changed to: \(connected)")
     isCarPlayConnected = connected
 
     #if os(iOS) || os(visionOS)
@@ -81,12 +82,12 @@ class AudioManager: ObservableObject {
   #endif
 
   private init() {
-    debugLog("AudioManager: Initializing - START", .audio)
+    Logger.audio.debug("AudioManager: Initializing - START")
 
     // Only load sounds and state immediately - delay media controls and observers
-    debugLog("AudioManager: About to loadSounds()", .audio)
+    Logger.audio.debug("AudioManager: About to loadSounds()")
     loadSounds()
-    debugLog("AudioManager: About to loadSavedState()", .audio)
+    Logger.audio.debug("AudioManager: About to loadSavedState()")
     loadSavedState()
 
     // Delay media controls and notification setup to avoid triggering audio session
@@ -97,14 +98,14 @@ class AudioManager: ObservableObject {
       // Allow app to fully launch before setting up delayed components
       await Task.yield()
 
-      debugLog("AudioManager: About to setupMediaControls() (delayed)", .audio)
+      Logger.audio.debug("AudioManager: About to setupMediaControls() (delayed)")
       self.setupMediaControls()
-      debugLog("AudioManager: About to setupNotificationObservers() (delayed)", .audio)
+      Logger.audio.debug("AudioManager: About to setupNotificationObservers() (delayed)")
       self.setupNotificationObservers()
 
       self.isInitializing = false
 
-      debugLog("AudioManager: About to setupSoundObservers() (after initialization)", .audio)
+      Logger.audio.debug("AudioManager: About to setupSoundObservers() (after initialization)")
       self.setupSoundObservers()
 
       // Analyze custom sounds that might be missing profiles
@@ -128,7 +129,7 @@ class AudioManager: ObservableObject {
   deinit {
     NotificationCenter.default.removeObserver(self)
     cleanup()
-    debugLog("AudioManager: Deinit called, cleanup performed", .audio)
+    Logger.audio.debug("AudioManager: Deinit called, cleanup performed")
   }
 }
 
@@ -159,20 +160,22 @@ extension AudioManager {
   func updateHasSelectedSounds() {
     let newValue = sounds.contains { $0.isSelected }
     if hasSelectedSounds != newValue {
-      debugLog("AudioManager: hasSelectedSounds changed from \(hasSelectedSounds) to \(newValue)", .audio)
+      Logger.audio.debug(
+        "AudioManager: hasSelectedSounds changed from \(self.hasSelectedSounds) to \(newValue)")
       hasSelectedSounds = newValue
 
       // Auto-start playback when sounds are selected and nothing is currently playing
       // Only auto-start if autoplay is enabled and we're not during initialization
       if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch
       {
-        debugLog("AudioManager: Auto-starting playback for selected sounds (autoplay enabled)", .audio)
+        Logger.audio.debug(
+          "AudioManager: Auto-starting playback for selected sounds (autoplay enabled)")
         Task { @MainActor in
           setGlobalPlaybackState(true)
         }
       } else if newValue && !isGloballyPlaying && !sounds.isEmpty {
-        debugLog(
-          "AudioManager: Selected sounds detected but autoplay disabled - waiting for user", .audio)
+        Logger.audio.debug(
+          "AudioManager: Selected sounds detected but autoplay disabled - waiting for user")
       }
     }
   }
@@ -216,7 +219,7 @@ extension AudioManager {
   func saveState() {
     // Don't save state during Quick Mix mode - volume changes are temporary
     guard !isQuickMix else {
-      debugLog("AudioManager: Skipping state save during Quick Mix mode", .audio)
+      Logger.audio.debug("AudioManager: Skipping state save during Quick Mix mode")
       return
     }
 
@@ -235,7 +238,8 @@ extension AudioManager {
     defaultSoundOrder.move(fromOffsets: source, toOffset: destination)
     UserDefaults.shared.set(defaultSoundOrder, forKey: "defaultSoundOrder")
     objectWillChange.send()
-    debugLog("AudioManager: Updated default sound order - moved from \(source) to \(destination)", .audio)
+    Logger.audio.debug(
+      "AudioManager: Updated default sound order - moved from \(source) to \(destination)")
   }
 }
 
@@ -258,8 +262,8 @@ extension AudioManager {
     sounds.insert(movedSound, at: min(destinationIndex, sounds.count))
 
     objectWillChange.send()
-    debugLog(
-      "AudioManager: Moved sound '\(movedSound.fileName)' from \(sourceIndex) to \(destinationIndex)", .audio
+    Logger.audio.debug(
+      "AudioManager: Moved sound '\(movedSound.fileName)' from \(sourceIndex) to \(destinationIndex)"
     )
   }
 
@@ -271,7 +275,7 @@ extension AudioManager {
 
   /// Apply volume settings to all playing sounds by triggering volume updates
   func applyVolumeSettings() {
-    debugLog("AudioManager: Updating volumes for volume settings change", .audio)
+    Logger.audio.debug("AudioManager: Updating volumes for volume settings change")
 
     for sound in sounds where sound.isSelected {
       // Trigger volume recalculation which will include custom volume settings

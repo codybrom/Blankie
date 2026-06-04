@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 #if canImport(FoundationModels) && !os(macOS)
   import FoundationModels
@@ -48,7 +49,7 @@ public enum AIPresetNameGenerator {
       // Verify locale is supported
       let currentLocale = Locale.current
       guard model.supportsLocale(currentLocale) else {
-        debugLog("AIPresetNameGenerator: Locale \(currentLocale.identifier) not supported", .ui)
+        Logger.ui.debug("AIPresetNameGenerator: Locale \(currentLocale.identifier) not supported")
         return ""
       }
 
@@ -86,33 +87,39 @@ public enum AIPresetNameGenerator {
         // Handle specific Foundation Models errors
         switch error {
         case .refusal(let refusal, _):
-          debugLog("AIPresetNameGenerator: Model refused request", .ui)
+          Logger.ui.debug("AIPresetNameGenerator: Model refused request")
           if let explanation = try? await refusal.explanation {
-            debugLog("   Reason: \(explanation)", .ui)
+            Logger.ui.debug("   Reason: \(String(describing: explanation))")
           }
         case .guardrailViolation:
-          debugLog("AIPresetNameGenerator: Guardrail violation detected", .ui)
+          Logger.ui.debug("AIPresetNameGenerator: Guardrail violation detected")
         case .unsupportedLanguageOrLocale(let locale):
-          debugLog("AIPresetNameGenerator: Unsupported locale: \(locale)", .ui)
+          Logger.ui.debug(
+            "AIPresetNameGenerator: Unsupported locale: \(String(describing: locale))")
         case .exceededContextWindowSize(let size):
-          debugLog("AIPresetNameGenerator: Context too large: \(size) tokens", .ui)
+          Logger.ui.debug(
+            "AIPresetNameGenerator: Context too large: \(String(describing: size)) tokens")
         case .assetsUnavailable(let reason):
-          debugLog("AIPresetNameGenerator: Model assets unavailable: \(reason)", .ui)
+          Logger.ui.debug(
+            "AIPresetNameGenerator: Model assets unavailable: \(String(describing: reason))")
         case .unsupportedGuide(let guide):
-          debugLog("AIPresetNameGenerator: Unsupported guide: \(guide)", .ui)
+          Logger.ui.debug("AIPresetNameGenerator: Unsupported guide: \(String(describing: guide))")
         case .decodingFailure(let description):
-          logError("AIPresetNameGenerator: Decoding failure: \(description)", .ui)
+          Logger.ui.error(
+            "AIPresetNameGenerator: Decoding failure: \(String(describing: description), privacy: .public)"
+          )
         case .rateLimited(let retryAfter):
-          debugLog("AIPresetNameGenerator: Rate limited, retry after: \(retryAfter)", .ui)
+          Logger.ui.debug(
+            "AIPresetNameGenerator: Rate limited, retry after: \(String(describing: retryAfter))")
         case .concurrentRequests:
-          debugLog(
-            "AIPresetNameGenerator: Concurrent requests detected - session already responding", .ui)
+          Logger.ui.debug(
+            "AIPresetNameGenerator: Concurrent requests detected - session already responding")
         @unknown default:
-          logError("AIPresetNameGenerator: Unknown error: \(error)", .ui)
+          Logger.ui.error("AIPresetNameGenerator: Unknown error: \(error, privacy: .public)")
         }
         return ""
       } catch {
-        logError("AIPresetNameGenerator: Unexpected error: \(error)", .ui)
+        Logger.ui.error("AIPresetNameGenerator: Unexpected error: \(error, privacy: .public)")
         return ""
       }
     #else

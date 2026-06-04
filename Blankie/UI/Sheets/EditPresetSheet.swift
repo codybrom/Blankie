@@ -9,6 +9,7 @@ import MediaPlayer
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
+import os
 
 extension UTType {
   static let blankie = UTType(exportedAs: "com.codybrom.blankie.preset")
@@ -268,16 +269,16 @@ struct EditPresetSheet: View {
     #if os(iOS)
       ImagePicker(imageData: $artworkData)
         .onDisappear {
-          debugLog(
-            "EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")", .ui
+          Logger.ui.debug(
+            "EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")"
           )
           if artworkData != nil {
             // Generate new ID for the new artwork
-            debugLog("EditPresetSheet: Generating new artwork ID and applying changes", .ui)
+            Logger.ui.debug("EditPresetSheet: Generating new artwork ID and applying changes")
             artworkId = UUID()
             applyChangesInstantly()
           } else {
-            debugLog("EditPresetSheet: No artwork data, user likely cancelled", .ui)
+            Logger.ui.debug("EditPresetSheet: No artwork data, user likely cancelled")
           }
         }
     #endif
@@ -353,7 +354,7 @@ extension EditPresetSheet {
     if let url = exportedURL {
       // Delete the temporary file
       try? FileManager.default.removeItem(at: url)
-      debugLog("Cleaned up temporary export file: \(url.lastPathComponent)", .ui)
+      Logger.ui.debug("Cleaned up temporary export file: \(url.lastPathComponent)")
     }
     // Reset the state
     exportedURL = nil
@@ -403,7 +404,7 @@ extension EditPresetSheet {
   }
 
   func applyChangesInstantly(skipRefresh: Bool = false) {
-    debugLog("EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))", .ui)
+    Logger.ui.debug("EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))")
 
     // Only validate name for non-default presets
     if !preset.isDefault {
@@ -530,8 +531,8 @@ extension EditPresetSheet {
       )
     }
 
-    debugLog(
-      "EditPresetSheet: Creating \(states.count) sound states from \(selectedSounds.count) selected sounds", .ui
+    Logger.ui.debug(
+      "EditPresetSheet: Creating \(states.count) sound states from \(selectedSounds.count) selected sounds"
     )
 
     return states
@@ -545,17 +546,17 @@ extension EditPresetSheet {
           data, for: preset.id, type: .artwork
         )
         artworkId = savedId
-        debugLog("EditPresetSheet: Saved artwork with ID: \(savedId)", .ui)
+        Logger.ui.debug("EditPresetSheet: Saved artwork with ID: \(savedId)")
       } catch {
-        logError("EditPresetSheet: Failed to save artwork: \(error)", .ui)
+        Logger.ui.error("EditPresetSheet: Failed to save artwork: \(error, privacy: .public)")
       }
     } else if artworkId == nil, preset.artworkId != nil {
       // Artwork was deleted - clean up old artwork
       do {
         try await PresetArtworkManager.shared.deleteArtwork(for: preset.artworkId!)
-        debugLog("EditPresetSheet: Deleted old artwork", .ui)
+        Logger.ui.debug("EditPresetSheet: Deleted old artwork")
       } catch {
-        logError("EditPresetSheet: Failed to delete old artwork: \(error)", .ui)
+        Logger.ui.error("EditPresetSheet: Failed to delete old artwork: \(error, privacy: .public)")
       }
     }
   }
@@ -570,7 +571,7 @@ extension EditPresetSheet {
       PresetStorage.saveDefaultPreset(defaultPreset)
     }
     PresetStorage.saveCustomPresets(customPresets)
-    debugLog("EditPresetSheet: Presets saved directly without state override", .ui)
+    Logger.ui.debug("EditPresetSheet: Presets saved directly without state override")
   }
 
   private func deletePreset(_ preset: Preset) {
@@ -603,10 +604,10 @@ extension EditPresetSheet {
             }
           }
         } catch {
-          logError("EditPresetSheet: Failed to import image: \(error)", .ui)
+          Logger.ui.error("EditPresetSheet: Failed to import image: \(error, privacy: .public)")
         }
       case .failure(let error):
-        logError("EditPresetSheet: Failed to import image: \(error)", .ui)
+        Logger.ui.error("EditPresetSheet: Failed to import image: \(error, privacy: .public)")
       }
     }
 

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import os
 
 @MainActor
 class AudioFileImporter: ObservableObject {
@@ -21,11 +22,11 @@ class AudioFileImporter: ObservableObject {
   func handleIncomingFile(_ url: URL) {
     // Handle direct file imports via URL scheme or document picker
 
-    debugLog("AudioFileImporter: Received file: \(url.lastPathComponent)")
+    Logger.app.debug("AudioFileImporter: Received file: \(url.lastPathComponent)")
 
     // Check if it's a .blankie preset file first
     if url.pathExtension.lowercased() == "blankie" {
-      debugLog("AudioFileImporter: Detected .blankie preset file, importing as preset")
+      Logger.app.debug("AudioFileImporter: Detected .blankie preset file, importing as preset")
       handleBlankiePresetImport(url)
       return
     }
@@ -34,7 +35,7 @@ class AudioFileImporter: ObservableObject {
     guard let type = UTType(filenameExtension: url.pathExtension),
       type.conforms(to: .audio)
     else {
-      debugLog("AudioFileImporter: Unsupported file type: \(url.pathExtension)")
+      Logger.app.debug("AudioFileImporter: Unsupported file type: \(url.pathExtension)")
       return
     }
 
@@ -55,7 +56,7 @@ class AudioFileImporter: ObservableObject {
   /// imported sound. Returns nil if the copy fails.
   func stagedTempCopy(of url: URL) -> URL? {
     let didStartAccessing = url.startAccessingSecurityScopedResource()
-    debugLog("AudioFileImporter: Security-scoped access started: \(didStartAccessing)")
+    Logger.app.debug("AudioFileImporter: Security-scoped access started: \(didStartAccessing)")
     defer {
       if didStartAccessing { url.stopAccessingSecurityScopedResource() }
     }
@@ -65,10 +66,10 @@ class AudioFileImporter: ObservableObject {
     do {
       try? FileManager.default.removeItem(at: tempFileURL)
       try FileManager.default.copyItem(at: url, to: tempFileURL)
-      debugLog("AudioFileImporter: Staged temp copy: \(tempFileURL.lastPathComponent)")
+      Logger.app.debug("AudioFileImporter: Staged temp copy: \(tempFileURL.lastPathComponent)")
       return tempFileURL
     } catch {
-      logError("AudioFileImporter: Failed to stage temp copy: \(error)")
+      Logger.app.error("AudioFileImporter: Failed to stage temp copy: \(error, privacy: .public)")
       return nil
     }
   }
@@ -84,9 +85,9 @@ class AudioFileImporter: ObservableObject {
       defer { isProcessingImport = false }
       do {
         let preset = try await PresetImporter.shared.importArchive(from: url)
-        debugLog("AudioFileImporter: Successfully imported preset '\(preset.name)'")
+        Logger.app.debug("AudioFileImporter: Successfully imported preset '\(preset.name)'")
       } catch {
-        logError("AudioFileImporter: Failed to import preset: \(error)")
+        Logger.app.error("AudioFileImporter: Failed to import preset: \(error, privacy: .public)")
         // Surface the failure: PresetImporter.ImportError is a LocalizedError,
         // so AudioErrorHandler's alert shows a meaningful message.
         ErrorReporter.shared.report(error)

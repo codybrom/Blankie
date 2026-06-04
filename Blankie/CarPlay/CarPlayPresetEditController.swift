@@ -5,6 +5,8 @@
 //  Created by Cody Bromley on 12/21/24.
 //
 
+import os
+
 #if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
@@ -27,10 +29,10 @@
       // Push the edit template
       interfaceController.pushTemplate(editTemplate, animated: true) { success, error in
         if success {
-          debugLog("CarPlay: Successfully showed edit sounds interface", .carPlay)
+          Logger.carPlay.debug("CarPlay: Successfully showed edit sounds interface")
         } else {
-          logError(
-            "CarPlay: Failed to show edit sounds interface: \(error?.localizedDescription ?? "unknown error")", .carPlay
+          Logger.carPlay.error(
+            "CarPlay: Failed to show edit sounds interface: \(error?.localizedDescription ?? "unknown error", privacy: .public)"
           )
         }
       }

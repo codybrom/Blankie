@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import os
 
 // MARK: - Import with Metadata
 
@@ -29,22 +30,22 @@ extension CustomSoundManager {
     let uniqueFileName = metadata.id.uuidString
     let fileExtension = sourceURL.pathExtension.lowercased()
 
-    debugLog(
-      "CustomSoundManager: Importing with metadata ID: \(metadata.id) from file: \(sourceURL.lastPathComponent)", .sounds
+    Logger.sounds.debug(
+      "CustomSoundManager: Importing with metadata ID: \(metadata.id) from file: \(sourceURL.lastPathComponent)"
     )
 
     guard isSupportedAudioFormat(fileExtension) else {
       return .failure(CustomSoundError.unsupportedFormat)
     }
 
-    debugLog(
-      "CustomSoundManager: Starting security-scoped resource access for import with metadata", .sounds)
+    Logger.sounds.debug(
+      "CustomSoundManager: Starting security-scoped resource access for import with metadata")
     let didStartAccess = sourceURL.startAccessingSecurityScopedResource()
     defer {
       if didStartAccess {
         sourceURL.stopAccessingSecurityScopedResource()
-        debugLog(
-          "CustomSoundManager: Released security-scoped resource access for import with metadata", .sounds)
+        Logger.sounds.debug(
+          "CustomSoundManager: Released security-scoped resource access for import with metadata")
       }
     }
 
@@ -92,7 +93,8 @@ extension CustomSoundManager {
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
     } catch {
-      logError("CustomSoundManager: Failed to import sound with metadata: \(error)", .sounds)
+      Logger.sounds.error(
+        "CustomSoundManager: Failed to import sound with metadata: \(error, privacy: .public)")
       return .failure(.invalidAudioFile(error))
     }
   }
@@ -147,7 +149,7 @@ extension CustomSoundManager {
       needsLimiter: lufs < -30.0  // Need limiter for very quiet sounds
     )
     PlaybackProfileStore.shared.store(profile)
-    debugLog("CustomSoundManager: Stored playback profile from metadata for \(fileName)", .sounds)
+    Logger.sounds.debug("CustomSoundManager: Stored playback profile from metadata for \(fileName)")
   }
 
   private func extractAndApplyID3Metadata(to customSound: CustomSoundData, from url: URL) async {

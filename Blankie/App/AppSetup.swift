@@ -9,6 +9,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 import TipKit
+import os
 
 /// Shared SwiftData container management to ensure single container per process
 class SharedModelContainer {
@@ -31,11 +32,12 @@ class SharedModelContainer {
 
   func initialize() {
     guard containerInstance == nil else {
-      debugLog("SharedModelContainer: Already initialized, skipping duplicate initialization")
+      Logger.app.debug(
+        "SharedModelContainer: Already initialized, skipping duplicate initialization")
       return
     }
 
-    debugLog("SharedModelContainer: Creating SwiftData model container...")
+    Logger.app.debug("SharedModelContainer: Creating SwiftData model container...")
     containerInstance = AppSetup.createModelContainer()
 
     // Validate that the container is properly initialized
@@ -43,7 +45,7 @@ class SharedModelContainer {
       fatalError("SharedModelContainer: Container creation returned nil")
     }
 
-    debugLog("SharedModelContainer: Successfully initialized shared container")
+    Logger.app.debug("SharedModelContainer: Successfully initialized shared container")
   }
 
   var isInitialized: Bool {
@@ -73,10 +75,10 @@ struct AppSetup {
 
         // Configure SwiftData to use the app group URL
         modelConfiguration = ModelConfiguration(url: storeURL)
-        debugLog("AppSetup: Using app group store at: \(storeURL.path)")
+        Logger.app.debug("AppSetup: Using app group store at: \(storeURL.path)")
       } else {
         modelConfiguration = ModelConfiguration()
-        debugLog("AppSetup: App group not available, using default store location")
+        Logger.app.debug("AppSetup: App group not available, using default store location")
       }
 
       let container = try ModelContainer(
@@ -84,7 +86,7 @@ struct AppSetup {
         configurations: modelConfiguration
       )
 
-      debugLog("AppSetup: Successfully created SwiftData model container")
+      Logger.app.debug("AppSetup: Successfully created SwiftData model container")
       return container
     } catch {
       fatalError("AppSetup: Failed to create SwiftData model container: \(error)")
@@ -148,6 +150,6 @@ struct AppSetup {
       .datastoreLocation(.applicationDefault),
     ])
 
-    debugLog("AppSetup: TipKit configured for preset onboarding")
+    Logger.app.debug("AppSetup: TipKit configured for preset onboarding")
   }
 }

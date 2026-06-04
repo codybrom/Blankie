@@ -1,6 +1,7 @@
 import SwiftUI
 import TipKit
 import UniformTypeIdentifiers
+import os
 
 /// Shared "now playing" treatment for Library rows. iPad sidebar rows highlight
 /// the whole row and tint the title with the active accent; iPhone page rows
@@ -219,7 +220,7 @@ struct PresetPickerRow: View {
         if dismissOnSelect { dismiss() }
         onSelection?()
       } catch {
-        logError("Error applying preset: \(error)", .ui)
+        Logger.ui.error("Error applying preset: \(error, privacy: .public)")
       }
     }
   }

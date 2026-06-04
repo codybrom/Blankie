@@ -8,6 +8,7 @@
 import AVFoundation
 import Foundation
 import SwiftUI
+import os
 
 extension AudioManager {
   /// Toggles the playback state of all selected sounds
@@ -17,11 +18,11 @@ extension AudioManager {
 
   @MainActor
   func resetSounds() {
-    debugLog("AudioManager: Resetting all sounds", .audio)
+    Logger.audio.debug("AudioManager: Resetting all sounds")
 
     // First pause all sounds immediately
     for sound in sounds {
-      debugLog("  - Stopping '\(sound.fileName)'", .audio)
+      Logger.audio.debug("  - Stopping '\(sound.fileName)'")
       sound.pause(immediate: true)
     }
     setGlobalPlaybackState(false)
@@ -38,7 +39,7 @@ extension AudioManager {
 
     // Call the reset callback
     onReset?()
-    debugLog("AudioManager: Reset complete", .audio)
+    Logger.audio.debug("AudioManager: Reset complete")
   }
 
   public func updateNowPlayingInfoForPreset(
@@ -69,13 +70,13 @@ extension AudioManager {
       guard let self = self else { return }
 
       guard !self.isInitializing || forceUpdate else {
-        debugLog("AudioManager: Ignoring setPlaybackState during initialization", .audio)
+        Logger.audio.debug("AudioManager: Ignoring setPlaybackState during initialization")
         return
       }
 
       if self.isGloballyPlaying != playing {
-        debugLog(
-          "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)", .audio
+        Logger.audio.debug(
+          "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
         )
         self.isGloballyPlaying = playing
 
@@ -93,16 +94,16 @@ extension AudioManager {
           isPlaying: playing
         )
       } else {
-        debugLog(
-          "AudioManager: setPlaybackState called, but state is the same \(playing), ignoring", .audio)
+        Logger.audio.debug(
+          "AudioManager: setPlaybackState called, but state is the same \(playing), ignoring")
       }
     }
   }
 
   func playSelected() {
-    debugLog("AudioManager: Playing selected sounds", .audio)
+    Logger.audio.debug("AudioManager: Playing selected sounds")
     guard isGloballyPlaying else {
-      debugLog("AudioManager: Not playing sounds because global playback is disabled", .audio)
+      Logger.audio.debug("AudioManager: Not playing sounds because global playback is disabled")
       return
     }
 
@@ -115,7 +116,7 @@ extension AudioManager {
 
     // If in solo mode, play only the solo sound
     if let soloSound = soloModeSound {
-      debugLog("  - In solo mode, playing only '\(soloSound.fileName)'", .audio)
+      Logger.audio.debug("  - In solo mode, playing only '\(soloSound.fileName)'")
 
       // Play the solo sound at its current volume
       soloSound.play()
@@ -160,7 +161,7 @@ extension AudioManager {
   }
 
   func pauseAll() {
-    debugLog("AudioManager: Pausing all selected sounds", .audio)
+    Logger.audio.debug("AudioManager: Pausing all selected sounds")
 
     for sound in sounds where sound.isSelected {
       sound.pause()
@@ -174,12 +175,12 @@ extension AudioManager {
   @MainActor
   public func setGlobalPlaybackState(_ playing: Bool, forceUpdate: Bool = false) {
     guard !isInitializing || forceUpdate else {
-      debugLog("AudioManager: Ignoring setPlaybackState during initialization", .audio)
+      Logger.audio.debug("AudioManager: Ignoring setPlaybackState during initialization")
       return
     }
 
-    debugLog(
-      "AudioManager: Setting playback state to \(playing) - Current global state: \(isGloballyPlaying)", .audio
+    Logger.audio.debug(
+      "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
     )
 
     // Update state first
@@ -218,8 +219,8 @@ extension AudioManager {
     // Stop any sounds that are playing but shouldn't be
     for sound in sounds {
       if !sound.isSelected, sound.player?.isPlaying == true {
-        debugLog(
-          "AudioManager: Stopping deselected sound '\(sound.fileName)' that was still playing", .audio)
+        Logger.audio.debug(
+          "AudioManager: Stopping deselected sound '\(sound.fileName)' that was still playing")
         sound.pause(immediate: true)
       }
     }

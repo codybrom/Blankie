@@ -5,6 +5,8 @@
 // Created by Cody Bromley on 6/7/25.
 //
 
+import os
+
 #if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
@@ -28,7 +30,7 @@
     static func updateTemplate(_ template: CPGridTemplate) {
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
-        debugLog("QuickMixGridTemplate: No sounds loaded yet", .carPlay)
+        Logger.carPlay.debug("QuickMixGridTemplate: No sounds loaded yet")
         return
       }
 

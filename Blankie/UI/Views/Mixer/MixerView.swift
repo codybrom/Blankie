@@ -1,5 +1,6 @@
 import SwiftUI
 import TipKit
+import os
 
 // Animation trigger struct to consolidate multiple animation values
 private struct AnimationTrigger: Equatable {
@@ -65,10 +66,10 @@ private enum IPhonePage: Hashable {
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()  // Prevent accidental dismissal
           .onAppear {
-            debugLog("MixerView: SoundSheet appeared for '\(sound.title)'", .ui)
+            Logger.ui.debug("MixerView: SoundSheet appeared for '\(sound.title)'")
           }
           .onDisappear {
-            debugLog("MixerView: SoundSheet disappeared for '\(sound.title)'", .ui)
+            Logger.ui.debug("MixerView: SoundSheet disappeared for '\(sound.title)'")
             // Trigger refresh when sound edit is closed in case sound properties changed
             soundsUpdateTrigger += 1
           }
@@ -76,10 +77,10 @@ private enum IPhonePage: Hashable {
       .onChange(of: soundToEdit) { oldValue, newValue in
         if let sound = newValue {
           soloBackdropSound = audioManager.soloModeSound
-          debugLog("MixerView: SoundSheet will be presented for '\(sound.title)'", .ui)
+          Logger.ui.debug("MixerView: SoundSheet will be presented for '\(sound.title)'")
         } else if let oldSound = oldValue {
           soloBackdropSound = nil
-          debugLog("MixerView: SoundSheet will be dismissed for '\(oldSound.title)'", .ui)
+          Logger.ui.debug("MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
         }
       }
 
@@ -96,7 +97,7 @@ private enum IPhonePage: Hashable {
         }
         .onDisappear {
           // Trigger refresh when sound management is closed in case sounds were imported
-          debugLog("MixerView: SoundManagementView closed, triggering refresh", .ui)
+          Logger.ui.debug("MixerView: SoundManagementView closed, triggering refresh")
           soundsUpdateTrigger += 1
         }
       }
@@ -110,13 +111,13 @@ private enum IPhonePage: Hashable {
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
           .onDisappear {
             // Trigger refresh when preset edit is closed in case preset was modified
-            debugLog("MixerView: EditPresetSheet closed, triggering refresh", .ui)
+            Logger.ui.debug("MixerView: EditPresetSheet closed, triggering refresh")
             soundsUpdateTrigger += 1
 
             // CRITICAL: Re-establish media controls after sheet dismissal
             // Animated artwork video preview may have caused iOS to disconnect remote command handlers
             // We restore controls regardless of play state since the gallery may have been browsed
-            debugLog("MixerView: Restoring media controls after sheet dismissal", .ui)
+            Logger.ui.debug("MixerView: Restoring media controls after sheet dismissal")
             audioManager.setupMediaControls()
           }
       }
@@ -124,13 +125,13 @@ private enum IPhonePage: Hashable {
       // Listen for changes that should trigger view updates
       .onChange(of: audioManager.sounds.count) { oldValue, newValue in
         // Sound imported or removed
-        debugLog("MixerView: Sound count changed from \(oldValue) to \(newValue)", .ui)
+        Logger.ui.debug("MixerView: Sound count changed from \(oldValue) to \(newValue)")
         soundsUpdateTrigger += 1
       }
       .onChange(of: presetManager.currentPreset?.id) { oldValue, newValue in
         // Preset switched
-        debugLog(
-          "MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")", .ui
+        Logger.ui.debug(
+          "MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")"
         )
         soundsUpdateTrigger += 1
       }
@@ -142,7 +143,7 @@ private enum IPhonePage: Hashable {
       .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
         // Preset content changed (sounds added/removed)
         if let oldCount = oldValue, let newCount = newValue, oldCount != newCount {
-          debugLog("MixerView: Preset sound count changed from \(oldCount) to \(newCount)", .ui)
+          Logger.ui.debug("MixerView: Preset sound count changed from \(oldCount) to \(newCount)")
           soundsUpdateTrigger += 1
         }
       }
@@ -150,13 +151,13 @@ private enum IPhonePage: Hashable {
         NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))
       ) { _ in
         // Custom sound was imported
-        debugLog("MixerView: Received CustomSoundImported notification", .ui)
+        Logger.ui.debug("MixerView: Received CustomSoundImported notification")
         soundsUpdateTrigger += 1
       }
       .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) {
         _ in
         // Preset was updated
-        debugLog("MixerView: Received PresetUpdated notification", .ui)
+        Logger.ui.debug("MixerView: Received PresetUpdated notification")
         soundsUpdateTrigger += 1
       }
     }
@@ -309,12 +310,12 @@ private enum IPhonePage: Hashable {
       )
       .onChange(of: audioManager.soloModeSound) { oldValue, newValue in
         if let newSolo = newValue {
-          debugLog(
-            "MixerView: Solo mode started for '\(newSolo.title)' (SoundSheet open: \(soundToEdit != nil))", .ui
+          Logger.ui.debug(
+            "MixerView: Solo mode started for '\(newSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
         } else if let oldSolo = oldValue {
-          debugLog(
-            "MixerView: Solo mode ended for '\(oldSolo.title)' (SoundSheet open: \(soundToEdit != nil))", .ui
+          Logger.ui.debug(
+            "MixerView: Solo mode ended for '\(oldSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
         }
       }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 extension AudioManager {
   // MARK: - Solo Mode
@@ -44,19 +45,19 @@ extension AudioManager {
     }
     if soloModeSound?.fileName == savedSoloFileName { return true }
     if let soloSound = sounds.first(where: { $0.fileName == savedSoloFileName }) {
-      debugLog("AudioManager: Restoring solo mode for '\(soloSound.title)'", .audio)
+      Logger.audio.debug("AudioManager: Restoring solo mode for '\(soloSound.title)'")
       enterSoloMode(for: soloSound, startPlaying: GlobalSettings.shared.autoPlayOnLaunch)
       return true
     }
     if soundsFullyLoaded {
       // Every sound is loaded and it still isn't found → it was deleted. Clear
       // the stale solo so launch falls back to the preset instead of silence.
-      debugLog("AudioManager: Saved solo sound '\(savedSoloFileName)' is gone; clearing", .audio)
+      Logger.audio.debug("AudioManager: Saved solo sound '\(savedSoloFileName)' is gone; clearing")
       GlobalSettings.shared.saveSoloModeSound(fileName: nil)
       return false
     }
-    debugLog(
-      "AudioManager: Solo sound '\(savedSoloFileName)' not loaded yet; deferring restore", .audio)
+    Logger.audio.debug(
+      "AudioManager: Solo sound '\(savedSoloFileName)' not loaded yet; deferring restore")
     return true
   }
 
@@ -87,7 +88,7 @@ extension AudioManager {
     // solo volume (1.0) as the "original", corrupting later restoration.
     if soloModeSound?.id == sound.id { return }
 
-    debugLog("AudioManager: Entering solo mode for '\(sound.title)'", .audio)
+    Logger.audio.debug("AudioManager: Entering solo mode for '\(sound.title)'")
 
     // Solo and Quick Mix are mutually exclusive; leave Quick Mix first.
     if isQuickMix {
@@ -171,7 +172,7 @@ extension AudioManager {
   @MainActor
   func exitSoloMode() {
     guard soloModeSound != nil else { return }
-    debugLog("AudioManager: Exiting solo mode", .audio)
+    Logger.audio.debug("AudioManager: Exiting solo mode")
 
     restoreSoloSoundState()
 
@@ -193,13 +194,13 @@ extension AudioManager {
       isPlaying: false
     )
 
-    debugLog("AudioManager: Exit solo mode complete", .audio)
+    Logger.audio.debug("AudioManager: Exit solo mode complete")
   }
 
   @MainActor
   func exitSoloModeWithoutResuming() {
     guard soloModeSound != nil else { return }
-    debugLog("AudioManager: Exiting solo mode (without resuming)", .audio)
+    Logger.audio.debug("AudioManager: Exiting solo mode (without resuming)")
 
     restoreSoloSoundState()
 
@@ -212,14 +213,14 @@ extension AudioManager {
     // Update media control command state
     updateNextPreviousCommandState()
 
-    debugLog("AudioManager: Exit solo mode (without resuming) complete", .audio)
+    Logger.audio.debug("AudioManager: Exit solo mode (without resuming) complete")
   }
 
   // MARK: - Preview Mode (for SoundSheet previews)
 
   @MainActor
   func enterPreviewMode(for sound: Sound) {
-    debugLog("AudioManager: Entering preview mode for '\(sound.title)'", .audio)
+    Logger.audio.debug("AudioManager: Entering preview mode for '\(sound.title)'")
 
     // Store original volume and playback states (don't touch selection states)
     previewModeOriginalStates.removeAll()
@@ -261,13 +262,13 @@ extension AudioManager {
     // Play the sound (continues from current position if it was already playing)
     sound.play()
 
-    debugLog("AudioManager: Preview mode started for '\(sound.title)'", .audio)
+    Logger.audio.debug("AudioManager: Preview mode started for '\(sound.title)'")
   }
 
   @MainActor
   func exitPreviewMode() {
     guard let previewSound = previewModeSound else { return }
-    debugLog("AudioManager: Exiting preview mode for '\(previewSound.title)'", .audio)
+    Logger.audio.debug("AudioManager: Exiting preview mode for '\(previewSound.title)'")
 
     // Handle the preview sound: pause it only if it wasn't playing before preview
     let previewSoundWasPlaying =
@@ -288,10 +289,11 @@ extension AudioManager {
         // Restore playback state: if it was playing before and should still be playing
         if originalState.isPlaying, isGloballyPlaying {
           if sound.player?.isPlaying != true {
-            debugLog("AudioManager: Resuming '\(sound.title)' - was playing before preview", .audio)
+            Logger.audio.debug(
+              "AudioManager: Resuming '\(sound.title)' - was playing before preview")
             sound.play()
           } else {
-            debugLog("AudioManager: '\(sound.title)' already playing, continuing", .audio)
+            Logger.audio.debug("AudioManager: '\(sound.title)' already playing, continuing")
           }
         }
       }
@@ -301,6 +303,6 @@ extension AudioManager {
     previewModeSound = nil
     previewModeOriginalStates.removeAll()
 
-    debugLog("AudioManager: Preview mode exited", .audio)
+    Logger.audio.debug("AudioManager: Preview mode exited")
   }
 }

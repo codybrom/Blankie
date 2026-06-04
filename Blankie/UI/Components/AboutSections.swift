@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 struct DeveloperSection: View {
   var body: some View {
@@ -219,7 +220,7 @@ struct AcknowledgementsSection: View {
 
   private func loadDependencies() {
     guard let url = Bundle.main.url(forResource: "credits", withExtension: "json") else {
-      debugLog("Unable to find credits.json in bundle", .ui)
+      Logger.ui.debug("Unable to find credits.json in bundle")
       return
     }
 
@@ -229,7 +230,7 @@ struct AcknowledgementsSection: View {
       let credits = try decoder.decode(Credits.self, from: data)
       self.dependencies = credits.dependencies ?? []
     } catch {
-      logError("Error loading dependencies: \(error)", .ui)
+      Logger.ui.error("Error loading dependencies: \(error, privacy: .public)")
     }
   }
 }

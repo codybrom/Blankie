@@ -9,6 +9,7 @@ import AVFoundation
 import Combine
 import CoreMedia
 import SwiftUI
+import os
 
 /// Represents a single sound with its associated properties and playback controls.
 open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegate {
@@ -57,7 +58,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   @Published var isSelected = false {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
-      debugLog("Sound: \(fileName) -  isSelected set to \(isSelected)", .sounds)
+      Logger.sounds.debug("Sound: \(self.fileName) -  isSelected set to \(self.isSelected)")
 
       // If sound was just selected, start playing it immediately when playback becomes active
       // Only do this after AudioManager is fully initialized to avoid circular dependency
@@ -67,7 +68,8 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
           // Fix race condition: Ensure sound is still selected before proceeding
           guard self.isSelected else {
-            debugLog("Sound: Aborting auto-play for '\(self.fileName)' - sound was deselected", .sounds)
+            Logger.sounds.debug(
+              "Sound: Aborting auto-play for '\(self.fileName)' - sound was deselected")
             return
           }
 
@@ -75,21 +77,22 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
           // their selection but must stay silent. Without this, a preset's
           // selected sounds auto-play alongside a restored solo sound.
           if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
-            debugLog("Sound: Skipping auto-play for '\(self.fileName)' - solo mode active", .sounds)
+            Logger.sounds.debug(
+              "Sound: Skipping auto-play for '\(self.fileName)' - solo mode active")
             return
           }
 
           // Already audible — restarting would audibly jump position.
           if self.player?.isPlaying == true {
-            debugLog("Sound: Skipping auto-play for '\(self.fileName)' - already playing", .sounds)
+            Logger.sounds.debug(
+              "Sound: Skipping auto-play for '\(self.fileName)' - already playing")
             return
           }
 
           // Check if playback is active, or will become active soon
           if AudioManager.shared.isGloballyPlaying {
-            debugLog(
-              "Sound: Auto-playing newly selected sound '\(self.fileName)' during active playback", .sounds
-            )
+            Logger.sounds.debug(
+              "Sound: Auto-playing newly selected sound '\(self.fileName)' during active playback")
             self.loadSound()
             self.resetSoundPosition()  // Apply randomization if enabled
             self.play()
@@ -101,9 +104,8 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
               // Fix race condition: Ensure sound is still selected before proceeding
               guard self.isSelected else {
-                debugLog(
-                  "Sound: Aborting delayed auto-play for '\(self.fileName)' - sound was deselected", .sounds
-                )
+                Logger.sounds.debug(
+                  "Sound: Aborting delayed auto-play for '\(self.fileName)' - sound was deselected")
                 return
               }
 
@@ -111,20 +113,20 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
               // Re-check solo here too: it may have been entered during the yield.
               if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
-                debugLog(
-                  "Sound: Skipping delayed auto-play for '\(self.fileName)' - solo mode active", .sounds)
+                Logger.sounds.debug(
+                  "Sound: Skipping delayed auto-play for '\(self.fileName)' - solo mode active")
                 return
               }
 
               // Already audible — restarting would audibly jump position.
               if self.player?.isPlaying == true {
-                debugLog(
-                  "Sound: Skipping delayed auto-play for '\(self.fileName)' - already playing", .sounds)
+                Logger.sounds.debug(
+                  "Sound: Skipping delayed auto-play for '\(self.fileName)' - already playing")
                 return
               }
 
-              debugLog(
-                "Sound: Auto-playing newly selected sound '\(self.fileName)' after auto-start", .sounds)
+              Logger.sounds.debug(
+                "Sound: Auto-playing newly selected sound '\(self.fileName)' after auto-start")
               self.loadSound()
               self.resetSoundPosition()  // Apply randomization if enabled
               self.play()
@@ -135,7 +137,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
       // If sound was just deselected, stop playing it immediately
       if !isSelected, oldValue == true {
-        debugLog("Sound: Auto-stopping newly deselected sound '\(fileName)'", .sounds)
+        Logger.sounds.debug("Sound: Auto-stopping newly deselected sound '\(self.fileName)'")
         // If player exists, pause it
         if player != nil {
           pause(immediate: true)
@@ -157,7 +159,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   @Published var volume: Float = 0.75 {
     didSet {
       guard volume >= 0, volume <= 1 else {
-        logError("Sound: Invalid volume for '\(fileName)'", .sounds)
+        Logger.sounds.error("Sound: Invalid volume for '\(self.fileName, privacy: .public)'")
         ErrorReporter.shared.report(AudioError.invalidVolume)
         volume = oldValue
         return
@@ -176,12 +178,13 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
         // Don't persist volume changes during Quick Mix mode
         guard !AudioManager.shared.isQuickMix else {
-          debugLog("Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode", .sounds)
+          Logger.sounds.debug(
+            "Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
           return
         }
 
         UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
-        debugLog("Sound: \(self.fileName) final volume saved as \(self.volume)", .sounds)
+        Logger.sounds.debug("Sound: \(self.fileName) final volume saved as \(self.volume)")
       }
     }
   }
@@ -253,23 +256,25 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   open func loadSound() {
     // Prevent concurrent loading
     guard !isLoading else {
-      debugLog("Sound: Already loading '\(fileName).\(fileExtension)', skipping", .sounds)
+      Logger.sounds.debug(
+        "Sound: Already loading '\(self.fileName).\(self.fileExtension)', skipping")
       return
     }
 
     // If player already exists, no need to reload
     guard player == nil else {
-      debugLog("Sound: Player already loaded for '\(fileName).\(fileExtension)'", .sounds)
+      Logger.sounds.debug(
+        "Sound: Player already loaded for '\(self.fileName).\(self.fileExtension)'")
       return
     }
 
     isLoading = true
     defer { isLoading = false }
 
-    debugLog("Sound: Loading '\(fileName).\(fileExtension)'", .sounds)
+    Logger.sounds.debug("Sound: Loading '\(self.fileName).\(self.fileExtension)'")
 
     guard let soundURL = getSoundURL() else {
-      debugLog("Sound: File not found for '\(fileName).\(fileExtension)'", .sounds)
+      Logger.sounds.debug("Sound: File not found for '\(self.fileName).\(self.fileExtension)'")
       ErrorReporter.shared.report(AudioError.fileNotFound)
       return
     }
@@ -282,7 +287,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
 
       // Additional validation
       guard let loadedPlayer = player else {
-        debugLog("Sound: Player is nil after initialization for '\(fileName)'", .sounds)
+        Logger.sounds.debug("Sound: Player is nil after initialization for '\(self.fileName)'")
         return
       }
 
@@ -298,12 +303,15 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
       // Apply random start position if enabled
       applyRandomStartPosition(to: loadedPlayer)
 
-      debugLog(
-        "Sound: Loaded sound '\(fileName).\(fileExtension)' with volume: \(loadedPlayer.volume)", .sounds)
+      Logger.sounds.debug(
+        "Sound: Loaded sound '\(self.fileName).\(self.fileExtension)' with volume: \(loadedPlayer.volume)"
+      )
     } catch {
-      logError("Sound: Failed to load '\(fileName).\(fileExtension)': \(error)", .sounds)
-      logError(
-        "Sound: Error details - domain: \((error as NSError).domain), code: \((error as NSError).code)", .sounds
+      Logger.sounds.error(
+        "Sound: Failed to load '\(self.fileName, privacy: .public).\(self.fileExtension, privacy: .public)': \(error, privacy: .public)"
+      )
+      Logger.sounds.error(
+        "Sound: Error details - domain: \((error as NSError).domain, privacy: .public), code: \((error as NSError).code, privacy: .public)"
       )
       ErrorReporter.shared.report(error)
     }
@@ -320,7 +328,7 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
   }
 
   deinit {
-    debugLog("Sound: Deinitialized '\(fileName)'", .sounds)
+    Logger.sounds.debug("Sound: Deinitialized '\(self.fileName)'")
     globalSettingsObserver?.cancel()
     customizationObserver?.cancel()
     fadeTimer?.invalidate()
@@ -345,11 +353,12 @@ open class Sound: NSObject, ObservableObject, Identifiable, AVAudioPlayerDelegat
     if !shouldLoop {
       DispatchQueue.main.async { [weak self] in
         guard let self = self else { return }
-        debugLog("Sound: Non-looping sound '\(self.fileName)' finished playing", .sounds)
+        Logger.sounds.debug("Sound: Non-looping sound '\(self.fileName)' finished playing")
 
         // Check if we're in solo mode with this sound
         if AudioManager.shared.soloModeSound?.id == self.id {
-          debugLog("Sound: Non-looping sound in solo mode finished, pausing global playback", .sounds)
+          Logger.sounds.debug(
+            "Sound: Non-looping sound in solo mode finished, pausing global playback")
           // Reset the sound position for next play
           self.resetSoundPosition()
           // Pause global playback but stay in solo mode

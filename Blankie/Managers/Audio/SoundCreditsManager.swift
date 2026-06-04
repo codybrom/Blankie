@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 class SoundCreditsManager: ObservableObject {
   static let shared = SoundCreditsManager()
@@ -19,7 +20,7 @@ class SoundCreditsManager: ObservableObject {
 
   private func loadCredits() {
     guard let url = Bundle.main.url(forResource: "sounds", withExtension: "json") else {
-      logError("Error: sounds.json not found in bundle", .sounds)
+      Logger.sounds.error("Error: sounds.json not found in bundle")
       return
     }
 
@@ -42,7 +43,7 @@ class SoundCreditsManager: ObservableObject {
         )
       }
     } catch {
-      logError("Error loading sounds.json: \(error)", .sounds)
+      Logger.sounds.error("Error loading sounds.json: \(error, privacy: .public)")
       loadError = error
     }
   }

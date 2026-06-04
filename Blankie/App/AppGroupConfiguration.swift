@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os
 
 /// Configuration for app group shared between main app and CarPlay
 struct AppGroupConfiguration {
@@ -53,9 +54,9 @@ struct AppGroupConfiguration {
 
     do {
       try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true)
-      debugLog("AppGroup: Created shared documents directory")
+      Logger.app.debug("AppGroup: Created shared documents directory")
     } catch {
-      logError("AppGroup: Failed to create documents directory: \(error)")
+      Logger.app.error("AppGroup: Failed to create documents directory: \(error, privacy: .public)")
     }
   }
 }

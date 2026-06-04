@@ -6,28 +6,29 @@
 //
 
 import SwiftUI
+import os
 
 extension SoundSheet {
   // MARK: - Preview Methods
 
   internal func startPreview() {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
-    debugLog(
-      "SoundSheet: Starting preview for '\(soundName)' (isDisappearing: \(isDisappearing))", .ui)
+    Logger.ui.debug(
+      "SoundSheet: Starting preview for '\(soundName)' (isDisappearing: \(isDisappearing))")
 
     // Don't start preview if sheet is disappearing
     guard !isDisappearing else {
-      debugLog("SoundSheet: Skipping preview start - sheet is disappearing", .ui)
+      Logger.ui.debug("SoundSheet: Skipping preview start - sheet is disappearing")
       return
     }
 
     Task { @MainActor in
-      debugLog("SoundSheet: Preview task started for '\(soundName)'", .ui)
+      Logger.ui.debug("SoundSheet: Preview task started for '\(soundName)'")
       prepareForPreview()
       createPreviewSound()
       await startPreviewPlayback()
       startPreviewProgressTimer()
-      debugLog("SoundSheet: Preview started successfully for '\(soundName)'", .ui)
+      Logger.ui.debug("SoundSheet: Preview started successfully for '\(soundName)'")
     }
   }
 
@@ -129,7 +130,7 @@ extension SoundSheet {
 
   internal func stopPreview() {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
-    debugLog("SoundSheet: Stopping preview for '\(soundName)'", .ui)
+    Logger.ui.debug("SoundSheet: Stopping preview for '\(soundName)'")
 
     // Stop the progress timer
     previewTimer?.invalidate()
@@ -138,13 +139,13 @@ extension SoundSheet {
 
     Task { @MainActor in
       if let preview = previewSound {
-        debugLog("SoundSheet: Cleaning up preview sound '\(preview.title)'", .ui)
+        Logger.ui.debug("SoundSheet: Cleaning up preview sound '\(preview.title)'")
 
         // Exit preview mode (this restores all original states)
         AudioManager.shared.exitPreviewMode()
 
         if let previousSolo = previousSoloModeSound {
-          debugLog("SoundSheet: Restoring previous solo mode for '\(previousSolo.title)'", .ui)
+          Logger.ui.debug("SoundSheet: Restoring previous solo mode for '\(previousSolo.title)'")
           AudioManager.shared.enterSoloMode(for: previousSolo)
         }
 
@@ -165,15 +166,15 @@ extension SoundSheet {
   internal func updatePreviewVolume() {
     guard isPreviewing, let preview = previewSound else { return }
 
-    debugLog(
-      "SoundSheet: Updating preview volume - normalize: \(normalizeAudio), adjustment: \(volumeAdjustment)", .ui
+    Logger.ui.debug(
+      "SoundSheet: Updating preview volume - normalize: \(normalizeAudio), adjustment: \(volumeAdjustment)"
     )
 
     Task { @MainActor in
       // Update the sound's volume based on the current customization
       preview.updateVolume()
 
-      debugLog("SoundSheet: Preview volume updated with current sheet settings", .ui)
+      Logger.ui.debug("SoundSheet: Preview volume updated with current sheet settings")
     }
   }
 

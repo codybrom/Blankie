@@ -5,6 +5,8 @@
 // Created by Cody Bromley on 6/7/25.
 //
 
+import os
+
 #if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
@@ -29,7 +31,7 @@
     static func updateTemplate(_ template: CPListTemplate) {
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
-        debugLog("SoundsListTemplate: No sounds loaded yet", .carPlay)
+        Logger.carPlay.debug("SoundsListTemplate: No sounds loaded yet")
         let loadingItem = CPListItem(text: "Loading sounds...", detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])

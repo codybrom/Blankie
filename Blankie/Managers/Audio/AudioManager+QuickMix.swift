@@ -6,13 +6,14 @@
 //
 
 import Foundation
+import os
 
 extension AudioManager {
   // MARK: - Quick Mix Mode
 
   @MainActor
   func enterQuickMix(with initialSounds: [Sound] = []) {
-    debugLog("AudioManager: Entering Quick Mix mode", .audio)
+    Logger.audio.debug("AudioManager: Entering Quick Mix mode")
 
     // Exit solo mode if active
     if soloModeSound != nil {
@@ -48,14 +49,14 @@ extension AudioManager {
       quickMixSounds.contains(sound.fileName) && !sound.isCustom
     }
 
-    debugLog(
-      "AudioManager: Filtered \(initialSounds.count) initial sounds to \(validInitialSounds.count) valid Quick Mix sounds", .audio
+    Logger.audio.debug(
+      "AudioManager: Filtered \(initialSounds.count) initial sounds to \(validInitialSounds.count) valid Quick Mix sounds"
     )
 
     // Reset all Quick Mix sounds to 80% volume
     for sound in sounds where quickMixSounds.contains(sound.fileName) && !sound.isCustom {
       sound.volume = 0.8
-      debugLog("AudioManager: Reset \(sound.fileName) volume to 80%", .audio)
+      Logger.audio.debug("AudioManager: Reset \(sound.fileName) volume to 80%")
     }
 
     // Enable only the valid initial sounds
@@ -78,7 +79,7 @@ extension AudioManager {
   @MainActor
   func exitQuickMix() {
     guard isQuickMix else { return }
-    debugLog("AudioManager: Exiting Quick Mix mode", .audio)
+    Logger.audio.debug("AudioManager: Exiting Quick Mix mode")
 
     // Pause all current sounds
     for sound in sounds {
@@ -107,7 +108,7 @@ extension AudioManager {
 
     // Restore the previous preset if it exists
     if let savedPreset = preQuickMixPreset {
-      debugLog("AudioManager: Restoring previous preset: '\(savedPreset.name)'", .audio)
+      Logger.audio.debug("AudioManager: Restoring previous preset: '\(savedPreset.name)'")
       PresetManager.shared.setCurrentPreset(savedPreset)
 
       // Update Now Playing info with restored preset
@@ -137,7 +138,8 @@ extension AudioManager {
 
     // Only allow toggling of built-in sounds (no custom sounds)
     guard !sound.isCustom else {
-      debugLog("AudioManager: Attempted to toggle custom sound in Quick Mix: \(sound.fileName)", .audio)
+      Logger.audio.debug(
+        "AudioManager: Attempted to toggle custom sound in Quick Mix: \(sound.fileName)")
       return
     }
 

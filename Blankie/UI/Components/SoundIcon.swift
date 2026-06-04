@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import os
 
 struct SoundIcon: View {
   @ObservedObject var sound: Sound
@@ -312,7 +313,7 @@ struct SoundIcon: View {
     let result = CustomSoundManager.shared.deleteCustomSound(customSoundData)
 
     if case .failure(let error) = result {
-      logError("SoundIcon: Failed to delete custom sound: \(error)", .ui)
+      Logger.ui.error("SoundIcon: Failed to delete custom sound: \(error, privacy: .public)")
     }
   }
 

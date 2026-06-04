@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Foundation
+import os
 
 // MARK: - Playback Controls
 extension Sound {
@@ -24,32 +25,34 @@ extension Sound {
 
     let success = validPlayer.play()
     if !success {
-      logError("Sound: Failed to play '\(fileName)'", .sounds)
+      Logger.sounds.error("Sound: Failed to play '\(self.fileName, privacy: .public)'")
       let error = NSError(
         domain: "SoundPlayback", code: -1,
         userInfo: [NSLocalizedDescriptionKey: "Failed to play sound"])
       ErrorReporter.shared.report(AudioError.playbackFailed(error))
     } else {
-      debugLog("Sound: Playing '\(fileName)' from position: \(validPlayer.currentTime)s", .sounds)
+      Logger.sounds.debug(
+        "Sound: Playing '\(self.fileName)' from position: \(validPlayer.currentTime)s")
     }
   }
 
   private func preparePlayer() -> AVAudioPlayer? {
     guard let player = self.player else {
-      debugLog("Sound: No player available for '\(fileName)'", .sounds)
+      Logger.sounds.debug("Sound: No player available for '\(self.fileName)'")
       return nil
     }
 
     // Additional validation
     if !player.prepareToPlay() {
-      debugLog("Sound: Player not ready for '\(fileName)' - attempting to reload", .sounds)
+      Logger.sounds.debug("Sound: Player not ready for '\(self.fileName)' - attempting to reload")
       loadSound()
       guard let reloadedPlayer = self.player else {
-        logError("Sound: Failed to reload player for '\(fileName)'", .sounds)
+        Logger.sounds.error(
+          "Sound: Failed to reload player for '\(self.fileName, privacy: .public)'")
         return nil
       }
       if !reloadedPlayer.prepareToPlay() {
-        debugLog("Sound: Player still not ready after reload for '\(fileName)'", .sounds)
+        Logger.sounds.debug("Sound: Player still not ready after reload for '\(self.fileName)'")
         return nil
       }
       return reloadedPlayer
@@ -81,46 +84,46 @@ extension Sound {
         let maxPosition = player.duration * 0.75
         let randomPosition = Double.random(in: 0..<maxPosition)
         player.currentTime = randomPosition
-        debugLog(
-          "Sound: Reset '\(fileName)' to random position: \(randomPosition)s of \(player.duration)s (max 75%)", .sounds
+        Logger.sounds.debug(
+          "Sound: Reset '\(self.fileName)' to random position: \(randomPosition)s of \(player.duration)s (max 75%)"
         )
       } else {
-        logError(
-          "Sound: Cannot randomize start position for '\(fileName)' - invalid duration: \(player.duration)", .sounds
+        Logger.sounds.error(
+          "Sound: Cannot randomize start position for '\(self.fileName, privacy: .public)' - invalid duration: \(player.duration, privacy: .public)"
         )
       }
     } else {
       // Reset to beginning if randomization is disabled
       player.currentTime = 0
-      debugLog("Sound: Reset '\(fileName)' to beginning", .sounds)
+      Logger.sounds.debug("Sound: Reset '\(self.fileName)' to beginning")
     }
   }
 
   func pause(immediate: Bool = false) {
     guard let currentPlayer = player else {
-      debugLog("Sound: No player to pause for '\(fileName)'", .sounds)
+      Logger.sounds.debug("Sound: No player to pause for '\(self.fileName)'")
       return
     }
 
     if immediate {
       currentPlayer.stop()
       currentPlayer.currentTime = 0  // Reset to beginning for next play
-      debugLog("Sound: Immediately stopped '\(fileName)'", .sounds)
+      Logger.sounds.debug("Sound: Immediately stopped '\(self.fileName)'")
     } else {
       currentPlayer.pause()
-      debugLog("Sound: Paused '\(fileName)'", .sounds)
+      Logger.sounds.debug("Sound: Paused '\(self.fileName)'")
     }
   }
 
   func stop() {
     guard let currentPlayer = player else {
-      debugLog("Sound: No player to stop for '\(fileName)'", .sounds)
+      Logger.sounds.debug("Sound: No player to stop for '\(self.fileName)'")
       return
     }
 
     currentPlayer.stop()
     currentPlayer.currentTime = 0  // Reset to beginning for next play
-    debugLog("Sound: Stopped '\(fileName)'", .sounds)
+    Logger.sounds.debug("Sound: Stopped '\(self.fileName)'")
   }
 
   func fadeIn(duration: TimeInterval = 0.5, completion: (() -> Void)? = nil) {
@@ -134,7 +137,7 @@ extension Sound {
       return
     }
 
-    debugLog("Sound: Fading in '\(fileName)' over \(duration)s", .sounds)
+    Logger.sounds.debug("Sound: Fading in '\(self.fileName)' over \(duration)s")
 
     // Store original volume level
     let originalVolume = player.volume
@@ -184,7 +187,7 @@ extension Sound {
       return
     }
 
-    debugLog("Sound: Fading out '\(fileName)' over \(duration)s", .sounds)
+    Logger.sounds.debug("Sound: Fading out '\(self.fileName)' over \(duration)s")
 
     fadeTimer?.invalidate()
     fadeStartVolume = player.volume
@@ -222,7 +225,7 @@ extension Sound {
     guard !isResetting else { return }
     isResetting = true
 
-    debugLog("Sound: Resetting '\(fileName)'", .sounds)
+    Logger.sounds.debug("Sound: Resetting '\(self.fileName)'")
 
     // Clean up timers
     fadeTimer?.invalidate()
@@ -245,7 +248,7 @@ extension Sound {
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
 
-    debugLog("Sound: Reset complete for '\(fileName)'", .sounds)
+    Logger.sounds.debug("Sound: Reset complete for '\(self.fileName)'")
     isResetting = false
   }
 }

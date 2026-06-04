@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 /// Shared view modifiers for all platforms
 struct SharedAppModifiers: ViewModifier {
@@ -27,9 +28,10 @@ struct SharedAppModifiers: ViewModifier {
           Task { @MainActor in
             do {
               let importedPreset = try await PresetImporter.shared.importArchive(from: url)
-              debugLog("Imported preset '\(importedPreset.name)' from \(url.lastPathComponent)")
+              Logger.app.debug(
+                "Imported preset '\(importedPreset.name)' from \(url.lastPathComponent)")
             } catch {
-              logError("Failed to import presets: \(error)")
+              Logger.app.error("Failed to import presets: \(error, privacy: .public)")
             }
           }
         } else {

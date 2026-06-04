@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 #if os(macOS)
   final class MacAppDelegate: NSObject, NSApplicationDelegate {
@@ -46,14 +47,14 @@ import SwiftUI
       if let languageCode = UserDefaults.standard.string(forKey: "languagePreference"),
         languageCode != "system"
       {
-        debugLog("AppDelegate: Applying saved language \(languageCode) at launch")
+        Logger.app.debug("AppDelegate: Applying saved language \(languageCode) at launch")
         UserDefaults.standard.set([languageCode], forKey: "AppleLanguages")
       }
     }
 
     private func clearRestartFlagIfNeeded() {
       if UserDefaults.standard.bool(forKey: "AppIsRestarting") {
-        debugLog("App detected post-restart state for language change")
+        Logger.app.debug("App detected post-restart state for language change")
         UserDefaults.standard.removeObject(forKey: "AppIsRestarting")
       }
     }
@@ -65,7 +66,8 @@ import SwiftUI
         if let window = NSApplication.shared.windows.first {
           let frame = NSRect(x: 485, y: 277, width: 950, height: 540)
           window.setFrame(frame, display: true, animate: false)
-          debugLog("AppDelegate: Set window frame for UI testing to \(frame)")
+          Logger.app.debug(
+            "AppDelegate: Set window frame for UI testing to \(String(describing: frame))")
         }
 
         // Force playback to start for screenshots
@@ -94,12 +96,12 @@ import SwiftUI
           if let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) {
             sound.isSelected = true
             sound.volume = Float(volume)
-            debugLog("Activated \(fileName) with volume \(volume)")
+            Logger.app.debug("Activated \(fileName) with volume \(volume)")
           }
         }
 
         audioManager.setPlaybackState(true, forceUpdate: true)
-        debugLog("AppDelegate: Started playback for screenshot mode")
+        Logger.app.debug("AppDelegate: Started playback for screenshot mode")
       }
     }
 
@@ -109,7 +111,7 @@ import SwiftUI
 
     // Handle language change
     @objc private func languageDidChange(_: Notification) {
-      debugLog("AppDelegate: Received language change notification")
+      Logger.app.debug("AppDelegate: Received language change notification")
       // The language has already been changed in UserDefaults by the Language.applyLanguage method
 
       // Try to refresh any localized strings throughout the app
@@ -118,7 +120,7 @@ import SwiftUI
 
     // Handle locale change
     @objc private func localeDidChange(_: Notification) {
-      debugLog("AppDelegate: Locale changed, refreshing localized content")
+      Logger.app.debug("AppDelegate: Locale changed, refreshing localized content")
       refreshAppLocalization()
     }
 
@@ -150,14 +152,14 @@ import SwiftUI
       _ application: UIApplication,
       didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-      debugLog("IOSAppDelegate: didFinishLaunchingWithOptions")
-      debugLog(
+      Logger.app.debug("IOSAppDelegate: didFinishLaunchingWithOptions")
+      Logger.app.debug(
         "IOSAppDelegate: Protected data available: \(application.isProtectedDataAvailable)")
 
       // Initialize core app systems synchronously for CarPlay compatibility
       // This MUST complete before CarPlay can connect
       #if CARPLAY_ENABLED && canImport(CarPlay)
-        debugLog("IOSAppDelegate: Performing synchronous CarPlay initialization...")
+        Logger.app.debug("IOSAppDelegate: Performing synchronous CarPlay initialization...")
 
         // Bridge CarPlay connection state into AudioManager. Must start before
         // CarPlay can connect so the first connect/disconnect is observed.
@@ -172,13 +174,13 @@ import SwiftUI
         AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
         PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
 
-        debugLog("IOSAppDelegate: Model context initialized")
+        Logger.app.debug("IOSAppDelegate: Model context initialized")
 
         // Load sounds synchronously - this works even when device is locked
         // because we've configured file protection appropriately
         if AudioManager.shared.sounds.isEmpty {
           AudioManager.shared.loadSounds()
-          debugLog(
+          Logger.app.debug(
             "IOSAppDelegate: Sounds loaded synchronously: \(AudioManager.shared.sounds.count) sounds"
           )
         }
@@ -196,10 +198,10 @@ import SwiftUI
       @MainActor
       private func initializeAppCoreAsync() async {
         // Load custom sounds with proper SwiftData coordination
-        debugLog("IOSAppDelegate: Loading custom sounds...")
+        Logger.app.debug("IOSAppDelegate: Loading custom sounds...")
         await AudioManager.shared.loadCustomSoundsWhenReady()
 
-        debugLog("IOSAppDelegate: Async app core initialization complete")
+        Logger.app.debug("IOSAppDelegate: Async app core initialization complete")
       }
     #endif
 
@@ -208,9 +210,8 @@ import SwiftUI
         // Re-establish CarPlay connection if needed after app becomes active
         // This is crucial for CarPlay apps that were force quit or when device was locked
         if CarPlayInterfaceController.shared.isConnected {
-          debugLog(
-            "IOSAppDelegate: App became active with CarPlay connected, checking interface state..."
-          )
+          Logger.app.debug(
+            "IOSAppDelegate: App became active with CarPlay connected, checking interface state...")
           Task { @MainActor in
             CarPlayInterfaceController.shared.reinitializeIfNeeded()
           }

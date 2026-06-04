@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import os
 
 /// Represents customizations applied to built-in sounds
 struct SoundCustomization: Codable, Identifiable {
@@ -230,16 +231,18 @@ class SoundCustomizationManager: ObservableObject {
     do {
       let data = try JSONEncoder().encode(Array(customizations.values))
       UserDefaults.shared.set(data, forKey: userDefaultsKey)
-      debugLog("SoundCustomizationManager: Saved \(customizations.count) customizations", .sounds)
+      Logger.sounds.debug(
+        "SoundCustomizationManager: Saved \(self.customizations.count) customizations")
     } catch {
-      logError("SoundCustomizationManager: Failed to save customizations: \(error)", .sounds)
+      Logger.sounds.error(
+        "SoundCustomizationManager: Failed to save customizations: \(error, privacy: .public)")
     }
   }
 
   private func loadCustomizations() {
 
     guard let data = UserDefaults.shared.data(forKey: userDefaultsKey) else {
-      debugLog("SoundCustomizationManager: No saved customizations found", .sounds)
+      Logger.sounds.debug("SoundCustomizationManager: No saved customizations found")
       return
     }
 
@@ -247,9 +250,11 @@ class SoundCustomizationManager: ObservableObject {
       let customizationArray = try JSONDecoder().decode([SoundCustomization].self, from: data)
       customizations = Dictionary(
         uniqueKeysWithValues: customizationArray.map { ($0.fileName, $0) })
-      debugLog("SoundCustomizationManager: Loaded \(customizations.count) customizations", .sounds)
+      Logger.sounds.debug(
+        "SoundCustomizationManager: Loaded \(self.customizations.count) customizations")
     } catch {
-      logError("SoundCustomizationManager: Failed to load customizations: \(error)", .sounds)
+      Logger.sounds.error(
+        "SoundCustomizationManager: Failed to load customizations: \(error, privacy: .public)")
       customizations = [:]
     }
   }

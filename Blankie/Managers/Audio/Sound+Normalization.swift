@@ -7,6 +7,7 @@
 
 import AVFoundation
 import Foundation
+import os
 
 // MARK: - Normalization & LUFS Analysis
 extension Sound {
@@ -44,8 +45,9 @@ extension Sound {
       if effectiveVolume > softLimitThreshold {
         let excess = (effectiveVolume - softLimitThreshold) / (1.0 - softLimitThreshold)
         let limited = softLimitThreshold + (1.0 - softLimitThreshold) * tanh(excess * 2)
-        debugLog(
-          "Sound: Applying soft limiter to '\(fileName)' - from \(effectiveVolume) to \(limited)", .sounds)
+        Logger.sounds.debug(
+          "Sound: Applying soft limiter to '\(self.fileName)' - from \(effectiveVolume) to \(limited)"
+        )
         effectiveVolume = limited
       }
     }
@@ -53,14 +55,14 @@ extension Sound {
     // Only log volume calculations if they actually change the player volume
     if player?.volume != effectiveVolume {
       player?.volume = effectiveVolume
-      debugLog("Sound: Set player volume for '\(fileName)' to \(effectiveVolume)", .sounds)
+      Logger.sounds.debug("Sound: Set player volume for '\(self.fileName)' to \(effectiveVolume)")
 
       // Debounce just the print statement
       updateVolumeLogTimer?.invalidate()
       updateVolumeLogTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
         [weak self] _ in
         guard let self = self else { return }
-        debugLog("Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)", .sounds)
+        Logger.sounds.debug("Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)")
       }
     }
     // Remove "Volume already at" logging - too verbose for production
@@ -115,9 +117,8 @@ extension Sound {
     guard isCustom,
       let customSoundDataID = customSoundDataID
     else {
-      debugLog(
-        "Sound: Skipping LUFS analysis for '\(fileName)' - not a custom sound", .sounds
-      )
+      Logger.sounds.debug(
+        "Sound: Skipping LUFS analysis for '\(self.fileName)' - not a custom sound")
       return
     }
 
@@ -133,13 +134,13 @@ extension Sound {
     }
 
     guard let analysisURL = fileURL else {
-      debugLog(
-        "Sound: Skipping LUFS analysis for '\(fileName)' - already has LUFS data or file not found", .sounds
+      Logger.sounds.debug(
+        "Sound: Skipping LUFS analysis for '\(self.fileName)' - already has LUFS data or file not found"
       )
       return
     }
 
-    debugLog("Sound: Starting LUFS analysis for custom sound '\(fileName)'", .sounds)
+    Logger.sounds.debug("Sound: Starting LUFS analysis for custom sound '\(self.fileName)'")
 
     if let lufsResult = await AudioAnalyzer.analyzeLUFS(at: analysisURL) {
       // Capture the values we need before the MainActor run
@@ -152,7 +153,8 @@ extension Sound {
         guard let customSoundDataID = self.customSoundDataID,
           let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID)
         else {
-          logError("Sound: Could not refetch custom sound data for '\(soundFileName)'", .sounds)
+          Logger.sounds.error(
+            "Sound: Could not refetch custom sound data for '\(soundFileName, privacy: .public)'")
           return
         }
 
@@ -163,8 +165,8 @@ extension Sound {
         // Save to database
         do {
           try CustomSoundManager.shared.saveContext()
-          debugLog(
-            "Sound: Updated LUFS data for '\(soundFileName)' - LUFS: \(detectedLUFS), Factor: \(normalizationFactor)", .sounds
+          Logger.sounds.debug(
+            "Sound: Updated LUFS data for '\(soundFileName)' - LUFS: \(detectedLUFS), Factor: \(normalizationFactor)"
           )
 
           // Update this Sound's own cached values so `getNormalizationFactor()`
@@ -175,11 +177,13 @@ extension Sound {
           // Trigger volume update to apply new normalization
           self.updateVolume()
         } catch {
-          logError("Sound: Failed to save LUFS data for '\(soundFileName)': \(error)", .sounds)
+          Logger.sounds.error(
+            "Sound: Failed to save LUFS data for '\(soundFileName, privacy: .public)': \(error, privacy: .public)"
+          )
         }
       }
     } else {
-      logError("Sound: Failed to analyze LUFS for '\(fileName)'", .sounds)
+      Logger.sounds.error("Sound: Failed to analyze LUFS for '\(self.fileName, privacy: .public)'")
     }
   }
 }

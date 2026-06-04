@@ -7,6 +7,7 @@
 
 import AVFoundation
 import SwiftUI
+import os
 
 struct SoundWaveformView: View {
   let sound: Sound?
@@ -91,7 +92,7 @@ struct SoundWaveformView: View {
           self.isLoading = false
         }
       } catch {
-        logError("Failed to load waveform: \(error)", .ui)
+        Logger.ui.error("Failed to load waveform: \(error, privacy: .public)")
         await MainActor.run {
           self.isLoading = false
         }

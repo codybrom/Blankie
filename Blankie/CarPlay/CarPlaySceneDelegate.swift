@@ -5,6 +5,8 @@
 // Created by Cody Bromley on 4/18/25.
 //
 
+import os
+
 #if CARPLAY_ENABLED && canImport(CarPlay)
 
   import CarPlay
@@ -17,14 +19,14 @@
 
     override init() {
       super.init()
-      debugLog("CarPlaySceneDelegate: init", .carPlay)
+      Logger.carPlay.debug("CarPlaySceneDelegate: init")
     }
 
     func templateApplicationScene(
       _ scene: CPTemplateApplicationScene,
       didConnect interfaceController: CPInterfaceController
     ) {
-      debugLog("CarPlay: Scene delegate didConnect called!", .carPlay)
+      Logger.carPlay.debug("CarPlay: Scene delegate didConnect called!")
       self.interfaceController = interfaceController
 
       // Set up CarPlay interface - the shared controller handles initialization
@@ -35,7 +37,7 @@
       _ scene: CPTemplateApplicationScene,
       didDisconnectInterfaceController interfaceController: CPInterfaceController
     ) {
-      debugLog("CarPlay: Disconnected!", .carPlay)
+      Logger.carPlay.debug("CarPlay: Disconnected!")
       self.interfaceController = nil
       CarPlayInterfaceController.shared.disconnect()
     }

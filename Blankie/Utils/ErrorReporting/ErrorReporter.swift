@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import os
 
 class ErrorReporter: ObservableObject {
   static let shared = ErrorReporter()
@@ -15,7 +16,7 @@ class ErrorReporter: ObservableObject {
     DispatchQueue.main.async {
       self.lastError = error
       #if DEBUG
-        logError("Error reported: \(error.localizedDescription)")
+        Logger.app.error("Error reported: \(error.localizedDescription, privacy: .public)")
       #endif
     }
   }

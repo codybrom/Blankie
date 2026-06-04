@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 
 /// A wrapper that automatically presents the PresetOnboardingSheet when appropriate.
 struct PresetOnboardingPresenter<Content: View>: View {
@@ -28,15 +29,15 @@ struct PresetOnboardingPresenter<Content: View>: View {
           let shouldShow = onboardingManager.checkAndShowOnboarding(
             hasCustomPresets: presetManager.hasCustomPresets
           )
-          debugLog(
-            "OnboardingPresenter: isLoading->false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)", .ui
+          Logger.ui.debug(
+            "OnboardingPresenter: isLoading->false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)"
           )
           showOnboarding = force ? true : shouldShow
         }
       }
       .onAppear {
         if force {
-          debugLog("OnboardingPresenter: force=true, presenting onboarding", .ui)
+          Logger.ui.debug("OnboardingPresenter: force=true, presenting onboarding")
           showOnboarding = true
           return
         }
@@ -44,12 +45,12 @@ struct PresetOnboardingPresenter<Content: View>: View {
           let shouldShow = onboardingManager.checkAndShowOnboarding(
             hasCustomPresets: presetManager.hasCustomPresets
           )
-          debugLog(
-            "OnboardingPresenter: onAppear, isLoading=false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)", .ui
+          Logger.ui.debug(
+            "OnboardingPresenter: onAppear, isLoading=false, shouldShowOnboarding=\(onboardingManager.shouldShowOnboarding), hasCustomPresets=\(presetManager.hasCustomPresets), result=\(shouldShow)"
           )
           showOnboarding = shouldShow
         } else {
-          debugLog("OnboardingPresenter: onAppear, waiting for presets to finish loading...", .ui)
+          Logger.ui.debug("OnboardingPresenter: onAppear, waiting for presets to finish loading...")
         }
       }
   }
