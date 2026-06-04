@@ -123,7 +123,7 @@ import SwiftUI
           } label: {
             HStack(spacing: 12) {
               Image(systemName: sound.systemIconName)
-                .foregroundColor(isSelected ? .accentColor : .secondary)
+                .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                 .frame(width: 20)
                 .accessibilityHidden(true)
               Text(sound.title)
@@ -131,7 +131,7 @@ import SwiftUI
               Spacer()
               if isSelected {
                 Image(systemName: "checkmark")
-                  .foregroundStyle(.accent)
+                  .foregroundStyle(.tint)
                   .accessibilityHidden(true)
               }
             }
