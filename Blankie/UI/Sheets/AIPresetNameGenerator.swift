@@ -1,3 +1,10 @@
+//
+//  AIPresetNameGenerator.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 11/24/25.
+//
+
 import Foundation
 import os
 

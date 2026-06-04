@@ -2,6 +2,8 @@
 //  GridSoundButton.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 6/10/25.
+//
 //  Unified sound tile used by both the normal preset grid and Quick Mix.
 //  Visual style matches the list view: a translucent glass icon circle with
 //  an accent-tinted symbol when active, dimmed when inactive, plus an inline

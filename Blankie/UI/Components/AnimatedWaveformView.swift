@@ -2,6 +2,8 @@
 //  AnimatedWaveformView.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 11/24/25.
+//
 //  Animated waveform that cycles through low/mid/high states
 //
 

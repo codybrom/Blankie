@@ -2,6 +2,8 @@
 //  CarPlayAudioBridge.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 4/21/26.
+//
 
 #if CARPLAY_ENABLED && canImport(CarPlay)
 

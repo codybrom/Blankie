@@ -2,7 +2,7 @@
 //  Logging.swift
 //  Blankie
 //
-//  Created by Cody Bromley.
+//  Created by Cody Bromley on 6/3/26.
 //
 
 import Foundation

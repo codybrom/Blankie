@@ -2,6 +2,8 @@
 //  NowPlayingSheet.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 11/24/25.
+//
 //  Apple Music-inspired Now Playing view with animated background
 //
 

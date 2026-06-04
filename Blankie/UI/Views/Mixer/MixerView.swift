@@ -1,3 +1,10 @@
+//
+//  MixerView.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 4/14/25.
+//
+
 import SwiftUI
 import TipKit
 import os

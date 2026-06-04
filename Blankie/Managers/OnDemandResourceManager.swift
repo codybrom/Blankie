@@ -2,6 +2,8 @@
 //  OnDemandResourceManager.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 10/17/25.
+//
 //  Manages On-Demand Resources for animated artwork videos
 //
 

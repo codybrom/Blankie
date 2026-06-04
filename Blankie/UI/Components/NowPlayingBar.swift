@@ -2,6 +2,8 @@
 //  NowPlayingBar.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 6/3/26.
+//
 //  Apple Music-style mini player bar that expands into the Now Playing cover.
 //
 

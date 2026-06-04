@@ -2,6 +2,8 @@
 //  SoundGridView.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 2/22/26.
+//
 //  Two-column tile grid with long-press-to-reorder, built on SortableGridView.
 //
 //  The dragged tile lifts into an overlay and the cells it passes over swap in

@@ -1,3 +1,10 @@
+//
+//  SidebarContentView.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 5/30/25.
+//
+
 import SwiftUI
 
 #if os(iOS) || os(visionOS)

@@ -1,5 +1,5 @@
 //
-//  AccentColor.swift
+//  Color+Extension.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 1/2/25.

@@ -2,6 +2,8 @@
 //  SortableGridView.swift
 //  Blankie
 //
+//  Created by Cody Bromley on 5/24/26.
+//
 //  Long-press-to-reorder grid, adapted from Balaji Venkatesh's "Sortable Grid"
 //  (28/01/26). The dragged tile is lifted into an overlay preview while the
 //  underlying cells swap live as it passes over them; the host commits the
