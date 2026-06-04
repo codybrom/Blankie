@@ -3,7 +3,7 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
   /// iPad sidebar. Hosts the full `LibraryView` so the sidebar *is* the Library
   /// — the same view iPhone shows as a sheet. The enclosing `NavigationSplitView`
-  /// owns the show/hide toggle; Settings rides in the Library's trailing toolbar.
+  /// puts its show/hide toggle trailing; Settings rides in the Library's leading toolbar.
   struct SidebarContentView: View {
     @Binding var showingSettings: Bool
 

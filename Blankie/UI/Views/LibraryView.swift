@@ -347,9 +347,9 @@ struct LibraryView: View {
   }
 
   var presentation: Presentation = .sheet
-  /// Opens the full Settings sheet from a toolbar gear (leading on the iPhone
-  /// page, trailing in the iPad sidebar). nil in the sheet presentation, where
-  /// Settings isn't surfaced here.
+  /// Opens the full Settings sheet from the leading toolbar gear (iPhone page
+  /// and iPad sidebar alike). nil in the sheet presentation, where Settings
+  /// isn't surfaced here.
   var onOpenSettings: (() -> Void)?
   /// Page-only: called after a row applies its selection so the owner can
   /// navigate forward to the mixer (the Library is the stack root, so there
@@ -395,7 +395,7 @@ struct LibraryView: View {
       .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
   }
 
-  // MARK: - Favorites / All Presets model
+  // MARK: - Favorites / Presets model
 
   /// Favorited tokens in saved order, dropping any whose preset no longer exists.
   private var favoriteTokens: [String] {
@@ -409,14 +409,14 @@ struct LibraryView: View {
   }
 
   /// Non-favorited custom presets in saved order. All Blankie Sounds and Quick
-  /// Mix render as fixed rows in the All Presets section, NOT in this list — so
+  /// Mix render as fixed rows in the Presets section, NOT in this list — so
   /// the reorderable ForEach contains only reorderable customs.
   private var nonFavoriteCustomTokens: [String] {
     sortedCustomPresets.map(\.id.uuidString).filter { !globalSettings.isStarred($0) }
   }
 
-  /// Show All Blankie Sounds as a fixed row in All Presets only when it isn't
-  /// favorited (when favorited it appears in the Favorites section instead).
+  /// Show All Blankie Sounds as a fixed row in the Presets section only when it
+  /// isn't favorited (when favorited it appears in the Favorites section instead).
   private var showsDefaultInAllPresets: Bool {
     presetManager.presets.contains { $0.isDefault }
       && !globalSettings.isStarred(GlobalSettings.allSoundsToken)
@@ -736,7 +736,7 @@ struct LibraryView: View {
           .onMove(perform: reorderAllPresets)
           .onDelete(perform: deleteAllPresets)
         } header: {
-          Text("All Presets")
+          Text("Presets")
         }
 
         // SOUNDS — solo a single sound. Listed alphabetically and fixed
@@ -807,13 +807,11 @@ struct LibraryView: View {
             .tint(Color.primary)
           }
         }
-        // Settings gear, opening the Settings sheet. On the page it sits in
-        // the leading corner — the Library is the stack root, so no back
-        // button competes for that edge — leaving the trailing edge to
-        // Edit/Add. In the sidebar the leading edge belongs to the sidebar
-        // toggle, so the gear stays trailing.
+        // Settings gear, opening the Settings sheet. Leading in both
+        // presentations so iPhone and iPad match; the sidebar's trailing
+        // edge holds the system sidebar toggle plus Edit/Add.
         if let onOpenSettings {
-          ToolbarItem(placement: presentation == .page ? .topBarLeading : .topBarTrailing) {
+          ToolbarItem(placement: .topBarLeading) {
             Button {
               onOpenSettings()
             } label: {

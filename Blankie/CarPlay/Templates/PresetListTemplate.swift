@@ -43,7 +43,7 @@
       addFavoritesSection(to: &sections)
 
       // Favorited presets already appear in the Favorites section above, so
-      // exclude them from "All Presets" / "All Sounds" to avoid duplicate rows.
+      // exclude them from "Presets" / "All Sounds" to avoid duplicate rows.
       let starred = GlobalSettings.shared.starredItems
       let nonFavoriteCustoms = customPresets.filter { !starred.contains($0.id.uuidString) }
       let allSoundsFavorited = starred.contains(GlobalSettings.allSoundsToken)
@@ -270,8 +270,8 @@
       sections.append(
         CPListSection(
           items: allItems,
-          header: "All Presets",
-          sectionIndexTitle: "A"
+          header: "Presets",
+          sectionIndexTitle: "P"
         )
       )
     }

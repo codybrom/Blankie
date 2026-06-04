@@ -25,18 +25,11 @@ import SwiftUI
     @State private var showingTimer = false
     var backgroundImage: PlatformImage?
 
-    #if CARPLAY_ENABLED && canImport(CarPlay)
-      @ObservedObject private var carPlayInterface = CarPlayInterface.shared
-    #endif
-
     /// CarPlay routes audio (and volume) to the car, so the in-app volume bar
     /// has nothing to control there — hide the whole row when connected.
+    /// Reads AudioManager's published flag (fed by CarPlayAudioBridge).
     private var isCarPlayConnected: Bool {
-      #if CARPLAY_ENABLED && canImport(CarPlay)
-        return carPlayInterface.isConnected
-      #else
-        return false
-      #endif
+      audioManager.isCarPlayConnected
     }
 
     #if os(iOS)
