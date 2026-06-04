@@ -1,10 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import languagesJson from "../../public/i18n/languages.json";
-import {
-  getLanguageName,
-  getNativeLanguageName,
-} from "../utils/i18n-helpers";
+import { getLanguageName, getNativeLanguageName } from "../utils/i18n-helpers";
 import { I18nStats, type LanguageRow } from "@/components/I18nStats";
 import { Card } from "@/components/ui/card";
 
@@ -38,7 +35,7 @@ const sortedLanguages = Object.entries(languageData.statistics).sort(
     const nameA = getNativeLanguageName(langCodeA);
     const nameB = getNativeLanguageName(langCodeB);
     return nameA.localeCompare(nameB);
-  }
+  },
 );
 
 const extractionTimestamp = languageData.metadata.extractedAt;
@@ -117,29 +114,29 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 ---
 
 <Layout title={title}>
-  <main class="max-w-5xl mx-auto px-5 pt-28 pb-10">
-    <h1 class="text-4xl font-semibold mb-6">Translation Status</h1>
+  <main class="mx-auto max-w-5xl px-5 pt-28 pb-10">
+    <h1 class="mb-6 text-4xl font-semibold">Translation Status</h1>
 
-    <Card className="p-6 mb-8 text-base gap-0">
-      <p class="text-md leading-relaxed mb-4">
+    <Card className="mb-8 gap-0 p-6 text-base">
+      <p class="mb-4 leading-relaxed">
         This page shows the current translation status for Blankie. The data is
         automatically updated whenever new translations are added.
       </p>
 
       <div
-        class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+        class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"
       >
         <div class="flex flex-wrap gap-3">
           <div class="dropdown relative inline-block">
             <button
-              class="inline-flex items-center px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-md text-yellow-500 hover:text-yellow-400 transition-colors text-sm"
+              class="inline-flex items-center rounded-md border border-zinc-600 bg-zinc-800 px-4 py-2 text-sm text-yellow-500 transition-colors hover:bg-zinc-700 hover:text-yellow-400"
               aria-expanded="false"
               aria-haspopup="true"
               aria-controls="download-dropdown"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4 mr-2"
+                class="mr-2 size-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -154,7 +151,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
               </svg>
               Download Template
               <svg
-                class="w-4 h-4 ml-2"
+                class="ml-2 size-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -169,7 +166,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
             </button>
             <div
               id="download-dropdown"
-              class="dropdown-menu hidden absolute right-0 mt-2 py-2 w-48 bg-zinc-800 rounded-md shadow-xl border border-zinc-700 z-10"
+              class="dropdown-menu absolute right-0 z-10 mt-2 hidden w-48 rounded-md border border-zinc-700 bg-zinc-800 py-2 shadow-xl"
               role="menu"
               aria-labelledby="download-dropdown-button"
             >
@@ -192,11 +189,11 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 
           <a
             href="/contributing/#translation-contributions"
-            class="inline-flex items-center px-4 py-2 bg-primary-blue hover:bg-blue-700 text-white font-medium rounded-md transition-colors text-sm no-underline"
+            class="bg-primary-blue inline-flex items-center rounded-md px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-blue-700"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 mr-2"
+              class="mr-2 size-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -213,7 +210,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
           </a>
         </div>
 
-        <p class="text-sm text-mid-gray">
+        <p class="text-mid-gray text-sm">
           Last updated: <span
             id="localTime"
             data-timestamp={extractionTimestamp}>{extractionTimestamp}</span
@@ -224,8 +221,8 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 
     {
       !languageData && (
-        <div class="bg-red-500/30 border border-red-500 rounded-lg p-6 mb-8">
-          <h2 class="text-xl font-semibold mb-2">
+        <div class="mb-8 rounded-lg border border-red-500 bg-red-500/30 p-6">
+          <h2 class="mb-2 text-xl font-semibold">
             Error Loading Translation Data
           </h2>
           <p>
@@ -236,33 +233,29 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
       )
     }
 
-    {
-      languageData && (
-        <I18nStats rows={tableRows} />
-      )
-    }
+    {languageData && <I18nStats rows={tableRows} />}
 
-    <Card className="mt-12 p-6 gap-0">
-      <h2 class="text-2xl font-semibold mb-4">About Translations</h2>
+    <Card className="mt-12 gap-0 p-6">
+      <h2 class="mb-4 text-2xl font-semibold">About Translations</h2>
       <p class="mb-4">
         Blankie is translated by volunteers. If you'd like to help translate
         Blankie into your language, please check the
         <a
           href="/contributing/#translation-contributions"
-          class="text-yellow-500 hover:text-yellow-400 transition-colors"
+          class="text-yellow-500 transition-colors hover:text-yellow-400"
         >
           contribution guidelines
         </a>.
       </p>
 
-      <h3 class="text-xl font-semibold mt-6 mb-3">
+      <h3 class="mt-6 mb-3 text-xl font-semibold">
         Getting Started with Translation
       </h3>
-      <ol class="list-decimal list-inside space-y-2 mb-4">
+      <ol class="mb-4 list-inside list-decimal space-y-2">
         <li>
           Download the <a
             href="/i18n/"
-            class="text-yellow-500 hover:text-yellow-400 transition-colors"
+            class="text-yellow-500 transition-colors hover:text-yellow-400"
             >English template</a
           > to use as your starting point
         </li>
@@ -272,18 +265,18 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
         </li>
         <li>
           Submit your translations either:
-          <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
+          <ul class="mt-2 ml-6 list-inside list-disc space-y-1">
             <li>
               Through a GitHub issue using the <a
                 href="https://github.com/codybrom/blankie/issues/new?assignees=&labels=translation-contribution&projects=&template=translation_contribution.yml&title=%5BTranslation%5D%3A+"
-                class="text-yellow-500 hover:text-yellow-400 transition-colors"
+                class="text-yellow-500 transition-colors hover:text-yellow-400"
                 >Translation contribution</a
               > template
             </li>
             <li>
               Or by emailing them to <a
                 href="mailto:i18n@blankie.rest"
-                class="text-yellow-500 hover:text-yellow-400 transition-colors"
+                class="text-yellow-500 transition-colors hover:text-yellow-400"
                 >i18n@blankie.rest</a
               >
             </li>
@@ -291,18 +284,18 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
         </li>
       </ol>
 
-      <h3 class="text-xl font-semibold mt-6 mb-3">Understanding the Status</h3>
+      <h3 class="mt-6 mb-3 text-xl font-semibold">Understanding the Status</h3>
       <p class="mb-3">We track translation progress in two categories:</p>
-      <ul class="space-y-2 mb-4">
+      <ul class="mb-4 space-y-2">
         <li class="flex items-center">
-          <span class="w-3 h-3 inline-block bg-green-500 rounded-full mr-2"
+          <span class="mr-2 inline-block size-3 rounded-full bg-green-500"
           ></span>
           <span
             ><strong>Finalized</strong>: Translations that are ready for use</span
           >
         </li>
         <li class="flex items-center">
-          <span class="w-3 h-3 inline-block bg-amber-400 rounded-full mr-2"
+          <span class="mr-2 inline-block size-3 rounded-full bg-amber-400"
           ></span>
           <span
             ><strong>In Review</strong>: Translations that need validation</span
@@ -313,12 +306,12 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
       <p class="mb-3">Status labels are based on the combined progress:</p>
       <ul class="space-y-2">
         <li class="flex items-center">
-          <span class="w-3 h-3 inline-block bg-green-500 rounded-full mr-2"
+          <span class="mr-2 inline-block size-3 rounded-full bg-green-500"
           ></span>
           <span><strong>Complete</strong>: 90%+ strings finalized</span>
         </li>
         <li class="flex items-center">
-          <span class="w-3 h-3 inline-block bg-primary-blue rounded-full mr-2"
+          <span class="bg-primary-blue mr-2 inline-block size-3 rounded-full"
           ></span>
           <span
             ><strong>Well Translated/Nearly Complete</strong>: 70%+ finalized or
@@ -326,12 +319,12 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
           >
         </li>
         <li class="flex items-center">
-          <span class="w-3 h-3 inline-block bg-yellow-500 rounded-full mr-2"
+          <span class="mr-2 inline-block size-3 rounded-full bg-yellow-500"
           ></span>
           <span><strong>In Progress</strong>: 50%+ combined progress</span>
         </li>
         <li class="flex items-center">
-          <span class="w-3 h-3 inline-block bg-orange-500 rounded-full mr-2"
+          <span class="mr-2 inline-block size-3 rounded-full bg-orange-500"
           ></span>
           <span
             ><strong>Getting Started/All Needs Review</strong>: Some strings
@@ -339,24 +332,23 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
           >
         </li>
         <li class="flex items-center">
-          <span class="w-3 h-3 inline-block bg-red-500 rounded-full mr-2"
-          ></span>
+          <span class="mr-2 inline-block size-3 rounded-full bg-red-500"></span>
           <span><strong>Not Started</strong>: No translation work yet</span>
         </li>
       </ul>
 
-      <h3 class="text-xl font-semibold mt-6 mb-3">Needs Review</h3>
+      <h3 class="mt-6 mb-3 text-xl font-semibold">Needs Review</h3>
       <p>
         Strings marked as "needs review" are translations that may need
         attention, such as strings that:
       </p>
-      <ul class="list-disc list-inside mt-2 space-y-1 text-mid-gray">
+      <ul class="text-mid-gray mt-2 list-inside list-disc space-y-1">
         <li>Were automatically translated and need human verification</li>
         <li>May not match the context correctly</li>
         <li>Need updates after the source string changed</li>
       </ul>
 
-      <h3 class="text-xl font-semibold mt-6 mb-3">Working with Translations</h3>
+      <h3 class="mt-6 mb-3 text-xl font-semibold">Working with Translations</h3>
       <p>
         On a language page, you can download translations as CSV files to work
         on them in spreadsheet software. After making changes, you can
@@ -368,12 +360,12 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
         >, then test locally and create a pull request with your changes.
       </p>
 
-      <div class="divider my-6 border-t border-gray-700"></div>
+      <div class="my-6 border-t border-gray-700"></div>
 
       <p class="mt-6 mb-4">
         Find an issue with existing translations or have general feedback? Email <a
           href="mailto:i18n@blankie.rest"
-          class="text-yellow-500 hover:text-yellow-400 transition-colors"
+          class="text-yellow-500 transition-colors hover:text-yellow-400"
           >i18n@blankie.rest</a
         >.
       </p>
@@ -394,7 +386,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
       dropdownMenu.classList.toggle("hidden");
       dropdownButton.setAttribute(
         "aria-expanded",
-        isExpanded ? "true" : "false"
+        isExpanded ? "true" : "false",
       );
     });
 

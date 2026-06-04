@@ -51,11 +51,11 @@ export function MobileNav({
                     "rounded-md px-3 py-2 text-base no-underline transition-colors hover:bg-white/5 hover:text-yellow-500",
                     currentPath === l.href && "text-yellow-500",
                   )}
-                />
+                >
+                  {l.label}
+                </a>
               }
-            >
-              {l.label}
-            </SheetClose>
+            />
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-2 p-4">
@@ -70,7 +70,7 @@ export function MobileNav({
           </a>
           <a
             href="/?section=download"
-            className="rounded-full bg-primary-blue px-6 py-2 text-center text-sm font-normal text-white no-underline transition-all duration-300 hover:bg-deep-blue"
+            className="bg-primary-blue hover:bg-deep-blue rounded-full px-6 py-2 text-center text-sm font-normal text-white no-underline transition-all duration-300"
           >
             Download
           </a>

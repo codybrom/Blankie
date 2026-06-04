@@ -1,4 +1,10 @@
 {
+  "prettier.requireConfig": true,
+  "prettier.ignorePath": "docs/.prettierignore",
+  "[javascript][javascriptreact][typescript][typescriptreact][json][jsonc][astro][css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
   "astro.content-intellisense": true,
   "astro.language-server.ls-path": "docs/node_modules/@astrojs/language-server/bin/nodeServer.js",
   "astro.trace.server": "messages",

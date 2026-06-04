@@ -1,0 +1,8 @@
+node_modules
+dist
+**/.astro
+**/*.md
+package-lock.json
+package.json
+public
+components.json

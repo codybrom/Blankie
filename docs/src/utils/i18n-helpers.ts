@@ -34,23 +34,23 @@ export function getLanguageName(localeCode: string): string {
 export function getNativeLanguageName(localeCode: string): string {
   // Extract base language code
   const baseCode = localeCode.split("-")[0];
-  
+
   // Try to get the native name from ISO6391
   if (ISO6391.validate(baseCode)) {
     const nativeName = ISO6391.getNativeName(baseCode);
-    
+
     // Add specific native names for variants
     const nativeVariants: Record<string, string> = {
-      "en": "English",
+      en: "English",
       "en-GB": "English",
       "pt-PT": "Português",
       "zh-Hans": "简体中文",
       "zh-Hant": "繁體中文",
     };
-    
+
     return nativeVariants[localeCode] || nativeName;
   }
-  
+
   return localeCode;
 }
 
@@ -58,7 +58,7 @@ export function getNativeLanguageName(localeCode: string): string {
 export function getTranslatorCredits(langCode: string): string[] {
   // Use native name to match credits.json format
   const nativeName = getNativeLanguageName(langCode);
-  
+
   const translators = creditsJson.translators as Record<string, string[]>;
   return translators[nativeName] || [];
 }

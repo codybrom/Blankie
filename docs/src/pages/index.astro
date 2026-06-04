@@ -29,32 +29,30 @@ const title = "Ambient sound mixer for macOS";
 <Layout title={title}>
   <!-- Hero Section -->
   <section
-    class="relative overflow-hidden bg-black text-white min-h-screen flex items-center justify-center"
+    class="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-white"
   >
     <BackgroundVideo videoSrc={wavesVideo} posterSrc={wavesPoster.src} />
-    <div class="relative z-10 max-w-4xl mx-auto px-5 text-center py-16 mt-8">
+    <div class="relative z-10 mx-auto mt-8 max-w-4xl px-5 py-16 text-center">
       <a
         href="/i18n/"
-        class="group mt-6 inline-flex items-center gap-2 rounded-full bg-card px-4 py-1.5 text-sm font-medium tracking-wide text-gray-200 ring-1 ring-foreground/10 transition-colors hover:ring-foreground/25 no-underline"
+        class="group bg-card ring-foreground/10 hover:ring-foreground/25 mt-6 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium tracking-wide text-gray-200 no-underline ring-1 transition-colors"
       >
-        <Globe className="size-4 shrink-0 text-primary" strokeWidth={1.75} />
-        Now available in Deutsch, Español, Français, Italiano, Magyar, Polski, 日本語, 한국어, Português, Türkçe and 简体中文!
+        <Globe className="text-primary size-4 shrink-0" strokeWidth={1.75} />
+        Now available in Deutsch, Español, Français, Italiano, Magyar, Polski, 日本語,
+        한국어, Português, Türkçe and 简体中文!
         <span
           class="shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5"
-          aria-hidden="true"
-          >→</span
+          aria-hidden="true">→</span
         >
       </a>
 
       <h1
-        class="text-5xl md:text-6xl font-semibold leading-tight tracking-tighter my-4"
+        class="my-4 text-5xl/tight font-semibold tracking-tighter md:text-6xl"
       >
         Ambient sounds&nbsp;for your&nbsp;flow&nbsp;state.
       </h1>
-      <h2
-        class="text-2xl md:text-3xl font-normal leading-normal tracking-tight mb-6"
-      >
-        <div class="flex justify-center flex-row space-x-2">
+      <h2 class="mb-6 text-2xl/normal font-normal tracking-tight md:text-3xl">
+        <div class="flex flex-row justify-center space-x-2">
           <span class="hidden sm:inline">Focus better.</span>
           <span class="hidden sm:inline">Work smarter.</span>
           <span class="hidden sm:inline">Rest deeper.</span>
@@ -74,20 +72,20 @@ const title = "Ambient sound mixer for macOS";
           width={800}
           height={454}
           loading="eager"
-          class="rounded-lg mx-auto my-12 max-w-full block w-full md:w-200 cursor-pointer ring-1 ring-white/10 transition duration-300 hover:scale-[1.02] hover:ring-white/20"
+          class="mx-auto my-12 block w-full max-w-full cursor-pointer rounded-lg ring-1 ring-white/10 transition duration-300 hover:scale-[1.02] hover:ring-white/20 md:w-200"
           quality={90}
         />
       </a>
 
       <!-- Social Proof Section -->
-      <div class="flex flex-col items-center gap-4 mb-8">
+      <div class="mb-8 flex flex-col items-center gap-4">
         <!-- Featured Badges Row -->
         <div class="flex flex-wrap justify-center gap-4">
           <!-- Mac App Store Featured Badge -->
           <a
             href="https://apps.apple.com/app/blankie/id6740096581"
             target="_blank"
-            class="relative inline-flex items-center gap-2 px-6 py-3 bg-card rounded-full ring-1 ring-foreground/10 hover:ring-foreground/25 transition-colors duration-200"
+            class="bg-card ring-foreground/10 hover:ring-foreground/25 relative inline-flex items-center gap-2 rounded-full px-6 py-3 ring-1 transition-colors duration-200"
           >
             <!-- Left Laurel -->
             <img
@@ -98,13 +96,13 @@ const title = "Ambient sound mixer for macOS";
               class="inline-block"
               style="filter: invert(84%) sepia(28%) saturate(668%) hue-rotate(345deg) brightness(91%) contrast(88%); opacity: 0.7;"
             />
-            <div class="text-center px-2">
+            <div class="px-2 text-center">
               <div
-                class="text-xs text-yellow-500 font-bold uppercase tracking-wider"
+                class="text-xs font-bold tracking-wider text-yellow-500 uppercase"
               >
                 Mac App Store
               </div>
-              <div class="text-sm text-gray-200 font-semibold italic">
+              <div class="text-sm font-semibold text-gray-200 italic">
                 Best New Apps and Updates
               </div>
               <div class="text-xs text-gray-400">United States • May 2025</div>
@@ -124,15 +122,15 @@ const title = "Ambient sound mixer for macOS";
           <a
             href="https://www.producthunt.com/products/blankie?embed=true&utm_source=badge-top-post-topic-badge&utm_medium=badge&utm_source=badge-blankie"
             target="_blank"
-            class="inline-flex items-center px-6 py-3 bg-card rounded-full ring-1 ring-foreground/10 hover:ring-foreground/25 transition-colors duration-200"
+            class="bg-card ring-foreground/10 hover:ring-foreground/25 inline-flex items-center rounded-full px-6 py-3 ring-1 transition-colors duration-200"
           >
             <div class="text-center">
               <div
-                class="text-xs text-orange-500 font-bold uppercase tracking-wider"
+                class="text-xs font-bold tracking-wider text-orange-500 uppercase"
               >
                 Product Hunt
               </div>
-              <div class="text-sm text-gray-200 font-semibold italic">
+              <div class="text-sm font-semibold text-gray-200 italic">
                 #4 Product of the Month
               </div>
               <div class="text-xs text-gray-400">
@@ -146,12 +144,12 @@ const title = "Ambient sound mixer for macOS";
         <div class="flex flex-wrap justify-center gap-4">
           <!-- Combined Stats Box -->
           <div
-            class="inline-flex items-center gap-6 px-8 py-3 bg-card rounded-full ring-1 ring-foreground/10"
+            class="bg-card ring-foreground/10 inline-flex items-center gap-6 rounded-full px-8 py-3 ring-1"
           >
             <!-- Rating -->
             <div class="flex items-center gap-2">
               <svg
-                class="w-5 h-5 text-yellow-500"
+                class="size-5 text-yellow-500"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 aria-hidden="true"
@@ -164,11 +162,11 @@ const title = "Ambient sound mixer for macOS";
               <span class="text-gray-400">Global App Store Rating</span>
             </div>
             <!-- Divider -->
-            <div class="w-px h-6 bg-zinc-700"></div>
+            <div class="h-6 w-px bg-zinc-700"></div>
             <!-- Downloads -->
             <div class="flex items-center gap-2">
               <svg
-                class="w-5 h-5 text-primary-blue"
+                class="text-primary-blue size-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -190,13 +188,13 @@ const title = "Ambient sound mixer for macOS";
 
       <div
         id="download"
-        class="flex flex-col items-center max-w-fit mx-auto gap-y-4 mt-4"
+        class="mx-auto mt-4 flex max-w-fit flex-col items-center gap-y-4"
       >
         <!-- Primary Download -->
         <div class="flex flex-col items-center">
           <a
             href="https://apps.apple.com/app/blankie/id6740096581"
-            class="hover:opacity-90 transition-all duration-300"
+            class="transition-all duration-300 hover:opacity-90"
           >
             <img
               src={macAppStoreBadge.src}
@@ -208,45 +206,45 @@ const title = "Ambient sound mixer for macOS";
               style="user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;"
             />
           </a>
-          <span class="text-xs text-gray-200 mt-2 font-bold"
+          <span class="mt-2 text-xs font-bold text-gray-200"
             >Recommended Method • Automatic Updates</span
           >
         </div>
 
         <!-- Alternative Options -->
-        <div class="flex flex-col gap-2 items-center text-sm">
-          <div class="flex flex-col sm:flex-row gap-1 sm:gap-3 items-center">
+        <div class="flex flex-col items-center gap-2 text-sm">
+          <div class="flex flex-col items-center gap-1 sm:flex-row sm:gap-3">
             <a
               href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
-              class="text-yellow-300 hover:text-yellow-200 transition-colors underline"
+              class="text-yellow-300 underline transition-colors hover:text-yellow-200"
             >
               Direct Download
             </a>
-            <span class="hidden sm:inline text-gray-400">•</span>
+            <span class="hidden text-gray-400 sm:inline">•</span>
             <a
               href="#brew"
-              class="text-yellow-300 hover:text-yellow-200 transition-colors underline"
+              class="text-yellow-300 underline transition-colors hover:text-yellow-200"
             >
               Install via Homebrew
             </a>
           </div>
-          <span class="text-xs text-gray-400 text-center">
+          <span class="text-center text-xs text-gray-400">
             Verified by Apple • Manual Updates Only</span
           >
         </div>
       </div>
       <p
-        class="text-lg mt-12 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-2 text-gray-100"
+        class="mt-12 flex flex-col items-center justify-center gap-2 text-lg text-gray-100 sm:flex-row sm:gap-2"
       >
         <span>macOS 14.6+</span>
-        <span class="hidden sm:inline text-gray-400">•</span>
+        <span class="hidden text-gray-400 sm:inline">•</span>
         <span class="sm:ml-2">No Ads or Subscriptions</span>
-        <span class="hidden sm:inline text-gray-400">•</span>
+        <span class="hidden text-gray-400 sm:inline">•</span>
         <span class="sm:ml-2">Offline & Private</span>
-        <span class="hidden sm:inline text-gray-400">•</span>
+        <span class="hidden text-gray-400 sm:inline">•</span>
         <a
           href="/contributing/"
-          class="hover:text-yellow-500 transition-colors duration-300 sm:ml-2"
+          class="transition-colors duration-300 hover:text-yellow-500 sm:ml-2"
         >
           Open Source
         </a>
@@ -255,13 +253,13 @@ const title = "Ambient sound mixer for macOS";
   </section>
 
   <!-- Features Section -->
-  <section class="max-w-5xl mx-auto px-5 py-10" id="features">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+  <section class="mx-auto max-w-5xl px-5 py-10" id="features">
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
       <a
         href="/features/#high-quality-audio"
-        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
       >
-        <SlidersHorizontal className="size-7 text-primary" strokeWidth={1.75} />
+        <SlidersHorizontal className="text-primary size-7" strokeWidth={1.75} />
         <h3
           class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
         >
@@ -283,9 +281,9 @@ const title = "Ambient sound mixer for macOS";
 
       <a
         href="/features/#preset-perfection"
-        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
       >
-        <Bookmark className="size-7 text-primary" strokeWidth={1.75} />
+        <Bookmark className="text-primary size-7" strokeWidth={1.75} />
         <h3
           class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
         >
@@ -307,9 +305,9 @@ const title = "Ambient sound mixer for macOS";
 
       <a
         href="/i18n/"
-        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
       >
-        <Languages className="size-7 text-primary" strokeWidth={1.75} />
+        <Languages className="text-primary size-7" strokeWidth={1.75} />
         <h3
           class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
         >
@@ -331,10 +329,11 @@ const title = "Ambient sound mixer for macOS";
 
       <a
         href="/features/#made-for-macos"
-        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
       >
-        <span class="block text-3xl leading-none text-primary" aria-hidden="true"
-          ></span
+        <span
+          class="text-primary block text-3xl leading-none"
+          aria-hidden="true"></span
         >
         <h3
           class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
@@ -357,9 +356,9 @@ const title = "Ambient sound mixer for macOS";
       </a>
       <a
         href="/privacy/"
-        class="group block rounded-xl bg-card p-8 ring-1 ring-foreground/10 transition duration-200 hover:ring-foreground/25"
+        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
       >
-        <InfinityIcon className="size-7 text-primary" strokeWidth={1.75} />
+        <InfinityIcon className="text-primary size-7" strokeWidth={1.75} />
         <h3
           class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
         >
@@ -380,15 +379,15 @@ const title = "Ambient sound mixer for macOS";
       </a>
 
       <div
-        class="relative rounded-xl bg-card p-8 ring-1 ring-foreground/10 opacity-80"
+        class="bg-card ring-foreground/10 relative rounded-xl p-8 opacity-80 ring-1"
       >
         <span
-          class="absolute right-4 top-4 inline-flex items-center rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+          class="bg-secondary text-secondary-foreground absolute top-4 right-4 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
         >
           Coming Soon
         </span>
-        <FolderPlus className="size-7 text-mid-gray" strokeWidth={1.75} />
-        <h3 class="text-xl font-semibold mt-5 mb-2">Custom Sounds</h3>
+        <FolderPlus className="text-mid-gray size-7" strokeWidth={1.75} />
+        <h3 class="mt-5 mb-2 text-xl font-semibold">Custom Sounds</h3>
         <p class="text-mid-gray">
           Soon, you'll be able to add your own sounds for a truly custom mix.
         </p>
@@ -397,14 +396,14 @@ const title = "Ambient sound mixer for macOS";
   </section>
 
   <!-- Homebrew Installation Section -->
-  <section class="max-w-3xl mx-auto px-5 py-4 text-center" id="brew">
-    <h2 class="text-3xl font-semibold mb-6">Install with Homebrew</h2>
-    <Card className="p-8 mb-6 gap-0">
+  <section class="mx-auto max-w-3xl px-5 py-4 text-center" id="brew">
+    <h2 class="mb-6 text-3xl font-semibold">Install with Homebrew</h2>
+    <Card className="mb-6 gap-0 p-8">
       <p class="mb-4">
         You can install Blankie via Homebrew by running this in your Terminal:
       </p>
       <div
-        class="bg-black text-white py-3 px-4 rounded-md overflow-x-auto text-center cursor-pointer hover:bg-neutral-900 transition-colors duration-200 relative group"
+        class="group relative cursor-pointer overflow-x-auto rounded-md bg-black px-4 py-3 text-center text-white transition-colors duration-200 hover:bg-neutral-900"
         id="brew-command-container"
       >
         <pre
@@ -412,23 +411,23 @@ const title = "Ambient sound mixer for macOS";
 
         <!-- Hover overlay -->
         <div
-          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-black/70 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         >
-          <span class="text-white text-sm">Click to copy to clipboard</span>
+          <span class="text-sm text-white">Click to copy to clipboard</span>
         </div>
 
         <!-- Success message -->
         <div
           id="copy-success-message"
-          class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 rounded-md opacity-0 transition-opacity duration-300 pointer-events-none"
+          class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-black/80 opacity-0 transition-opacity duration-300"
         >
-          <span class="text-white text-sm">Copied to clipboard!</span>
+          <span class="text-sm text-white">Copied to clipboard!</span>
         </div>
       </div>
       <p class="text-mid-gray mt-4">
         Requires Homebrew to be installed on your Mac. Visit <a
           href="https://formulae.brew.sh/cask/blankie"
-          class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
           >brew.sh</a
         > for more information.
       </p>
@@ -436,9 +435,9 @@ const title = "Ambient sound mixer for macOS";
   </section>
 
   <!-- Coming Soon Section -->
-  <section class="max-w-3xl mx-auto px-5 py-4 text-center">
-    <div class="rounded-xl bg-card ring-1 ring-foreground/10 p-8 mb-6">
-      <div class="flex items-center justify-center mb-4">
+  <section class="mx-auto max-w-3xl px-5 py-4 text-center">
+    <div class="bg-card ring-foreground/10 mb-6 rounded-xl p-8 ring-1">
+      <div class="mb-4 flex items-center justify-center">
         <h2 class="text-2xl font-semibold">
           Wish you could use Blankie on other devices?
         </h2>
@@ -450,18 +449,18 @@ const title = "Ambient sound mixer for macOS";
       </p>
       <a
         href="https://testflight.apple.com/join/XgpBpWv8"
-        class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-md bg-secondary text-foreground ring-1 ring-border hover:bg-secondary/80 transition-colors duration-200"
+        class="bg-secondary text-foreground ring-border hover:bg-secondary/80 inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-medium ring-1 transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
         <FlaskConical className="size-4" strokeWidth={1.75} />
         Join the TestFlight Beta
       </a>
-      <p class="text-xs text-white mt-4">
+      <p class="mt-4 text-xs text-white">
         Requires TestFlight to be installed on your device.
         <a
           href="https://developer.apple.com/testflight/"
-          class="text-yellow-400 hover:text-yellow-300 transition-colors underline"
+          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
           >Learn more about TestFlight</a
         >
       </p>
@@ -469,23 +468,23 @@ const title = "Ambient sound mixer for macOS";
   </section>
 
   <!-- Support Section -->
-  <section class="max-w-3xl mx-auto px-5 py-10 my-4 text-center">
-    <h2 class="text-xl font-semibold mb-2">
+  <section class="mx-auto my-4 max-w-3xl px-5 py-10 text-center">
+    <h2 class="mb-2 text-xl font-semibold">
       Blankie is made with love and caffeine
     </h2>
-    <p class="mb-6 text-gray-100 text-sm">
+    <p class="mb-6 text-sm text-gray-100">
       If you enjoy using it and want to support its creator and development, you
       can use the links below:
     </p>
-    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
       <a
         href="https://github.com/sponsors/codybrom"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-secondary ring-1 ring-border hover:bg-secondary/80 rounded-md transition-colors duration-200"
+        class="text-foreground bg-secondary ring-border hover:bg-secondary/80 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ring-1 transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
         <img
-          class="h-3.75 inline-block mr-2"
+          class="mr-2 inline-block h-3.75"
           src={ghSVG.src}
           alt=""
           width="15"
@@ -495,12 +494,12 @@ const title = "Ambient sound mixer for macOS";
       </a>
       <a
         href="https://buymeacoffee.com/codybrom"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-secondary ring-1 ring-border hover:bg-secondary/80 rounded-md transition-colors duration-200"
+        class="text-foreground bg-secondary ring-border hover:bg-secondary/80 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ring-1 transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
         <img
-          class="h-3.75 inline-block mr-2"
+          class="mr-2 inline-block h-3.75"
           src={bmcSVG.src}
           alt=""
           width="15"
@@ -510,12 +509,12 @@ const title = "Ambient sound mixer for macOS";
       </a>
       <a
         href="https://ko-fi.com/codybrom"
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground bg-secondary ring-1 ring-border hover:bg-secondary/80 rounded-md transition-colors duration-200"
+        class="text-foreground bg-secondary ring-border hover:bg-secondary/80 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ring-1 transition-colors duration-200"
         target="_blank"
         rel="noopener noreferrer"
       >
         <img
-          class="h-3.75 inline-block mr-2"
+          class="mr-2 inline-block h-3.75"
           src={kfSVG.src}
           alt=""
           width="15"
@@ -529,7 +528,7 @@ const title = "Ambient sound mixer for macOS";
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const brewCommandContainer = document.getElementById(
-        "brew-command-container"
+        "brew-command-container",
       );
       const successMessage = document.getElementById("copy-success-message");
 

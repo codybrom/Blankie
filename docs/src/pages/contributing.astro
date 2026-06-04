@@ -35,7 +35,7 @@ function rewriteGitHubLinks(content: string) {
 
       // Return the formatted GitHub link
       return `${linkText}(https://github.com/codybrom/blankie/blob/main/${linkPath})`;
-    }
+    },
   );
 }
 
@@ -90,20 +90,20 @@ const tocItems = processedSections
 ---
 
 <Layout title={title}>
-  <main class="max-w-5xl mx-auto px-5 pt-28 pb-10">
-    <h1 class="text-4xl font-semibold mb-6">Contributing to Blankie</h1>
+  <main class="mx-auto max-w-5xl px-5 pt-28 pb-10">
+    <h1 class="mb-6 text-4xl font-semibold">Contributing to Blankie</h1>
 
-    <Card className="mb-8 p-6 text-base gap-0">
-      <p class="text-md leading-relaxed">
+    <Card className="mb-8 gap-0 p-6 text-base">
+      <p class="leading-relaxed">
         {introText}
       </p>
     </Card>
 
     <!-- Table of Contents -->
-    <Card className="mb-8 p-6 gap-0">
-      <h2 class="text-2xl font-semibold mb-4 text-base">Table of Contents</h2>
+    <Card className="mb-8 gap-0 p-6">
+      <h2 class="mb-4 text-2xl text-base font-semibold">Table of Contents</h2>
       <nav>
-        <ul class="list-disc list-inside space-y-2">
+        <ul class="list-inside list-disc space-y-2">
           {
             tocItems.map(({ title, titleId, subItems }) => (
               <li>
@@ -111,7 +111,7 @@ const tocItems = processedSections
                   {title}
                 </a>
                 {subItems.length > 0 && (
-                  <ul class="list-disc list-inside ml-4 mt-2 space-y-2">
+                  <ul class="mt-2 ml-4 list-inside list-disc space-y-2">
                     {subItems.map((item) => (
                       <li>
                         <a
@@ -139,17 +139,17 @@ const tocItems = processedSections
             <Card className="p-6 gap-0">
               <h2
                 id={titleId}
-                class="group text-2xl font-semibold mb-4 text-base"
+                class="group mb-4 text-2xl text-base font-semibold"
               >
                 {title}
                 <a
                   href={`#${titleId}`}
-                  class="ml-2 opacity-0 group-hover:opacity-100 text-yellow-500"
+                  class="ml-2 text-yellow-500 opacity-0 group-hover:opacity-100"
                 >
                   #
                 </a>
               </h2>
-              <div class="prose prose-lg prose-invert max-w-none prose-headings:text-base">
+              <div class="prose prose-lg prose-invert prose-headings:text-base max-w-none">
                 <Fragment set:html={content} />
               </div>
             </Card>
@@ -157,7 +157,7 @@ const tocItems = processedSections
             <div class="prose prose-lg prose-invert max-w-none">
               <Fragment set:html={content} />
             </div>
-          )
+          ),
         )
       }
     </div>

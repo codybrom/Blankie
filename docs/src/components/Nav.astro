@@ -16,10 +16,10 @@ const navLinks: NavLink[] = [
 ---
 
 <header
-  class="bg-black/80 backdrop-blur-md border-b border-white/10 fixed w-full top-0 z-50"
+  class="fixed top-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur-md"
 >
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-    <nav class="flex justify-between items-center">
+  <div class="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
+    <nav class="flex items-center justify-between">
       <a
         href="/"
         class="flex items-center gap-x-3 text-white no-underline"
@@ -31,7 +31,7 @@ const navLinks: NavLink[] = [
           width={40}
           height={33}
           loading="eager"
-          class="h-10 w-10 object-contain"
+          class="size-10 object-contain"
           style={{ aspectRatio: "802/666" }}
         />
         <div class="flex items-baseline">
@@ -41,13 +41,13 @@ const navLinks: NavLink[] = [
       </a>
 
       <!-- Desktop Navigation (lg+) -->
-      <div class="hidden lg:flex items-center gap-x-4">
+      <div class="hidden items-center gap-x-4 lg:flex">
         {
           navLinks.map((link) => (
             <a
               href={link.href}
               class:list={[
-                "text-white text-sm hover:text-yellow-500 transition-colors duration-200",
+                "text-sm text-white transition-colors duration-200 hover:text-yellow-500",
                 { "text-yellow-500": currentPath === link.href },
               ]}
             >
@@ -59,7 +59,7 @@ const navLinks: NavLink[] = [
         <GithubStars />
         <a
           href="/?section=download"
-          class="bg-primary-blue text-white py-2 px-6 rounded-full text-sm font-normal transition-all duration-300 hover:bg-deep-blue no-underline"
+          class="bg-primary-blue hover:bg-deep-blue rounded-full px-6 py-2 text-sm font-normal text-white no-underline transition-all duration-300"
         >
           Download
         </a>

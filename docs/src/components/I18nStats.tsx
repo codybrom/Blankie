@@ -75,7 +75,7 @@ function ProgressLegend({
         {finalizedPct}% finalized
       </span>
       {needsReview > 0 && (
-        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+        <span className="text-muted-foreground inline-flex items-center gap-1.5">
           <span className="size-2 rounded-full bg-amber-400" />
           {reviewPct}% in review
         </span>
@@ -88,7 +88,10 @@ function viewButton(href: string, className = "") {
   return (
     <a
       href={href}
-      className={cn(buttonVariants({ variant: "outline", size: "sm" }), className)}
+      className={cn(
+        buttonVariants({ variant: "outline", size: "sm" }),
+        className,
+      )}
     >
       View Details →
     </a>
@@ -106,7 +109,7 @@ function StringsCount({
   return (
     <>
       {translated}
-      <span className="mx-1 text-muted-foreground">/</span>
+      <span className="text-muted-foreground mx-1">/</span>
       {total}
     </>
   );
@@ -121,7 +124,7 @@ export function I18nStats({ rows }: { rows: LanguageRow[] }) {
   return (
     <>
       {/* Desktop / tablet: table */}
-      <div className="hidden overflow-hidden rounded-lg border border-border bg-card md:block">
+      <div className="border-border bg-card hidden overflow-hidden rounded-lg border md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -137,7 +140,7 @@ export function I18nStats({ rows }: { rows: LanguageRow[] }) {
               <TableRow key={r.langCode}>
                 <TableCell className="py-4 align-top">
                   <div className="font-medium">{r.title}</div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">
+                  <div className="text-muted-foreground mt-0.5 text-xs">
                     {r.subtitle} ·{" "}
                     <code className="text-yellow-500">{r.langCode}</code>
                   </div>
@@ -154,7 +157,7 @@ export function I18nStats({ rows }: { rows: LanguageRow[] }) {
                     finalizedPct={r.finalizedPct}
                     reviewPct={r.reviewPct}
                     needsReview={r.needsReview}
-                    className="mt-1.5 text-xs text-muted-foreground"
+                    className="text-muted-foreground mt-1.5 text-xs"
                   />
                 </TableCell>
                 <TableCell className="py-4 text-right align-top text-sm tabular-nums">
@@ -162,7 +165,7 @@ export function I18nStats({ rows }: { rows: LanguageRow[] }) {
                     <StringsCount translated={r.translated} total={r.total} />
                   </div>
                   {r.needsReview > 0 && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-muted-foreground text-xs">
                       {r.needsReview} need review
                     </div>
                   )}
@@ -182,14 +185,14 @@ export function I18nStats({ rows }: { rows: LanguageRow[] }) {
           <div
             key={r.langCode}
             className={cn(
-              "rounded-lg border border-border border-l-4 bg-card p-4",
+              "border-border bg-card rounded-lg border border-l-4 p-4",
               r.accentClass,
             )}
           >
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="text-lg font-semibold">{r.title}</div>
-                <div className="mt-0.5 text-sm text-muted-foreground">
+                <div className="text-muted-foreground mt-0.5 text-sm">
                   {r.subtitle} ·{" "}
                   <code className="text-yellow-500">{r.langCode}</code>
                 </div>
