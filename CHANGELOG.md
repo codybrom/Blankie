@@ -31,6 +31,7 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - **VoiceOver support** - labeled controls throughout, sliders that announce and adjust volume, sounds that announce their selection state, grouped sound credits and color pickers, and a Now Playing screen that properly holds focus
 - **Full keyboard control of the sound grid** (macOS) - Tab to any sound, Space to toggle it, arrow keys to adjust its volume
 - **Dynamic Type support** - text scales to the preferred reading size with adaptive layouts and 44-point minimum touch targets
+- **Smooth fades and crossfades** - sounds ease in and out when played, paused, or toggled, and switching presets crossfades between mixes
 - Play/Pause command in the macOS menu bar (Controls menu)
 - Polish (Polski) translation support - thanks to **Kristopheros** (now 12 languages total)
 - CodeQL security scanning workflows
@@ -39,6 +40,7 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 
 - Migrated all audio from MP3 to M4A (AAC)
 - Re-normalized every built-in sound with two-way K-weighted (LUFS) loudness analysis so the whole library plays at a consistent level
+- Rebuilt audio playback on a shared audio engine so loudness normalization can now genuinely boost quiet sounds to the library's target level, a peak limiter on the final mix can prevent clipping, and playback can survives output-device switches and system audio resets
 - Rebuilt Settings and Preferences rows with idiomatic SwiftUI (Picker, LabeledContent, NavigationLink) so assistive technologies handle them natively
 - Rebuilt the documentation website on Astro 6
 - Improved German (Deutsch) translations - thanks to **H. Rapp**
@@ -47,6 +49,8 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 
 ### Fixed
 
+- Quieter sounds still played far below the rest of the library
+- Imported custom sounds could be over-boosted by imprecise loudness analysis
 - Audible pop when the fireplace sound loops
 
 ### Removed
