@@ -142,8 +142,11 @@ import SwiftUI
                   spreadOutSounds()
                 }
               } label: {
-                Label("Arrange", systemImage: "move.3d")
-                  .labelStyle(.titleAndIcon)
+                // Toolbars force Labels to icon-only; an HStack keeps the text.
+                HStack(spacing: 4) {
+                  Image(systemName: "move.3d")
+                  Text("Arrange")
+                }
               }
             }
           }
