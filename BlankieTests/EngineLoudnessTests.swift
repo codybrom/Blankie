@@ -31,7 +31,7 @@ final class EngineLoudnessTests: XCTestCase {
 
   /// The headline proof: fireplace (-42.89 LUFS source, factor 6.233) must
   /// come out of the graph at the target loudness. This is the bug.
-  func testFireplaceRendersAtTargetLUFS() throws {
+  func testFireplaceRendersAtTargetLUFS() async throws {
     let url = try bundledSoundURL("fireplace")
     let boostDB = 20 * log10(Float(6.233351))
 
@@ -47,7 +47,7 @@ final class EngineLoudnessTests: XCTestCase {
 
   /// Boat is gain-capped at +18 dB (maxGainDB) from -49.85 LUFS, so it can
   /// only reach ≈ -31.85 — assert the capped target, not -27.
-  func testBoatRendersAtGainCappedTarget() throws {
+  func testBoatRendersAtGainCappedTarget() async throws {
     let url = try bundledSoundURL("boat")
     let boostDB = 20 * log10(Float(7.943282))
 
@@ -65,7 +65,7 @@ final class EngineLoudnessTests: XCTestCase {
   /// Attenuation path: storm (factor 0.347 < 1) lands on target via node
   /// volume. Also answers empirically whether player-node volume applies when
   /// the node feeds an EQ rather than a mixer directly.
-  func testStormAttenuatesToTarget() throws {
+  func testStormAttenuatesToTarget() async throws {
     let url = try bundledSoundURL("storm")
     let buffer = try EngineRenderHarness.render(
       fileURL: url, boostDB: 0, attenuation: Float(0.34659564),
@@ -79,7 +79,7 @@ final class EngineLoudnessTests: XCTestCase {
 
   // MARK: - True-peak ceiling with limiter
 
-  func testTruePeakStaysUnderCeilingWithLimiter() throws {
+  func testTruePeakStaysUnderCeilingWithLimiter() async throws {
     let url = try bundledSoundURL("fireplace")
     let boostDB = 20 * log10(Float(6.233351))
 
@@ -107,7 +107,7 @@ final class EngineLoudnessTests: XCTestCase {
 
   /// Self-referential: measure the synthesized file, derive the boost the app
   /// would apply (clamped to maxGainDB), assert the render lands accordingly.
-  func testSynthesizedQuietToneBoosts() throws {
+  func testSynthesizedQuietToneBoosts() async throws {
     let url = try Self.makeQuietToneURL(channels: 2)
     defer { try? FileManager.default.removeItem(at: url) }
 
@@ -122,7 +122,7 @@ final class EngineLoudnessTests: XCTestCase {
   /// MONO sources lose ≈3 dB through the mixer (constant-power pan law on
   /// mono inputs). This test documents that behavior so Stage 3 knows to
   /// compensate mono customs (+3 dB or upmix at decode). Built-ins are stereo.
-  func testMonoSourceRendersThreeDBLow() throws {
+  func testMonoSourceRendersThreeDBLow() async throws {
     let url = try Self.makeQuietToneURL(channels: 1)
     defer { try? FileManager.default.removeItem(at: url) }
 

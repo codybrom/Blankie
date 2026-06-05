@@ -40,7 +40,7 @@ final class EngineLoopSeamTests: XCTestCase {
     return deltas.count % 2 == 1 ? deltas[mid] : (deltas[mid - 1] + deltas[mid]) / 2
   }
 
-  func testFireplaceLoopSeamContinuity() throws {
+  func testFireplaceLoopSeamContinuity() async throws {
     let url = try bundledSoundURL("fireplace")
     let file = try AVAudioFile(forReading: url)
     let sampleRate = file.processingFormat.sampleRate
@@ -93,7 +93,7 @@ final class EngineLoopSeamTests: XCTestCase {
       "Found \(longestSilentRun) frames (>5ms) of silence at the seam — a loop gap")
   }
 
-  func testRainLoopSeamRMSContinuity() throws {
+  func testRainLoopSeamRMSContinuity() async throws {
     let url = try bundledSoundURL("rain")
     let file = try AVAudioFile(forReading: url)
     let sampleRate = file.processingFormat.sampleRate
