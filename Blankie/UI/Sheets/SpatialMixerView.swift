@@ -321,6 +321,18 @@ import SwiftUI
           context.stroke(
             Path(ellipseIn: ring), with: .color(.secondary.opacity(0.2)), lineWidth: 1)
         }
+
+        // Dead zone: pins clamp to ≥0.5m from the listener, so disclose the
+        // keep-out spot with a dashed ring (matches the actual drag clamp).
+        let exclusionRadius = 0.5 * scale
+        let exclusion = CGRect(
+          x: center.x - exclusionRadius, y: center.y - exclusionRadius,
+          width: exclusionRadius * 2, height: exclusionRadius * 2)
+        context.fill(
+          Path(ellipseIn: exclusion), with: .color(.secondary.opacity(0.08)))
+        context.stroke(
+          Path(ellipseIn: exclusion), with: .color(.secondary.opacity(0.5)),
+          style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
       }
     }
 

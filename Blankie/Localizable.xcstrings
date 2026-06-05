@@ -27906,9 +27906,6 @@
         }
       }
     },
-    "You, facing up" : {
-
-    },
     "Your preset will include" : {
       "comment" : "A label displayed above a list of sounds that are included in a user's preset.",
       "localizations" : {
