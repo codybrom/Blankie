@@ -46,11 +46,27 @@ final class SpatialSessionManager: ObservableObject {
     AudioEngineManager.shared.applyHeadTrackingSetting()
 
     if isActive != wasActive {
-      if !isActive {
+      if isActive {
+        seedDefaultSpread()
+      } else {
         placements.removeAll()
         removedFromField.removeAll()
       }
       AudioManager.shared.applySpatialAudioSetting()
+    }
+  }
+
+  /// Seeds an even fan around the listener when a session starts (before the
+  /// rebuild, so players load straight into their spots) — the hash defaults
+  /// read as random clutter on first open.
+  @MainActor
+  private func seedDefaultSpread() {
+    let sounds = AudioManager.shared.sounds.filter { $0.isSelected && $0.isSpatialReady }
+    guard !sounds.isEmpty else { return }
+
+    let step = 360.0 / Float(sounds.count)
+    for (index, sound) in sounds.enumerated() {
+      placements[sound.fileName] = Placement(angle: Float(index) * step, distance: 2.0)
     }
   }
 

@@ -8946,7 +8946,7 @@
         }
       }
     },
-    "Drag pins to place. Tap a pin to remove it from the spatial map." : {
+    "Drag pins to place. Tap a pin to remove it from the spatial map. Placements aren't saved between sessions." : {
 
     },
     "Drag sounds to reorder" : {
@@ -12613,9 +12613,6 @@
           }
         }
       }
-    },
-    "In Your Head" : {
-
     },
     "Indigo" : {
       "comment" : "The name of an accent color the user can choose for the app's theme.",
@@ -16509,6 +16506,9 @@
         }
       }
     },
+    "Off the Map" : {
+
+    },
     "OK" : {
       "comment" : "The label for the OK button.",
       "extractionState" : "manual",
@@ -17963,9 +17963,6 @@
           }
         }
       }
-    },
-    "Placements aren't saved between sessions." : {
-
     },
     "Play" : {
       "comment" : "Accessibility label for the button that starts playback.",

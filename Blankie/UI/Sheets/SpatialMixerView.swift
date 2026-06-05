@@ -90,8 +90,9 @@ import SwiftUI
         VStack(spacing: 16) {
           controls
 
-          // Dim the empty field when no session is running (no sound icons),
-          // so the sheet doesn't collapse and the feature stays discoverable.
+          // Every state renders the same fixed layout (the strip reserves its
+          // space even when empty) so the map never resizes; pins and chips
+          // are the only things that come and go. Off = dimmed empty field.
           Group {
             SpatialGrid(
               sounds: session.isActive ? gridSounds : [],
@@ -100,30 +101,26 @@ import SwiftUI
             .aspectRatio(1, contentMode: .fit)
             .padding(.horizontal)
 
-            if session.isActive {
-              Text(
-                "Drag pins to place. Tap a pin to remove it from the spatial map. Placements aren't saved between sessions."
-              )
-              .font(.caption)
-              .foregroundColor(.secondary)
-              .multilineTextAlignment(.center)
-              .padding(.horizontal, 24)
+            Text(
+              "Drag pins to place. Tap a pin to remove it from the spatial map. Placements aren't saved between sessions."
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 24)
 
-              Button {
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
-                  spreadOutSounds()
-                }
-              } label: {
-                Label(
-                  "Spread Out",
-                  systemImage: "arrow.up.and.down.and.arrow.left.and.right")
+            Button {
+              withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
+                spreadOutSounds()
               }
-              .buttonStyle(.bordered)
-
-              if !parkedSounds.isEmpty {
-                ParkedSoundsRow(sounds: parkedSounds)
-              }
+            } label: {
+              Label(
+                "Spread Out",
+                systemImage: "arrow.up.and.down.and.arrow.left.and.right")
             }
+            .buttonStyle(.bordered)
+
+            ParkedSoundsRow(sounds: session.isActive ? parkedSounds : [])
           }
           .disabled(!session.isActive)
           .opacity(session.isActive ? 1 : 0.35)
@@ -347,30 +344,38 @@ import SwiftUI
 
   // MARK: - Parked Sounds (below the grid)
 
-  /// Sounds that aren't in the spatial field: taken out by tap, or long ones
+  /// Sounds that aren't on the spatial map: taken off by tap, or long ones
   /// that haven't rendered their mono variant yet. Tap to (prepare and) place.
+  /// Always occupies its height so the map above never resizes.
   private struct ParkedSoundsRow: View {
     let sounds: [Sound]
 
     var body: some View {
-      VStack(spacing: 6) {
-        Text("In Your Head")
-          .font(.caption2)
-          .textCase(.uppercase)
-          .foregroundColor(.secondary)
+      Group {
+        if sounds.isEmpty {
+          Color.clear
+        } else {
+          VStack(spacing: 4) {
+            Text("Off the Map")
+              .font(.caption2)
+              .textCase(.uppercase)
+              .foregroundColor(.secondary)
 
-        ScrollView(.horizontal, showsIndicators: false) {
-          HStack(spacing: 14) {
-            ForEach(sounds, id: \.id) { sound in
-              ParkedDot(sound: sound)
+            ScrollView(.horizontal, showsIndicators: false) {
+              HStack(spacing: 12) {
+                ForEach(sounds, id: \.id) { sound in
+                  ParkedDot(sound: sound)
+                }
+              }
+              .padding(.horizontal, 16)
+              .padding(.vertical, 6)
             }
+            .modernGlassEffect(cornerRadius: 14)
+            .padding(.horizontal, 16)
           }
-          .padding(.horizontal, 16)
-          .padding(.vertical, 10)
         }
-        .modernGlassEffect(cornerRadius: 16)
-        .padding(.horizontal, 16)
       }
+      .frame(height: 72)
     }
   }
 
@@ -427,6 +432,28 @@ import SwiftUI
     }
   }
 
+  /// Classic map-pin teardrop: circular head flowing into a tapered tail, as
+  /// one filled path (the tip is the precise placement point). Arc direction
+  /// verified: clockwise=false sweeps over the top in SwiftUI's flipped space.
+  private struct PinShape: Shape {
+    func path(in rect: CGRect) -> Path {
+      var path = Path()
+      let headRadius = rect.width / 2
+      let center = CGPoint(x: rect.midX, y: rect.minY + headRadius)
+      let theta: CGFloat = .pi / 4  // where the tail leaves the head
+
+      path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+      path.addLine(
+        to: CGPoint(
+          x: center.x - headRadius * cos(theta), y: center.y + headRadius * sin(theta)))
+      path.addArc(
+        center: center, radius: headRadius,
+        startAngle: .radians(.pi - theta), endAngle: .radians(theta), clockwise: false)
+      path.closeSubpath()
+      return path
+    }
+  }
+
   /// A wide pie slice pointing "up" (the canonical forward direction); the
   /// grid rotates it to the live head yaw.
   private struct FacingWedge: Shape {
@@ -475,24 +502,20 @@ import SwiftUI
         .gesture(dragGesture)
     }
 
-    /// Map-pin look: round head with the sound's icon, tapered tail pointing
-    /// at the placement, label underneath.
+    /// Map-pin look: a single teardrop silhouette (head + tapering tail in one
+    /// filled path) with the sound's icon in the head, label underneath.
     private var pin: some View {
-      VStack(spacing: 0) {
-        ZStack {
-          Circle()
-            .fill(.tint)
-            .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
-          Image(systemName: sound.systemIconName)
-            .font(.system(size: 14))
-            .foregroundStyle(.white)
-        }
-        .frame(width: 32, height: 32)
-
-        Image(systemName: "arrowtriangle.down.fill")
-          .font(.system(size: 11))
-          .foregroundStyle(.tint)
-          .offset(y: -4)
+      VStack(spacing: 2) {
+        PinShape()
+          .fill(.tint)
+          .overlay(alignment: .top) {
+            Image(systemName: sound.systemIconName)
+              .font(.system(size: 13))
+              .foregroundStyle(.white)
+              .frame(height: 30)  // centered in the head circle
+          }
+          .frame(width: 30, height: 42)
+          .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
 
         Text(sound.title)
           .font(.system(size: 9))
