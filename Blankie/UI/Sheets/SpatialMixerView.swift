@@ -102,7 +102,7 @@ import SwiftUI
 
             if session.isActive {
               Text(
-                "Drag pins to place. Tap a pin to remove it from the spatial map."
+                "Drag pins to place. Tap a pin to remove it from the spatial map. Placements aren't saved between sessions."
               )
               .font(.caption)
               .foregroundColor(.secondary)
@@ -205,10 +205,6 @@ import SwiftUI
             session.setMode(.fixed)
           }
         }
-
-        Text("Placements aren't saved between sessions.")
-          .font(.caption2)
-          .foregroundColor(.secondary)
 
         // Soft capability hints: the binaural render works on any headphones,
         // so we inform rather than gate.
@@ -466,7 +462,7 @@ import SwiftUI
       let distance = CGFloat(placement.distance)
       let radians = Double(placement.angle) * .pi / 180
 
-      dot
+      pin
         .position(
           x: center.x + CGFloat(sin(radians)) * distance * scale,
           y: center.y - CGFloat(cos(radians)) * distance * scale
@@ -479,13 +475,24 @@ import SwiftUI
         .gesture(dragGesture)
     }
 
-    private var dot: some View {
-      VStack(spacing: 2) {
-        Image(systemName: sound.systemIconName)
-          .font(.system(size: 15))
-          .foregroundStyle(.white)
-          .frame(width: 36, height: 36)
-          .background(Circle().fill(.tint))
+    /// Map-pin look: round head with the sound's icon, tapered tail pointing
+    /// at the placement, label underneath.
+    private var pin: some View {
+      VStack(spacing: 0) {
+        ZStack {
+          Circle()
+            .fill(.tint)
+            .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+          Image(systemName: sound.systemIconName)
+            .font(.system(size: 14))
+            .foregroundStyle(.white)
+        }
+        .frame(width: 32, height: 32)
+
+        Image(systemName: "arrowtriangle.down.fill")
+          .font(.system(size: 11))
+          .foregroundStyle(.tint)
+          .offset(y: -4)
 
         Text(sound.title)
           .font(.system(size: 9))
@@ -493,6 +500,8 @@ import SwiftUI
           .lineLimit(1)
           .frame(maxWidth: 64)
       }
+      // Nudge up so the tail's tip sits on the placement point.
+      .offset(y: -14)
       .accessibilityLabel("\(sound.title), placed in space")
     }
 
