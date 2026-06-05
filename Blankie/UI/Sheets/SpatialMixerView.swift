@@ -155,7 +155,7 @@ import SwiftUI
           }
         }
       }
-      .presentationDetents([.fraction(0.8)])
+      .presentationDetents([.large])
       .presentationDragIndicator(.visible)
       .presentationBackground {
         // More translucent than a stock material: let the mixer glow through.
