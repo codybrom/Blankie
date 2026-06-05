@@ -148,6 +148,7 @@ import SwiftUI
                   Text("Arrange")
                 }
               }
+              .tint(.primary)
             }
           }
           ToolbarItem(placement: .principal) {
@@ -379,14 +380,18 @@ import SwiftUI
               .textCase(.uppercase)
               .foregroundColor(.secondary)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-              HStack(spacing: 12) {
-                ForEach(sounds, id: \.id) { sound in
-                  ParkedDot(sound: sound)
+            GeometryReader { geo in
+              ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                  ForEach(sounds, id: \.id) { sound in
+                    ParkedDot(sound: sound)
+                  }
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 6)
+                // Centered while the chips fit; overflow still scrolls.
+                .frame(minWidth: geo.size.width)
               }
-              .padding(.horizontal, 16)
-              .padding(.vertical, 6)
             }
             .modernGlassEffect(cornerRadius: 14)
             .padding(.horizontal, 16)
