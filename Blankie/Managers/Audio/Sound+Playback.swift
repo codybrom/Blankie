@@ -106,10 +106,7 @@ extension Sound {
   }
 
   func pause(immediate: Bool = false) {
-    guard let currentPlayer = player else {
-      Logger.sounds.debug("Sound: No player to pause for '\(self.fileName)'")
-      return
-    }
+    guard let currentPlayer = player else { return }
 
     if immediate {
       currentPlayer.stop()
@@ -118,10 +115,7 @@ extension Sound {
     } else {
       // Nothing audible to fade (already stopped/paused) — bail rather than
       // flip a .stopped sound to .paused and corrupt resume semantics.
-      guard currentPlayer.isPlaying || playbackState == .playing else {
-        Logger.sounds.debug("Sound: Nothing to pause for '\(self.fileName)'")
-        return
-      }
+      guard currentPlayer.isPlaying || playbackState == .playing else { return }
       // Fade out, then pause. State flips to .paused right away so UI and
       // playback logic treat the sound as paused during the ramp; play() can
       // rescue a mid-fade pause by ramping back up.

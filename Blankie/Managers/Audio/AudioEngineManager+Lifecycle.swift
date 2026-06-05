@@ -52,11 +52,14 @@ extension AudioEngineManager {
       "AudioEngineManager: Configuration change (wasPlaying: \(wasPlaying))")
 
     // Snapshot positions: freeze() strictly BEFORE node.stop() (stop zeroes
-    // the player timeline). Record who was playing for the resume pass.
+    // the player timeline). Skip players mid-fade-to-silence: their node is
+    // still rendering the ramp but they're logically paused — resuming them
+    // here would resurrect them at full volume with nothing left to stop
+    // them (Quick Mix exit racing a CarPlay detach did exactly that).
     var resumeFrames: [ObjectIdentifier: AVAudioFramePosition] = [:]
     for (key, player) in registered {
       player.freeze()
-      if player.isPlaying {
+      if player.isPlaying, !player.isFadingToSilence {
         resumeFrames[key] = player.currentFrame
       }
     }

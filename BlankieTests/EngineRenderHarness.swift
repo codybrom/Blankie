@@ -99,13 +99,15 @@ enum EngineRenderHarness {
       limiter = nil
     }
 
+    // Mirror production wiring (AudioEngineManager): per-sound chain feeds the
+    // main mixer, and the limiter sits on the mix bus after it — so the
+    // limiter sees post-pan-law levels, exactly as it does in the app.
     let mixer = engine.mainMixerNode
     engine.connect(player, to: eq, format: format)
+    engine.connect(eq, to: mixer, format: format)
     if let limiter {
-      engine.connect(eq, to: limiter, format: format)
-      engine.connect(limiter, to: mixer, format: format)
-    } else {
-      engine.connect(eq, to: mixer, format: format)
+      engine.connect(mixer, to: limiter, format: nil)
+      engine.connect(limiter, to: engine.outputNode, format: nil)
     }
 
     player.volume = attenuation

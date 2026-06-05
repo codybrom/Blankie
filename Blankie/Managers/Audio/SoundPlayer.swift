@@ -69,6 +69,11 @@ final class SoundPlayer {
   private(set) var fadeLevel: Float = 1
   private var fadeTimer: Timer?
 
+  /// True while a fade is ramping toward silence (pause/stop intent). Lets
+  /// the engine rebuild skip resurrecting a node that is audibly fading out
+  /// but already logically paused.
+  private(set) var isFadingToSilence = false
+
   // MARK: - Init
 
   init(fileURL: URL, loops: Bool, spatial: Bool = false, spatialBoostDB: Float = 0) throws {
@@ -222,6 +227,7 @@ final class SoundPlayer {
   /// Sets the fade layer instantly (e.g. to 0 just before a fade-in starts).
   func setFadeLevel(_ level: Float) {
     fadeTimer?.invalidate()
+    isFadingToSilence = false
     fadeLevel = max(0, min(level, 1))
     applyVolume()
   }
@@ -232,11 +238,13 @@ final class SoundPlayer {
     fadeTimer?.invalidate()
     let clampedTarget = max(0, min(target, 1))
     guard duration > 0, abs(clampedTarget - fadeLevel) > 0.001 else {
+      isFadingToSilence = false
       fadeLevel = clampedTarget
       applyVolume()
       completion?()
       return
     }
+    isFadingToSilence = clampedTarget == 0
 
     let start = fadeLevel
     let steps = max(Int(duration * 30), 1)
@@ -256,6 +264,7 @@ final class SoundPlayer {
 
       if currentStep >= steps {
         timer.invalidate()
+        self.isFadingToSilence = false
         self.fadeLevel = clampedTarget
         self.applyVolume()
         completion?()
@@ -385,6 +394,7 @@ final class SoundPlayer {
   func stop() {
     generation += 1
     fadeTimer?.invalidate()
+    isFadingToSilence = false
     if node.engine != nil {
       node.stop()
     }
@@ -398,6 +408,7 @@ final class SoundPlayer {
     let clamped = max(0, min(frame, max(totalFrames - 1, 0)))
     generation += 1
     fadeTimer?.invalidate()
+    isFadingToSilence = false
     if node.engine != nil {
       node.stop()
     }
