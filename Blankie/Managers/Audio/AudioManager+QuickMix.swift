@@ -62,6 +62,10 @@ extension AudioManager {
     // Enable only the valid initial sounds
     for sound in validInitialSounds {
       sound.isSelected = true
+      // Spatial is preset-only; rebuild a spatially-loaded player flat.
+      if sound.player?.isSpatial == true {
+        sound.unload()
+      }
       sound.play()
     }
 
@@ -80,6 +84,7 @@ extension AudioManager {
   func exitQuickMix() {
     guard isQuickMix else { return }
     Logger.audio.debug("AudioManager: Exiting Quick Mix mode")
+    defer { applyPresetSpatialArrangement() }
 
     // Pause all current sounds
     for sound in sounds {
@@ -148,6 +153,10 @@ extension AudioManager {
       sound.pause()
     } else {
       sound.isSelected = true
+      // Spatial is preset-only; rebuild a spatially-loaded player flat.
+      if sound.player?.isSpatial == true {
+        sound.unload()
+      }
       sound.play()
     }
 

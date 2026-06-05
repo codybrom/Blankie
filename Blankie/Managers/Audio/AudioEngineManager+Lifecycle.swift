@@ -61,12 +61,11 @@ extension AudioEngineManager {
       }
     }
 
-    // Stop all, then re-establish per-sound edges and the mix-bus chain.
+    // Stop all, then re-establish per-sound edges and the mix-bus chains.
+    resetEnvironmentConnection()
     for (_, player) in registered {
       player.stop()
-      let format = player.file.processingFormat
-      engine.connect(player.node, to: player.gain, format: format)
-      engine.connect(player.gain, to: engine.mainMixerNode, format: format)
+      connectPlayerChain(player)
     }
     resetLimiterConnection()
     connectLimiterChainIfNeeded()

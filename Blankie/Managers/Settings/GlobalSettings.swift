@@ -99,6 +99,8 @@ class GlobalSettings: ObservableObject {
   @Published var backgroundBlurRadius: Double
 
   // Platform-specific settings
+  /// Availability gate for the experimental spatial feature: shows the
+  /// Spatial Mix entry on presets. Sessions themselves are started in-sheet.
   @Published var enableSpatialAudio: Bool = false
   @Published var mixWithOthers: Bool = false
   @Published var volumeWithOtherAudio: Double = 0.5  // 0.0 = silent, 1.0 = full volume
@@ -193,7 +195,10 @@ extension GlobalSettings {
   func setEnableSpatialAudio(_ value: Bool) {
     enableSpatialAudio = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.enableSpatialAudio)
-    // Here we would also update the audio engine to enable/disable spatial audio
+    // Availability gate only; turning it off ends any live session.
+    if !value, SpatialSessionManager.shared.isActive {
+      SpatialSessionManager.shared.setMode(.off)
+    }
     logCurrentSettings()
   }
 

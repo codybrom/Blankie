@@ -124,6 +124,12 @@ extension AudioManager {
     // Temporarily mark the sound as selected for solo mode playback
     sound.isSelected = true
 
+    // Spatial is preset-only: a spatially-loaded player must rebuild flat
+    // (soloModeSound is already set, so the reload skips the spatial chain).
+    if sound.player?.isSpatial == true {
+      sound.unload()
+    }
+
     // Ensure the sound is loaded (loading applies a random start position)
     if !sound.isLoaded {
       sound.loadSound()
@@ -178,6 +184,7 @@ extension AudioManager {
 
     // Clear solo mode
     soloModeSound = nil
+    applyPresetSpatialArrangement()
 
     // Clear from persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: nil)

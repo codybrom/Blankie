@@ -33,7 +33,7 @@ extension Sound {
     // attenuation (≤1) rides the node volume with the slider. The mix-bus
     // peak limiter guards any residual clipping from boosted sounds.
     var boostDB: Float = factor > 1 ? 20 * log10(factor) : 0
-    if player.isMonoSource {
+    if player.isMonoSource && !player.isSpatial {
       boostDB += 3.0  // the mixer pans mono inputs ≈3 dB down; compensate
     }
     player.setBoostDB(min(boostDB, 24))
@@ -57,6 +57,14 @@ extension Sound {
       normalizeAudio: customization?.normalizeAudio ?? true,
       volumeAdjustment: customization?.volumeAdjustment ?? 1.0
     )
+  }
+
+  /// Current normalization boost in dB (0 when attenuating). Spatial players
+  /// bake this into their mono fold since the EQ isn't in the spatial chain.
+  func normalizationBoostDB() -> Float {
+    let settings = getNormalizationSettings()
+    let factor = settings.normalizeAudio ? getNormalizationFactor() : settings.volumeAdjustment
+    return factor > 1 ? 20 * log10(factor) : 0
   }
 
   private func getNormalizationFactor() -> Float {

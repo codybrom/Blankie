@@ -319,9 +319,18 @@ open class Sound: NSObject, ObservableObject, Identifiable {
 
       let shouldLoop =
         SoundCustomizationManager.shared.getCustomization(for: fileName)?.loopSound ?? true
-      let loadedPlayer = try SoundPlayer(fileURL: soundURL, loops: shouldLoop)
+      let wantsSpatial = isSpatialEligible
+      let loadedPlayer = try SoundPlayer(
+        fileURL: soundURL, loops: shouldLoop,
+        spatial: wantsSpatial,
+        spatialBoostDB: wantsSpatial ? normalizationBoostDB() : 0)
       loadedPlayer.onPlaybackFinished = { [weak self] in
         self?.handleNonLoopingFinished()
+      }
+      if wantsSpatial {
+        let placement = spatialPlacement()
+        loadedPlayer.spatialPosition = AudioEngineManager.point(
+          angleDegrees: placement.angle, distance: placement.distance)
       }
       player = loadedPlayer
       AudioEngineManager.shared.attach(loadedPlayer)
@@ -361,6 +370,76 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     Logger.sounds.debug("Sound: Deinitialized '\(self.fileName)'")
     customizationObserver?.cancel()
     volumeDebounceTimer?.invalidate()
+  }
+
+  // MARK: - Spatial Arrangement (experimental, session-scoped)
+
+  /// Whether this sound joins the spatial field right now: a session is
+  /// active, preset mode (spatial is preset-only — never solo or Quick Mix),
+  /// and the sound hasn't been taken out of the field this session.
+  var isSpatialEligible: Bool {
+    SpatialSessionManager.shared.isActive
+      && AudioManager.shared.soloModeSound == nil
+      && !AudioManager.shared.isQuickMix
+      && SpatialSessionManager.shared.isInField(fileName)
+  }
+
+  /// This sound's placement: the session's spot, or its default ring slot.
+  func spatialPlacement() -> (angle: Float, distance: Float) {
+    if let placement = SpatialSessionManager.shared.placement(for: fileName) {
+      return (placement.angle, placement.distance)
+    }
+    let slot = AudioEngineManager.defaultSpatialPlacement(for: "\(fileName).\(fileExtension)")
+    return (slot.angleDegrees, slot.distance)
+  }
+
+  /// Live-moves the sound in the field; optionally remembers the spot for the
+  /// rest of the session (in memory only — synchronous, so the mixer re-reads
+  /// fresh data immediately and released dots don't snap back).
+  func setSpatialPlacement(angleDegrees: Float, distance: Float, persist: Bool) {
+    let point = AudioEngineManager.point(angleDegrees: angleDegrees, distance: distance)
+    player?.spatialPosition = point
+    if let player, player.isSpatial {
+      player.node.position = point
+    }
+    if persist {
+      SpatialSessionManager.shared.setPlacement(
+        angle: angleDegrees, distance: distance, for: fileName)
+    }
+  }
+
+  /// Whether the sound can join the field right now: short sounds fold in
+  /// memory; long ones need their rendered mono cache (see prepareForSpatial).
+  var isSpatialReady: Bool {
+    if (duration ?? 0) <= SoundPlayer.bufferThreshold { return true }
+    guard let url = getSoundURL() else { return false }
+    return SpatialAudioCache.existingCache(for: url, boostDB: normalizationBoostDB()) != nil
+  }
+
+  /// Renders the mono cache a long sound needs before joining the field.
+  @MainActor
+  func prepareForSpatial() async -> Bool {
+    guard let url = getSoundURL() else { return false }
+    do {
+      _ = try await SpatialAudioCache.renderMonoCache(for: url, boostDB: normalizationBoostDB())
+      return true
+    } catch {
+      Logger.sounds.error(
+        "Sound: Spatial render failed for '\(self.fileName, privacy: .public)': \(error, privacy: .public)"
+      )
+      return false
+    }
+  }
+
+  /// Rebuilds the player when spatial participation changes, preserving playback.
+  func rebuildPlayerForSpatialChange() {
+    guard isLoaded else { return }
+    let wasPlaying = playbackState == .playing
+    unload()
+    if wasPlaying {
+      loadSound()
+      play()
+    }
   }
 
   // MARK: - Playback Completion

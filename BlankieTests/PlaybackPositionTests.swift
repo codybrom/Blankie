@@ -156,7 +156,13 @@ final class PlaybackPositionTests: XCTestCase {
 
     // Let the fade-in progress (fades are run-loop timers); a pause at
     // fadeLevel ≈ 0 short-circuits to an instant stop, which isn't this race.
-    RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.25))
+    // Spin until the level moves rather than a fixed wait (load-flake proof).
+    let deadline = Date(timeIntervalSinceNow: 2.0)
+    while (sound.player?.fadeLevel ?? 1) < 0.1, Date() < deadline {
+      RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
+    }
+    XCTAssertGreaterThanOrEqual(
+      sound.player?.fadeLevel ?? 0, 0.1, "Fade-in timer should advance on the run loop")
 
     // Fade-out pause, then immediately play again (the fast off/on toggle).
     sound.pause()
@@ -171,6 +177,46 @@ final class PlaybackPositionTests: XCTestCase {
     XCTAssertTrue(sound.isPlaying, "Superseded fade completion must not pause the sound")
     XCTAssertEqual(sound.playbackState, .playing)
     XCTAssertEqual(sound.player?.fadeLevel ?? 0, 1.0, accuracy: 0.01, "Fade should be back at full")
+  }
+
+  // MARK: - Spatial placement persistence (regression: dots snapping back)
+
+  /// Drag-end remembers the spot synchronously in the session store and reads
+  /// back through the same path the grid dots use — an async hop (or a dropped
+  /// write) makes released dots snap to their old position. Ending the session
+  /// must discard placements (experimental: nothing persists between sessions).
+  @MainActor
+  func testSessionPlacementRoundTrip() throws {
+    let session = SpatialSessionManager.shared
+    defer { session.setMode(.off) }
+
+    guard let rain = AudioManager.shared.sounds.first(where: { $0.fileName == "rain" }) else {
+      throw XCTSkip("Built-in rain sound unavailable in this test host")
+    }
+
+    session.setMode(.fixed)
+    XCTAssertTrue(session.isActive)
+
+    // The exact call the drag gesture makes on release.
+    rain.setSpatialPlacement(angleDegrees: 123, distance: 1.5, persist: true)
+
+    XCTAssertEqual(session.placement(for: "rain")?.angle, 123)
+    XCTAssertEqual(session.placement(for: "rain")?.distance, 1.5)
+
+    // The read-back path the dot uses immediately after release.
+    let placement = rain.spatialPlacement()
+    XCTAssertEqual(placement.angle, 123, "Dot must read back the dropped position, not default")
+    XCTAssertEqual(placement.distance, 1.5)
+
+    // Taking a sound out of the field is session state too.
+    session.setInField(false, for: "rain")
+    XCTAssertFalse(rain.isSpatialEligible)
+    session.setInField(true, for: "rain")
+
+    // Ending the session discards everything.
+    session.setMode(.off)
+    XCTAssertNil(session.placement(for: "rain"), "Session end must discard placements")
+    XCTAssertFalse(session.isActive)
   }
 
   // MARK: - Integration placeholder
