@@ -384,7 +384,10 @@ import SwiftUI
     var body: some View {
       Group {
         if sounds.isEmpty {
+          // Fixed-height reservation: a bare Color.clear is greedy and would
+          // steal the map's height whenever the strip is empty.
           Color.clear
+            .frame(height: 72)
         } else {
           VStack(spacing: 4) {
             Text("Off the Map")
