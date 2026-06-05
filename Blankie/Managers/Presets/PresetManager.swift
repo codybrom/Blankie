@@ -521,9 +521,11 @@ extension PresetManager {
         AudioManager.shared.setGlobalPlaybackState(true)
       }
 
-      // Positions are per preset: re-arm the spatial arrangement for the
-      // incoming preset's layout.
-      AudioManager.shared.applyPresetSpatialArrangement()
+      // Spatial sessions are bound to the mix they started on; switching
+      // presets ends them.
+      if SpatialSessionManager.shared.isActive {
+        SpatialSessionManager.shared.setMode(.off)
+      }
 
       // Prefetch animated artwork for nearby presets so they're available on lock screen
       prefetchNearbyAnimatedArtwork(currentPreset: preset)

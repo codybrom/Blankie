@@ -26,6 +26,11 @@ extension AudioManager {
     // Clear any current preset
     PresetManager.shared.clearCurrentPreset()
 
+    // Spatial sessions are bound to the preset mix; Quick Mix ends them.
+    if SpatialSessionManager.shared.isActive {
+      SpatialSessionManager.shared.setMode(.off)
+    }
+
     // Save original states of all sounds
     quickMixOriginalStates = sounds.map { sound in
       QuickMixState(sound: sound, isSelected: sound.isSelected, volume: sound.volume)
@@ -62,10 +67,6 @@ extension AudioManager {
     // Enable only the valid initial sounds
     for sound in validInitialSounds {
       sound.isSelected = true
-      // Spatial is preset-only; rebuild a spatially-loaded player flat.
-      if sound.player?.isSpatial == true {
-        sound.unload()
-      }
       sound.play()
     }
 
@@ -84,7 +85,6 @@ extension AudioManager {
   func exitQuickMix() {
     guard isQuickMix else { return }
     Logger.audio.debug("AudioManager: Exiting Quick Mix mode")
-    defer { applyPresetSpatialArrangement() }
 
     // Pause all current sounds
     for sound in sounds {
@@ -153,10 +153,6 @@ extension AudioManager {
       sound.pause()
     } else {
       sound.isSelected = true
-      // Spatial is preset-only; rebuild a spatially-loaded player flat.
-      if sound.player?.isSpatial == true {
-        sound.unload()
-      }
       sound.play()
     }
 

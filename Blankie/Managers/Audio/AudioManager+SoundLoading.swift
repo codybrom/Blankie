@@ -233,23 +233,6 @@ extension AudioManager {
     }
   }
 
-  /// Re-arms the spatial arrangement after a preset switch or solo/Quick Mix
-  /// exit: live-positions matching players, rebuilds participation mismatches.
-  @MainActor
-  func applyPresetSpatialArrangement() {
-    guard SpatialSessionManager.shared.isActive else { return }
-    for sound in sounds where sound.isLoaded {
-      let desired = sound.isSpatialEligible
-      if (sound.player?.isSpatial ?? false) != desired {
-        sound.rebuildPlayerForSpatialChange()
-      } else if desired {
-        let placement = sound.spatialPlacement()
-        sound.setSpatialPlacement(
-          angleDegrees: placement.angle, distance: placement.distance, persist: false)
-      }
-    }
-  }
-
   /// Rebuilds loaded players after the spatial-audio toggle changes (the
   /// mono fold and graph chain are decided at load time). Keeps selection;
   /// resumes whatever was audibly playing.

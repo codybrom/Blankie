@@ -95,6 +95,11 @@ extension AudioManager {
       exitQuickMix()
     }
 
+    // Spatial sessions are bound to the preset mix; soloing ends them.
+    if SpatialSessionManager.shared.isActive {
+      SpatialSessionManager.shared.setMode(.off)
+    }
+
     // Switching directly from another solo sound: restore that sound's pre-solo
     // volume & selection first, so it doesn't stay selected at full volume and
     // leak into the mix the next time playback starts.
@@ -123,12 +128,6 @@ extension AudioManager {
 
     // Temporarily mark the sound as selected for solo mode playback
     sound.isSelected = true
-
-    // Spatial is preset-only: a spatially-loaded player must rebuild flat
-    // (soloModeSound is already set, so the reload skips the spatial chain).
-    if sound.player?.isSpatial == true {
-      sound.unload()
-    }
 
     // Ensure the sound is loaded (loading applies a random start position)
     if !sound.isLoaded {
@@ -184,7 +183,6 @@ extension AudioManager {
 
     // Clear solo mode
     soloModeSound = nil
-    applyPresetSpatialArrangement()
 
     // Clear from persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: nil)
