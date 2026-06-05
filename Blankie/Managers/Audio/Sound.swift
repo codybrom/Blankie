@@ -58,7 +58,6 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   @Published var isSelected = false {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
-      Logger.sounds.debug("Sound: \(self.fileName) -  isSelected set to \(self.isSelected)")
 
       // If sound was just selected, start playing it immediately when playback becomes active
       // Only do this after AudioManager is fully initialized to avoid circular dependency

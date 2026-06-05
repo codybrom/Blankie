@@ -304,6 +304,9 @@ class AudioAnalyzer {
       oversampledData[index * 4 + 2] = sample1 + delta * 2
       oversampledData[index * 4 + 3] = sample1 + delta * 3
     }
+    // The loop stops one sample short; write the final source sample so a
+    // peak on the last frame isn't missed.
+    oversampledData[(Int(frameLength) - 1) * 4] = channelData[Int(frameLength) - 1]
 
     var peak: Float = 0
     vDSP_maxmgv(oversampledData, 1, &peak, vDSP_Length(oversampledLength))
