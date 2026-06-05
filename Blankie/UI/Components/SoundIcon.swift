@@ -25,7 +25,20 @@ struct SoundIcon: View {
   @State private var showingDeleteConfirmation = false
 
   private var configuration: Configuration {
-    switch globalSettings.iconSize {
+    #if os(macOS)
+      // macOS tiles scale with their grid cell (`maxWidth` from
+      // MacSoundGridView, floored at 120 and capped at 200 there), so icons
+      // grow into roomy windows. `iconSize` has no UI; the iOS switch below
+      // keeps its fixed sizes.
+      return Configuration(
+        iconSize: maxWidth * 0.85,
+        sliderWidth: maxWidth * 0.7,
+        spacing: 8,
+        padding: EdgeInsets(top: 12, leading: 10, bottom: 12, trailing: 10),
+        fontSizeOffset: 0
+      )
+    #else
+      switch globalSettings.iconSize {
     case .small:
       let iconSize: CGFloat = 75
       return Configuration(
@@ -54,6 +67,7 @@ struct SoundIcon: View {
         fontSizeOffset: 6
       )
     }
+    #endif
   }
 
   private struct Configuration {

@@ -21,7 +21,11 @@
     @State private var items: [SortableSoundMac]
     @State private var isDragging = false
 
+    /// Floor for a tile cell — icons never render smaller than this allows.
     private let tileWidth: CGFloat = 120
+    /// Cap for icon growth in roomy windows (a few sounds in a wide window
+    /// spread out rather than ballooning past this).
+    private let maxTileWidth: CGFloat = 200
     private let spacing: CGFloat = 10
 
     init(sounds: [Sound], onMove: @escaping (IndexSet, Int) -> Void) {
@@ -32,15 +36,25 @@
 
     var body: some View {
       GeometryReader { geometry in
-        let count = max(2, Int(geometry.size.width / (tileWidth + spacing)))
+        // Columns that fit at the floor width, clamped to the item count so a
+        // small preset spreads across the window instead of clustering left
+        // (the grid's flexible columns share the full width). Tiles then grow
+        // with their column — never below the floor, capped for sanity.
+        let fitting = max(2, Int(geometry.size.width / (tileWidth + spacing)))
+        let count = max(2, min(fitting, items.count))
+        let cellWidth = min(
+          maxTileWidth,
+          max(tileWidth, (geometry.size.width - spacing * CGFloat(count - 1)) / CGFloat(count))
+        )
         SortableGridView(
           isScrollable: true,
           config: .init(spacing: spacing, count: count),
-          items: $items
+          items: $items,
+          minContentHeight: geometry.size.height
         ) { item in
-          SoundIcon(sound: item.sound, maxWidth: tileWidth)
+          SoundIcon(sound: item.sound, maxWidth: cellWidth)
         } draggingPreview: { item in
-          SoundIcon(sound: item.sound, maxWidth: tileWidth)
+          SoundIcon(sound: item.sound, maxWidth: cellWidth)
         } onDraggingChange: { _, _, dragging in
           if dragging {
             isDragging = true

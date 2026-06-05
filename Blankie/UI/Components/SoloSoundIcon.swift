@@ -12,66 +12,87 @@
 
 import SwiftUI
 
-#if os(iOS) || os(visionOS)
-  struct SoloSoundIcon: View {
-    @ObservedObject var sound: Sound
-    var iconSize: CGFloat = 200
+struct SoloSoundIcon: View {
+  @ObservedObject var sound: Sound
+  var iconSize: CGFloat = 200
 
-    @ObservedObject private var globalSettings = GlobalSettings.shared
+  @ObservedObject private var globalSettings = GlobalSettings.shared
+  // Observe playback so the disc/icon/border react to play–pause; reading
+  // AudioManager.shared statically misses updates (SoundIcon does the same).
+  @ObservedObject private var audioManager = AudioManager.shared
 
-    private var accentColor: Color {
-      globalSettings.customAccentColor ?? .accentColor
-    }
+  private var accentColor: Color {
+    globalSettings.customAccentColor ?? .accentColor
+  }
 
-    private var borderWidth: CGFloat { 6 }
+  private var borderWidth: CGFloat { 6 }
 
-    private var shouldShowProgressBorder: Bool {
-      globalSettings.showProgressBorder && sound.isSelected
-        && AudioManager.shared.isGloballyPlaying
-    }
+  private var iconColor: Color {
+    #if os(macOS)
+      // Gray out while paused, matching the macOS grid tiles' iconColor.
+      audioManager.isGloballyPlaying ? accentColor : .gray
+    #else
+      accentColor
+    #endif
+  }
 
-    var body: some View {
-      ZStack {
+  private var shouldShowProgressBorder: Bool {
+    globalSettings.showProgressBorder && sound.isSelected
+      && audioManager.isGloballyPlaying
+  }
+
+  var body: some View {
+    ZStack {
+      #if os(macOS)
+        // Accent-tinted disc matching the macOS grid tiles (macOS is opted
+        // out of Liquid Glass, so no glass effect here).
+        Circle()
+          .fill(
+            audioManager.isGloballyPlaying
+              ? accentColor.opacity(0.2) : Color.gray.opacity(0.2)
+          )
+          .frame(width: iconSize, height: iconSize)
+      #else
         // Clear glass disc — interactive without heavy blur.
         Circle()
           .fill(.clear)
           .frame(width: iconSize, height: iconSize)
           .glassEffect(.clear.interactive(), in: .circle)
+      #endif
 
-        Image(systemName: sound.systemIconName)
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: iconSize * 0.64, height: iconSize * 0.64)
-          .foregroundColor(accentColor)
+      Image(systemName: sound.systemIconName)
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(width: iconSize * 0.64, height: iconSize * 0.64)
+        .foregroundColor(iconColor)
 
-        if shouldShowProgressBorder {
-          let borderSize = iconSize - borderWidth
+      if shouldShowProgressBorder {
+        let borderSize = iconSize - borderWidth
 
-          Circle()
-            .stroke(Color.gray.opacity(0.3), lineWidth: borderWidth)
-            .frame(width: borderSize, height: borderSize)
+        Circle()
+          .stroke(Color.gray.opacity(0.3), lineWidth: borderWidth)
+          .frame(width: borderSize, height: borderSize)
 
-          ProgressBorderView(
-            iconSize: borderSize,
-            borderWidth: borderWidth,
-            sound: sound,
-            color: accentColor
-          )
-        }
+        ProgressBorderView(
+          iconSize: borderSize,
+          borderWidth: borderWidth,
+          sound: sound,
+          color: accentColor
+        )
       }
-      .frame(width: iconSize, height: iconSize)
-      .contentShape(Circle())
-      .accessibilityElement(children: .ignore)
-      .accessibilityAddTraits(.isButton)
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
-      .accessibilityValue(Text(AudioManager.shared.isGloballyPlaying ? "Playing" : "Paused"))
-      .accessibilityHint(Text("Plays or pauses the sound"))
-      .onTapGesture {
-        // This icon only ever shows the soloed sound, so a tap toggles
-        // playback rather than deselecting it.
-        AudioManager.shared.togglePlayback()
-      }
-      .sensoryFeedback(.selection, trigger: sound.isSelected)
     }
+    .frame(width: iconSize, height: iconSize)
+    .contentShape(Circle())
+    .accessibilityElement(children: .ignore)
+    .accessibilityAddTraits(.isButton)
+    .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+    .accessibilityValue(Text(audioManager.isGloballyPlaying ? "Playing" : "Paused"))
+    .accessibilityHint(Text("Plays or pauses the sound"))
+    .onTapGesture {
+      // This icon only ever shows the soloed sound, so a tap toggles
+      // playback rather than deselecting it.
+      audioManager.togglePlayback()
+    }
+    .sensoryFeedback(.selection, trigger: sound.isSelected)
   }
-#endif
+}

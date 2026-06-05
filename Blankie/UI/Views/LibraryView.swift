@@ -377,6 +377,9 @@ struct LibraryView: View {
   @State private var showingSoundFilePicker = false
   @State private var importedSoundURL: URL?
   @State private var showingImportSoundSheet = false
+  #if os(macOS)
+    @State private var selectedPresetForEdit: Preset?
+  #endif
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var systemColorScheme
 
@@ -582,9 +585,19 @@ struct LibraryView: View {
         }
       default:
         if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
-          PresetPickerRow(
+          let row = PresetPickerRow(
             preset: preset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
             presentation: presentation, onSelection: onSelect)
+          #if os(macOS)
+            // macOS rename/delete replacing the old PresetPicker's per-row pencil
+            // and trash. Custom presets only — never the default or solo rows.
+            row.contextMenu {
+              Button("Edit Preset…") { selectedPresetForEdit = preset }
+              Button("Delete Preset…", role: .destructive) { presetToDelete = preset }
+            }
+          #else
+            row
+          #endif
         }
       }
     }
@@ -628,6 +641,22 @@ struct LibraryView: View {
         isCurrent: audioManager.isQuickMix, accent: accent, presentation: presentation))
   }
 
+  /// The Add menu's items (New Preset / Import), shared by the iOS and macOS
+  /// toolbar branches so the actions aren't duplicated.
+  @ViewBuilder
+  private var addMenuContent: some View {
+    Button {
+      showingNewPresetSheet = true
+    } label: {
+      Label("New Preset", systemImage: "rectangle.stack.badge.plus")
+    }
+    Button {
+      showingSoundFilePicker = true
+    } label: {
+      Label("Import", systemImage: "square.and.arrow.down")
+    }
+  }
+
   var body: some View {
     Group {
       switch presentation {
@@ -665,6 +694,9 @@ struct LibraryView: View {
         TipView(createFirstPresetTip, arrowEdge: .top) { action in
           if action.id == "create" {
             showingNewPresetSheet = true
+          } else if action.id == "dismiss" {
+            // TipKit actions don't auto-dismiss; invalidate explicitly.
+            createFirstPresetTip.invalidate(reason: .actionPerformed)
           }
         }
         .listRowBackground(Color.clear)
@@ -731,8 +763,10 @@ struct LibraryView: View {
         // ALL PRESETS — Quick Mix and All Blankie Sounds are fixed rows at the
         // top; only the custom presets below are reorderable in Edit.
         Section {
-          // Quick Mix — always available, not favoritable (its own thing).
-          quickMixRow
+          // Quick Mix — not favoritable (its own thing); iOS/iPadOS only.
+          #if !os(macOS)
+            quickMixRow
+          #endif
 
           if showsDefaultInAllPresets {
             tokenRow(GlobalSettings.allSoundsToken)
@@ -799,16 +833,7 @@ struct LibraryView: View {
         ToolbarItem(placement: .topBarTrailing) {
           if !isEditMode {
             Menu {
-              Button {
-                showingNewPresetSheet = true
-              } label: {
-                Label("New Preset", systemImage: "rectangle.stack.badge.plus")
-              }
-              Button {
-                showingSoundFilePicker = true
-              } label: {
-                Label("Import", systemImage: "square.and.arrow.down")
-              }
+              addMenuContent
             } label: {
               Label("Add", systemImage: "plus")
             }
@@ -826,6 +851,20 @@ struct LibraryView: View {
               Label("Settings", systemImage: "gearshape")
             }
             .tint(Color.primary)
+          }
+        }
+      }
+    #endif
+    #if os(macOS)
+      // The sidebar's window toolbar carries only the Add menu; the system adds
+      // the sidebar-toggle item automatically. No Edit toggle (reorder works via
+      // drag) and no Settings gear (Settings lives in the app menu / scene).
+      .toolbar {
+        ToolbarItem(placement: .primaryAction) {
+          Menu {
+            addMenuContent
+          } label: {
+            Label("Add", systemImage: "plus")
           }
         }
       }
@@ -863,6 +902,11 @@ struct LibraryView: View {
         SoundSheet(mode: .add, preselectedFile: url)
       }
     }
+    #if os(macOS)
+      .sheet(item: $selectedPresetForEdit) { preset in
+        EditPresetSheet(preset: preset, isPresented: $selectedPresetForEdit)
+      }
+    #endif
     .alert(
       "Delete Preset",
       isPresented: .init(

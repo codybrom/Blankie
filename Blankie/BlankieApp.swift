@@ -40,16 +40,12 @@ struct BlankieApp: App {
     @NSApplicationDelegateAdaptor(MacAppDelegate.self) private var appDelegate
     @StateObject private var windowObserver = WindowObserver.shared
     @State private var showingShortcuts = false
-    @State private var showingNewPresetPopover = false
-    @State private var presetName = ""
 
     var body: some Scene {
       Window("Blankie", id: "main") {
         WindowDefaults.defaultContentView(
           showingAbout: $showingAbout,
-          showingShortcuts: $showingShortcuts,
-          showingNewPresetPopover: $showingNewPresetPopover,
-          presetName: $presetName
+          showingShortcuts: $showingShortcuts
         )
         .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -58,12 +54,16 @@ struct BlankieApp: App {
       }
       .modelContainer(modelContainer)
       .defaultPosition(.center)
-      .windowResizability(.contentSize)
+      .windowResizability(.contentMinSize)
       .windowStyle(.automatic)
       .defaultSize(width: WindowDefaults.defaultWidth, height: WindowDefaults.defaultHeight)
       .windowToolbarStyle(.unified)
       .commandsReplaced {
-        AppCommands(showingAbout: $showingAbout, hasWindow: $windowObserver.hasVisibleWindow)
+        AppCommands(
+          showingAbout: $showingAbout,
+          showingShortcuts: $showingShortcuts,
+          hasWindow: $windowObserver.hasVisibleWindow
+        )
       }
 
       Settings {
@@ -129,9 +129,7 @@ struct BlankieApp: App {
             #if os(macOS)
               WindowDefaults.defaultContentView(
                 showingAbout: .constant(false),
-                showingShortcuts: .constant(false),
-                showingNewPresetPopover: .constant(false),
-                presetName: .constant("")
+                showingShortcuts: .constant(false)
               )
               .frame(width: 450, height: 450)
             #else

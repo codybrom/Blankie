@@ -43,6 +43,10 @@ where
   @State var isScrollable: Bool
   var config: SortableGridConfig
   @Binding var items: Data
+  /// Scrollable grids only: content shorter than this is centered vertically.
+  /// Pass the viewport height to center sparse grids (cell rects are tracked
+  /// in .global coordinates, so the shift doesn't disturb reordering).
+  var minContentHeight: CGFloat? = nil
   @ViewBuilder var content: (Data.Element) -> Content
   @ViewBuilder var draggingPreview: (Data.Element) -> DraggingPreview
   var onDraggingChange: (_ location: CGPoint, _ offset: CGSize, _ isDragging: Bool) -> Void
@@ -60,6 +64,7 @@ where
       if isScrollable {
         ScrollView(.vertical) {
           gridContent
+            .frame(minHeight: minContentHeight)
         }
         .scrollDisabled(isDragging)
       } else {
@@ -105,6 +110,11 @@ where
 
     LazyVGrid(columns: columns, spacing: config.spacing) {
       ForEach($items) { $item in
+        // Captured at render time, while the element binding's index is valid.
+        // The geometry action below can fire AFTER `items` shrinks (preset
+        // switch relayouts every cell); writing through the positional `$item`
+        // binding then traps out-of-bounds, so it writes by id lookup instead.
+        let itemID = item.id
         content(item)
           // Hand each tile its reorder callbacks via the environment; the tile
           // attaches the gesture to just its icon/tap-zone with `.reorderHandle()`
@@ -122,7 +132,8 @@ where
           .onGeometryChange(for: CGRect.self) {
             $0.frame(in: .global)
           } action: { newValue in
-            item.position = newValue
+            guard let index = items.firstIndex(where: { $0.id == itemID }) else { return }
+            items[index].position = newValue
           }
       }
     }

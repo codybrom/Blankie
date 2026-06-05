@@ -12,15 +12,17 @@ import UniformTypeIdentifiers
   struct ContentView: View {
     @Binding var showingAbout: Bool
     @Binding var showingShortcuts: Bool
-    @Binding var showingNewPresetPopover: Bool
-    @Binding var presetName: String
 
     @ObservedObject private var appState = AppState.shared
     @ObservedObject var audioManager = AudioManager.shared
     @ObservedObject var globalSettings = GlobalSettings.shared
     @StateObject private var presetManager = PresetManager.shared
 
-    @State private var showingVolumePopover = false
+    @ObservedObject private var timerManager = TimerManager.shared
+
+    @State private var showingTimerPopover = false
+    @State private var soundToEdit: Sound?
+    @State private var presetToEdit: Preset?
     @State private var showingColorPicker = false
     @State private var showingPreferences = false
 
@@ -63,6 +65,29 @@ import UniformTypeIdentifiers
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
+    /// Window titlebar context, mirroring iOS MixerView: solo sound name, then
+    /// Quick Mix, then the current preset name (default preset shows "Blankie").
+    private var navigationTitle: String {
+      if let soloSound = audioManager.soloModeSound {
+        return soloSound.title
+      }
+      if audioManager.isQuickMix {
+        return "Quick Mix"
+      }
+      if let preset = presetManager.currentPreset {
+        return preset.isDefault ? "Blankie" : preset.name
+      }
+      return "Blankie"
+    }
+
+    /// Titlebar subtitle while a sleep timer runs (same string as the iOS
+    /// Now Playing bar); empty otherwise, which hides it.
+    private var timerSubtitle: String {
+      guard timerManager.isTimerActive, let endTime = timerManager.getEndTime() else { return "" }
+      return String(
+        localized: "Pausing at \(endTime.formatted(date: .omitted, time: .shortened))")
+    }
+
     var body: some View {
       VStack(spacing: 0) {
         if !audioManager.isGloballyPlaying {
@@ -81,16 +106,28 @@ import UniformTypeIdentifiers
           .foregroundStyle(.secondary)
         }
 
-        // Main content: the shared long-press lift-and-reorder grid (same
-        // engine as iOS), with SoundIcon tiles.
-        MacSoundGridView(
-          sounds: filteredSounds,
-          onMove: { from, to in
-            moveSounds(from: from, to: to)
+        // Main content: solo mode swaps the grid for one large icon with no
+        // volume slider (mirrors MixerView's soloModeView); otherwise the
+        // shared long-press lift-and-reorder grid with SoundIcon tiles.
+        if let soloSound = audioManager.soloModeSound, audioManager.previewModeSound == nil {
+          VStack {
+            Spacer()
+            SoloSoundIcon(sound: soloSound)
+              .transition(.scale.combined(with: .opacity))
+            Spacer()
           }
-        )
-        .padding()
-        .frame(maxHeight: .infinity)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .padding()
+        } else {
+          MacSoundGridView(
+            sounds: filteredSounds,
+            onMove: { from, to in
+              moveSounds(from: from, to: to)
+            }
+          )
+          .padding()
+          .frame(maxHeight: .infinity)
+        }
 
         // App bar
         VStack(spacing: 0) {
@@ -98,25 +135,8 @@ import UniformTypeIdentifiers
             .frame(height: 1)
             .foregroundColor(Color.gray.opacity(0.2))
 
-          HStack(spacing: 16) {
-            // Volume button with popover
-            Button(action: {
-              showingVolumePopover.toggle()
-            }) {
-              Image(systemName: "speaker.wave.2.fill")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 20, height: 20)
-                .foregroundColor(.primary)
-            }
-            .buttonStyle(.borderless)
-            .accessibilityIdentifier("volumeButton")
-            .accessibilityLabel("Volume")
-            .popover(isPresented: $showingVolumePopover, arrowEdge: .top) {
-              VolumePopoverView()
-            }
-
-            // Play/Pause button
+          ZStack {
+            // Play/Pause button — visually centered in the bar
             Button(action: {
               audioManager.togglePlayback()
             }) {
@@ -136,21 +156,66 @@ import UniformTypeIdentifiers
             .buttonStyle(.borderless)
             .accessibilityLabel(audioManager.isGloballyPlaying ? "Pause" : "Play")
 
-            // Color picker menu
-            Button(action: {
-              showingColorPicker.toggle()
-            }) {
-              Image(systemName: "paintpalette.fill")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 20, height: 20)
-                .foregroundColor(.primary)
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel("Accent Color")
-            .popover(isPresented: $showingColorPicker) {
-              ColorPickerView()
-                .padding()
+            HStack(spacing: 16) {
+              // Always-visible All Sounds volume (app-level, for multi-output
+              // setups — same idea as Music/Spotify's in-app volume).
+              HStack(spacing: 8) {
+                Image(systemName: "speaker.wave.2.fill")
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .frame(width: 16, height: 16)
+                  .foregroundColor(.secondary)
+                  .accessibilityHidden(true)
+
+                Slider(
+                  value: Binding(
+                    get: { globalSettings.volume },
+                    set: { globalSettings.setVolume($0) }
+                  ),
+                  in: 0...1
+                )
+                .frame(maxWidth: 130)
+                .controlSize(.small)
+                .tint(activeAccent)
+                .accessibilityLabel(Text("All Sounds"))
+                .accessibilityValue(
+                  Text(globalSettings.volume.formatted(.percent.precision(.fractionLength(0)))))
+              }
+
+              Spacer()
+
+              // Sleep timer
+              Button(action: {
+                showingTimerPopover.toggle()
+              }) {
+                Image(systemName: "timer")
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .frame(width: 20, height: 20)
+                  .foregroundColor(timerManager.isTimerActive ? activeAccent : .primary)
+              }
+              .buttonStyle(.borderless)
+              .accessibilityLabel("Sleep Timer")
+              .popover(isPresented: $showingTimerPopover, arrowEdge: .top) {
+                TimerView()
+              }
+
+              // Color picker menu
+              Button(action: {
+                showingColorPicker.toggle()
+              }) {
+                Image(systemName: "paintpalette.fill")
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .frame(width: 20, height: 20)
+                  .foregroundColor(.primary)
+              }
+              .buttonStyle(.borderless)
+              .accessibilityLabel("Accent Color")
+              .popover(isPresented: $showingColorPicker) {
+                ColorPickerView()
+                  .padding()
+              }
             }
           }
           .padding(.vertical, 12)
@@ -161,8 +226,37 @@ import UniformTypeIdentifiers
         .background(.ultraThinMaterial)
       }
 
-      .ignoresSafeArea(.container, edges: .horizontal)
+      .navigationTitle(navigationTitle)
+      .navigationSubtitle(timerSubtitle)
+      // Floating title: merge the detail's toolbar strip into the content,
+      // mirroring the iPad detail's hidden navigation-bar background.
+      .toolbarBackground(.hidden, for: .windowToolbar)
+      .toolbar {
+        // Edit affordance for whatever is on screen — the solo sound's editor
+        // or the current preset (mirrors iOS's topTrailingToolbarButton).
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            if let soloSound = audioManager.soloModeSound {
+              soundToEdit = soloSound
+            } else if let currentPreset = presetManager.currentPreset {
+              presetToEdit = currentPreset
+            }
+          } label: {
+            Image(systemName: "slider.vertical.3")
+          }
+          .accessibilityLabel(audioManager.soloModeSound != nil ? "Edit Sound" : "Edit Preset")
+          .disabled(audioManager.soloModeSound == nil && presetManager.currentPreset == nil)
+        }
+      }
+      .sheet(item: $soundToEdit) { sound in
+        SoundSheet(mode: .edit(sound))
+          .interactiveDismissDisabled()  // Prevent accidental dismissal
+      }
+      .sheet(item: $presetToEdit) { preset in
+        EditPresetSheet(preset: preset, isPresented: $presetToEdit)
+      }
       .animation(.easeInOut(duration: 0.2), value: audioManager.isGloballyPlaying)
+      .animation(.easeInOut(duration: 0.3), value: audioManager.soloModeSound?.id)
       .sheet(isPresented: $showingShortcuts) {
         ShortcutsView()
           .background(.ultraThinMaterial)
@@ -211,7 +305,7 @@ import UniformTypeIdentifiers
 
     private func setupResetHandler() {
       audioManager.onReset = { @MainActor in
-        showingVolumePopover = false
+        showingTimerPopover = false
       }
     }
 
@@ -256,9 +350,7 @@ import UniformTypeIdentifiers
       Group {
         ContentView(
           showingAbout: .constant(false),
-          showingShortcuts: .constant(false),
-          showingNewPresetPopover: .constant(false),
-          presetName: .constant("")
+          showingShortcuts: .constant(false)
         )
         .frame(width: 600, height: 400)
       }
