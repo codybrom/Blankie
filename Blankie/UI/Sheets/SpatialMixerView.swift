@@ -289,6 +289,13 @@ import SwiftUI
             .animation(.linear(duration: 0.1), value: headYawDegrees)
             .allowsHitTesting(false)
 
+          // Solid hub over the dead zone — pins can't live here (0.5m clamp).
+          Circle()
+            .fill(.secondary.opacity(0.3))
+            .frame(width: scale, height: scale)
+            .position(center)
+            .allowsHitTesting(false)
+
           ForEach(sounds, id: \.id) { sound in
             SpatialDot(sound: sound, center: center, scale: scale)
           }
