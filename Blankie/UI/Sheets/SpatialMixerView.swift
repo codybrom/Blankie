@@ -89,7 +89,7 @@ import SwiftUI
 
     var body: some View {
       NavigationStack {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
           controls
 
           // Every state renders the same fixed layout (the strip reserves its
@@ -111,18 +111,8 @@ import SwiftUI
             .multilineTextAlignment(.center)
             .padding(.horizontal, 24)
 
-            Button {
-              withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
-                spreadOutSounds()
-              }
-            } label: {
-              Label(
-                "Spread Out",
-                systemImage: "arrow.up.and.down.and.arrow.left.and.right")
-            }
-            .buttonStyle(.bordered)
-
             ParkedSoundsRow(sounds: session.isActive ? parkedSounds : [])
+              .padding(.top, 10)
           }
           .disabled(!session.isActive)
           .opacity(session.isActive ? 1 : 0.35)
@@ -143,6 +133,20 @@ import SwiftUI
         .navigationTitle("Spatial Mix")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+          // Only offered when pins have strayed from the even spread (it
+          // would be a no-op right after seeding or a previous reset).
+          if session.isActive, !isSpreadOut {
+            ToolbarItem(placement: .topBarLeading) {
+              Button {
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
+                  spreadOutSounds()
+                }
+              } label: {
+                Label("Reset", systemImage: "arrow.counterclockwise")
+                  .labelStyle(.titleAndIcon)
+              }
+            }
+          }
           ToolbarItem(placement: .principal) {
             VStack(spacing: 0) {
               Text("Spatial Mix")
@@ -164,6 +168,19 @@ import SwiftUI
         Rectangle()
           .fill(.ultraThinMaterial)
           .opacity(0.8)
+      }
+    }
+
+    /// Whether the pins already sit in the even spread (seeded or previously
+    /// spread) — Spread Out would be a no-op.
+    private var isSpreadOut: Bool {
+      let sounds = gridSounds
+      guard !sounds.isEmpty else { return true }
+      let step = 360.0 / Float(sounds.count)
+      return sounds.enumerated().allSatisfy { index, sound in
+        let placement = sound.spatialPlacement()
+        return abs(placement.angle - Float(index) * step) < 0.5
+          && abs(placement.distance - 2.0) < 0.01
       }
     }
 
