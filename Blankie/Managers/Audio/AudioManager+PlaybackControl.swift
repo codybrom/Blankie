@@ -133,14 +133,9 @@ extension AudioManager {
 
     // Normal mode: play all selected sounds according to preset
     for sound in sounds where sound.isSelected {
-      // Check if this sound is starting fresh (not paused or playing)
-      let wasPlaying = sound.player?.isPlaying == true
-      let currentTime = sound.player?.currentTime ?? 0
-      let duration = sound.player?.duration ?? 0
-      let isPaused = sound.player != nil && !wasPlaying && currentTime > 0 && currentTime < duration
-
-      if !wasPlaying, !isPaused {
-        // Sound is truly stopped/new/finished, reset position (respecting randomization)
+      // Resume paused sounds in place; reset stopped/new/finished ones
+      // (respecting randomization). Explicit state replaces currentTime inference.
+      if !sound.isPlaying, sound.playbackState != .paused {
         sound.resetSoundPosition()
       }
 
@@ -216,9 +211,11 @@ extension AudioManager {
   // MARK: - Update Playing Sounds
 
   func updatePlayingSounds() {
-    // Stop any sounds that are playing but shouldn't be
+    // Stop any sounds that are playing but shouldn't be. Sounds in a fade-out
+    // (.paused mid-ramp) are already winding down — hard-stopping them would
+    // kill the crossfade.
     for sound in sounds {
-      if !sound.isSelected, sound.player?.isPlaying == true {
+      if !sound.isSelected, sound.isPlaying, sound.playbackState == .playing {
         Logger.audio.debug(
           "AudioManager: Stopping deselected sound '\(sound.fileName)' that was still playing")
         sound.pause(immediate: true)

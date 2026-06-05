@@ -145,7 +145,7 @@ extension CustomSoundManager {
       filename: fileName,
       integratedLUFS: lufs,
       truePeakdBTP: estimatedTruePeak,
-      gainDB: -23.0 - lufs,  // Target LUFS normalization
+      gainDB: min(AudioAnalyzer.targetLUFS - lufs, AudioAnalyzer.maxGainDB),
       needsLimiter: lufs < -30.0  // Need limiter for very quiet sounds
     )
     PlaybackProfileStore.shared.store(profile)

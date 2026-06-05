@@ -58,9 +58,10 @@ struct PlaybackProfile: Codable, Equatable {
       return nil
     }
 
-    // Calculate gain needed to reach target LUFS
+    // Calculate gain needed to reach target LUFS, capped like the analyzer
+    // (an uncapped profile would override the capped factor at load time)
     let targetLUFS = AudioAnalyzer.targetLUFS
-    let gainDB = targetLUFS - lufs
+    let gainDB = min(targetLUFS - lufs, AudioAnalyzer.maxGainDB)
 
     // Check if applying gain would exceed true peak limit
     let predictedTruePeak = truePeak + gainDB

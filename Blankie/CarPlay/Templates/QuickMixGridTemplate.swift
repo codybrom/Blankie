@@ -55,7 +55,7 @@ import os
     private static func createGridButton(for sound: Sound) -> CPGridButton {
       // Check if sound is currently playing in QuickMix mode
       let isPlaying =
-        sound.player?.isPlaying == true && AudioManager.shared.isQuickMix
+        sound.isPlaying && AudioManager.shared.isQuickMix
         && AudioManager.shared.soloModeSound == nil
 
       // Create button titles

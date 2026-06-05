@@ -31,9 +31,9 @@ extension AudioManager {
       QuickMixState(sound: sound, isSelected: sound.isSelected, volume: sound.volume)
     }
 
-    // Stop all sounds first
+    // Fade all sounds out first (entering Quick Mix reads as a crossfade)
     for sound in sounds {
-      sound.pause(immediate: true)
+      sound.pause()
       sound.isSelected = false
     }
 
@@ -66,7 +66,7 @@ extension AudioManager {
     }
 
     // Update playback state
-    let hasActiveSounds = sounds.contains { $0.isSelected && $0.player?.isPlaying == true }
+    let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
     setGlobalPlaybackState(hasActiveSounds)
 
     // Update Now Playing info
@@ -152,7 +152,7 @@ extension AudioManager {
     }
 
     // Update playback state
-    let hasActiveSounds = sounds.contains { $0.isSelected && $0.player?.isPlaying == true }
+    let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
     setGlobalPlaybackState(hasActiveSounds)
 
     // Update Now Playing info
