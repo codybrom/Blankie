@@ -292,6 +292,11 @@ import SwiftUI
           // Solid hub over the dead zone — pins can't live here (0.5m clamp).
           Circle()
             .fill(.secondary.opacity(0.3))
+            .overlay {
+              Image(systemName: "headphones")
+                .font(.system(size: scale * 0.4))
+                .foregroundStyle(.secondary)
+            }
             .frame(width: scale, height: scale)
             .position(center)
             .allowsHitTesting(false)
@@ -387,25 +392,23 @@ import SwiftUI
               .textCase(.uppercase)
               .foregroundColor(.secondary)
 
-            GeometryReader { geo in
-              ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                  ForEach(sounds, id: \.id) { sound in
-                    ParkedDot(sound: sound)
-                  }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 6)
-                // Centered while the chips fit; overflow still scrolls.
-                .frame(minWidth: geo.size.width)
+            // Wraps to extra rows rather than scrolling; the map above is
+            // width-sized, so growth here only consumes the spacer below.
+            LazyVGrid(
+              columns: [GridItem(.adaptive(minimum: 64), spacing: 12)], spacing: 8
+            ) {
+              ForEach(sounds, id: \.id) { sound in
+                ParkedDot(sound: sound)
               }
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
             .modernGlassEffect(cornerRadius: 14)
             .padding(.horizontal, 16)
           }
         }
       }
-      .frame(height: 72)
+      .frame(minHeight: 72)
     }
   }
 
@@ -528,6 +531,15 @@ import SwiftUI
           // Take the sound out of the field; it moves to the parked row.
           SpatialSessionManager.shared.setInField(false, for: sound.fileName)
           sound.rebuildPlayerForSpatialChange()
+
+          // Last pin removed: an empty map isn't a spatial session.
+          let anyOnMap = AudioManager.shared.sounds.contains {
+            $0.isSelected && $0.isSpatialReady
+              && SpatialSessionManager.shared.isInField($0.fileName)
+          }
+          if !anyOnMap {
+            SpatialSessionManager.shared.setMode(.off)
+          }
         }
         .gesture(dragGesture)
     }
