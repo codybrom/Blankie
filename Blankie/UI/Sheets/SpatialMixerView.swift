@@ -266,7 +266,6 @@ import SwiftUI
             .animation(.linear(duration: 0.1), value: headYawDegrees)
             .allowsHitTesting(false)
 
-          listener(center: center)
           ForEach(sounds, id: \.id) { sound in
             SpatialDot(sound: sound, center: center, scale: scale)
           }
@@ -325,21 +324,6 @@ import SwiftUI
       }
     }
 
-    private func listener(center: CGPoint) -> some View {
-      VStack(spacing: 1) {
-        // Facing indicator: you're looking "up" in this view
-        Image(systemName: "location.north.fill")
-          .font(.system(size: 11))
-          .foregroundStyle(.tint)
-        Image(systemName: "person.fill")
-          .font(.system(size: 15))
-          .foregroundStyle(.white)
-          .padding(6)
-          .background(Circle().fill(.tint))
-      }
-      .position(x: center.x, y: center.y - 6)
-      .accessibilityLabel("You, facing up")
-    }
   }
 
   // MARK: - Parked Sounds (below the grid)
