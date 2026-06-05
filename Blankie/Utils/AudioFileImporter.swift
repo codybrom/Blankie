@@ -40,7 +40,7 @@ class AudioFileImporter: ObservableObject {
     }
 
     // Copy to an app-owned temp location so the file outlives the picker's
-    // security scope and stays readable (AVAudioPlayer, preview-before-save).
+    // security scope and stays readable (playback, preview-before-save).
     guard let tempFileURL = stagedTempCopy(of: url) else {
       ErrorReporter.shared.report(AudioError.fileNotFound)
       return
@@ -51,9 +51,9 @@ class AudioFileImporter: ObservableObject {
 
   /// Copies a (possibly security-scoped) file into an app-owned temp location
   /// and returns the new URL. A URL handed back by a document picker is only
-  /// readable while its security scope is held; copying gives a stable URL that
-  /// `AVAudioPlayer` can load later — e.g. when previewing a not-yet-saved
-  /// imported sound. Returns nil if the copy fails.
+  /// readable while its security scope is held; copying gives a stable URL the
+  /// player can load later — e.g. when previewing a not-yet-saved imported
+  /// sound. Returns nil if the copy fails.
   func stagedTempCopy(of url: URL) -> URL? {
     let didStartAccessing = url.startAccessingSecurityScopedResource()
     Logger.app.debug("AudioFileImporter: Security-scoped access started: \(didStartAccessing)")

@@ -18,54 +18,58 @@ extension Sound {
       loadSound()
     }
 
-    guard let validPlayer = preparePlayer() else { return }
+    guard let player = self.player else {
+      Logger.sounds.debug("Sound: No player available for '\(self.fileName)'")
+      return
+    }
+
+    // Already audible — rescheduling would audibly restart the sound. If a
+    // fade-out pause is in flight, rescue it by ramping back up instead.
+    guard !player.isPlaying else {
+      if playbackState == .paused {
+        Logger.sounds.debug("Sound: Rescuing mid-fade pause for '\(self.fileName)'")
+        player.fade(to: 1, duration: Sound.fadeDuration)
+        playbackState = .playing
+      } else {
+        Logger.sounds.debug("Sound: '\(self.fileName)' already playing")
+      }
+      return
+    }
+
+    // Re-attach (idempotent; covers engine recreation) and make sure the
+    // engine is live — AVAudioPlayerNode.play() throws if it isn't.
+    AudioEngineManager.shared.attach(player)
+    guard AudioEngineManager.shared.ensureRunning() else {
+      Logger.sounds.error(
+        "Sound: Engine unavailable for '\(self.fileName, privacy: .public)' - retry scheduled")
+      return
+    }
 
     // Ensure volume is set before playing
     updateVolume()
 
-    let success = validPlayer.play()
-    if !success {
-      Logger.sounds.error("Sound: Failed to play '\(self.fileName, privacy: .public)'")
-      let error = NSError(
-        domain: "SoundPlayback", code: -1,
-        userInfo: [NSLocalizedDescriptionKey: "Failed to play sound"])
-      ErrorReporter.shared.report(AudioError.playbackFailed(error))
-    } else {
-      Logger.sounds.debug(
-        "Sound: Playing '\(self.fileName)' from position: \(validPlayer.currentTime)s")
-    }
+    // One path for resume and fresh start: currentFrame is the paused position
+    // for .paused sounds, the (possibly randomized) seek target otherwise.
+    // Start silent, then fade in.
+    player.setFadeLevel(0)
+    player.play(fromFrame: player.currentFrame)
+    player.fade(to: 1, duration: Sound.fadeDuration)
+    playbackState = .playing
+    Logger.sounds.debug(
+      "Sound: Playing '\(self.fileName)' from position: \(player.currentTime)s")
   }
 
-  private func preparePlayer() -> AVAudioPlayer? {
-    guard let player = self.player else {
-      Logger.sounds.debug("Sound: No player available for '\(self.fileName)'")
-      return nil
-    }
-
-    // Additional validation
-    if !player.prepareToPlay() {
-      Logger.sounds.debug("Sound: Player not ready for '\(self.fileName)' - attempting to reload")
-      loadSound()
-      guard let reloadedPlayer = self.player else {
-        Logger.sounds.error(
-          "Sound: Failed to reload player for '\(self.fileName, privacy: .public)'")
-        return nil
-      }
-      if !reloadedPlayer.prepareToPlay() {
-        Logger.sounds.debug("Sound: Player still not ready after reload for '\(self.fileName)'")
-        return nil
-      }
-      return reloadedPlayer
-    }
-
-    return player
-  }
-
+  /// Repositions a non-playing sound for its next start: a random point in the
+  /// first 75% of the clip, or the beginning when randomization is off.
   func resetSoundPosition() {
     guard let player = self.player else {
-      // If player doesn't exist yet, it will be randomized when loaded
+      // If player doesn't exist yet, it will be positioned when loaded
       return
     }
+
+    // Never reposition live playback (matches the old currentTime semantics:
+    // callers only reset stopped/paused sounds).
+    guard !player.isPlaying else { return }
 
     // Check if randomize start position is enabled
     // Default to true for both custom and built-in sounds unless explicitly disabled
@@ -77,41 +81,49 @@ extension Sound {
     }
 
     if shouldRandomizeStart {
-      // Set a random start position within the sound's duration
-      // Check if duration is valid (greater than 0 and not infinite/NaN)
-      if player.duration > 0 && player.duration.isFinite {
-        // Limit random position to maximum 75% of the duration
-        let maxPosition = player.duration * 0.75
-        let randomPosition = Double.random(in: 0..<maxPosition)
-        player.currentTime = randomPosition
-        Logger.sounds.debug(
-          "Sound: Reset '\(self.fileName)' to random position: \(randomPosition)s of \(player.duration)s (max 75%)"
-        )
-      } else {
+      guard player.duration > 0, player.duration.isFinite else {
         Logger.sounds.error(
           "Sound: Cannot randomize start position for '\(self.fileName, privacy: .public)' - invalid duration: \(player.duration, privacy: .public)"
         )
+        return
       }
+      // Limit random position to maximum 75% of the duration
+      let maxFrame = AVAudioFramePosition(Double(player.totalFrames) * 0.75)
+      let randomFrame = AVAudioFramePosition.random(in: 0..<max(maxFrame, 1))
+      player.seek(toFrame: randomFrame)
+      Logger.sounds.debug(
+        "Sound: Reset '\(self.fileName)' to random position: \(Double(randomFrame) / player.sampleRate)s of \(player.duration)s (max 75%)"
+      )
     } else {
       // Reset to beginning if randomization is disabled
-      player.currentTime = 0
+      player.seek(toFrame: 0)
       Logger.sounds.debug("Sound: Reset '\(self.fileName)' to beginning")
     }
+
+    // Seeking clears any paused schedule, so the next play() must schedule
+    // fresh rather than resume.
+    playbackState = .stopped
   }
 
   func pause(immediate: Bool = false) {
-    guard let currentPlayer = player else {
-      Logger.sounds.debug("Sound: No player to pause for '\(self.fileName)'")
-      return
-    }
+    guard let currentPlayer = player else { return }
 
     if immediate {
       currentPlayer.stop()
-      currentPlayer.currentTime = 0  // Reset to beginning for next play
+      playbackState = .stopped
       Logger.sounds.debug("Sound: Immediately stopped '\(self.fileName)'")
     } else {
-      currentPlayer.pause()
-      Logger.sounds.debug("Sound: Paused '\(self.fileName)'")
+      // Nothing audible to fade (already stopped/paused) — bail rather than
+      // flip a .stopped sound to .paused and corrupt resume semantics.
+      guard currentPlayer.isPlaying || playbackState == .playing else { return }
+      // Fade out, then pause. State flips to .paused right away so UI and
+      // playback logic treat the sound as paused during the ramp; play() can
+      // rescue a mid-fade pause by ramping back up.
+      playbackState = .paused
+      currentPlayer.fade(to: 0, duration: Sound.fadeDuration) { [weak currentPlayer] in
+        currentPlayer?.pause()
+      }
+      Logger.sounds.debug("Sound: Fading out and pausing '\(self.fileName)'")
     }
   }
 
@@ -122,103 +134,8 @@ extension Sound {
     }
 
     currentPlayer.stop()
-    currentPlayer.currentTime = 0  // Reset to beginning for next play
+    playbackState = .stopped
     Logger.sounds.debug("Sound: Stopped '\(self.fileName)'")
-  }
-
-  func fadeIn(duration: TimeInterval = 0.5, completion: (() -> Void)? = nil) {
-    // Ensure player is loaded first
-    if player == nil {
-      loadSound()
-    }
-
-    guard let player = self.player else {
-      completion?()
-      return
-    }
-
-    Logger.sounds.debug("Sound: Fading in '\(self.fileName)' over \(duration)s")
-
-    // Store original volume level
-    let originalVolume = player.volume
-    player.volume = 0.0
-
-    // Start playing if not already
-    if !player.isPlaying {
-      player.play()
-    }
-
-    // Fade in
-    fadeTimer?.invalidate()
-    fadeStartVolume = 0.0
-    targetVolume = originalVolume
-
-    let steps = Int(duration * 30)
-    let volumeIncrement = targetVolume / Float(steps)
-    let stepDuration = duration / Double(steps)
-
-    var currentStep = 0
-    let timer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) {
-      [weak self] timer in
-      guard let self = self else {
-        timer.invalidate()
-        return
-      }
-
-      currentStep += 1
-      let newVolume = min(
-        self.fadeStartVolume + (volumeIncrement * Float(currentStep)), self.targetVolume)
-      self.player?.volume = newVolume
-
-      if currentStep >= steps || newVolume >= self.targetVolume {
-        timer.invalidate()
-        self.player?.volume = self.targetVolume
-        completion?()
-      }
-    }
-
-    timer.tolerance = stepDuration * 0.1  // Allow 10% variance
-    fadeTimer = timer
-  }
-
-  func fadeOut(duration: TimeInterval = 0.5, completion: (() -> Void)? = nil) {
-    guard let player = self.player, player.isPlaying else {
-      completion?()
-      return
-    }
-
-    Logger.sounds.debug("Sound: Fading out '\(self.fileName)' over \(duration)s")
-
-    fadeTimer?.invalidate()
-    fadeStartVolume = player.volume
-    targetVolume = 0.0
-
-    let steps = Int(duration * 30)  // 30 steps per second
-    let volumeDecrement = fadeStartVolume / Float(steps)
-    let stepDuration = duration / Double(steps)
-
-    var currentStep = 0
-    let timer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) {
-      [weak self] timer in
-      guard let self = self else {
-        timer.invalidate()
-        return
-      }
-
-      currentStep += 1
-      let newVolume = max(self.fadeStartVolume - (volumeDecrement * Float(currentStep)), 0.0)
-      self.player?.volume = newVolume
-
-      if currentStep >= steps || newVolume <= 0.0 {
-        timer.invalidate()
-        self.player?.volume = 0.0
-        self.player?.pause()
-        completion?()
-      }
-    }
-
-    timer.tolerance = stepDuration * 0.1  // Allow 10% variance
-    fadeTimer = timer
   }
 
   func reset() {
@@ -228,16 +145,11 @@ extension Sound {
     Logger.sounds.debug("Sound: Resetting '\(self.fileName)'")
 
     // Clean up timers
-    fadeTimer?.invalidate()
-    fadeTimer = nil
     volumeDebounceTimer?.invalidate()
     volumeDebounceTimer = nil
-    updateVolumeLogTimer?.invalidate()
-    updateVolumeLogTimer = nil
 
-    // Reset player
-    player?.stop()
-    player = nil
+    // Tear down playback (stops, detaches from the engine, releases)
+    unload()
 
     // Reset state
     isSelected = false

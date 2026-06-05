@@ -36,7 +36,30 @@ extension AudioManager {
       Logger.audio.debug("AudioManager: Setting up audio session observers on first playback")
       setupAudioInterruptionObserver()
       setupAudioRouteChangeObserver()
+      setupMediaServicesResetObserver()
+
+      // A media-services reset invalidates every node bound to the dead
+      // engine; tear down players (keeping selection) for lazy rebuild.
+      AudioEngineManager.shared.onEngineReset = { [weak self] in
+        self?.sounds.forEach { $0.unload() }
+      }
+
       audioSessionObserversSetup = true
+    }
+
+    /// The media daemon can restart out from under us; Apple requires
+    /// rebuilding all audio objects and never auto-resuming playback.
+    private func setupMediaServicesResetObserver() {
+      NotificationCenter.default.addObserver(
+        forName: AVAudioSession.mediaServicesWereResetNotification,
+        object: nil,
+        queue: .main
+      ) { _ in
+        Logger.audio.error("AudioManager: Media services were reset")
+        Task { @MainActor in
+          AudioEngineManager.shared.handleMediaServicesReset()
+        }
+      }
     }
 
     private func setupTerminationObserver() {
@@ -145,13 +168,11 @@ extension AudioManager {
           // Use active (selected) sounds to ensure we have position even when pausing
           let activeSounds = self.sounds.filter { $0.isSelected }
           if let longestSound = activeSounds.max(by: {
-            ($0.player?.duration ?? 0) < ($1.player?.duration ?? 0)
-          }),
-            let player = longestSound.player
-          {
+            $0.playbackDuration < $1.playbackDuration
+          }), longestSound.isLoaded {
             self.nowPlayingManager.updateProgress(
-              currentTime: player.currentTime,
-              duration: player.duration
+              currentTime: longestSound.playbackPosition,
+              duration: longestSound.playbackDuration
             )
           }
 

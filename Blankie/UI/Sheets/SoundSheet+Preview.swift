@@ -42,16 +42,15 @@ extension SoundSheet {
     // Start a new timer to update progress
     previewTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
       guard let preview = self.previewSound,
-        let player = preview.player,
-        player.isPlaying
+        preview.isPlaying
       else {
         self.previewTimer?.invalidate()
         self.previewTimer = nil
         return
       }
 
-      let duration = player.duration
-      let currentTime = player.currentTime
+      let duration = preview.playbackDuration
+      let currentTime = preview.playbackPosition
 
       if duration > 0 {
         self.previewProgress = currentTime / duration
@@ -112,7 +111,7 @@ extension SoundSheet {
 
   private func createEditPreview(_ sound: Sound) {
     // Track if this sound was playing before preview
-    wasPreviewSoundPlaying = sound.player?.isPlaying == true && sound.isSelected
+    wasPreviewSoundPlaying = sound.isPlaying && sound.isSelected
 
     // For edit mode, the preview sound is just the actual sound
     // Changes are already applied instantly, no need for temporary customization
@@ -152,8 +151,7 @@ extension SoundSheet {
         // Tear down add mode's temp player; edit mode previews the real Sound,
         // whose playback exitPreviewMode/enterSoloMode just restored.
         if case .add = mode {
-          preview.player?.stop()
-          preview.player = nil
+          preview.unload()
         }
       }
 

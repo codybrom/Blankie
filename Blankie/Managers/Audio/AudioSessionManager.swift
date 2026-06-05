@@ -50,6 +50,12 @@ import os
       }
     }
 
+    /// Re-applies category/options/mode after a media-services reset, which
+    /// wipes the session configuration (Apple requires a full re-set).
+    func reapplyConfiguration(mixWithOthers: Bool, isCarPlayConnected: Bool) {
+      setupForPlayback(mixWithOthers: mixWithOthers, isCarPlayConnected: isCarPlayConnected)
+    }
+
     func deactivate() {
       // Deactivate audio session when stopping to allow other apps to play
       do {

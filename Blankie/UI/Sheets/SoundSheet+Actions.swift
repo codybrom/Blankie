@@ -75,7 +75,7 @@ extension SoundSheet {
     applyCustomizations(sound)
 
     // Force an immediate volume update for the sound
-    if sound.player != nil {
+    if sound.isLoaded {
       sound.updateVolume()
     }
   }

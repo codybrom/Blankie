@@ -36,9 +36,9 @@ struct ProgressBorderView: View {
   }
 
   private func getCurrentProgress() -> Double {
-    guard let player = sound.player, player.duration > 0 else {
+    guard sound.playbackDuration > 0 else {
       return 0.0
     }
-    return player.currentTime / player.duration
+    return sound.playbackPosition / sound.playbackDuration
   }
 }

@@ -13,9 +13,12 @@ enum AudioError: Error, LocalizedError {
   case playbackFailed(Error)
   case invalidVolume
   case systemAudioError(String)
+  case engineStartFailed
 
   var errorDescription: String? {
     switch self {
+    case .engineStartFailed:
+      return "Audio engine failed to start"
     case .fileNotFound:
       return "Audio file could not be found"
     case .loadFailed(let error):

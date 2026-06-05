@@ -125,9 +125,9 @@ extension AudioManager {
     sound.isSelected = true
 
     // Ensure the sound is loaded (loading applies a random start position)
-    if sound.player == nil {
+    if !sound.isLoaded {
       sound.loadSound()
-    } else if sound.player?.isPlaying != true {
+    } else if !sound.isPlaying {
       // Re-randomize a reused stopped player; auto-play no longer does this.
       sound.resetSoundPosition()
     }
@@ -227,14 +227,14 @@ extension AudioManager {
     for existingSound in sounds {
       previewModeOriginalStates[existingSound.fileName] = PreviewOriginalState(
         volume: existingSound.volume,
-        isPlaying: existingSound.player?.isPlaying == true
+        isPlaying: existingSound.isPlaying
       )
     }
 
     // Pause all other sounds (but preserve their playback position)
     // Don't pause the preview sound itself
     for otherSound in sounds where otherSound.id != sound.id {
-      if otherSound.player?.isPlaying == true {
+      if otherSound.isPlaying {
         otherSound.pause()
       }
     }
@@ -246,7 +246,7 @@ extension AudioManager {
     sound.volume = 1.0
 
     // Ensure the sound is loaded
-    if sound.player == nil {
+    if !sound.isLoaded {
       sound.loadSound()
     }
 
@@ -288,7 +288,7 @@ extension AudioManager {
 
         // Restore playback state: if it was playing before and should still be playing
         if originalState.isPlaying, isGloballyPlaying {
-          if sound.player?.isPlaying != true {
+          if !sound.isPlaying {
             Logger.audio.debug(
               "AudioManager: Resuming '\(sound.title)' - was playing before preview")
             sound.play()

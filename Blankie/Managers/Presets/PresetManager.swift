@@ -248,12 +248,7 @@ extension PresetManager {
     // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
     if AudioManager.shared.soloModeSound != nil || !presetStatesApplied { return }
 
-    guard let preset = currentPreset else {
-      if !isInitializing {
-        Logger.presets.debug("PresetManager: No current preset to update")
-      }
-      return
-    }
+    guard let preset = currentPreset else { return }
 
     let (newStates, currentSoundOrder) = generateUpdatedPresetData(for: preset)
     updatePresetIfChanged(
