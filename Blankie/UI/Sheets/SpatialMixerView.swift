@@ -26,8 +26,10 @@ import SwiftUI
     func start() {
       guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
       manager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
-        guard let motion else { return }
-        self?.yawDegrees = motion.attitude.yaw * 180 / .pi
+        // Queued updates can land after stop(); dropping them keeps the wedge
+        // from freezing at the last head yaw when leaving Head Tracked mode.
+        guard let self, self.manager.isDeviceMotionActive, let motion else { return }
+        self.yawDegrees = motion.attitude.yaw * 180 / .pi
       }
     }
 
