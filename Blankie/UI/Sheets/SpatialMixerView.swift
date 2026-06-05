@@ -142,7 +142,7 @@ import SwiftUI
                   spreadOutSounds()
                 }
               } label: {
-                Label("Reset", systemImage: "arrow.counterclockwise")
+                Label("Arrange", systemImage: "move.3d")
                   .labelStyle(.titleAndIcon)
               }
             }
