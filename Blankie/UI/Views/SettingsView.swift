@@ -7,15 +7,47 @@
 
 import SwiftUI
 
+// macOS renders a bare Button in a grouped Form as a bordered pill instead of
+// a tappable list row (iOS's rendering); plain style + a full-width content
+// shape restore the row look and keep the whole row clickable. No-ops on iOS.
+extension View {
+  @ViewBuilder
+  fileprivate func formRowLabel() -> some View {
+    #if os(macOS)
+      self
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+    #else
+      self
+    #endif
+  }
+
+  @ViewBuilder
+  fileprivate func formRowButtonStyle() -> some View {
+    #if os(macOS)
+      self.buttonStyle(.plain)
+    #else
+      self
+    #endif
+  }
+}
+
 struct SettingsView: View {
+  /// macOS: embedded in the main window's detail pane (sidebar gear) instead
+  /// of its own sheet/scene — fills the pane and Done closes it via AppState.
+  var isPane = false
   @Environment(\.dismiss) private var dismiss
   @ObservedObject private var globalSettings = GlobalSettings.shared
   #if os(iOS) || os(visionOS)
     @ObservedObject private var audioManager = AudioManager.shared
     @ObservedObject private var presetManager = PresetManager.shared
   #endif
-  @State private var showingAbout = false
   @State private var showingOnboarding = false
+  #if os(macOS)
+    /// Holds the in-pane About sub-page flag (app-level so the menu bar's
+    /// About Blankie can open straight to it; reset when the pane closes).
+    @ObservedObject private var appState = AppState.shared
+  #endif
   #if os(macOS)
     @State private var showingRestartAlert = false
   #endif
@@ -26,6 +58,17 @@ struct SettingsView: View {
   private let appVersion =
     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
   private let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+
+  private var aboutRowLabel: some View {
+    Label {
+      Text("About Blankie")
+        .foregroundColor(.primary)
+    } icon: {
+      Image(systemName: "hand.wave.fill")
+        .symbolRenderingMode(.hierarchical)
+        .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+    }
+  }
 
   // Compact badge marking a Theme Default the active preset overrides, used in
   // place of a full explanatory caption.
@@ -55,12 +98,56 @@ struct SettingsView: View {
     }
   #endif
 
+  @ViewBuilder
   var body: some View {
-    NavigationStack { settingsForm }
+    if isPane {
+      // About swaps in-pane rather than via NavigationLink: a NavigationStack
+      // push here escapes the pane and takes over the whole detail column,
+      // hiding the playback bar below.
+      NavigationStack {
+        #if os(macOS)
+          if appState.showingSettingsAboutPage {
+            AboutView()
+              .toolbar {
+                ToolbarItem(placement: .navigation) {
+                  Button {
+                    appState.showingSettingsAboutPage = false
+                  } label: {
+                    Label("Back", systemImage: "chevron.left")
+                  }
+                  .accessibilityLabel("Back to Settings")
+                }
+                // Same Done as the settings root — ends Settings entirely
+                // (also resets this sub-page via the pane flag's didSet).
+                ToolbarItem(placement: .confirmationAction) {
+                  Button("Done") {
+                    appState.showingSettingsPane = false
+                  }
+                  .tint(Color.primary)
+                }
+              }
+          } else {
+            settingsForm
+          }
+        #else
+          settingsForm
+        #endif
+      }
       #if os(macOS)
-        // Tuned sheet/scene size; the grouped form scrolls inside it.
-        .frame(width: 500, height: 640)
+        // After the pane is fully gone, reset to the root settings list so
+        // the next open (gear/⌘,) starts there. Doing this on the pane flag
+        // itself flashed the root mid-fade-out.
+        .onDisappear {
+          appState.showingSettingsAboutPage = false
+        }
       #endif
+    } else {
+      NavigationStack { settingsForm }
+        #if os(macOS)
+          // Tuned sheet/scene size; the grouped form scrolls inside it.
+          .frame(width: 500, height: 640)
+        #endif
+    }
   }
 
   /// App-wide accent color row: iOS shows it in Theme (with the preset
@@ -146,18 +233,52 @@ struct SettingsView: View {
         }
         .padding(.vertical, 4)
 
-        Button {
-          showingAbout = true
-        } label: {
-          Label {
-            Text("About Blankie")
-              .foregroundColor(.primary)
-          } icon: {
-            Image(systemName: "hand.wave.fill")
-              .symbolRenderingMode(.hierarchical)
-              .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+        // About is a sub-page on both platforms: iOS pushes in the settings
+        // sheet's stack; macOS swaps in-pane (a push there escapes the pane).
+        // (In the unreachable macOS sheet/scene this row no-ops.)
+        #if os(macOS)
+          Button {
+            appState.showingSettingsAboutPage = true
+          } label: {
+            HStack {
+              aboutRowLabel
+              Spacer()
+              Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+            }
+            .formRowLabel()
           }
+          .formRowButtonStyle()
+        #else
+          NavigationLink {
+            AboutView()
+          } label: {
+            aboutRowLabel
+          }
+        #endif
+
+        // Help row, relocated from the About page's footer.
+        Link(destination: URL(string: "https://blankie.rest/faq")!) {
+          HStack {
+            Label {
+              Text("Blankie Help")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "questionmark.circle")
+                .foregroundStyle(.tint)
+            }
+            Spacer()
+            Image(systemName: "arrow.up.right")
+              .font(.footnote.weight(.semibold))
+              .foregroundStyle(.secondary)
+              .accessibilityHidden(true)
+          }
+          .formRowLabel()
         }
+        .formRowButtonStyle()
+        .handCursor()
 
         #if DEBUG
           Button {
@@ -170,7 +291,9 @@ struct SettingsView: View {
               Image(systemName: "ladybug.fill")
                 .foregroundColor(.orange)
             }
+            .formRowLabel()
           }
+          .formRowButtonStyle()
         #endif
 
         if showBetaTesterUI {
@@ -273,17 +396,10 @@ struct SettingsView: View {
       }
 
       // App-wide defaults a preset inherits and can override in Edit Preset
-      // (view mode, accent color, background blur). iOS-only as a section —
-      // macOS folds accent into Display above.
+      // (view mode, accent color, lock screen animation, background blur).
+      // iOS-only as a section — macOS folds accent into Display above.
       #if os(iOS) || os(visionOS)
-        Section(
-          header: VStack(alignment: .leading, spacing: 4) {
-            Text("Theme")
-            Text("Presets can override these options.")
-              .font(.caption)
-              .textCase(.none)
-          }
-        ) {
+        Section {
           // View mode (Grid / List). This is the app-wide default. It's
           // locked to Grid while in Quick Mix (tile-only by design). A preset
           // override no longer locks the control — the badge marks it, and the
@@ -319,6 +435,27 @@ struct SettingsView: View {
 
           accentColorControl
 
+          // App-wide default lock screen animation, used for any preset that
+          // doesn't set its own. Hidden while Lock Screen Animations is off.
+          #if os(iOS)
+            if globalSettings.lockScreenBackgroundEnabled {
+              AnimatedArtworkPicker(
+                artwork: Binding(
+                  get: { globalSettings.defaultLockScreenArtwork },
+                  set: { globalSettings.setDefaultLockScreenArtwork($0) }
+                ),
+                staticArtworkPath: .constant(nil),
+                onChange: {
+                  // Republish so the lock screen reflects the new default now.
+                  if let preset = presetManager.currentPreset {
+                    audioManager.nowPlayingManager.forceRefresh(
+                      preset: preset, isPlaying: audioManager.isGloballyPlaying)
+                  }
+                }
+              )
+            }
+          #endif
+
           // App-wide default blur for preset background artwork. On/off:
           // on applies `defaultBackgroundBlurRadius`, off is no blur.
           Toggle(
@@ -330,11 +467,18 @@ struct SettingsView: View {
             )
           ) {
             HStack(spacing: 6) {
-              Text("Blur Background")
+              Text("Blur Background Images")
               if blurOverridden {
                 overriddenByPresetBadge
               }
             }
+          }
+        } header: {
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Theme")
+            Text("Your presets can customize these options")
+              .font(.caption)
+              .textCase(.none)
           }
         }
       #endif
@@ -360,7 +504,11 @@ struct SettingsView: View {
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done") {
-            dismiss()
+            if isPane {
+              AppState.shared.showingSettingsPane = false
+            } else {
+              dismiss()
+            }
           }
           .tint(Color.primary)
         }
@@ -392,9 +540,6 @@ struct SettingsView: View {
         )
       }
     #endif
-    .sheet(isPresented: $showingAbout) {
-      AboutView()
-    }
     .sheet(isPresented: $showingOnboarding) {
       PresetOnboardingSheet(isPresented: $showingOnboarding)
     }
@@ -444,17 +589,29 @@ private struct PlaybackSettingsSection: View {
   private var spatialAvailabilitySection: some View {
     VStack(alignment: .leading, spacing: 8) {
       Toggle(
-        "Spatial Audio (Experimental)",
         isOn: Binding(
           get: { globalSettings.enableSpatialAudio },
           set: { globalSettings.setEnableSpatialAudio($0) }
         )
-      )
+      ) {
+        HStack(spacing: 6) {
+          Text("Spatial Audio Mixing")
+          Text("Experimental")
+            .font(.caption2.weight(.semibold))
+            .textCase(.uppercase)
+            .foregroundColor(.secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(Color.secondary.opacity(0.15)))
+        }
+      }
       .tint(globalSettings.customAccentColor ?? .accentColor)
 
-      Text("Adds a Spatial Mix button to presets.")
-        .font(.caption)
-        .foregroundColor(.secondary)
+      Text(
+        "Mix presets in a virtual 3D binaural space. Works best with headphones. 3D head-tracking requires compatible AirPods and Motion permission."
+      )
+      .font(.caption)
+      .foregroundColor(.secondary)
     }
   }
 

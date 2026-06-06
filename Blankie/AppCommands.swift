@@ -9,11 +9,11 @@ import SwiftUI
 
 #if os(macOS)
   struct AppCommands: Commands {
-    @Binding var showingAbout: Bool
     @Binding var showingShortcuts: Bool
     @Binding var hasWindow: Bool
     @StateObject private var appState = AppState.shared
     @StateObject private var audioManager = AudioManager.shared
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
       // Custom View menu instead of SidebarCommands() so the toggle can bind
@@ -34,39 +34,21 @@ import SwiftUI
 
       CommandGroup(replacing: .appInfo) {
         Button {
-          showingAbout = true
-          appState.isAboutViewPresented = true
+          // Open the Settings pane directly on its About sub-page (sub-page
+          // flag first so the pane never flashes the settings root).
+          appState.showingSettingsAboutPage = true
+          appState.showingSettingsPane = true
         } label: {
           Text("About Blankie")
         }
       }
 
       CommandGroup(replacing: .newItem) {
+        // Reopen the real "main" Window scene. Hand-building an NSWindow +
+        // NSHostingView here breaks the split view's toolbar integration
+        // (merged toolbar cluster, floating sidebar).
         Button("New Window") {
-          if !hasWindow {
-            let controller = NSWindowController(
-              window: NSWindow(
-                contentRect: WindowDefaults.defaultFrame,
-                styleMask: WindowDefaults.styleMask,
-                backing: .buffered,
-                defer: false
-              )
-            )
-
-            if let window = controller.window {
-              WindowDefaults.configureWindow(window)
-
-              let contentView = WindowDefaults.defaultContentView(
-                showingAbout: $showingAbout,
-                showingShortcuts: $showingShortcuts
-              )
-
-              let hostingView = NSHostingView(rootView: contentView)
-              window.contentView = hostingView
-              controller.showWindow(nil)
-              hasWindow = true
-            }
-          }
+          openWindow(id: "main")
         }
         .disabled(hasWindow)
         .keyboardShortcut(.newWindow)
@@ -83,6 +65,14 @@ import SwiftUI
         }
         .keyboardShortcut(.manageSounds)
       }
+
+      #if DEBUG
+        CommandMenu("Debug") {
+          Button("Show Onboarding") {
+            appState.showingOnboarding = true
+          }
+        }
+      #endif
 
       // Add Help menu command
       CommandGroup(replacing: .help) {

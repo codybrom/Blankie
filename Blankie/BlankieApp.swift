@@ -18,9 +18,6 @@ struct BlankieApp: App {
   @StateObject private var globalSettings = GlobalSettings.shared
   @Environment(\.scenePhase) private var scenePhase
 
-  #if os(macOS)
-    @State private var showingAbout = false
-  #endif
 
   // Initialize SwiftData
   init() {
@@ -44,7 +41,6 @@ struct BlankieApp: App {
     var body: some Scene {
       Window("Blankie", id: "main") {
         WindowDefaults.defaultContentView(
-          showingAbout: $showingAbout,
           showingShortcuts: $showingShortcuts
         )
         .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
@@ -60,14 +56,27 @@ struct BlankieApp: App {
       .windowToolbarStyle(.unified)
       .commandsReplaced {
         AppCommands(
-          showingAbout: $showingAbout,
           showingShortcuts: $showingShortcuts,
           hasWindow: $windowObserver.hasVisibleWindow
         )
       }
 
+      // The scene must exist — with the Window scene's commands replaced, it's
+      // what contributes the standard app menu (Services/Hide/Quit; removing
+      // it gutted the menu). Its window is unreachable: the Settings… item is
+      // replaced below to open the in-window pane instead. The replacement
+      // must attach HERE — a CommandGroup on the Window scene can't replace
+      // another scene's menu contribution (it duplicates the item instead).
       Settings {
         SettingsView()
+      }
+      .commands {
+        CommandGroup(replacing: .appSettings) {
+          Button("Settings…") {
+            AppState.shared.showingSettingsPane = true
+          }
+          .keyboardShortcut(",", modifiers: .command)
+        }
       }
     }
 
@@ -128,7 +137,6 @@ struct BlankieApp: App {
           Group {
             #if os(macOS)
               WindowDefaults.defaultContentView(
-                showingAbout: .constant(false),
                 showingShortcuts: .constant(false)
               )
               .frame(width: 450, height: 450)

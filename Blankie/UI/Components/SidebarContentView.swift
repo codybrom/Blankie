@@ -8,16 +8,16 @@
 import SwiftUI
 
 /// Sidebar hosting the full `LibraryView` so the sidebar *is* the Library. On
-/// iPad it's the same view iPhone shows as a sheet. Both platforms put a
-/// Settings gear in the Library's leading toolbar — iPad's sheet binding comes
-/// from the split view's owner, macOS owns its own (and ⌘, opens the same view
-/// in the Settings scene). The enclosing `NavigationSplitView` supplies the
-/// show/hide toggle.
+/// iPad it's the same view iPhone shows as a sheet. iPad puts a Settings gear
+/// in the Library's leading toolbar (sheet binding from the split view's
+/// owner); macOS uses a sidebar footer row that toggles the detail-pane
+/// Settings takeover (⌘, does the same). The enclosing `NavigationSplitView`
+/// supplies the show/hide toggle.
 struct SidebarContentView: View {
   #if os(iOS) || os(visionOS)
     @Binding var showingSettings: Bool
   #else
-    @State private var showingSettings = false
+    @ObservedObject private var appState = AppState.shared
   #endif
 
   @StateObject private var presetManager = PresetManager.shared
@@ -51,25 +51,23 @@ struct SidebarContentView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
           settingsFooter
         }
-        .sheet(isPresented: $showingSettings) {
-          SettingsView()
-        }
       #endif
   }
 
   #if os(macOS)
-    /// Bottom-of-sidebar Settings row (the classic Mac spot for it).
+    /// Bottom-of-sidebar Settings row (the classic Mac spot for it). Toggles
+    /// the Settings pane in the detail area rather than opening a sheet.
     private var settingsFooter: some View {
       VStack(spacing: 0) {
         Divider()
         HStack {
           Button {
-            showingSettings = true
+            appState.showingSettingsPane.toggle()
           } label: {
             Label("Settings", systemImage: "gearshape")
           }
           .buttonStyle(.borderless)
-          .foregroundStyle(.secondary)
+          .foregroundStyle(appState.showingSettingsPane ? activeAccent : .secondary)
           Spacer()
         }
         .padding(.horizontal, 12)

@@ -12,15 +12,14 @@
   /// replacing the old toolbar preset picker and hamburger menu.
   struct MacRootView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
-    @Binding var showingAbout: Bool
     @Binding var showingShortcuts: Bool
 
     var body: some View {
       NavigationSplitView(columnVisibility: $columnVisibility) {
         SidebarContentView()
-          .navigationSplitViewColumnWidth(min: 300, ideal: 300)
+          .navigationSplitViewColumnWidth(min: 300, ideal: 300, max: 450)
       } detail: {
-        ContentView(showingAbout: $showingAbout, showingShortcuts: $showingShortcuts)
+        ContentView(showingShortcuts: $showingShortcuts)
       }
       .frame(minWidth: WindowDefaults.minWidth, minHeight: WindowDefaults.minHeight)
     }

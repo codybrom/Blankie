@@ -18,7 +18,7 @@ struct CreditRow: View {
       // Attribution line
       attributionView
     }
-    .font(.caption)
+    .font(.aboutCaption)
     .padding(.vertical, 4)
     // Make each credit one navigable container named for the sound, so VoiceOver
     // announces it as a unit ("Rain, group") with the source/license links as
@@ -40,9 +40,10 @@ struct CreditRow: View {
         .accessibilityHidden(true)
 
       if let soundUrl = credit.soundUrl {
-        // With link case
+        // With link case (.tint, not Color.accentColor, so it follows the
+        // app accent — accentColor ignores the .tint environment on macOS)
         Link(credit.soundName, destination: soundUrl)
-          .foregroundColor(.accentColor)
+          .foregroundStyle(.tint)
           .underline()
           .handCursor()
           .accessibilityHint(Text("Opens the sound source"))
@@ -70,7 +71,7 @@ struct CreditRow: View {
           .accessibilityHidden(true)
         Link(credit.license.linkText, destination: licenseUrl)
           .help(licenseUrl.absoluteString)
-          .foregroundColor(.accentColor)
+          .foregroundStyle(.tint)
           .handCursor()
       }
     }

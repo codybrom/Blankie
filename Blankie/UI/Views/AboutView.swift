@@ -63,7 +63,6 @@ import os
 struct AboutView: View {
   @ObservedObject private var creditsManager = SoundCreditsManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
-  @Environment(\.dismiss) private var dismiss
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var isSoundCreditsExpanded = false
   @State private var isLicenseExpanded = false
@@ -81,31 +80,19 @@ struct AboutView: View {
     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
   private let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
+  // Shown only as a Settings sub-page: pushed in the iOS settings sheet's
+  // stack, swapped into the macOS Settings pane.
   var body: some View {
-    Group {
+    aboutContent
+      .navigationTitle("About Blankie")
       #if os(iOS)
-        NavigationStack {
-          aboutContent
-            .toolbar {
-              ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Close") { dismiss() }
-                  .tint(Color.primary)
-              }
-            }
-        }
-      #else
-        aboutContent.frame(width: 480, height: 650)
+        .navigationBarTitleDisplayMode(.inline)
       #endif
-    }
   }
 
   private var aboutContent: some View {
     ScrollView {
       VStack(spacing: 20) {
-        #if os(macOS)
-          macOSCloseButton
-        #endif
-
         appIconView
         appInfoSection
         linksSection
@@ -127,10 +114,11 @@ struct AboutView: View {
         Divider().padding(.horizontal, 40).accessibilityHidden(true)
         copyrightText
         creditsAndLicenseSection
-        Divider().padding(.horizontal, 40).accessibilityHidden(true)
-        helpSection
       }
       .padding(20)
+      // Readable column in the wide Settings pane; no-op in the iOS sheet.
+      .frame(maxWidth: 640)
+      .frame(maxWidth: .infinity)
       #if os(iOS)
         .sheet(isPresented: $showingIconChooser) {
           iconChooserSheet
@@ -154,23 +142,6 @@ struct AboutView: View {
 // MARK: - View Components
 
 extension AboutView {
-  #if os(macOS)
-    private var macOSCloseButton: some View {
-      HStack {
-        Spacer()
-        Button(action: { dismiss() }) {
-          Image(systemName: "xmark.circle.fill")
-            .foregroundColor(.secondary)
-            .imageScale(.large)
-        }
-        .buttonStyle(.plain)
-        .help("Close")
-        .accessibilityLabel(Text("Close"))
-        .keyboardShortcut(.defaultAction)
-      }
-      .padding(.bottom, -8)
-    }
-  #endif
 
   private var appIconView: some View {
     Group {
@@ -204,10 +175,17 @@ extension AboutView {
     }
   }
 
+  // One style up on macOS, like the rest of the About type roles.
+  #if os(macOS)
+    private static let nameStyle: Font.TextStyle = .title
+  #else
+    private static let nameStyle: Font.TextStyle = .title2
+  #endif
+
   private var appInfoSection: some View {
     VStack(spacing: 8) {
       Text(verbatim: "Blankie")
-        .font(.system(.title2, design: .rounded).weight(.medium))
+        .font(.system(Self.nameStyle, design: .rounded).weight(.medium))
         #if os(iOS)
           .onTapGesture {
             appIconOptions = getAvailableAppIcons()
@@ -218,7 +196,7 @@ extension AboutView {
         #endif
 
       Text(LocalizedStringKey("Version \(appVersion) (\(buildNumber))"))
-        .font(.caption)
+        .font(.aboutCaption)
         .foregroundStyle(.secondary)
     }
   }
@@ -231,13 +209,17 @@ extension AboutView {
       HStack(spacing: 4) {
         Image(systemName: "globe")
           .accessibilityHidden(true)
-        Link("blankie.rest", destination: URL(string: "https://blankie.rest")!).handCursor()
+        // .tint (not the default link blue) so links follow the app accent.
+        Link("blankie.rest", destination: URL(string: "https://blankie.rest")!)
+          .foregroundStyle(.tint)
+          .handCursor()
       }
 
       Link(destination: URL(string: "https://github.com/codybrom/blankie")!) {
         HStack(spacing: 4) {
           Image(systemName: "star.fill").foregroundStyle(.yellow)
           Text("Star on GitHub")
+            .foregroundStyle(.tint)
         }
       }
       .handCursor()
@@ -246,16 +228,17 @@ extension AboutView {
         HStack(spacing: 4) {
           Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
           Text("Report an Issue")
+            .foregroundStyle(.tint)
         }
       }
       .handCursor()
     }
-    .font(.caption)
+    .font(.aboutBody)
   }
 
   private var copyrightText: some View {
     Text("© 2026 Cody Bromley and contributors. All rights reserved.")
-      .font(.caption)
+      .font(.aboutCaption)
   }
 
   private var creditsAndLicenseSection: some View {
@@ -268,11 +251,34 @@ extension AboutView {
           isAcknowledgementsExpanded = false
         }
       ) {
-        VStack(alignment: .leading, spacing: 4) {
-          ForEach(creditsManager.credits, id: \.name) { credit in
-            CreditRow(credit: credit)
+        // Two columns of credit cards on macOS — the rows are short and the
+        // single column made the list a scroll marathon in the pane. Each
+        // card stays one VoiceOver group (CreditRow's contained element).
+        #if os(macOS)
+          LazyVGrid(
+            columns: [
+              GridItem(.flexible(), spacing: 12, alignment: .topLeading),
+              GridItem(.flexible(), spacing: 12, alignment: .topLeading),
+            ],
+            alignment: .leading, spacing: 12
+          ) {
+            ForEach(creditsManager.credits, id: \.name) { credit in
+              CreditRow(credit: credit)
+                .padding(12)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .background(
+                  RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.secondary.opacity(0.08))
+                )
+            }
           }
-        }
+        #else
+          VStack(alignment: .leading, spacing: 4) {
+            ForEach(creditsManager.credits, id: \.name) { credit in
+              CreditRow(credit: credit)
+            }
+          }
+        #endif
       }
 
       ExpandableSection(
@@ -299,23 +305,6 @@ extension AboutView {
     }
   }
 
-  private var helpSection: some View {
-    Link(destination: URL(string: "https://blankie.rest/faq")!) {
-      HStack {
-        Image(systemName: "questionmark.circle").foregroundColor(.accentColor)
-          .accessibilityHidden(true)
-        Text("Blankie Help").foregroundColor(.primary)
-        Spacer()
-        Image(systemName: "safari").foregroundColor(.secondary)
-          .accessibilityHidden(true)
-      }
-      .padding(.vertical, 8)
-      .padding(.horizontal, 16)
-      .background(.regularMaterial)
-      .cornerRadius(8)
-    }
-    .handCursor()
-  }
 }
 
 // MARK: - iOS App Icon Chooser

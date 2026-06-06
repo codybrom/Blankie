@@ -22,38 +22,10 @@
       height: defaultHeight
     )
 
-    static let styleMask: NSWindow.StyleMask = [
-      .titled,
-      .closable,
-      .miniaturizable,
-      .resizable,
-    ]
-
-    static func configureWindow(_ window: NSWindow) {
-      window.title = title
-      window.toolbarStyle = .unified
-      window.minSize = NSSize(width: minWidth, height: minHeight)
-      window.isExcludedFromWindowsMenu = true
-      window.tabbingMode = .disallowed
-
-      // Get saved frame
-      let savedFrame = WindowObserver.shared.getLastWindowFrame()
-
-      // Set window frame with saved dimensions
-      window.setFrame(savedFrame, display: true)
-
-      // Center window if no saved position
-      if !UserDefaults.standard.bool(forKey: "HasSavedWindowPosition") {
-        window.center()
-        UserDefaults.standard.set(true, forKey: "HasSavedWindowPosition")
-      }
-    }
-
     static func defaultContentView(
-      showingAbout: Binding<Bool>,
       showingShortcuts: Binding<Bool>
     ) -> some View {
-      MacRootView(showingAbout: showingAbout, showingShortcuts: showingShortcuts)
+      MacRootView(showingShortcuts: showingShortcuts)
     }
   }
 #endif
