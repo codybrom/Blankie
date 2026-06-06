@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app around a Library sidebar with Liquid Glass throughout.
 
+### Breaking
+
+- The minimum macOS version to use Blankie is now macOS 26 (Tahoe)
+
 ### Added
 
 - **iPhone and iPad support** - Blankie is now a universal app, with layouts that adapt to each screen, iPad Split View, and an iPad sidebar for favorite presets, Quick Mix, and settings
@@ -48,7 +52,6 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - Rebuilt the documentation website on Astro 6
 - Improved German (Deutsch) translations - thanks to **H. Rapp**
 - Improved Spanish (Español) translations - thanks to **Dizz7**
-- **Breaking**: minimum requirements are now iOS 26 and macOS 26 (Tahoe)
 
 ### Fixed
 
