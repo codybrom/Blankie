@@ -305,48 +305,55 @@ import SwiftUI
       GeometryReader { geo in
         let side = min(geo.size.width, geo.size.height)
         let center = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-        // Clamped at 0: the sheet's present/dismiss transition passes through
-        // zero-size geometry, and a negative scale propagates negative frame
-        // dimensions and font sizes into the dismissal layout (crash).
-        let scale = max((side / 2 - 28) / CGFloat(Self.fieldRadius), 0)  // points per meter
+        let scale = (side / 2 - 28) / CGFloat(Self.fieldRadius)  // points per meter
         let radius = CGFloat(Self.fieldRadius) * scale
 
-        ZStack {
-          // Glassy field backing: .regular glass reads opaque on surfaces
-          // this large, so use clear glass + a slight dim + an accent rim.
-          glassDisc(radius: radius)
-            .position(center)
+        // The sheet's present/dismiss transition passes through zero-size
+        // geometry, where scale goes negative/zero and propagates degenerate
+        // frame dimensions and font sizes into layout (crashed dismissal).
+        // Render nothing until there's real space to draw in.
+        if scale > 0 {
+          gridContent(center: center, scale: scale, radius: radius)
+        }
+      }
+    }
 
-          gridBackground(center: center, scale: scale)
+    private func gridContent(center: CGPoint, scale: CGFloat, radius: CGFloat) -> some View {
+      ZStack {
+        // Glassy field backing: .regular glass reads opaque on surfaces
+        // this large, so use clear glass + a slight dim + an accent rim.
+        glassDisc(radius: radius)
+          .position(center)
 
-          // Live listening direction: head tracking anchors the SOUNDS in the
-          // room, so turning right means you now face sounds placed clockwise
-          // — the wedge sweeps over what you're pointed at.
-          FacingWedge()
-            .fill(.tint.opacity(0.13))
-            .frame(width: radius * 2, height: radius * 2)
-            .position(center)
-            .rotationEffect(
-              .degrees(-(headYawDegrees ?? 0)), anchor: .center
-            )
-            .animation(.linear(duration: 0.1), value: headYawDegrees)
-            .allowsHitTesting(false)
+        gridBackground(center: center, scale: scale)
 
-          // Solid hub over the dead zone — pins can't live here (0.5m clamp).
-          Circle()
-            .fill(.secondary.opacity(0.3))
-            .overlay {
-              Image(systemName: "headphones")
-                .font(.system(size: scale * 0.4))
-                .foregroundStyle(.secondary)
-            }
-            .frame(width: scale, height: scale)
-            .position(center)
-            .allowsHitTesting(false)
+        // Live listening direction: head tracking anchors the SOUNDS in the
+        // room, so turning right means you now face sounds placed clockwise
+        // — the wedge sweeps over what you're pointed at.
+        FacingWedge()
+          .fill(.tint.opacity(0.13))
+          .frame(width: radius * 2, height: radius * 2)
+          .position(center)
+          .rotationEffect(
+            .degrees(-(headYawDegrees ?? 0)), anchor: .center
+          )
+          .animation(.linear(duration: 0.1), value: headYawDegrees)
+          .allowsHitTesting(false)
 
-          ForEach(sounds, id: \.id) { sound in
-            SpatialDot(sound: sound, center: center, scale: scale)
+        // Solid hub over the dead zone — pins can't live here (0.5m clamp).
+        Circle()
+          .fill(.secondary.opacity(0.3))
+          .overlay {
+            Image(systemName: "headphones")
+              .font(.system(size: scale * 0.4))
+              .foregroundStyle(.secondary)
           }
+          .frame(width: scale, height: scale)
+          .position(center)
+          .allowsHitTesting(false)
+
+        ForEach(sounds, id: \.id) { sound in
+          SpatialDot(sound: sound, center: center, scale: scale)
         }
       }
     }
