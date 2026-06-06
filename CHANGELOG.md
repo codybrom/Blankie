@@ -20,11 +20,11 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - **iPhone and iPad support** - Blankie is now a universal app, with layouts that adapt to each screen, iPad Split View, and an iPad sidebar for favorite presets, Quick Mix, and settings
 - **CarPlay support** - a tabbed in-car interface with Presets (Recent, Favorites, and All), a Quick Mix sound grid, and a full Sounds list, plus a Now Playing screen with animated artwork, one-tap favoriting, and an in-car sound editor
 - **Custom sounds** - import your own audio files and play them alongside the built-in library, with automatic loudness matching so they sit at a comparable volume
-- **Apple Intelligence suggestions** - importing a sound suggests a clean display name and matching icon from the file name (with one-tap re-roll and undo for each), and preset names can be suggested when creating or editing presets, on devices with Apple Intelligence
-- **Add to Presets on import** - choose which presets a newly imported sound joins, or create a fresh "(Sound) Mix" preset in the same step
-- **Default lock screen animation** - pick an animation in Settings that presets fall back to when they don't set their own
-- **New Preset from playing sounds** - on the default preset, the edit button offers to start a new preset seeded with the current mix
-- Per-sound "Fade In and Out" and "Preset Use Only" playback options join Loop and Randomize Start in the sound editor
+- **Apple Intelligence name and icon suggestions** - Where enabled/available, Blankie will use the on-device Apple Intelligence model to suggest a display name and icon when importing a sound (based on the file name), or a preset name based on the attached sounds. There is also one-tap re-roll and undo for each. The feature is available when importing/creating or editing sounds and presets.
+- **Add to Presets on import** - you can choose which presets a newly imported sound joins, or create a fresh "[IMPORTED_SOUND_NAME] Mix" preset in the same step
+- **Lock screen animation** - choose from multiple video backgrounds that play on your lockscreen while your preset plays
+- **Make New Preset from playing sounds** - When you're on the built-in "All Blankie Sound" preset, the button where "Edit Preset" normally lives offers to start a new preset from your current mix
+- Per-sound Fade In and Out, Preset Use Only, Loop and Randomize Start options
 - Theme overrides (view mode, accent color, background blur) can be set while creating a preset, not just when editing one
 - A heads-up at launch when the app volume is turned all the way down, like Music on the Mac
 - Playing-sound indicator in the macOS and iPad sidebars, and double-clicking the current sidebar row toggles play/pause
@@ -41,7 +41,7 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - Preset import and export as `.blankie` files for sharing
 - Per-preset accent color, grid or list layout, and background blur
 - Drag to reorder sounds in both grid and list views
-- Interactive onboarding on first launch
+- Interactive onboarding on first launch. Onboarding is always skippable and finishes on your new preset.
 - Settings to toggle sound name labels and the progress border around playing sounds
 - **VoiceOver support** - labeled controls throughout, sliders that announce and adjust volume, sounds that announce their selection state, grouped sound credits and color pickers, and a Now Playing screen that properly holds focus
 - **Library sidebar** (macOS) - favorites, presets, and single sounds in a native sidebar that replaces the preset dropdown and hamburger menu, with menu-bar commands for every action and an always-visible volume slider and sleep timer in the bottom bar
@@ -58,8 +58,7 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - Re-normalized every built-in sound with two-way K-weighted (LUFS) loudness analysis so the whole library plays at a consistent level
 - Rebuilt audio playback on a shared audio engine so loudness normalization can now genuinely boost quiet sounds to the library's target level, a peak limiter on the final mix can prevent clipping, and playback can survives output-device switches and system audio resets
 - Rebuilt Settings and Preferences rows with idiomatic SwiftUI (Picker, LabeledContent, NavigationLink) so assistive technologies handle them natively
-- Unified Settings across platforms - macOS uses the same Settings screen as iOS, now opening inside the main window from the sidebar gear or ⌘, with About Blankie as a Settings page on every platform
-- Redesigned onboarding on macOS with native layout and larger type; onboarding is always skippable and finishes on your new preset
+- Unified Settings across platforms - macOS uses the same Settings layout as iOS, and opens inside the main window
 - New Preset and Edit Preset share one design, with a live preview of the preset's accent color while you pick it
 - Sounds show circular icons in the Library, matching CarPlay
 - The Mac window adapts its minimum size to the sidebar and opens at a roomier default size
@@ -70,13 +69,8 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 
 ### Fixed
 
-- Quieter sounds still played far below the rest of the library
-- Imported custom sounds could be over-boosted by imprecise loudness analysis
-- Audible pop when the fireplace sound loops
-- A volume saved at zero is restored on relaunch instead of jumping back to full
-- The last row of sounds could hide behind the Now Playing bar on iPhone
-- Short one-shot sounds no longer start mid-file or get cut short by fades
-- The import sheet's Loop toggle was silently ignored
+- Audible pop when the fireplace sound loops (replaced with new sound)
+- If Blankie's global volume was saved at zero, it now prompts a warning on relaunch instead so you'll know what sounds aren't audible
 - Links and sound credits follow the accent color instead of always showing blue
 
 ### Removed
