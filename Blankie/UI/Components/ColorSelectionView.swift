@@ -12,35 +12,12 @@ struct ColorSelectionView: View {
   @ObservedObject private var globalSettings = GlobalSettings.shared
 
   var textColorForCurrentTheme: Color {
-    let color = globalSettings.customAccentColor ?? .accentColor
-    #if os(macOS)
-      if let nsColor = NSColor(color).usingColorSpace(.sRGB) {
-        let brightness =
-          (0.299 * nsColor.redComponent) + (0.587 * nsColor.greenComponent)
-          + (0.114 * nsColor.blueComponent)
-        return brightness > 0.5 ? .black : .white
-      } else {
-        return .white
-      }
-    #else
-      return .white
-    #endif
+    (globalSettings.customAccentColor ?? .accentColor).contrastingLabel
   }
 
   func textColorForAccentColor(_ accentColor: AccentColor) -> Color {
     guard let color = accentColor.color else { return .white }
-    #if os(macOS)
-      if let nsColor = NSColor(color).usingColorSpace(.sRGB) {
-        let brightness =
-          (0.299 * nsColor.redComponent) + (0.587 * nsColor.greenComponent)
-          + (0.114 * nsColor.blueComponent)
-        return brightness > 0.5 ? .black : .white
-      } else {
-        return .white
-      }
-    #else
-      return .white
-    #endif
+    return color.contrastingLabel
   }
 
   var body: some View {
