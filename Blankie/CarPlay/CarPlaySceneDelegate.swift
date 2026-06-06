@@ -29,6 +29,11 @@ import os
       Logger.carPlay.debug("CarPlay: Scene delegate didConnect called!")
       self.interfaceController = interfaceController
 
+      // Covers CarPlay connects the route-change observer can miss.
+      Task { @MainActor in
+        SpatialSessionManager.shared.endSessionForCarAudio()
+      }
+
       // Set up CarPlay interface - the shared controller handles initialization
       CarPlayInterfaceController.shared.setInterfaceController(interfaceController)
     }

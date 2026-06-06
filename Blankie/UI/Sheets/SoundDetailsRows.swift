@@ -9,7 +9,8 @@ import SwiftUI
 
 /// Read-only technical detail rows, shown in Edit Sound's Details disclosure.
 struct SoundDetailsRows: View {
-  let sound: Sound
+  @ObservedObject var sound: Sound
+  @State private var isReanalyzing = false
 
   var body: some View {
     Group {
@@ -39,9 +40,25 @@ struct SoundDetailsRows: View {
         LabeledContent("File Size", value: getFileSizeText(from: fileSize))
       }
 
-      // LUFS
+      // LUFS (long-press to force a fresh analysis; deliberately undiscoverable)
       if let lufs = sound.lufs {
-        LabeledContent("LUFS", value: String(format: "%.1f", lufs))
+        LabeledContent("LUFS") {
+          if isReanalyzing {
+            ProgressView()
+              .controlSize(.small)
+          } else {
+            Text(String(format: "%.1f", lufs))
+          }
+        }
+        .contentShape(Rectangle())
+        .onLongPressGesture(minimumDuration: 1.0) {
+          guard !isReanalyzing else { return }
+          isReanalyzing = true
+          Task { @MainActor in
+            await sound.reanalyzeAudio()
+            isReanalyzing = false
+          }
+        }
       }
 
       // Normalization Factor with Gain on same line

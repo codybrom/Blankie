@@ -249,7 +249,7 @@ final class NowPlayingManager {
       nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyAlbumTitle)
       return
     }
-    let activeSounds = AudioManager.shared.sounds.filter { $0.player?.isPlaying == true }
+    let activeSounds = AudioManager.shared.sounds.filter { $0.isPlaying }
     if !activeSounds.isEmpty {
       let soundNames = activeSounds.map { $0.title }.joined(separator: ", ")
       nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = soundNames
@@ -285,21 +285,20 @@ final class NowPlayingManager {
       return (max(0, elapsed), sleepTimer.selectedDuration)
     }
 
-    let player: AVAudioPlayer?
+    let anchorSound: Sound?
     if let soloSound = AudioManager.shared.soloModeSound {
-      player = soloSound.player
+      anchorSound = soloSound
     } else {
       // Use active (selected) sounds, not only playing ones, so we still track
       // time when paused; mirror the "longest selected sound" choice.
-      player =
+      anchorSound =
         AudioManager.shared.sounds
         .filter { $0.isSelected }
-        .max { ($0.player?.duration ?? 0) < ($1.player?.duration ?? 0) }?
-        .player
+        .max { $0.playbackDuration < $1.playbackDuration }
     }
 
-    guard let player, player.duration > 0 else { return nil }
-    return (player.currentTime, player.duration)
+    guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
+    return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
 
   private func setInfiniteDuration() {

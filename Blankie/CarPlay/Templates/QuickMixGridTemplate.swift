@@ -53,9 +53,11 @@ import os
     }
 
     private static func createGridButton(for sound: Sound) -> CPGridButton {
-      // Check if sound is currently playing in QuickMix mode
+      // Check if sound is currently playing in QuickMix mode. Use logical
+      // playback state, not the node: a just-toggled-off sound is still
+      // rendering its fade-out when this template refreshes.
       let isPlaying =
-        sound.player?.isPlaying == true && AudioManager.shared.isQuickMix
+        sound.playbackState == .playing && AudioManager.shared.isQuickMix
         && AudioManager.shared.soloModeSound == nil
 
       // Create button titles

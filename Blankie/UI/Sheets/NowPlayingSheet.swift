@@ -359,15 +359,14 @@ import SwiftUI
         return (max(0, elapsed), timerManager.selectedDuration)
       }
 
-      let player =
-        audioManager.soloModeSound?.player
+      let anchorSound =
+        audioManager.soloModeSound
         ?? audioManager.sounds
         .filter { $0.isSelected }
-        .max { ($0.player?.duration ?? 0) < ($1.player?.duration ?? 0) }?
-        .player
+        .max { $0.playbackDuration < $1.playbackDuration }
 
-      guard let player, player.duration > 0 else { return nil }
-      return (player.currentTime, player.duration)
+      guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
+      return (anchorSound.playbackPosition, anchorSound.playbackDuration)
     }
 
     @ViewBuilder

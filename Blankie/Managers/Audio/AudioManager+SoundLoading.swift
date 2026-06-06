@@ -233,6 +233,16 @@ extension AudioManager {
     }
   }
 
+  /// Rebuilds every loaded player when the session starts or ends (the mono
+  /// fold and graph chain are decided at load time); position/resume
+  /// semantics live in rebuildPlayerForSpatialChange.
+  @MainActor
+  func applySpatialAudioSetting() {
+    for sound in sounds where sound.isLoaded {
+      sound.rebuildPlayerForSpatialChange()
+    }
+  }
+
   private func stopAndRemoveCustomSounds() -> [String: (isSelected: Bool, volume: Float)] {
     let customSoundsToRemove = sounds.filter { $0.isCustom }
     var savedState: [String: (isSelected: Bool, volume: Float)] = [:]
@@ -242,13 +252,14 @@ extension AudioManager {
       // new instance.
       savedState[sound.fileName] = (isSelected: sound.isSelected, volume: sound.volume)
 
-      // Stop and deselect unconditionally. This instance is leaving `sounds`
-      // but may still be retained (a grid tile, or a pending auto-play closure
-      // from `Sound.isSelected.didSet`). If we leave it selected, that closure
-      // can call `play()` on it after removal — and since it is no longer in
-      // `sounds`, nothing (pauseAll / disable loop / updatePlayingSounds) can
-      // ever stop it. Clearing `isSelected` also makes those closures no-op.
-      sound.pause(immediate: true)
+      // Stop, detach from the engine, and deselect unconditionally. This
+      // instance is leaving `sounds` but may still be retained (a grid tile,
+      // or a pending auto-play closure from `Sound.isSelected.didSet`). If we
+      // leave it selected, that closure can call `play()` on it after removal
+      // — and since it is no longer in `sounds`, nothing (pauseAll / disable
+      // loop / updatePlayingSounds) can ever stop it. Clearing `isSelected`
+      // also makes those closures no-op; unloading frees its engine nodes.
+      sound.unload()
       sound.isSelected = false
     }
     sounds.removeAll(where: { $0.isCustom })

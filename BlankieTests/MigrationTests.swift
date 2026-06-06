@@ -289,7 +289,7 @@ final class MigrationTests: XCTestCase {
     UserDefaults.standard.set(0.8, forKey: UserDefaultsKeys.volume)
     UserDefaults.standard.set("light", forKey: UserDefaultsKeys.appearance)
     UserDefaults.standard.set(true, forKey: UserDefaultsKeys.autoPlayOnLaunch)
-    UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hideInactiveSounds)
+    UserDefaults.standard.set(true, forKey: "hideInactiveSounds")
     UserDefaults.standard.set("en", forKey: UserDefaultsKeys.language)
     UserDefaults.standard.set(false, forKey: UserDefaultsKeys.enableSpatialAudio)
 
@@ -312,7 +312,7 @@ final class MigrationTests: XCTestCase {
       UserDefaultsKeys.volume,
       UserDefaultsKeys.appearance,
       UserDefaultsKeys.autoPlayOnLaunch,
-      UserDefaultsKeys.hideInactiveSounds,
+      "hideInactiveSounds",
       UserDefaultsKeys.language,
       UserDefaultsKeys.enableSpatialAudio,
       "soundState",

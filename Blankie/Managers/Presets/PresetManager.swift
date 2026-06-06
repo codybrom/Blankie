@@ -248,12 +248,7 @@ extension PresetManager {
     // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
     if AudioManager.shared.soloModeSound != nil || !presetStatesApplied { return }
 
-    guard let preset = currentPreset else {
-      if !isInitializing {
-        Logger.presets.debug("PresetManager: No current preset to update")
-      }
-      return
-    }
+    guard let preset = currentPreset else { return }
 
     let (newStates, currentSoundOrder) = generateUpdatedPresetData(for: preset)
     updatePresetIfChanged(
@@ -519,6 +514,12 @@ extension PresetManager {
       let shouldAutoPlay = !isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch
       if shouldAutoPlay, targetStates.contains(where: { $0.isSelected }) {
         AudioManager.shared.setGlobalPlaybackState(true)
+      }
+
+      // Spatial sessions are bound to the mix they started on; switching
+      // presets ends them.
+      if SpatialSessionManager.shared.isActive {
+        SpatialSessionManager.shared.setMode(.off)
       }
 
       // Prefetch animated artwork for nearby presets so they're available on lock screen

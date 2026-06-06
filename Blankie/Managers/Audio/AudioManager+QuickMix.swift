@@ -26,14 +26,19 @@ extension AudioManager {
     // Clear any current preset
     PresetManager.shared.clearCurrentPreset()
 
+    // Spatial sessions are bound to the preset mix; Quick Mix ends them.
+    if SpatialSessionManager.shared.isActive {
+      SpatialSessionManager.shared.setMode(.off)
+    }
+
     // Save original states of all sounds
     quickMixOriginalStates = sounds.map { sound in
       QuickMixState(sound: sound, isSelected: sound.isSelected, volume: sound.volume)
     }
 
-    // Stop all sounds first
+    // Fade all sounds out first (entering Quick Mix reads as a crossfade)
     for sound in sounds {
-      sound.pause(immediate: true)
+      sound.pause()
       sound.isSelected = false
     }
 
@@ -66,7 +71,7 @@ extension AudioManager {
     }
 
     // Update playback state
-    let hasActiveSounds = sounds.contains { $0.isSelected && $0.player?.isPlaying == true }
+    let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
     setGlobalPlaybackState(hasActiveSounds)
 
     // Update Now Playing info
@@ -152,7 +157,7 @@ extension AudioManager {
     }
 
     // Update playback state
-    let hasActiveSounds = sounds.contains { $0.isSelected && $0.player?.isPlaying == true }
+    let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
     setGlobalPlaybackState(hasActiveSounds)
 
     // Update Now Playing info

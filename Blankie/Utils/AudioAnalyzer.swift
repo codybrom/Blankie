@@ -195,29 +195,10 @@ class AudioAnalyzer {
         file.framePosition = position
         try file.read(into: buffer)
 
-        // Process each channel with 4x oversampling
+        // Process each channel with 4x oversampling (shared with buffer overload)
         for channel in 0..<Int(format.channelCount) {
           guard let channelData = buffer.floatChannelData?[channel] else { continue }
-
-          // Simple 4x oversampling using linear interpolation
-          let oversampledLength = Int(buffer.frameLength) * 4
-          var oversampledData = [Float](repeating: 0, count: oversampledLength)
-
-          // Upsample with linear interpolation
-          for index in 0..<Int(buffer.frameLength - 1) {
-            let sample1 = channelData[index]
-            let sample2 = channelData[index + 1]
-            let delta = (sample2 - sample1) / 4.0
-
-            oversampledData[index * 4] = sample1
-            oversampledData[index * 4 + 1] = sample1 + delta
-            oversampledData[index * 4 + 2] = sample1 + delta * 2
-            oversampledData[index * 4 + 3] = sample1 + delta * 3
-          }
-
-          // Find peak in oversampled data
-          var peak: Float = 0
-          vDSP_maxmgv(oversampledData, 1, &peak, vDSP_Length(oversampledLength))
+          let peak = oversampledPeak(channelData: channelData, frameLength: buffer.frameLength)
           globalTruePeak = max(globalTruePeak, peak)
         }
 
@@ -294,6 +275,100 @@ class AudioAnalyzer {
       needsLimiter: needsLimiter,
       duration: duration
     )
+  }
+
+  // MARK: - Buffer-Based Analysis
+
+  /// Per-channel 4x linear-oversampled magnitude peak, shared by the URL and
+  /// buffer true-peak paths so there is one implementation of the computation.
+  static func oversampledPeak(
+    channelData: UnsafeMutablePointer<Float>,
+    frameLength: AVAudioFrameCount
+  ) -> Float {
+    guard frameLength > 1 else {
+      var peak: Float = 0
+      vDSP_maxmgv(channelData, 1, &peak, vDSP_Length(frameLength))
+      return peak
+    }
+
+    let oversampledLength = Int(frameLength) * 4
+    var oversampledData = [Float](repeating: 0, count: oversampledLength)
+
+    for index in 0..<Int(frameLength - 1) {
+      let sample1 = channelData[index]
+      let sample2 = channelData[index + 1]
+      let delta = (sample2 - sample1) / 4.0
+
+      oversampledData[index * 4] = sample1
+      oversampledData[index * 4 + 1] = sample1 + delta
+      oversampledData[index * 4 + 2] = sample1 + delta * 2
+      oversampledData[index * 4 + 3] = sample1 + delta * 3
+    }
+    // The loop stops one sample short; write the final source sample so a
+    // peak on the last frame isn't missed.
+    oversampledData[(Int(frameLength) - 1) * 4] = channelData[Int(frameLength) - 1]
+
+    var peak: Float = 0
+    vDSP_maxmgv(oversampledData, 1, &peak, vDSP_Length(oversampledLength))
+    return peak
+  }
+
+  /// Integrated LUFS of an in-memory buffer, reusing the exact chunk pipeline
+  /// from the file path (filter state resets per 48k-frame chunk there too).
+  static func integratedLUFS(buffer: AVAudioPCMBuffer) -> Float? {
+    let channelCount = buffer.format.channelCount
+    guard channelCount > 0, buffer.frameLength > 0,
+      let channelPointers = buffer.floatChannelData
+    else { return nil }
+
+    let filterCoefficients = getKWeightingCoefficients()
+    let chunkSize: AVAudioFrameCount = 48000
+    var measurements: [Float] = []
+    var position: AVAudioFrameCount = 0
+
+    while position < buffer.frameLength {
+      let framesInChunk = min(chunkSize, buffer.frameLength - position)
+
+      guard
+        let chunk = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: framesInChunk),
+        let chunkPointers = chunk.floatChannelData
+      else {
+        position += framesInChunk
+        continue
+      }
+      chunk.frameLength = framesInChunk
+
+      for channel in 0..<Int(channelCount) {
+        chunkPointers[channel].update(
+          from: channelPointers[channel] + Int(position), count: Int(framesInChunk))
+      }
+
+      if let loudness = processAudioChunk(
+        chunk, channelCount: channelCount, filterCoefficients: filterCoefficients)
+      {
+        measurements.append(loudness)
+      }
+
+      position += framesInChunk
+    }
+
+    return calculateIntegratedLUFS(from: measurements)
+  }
+
+  /// True peak (dBTP) of an in-memory buffer via the shared oversampling helper.
+  static func truePeakdBTP(buffer: AVAudioPCMBuffer) -> Float? {
+    guard buffer.frameLength > 0, let channelData = buffer.floatChannelData else {
+      return nil
+    }
+
+    var globalTruePeak: Float = 0
+    for channel in 0..<Int(buffer.format.channelCount) {
+      let peak = oversampledPeak(
+        channelData: channelData[channel], frameLength: buffer.frameLength)
+      globalTruePeak = max(globalTruePeak, peak)
+    }
+
+    return globalTruePeak > 0 ? 20 * log10(globalTruePeak) : -Float.infinity
   }
 
   // MARK: - Duration Analysis

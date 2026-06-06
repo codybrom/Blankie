@@ -14,58 +14,36 @@ extension Sound {
 
   func updateVolume() {
     // Skip volume calculations during app initialization when no player exists
-    guard player != nil else {
+    guard let player else {
       return
     }
+
+    // Global volume and mix-with-others ride the engine's main mixer
+    // (AudioEngineManager); this computes only the per-sound contribution.
     let scaledVol = scaledVolume(volume)
-    var effectiveVolume = scaledVol * Float(GlobalSettings.shared.volume)
 
-    // Apply custom volume level when mixing with other audio
-    if GlobalSettings.shared.mixWithOthers {
-      effectiveVolume *= Float(GlobalSettings.shared.volumeWithOtherAudio)
-    }
-
-    // Apply normalization and volume adjustment
+    // Apply normalization or manual volume adjustment
     let normalizationSettings = getNormalizationSettings()
-    if normalizationSettings.normalizeAudio {
-      // Use detected peak level if available, otherwise use default
-      let normalizationFactor = getNormalizationFactor()
-      effectiveVolume *= normalizationFactor
-      // When normalization is enabled, ignore volume adjustment
-    } else {
-      // Only apply volume adjustment when normalization is disabled
-      effectiveVolume *= normalizationSettings.volumeAdjustment
-    }
+    let factor =
+      normalizationSettings.normalizeAudio
+      ? getNormalizationFactor() : normalizationSettings.volumeAdjustment
 
-    // Apply soft limiting if needed to prevent clipping
-    if needsLimiter && effectiveVolume > 0.95 {
-      // Simple soft clipping function using tanh
-      // This provides a smooth transition as we approach 1.0
-      let softLimitThreshold: Float = 0.85
-      if effectiveVolume > softLimitThreshold {
-        let excess = (effectiveVolume - softLimitThreshold) / (1.0 - softLimitThreshold)
-        let limited = softLimitThreshold + (1.0 - softLimitThreshold) * tanh(excess * 2)
-        Logger.sounds.debug(
-          "Sound: Applying soft limiter to '\(self.fileName)' - from \(effectiveVolume) to \(limited)"
-        )
-        effectiveVolume = limited
-      }
+    // Split the factor on 1.0: boost (≥1) lands in the EQ stage in dB (node
+    // volume is capped at 1.0 and silently eats boosts — the original bug);
+    // attenuation (≤1) rides the node volume with the slider. The mix-bus
+    // peak limiter guards any residual clipping from boosted sounds.
+    var boostDB: Float = factor > 1 ? 20 * log10(factor) : 0
+    if player.isMonoSource && !player.isSpatial {
+      boostDB += 3.0  // the mixer pans mono inputs ≈3 dB down; compensate
     }
+    player.setBoostDB(min(boostDB, 24))
 
-    // Only log volume calculations if they actually change the player volume
-    if player?.volume != effectiveVolume {
-      player?.volume = effectiveVolume
-      Logger.sounds.debug("Sound: Set player volume for '\(self.fileName)' to \(effectiveVolume)")
-
-      // Debounce just the print statement
-      updateVolumeLogTimer?.invalidate()
-      updateVolumeLogTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
-        [weak self] _ in
-        guard let self = self else { return }
-        Logger.sounds.debug("Sound: Updated '\(self.fileName)' volume to \(effectiveVolume)")
-      }
+    let effectiveVolume = scaledVol * min(factor, 1)
+    if player.volume != effectiveVolume {
+      player.volume = effectiveVolume
+      Logger.sounds.debug(
+        "Sound: Set volume for '\(self.fileName)' to \(effectiveVolume) (boost: \(boostDB) dB)")
     }
-    // Remove "Volume already at" logging - too verbose for production
   }
 
   private func scaledVolume(_ linear: Float) -> Float {
@@ -79,6 +57,14 @@ extension Sound {
       normalizeAudio: customization?.normalizeAudio ?? true,
       volumeAdjustment: customization?.volumeAdjustment ?? 1.0
     )
+  }
+
+  /// Current normalization boost in dB (0 when attenuating). Spatial players
+  /// bake this into their mono fold since the EQ isn't in the spatial chain.
+  func normalizationBoostDB() -> Float {
+    let settings = getNormalizationSettings()
+    let factor = settings.normalizeAudio ? getNormalizationFactor() : settings.volumeAdjustment
+    return factor > 1 ? 20 * log10(factor) : 0
   }
 
   private func getNormalizationFactor() -> Float {
@@ -109,6 +95,52 @@ extension Sound {
     Task {
       await analyzeAndUpdateLUFS()
     }
+  }
+
+  /// Forces a fresh loudness analysis, overwriting the stored profile and
+  /// cached values. The deferred path only fills *missing* data, so stale
+  /// profiles (e.g. pre-cap gains) never refresh without this.
+  @MainActor
+  func reanalyzeAudio() async {
+    guard let url = getSoundURL() else {
+      Logger.sounds.error("Sound: Cannot re-analyze '\(self.fileName, privacy: .public)' - no file")
+      return
+    }
+    Logger.sounds.debug("Sound: Re-analyzing audio for '\(self.fileName)'")
+
+    let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: url)
+    // Match the keys the loaders read: customs are keyed by bare fileName,
+    // built-ins by fileName.extension.
+    let profileKey = isCustom ? fileName : "\(fileName).\(fileExtension)"
+    guard let profile = PlaybackProfile.from(analysis: analysis, filename: profileKey) else {
+      Logger.sounds.error(
+        "Sound: Re-analysis produced no profile for '\(self.fileName, privacy: .public)'")
+      return
+    }
+
+    PlaybackProfileStore.shared.store(profile)
+    // A new boost means a different spatial-cache key; re-check on next read.
+    spatialReadyCache = nil
+    let freshFactor = pow(10, profile.gainDB / 20)
+
+    if isCustom, let customSoundData {
+      customSoundData.detectedLUFS = profile.integratedLUFS
+      customSoundData.normalizationFactor = freshFactor
+      do {
+        try CustomSoundManager.shared.saveContext()
+      } catch {
+        Logger.sounds.error(
+          "Sound: Failed to save re-analysis for '\(self.fileName, privacy: .public)': \(error, privacy: .public)"
+        )
+      }
+    }
+
+    lufs = profile.integratedLUFS
+    normalizationFactor = freshFactor
+    updateVolume()
+    Logger.sounds.debug(
+      "Sound: Re-analysis complete for '\(self.fileName)' - LUFS: \(profile.integratedLUFS), gain: \(profile.gainDB) dB"
+    )
   }
 
   /// Analyze LUFS for this sound if missing and update the data

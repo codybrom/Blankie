@@ -39,6 +39,7 @@ private enum IPhonePage: Hashable {
     /// Keeps the solo backdrop up while sheet preview temporarily exits solo mode.
     @State private var soloBackdropSound: Sound?
     @State var presetToEdit: Preset?
+    @State var showingSpatialMixer = false
     @State var soundsUpdateTrigger = 0
     @State var showingNowPlaying = false
     @State private var isLandscape = false
@@ -113,6 +114,9 @@ private enum IPhonePage: Hashable {
       }
       .sheet(isPresented: $showingQuickMixEditor) {
         QuickMixEditorSheet()
+      }
+      .sheet(isPresented: $showingSpatialMixer) {
+        SpatialMixerView()
       }
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
