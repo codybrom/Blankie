@@ -71,6 +71,10 @@ import SwiftUI
         }
       }
       .safeAreaPadding(16)
+      // The Now Playing mini player floats over the bottom edge and its
+      // safe-area-bar inset doesn't reach this nested ScrollView — reserve
+      // room so the last row can scroll clear of the bar (58pt + breathing).
+      .contentMargins(.bottom, 72, for: .scrollContent)
       .onChange(of: sounds) { _, newSounds in
         guard !isDragging else { return }
         // After our own move commits, `sounds` returns in the order `items`

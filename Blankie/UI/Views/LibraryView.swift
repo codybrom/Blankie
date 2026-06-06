@@ -10,9 +10,9 @@ import TipKit
 import UniformTypeIdentifiers
 import os
 
-/// Shared "now playing" treatment for Library rows. iPad sidebar rows highlight
-/// the whole row and tint the title with the active accent; iPhone page rows
-/// show an animated equalizer glyph in place of the old checkmark.
+/// Shared "now playing" treatment for Library rows. Sidebar rows highlight
+/// the whole row and tint the title with the active accent; every presentation
+/// shows an animated equalizer glyph in place of the old checkmark.
 enum LibraryRowStyle {
   static func titleColor(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
@@ -46,10 +46,13 @@ enum LibraryRowStyle {
 
   @ViewBuilder
   static func nowPlayingIndicator(
-    isCurrent: Bool, isPlaying: Bool, accent: Color, presentation: LibraryView.Presentation
+    isCurrent: Bool, isPlaying: Bool, accent: Color
   ) -> some View {
-    if isCurrent && presentation != .sidebar {
+    if isCurrent {
+      // Recreate on play/pause: the bars' repeatForever animations survive a
+      // non-animated height change, so a stopped row would keep bouncing.
       EqualizerIcon(isPlaying: isPlaying, accent: accent)
+        .id(isPlaying)
     }
   }
 }
@@ -169,12 +172,22 @@ struct PresetPickerRow: View {
 
         LibraryRowStyle.nowPlayingIndicator(
           isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying,
-          accent: accent, presentation: presentation)
+          accent: accent)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
-      .onTapGesture {
-        if !isEditMode { applyPreset() }
+      // Sidebar (iPad/macOS): the current row needs a double tap/click, which
+      // toggles play–pause; elsewhere a single tap applies as usual.
+      .onTapGesture(count: presentation == .sidebar && isCurrent ? 2 : 1) {
+        guard !isEditMode else { return }
+        if presentation == .sidebar && isCurrent {
+          // Don't start a silent mix; pausing is always allowed.
+          if audioManager.isGloballyPlaying || audioManager.hasSelectedSounds {
+            audioManager.togglePlayback()
+          }
+        } else {
+          applyPreset()
+        }
       }
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
@@ -277,7 +290,8 @@ struct SoloPickerRow: View {
           artworkId: nil,
           preset: nil,
           fallbackSystemImage: sound.systemIconName,
-          tint: accent
+          tint: accent,
+          isCircular: true
         )
         .accessibilityHidden(true)
 
@@ -288,12 +302,19 @@ struct SoloPickerRow: View {
 
         LibraryRowStyle.nowPlayingIndicator(
           isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying,
-          accent: accent, presentation: presentation)
+          accent: accent)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
-      .onTapGesture {
-        if !isEditMode { soloSound() }
+      // Sidebar (iPad/macOS): the current row needs a double tap/click, which
+      // toggles play–pause; elsewhere a single tap applies as usual.
+      .onTapGesture(count: presentation == .sidebar && isCurrent ? 2 : 1) {
+        guard !isEditMode else { return }
+        if presentation == .sidebar && isCurrent {
+          audioManager.togglePlayback()
+        } else {
+          soloSound()
+        }
       }
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
@@ -371,6 +392,9 @@ struct LibraryView: View {
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
+  // Re-filter the Sounds section when per-sound customizations change
+  // (preset-use-only, loop, renames) — they live outside the audio manager.
+  @ObservedObject private var customizationManager = SoundCustomizationManager.shared
   @State private var showingNewPresetSheet = false
   @State private var presetToDelete: Preset?
   @State private var isEditMode = false
@@ -399,9 +423,11 @@ struct LibraryView: View {
 
   /// Non-favorited sounds, alphabetical by title, for the fixed Sounds (solo)
   /// section. Favorited sounds appear in the Favorites section instead — the
-  /// same split presets use, so nothing shows twice.
+  /// same split presets use, so nothing shows twice. Preset-use-only sounds
+  /// don't solo and stay out entirely.
   private var soloSounds: [Sound] {
     audioManager.sounds
+      .filter { !$0.isPresetUseOnly }
       .filter { !globalSettings.isStarred(GlobalSettings.soloToken(forFileName: $0.fileName)) }
       .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
   }
@@ -632,7 +658,7 @@ struct LibraryView: View {
         Spacer()
         LibraryRowStyle.nowPlayingIndicator(
           isCurrent: audioManager.isQuickMix, isPlaying: audioManager.isGloballyPlaying,
-          accent: accent, presentation: presentation)
+          accent: accent)
       }
     }
     .accessibilityAddTraits(audioManager.isQuickMix ? [.isSelected] : [])
@@ -794,10 +820,19 @@ struct LibraryView: View {
         }
       }
     }
-    // The sheet and pushed page keep their "Library" title; the sidebar is
+    // The iPhone page is the app's root screen, so it titles as "Blankie";
+    // the (currently unused) sheet keeps "Library"; the sidebar is
     // self-evidently the library, so it omits the title to leave the bar for
     // the controls.
-    .navigationTitle(presentation == .sidebar ? Text(verbatim: "") : Text("Library"))
+    .navigationTitle(
+      {
+        switch presentation {
+        case .sidebar: return Text(verbatim: "")
+        case .page: return Text(verbatim: "Blankie")
+        case .sheet: return Text("Library")
+        }
+      }()
+    )
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
     #endif
@@ -936,22 +971,28 @@ struct LibraryView: View {
   }
 }
 
-/// CarPlay-style leading artwork squircle for picker rows. Loads the preset's
+/// CarPlay-style leading artwork tile for picker rows. Loads the preset's
 /// saved artwork asynchronously (cached by `PresetArtworkManager`); when there
 /// is no artwork — solo sounds, Quick Mix, or a preset without a custom image —
-/// it shows the supplied glyph on a faintly tinted squircle so every row keeps
-/// the same leading footprint.
+/// it shows the supplied glyph on a faintly tinted tile so every row keeps
+/// the same leading footprint. Presets and Quick Mix use a squircle; sound
+/// rows use a circle to read as a different kind of item.
 struct PresetThumbnail: View {
   let artworkId: UUID?
   let preset: Preset?
   let fallbackSystemImage: String
   let tint: Color
+  var isCircular = false
 
   @Environment(\.displayScale) private var displayScale
   @State private var image: PlatformImage?
 
   private let size: CGFloat = 36
-  private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 9, style: .continuous) }
+  private var shape: AnyShape {
+    isCircular
+      ? AnyShape(Circle())
+      : AnyShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+  }
 
   var body: some View {
     Group {
@@ -971,7 +1012,15 @@ struct PresetThumbnail: View {
     }
     .frame(width: size, height: size)
     .clipShape(shape)
-    .overlay { shape.strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5) }
+    // strokeBorder needs a concrete InsettableShape, which AnyShape isn't.
+    .overlay {
+      if isCircular {
+        Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+      } else {
+        RoundedRectangle(cornerRadius: 9, style: .continuous)
+          .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+      }
+    }
     .task(
       id:
         "\(artworkId?.uuidString ?? "nil")-\(preset?.animatedArtwork?.squarePreviewPath ?? preset?.animatedArtwork?.previewPath ?? "nil")"
