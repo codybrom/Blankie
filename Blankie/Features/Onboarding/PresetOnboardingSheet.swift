@@ -24,6 +24,22 @@ struct PresetOnboardingSheet: View {
 
   private let steps = OnboardingStep.allSteps
 
+  // macOS resolves text styles smaller than iOS (body is 13pt vs 17pt), so
+  // the onboarding copy steps up one style there to read well at sheet scale.
+  #if os(macOS)
+    private let titleFont: Font = .largeTitle.weight(.bold)
+    private let descriptionFont: Font = .title3
+    private let promptFont: Font = .title3.weight(.semibold)
+    private let detailFont: Font = .body
+    private let hintFont: Font = .callout
+  #else
+    private let titleFont: Font = .title.weight(.bold)
+    private let descriptionFont: Font = .body
+    private let promptFont: Font = .headline
+    private let detailFont: Font = .subheadline
+    private let hintFont: Font = .caption
+  #endif
+
   var body: some View {
     NavigationStack {
       ZStack {
@@ -43,16 +59,21 @@ struct PresetOnboardingSheet: View {
           progressIndicator
 
           // Content
-          TabView(selection: $currentStep) {
-            ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-              stepView(for: step, at: index)
-                .tag(index)
+          #if os(macOS)
+            // macOS TabView renders visible tab chrome, so show the current step directly
+            stepView(for: steps[currentStep], at: currentStep)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .animation(.easeInOut, value: currentStep)
+          #else
+            TabView(selection: $currentStep) {
+              ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                stepView(for: step, at: index)
+                  .tag(index)
+              }
             }
-          }
-          #if !os(macOS)
             .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(.easeInOut, value: currentStep)
           #endif
-          .animation(.easeInOut, value: currentStep)
 
           // Navigation buttons
           navigationButtons
@@ -77,6 +98,11 @@ struct PresetOnboardingSheet: View {
         aiAvailable = AIPresetNameGenerator.isAvailable
       }
     }
+    // Only Skip (or finishing) dismisses — no swipe-down or click-outside.
+    .interactiveDismissDisabled()
+    #if os(macOS)
+      .frame(width: 500, height: 640)
+    #endif
   }
 
   // MARK: - Step Views
@@ -110,7 +136,7 @@ struct PresetOnboardingSheet: View {
 
         // Title
         Text(step.title)
-          .font(.title.weight(.bold))
+          .font(titleFont)
           .multilineTextAlignment(.leading)
 
         // Description
@@ -119,7 +145,7 @@ struct PresetOnboardingSheet: View {
             ? "'\(presetName)' is ready! Tap 'Create Preset' to save and start listening."
             : step.description
         )
-        .font(.body)
+        .font(descriptionFont)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.leading)
       }
@@ -154,13 +180,13 @@ struct PresetOnboardingSheet: View {
       Label("Listen offline, anytime and anywhere", systemImage: "wifi.slash")
       Label("Add your own sounds and backgrounds", systemImage: "music.note.list")
     }
-    .font(.subheadline)
+    .font(detailFont)
   }
 
   private var colorPickerContent: some View {
     VStack(spacing: 8) {
       Text("Drag the slider to pick a color")
-        .font(.headline)
+        .font(promptFont)
 
       SpectrumColorPicker(
         selectedColor: Binding(
@@ -174,9 +200,9 @@ struct PresetOnboardingSheet: View {
     VStack(spacing: 16) {
       VStack(spacing: 4) {
         Text("Pick some sounds for your first mix")
-          .font(.headline)
+          .font(promptFont)
         Text("Select at least 2 sounds")
-          .font(.caption)
+          .font(hintFont)
           .foregroundStyle(selectedSounds.count >= 2 ? Color.secondary : Color.red)
       }
 
@@ -268,7 +294,7 @@ struct PresetOnboardingSheet: View {
   private var namePresetContent: some View {
     VStack(spacing: 20) {
       Text("Give it a memorable name")
-        .font(.headline)
+        .font(promptFont)
       TextField("e.g., Mindful Meditation", text: $presetName)
         .textFieldStyle(.roundedBorder)
         .font(.title3)
@@ -287,7 +313,7 @@ struct PresetOnboardingSheet: View {
               ProgressView()
                 .progressViewStyle(CircularProgressViewStyle())
                 .scaleEffect(0.8)
-              Text("Generating...")
+              Text("Generating with Apple Intelligence...")
             }
           } else {
             Label("Generate Another Name", systemImage: "sparkles")
@@ -311,7 +337,7 @@ struct PresetOnboardingSheet: View {
                   .font(.caption)
                   .padding(.horizontal, 12)
                   .padding(.vertical, 6)
-                  .background(globalSettings.customAccentColor ?? .accentColor.opacity(0.2))
+                  .background((globalSettings.customAccentColor ?? .accentColor).opacity(0.2))
                   .clipShape(Capsule())
               }
             }
@@ -335,13 +361,13 @@ struct PresetOnboardingSheet: View {
     if !presetName.isEmpty {
       VStack(alignment: .leading, spacing: 16) {
         Text("What's next?")
-          .font(.headline)
+          .font(promptFont)
         VStack(alignment: .leading, spacing: 12) {
           Label("Mix sounds with individual volume controls", systemImage: "slider.horizontal.3")
           Label("Import your own sounds and backgrounds", systemImage: "square.and.arrow.down")
           Label("Set a timer to fade out automatically", systemImage: "timer")
         }
-        .font(.subheadline)
+        .font(detailFont)
         .foregroundStyle(.secondary)
         .padding(.top, 8)
       }
@@ -349,6 +375,12 @@ struct PresetOnboardingSheet: View {
   }
 
   // MARK: - UI Components
+
+  /// Glass-prominent buttons keep a white label even on light accents, so the
+  /// label color is chosen against the tint explicitly.
+  private var accentContrastLabel: Color {
+    (globalSettings.customAccentColor ?? .accentColor).contrastingLabel
+  }
 
   private var progressIndicator: some View {
     HStack(spacing: 8) {
@@ -370,7 +402,13 @@ struct PresetOnboardingSheet: View {
 
   private var navigationButtons: some View {
     HStack(spacing: 16) {
-      // Skip/Back button
+      // Skip is always available; Escape triggers it.
+      Button("Skip") {
+        skipOnboarding()
+      }
+      .buttonStyle(.bordered)
+      .keyboardShortcut(.cancelAction)
+
       if currentStep > 0 {
         Button {
           withAnimation {
@@ -379,11 +417,6 @@ struct PresetOnboardingSheet: View {
         } label: {
           Label("Back", systemImage: "chevron.left")
             .font(.body)
-        }
-        .buttonStyle(.bordered)
-      } else {
-        Button("Skip") {
-          dismiss()
         }
         .buttonStyle(.bordered)
       }
@@ -407,9 +440,10 @@ struct PresetOnboardingSheet: View {
         } label: {
           Label(currentStep == 0 ? "Get Started" : "Next", systemImage: "chevron.right")
             .font(.body)
+            .foregroundStyle(accentContrastLabel)
             .labelStyle(.trailingIcon)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
         .disabled(
           (currentStep == 2 && selectedSounds.count < 2) || (currentStep == 3 && presetName.isEmpty)
         )
@@ -419,8 +453,9 @@ struct PresetOnboardingSheet: View {
         } label: {
           Label("Create Preset", systemImage: "checkmark")
             .font(.body.weight(.semibold))
+            .foregroundStyle(accentContrastLabel)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.glassProminent)
         .disabled(presetName.isEmpty)
       }
     }
@@ -431,6 +466,12 @@ struct PresetOnboardingSheet: View {
   }
 
   // MARK: - Actions
+
+  private func skipOnboarding() {
+    stopAllPreviews()
+    onboardingManager.completeOnboarding()
+    dismiss()
+  }
 
   private func togglePreview(for sound: Sound) {
     if previewingSound == sound.fileName {
@@ -536,6 +577,10 @@ struct PresetOnboardingSheet: View {
         // Mark onboarding as complete
         onboardingManager.markPresetCreated()
         onboardingManager.completeOnboarding()
+
+        // Land the user on their new preset (the roots navigate and reset
+        // this: iPhone pushes the mixer, macOS closes the Settings pane).
+        AppState.shared.onboardingCreatedPreset = true
 
         // Dismiss
         dismiss()
