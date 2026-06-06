@@ -19,13 +19,13 @@ import SwiftUI
 
       let filteredSounds = visibleSounds.filter { sound in
         guard let currentPreset = presetManager.currentPreset else {
-          // No current preset — show everything.
-          return true
+          // No current preset — show everything but preset-use-only sounds.
+          return !sound.isPresetUseOnly
         }
-        // Default preset shows all sounds; a custom preset shows only the
-        // sounds that belong to it.
+        // The default preset hides preset-use-only sounds; a custom preset
+        // shows only the sounds that belong to it.
         if currentPreset.isDefault {
-          return true
+          return !sound.isPresetUseOnly
         }
         return currentPreset.soundStates.contains { $0.fileName == sound.fileName }
       }

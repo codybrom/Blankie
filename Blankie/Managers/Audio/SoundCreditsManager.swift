@@ -99,16 +99,18 @@ extension Sound {
       guard let data = customSoundData else { return nil }
 
       // Explicit credit fields first, then ID3 metadata captured at import.
-      let workTitle = nonEmpty(data.id3Title) ?? nonEmpty(data.originalFileName)
+      let id3Title = nonEmpty(data.id3Title)
       let author = nonEmpty(data.creditAuthor) ?? nonEmpty(data.id3Artist)
       let sourceUrl = nonEmpty(data.creditSourceUrl) ?? nonEmpty(data.id3Url)
       let license = License(rawValue: data.creditLicenseType)
 
-      guard workTitle != nil || author != nil || sourceUrl != nil || license != nil else {
+      // The original filename is only a fallback display title; alone it
+      // isn't a credit worth surfacing.
+      guard id3Title != nil || author != nil || sourceUrl != nil || license != nil else {
         return nil
       }
       return ResolvedSoundCredit(
-        workTitle: workTitle,
+        workTitle: id3Title ?? nonEmpty(data.originalFileName),
         workUrl: sourceUrl.flatMap { URL(string: $0) },
         author: author,
         license: license,

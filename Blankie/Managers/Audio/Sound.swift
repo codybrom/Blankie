@@ -55,6 +55,13 @@ open class Sound: NSObject, ObservableObject, Identifiable {
       originalIconName: originalSystemIconName) ?? originalSystemIconName
   }
 
+  /// Hidden from the Library's Sounds list and the All Sounds grid; still
+  /// usable inside presets. Non-looping one-shots are always preset-only.
+  var isPresetUseOnly: Bool {
+    let customization = SoundCustomizationManager.shared.getCustomization(for: fileName)
+    return (customization?.isPresetUseOnly ?? false) || !(customization?.loopSound ?? true)
+  }
+
   @Published var isSelected = false {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")

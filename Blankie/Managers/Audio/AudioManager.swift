@@ -164,6 +164,15 @@ extension AudioManager {
         "AudioManager: hasSelectedSounds changed from \(self.hasSelectedSounds) to \(newValue)")
       hasSelectedSounds = newValue
 
+      // Turning off the last sound pauses playback: silence should read as
+      // paused, never as a silent "playing" state.
+      if !newValue && isGloballyPlaying {
+        Logger.audio.debug("AudioManager: Last sound deselected - pausing playback")
+        Task { @MainActor in
+          setGlobalPlaybackState(false)
+        }
+      }
+
       // Auto-start playback when sounds are selected and nothing is currently playing
       // Only auto-start if autoplay is enabled and we're not during initialization
       if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch

@@ -291,8 +291,10 @@ extension AudioManager {
         // Update volume to reflect the restored state
         sound.updateVolume()
 
-        // Restore playback state: if it was playing before and should still be playing
-        if originalState.isPlaying, isGloballyPlaying {
+        // Restore playback state: if it was playing before and should still be
+        // playing. isSelected can flip mid-preview (e.g. the editor marking a
+        // sound preset-only deselects it) — never resume a deselected sound.
+        if originalState.isPlaying, isGloballyPlaying, sound.isSelected {
           if !sound.isPlaying {
             Logger.audio.debug(
               "AudioManager: Resuming '\(sound.title)' - was playing before preview")
