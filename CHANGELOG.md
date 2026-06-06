@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-06-03
+## [2.0.0] - Planned June 2026
 
 Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app around a Library sidebar with Liquid Glass throughout.
 
