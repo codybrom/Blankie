@@ -21,7 +21,12 @@
       } detail: {
         ContentView(showingShortcuts: $showingShortcuts)
       }
-      .frame(minWidth: WindowDefaults.minWidth, minHeight: WindowDefaults.minHeight)
+      // The window's floor follows the sidebar: collapsed it can shrink to a
+      // compact mixer; open it must hold sidebar + a usable detail pane.
+      .frame(
+        minWidth: columnVisibility == .detailOnly
+          ? WindowDefaults.minWidth : WindowDefaults.minWidthWithSidebar,
+        minHeight: WindowDefaults.minHeight)
     }
   }
 #endif
