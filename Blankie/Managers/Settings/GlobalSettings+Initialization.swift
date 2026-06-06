@@ -11,9 +11,10 @@ import os
 
 extension GlobalSettings {
   func loadBasicSettings() {
-    // Initialize properties directly
-    let savedVolume = UserDefaults.shared.double(forKey: UserDefaultsKeys.volume)
-    volume = savedVolume == 0 ? 1.0 : savedVolume
+    // object(forKey:) to distinguish "never saved" (default 1.0) from a saved
+    // zero — double(forKey:) returns 0 for both, which forced a zeroed volume
+    // back to full on every launch.
+    volume = UserDefaults.shared.object(forKey: UserDefaultsKeys.volume) as? Double ?? 1.0
 
     appearance =
       UserDefaults.shared.string(forKey: UserDefaultsKeys.appearance)
@@ -73,6 +74,13 @@ extension GlobalSettings {
     lockScreenBackgroundEnabled =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockScreenBackgroundEnabled) as? Bool
       ?? true
+
+    // App-wide default lock screen animation (used when a preset has none).
+    if let data = UserDefaults.shared.data(forKey: UserDefaultsKeys.defaultLockScreenArtwork),
+      let ref = try? JSONDecoder().decode(AnimatedArtworkRef.self, from: data)
+    {
+      defaultLockScreenArtwork = ref
+    }
 
     // Background blur (default on). Read via `object` rather than
     // `double(forKey:)` so a deliberately-saved 0 ("no blur") isn't mistaken

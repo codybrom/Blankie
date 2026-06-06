@@ -486,7 +486,23 @@ extension PresetManager {
   }
 
   func executePresetApplication(preset: Preset, isInitialLoad: Bool) {
-    let targetStates = preset.soundStates
+    // The default grid hides preset-use-only sounds, so never activate one
+    // from the default preset — a stale selection (e.g. marked preset-only
+    // while a custom preset was current) would play with no tile to stop it.
+    let targetStates: [PresetState]
+    if preset.isDefault {
+      targetStates = preset.soundStates.map { state in
+        guard state.isSelected,
+          let sound = AudioManager.shared.sounds.first(where: { $0.fileName == state.fileName }),
+          sound.isPresetUseOnly
+        else { return state }
+        Logger.presets.debug(
+          "PresetManager: Dropping preset-use-only '\(state.fileName)' from default preset")
+        return PresetState(fileName: state.fileName, isSelected: false, volume: state.volume)
+      }
+    } else {
+      targetStates = preset.soundStates
+    }
     let wasPlaying = AudioManager.shared.isGloballyPlaying
 
     Task { @MainActor in
@@ -708,7 +724,17 @@ extension PresetManager {
 
     do {
       // Load or create default preset
-      let defaultPreset = PresetStorage.loadDefaultPreset() ?? createDefaultPreset()
+      var defaultPreset = PresetStorage.loadDefaultPreset() ?? createDefaultPreset()
+      // The default preset takes no theme overrides (its sheet doesn't offer
+      // them); strip any saved before this rule so they can't apply invisibly.
+      if defaultPreset.accentColorName != nil || defaultPreset.viewMode != nil
+        || defaultPreset.backgroundBlurRadius != nil
+      {
+        defaultPreset.accentColorName = nil
+        defaultPreset.viewMode = nil
+        defaultPreset.backgroundBlurRadius = nil
+        PresetStorage.saveDefaultPreset(defaultPreset)
+      }
       setPresets([defaultPreset])
 
       // Load custom presets

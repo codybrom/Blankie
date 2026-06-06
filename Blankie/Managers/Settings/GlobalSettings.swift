@@ -45,6 +45,7 @@ enum UserDefaultsKeys {
   static let lockPortraitOrientationiOS = "lockPortraitOrientationiOS"
   static let quickMixSoundFileNames = "quickMixSoundFileNames"
   static let lockScreenBackgroundEnabled = "lockScreenBackgroundEnabled"
+  static let defaultLockScreenArtwork = "defaultLockScreenArtwork"
   static let starredItems = "starredItems"
   static let backgroundBlurRadius = "backgroundBlurRadius"
 }
@@ -94,6 +95,9 @@ class GlobalSettings: ObservableObject {
   @Published var starredItems: [String]
   @Published var availableLanguages: [Language] = []
   @Published var lockScreenBackgroundEnabled: Bool
+  /// App-wide default lock screen animation. Used on the lock screen for any
+  /// preset that doesn't set its own `animatedArtwork`.
+  @Published var defaultLockScreenArtwork: AnimatedArtworkRef?
   /// App-wide default blur (in points) for preset background artwork. A preset's
   /// own `backgroundBlurRadius` overrides this when set.
   @Published var backgroundBlurRadius: Double

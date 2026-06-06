@@ -268,8 +268,6 @@ import os
       animatedArtwork: AnimatedArtworkRef,
       preset: Preset
     ) async {
-      var preset = preset  // Create mutable copy
-
       // Skip if already cached to Documents
       if let loopPath = animatedArtwork.loopPath,
         AnimatedArtworkFileStore.fileExists(at: loopPath)
@@ -331,9 +329,12 @@ import os
         Logger.nowPlaying.debug(
           "Successfully cached ODR resource \(bundledId) to Documents: \(loopRel)")
 
-        // Update preset with new paths
+        // Record the new paths on whoever owns this artwork. The preset passed
+        // in may carry the app-wide default substituted at publish time, so
+        // only write back to the preset when its live copy still references
+        // this bundled id itself; otherwise update the global default.
         await MainActor.run {
-          preset.animatedArtwork = AnimatedArtworkRef(
+          let cachedRef = AnimatedArtworkRef(
             source: .bundled,
             loopPath: loopRel,
             previewPath: previewRel,
@@ -342,13 +343,16 @@ import os
             bundledIdentifier: bundledId
           )
 
-          // Update preset in PresetManager
-          if let index = PresetManager.shared.presets.firstIndex(where: { $0.id == preset.id }) {
-            PresetManager.shared.updatePresetAtIndex(index, with: preset)
+          if let index = PresetManager.shared.presets.firstIndex(where: { $0.id == preset.id }),
+            PresetManager.shared.presets[index].animatedArtwork?.bundledIdentifier == bundledId
+          {
+            var livePreset = PresetManager.shared.presets[index]
+            livePreset.animatedArtwork = cachedRef
+            PresetManager.shared.updatePresetAtIndex(index, with: livePreset)
+            PresetManager.shared.savePresets()
+          } else if GlobalSettings.shared.defaultLockScreenArtwork?.bundledIdentifier == bundledId {
+            GlobalSettings.shared.setDefaultLockScreenArtwork(cachedRef)
           }
-
-          // Save preset changes
-          PresetManager.shared.savePresets()
         }
       } catch {
         Logger.nowPlaying.error(

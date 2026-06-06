@@ -154,11 +154,18 @@ final class NowPlayingManager {
           removeAnimatedArtwork()
         #endif
       } else {
+        // Presets without their own lock screen background inherit the
+        // app-wide default (preset → default → Blankie icon). Substituted on a
+        // value copy so the fallback is never persisted onto the preset.
+        var effectivePreset = preset
+        if effectivePreset != nil, effectivePreset?.animatedArtwork == nil {
+          effectivePreset?.animatedArtwork = GlobalSettings.shared.defaultLockScreenArtwork
+        }
         // CRITICAL: Load static artwork synchronously to avoid double-publishing
         // If we load async, the artwork loads after we publish, triggering a second update that restarts animated artwork
-        await loadStaticArtworkSync(from: preset, fallbackArtworkId: artworkId)
+        await loadStaticArtworkSync(from: effectivePreset, fallbackArtworkId: artworkId)
         #if os(iOS)
-          updateAnimatedArtwork(for: preset)
+          updateAnimatedArtwork(for: effectivePreset)
         #endif
       }
       lastPresetId = preset?.id
