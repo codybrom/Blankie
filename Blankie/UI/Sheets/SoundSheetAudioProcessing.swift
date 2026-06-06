@@ -25,9 +25,7 @@ extension SoundSheetForm {
 
             Image(systemName: isPreviewing ? "stop.fill" : "play.fill")
               .font(.system(size: 18, weight: .medium))
-              .foregroundColor(
-                isPreviewing ? .red : (globalSettings.customAccentColor ?? .accentColor)
-              )
+              .foregroundStyle(isPreviewing ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
               .contentTransition(
                 .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating))
           }
@@ -77,19 +75,48 @@ extension SoundSheetForm {
       .frame(height: 44)
       .padding(.vertical, 4)
 
-      Toggle(isOn: $randomizeStartPosition) {
+      // Alphabetical, with the two loop-dependent toggles right after Loop.
+
+      // Play/pause fades. Very short clips always hard-cut (a fade would
+      // swallow them), regardless of this setting.
+      Toggle(isOn: $fadeSound) {
         Text(
-          "Randomize Start Position"
+          "Fade In and Out"
         )
       }
-      .tint(globalSettings.customAccentColor ?? .accentColor)
 
       Toggle(isOn: $loopSound) {
         Text(
           "Loop Sound"
         )
       }
-      .tint(globalSettings.customAccentColor ?? .accentColor)
+
+      // Non-looping one-shots are always preset-only, so the toggle locks on
+      // while Loop Sound is off (the stored choice survives re-enabling loop).
+      Toggle(isOn: loopSound ? $isPresetUseOnly : .constant(true)) {
+        Text(
+          "Preset Use Only"
+        )
+        if loopSound {
+          Text("Hides this sound from the Sounds list and All Blankie Sounds.")
+        } else {
+          Text("Non-looping sounds are always preset use only.")
+        }
+      }
+      .disabled(!loopSound)
+
+      // A random start only makes sense when the loop wraps; on a one-shot it
+      // would cut off the beginning, so playback ignores it and the toggle
+      // explains itself while disabled.
+      Toggle(isOn: $randomizeStartPosition) {
+        Text(
+          "Randomize Start"
+        )
+        if !loopSound {
+          Text("Only applies when Loop Sound is on.")
+        }
+      }
+      .disabled(!loopSound)
 
       Toggle(isOn: $normalizeAudio) {
         Text("Sound Check")
@@ -97,7 +124,6 @@ extension SoundSheetForm {
           "Sound Check adjusts the loudness between different sounds to play at the same volume."
         )
       }
-      .tint(globalSettings.customAccentColor ?? .accentColor)
 
       // Volume Adjustment (only visible when normalization is OFF)
       if !normalizeAudio {
@@ -137,7 +163,6 @@ extension SoundSheetForm {
         .accessibilityHidden(true)
 
         Slider(value: $volumeAdjustment, in: 0.5...8.0, step: 0.01)
-          .tint(globalSettings.customAccentColor ?? .accentColor)
           .accessibilityLabel(Text("Volume Adjustment"))
           .accessibilityValue(Text(volumePercentageText))
 

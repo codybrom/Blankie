@@ -7,10 +7,64 @@
 
 import SwiftUI
 
+/// Curated icon categories. Raw values match the top-level keys in icon-categories.json.
+enum IconCategory: String, CaseIterable {
+  case popular = "Popular"
+  case nature = "Nature"
+  case audio = "Audio"
+  case education = "Education"
+  case sports = "Sports"
+  case tools = "Tools"
+  case objects = "Objects"
+  case home = "Home"
+  case transport = "Transport"
+  case communication = "Communication"
+  case shopping = "Shopping"
+  case foodAndDrink = "Food & Drink"
+  case entertainment = "Entertainment"
+  case medical = "Medical"
+  case clothing = "Clothing"
+  case miscellaneous = "Miscellaneous"
+  case symbols = "Symbols"
+  case peopleAndActivity = "People & Activity"
+
+  var localizedName: String {
+    switch self {
+    case .popular: return String(localized: "Popular")
+    case .nature: return String(localized: "Nature")
+    case .audio: return String(localized: "Audio")
+    case .education: return String(localized: "Education")
+    case .sports: return String(localized: "Sports")
+    case .tools: return String(localized: "Tools")
+    case .objects: return String(localized: "Objects")
+    case .home: return String(localized: "Home")
+    case .transport: return String(localized: "Transport")
+    case .communication: return String(localized: "Communication")
+    case .shopping: return String(localized: "Shopping")
+    case .foodAndDrink: return String(localized: "Food & Drink")
+    case .entertainment: return String(localized: "Entertainment")
+    case .medical: return String(localized: "Medical")
+    case .clothing: return String(localized: "Clothing")
+    case .miscellaneous: return String(localized: "Miscellaneous")
+    case .symbols: return String(localized: "Symbols")
+    case .peopleAndActivity: return String(localized: "People & Activity")
+    }
+  }
+
+  /// Categories sorted by localized display name for picker menus.
+  static var sortedByLocalizedName: [IconCategory] {
+    allCases.sorted { $0.localizedName.localizedCompare($1.localizedName) == .orderedAscending }
+  }
+
+  var icons: [String] {
+    IconData.iconCategories[rawValue] ?? []
+  }
+}
+
 struct IconPickerView: View {
   @Binding var selectedIcon: String
   @State private var iconSearchText = ""
-  @State private var selectedIconCategory: String
+  @State private var selectedIconCategory: IconCategory
   @Environment(\.dismiss) private var dismiss
 
   // Icon categories with curated selections
@@ -20,20 +74,15 @@ struct IconPickerView: View {
     self._selectedIcon = selectedIcon
 
     // Find which category contains the selected icon
-    let categories = IconData.iconCategories
-    var foundCategory = "Popular"  // Default fallback
-
-    for (categoryName, icons) in categories where icons.contains(selectedIcon.wrappedValue) {
-      foundCategory = categoryName
-      break
-    }
+    let foundCategory =
+      IconCategory.allCases.first { $0.icons.contains(selectedIcon.wrappedValue) } ?? .popular
 
     self._selectedIconCategory = State(initialValue: foundCategory)
   }
 
   private var searchResults: [String] {
     if iconSearchText.isEmpty {
-      return iconCategories[selectedIconCategory] ?? []
+      return selectedIconCategory.icons
     }
 
     // Search across all categories
@@ -87,8 +136,8 @@ struct IconPickerView: View {
               selection: $selectedIconCategory,
               label: Text("Category")
             ) {
-              ForEach(Array(iconCategories.keys).sorted(), id: \.self) { category in
-                Text(category).tag(category)
+              ForEach(IconCategory.sortedByLocalizedName, id: \.self) { category in
+                Text(category.localizedName).tag(category)
               }
             }
             .pickerStyle(.menu)
@@ -193,9 +242,16 @@ struct IconPickerView: View {
 struct IconData {
   static let iconCategories: [String: [String]] = loadIconCategories()
 
+  /// Every pickable symbol, for validating AI icon suggestions against the
+  /// real catalog (which already excludes restricted symbols).
+  static let allIcons: Set<String> = Set(iconCategories.values.flatMap { $0 })
+
+  /// Category names, for constraining the AI icon pick's first stage.
+  static let categoryNames: [String] = iconCategories.keys.sorted()
+
   private static func loadIconCategories() -> [String: [String]] {
     // Helper enum to decode JSON with nested categories
-    enum IconCategory: Decodable {
+    enum CategoryEntry: Decodable {
       case simple([String])
       case nested([String: [String]])
 
@@ -216,7 +272,7 @@ struct IconData {
           self = .nested(subcategories)
         } else {
           throw DecodingError.typeMismatch(
-            IconCategory.self,
+            CategoryEntry.self,
             DecodingError.Context(
               codingPath: decoder.codingPath,
               debugDescription: "Expected array or dictionary"
@@ -228,7 +284,7 @@ struct IconData {
 
     guard let url = Bundle.main.url(forResource: "icon-categories", withExtension: "json"),
       let data = try? Data(contentsOf: url),
-      let categories = try? JSONDecoder().decode([String: IconCategory].self, from: data)
+      let categories = try? JSONDecoder().decode([String: CategoryEntry].self, from: data)
     else {
       return [:]
     }
@@ -236,6 +292,9 @@ struct IconData {
     // Flatten nested categories
     var flatCategories: [String: [String]] = [:]
     for (key, value) in categories {
+      assert(
+        IconCategory(rawValue: key) != nil,
+        "icon-categories.json key '\(key)' has no IconCategory case")
       flatCategories[key] = value.allIcons
     }
     return flatCategories

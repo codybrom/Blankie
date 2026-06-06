@@ -54,10 +54,28 @@ extension SoundSheet {
 
       switch result {
       case .success(let customSound):
-        // Add the new sound to current preset after AudioManager loads it
+        // Persist the import sheet's non-default toggles (the import call
+        // itself only carries randomization).
+        let manager = SoundCustomizationManager.shared
+        if loopSound != true {
+          manager.setLoopSound(loopSound, for: customSound.fileName)
+        }
+        if fadeSound != true {
+          manager.setFadeSound(fadeSound, for: customSound.fileName)
+        }
+        if isPresetUseOnly != false {
+          manager.setPresetUseOnly(isPresetUseOnly, for: customSound.fileName)
+        }
+
+        // Add the new sound to the chosen presets (and/or a fresh
+        // "<Name> Mix") after AudioManager loads it.
+        let presetIDs = addToPresetIDs
+        let makeMix = createMixPreset
         Task { @MainActor in
           await Task.yield()  // Allow AudioManager to process the new sound
-          addNewSoundToCurrentPreset(fileName: customSound.fileName)
+          addImportedSound(
+            fileName: customSound.fileName, title: title,
+            toPresets: presetIDs, creatingMix: makeMix)
         }
         dismiss()
       case .failure(let error):
@@ -87,9 +105,12 @@ extension SoundSheet {
     let hasCustomNormalization = normalizeAudio != true  // Default is true
     let hasCustomVolume = volumeAdjustment != 1.0  // Default is 1.0
     let hasCustomLoop = loopSound != true  // Default is true
+    let hasCustomFade = fadeSound != true  // Default is true
+    let hasCustomPresetOnly = isPresetUseOnly != false  // Default is false
 
     return hasCustomName || hasCustomIcon || hasCustomRandomization
-      || hasCustomNormalization || hasCustomVolume || hasCustomLoop
+      || hasCustomNormalization || hasCustomVolume || hasCustomLoop || hasCustomFade
+      || hasCustomPresetOnly
   }
 
   private func applyCustomizations(_ sound: Sound) {
@@ -131,36 +152,44 @@ extension SoundSheet {
       for: sound.fileName
     )
 
+    // Fade customization
+    manager.setFadeSound(
+      fadeSound != true ? fadeSound : nil,
+      for: sound.fileName
+    )
+
+    // Preset-use-only customization
+    manager.setPresetUseOnly(
+      isPresetUseOnly != false ? isPresetUseOnly : nil,
+      for: sound.fileName
+    )
+
+    // Going preset-only (directly or via loop-off) hides the tile from the
+    // default grid; if the sound is selected there it would keep playing with
+    // no control to stop it. Deselect (fades out) — unless a custom preset is
+    // showing it, or it's the active solo sound.
+    if sound.isPresetUseOnly, sound.isSelected,
+      PresetManager.shared.currentPreset?.isDefault ?? true,
+      AudioManager.shared.soloModeSound?.id != sound.id
+    {
+      sound.isSelected = false
+    }
+
     // Force save all customizations
     manager.saveCustomizations()
   }
 
   // MARK: - Preset Integration
 
-  private func addNewSoundToCurrentPreset(fileName: String) {
+  /// Adds the imported sound to every preset checked in Add to Presets, and
+  /// optionally creates a fresh "<Name> Mix" preset containing just it.
+  private func addImportedSound(
+    fileName: String, title: String, toPresets presetIDs: Set<UUID>, creatingMix: Bool
+  ) {
     let presetManager = PresetManager.shared
     let audioManager = AudioManager.shared
 
-    // Only add to preset if:
-    // 1. There's a current preset
-    // 2. It's not the default preset (All Sounds)
-    // 3. We're not in solo mode
-    // 4. We're not in Quick Mix mode
-    guard let currentPreset = presetManager.currentPreset,
-      !currentPreset.isDefault,
-      audioManager.soloModeSound == nil,
-      !audioManager.isQuickMix
-    else {
-      Logger.ui.debug("SoundSheet: Not adding to preset - conditions not met")
-      return
-    }
-
-    // Check if the sound is already in the preset
-    let existingSoundFileNames = Set(currentPreset.soundStates.map(\.fileName))
-    guard !existingSoundFileNames.contains(fileName) else {
-      Logger.ui.debug("SoundSheet: Sound already exists in preset")
-      return
-    }
+    guard !presetIDs.isEmpty || creatingMix else { return }
 
     // Find the newly imported sound
     guard let newSound = audioManager.sounds.first(where: { $0.fileName == fileName }) else {
@@ -169,35 +198,63 @@ extension SoundSheet {
       return
     }
 
-    Logger.ui.debug("SoundSheet: Adding '\(newSound.title)' to preset '\(currentPreset.name)'")
-
-    // Create a new preset state for the imported sound
-    let newSoundState = PresetState(
-      fileName: fileName,
-      isSelected: false,  // Start unselected so it doesn't interrupt current mix
-      volume: newSound.volume
-    )
-
-    // Update the preset with the new sound
-    var updatedPreset = currentPreset
-    updatedPreset.soundStates.append(newSoundState)
-    updatedPreset.lastModifiedVersion =
+    let currentVersion =
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    var presets = presetManager.presets
+    var changed = false
 
-    // Update the preset in the manager
-    var currentPresets = presetManager.presets
-    if let index = currentPresets.firstIndex(where: { $0.id == currentPreset.id }) {
-      currentPresets[index] = updatedPreset
-      presetManager.setPresets(currentPresets)
-      presetManager.setCurrentPreset(updatedPreset)
+    for index in presets.indices where presetIDs.contains(presets[index].id) {
+      guard !presets[index].isDefault,
+        !presets[index].soundStates.contains(where: { $0.fileName == fileName })
+      else { continue }
 
-      // Save directly to avoid state override
-      savePresetsDirectly()
+      presets[index].soundStates.append(
+        PresetState(
+          fileName: fileName,
+          isSelected: false,  // Start unselected so it doesn't interrupt current mix
+          volume: newSound.volume
+        ))
+      presets[index].lastModifiedVersion = currentVersion
+      changed = true
 
-      Logger.ui.debug(
-        "SoundSheet: Successfully added sound to preset (now has \(updatedPreset.soundStates.count) sounds)"
-      )
+      // Keep the active preset's working copy in sync.
+      if presetManager.currentPreset?.id == presets[index].id {
+        presetManager.setCurrentPreset(presets[index])
+      }
     }
+
+    if creatingMix {
+      presets.append(
+        Preset(
+          id: UUID(),
+          // Format string so locales control the word order.
+          name: String(localized: "\(title) Mix"),
+          soundStates: [
+            PresetState(fileName: fileName, isSelected: true, volume: newSound.volume)
+          ],
+          isDefault: false,
+          createdVersion: currentVersion,
+          lastModifiedVersion: currentVersion,
+          soundOrder: nil,
+          creatorName: nil,
+          artworkId: nil,
+          animatedArtwork: nil,
+          staticArtworkPath: nil,
+          order: presets.filter { !$0.isDefault }.count
+        ))
+      changed = true
+    }
+
+    guard changed else { return }
+    presetManager.setPresets(presets)
+    presetManager.updateCustomPresetStatus()
+
+    // Save directly to avoid state override
+    savePresetsDirectly()
+
+    Logger.ui.debug(
+      "SoundSheet: Added '\(title)' to \(presetIDs.count) preset(s); new Mix preset: \(creatingMix)"
+    )
   }
 
   // MARK: - Delete Action

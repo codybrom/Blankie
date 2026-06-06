@@ -16,12 +16,16 @@ struct SoundSheetInitValues {
   let normalizeAudio: Bool
   let volumeAdjustment: Float
   let loopSound: Bool
+  let fadeSound: Bool
+  let isPresetUseOnly: Bool
   let initialSoundName: String
   let initialSelectedIcon: String
   let initialRandomizeStartPosition: Bool
   let initialNormalizeAudio: Bool
   let initialVolumeAdjustment: Float
   let initialLoopSound: Bool
+  let initialFadeSound: Bool
+  let initialIsPresetUseOnly: Bool
 
   init(
     soundName: String = "",
@@ -30,7 +34,9 @@ struct SoundSheetInitValues {
     randomizeStartPosition: Bool = true,
     normalizeAudio: Bool = true,
     volumeAdjustment: Float = 1.0,
-    loopSound: Bool = true
+    loopSound: Bool = true,
+    fadeSound: Bool = true,
+    isPresetUseOnly: Bool = false
   ) {
     self.soundName = soundName
     self.selectedIcon = selectedIcon
@@ -39,12 +45,16 @@ struct SoundSheetInitValues {
     self.normalizeAudio = normalizeAudio
     self.volumeAdjustment = volumeAdjustment
     self.loopSound = loopSound
+    self.fadeSound = fadeSound
+    self.isPresetUseOnly = isPresetUseOnly
     self.initialSoundName = soundName
     self.initialSelectedIcon = selectedIcon
     self.initialRandomizeStartPosition = randomizeStartPosition
     self.initialNormalizeAudio = normalizeAudio
     self.initialVolumeAdjustment = volumeAdjustment
     self.initialLoopSound = loopSound
+    self.initialFadeSound = fadeSound
+    self.initialIsPresetUseOnly = isPresetUseOnly
   }
 }
 
@@ -96,7 +106,9 @@ extension SoundSheet {
       randomizeStartPosition: customization?.randomizeStartPosition ?? true,
       normalizeAudio: customization?.normalizeAudio ?? true,
       volumeAdjustment: customization?.volumeAdjustment ?? 1.0,
-      loopSound: customization?.loopSound ?? true
+      loopSound: customization?.loopSound ?? true,
+      fadeSound: customization?.fadeSound ?? true,
+      isPresetUseOnly: customization?.isPresetUseOnly ?? false
     )
   }
 }

@@ -32,6 +32,8 @@ struct SoundSheet: View {
   @State var normalizeAudio: Bool = true
   @State var volumeAdjustment: Float = 1.0
   @State var loopSound: Bool = true
+  @State var fadeSound: Bool = true
+  @State var isPresetUseOnly: Bool = false
   @State var isPreviewing: Bool = false
   @State var previewSound: Sound?
   @State var previewProgress: Double = 0
@@ -41,6 +43,10 @@ struct SoundSheet: View {
   @State var showingDeleteConfirmation: Bool = false
   @State var showingResetConfirmation: Bool = false
   @State var isDisappearing: Bool = false
+  /// Import only: presets the new sound gets added to (seeded with the active
+  /// custom preset), plus an optional fresh "<Name> Mix" preset.
+  @State var addToPresetIDs: Set<UUID> = []
+  @State var createMixPreset: Bool = false
 
   // Track initial values to detect changes
   @State var initialSoundName: String = ""
@@ -49,6 +55,8 @@ struct SoundSheet: View {
   @State var initialNormalizeAudio: Bool = true
   @State var initialVolumeAdjustment: Float = 1.0
   @State var initialLoopSound: Bool = true
+  @State var initialFadeSound: Bool = true
+  @State var initialIsPresetUseOnly: Bool = false
 
   let isFilePreselected: Bool
   let embedInNavigation: Bool
@@ -75,6 +83,8 @@ struct SoundSheet: View {
       _normalizeAudio = State(initialValue: values.normalizeAudio)
       _volumeAdjustment = State(initialValue: values.volumeAdjustment)
       _loopSound = State(initialValue: values.loopSound)
+      _fadeSound = State(initialValue: values.fadeSound)
+      _isPresetUseOnly = State(initialValue: values.isPresetUseOnly)
       _initialSoundName = State(initialValue: values.initialSoundName)
       _initialSelectedIcon = State(initialValue: values.initialSelectedIcon)
       _initialRandomizeStartPosition = State(
@@ -82,6 +92,8 @@ struct SoundSheet: View {
       _initialNormalizeAudio = State(initialValue: values.initialNormalizeAudio)
       _initialVolumeAdjustment = State(initialValue: values.initialVolumeAdjustment)
       _initialLoopSound = State(initialValue: values.initialLoopSound)
+      _initialFadeSound = State(initialValue: values.initialFadeSound)
+      _initialIsPresetUseOnly = State(initialValue: values.initialIsPresetUseOnly)
     }
   }
 
@@ -143,6 +155,8 @@ struct SoundSheet: View {
           volumeAdjustment: $volumeAdjustment,
           randomizeStartPosition: $randomizeStartPosition,
           loopSound: $loopSound,
+          fadeSound: $fadeSound,
+          isPresetUseOnly: $isPresetUseOnly,
           soundName: $soundName,
           selectedIcon: $selectedIcon,
           startPreview: startPreview,
@@ -158,9 +172,10 @@ struct SoundSheet: View {
       }
       // Tint the whole sheet so accent-colored icons (selected sound icon,
       // icon-picker highlight, Reset button) resolve from one stable environment
-      // and don't flip when a tinted control is touched. Sound editing is
-      // app-global (no preset), so use the app accent.
-      .tint(GlobalSettings.shared.customAccentColor ?? .accentColor)
+      // and don't flip when a tinted control is touched. Standalone, sound
+      // editing is app-global so use the app accent; pushed inside Edit Preset
+      // (embedInNavigation false) inherit that stack's preset accent instead.
+      .tint(embedInNavigation ? (GlobalSettings.shared.customAccentColor ?? .accentColor) : nil)
   }
 
   private var baseContent: some View {
@@ -188,6 +203,15 @@ struct SoundSheet: View {
 
     if case .edit(let sound) = mode, sound.channelCount == nil {
       sound.loadSound()
+    }
+
+    // Pre-check the active custom preset in Add to Presets (the visible
+    // version of the old implicit add-to-current-preset behavior).
+    if mode.isAdd,
+      let currentPreset = PresetManager.shared.currentPreset, !currentPreset.isDefault,
+      AudioManager.shared.soloModeSound == nil, !AudioManager.shared.isQuickMix
+    {
+      addToPresetIDs = [currentPreset.id]
     }
   }
 
