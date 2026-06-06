@@ -10,8 +10,12 @@ import os
 
 struct CreatePresetSheet: View {
   @Binding var isPresented: Bool
+  /// Sound file names to pre-select ("create from playing sounds" while on
+  /// the default preset). Empty = start with nothing selected.
+  var initialSelectedSounds: Set<String> = []
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
+  @ObservedObject private var globalSettings = GlobalSettings.shared
   @State private var presetName = ""
   @State private var creatorName = ""
   @State private var error: String?
@@ -22,6 +26,14 @@ struct CreatePresetSheet: View {
   @State private var showingImageCropper = false
   @State private var animatedArtwork: AnimatedArtworkRef?
   @State private var staticArtworkPath: String?
+  // Theme overrides (same semantics as Edit Preset: toggled off = nil =
+  // follow the app-wide setting).
+  @State private var useCustomTheme = false
+  @State private var accentColor: Color?
+  @State private var useCustomViewMode = false
+  @State private var viewModeOverride: PresetViewMode?
+  @State private var useCustomBlur = false
+  @State private var blurOverride: Double = defaultBackgroundBlurRadius
   @State private var didCreatePreset = false
   #if os(iOS) || os(visionOS)
     @State private var selectedImage: UIImage?
@@ -34,18 +46,41 @@ struct CreatePresetSheet: View {
     }
   }
 
+  /// Live accent: the in-flight custom accent once enabled, else app-wide —
+  /// mirrors Edit Preset so the sheet re-themes while you pick.
+  private var activeAccentColor: Color {
+    if useCustomTheme {
+      return accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    }
+    return globalSettings.customAccentColor ?? .accentColor
+  }
+
   var body: some View {
     NavigationStack {
       Form {
-        basicInfoSection
         errorSection
-        creatorSection
-        artworkSection
-        // Animated artwork editing is iOS-only; hide the section on macOS.
-        #if !os(macOS)
-          animatedArtworkSection
-        #endif
+        // Same details card as Edit Preset (no Favorite — no preset yet).
+        PresetDetailsSection(
+          presetName: $presetName,
+          creatorName: $creatorName,
+          artworkData: $artworkData,
+          showingImagePicker: $showingImagePicker,
+          animatedArtwork: $animatedArtwork,
+          staticArtworkPath: $staticArtworkPath,
+          starToken: nil,
+          accent: activeAccentColor,
+          aiSoundTitles: selectedSoundTitles,
+          sparklesOnlyWhenEmpty: false
+        )
         soundsSection
+        PresetThemeSection(
+          useCustomViewMode: $useCustomViewMode,
+          viewModeOverride: $viewModeOverride,
+          useCustomTheme: $useCustomTheme,
+          accentColor: $accentColor,
+          useCustomBlur: $useCustomBlur,
+          blurOverride: $blurOverride
+        )
       }
       .navigationTitle("New Preset")
       #if os(iOS)
@@ -106,6 +141,9 @@ struct CreatePresetSheet: View {
         }
       #endif
     }
+    // Live preview of the chosen accent across the whole sheet (mirrors
+    // Edit Preset's root tint).
+    .tint(activeAccentColor)
     .onDisappear {
       cleanupAnimatedArtworkIfNeeded()
     }
@@ -113,18 +151,6 @@ struct CreatePresetSheet: View {
 }
 
 extension CreatePresetSheet {
-  var basicInfoSection: some View {
-    Section {
-      HStack {
-        Text("Name")
-          .foregroundStyle(.secondary)
-        Spacer()
-        TextField("Required", text: $presetName)
-          .multilineTextAlignment(.trailing)
-      }
-    }
-  }
-
   @ViewBuilder
   var errorSection: some View {
     if let error = error {
@@ -135,80 +161,9 @@ extension CreatePresetSheet {
     }
   }
 
-  var creatorSection: some View {
-    Section {
-      HStack {
-        Text("Creator")
-          .foregroundStyle(.secondary)
-        Spacer()
-        TextField("Optional", text: $creatorName)
-          .multilineTextAlignment(.trailing)
-      }
-    } footer: {
-      Text("Shows in Now Playing info")
-        .font(.caption)
-    }
-  }
-
-  var artworkSection: some View {
-    Section {
-      Button {
-        showingImagePicker = true
-      } label: {
-        HStack {
-          Text("Artwork")
-          Spacer()
-          artworkPreview
-        }
-      }
-      .buttonStyle(.plain)
-    } footer: {
-      Text("Custom artwork for Now Playing")
-        .font(.caption)
-    }
-  }
-
-  var animatedArtworkSection: some View {
-    Section {
-      AnimatedArtworkPicker(
-        artwork: $animatedArtwork,
-        staticArtworkPath: $staticArtworkPath,
-        onChange: {}
-      )
-    } header: {
-      Text("Animated Artwork")
-    } footer: {
-      Text("Loops play on the Lock Screen")
-        .font(.caption)
-    }
-  }
-
-  @ViewBuilder
-  var artworkPreview: some View {
-    if let artworkData = artworkData {
-      #if os(iOS) || os(visionOS)
-        if let uiImage = UIImage(data: artworkData) {
-          Image(uiImage: uiImage)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: 40, height: 40)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-      #elseif os(macOS)
-        if let nsImage = NSImage(data: artworkData) {
-          Image(nsImage: nsImage)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: 40, height: 40)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-      #endif
-    } else {
-      Text("Select Image")
-        .foregroundStyle(.secondary)
-    }
-  }
-
+  /// Mirrors Edit Preset's Sounds section (header, Choose Sounds row, then a
+  /// row per selected sound) minus reorder/edit — there's no preset to
+  /// persist against yet.
   var soundsSection: some View {
     Section {
       #if os(iOS)
@@ -216,36 +171,77 @@ extension CreatePresetSheet {
           showingSoundSelection = true
         } label: {
           HStack {
-            Text("Sounds")
-            Spacer()
-            Text("\(selectedSounds.count) Sounds")
-              .foregroundStyle(.secondary)
+            LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
             Image(systemName: "chevron.right")
               .foregroundStyle(.tertiary)
               .imageScale(.small)
               .accessibilityHidden(true)
           }
         }
-        .buttonStyle(.plain)
       #else
         NavigationLink(
           destination: SoundSelectionView(
             selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: nil
           )
         ) {
-          HStack {
-            Text("Sounds")
-            Spacer()
-            Text("\(selectedSounds.count) Sounds")
-              .foregroundStyle(.secondary)
-          }
+          LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
         }
       #endif
+
+      if selectedSounds.isEmpty {
+        Text("No sounds selected")
+          .foregroundStyle(.secondary)
+          .font(.subheadline)
+      } else {
+        ForEach(orderedSounds.filter { selectedSounds.contains($0.fileName) }) { sound in
+          HStack(spacing: 8) {
+            Label {
+              Text(sound.title)
+            } icon: {
+              Image(systemName: sound.systemIconName)
+                .foregroundColor(activeAccentColor)
+            }
+            SoundCreditInfoButton(sound: sound, accent: activeAccentColor)
+            Spacer()
+          }
+        }
+      }
+    } header: {
+      Text("Sounds")
     }
   }
 
   func setupDefaultSelection() {
-    // Start with no sounds selected - user can add sounds as needed
+    // Seed from the caller's pre-selection; otherwise start with no sounds
+    // selected - user can add sounds as needed
+    if !initialSelectedSounds.isEmpty {
+      selectedSounds = initialSelectedSounds
+      // Offer an Apple Intelligence name for the seeded mix up front.
+      Task {
+        await generateInitialNameSuggestion()
+      }
+    }
+  }
+
+  /// Titles of the currently selected sounds, for the name prompt.
+  private var selectedSoundTitles: [String] {
+    orderedSounds.filter { selectedSounds.contains($0.fileName) }.map(\.title)
+  }
+
+  /// Fills the name on open when seeded from playing sounds; taps on the
+  /// details card's sparkles button regenerate from there.
+  private func generateInitialNameSuggestion() async {
+    guard AIPresetNameGenerator.isAvailable, presetName.isEmpty else { return }
+    let titles = selectedSoundTitles
+    guard !titles.isEmpty else { return }
+
+    let suggestion = await AIPresetNameGenerator.generateName(from: titles, allowVariation: false)
+    await MainActor.run {
+      // Don't clobber anything typed while generating (or a failed "" result).
+      if presetName.isEmpty, !suggestion.isEmpty {
+        presetName = suggestion
+      }
+    }
   }
 
   func createPreset() {
@@ -302,7 +298,7 @@ extension CreatePresetSheet {
     // Assign order based on existing custom presets count
     let customPresetsCount = presetManager.presets.filter { !$0.isDefault }.count
 
-    let newPreset = Preset(
+    var newPreset = Preset(
       id: presetId,
       name: presetName,
       soundStates: selectedSoundStates,
@@ -316,6 +312,12 @@ extension CreatePresetSheet {
       staticArtworkPath: staticArtworkPath,
       order: customPresetsCount
     )
+
+    // Theme overrides, persisted exactly like Edit Preset's save path
+    // (toggled off = nil = follow the app-wide setting).
+    newPreset.accentColorName = useCustomTheme ? accentColor?.toString : nil
+    newPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
+    newPreset.backgroundBlurRadius = useCustomBlur ? blurOverride : nil
 
     Logger.ui.debug(
       "CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "set" : "none")"

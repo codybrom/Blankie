@@ -28,91 +28,21 @@ extension EditPresetSheet {
 
 extension EditPresetSheet {
   var basicDetailsSection: some View {
-    Section {
-      // Name field
-      LabeledContent("Name") {
-        TextField("Required", text: $presetName)
-          #if os(iOS)
-            // Trailing alignment looks right on iOS; on macOS it renders the
-            // prompt and value at the same time, so leave the default there.
-            .multilineTextAlignment(.trailing)
-          #endif
-          .onChange(of: presetName) { _, _ in
-            applyChangesInstantly()
-          }
-      }
-
-      // Creator field (only for non-default presets)
-      if !preset.isDefault {
-        LabeledContent("Creator") {
-          TextField("Optional", text: $creatorName)
-            #if os(iOS)
-              .multilineTextAlignment(.trailing)
-            #endif
-            .onChange(of: creatorName) { _, _ in
-              applyChangesInstantly()
-            }
-        }
-      }
-
-      Toggle(
-        isOn: Binding(
-          get: { globalSettings.isStarred(starToken) },
-          set: { _ in globalSettings.toggleStarred(starToken) }
-        )
-      ) {
-        Label {
-          Text("Favorite")
-        } icon: {
-          Image(systemName: "star")
-            .foregroundColor(activeAccentColor)
-        }
-      }
-      // Without this the row separator insets to the label text, leaving a gap
-      // under the star. Pin it to the row's leading edge like the plain rows.
-      .alignmentGuide(.listRowSeparatorLeading) { dimensions in
-        dimensions[.leading]
-      }
-
-      // Artwork field
-      LabeledContent("Artwork") {
-        HStack(spacing: 8) {
-          if artworkData != nil {
-            Button {
-              artworkData = nil
-              artworkId = nil
-              // Apply changes to persist the removal
-              applyChangesInstantly()
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .foregroundColor(.secondary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Remove Artwork")
-          }
-
-          Button {
-            showingImagePicker = true
-          } label: {
-            artworkPreview
-          }
-          .buttonStyle(.plain)
-          .accessibilityLabel("Choose Artwork")
-        }
-      }
-
-      // Animated artwork editing is iOS-only; hide it on macOS.
-      #if !os(macOS)
-        AnimatedArtworkPicker(
-          artwork: $animatedArtwork,
-          staticArtworkPath: $staticArtworkPath,
-          onChange: { applyChangesInstantly() }
-        )
-      #endif
-    }
-    .onChange(of: artworkData) { _, _ in
-      applyChangesInstantly()
-    }
+    PresetDetailsSection(
+      presetName: $presetName,
+      creatorName: $creatorName,
+      artworkData: $artworkData,
+      showingImagePicker: $showingImagePicker,
+      animatedArtwork: $animatedArtwork,
+      staticArtworkPath: $staticArtworkPath,
+      starToken: starToken,
+      accent: activeAccentColor,
+      aiSoundTitles: orderedSelectedSounds.map(\.title),
+      // A typed name is settled; sparkles only fills an empty one here.
+      sparklesOnlyWhenEmpty: true,
+      onEdited: { applyChangesInstantly() },
+      onRemoveArtwork: { artworkId = nil }
+    )
   }
 
   var activeAccentColor: Color {
@@ -128,110 +58,15 @@ extension EditPresetSheet {
 
 extension EditPresetSheet {
   var visualsSection: some View {
-    Section("Theme Overrides") {
-      // Per-preset view mode: Default falls back to the app-wide setting.
-      // macOS has a single grid layout, so the override is meaningless there.
-      #if !os(macOS)
-        VStack(alignment: .leading, spacing: 8) {
-          Text("View Mode")
-          Picker(
-            "View Mode",
-            selection: Binding<PresetViewModeSelection>(
-              get: { PresetViewModeSelection(viewModeOverride) },
-              set: { viewModeOverride = $0.asOptional }
-            )
-          ) {
-            Text("Default").tag(
-              PresetViewModeSelection.useDefault)
-            Text("Grid").tag(PresetViewModeSelection.grid)
-            Text("List").tag(PresetViewModeSelection.list)
-          }
-          .pickerStyle(.segmented)
-          .labelsHidden()
-          .onChange(of: viewModeOverride) { _, _ in
-            applyChangesInstantly()
-          }
-        }
-      #endif
-
-      // Accent Color. The toggle and picker share one list row so no separator
-      // (or extra row padding) appears between them when the picker is shown.
-      VStack(alignment: .leading, spacing: 12) {
-        Toggle("Accent Color", isOn: $useCustomTheme)
-
-        if useCustomTheme {
-          #if os(macOS)
-            // macOS uses the circle swatches (no System swatch — the toggle
-            // above already handles the off state).
-            AccentColorCirclePicker(selectedColor: $accentColor, allowSystem: false)
-          #else
-            SpectrumColorPicker(selectedColor: $accentColor)
-          #endif
-        }
-      }
-
-      // Background blur override. "Default" stores nil and follows the app-wide
-      // blur; Off/On override it per-preset (On = the single app-wide blur
-      // value). The macOS window doesn't use a blurred backdrop, so hide this
-      // there.
-      #if !os(macOS)
-        VStack(alignment: .leading, spacing: 8) {
-          Text("Blur Background")
-          Picker(
-            "Blur Background",
-            selection: Binding<Double?>(
-              get: { useCustomBlur ? blurOverride : nil },
-              set: { newValue in
-                if let radius = newValue {
-                  useCustomBlur = true
-                  blurOverride = radius
-                } else {
-                  useCustomBlur = false
-                }
-                applyChangesInstantly()
-              }
-            )
-          ) {
-            Text("Default").tag(Double?.none)
-            Text("Off").tag(Double?(0.0))
-            Text("On").tag(Double?(defaultBackgroundBlurRadius))
-          }
-          .pickerStyle(.segmented)
-          .labelsHidden()
-        }
-        .padding(.vertical, 4)
-      #endif
-    }
-  }
-}
-
-// MARK: - Artwork Preview
-
-extension EditPresetSheet {
-  @ViewBuilder
-  var artworkPreview: some View {
-    if let artworkData = artworkData {
-      #if os(iOS) || os(visionOS)
-        if let uiImage = UIImage(data: artworkData) {
-          Image(uiImage: uiImage)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: 40, height: 40)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-      #elseif os(macOS)
-        if let nsImage = NSImage(data: artworkData) {
-          Image(nsImage: nsImage)
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: 40, height: 40)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-      #endif
-    } else {
-      Text("Select Image")
-        .foregroundStyle(.secondary)
-    }
+    PresetThemeSection(
+      useCustomViewMode: $useCustomViewMode,
+      viewModeOverride: $viewModeOverride,
+      useCustomTheme: $useCustomTheme,
+      accentColor: $accentColor,
+      useCustomBlur: $useCustomBlur,
+      blurOverride: $blurOverride,
+      onEdited: { applyChangesInstantly() }
+    )
   }
 }
 
@@ -271,7 +106,7 @@ extension EditPresetSheet {
         ForEach(orderedSelectedSounds) { sound in
           #if os(iOS)
             NavigationLink(value: SoundEditDestination(fileName: sound.fileName)) {
-              HStack {
+              HStack(spacing: 8) {
                 Label {
                   Text(sound.title)
                 } icon: {
@@ -279,9 +114,14 @@ extension EditPresetSheet {
                     .foregroundColor(activeAccentColor)
                 }
 
+                SoundCreditInfoButton(sound: sound, accent: activeAccentColor)
+
                 Spacer()
 
-                SoundCreditInfoButton(sound: sound)
+                // Per-row reorder affordance (replaces the old header caption).
+                Image(systemName: "line.3.horizontal")
+                  .foregroundStyle(.tertiary)
+                  .accessibilityHidden(true)
               }
             }
           #else
@@ -289,7 +129,7 @@ extension EditPresetSheet {
             // drag-reorderable with onDrag/onDrop instead, carrying the row's
             // index and routing through `moveSound` (which also persists).
             let rowIndex = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }) ?? 0
-            HStack {
+            HStack(spacing: 8) {
               Label {
                 Text(sound.title)
               } icon: {
@@ -297,9 +137,9 @@ extension EditPresetSheet {
                   .foregroundColor(activeAccentColor)
               }
 
-              Spacer()
+              SoundCreditInfoButton(sound: sound, accent: activeAccentColor)
 
-              SoundCreditInfoButton(sound: sound)
+              Spacer()
 
               Image(systemName: "line.3.horizontal")
                 .foregroundStyle(.tertiary)
@@ -319,15 +159,7 @@ extension EditPresetSheet {
         }
       }
     } header: {
-      VStack(alignment: .leading, spacing: 4) {
-        Text("Sounds")
-        if !selectedSounds.isEmpty {
-          Text("Drag sounds to reorder")
-            .font(.caption)
-            .textCase(nil)
-            .foregroundStyle(.secondary)
-        }
-      }
+      Text("Sounds")
     }
     #if os(iOS)
       .environment(\.editMode, .constant(.active))
@@ -394,6 +226,9 @@ extension EditPresetSheet {
           Text("Delete Preset")
           Spacer()
         }
+        // The sheet's accent tint overrides the destructive role's color in
+        // macOS grouped forms; destructive reads red on both platforms.
+        .foregroundStyle(.red)
       }
     }
   }

@@ -47,30 +47,6 @@ enum PresetViewMode: String, Codable, CaseIterable {
   case list
 }
 
-/// UI-side enum for the Edit Preset picker, so SwiftUI can bind to a
-/// concrete value even when the underlying model stores `nil`.
-enum PresetViewModeSelection: Hashable {
-  case useDefault
-  case grid
-  case list
-
-  init(_ mode: PresetViewMode?) {
-    switch mode {
-    case .some(.grid): self = .grid
-    case .some(.list): self = .list
-    case .none: self = .useDefault
-    }
-  }
-
-  var asOptional: PresetViewMode? {
-    switch self {
-    case .useDefault: return nil
-    case .grid: return .grid
-    case .list: return .list
-    }
-  }
-}
-
 struct Preset: Codable, Identifiable, Equatable {
   let id: UUID
   var name: String
