@@ -233,28 +233,13 @@ extension AudioManager {
     }
   }
 
-  /// Rebuilds loaded players after the spatial-audio toggle changes (the
-  /// mono fold and graph chain are decided at load time). Keeps selection,
-  /// preserves the position of playing and paused sounds — stopped sounds
-  /// reload fresh (next enable gets a new random start) — and resumes
-  /// whatever was audibly playing.
+  /// Rebuilds every loaded player when the session starts or ends (the mono
+  /// fold and graph chain are decided at load time); position/resume
+  /// semantics live in rebuildPlayerForSpatialChange.
   @MainActor
   func applySpatialAudioSetting() {
-    let snapshot: [(sound: Sound, time: TimeInterval, state: Sound.PlaybackState)] =
-      sounds.compactMap { sound in
-        guard sound.isLoaded else { return nil }
-        return (sound, sound.player?.currentTime ?? 0, sound.playbackState)
-      }
-
-    for entry in snapshot {
-      entry.sound.unload()
-      entry.sound.loadSound()
-      if entry.state != .stopped {
-        entry.sound.restorePlaybackPosition(entry.time)
-      }
-      if entry.state == .playing, isGloballyPlaying {
-        entry.sound.play()
-      }
+    for sound in sounds where sound.isLoaded {
+      sound.rebuildPlayerForSpatialChange()
     }
   }
 

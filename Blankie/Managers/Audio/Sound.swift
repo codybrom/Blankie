@@ -416,7 +416,9 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   /// The cache-existence check is memoized — the mixer reads this per redraw
   /// (~10 Hz under head tracking) and a filesystem stat each time adds up.
   var isSpatialReady: Bool {
-    if (duration ?? 0) <= SoundPlayer.bufferThreshold { return true }
+    // Unknown duration is NOT short (the player would silently stream flat);
+    // treat it as long and let the cache check settle it.
+    if let duration, duration <= SoundPlayer.bufferThreshold { return true }
     if let cached = spatialReadyCache { return cached }
     guard let url = getSoundURL() else { return false }
     let ready = SpatialAudioCache.existingCache(for: url, boostDB: normalizationBoostDB()) != nil
@@ -442,7 +444,7 @@ open class Sound: NSObject, ObservableObject, Identifiable {
 
   /// Rebuilds the player when spatial participation changes, preserving the
   /// position of a playing or paused sound (stopped sounds reload fresh) and
-  /// resuming if it was audibly playing.
+  /// resuming if it was audibly playing (and playback is globally on).
   @MainActor
   func rebuildPlayerForSpatialChange() {
     guard isLoaded else { return }
@@ -453,16 +455,14 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     if priorState != .stopped {
       restorePlaybackPosition(position)
     }
-    if priorState == .playing {
+    if priorState == .playing, AudioManager.shared.isGloballyPlaying {
       play()
     }
   }
 
-  /// Seeks a freshly (re)loaded player back to a position captured before a
-  /// rebuild. Seconds, not frames: a spatial mono cache can differ from its
-  /// source file in frame count. Marks the sound .paused — a restored
-  /// mid-file position is a resume point, and playSelected re-randomizes
-  /// stopped sounds (which would discard the restore on the next play).
+  /// Seeks a freshly (re)loaded player to a position captured before a
+  /// rebuild. Seconds, not frames (a mono cache's frame count can differ);
+  /// marks .paused so playSelected doesn't re-randomize it as "stopped".
   func restorePlaybackPosition(_ seconds: TimeInterval) {
     guard let player, seconds > 0 else { return }
     player.seek(toFrame: AVAudioFramePosition(seconds * player.sampleRate))

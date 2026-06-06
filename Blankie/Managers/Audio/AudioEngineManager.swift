@@ -205,22 +205,22 @@ final class AudioEngineManager {
   /// Fibonacci mix — raw djb2 low bits are dominated by the shared ".m4a" /
   /// ".wav" suffixes, which clustered every sound at nearly the same angle).
   /// Swift's Hashable is seeded per launch, hence the hand-rolled hash.
+  /// Ear height only — placements are 2D throughout.
   static func defaultSpatialPlacement(for name: String) -> (
-    angleDegrees: Float, distance: Float, elevation: Float
+    angleDegrees: Float, distance: Float
   ) {
     var hash: UInt32 = 5381
     for byte in name.utf8 {
       hash = hash &* 33 &+ UInt32(byte)
     }
     hash = hash &* 2_654_435_761
-    return (Float((hash >> 16) % 360), 2.0, (Float((hash >> 8) % 3) - 1) * 0.5)
+    return (Float((hash >> 16) % 360), 2.0)
   }
 
   /// A stable default position around the listener for un-placed sounds.
   static func spatialPosition(for name: String) -> AVAudio3DPoint {
     let slot = defaultSpatialPlacement(for: name)
-    return point(
-      angleDegrees: slot.angleDegrees, distance: slot.distance, elevation: slot.elevation)
+    return point(angleDegrees: slot.angleDegrees, distance: slot.distance)
   }
 
   // MARK: - Limiter chain

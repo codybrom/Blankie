@@ -41,7 +41,7 @@ import SwiftUI
       return HStack(spacing: 2) {
         // Spatial mixer entry — preset mode only, and only when the user has
         // opted into the experimental feature in Settings
-        if GlobalSettings.shared.enableSpatialAudio,
+        if globalSettings.enableSpatialAudio,
           audioManager.soloModeSound == nil, !audioManager.isQuickMix,
           presetManager.currentPreset != nil
         {

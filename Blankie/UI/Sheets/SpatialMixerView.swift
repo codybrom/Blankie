@@ -16,10 +16,9 @@ import SwiftUI
   /// at "up"), and tracks the output route for the capability hints — the
   /// binaural render works on any headphones, only tracking needs AirPods.
   final class HeadPoseMonitor: NSObject, ObservableObject, CMHeadphoneMotionManagerDelegate {
-    /// One app-lifetime instance: CoreMotion delivers queued events to the
-    /// main queue AFTER updates stop, and a deallocated manager/delegate is a
-    /// use-after-free crash on sheet dismissal (seen in the wild as
-    /// EXC_BAD_ACCESS in a CoreMotion NSOperation). Keep it alive forever.
+    /// One app-lifetime instance: CoreMotion delivers queued events AFTER
+    /// updates stop — a deallocated manager/delegate was a use-after-free
+    /// crash (EXC_BAD_ACCESS in a CoreMotion NSOperation) on sheet dismissal.
     static let shared = HeadPoseMonitor()
 
     @Published var yawDegrees: Double?
@@ -70,7 +69,11 @@ import SwiftUI
         NotificationCenter.default.removeObserver(routeObserver)
       }
       routeObserver = nil
-      if manager.isConnectionStatusActive {
+      // Connection monitoring outlives the sheet during a head-tracked
+      // session: it drives the headTracked → fixed downgrade on disconnect.
+      if manager.isConnectionStatusActive,
+        SpatialSessionManager.shared.mode != .headTracked
+      {
         manager.stopConnectionStatusUpdates()
       }
     }
@@ -85,9 +88,14 @@ import SwiftUI
     }
 
     func headphoneMotionManagerDidDisconnect(_ manager: CMHeadphoneMotionManager) {
-      DispatchQueue.main.async {
+      Task { @MainActor in
         self.trackingDeviceConnected = false
         self.refreshRoute()
+        // AirPods gone mid-session: downgrade to Fixed, keep playing. Lives
+        // here (not the sheet) so it still fires with the sheet closed.
+        if SpatialSessionManager.shared.mode == .headTracked {
+          SpatialSessionManager.shared.setMode(.fixed)
+        }
       }
     }
 
@@ -223,7 +231,10 @@ import SwiftUI
       return sounds.enumerated().allSatisfy { index, sound in
         let placement = sound.spatialPlacement()
         let slot = SpatialSessionManager.spreadSlot(index: index, count: sounds.count)
-        return abs(placement.angle - slot.angle) < 0.5
+        // Circular compare: drags store atan2 angles (-180...180], slots are
+        // [0..360) — -90° and 270° are the same pin position.
+        let delta = abs((placement.angle - slot.angle).truncatingRemainder(dividingBy: 360))
+        return min(delta, 360 - delta) < 0.5
           && abs(placement.distance - slot.distance) < 0.01
       }
     }
@@ -259,12 +270,7 @@ import SwiftUI
           }
         }
         .pickerStyle(.segmented)
-        .onChange(of: headPose.trackingAvailable) { _, available in
-          // AirPods disconnected mid-session: downgrade to Fixed, keep playing.
-          if !available, session.mode == .headTracked {
-            session.setMode(.fixed)
-          }
-        }
+        // AirPods-disconnect downgrades happen in HeadPoseMonitor's delegate.
 
         // Soft capability hints: the binaural render works on any headphones,
         // so we inform rather than gate.
@@ -485,11 +491,18 @@ import SwiftUI
           }
         }
 
-        Text(isPreparing ? "Preparing…" : sound.title)
-          .font(.system(size: 9))
-          .foregroundColor(.secondary)
-          .lineLimit(1)
-          .frame(maxWidth: 64)
+        // Not a ternary String — that's Text's verbatim init, skipping localization.
+        Group {
+          if isPreparing {
+            Text("Preparing…")
+          } else {
+            Text(sound.title)
+          }
+        }
+        .font(.system(size: 9))
+        .foregroundColor(.secondary)
+        .lineLimit(1)
+        .frame(maxWidth: 64)
       }
       .onTapGesture { placeInField() }
       .accessibilityLabel(Text("\(sound.title), in your head, tap to place in space"))
@@ -583,14 +596,16 @@ import SwiftUI
         .onTapGesture {
           // Take the sound out of the field; it moves to the parked row.
           SpatialSessionManager.shared.setInField(false, for: sound.fileName)
-          sound.rebuildPlayerForSpatialChange()
 
-          // Last pin removed: an empty map isn't a spatial session.
-          let anyOnMap = AudioManager.shared.sounds.contains {
+          // Last pin removed: an empty map isn't a spatial session, and
+          // setMode(.off) already rebuilds every player, this one included.
+          let othersOnMap = AudioManager.shared.sounds.contains {
             $0.isSelected && $0.isSpatialReady
               && SpatialSessionManager.shared.isInField($0.fileName)
           }
-          if !anyOnMap {
+          if othersOnMap {
+            sound.rebuildPlayerForSpatialChange()
+          } else {
             SpatialSessionManager.shared.setMode(.off)
           }
         }

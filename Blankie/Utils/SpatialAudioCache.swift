@@ -32,6 +32,19 @@ enum SpatialAudioCache {
     return FileManager.default.fileExists(atPath: url.path) ? url : nil
   }
 
+  /// Removes every rendered variant of this source (any boost) — called when
+  /// a custom sound is deleted so its caches don't linger until purge.
+  static func removeCaches(for sourceURL: URL) {
+    let prefix = "\(sourceURL.lastPathComponent)-"
+    guard
+      let files = try? FileManager.default.contentsOfDirectory(
+        at: directory, includingPropertiesForKeys: nil)
+    else { return }
+    for file in files where file.lastPathComponent.hasPrefix(prefix) {
+      try? FileManager.default.removeItem(at: file)
+    }
+  }
+
   /// Renders (or returns) the mono cache: chunked fold to mono with the
   /// normalization boost baked in, written as AAC. Runs off the main thread.
   static func renderMonoCache(for sourceURL: URL, boostDB: Float) async throws -> URL {

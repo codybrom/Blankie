@@ -5,6 +5,7 @@
 //  Created by Cody Bromley on 6/4/26.
 //
 
+import AVFAudio
 import Foundation
 import os
 
@@ -34,11 +35,33 @@ final class SpatialSessionManager: ObservableObject {
 
   private init() {}
 
+  /// Whether audio routes to a car (CarPlay or car Bluetooth). Spatial
+  /// sessions are headphone experiences — in a car the render broke silently.
+  static var isCarAudioRouteActive: Bool {
+    #if os(iOS)
+      return AVAudioSession.sharedInstance().currentRoute.outputs.contains {
+        $0.portType == .carAudio
+      }
+    #else
+      return false
+    #endif
+  }
+
+  /// Ends any live session when a car route/scene appears; no-op otherwise.
+  @MainActor
+  func endSessionForCarAudio() {
+    guard isActive else { return }
+    Logger.audio.debug("SpatialSession: ending session - car audio route")
+    setMode(.off)
+  }
+
   /// Switches mode. Entering/leaving a session rebuilds players (the spatial
   /// chain is decided at load); fixed ↔ head-tracked is just the env-node flag.
   @MainActor
   func setMode(_ newMode: SpatialSessionMode) {
     guard newMode != mode else { return }
+    // Never start a session while audio routes to a car (see above).
+    if newMode != .off, Self.isCarAudioRouteActive { return }
     let wasActive = isActive
     mode = newMode
     Logger.audio.debug("SpatialSession: mode -> \(newMode.rawValue)")
