@@ -9,6 +9,7 @@ import Foundation
 
 struct Credits: Codable {
   let contributors: [String]
+  let betaTesters: [String]?
   let translators: [String: [String]]
   let dependencies: [Dependency]?
 }

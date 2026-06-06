@@ -68,6 +68,7 @@ struct AboutView: View {
   @State private var isLicenseExpanded = false
   @State private var isAcknowledgementsExpanded = false
   @State private var contributors: [String] = []
+  @State private var betaTesters: [String] = []
   @State private var translators: [String: [String]] = [:]
 
   #if os(iOS)
@@ -109,6 +110,11 @@ struct AboutView: View {
         if !translators.isEmpty {
           Divider().padding(.horizontal, 40).accessibilityHidden(true)
           TranslatorSection(translators: translators)
+        }
+
+        if !betaTesters.isEmpty {
+          Divider().padding(.horizontal, 40).accessibilityHidden(true)
+          ContributorSection(title: "Beta Testers", contributors: betaTesters)
         }
 
         Divider().padding(.horizontal, 40).accessibilityHidden(true)
@@ -414,6 +420,7 @@ extension AboutView {
       let decoder = JSONDecoder()
       let credits = try decoder.decode(Credits.self, from: data)
       contributors = credits.contributors
+      betaTesters = credits.betaTesters ?? []
       translators = credits.translators
     } catch {
       Logger.ui.error("Error loading credits: \(error, privacy: .public)")

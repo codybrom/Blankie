@@ -55,28 +55,20 @@ struct DeveloperSection: View {
 }
 
 struct ContributorSection: View {
+  var title: LocalizedStringKey = "Contributors"
   let contributors: [String]
   var body: some View {
     VStack(spacing: 8) {
-      Text("Contributors")
+      Text(title)
         .font(.aboutHeading)
         .padding(.bottom, 4)
 
-      HStack(spacing: 0) {
-        ForEach(contributors.indices, id: \.self) { index in
-          Text(contributors[index])
-            .font(.aboutBody)
-
-          if index < contributors.count - 1 {
-            Text(verbatim: ", ")
-              .font(.aboutBody)
-          }
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .center)
-      // Read the contributor list as one phrase ("Hans, Fritz, …") rather than
-      // a stutter of name / comma / name VoiceOver stops.
-      .accessibilityElement(children: .combine)
+      // One joined Text so long name lists wrap, and VoiceOver reads the
+      // list as a single phrase ("Hans, Fritz, …").
+      Text(contributors.joined(separator: ", "))
+        .font(.aboutBody)
+        .multilineTextAlignment(.center)
+        .frame(maxWidth: .infinity, alignment: .center)
     }
     .frame(maxWidth: .infinity)
     .padding(.bottom, 4)
