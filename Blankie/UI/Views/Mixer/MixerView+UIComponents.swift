@@ -48,11 +48,13 @@ import SwiftUI
           Button {
             showingSpatialMixer = true
           } label: {
-            // Restricted symbol, used for its licensed purpose: spatial audio.
-            Image(systemName: "person.spatialaudio.stereo.3d.fill")
+            // Not person.spatialaudio.*: those are restricted to referring to
+            // Apple's Spatial Audio feature, and our spatial mix is an in-app
+            // binaural render, not the system feature.
+            Image(systemName: "speaker.wave.1.arrowtriangles.up.right.down.left")
           }
           .tint(.primary)
-          .accessibilityLabel("Spatial Mix")
+          .accessibilityLabel(Text("Spatial Mix"))
         }
 
         Button {

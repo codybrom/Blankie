@@ -44,6 +44,9 @@ enum SpatialAudioCache {
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
       let inFile = try AVAudioFile(forReading: sourceURL)
+      // A zero-frame source would write an empty cache that then reads as
+      // valid forever; refuse it instead.
+      guard inFile.length > 0 else { throw CocoaError(.fileReadCorruptFile) }
       let inFormat = inFile.processingFormat
 
       // Write to a temp file first so a cancelled render never leaves a

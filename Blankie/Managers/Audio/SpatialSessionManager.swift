@@ -64,10 +64,15 @@ final class SpatialSessionManager: ObservableObject {
     let sounds = AudioManager.shared.sounds.filter { $0.isSelected && $0.isSpatialReady }
     guard !sounds.isEmpty else { return }
 
-    let step = 360.0 / Float(sounds.count)
     for (index, sound) in sounds.enumerated() {
-      placements[sound.fileName] = Placement(angle: Float(index) * step, distance: 2.0)
+      placements[sound.fileName] = Self.spreadSlot(index: index, count: sounds.count)
     }
+  }
+
+  /// The even-fan slot for sound `index` of `count` — the single source of
+  /// truth for seeding, the mixer's Arrange action, and its no-op check.
+  static func spreadSlot(index: Int, count: Int) -> Placement {
+    Placement(angle: Float(index) * (360.0 / Float(count)), distance: 2.0)
   }
 
   // MARK: - Session placements (in-memory only)
@@ -76,6 +81,7 @@ final class SpatialSessionManager: ObservableObject {
     placements[fileName]
   }
 
+  @MainActor
   func setPlacement(angle: Float, distance: Float, for fileName: String) {
     placements[fileName] = Placement(angle: angle, distance: distance)
   }
@@ -85,6 +91,7 @@ final class SpatialSessionManager: ObservableObject {
     !removedFromField.contains(fileName)
   }
 
+  @MainActor
   func setInField(_ inField: Bool, for fileName: String) {
     if inField {
       removedFromField.remove(fileName)

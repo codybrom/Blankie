@@ -234,6 +234,9 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   private var customizationObserver: AnyCancellable?
   var isResetting = false
   private var isLoading = false
+  // Memoized spatial-cache existence (not private: re-analysis in
+  // Sound+Normalization invalidates it when the baked boost changes).
+  var spatialReadyCache: Bool?
 
   // Metadata properties
   @Published var channelCount: Int?
@@ -395,6 +398,7 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   /// Live-moves the sound in the field; optionally remembers the spot for the
   /// rest of the session (in memory only — synchronous, so the mixer re-reads
   /// fresh data immediately and released dots don't snap back).
+  @MainActor
   func setSpatialPlacement(angleDegrees: Float, distance: Float, persist: Bool) {
     let point = AudioEngineManager.point(angleDegrees: angleDegrees, distance: distance)
     player?.spatialPosition = point
@@ -409,10 +413,15 @@ open class Sound: NSObject, ObservableObject, Identifiable {
 
   /// Whether the sound can join the field right now: short sounds fold in
   /// memory; long ones need their rendered mono cache (see prepareForSpatial).
+  /// The cache-existence check is memoized — the mixer reads this per redraw
+  /// (~10 Hz under head tracking) and a filesystem stat each time adds up.
   var isSpatialReady: Bool {
     if (duration ?? 0) <= SoundPlayer.bufferThreshold { return true }
+    if let cached = spatialReadyCache { return cached }
     guard let url = getSoundURL() else { return false }
-    return SpatialAudioCache.existingCache(for: url, boostDB: normalizationBoostDB()) != nil
+    let ready = SpatialAudioCache.existingCache(for: url, boostDB: normalizationBoostDB()) != nil
+    spatialReadyCache = ready
+    return ready
   }
 
   /// Renders the mono cache a long sound needs before joining the field.
@@ -421,6 +430,7 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     guard let url = getSoundURL() else { return false }
     do {
       _ = try await SpatialAudioCache.renderMonoCache(for: url, boostDB: normalizationBoostDB())
+      spatialReadyCache = true
       return true
     } catch {
       Logger.sounds.error(
@@ -430,15 +440,33 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     }
   }
 
-  /// Rebuilds the player when spatial participation changes, preserving playback.
+  /// Rebuilds the player when spatial participation changes, preserving the
+  /// position of a playing or paused sound (stopped sounds reload fresh) and
+  /// resuming if it was audibly playing.
+  @MainActor
   func rebuildPlayerForSpatialChange() {
     guard isLoaded else { return }
-    let wasPlaying = playbackState == .playing
+    let priorState = playbackState
+    let position = player?.currentTime ?? 0
     unload()
-    if wasPlaying {
-      loadSound()
+    loadSound()
+    if priorState != .stopped {
+      restorePlaybackPosition(position)
+    }
+    if priorState == .playing {
       play()
     }
+  }
+
+  /// Seeks a freshly (re)loaded player back to a position captured before a
+  /// rebuild. Seconds, not frames: a spatial mono cache can differ from its
+  /// source file in frame count. Marks the sound .paused — a restored
+  /// mid-file position is a resume point, and playSelected re-randomizes
+  /// stopped sounds (which would discard the restore on the next play).
+  func restorePlaybackPosition(_ seconds: TimeInterval) {
+    guard let player, seconds > 0 else { return }
+    player.seek(toFrame: AVAudioFramePosition(seconds * player.sampleRate))
+    playbackState = .paused
   }
 
   // MARK: - Playback Completion

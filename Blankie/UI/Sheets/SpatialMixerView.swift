@@ -15,13 +15,28 @@ import SwiftUI
   /// grid can show which way they're actually facing (yaw nil = wedge rests
   /// at "up"), and tracks the output route for the capability hints — the
   /// binaural render works on any headphones, only tracking needs AirPods.
-  final class HeadPoseMonitor: ObservableObject {
+  final class HeadPoseMonitor: NSObject, ObservableObject, CMHeadphoneMotionManagerDelegate {
+    /// One app-lifetime instance: CoreMotion delivers queued events to the
+    /// main queue AFTER updates stop, and a deallocated manager/delegate is a
+    /// use-after-free crash on sheet dismissal (seen in the wild as
+    /// EXC_BAD_ACCESS in a CoreMotion NSOperation). Keep it alive forever.
+    static let shared = HeadPoseMonitor()
+
     @Published var yawDegrees: Double?
     @Published var headphonesConnected = false
     @Published var trackingAvailable = false
 
     private let manager = CMHeadphoneMotionManager()
     private var routeObserver: NSObjectProtocol?
+    // Set by the connection-status delegate, which only fires for
+    // motion-capable headphones — isDeviceMotionAvailable alone reports the
+    // DEVICE's capability and stays true with no (or non-AirPods) headphones.
+    private var trackingDeviceConnected = false
+
+    private override init() {
+      super.init()
+      manager.delegate = self
+    }
 
     func start() {
       guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
@@ -45,6 +60,9 @@ import SwiftUI
       ) { [weak self] _ in
         self?.refreshRoute()
       }
+      if manager.isDeviceMotionAvailable {
+        manager.startConnectionStatusUpdates()
+      }
     }
 
     func endRouteObservation() {
@@ -52,6 +70,25 @@ import SwiftUI
         NotificationCenter.default.removeObserver(routeObserver)
       }
       routeObserver = nil
+      if manager.isConnectionStatusActive {
+        manager.stopConnectionStatusUpdates()
+      }
+    }
+
+    // MARK: CMHeadphoneMotionManagerDelegate (motion-capable headphones only)
+
+    func headphoneMotionManagerDidConnect(_ manager: CMHeadphoneMotionManager) {
+      DispatchQueue.main.async {
+        self.trackingDeviceConnected = true
+        self.refreshRoute()
+      }
+    }
+
+    func headphoneMotionManagerDidDisconnect(_ manager: CMHeadphoneMotionManager) {
+      DispatchQueue.main.async {
+        self.trackingDeviceConnected = false
+        self.refreshRoute()
+      }
     }
 
     private func refreshRoute() {
@@ -60,17 +97,18 @@ import SwiftUI
       ]
       headphonesConnected = AVAudioSession.sharedInstance().currentRoute.outputs
         .contains { headphonePorts.contains($0.portType) }
-      trackingAvailable = manager.isDeviceMotionAvailable
+      trackingAvailable = manager.isDeviceMotionAvailable && trackingDeviceConnected
     }
   }
 
   /// Experimental per-preset spatial mixer: a grid of the space around the
   /// listener with draggable dots for each sound in the mix. Tap a dot to lock
-  /// it into space or keep it in your head; positions save to the preset.
+  /// it into space or keep it in your head. Placements are session-scoped and
+  /// discarded when the session ends — nothing is written to presets.
   struct SpatialMixerView: View {
     @ObservedObject private var audioManager = AudioManager.shared
     @ObservedObject private var session = SpatialSessionManager.shared
-    @StateObject private var headPose = HeadPoseMonitor()
+    @ObservedObject private var headPose = HeadPoseMonitor.shared
     @Environment(\.dismiss) private var dismiss
 
     private var mixSounds: [Sound] {
@@ -161,7 +199,9 @@ import SwiftUI
             }
           }
           ToolbarItem(placement: .confirmationAction) {
+            // Untinted per HIG: nav buttons stay monochrome, not accent-colored.
             Button("Done") { dismiss() }
+              .tint(.primary)
           }
         }
       }
@@ -180,23 +220,23 @@ import SwiftUI
     private var isSpreadOut: Bool {
       let sounds = gridSounds
       guard !sounds.isEmpty else { return true }
-      let step = 360.0 / Float(sounds.count)
       return sounds.enumerated().allSatisfy { index, sound in
         let placement = sound.spatialPlacement()
-        return abs(placement.angle - Float(index) * step) < 0.5
-          && abs(placement.distance - 2.0) < 0.01
+        let slot = SpatialSessionManager.spreadSlot(index: index, count: sounds.count)
+        return abs(placement.angle - slot.angle) < 0.5
+          && abs(placement.distance - slot.distance) < 0.01
       }
     }
 
     /// Distributes every placed, spatial-ready sound evenly around the
-    /// listener at 2m, so overlapping dots become visible at a glance.
+    /// listener, so overlapping dots become visible at a glance.
     private func spreadOutSounds() {
       guard !gridSounds.isEmpty else { return }
 
-      let step = 360.0 / Float(gridSounds.count)
       for (index, sound) in gridSounds.enumerated() {
+        let slot = SpatialSessionManager.spreadSlot(index: index, count: gridSounds.count)
         sound.setSpatialPlacement(
-          angleDegrees: Float(index) * step, distance: 2.0, persist: true)
+          angleDegrees: slot.angle, distance: slot.distance, persist: true)
       }
     }
 
@@ -265,7 +305,10 @@ import SwiftUI
       GeometryReader { geo in
         let side = min(geo.size.width, geo.size.height)
         let center = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-        let scale = (side / 2 - 28) / CGFloat(Self.fieldRadius)  // points per meter
+        // Clamped at 0: the sheet's present/dismiss transition passes through
+        // zero-size geometry, and a negative scale propagates negative frame
+        // dimensions and font sizes into the dismissal layout (crash).
+        let scale = max((side / 2 - 28) / CGFloat(Self.fieldRadius), 0)  // points per meter
         let radius = CGFloat(Self.fieldRadius) * scale
 
         ZStack {
@@ -442,7 +485,7 @@ import SwiftUI
           .frame(maxWidth: 64)
       }
       .onTapGesture { placeInField() }
-      .accessibilityLabel("\(sound.title), in your head, tap to place in space")
+      .accessibilityLabel(Text("\(sound.title), in your head, tap to place in space"))
     }
 
     /// Long sounds render their mono variant first ("Preparing for Spatial"),
@@ -570,7 +613,7 @@ import SwiftUI
       }
       // Nudge up so the tail's tip sits on the placement point.
       .offset(y: -14)
-      .accessibilityLabel("\(sound.title), placed in space")
+      .accessibilityLabel(Text("\(sound.title), placed in space"))
     }
 
     private var dragGesture: some Gesture {

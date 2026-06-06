@@ -119,6 +119,8 @@ extension Sound {
     }
 
     PlaybackProfileStore.shared.store(profile)
+    // A new boost means a different spatial-cache key; re-check on next read.
+    spatialReadyCache = nil
     let freshFactor = pow(10, profile.gainDB / 20)
 
     if isCustom, let customSoundData {

@@ -288,10 +288,7 @@ final class SoundPlayer {
       node.stop()
     }
 
-    // Spatial players schedule only their mono buffer (file segments carry
-    // the source channel count and can't feed the mono chain) — always from 0.
-    let requested = isSpatial ? 0 : fromFrame
-    let start = max(0, min(requested, max(totalFrames - 1, 0)))
+    let start = max(0, min(fromFrame, max(totalFrames - 1, 0)))
     segmentBaseFrame = start
     lastKnownFrame = start
     if let completion { onPlaybackFinished = completion }
@@ -303,7 +300,10 @@ final class SoundPlayer {
       if loops {
         scheduleBufferedLoop(buffer, fromFrame: start)
       } else if isSpatial {
-        node.scheduleBuffer(buffer, at: nil, completionCallbackType: .dataPlayedBack) {
+        // Slice the mono fold from the start frame (file segments carry the
+        // source channel count and can't feed the mono chain).
+        let toPlay = Self.slice(of: buffer, from: start) ?? buffer
+        node.scheduleBuffer(toPlay, at: nil, completionCallbackType: .dataPlayedBack) {
           [weak self] _ in
           self?.fireFinishedIfCurrent(scheduleGeneration)
         }
@@ -325,11 +325,40 @@ final class SoundPlayer {
   /// whole buffer gaplessly forever.
   private func scheduleBufferedLoop(_ buffer: AVAudioPCMBuffer, fromFrame: AVAudioFramePosition) {
     if fromFrame > 0 {
-      let tail = AVAudioFrameCount(totalFrames - fromFrame)
-      node.scheduleSegment(
-        file, startingFrame: fromFrame, frameCount: tail, at: nil, completionHandler: nil)
+      if isSpatial {
+        // File segments carry the source channel count and can't feed the
+        // mono chain; slice the tail out of the mono fold instead.
+        if let tail = Self.slice(of: buffer, from: fromFrame) {
+          node.scheduleBuffer(tail, at: nil, completionHandler: nil)
+        }
+      } else {
+        let tail = AVAudioFrameCount(totalFrames - fromFrame)
+        node.scheduleSegment(
+          file, startingFrame: fromFrame, frameCount: tail, at: nil, completionHandler: nil)
+      }
     }
     node.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
+  }
+
+  /// A copy of `buffer` from `frame` to its end, or nil when the slice would
+  /// be empty (frame 0 callers should just use the whole buffer).
+  private static func slice(
+    of buffer: AVAudioPCMBuffer, from frame: AVAudioFramePosition
+  ) -> AVAudioPCMBuffer? {
+    let total = AVAudioFramePosition(buffer.frameLength)
+    guard frame > 0, frame < total,
+      let src = buffer.floatChannelData,
+      let out = AVAudioPCMBuffer(
+        pcmFormat: buffer.format, frameCapacity: AVAudioFrameCount(total - frame)),
+      let dst = out.floatChannelData
+    else { return nil }
+
+    let count = Int(total - frame)
+    for channel in 0..<Int(buffer.format.channelCount) {
+      dst[channel].update(from: src[channel] + Int(frame), count: count)
+    }
+    out.frameLength = AVAudioFrameCount(count)
+    return out
   }
 
   /// Buffered, non-looping: play the segment once, then fire the finished callback.
