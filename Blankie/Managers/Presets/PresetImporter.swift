@@ -758,7 +758,7 @@ extension PresetImporter {
       isDefault: false,
       createdVersion: preset.createdVersion,
       lastModifiedVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        ?? "1.1.0",
+        ?? "2.0.0",
       soundOrder: preset.soundOrder,
       creatorName: preset.creatorName,
       artworkId: preset.artworkId,
@@ -837,7 +837,7 @@ extension PresetImporter {
 
   func validateCompatibility(_ manifest: ArchiveManifest) throws {
     let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.0"
+      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
 
     guard manifest.compatibility.isCompatible(with: currentVersion) else {
       throw ImportError.incompatibleVersion

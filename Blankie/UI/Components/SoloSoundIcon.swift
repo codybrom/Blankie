@@ -43,22 +43,12 @@ struct SoloSoundIcon: View {
 
   var body: some View {
     ZStack {
-      #if os(macOS)
-        // Accent-tinted disc matching the macOS grid tiles (macOS is opted
-        // out of Liquid Glass, so no glass effect here).
-        Circle()
-          .fill(
-            audioManager.isGloballyPlaying
-              ? accentColor.opacity(0.2) : Color.gray.opacity(0.2)
-          )
-          .frame(width: iconSize, height: iconSize)
-      #else
-        // Clear glass disc — interactive without heavy blur.
-        Circle()
-          .fill(.clear)
-          .frame(width: iconSize, height: iconSize)
-          .glassEffect(.clear.interactive(), in: .circle)
-      #endif
+      // Clear glass disc — interactive without heavy blur. (The paused state
+      // still reads through iconColor's gray-out on macOS.)
+      Circle()
+        .fill(.clear)
+        .frame(width: iconSize, height: iconSize)
+        .glassEffect(.clear.interactive(), in: .circle)
 
       Image(systemName: sound.systemIconName)
         .resizable()

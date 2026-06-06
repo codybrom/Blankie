@@ -87,24 +87,4 @@ import SwiftUI
     }
   }
 
-  // MARK: - Liquid Glass Effect Extension
-
-  extension View {
-    @ViewBuilder
-    func modernGlassEffect(cornerRadius: CGFloat = 12) -> some View {
-      if #available(iOS 26.0, *) {
-        self.glassEffect(
-          .regular.interactive(), in: .rect(cornerRadius: cornerRadius, style: .continuous))
-      } else {
-        background(
-          .ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        )
-        .overlay(
-          RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
-      }
-    }
-  }
 #endif

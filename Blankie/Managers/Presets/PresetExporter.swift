@@ -48,7 +48,7 @@ class PresetExporter {
 
     // Create archive manifest
     let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.1.0"
+      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
     let manifest = ArchiveManifest(blankieVersion: currentVersion)
 
     // Get custom sounds for this preset

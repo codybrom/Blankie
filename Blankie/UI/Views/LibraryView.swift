@@ -856,9 +856,9 @@ struct LibraryView: View {
       }
     #endif
     #if os(macOS)
-      // The sidebar's window toolbar carries only the Add menu; the system adds
-      // the sidebar-toggle item automatically. No Edit toggle (reorder works via
-      // drag) and no Settings gear (Settings lives in the app menu / scene).
+      // The sidebar's window toolbar carries only the Add menu; the system
+      // adds the sidebar-toggle item automatically. No Edit toggle (reorder
+      // works via drag); Settings is the sidebar's footer gear.
       .toolbar {
         ToolbarItem(placement: .primaryAction) {
           Menu {

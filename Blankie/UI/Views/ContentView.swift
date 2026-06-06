@@ -21,7 +21,12 @@ import UniformTypeIdentifiers
     @ObservedObject private var timerManager = TimerManager.shared
 
     @State private var showingTimerPopover = false
+    @State private var showingSpatialMixer = false
     @State private var soundToEdit: Sound?
+    /// Keeps the solo backdrop up while sheet preview temporarily exits solo
+    /// mode (mirrors MixerView) — otherwise the preset grid pops in behind the
+    /// Edit Sound sheet, with paused tiles still styled as playing.
+    @State private var soloBackdropSound: Sound?
     @State private var presetToEdit: Preset?
     @State private var showingColorPicker = false
     @State private var showingPreferences = false
@@ -65,14 +70,37 @@ import UniformTypeIdentifiers
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
+    /// Whether the Spatial Mix toggle (and pane) is available: opted in via
+    /// Preferences, preset mode only — mirrors iOS's gating.
+    private var spatialEntryAvailable: Bool {
+      globalSettings.enableSpatialAudio
+        && audioManager.soloModeSound == nil && !audioManager.isQuickMix
+        && presetManager.currentPreset != nil
+    }
+
+    /// The sound whose solo view should fill the detail pane: the real solo
+    /// (when not previewing), or the captured backdrop while the Edit Sound
+    /// sheet is up (mirrors MixerView's soloLayoutSound).
+    private var soloLayoutSound: Sound? {
+      if let solo = audioManager.soloModeSound, audioManager.previewModeSound == nil {
+        return solo
+      }
+      if soundToEdit != nil {
+        return soloBackdropSound
+      }
+      return nil
+    }
+
     /// Window titlebar context, mirroring iOS MixerView: solo sound name, then
     /// Quick Mix, then the current preset name (default preset shows "Blankie").
     private var navigationTitle: String {
-      if let soloSound = audioManager.soloModeSound {
+      // soloLayoutSound (not soloModeSound) so the title doesn't flip to the
+      // preset name while sheet preview temporarily exits solo mode.
+      if let soloSound = soloLayoutSound {
         return soloSound.title
       }
       if audioManager.isQuickMix {
-        return "Quick Mix"
+        return String(localized: "Quick Mix")
       }
       if let preset = presetManager.currentPreset {
         return preset.isDefault ? "Blankie" : preset.name
@@ -80,12 +108,18 @@ import UniformTypeIdentifiers
       return "Blankie"
     }
 
-    /// Titlebar subtitle while a sleep timer runs (same string as the iOS
-    /// Now Playing bar); empty otherwise, which hides it.
-    private var timerSubtitle: String {
-      guard timerManager.isTimerActive, let endTime = timerManager.getEndTime() else { return "" }
-      return String(
-        localized: "Pausing at \(endTime.formatted(date: .omitted, time: .shortened))")
+    /// Titlebar subtitle: a running sleep timer wins (same string as the iOS
+    /// Now Playing bar), then "Spatial Mix" while the pane replaces the grid
+    /// (its only label — the pane itself has no heading). Empty hides it.
+    private var windowSubtitle: String {
+      if timerManager.isTimerActive, let endTime = timerManager.getEndTime() {
+        return String(
+          localized: "Pausing at \(endTime.formatted(date: .omitted, time: .shortened))")
+      }
+      if showingSpatialMixer, spatialEntryAvailable {
+        return String(localized: "Spatial Mix")
+      }
+      return ""
     }
 
     var body: some View {
@@ -106,10 +140,14 @@ import UniformTypeIdentifiers
           .foregroundStyle(.secondary)
         }
 
-        // Main content: solo mode swaps the grid for one large icon with no
-        // volume slider (mirrors MixerView's soloModeView); otherwise the
+        // Main content: the spatial mixer replaces the grid while toggled on
+        // (preset mode only); solo mode swaps the grid for one large icon with
+        // no volume slider (mirrors MixerView's soloModeView); otherwise the
         // shared long-press lift-and-reorder grid with SoundIcon tiles.
-        if let soloSound = audioManager.soloModeSound, audioManager.previewModeSound == nil {
+        if showingSpatialMixer, spatialEntryAvailable {
+          SpatialMixerView()
+            .transition(.opacity)
+        } else if let soloSound = soloLayoutSound {
           VStack {
             Spacer()
             SoloSoundIcon(sound: soloSound)
@@ -227,11 +265,25 @@ import UniformTypeIdentifiers
       }
 
       .navigationTitle(navigationTitle)
-      .navigationSubtitle(timerSubtitle)
+      .navigationSubtitle(windowSubtitle)
       // Floating title: merge the detail's toolbar strip into the content,
       // mirroring the iPad detail's hidden navigation-bar background.
       .toolbarBackground(.hidden, for: .windowToolbar)
       .toolbar {
+        // Spatial mixer toggle — preset mode only, and only when the user has
+        // opted into the experimental feature. Swaps the grid for the mixer
+        // pane; accent tint marks the pane as showing.
+        if spatialEntryAvailable {
+          ToolbarItem(placement: .primaryAction) {
+            Button {
+              showingSpatialMixer.toggle()
+            } label: {
+              Image(systemName: "speaker.wave.1.arrowtriangles.up.right.down.left")
+                .foregroundStyle(showingSpatialMixer ? activeAccent : Color.primary)
+            }
+            .accessibilityLabel(Text("Spatial Mix"))
+          }
+        }
         // Edit affordance for whatever is on screen — the solo sound's editor
         // or the current preset (mirrors iOS's topTrailingToolbarButton).
         ToolbarItem(placement: .primaryAction) {
@@ -252,11 +304,20 @@ import UniformTypeIdentifiers
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()  // Prevent accidental dismissal
       }
+      // Capture the solo backdrop for the sheet's lifetime (mirrors MixerView).
+      .onChange(of: soundToEdit) { oldValue, newValue in
+        if newValue != nil {
+          soloBackdropSound = audioManager.soloModeSound
+        } else if oldValue != nil {
+          soloBackdropSound = nil
+        }
+      }
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
       }
       .animation(.easeInOut(duration: 0.2), value: audioManager.isGloballyPlaying)
       .animation(.easeInOut(duration: 0.3), value: audioManager.soloModeSound?.id)
+      .animation(.easeInOut(duration: 0.2), value: showingSpatialMixer)
       .sheet(isPresented: $showingShortcuts) {
         ShortcutsView()
           .background(.ultraThinMaterial)

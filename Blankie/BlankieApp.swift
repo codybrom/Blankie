@@ -67,7 +67,7 @@ struct BlankieApp: App {
       }
 
       Settings {
-        PreferencesView()
+        SettingsView()
       }
     }
 

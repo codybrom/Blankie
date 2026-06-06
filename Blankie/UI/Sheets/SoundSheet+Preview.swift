@@ -145,7 +145,12 @@ extension SoundSheet {
 
         if let previousSolo = previousSoloModeSound {
           Logger.ui.debug("SoundSheet: Restoring previous solo mode for '\(previousSolo.title)'")
-          AudioManager.shared.enterSoloMode(for: previousSolo)
+          // Restore the solo session paused — auto-resuming read as the stop
+          // button doing nothing, since the solo sound is usually the very
+          // sound just previewed. Play/space resumes it. The explicit pause
+          // covers a mid-fade snapshot that exitPreviewMode left audible.
+          previousSolo.pause()
+          AudioManager.shared.enterSoloMode(for: previousSolo, startPlaying: false)
         }
 
         // Tear down add mode's temp player; edit mode previews the real Sound,

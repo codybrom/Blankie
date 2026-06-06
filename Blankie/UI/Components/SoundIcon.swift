@@ -23,6 +23,14 @@ struct SoundIcon: View {
 
   @State private var showingEditSheet = false
   @State private var showingDeleteConfirmation = false
+  #if os(macOS)
+    /// Drives the custom primary-colored focus ring (system ring disabled).
+    @FocusState private var isTileFocused: Bool
+    /// Ring shows only for keyboard-originated focus: clicks grab focus on
+    /// mouse-down (before the tap handler can clear it), which flashed the
+    /// ring for the duration of every press.
+    @State private var focusCameFromKeyboard = false
+  #endif
 
   private var configuration: Configuration {
     #if os(macOS)
@@ -39,34 +47,34 @@ struct SoundIcon: View {
       )
     #else
       switch globalSettings.iconSize {
-    case .small:
-      let iconSize: CGFloat = 75
-      return Configuration(
-        iconSize: iconSize,
-        sliderWidth: 70,  // Keep slider width the same
-        spacing: 1,
-        padding: EdgeInsets(top: 2, leading: 1, bottom: 2, trailing: 1),
-        fontSizeOffset: -7  // Smaller text for small icons
-      )
-    case .medium:
-      return Configuration(
-        iconSize: 100,
-        sliderWidth: 85,
-        spacing: 8,
-        padding: EdgeInsets(top: 12, leading: 10, bottom: 12, trailing: 10),
-        fontSizeOffset: 0
-      )
-    case .large:
-      let iconSize = maxWidth * 0.85
-      let sliderWidth = maxWidth * 0.75
-      return Configuration(
-        iconSize: iconSize,
-        sliderWidth: sliderWidth,
-        spacing: 8,
-        padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20),
-        fontSizeOffset: 6
-      )
-    }
+      case .small:
+        let iconSize: CGFloat = 75
+        return Configuration(
+          iconSize: iconSize,
+          sliderWidth: 70,  // Keep slider width the same
+          spacing: 1,
+          padding: EdgeInsets(top: 2, leading: 1, bottom: 2, trailing: 1),
+          fontSizeOffset: -7  // Smaller text for small icons
+        )
+      case .medium:
+        return Configuration(
+          iconSize: 100,
+          sliderWidth: 85,
+          spacing: 8,
+          padding: EdgeInsets(top: 12, leading: 10, bottom: 12, trailing: 10),
+          fontSizeOffset: 0
+        )
+      case .large:
+        let iconSize = maxWidth * 0.85
+        let sliderWidth = maxWidth * 0.75
+        return Configuration(
+          iconSize: iconSize,
+          sliderWidth: sliderWidth,
+          spacing: 8,
+          padding: EdgeInsets(top: 24, leading: 20, bottom: 24, trailing: 20),
+          fontSizeOffset: 6
+        )
+      }
     #endif
   }
 
@@ -187,13 +195,37 @@ struct SoundIcon: View {
       // is hidden by "Show Sound Names" (the identifier above is test-only).
       .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
       .onTapGesture {
+        #if os(macOS)
+          // Clicking activates but must not keep keyboard focus — the ring is
+          // for Tab navigation only.
+          isTileFocused = false
+        #endif
         activateTile()
       }
       .sensoryFeedback(.selection, trigger: sound.isSelected)
       #if os(macOS)
         // Volume is a separate VoiceOver stop so the rotor stays reliable
         .accessibilityAction { DispatchQueue.main.async { activateTile() } }
+        // Plain focusable: tabbable even with the system "Keyboard navigation"
+        // setting off (.activate would gate on it). Click-to-focus is undone
+        // in the tap handler instead; VoiceOver has its own a11y focus.
         .focusable()
+        .focused($isTileFocused)
+        // Primary-colored ring instead of the system (accent-blue) effect.
+        .focusEffectDisabled()
+        .onChange(of: isTileFocused) { _, focused in
+          guard focused else { return }
+          // Tab arrives as a keyDown; clicks are mouse events and launch-time
+          // initial focus has no event at all — only a provable keyDown rings.
+          focusCameFromKeyboard = NSApp.currentEvent?.type == .keyDown
+        }
+        .overlay {
+          if isTileFocused && focusCameFromKeyboard {
+            Circle()
+            .strokeBorder(Color.primary, lineWidth: 2)
+            .padding(-4)
+          }
+        }
         .onKeyPress(.return) {
           DispatchQueue.main.async { activateTile() }
           return .handled
@@ -208,6 +240,12 @@ struct SoundIcon: View {
         }
         .onKeyPress(.downArrow) {
           DispatchQueue.main.async { adjustVolume(.decrement) }
+          return .handled
+        }
+        .onKeyPress(.escape) {
+          // Clear keyboard focus (matches clicking empty grid space); the
+          // next Tab restarts from the first tile.
+          DispatchQueue.main.async { NSApp.keyWindow?.makeFirstResponder(nil) }
           return .handled
         }
       #endif

@@ -8,13 +8,16 @@
 import SwiftUI
 
 /// Sidebar hosting the full `LibraryView` so the sidebar *is* the Library. On
-/// iPad it's the same view iPhone shows as a sheet, with a Settings sheet in the
-/// leading toolbar; on macOS Settings lives in the native Settings scene, so the
-/// sidebar passes `onOpenSettings: nil`. The enclosing `NavigationSplitView`
-/// supplies the show/hide toggle.
+/// iPad it's the same view iPhone shows as a sheet. Both platforms put a
+/// Settings gear in the Library's leading toolbar — iPad's sheet binding comes
+/// from the split view's owner, macOS owns its own (and ⌘, opens the same view
+/// in the Settings scene). The enclosing `NavigationSplitView` supplies the
+/// show/hide toggle.
 struct SidebarContentView: View {
   #if os(iOS) || os(visionOS)
     @Binding var showingSettings: Bool
+  #else
+    @State private var showingSettings = false
   #endif
 
   @StateObject private var presetManager = PresetManager.shared
@@ -30,8 +33,10 @@ struct SidebarContentView: View {
 
   var body: some View {
     #if os(iOS) || os(visionOS)
+      // iPad: gear in the Library's leading toolbar.
       let onOpenSettings: (() -> Void)? = { showingSettings = true }
     #else
+      // macOS: the gear lives inside the sidebar as a footer row instead.
       let onOpenSettings: (() -> Void)? = nil
     #endif
     return LibraryView(presentation: .sidebar, onOpenSettings: onOpenSettings)
@@ -42,7 +47,37 @@ struct SidebarContentView: View {
       .onChange(of: presetManager.presets) { _, _ in
         pruneStarred()
       }
+      #if os(macOS)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+          settingsFooter
+        }
+        .sheet(isPresented: $showingSettings) {
+          SettingsView()
+        }
+      #endif
   }
+
+  #if os(macOS)
+    /// Bottom-of-sidebar Settings row (the classic Mac spot for it).
+    private var settingsFooter: some View {
+      VStack(spacing: 0) {
+        Divider()
+        HStack {
+          Button {
+            showingSettings = true
+          } label: {
+            Label("Settings", systemImage: "gearshape")
+          }
+          .buttonStyle(.borderless)
+          .foregroundStyle(.secondary)
+          Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+      }
+      .background(.thinMaterial)
+    }
+  #endif
 
   // Drop starred tokens whose preset no longer exists. The Library only filters
   // stale favorites out of its display; pruning persists the cleanup so the

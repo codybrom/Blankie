@@ -16,6 +16,9 @@ struct SettingsView: View {
   #endif
   @State private var showingAbout = false
   @State private var showingOnboarding = false
+  #if os(macOS)
+    @State private var showingRestartAlert = false
+  #endif
   // Populated asynchronously from `Bundle.main.isTestFlightOrDebug` (StoreKit
   // AppTransaction). Starts `false` so App Store users never flash beta UI.
   @State private var showBetaTesterUI = false
@@ -54,7 +57,56 @@ struct SettingsView: View {
 
   var body: some View {
     NavigationStack { settingsForm }
+      #if os(macOS)
+        // Tuned sheet/scene size; the grouped form scrolls inside it.
+        .frame(width: 500, height: 640)
+      #endif
   }
+
+  /// App-wide accent color row: iOS shows it in Theme (with the preset
+  /// override badge), macOS in Display.
+  private var accentColorControl: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      HStack(spacing: 6) {
+        Text("Accent Color")
+        #if os(iOS) || os(visionOS)
+          if accentColorOverridden {
+            overriddenByPresetBadge
+          }
+        #endif
+      }
+      SpectrumColorPicker(
+        selectedColor: Binding(
+          get: { globalSettings.customAccentColor },
+          // Use the setter so the choice persists (assigning the
+          // @Published directly never writes to UserDefaults).
+          set: { globalSettings.setAccentColor($0) }
+        )
+      )
+    }
+    .padding(.vertical, 4)
+  }
+
+  #if os(macOS)
+    private var languageMenu: some View {
+      Picker(
+        "Language",
+        selection: Binding(
+          get: { globalSettings.language },
+          set: { globalSettings.setLanguage($0) }
+        )
+      ) {
+        ForEach(globalSettings.availableLanguages) { language in
+          HStack {
+            Image(systemName: language.icon)
+            Text(language.displayName)
+          }
+          .tag(language)
+        }
+      }
+      .pickerStyle(.menu)
+    }
+  #endif
 
   private var settingsForm: some View {
     Form {
@@ -197,29 +249,41 @@ struct SettingsView: View {
             "Show Progress Borders")
         }
 
-        // Animated preset artwork as the Lock Screen / Now Playing background.
-        Toggle(
-          isOn: Binding(
-            get: { globalSettings.lockScreenBackgroundEnabled },
-            set: { globalSettings.setLockScreenBackgroundEnabled($0) }
-          )
-        ) {
-          Text("Lock Screen Animations")
-        }
+        #if os(iOS) || os(visionOS)
+          // Animated preset artwork as the Lock Screen / Now Playing background.
+          Toggle(
+            isOn: Binding(
+              get: { globalSettings.lockScreenBackgroundEnabled },
+              set: { globalSettings.setLockScreenBackgroundEnabled($0) }
+            )
+          ) {
+            Text("Lock Screen Animations")
+          }
+        #endif
 
+        #if os(macOS)
+          // macOS keeps everything visual in one Display section: accent here
+          // (Theme is iOS-only), and the Language picker — iOS handles
+          // per-app language in system Settings; macOS picks it here
+          // (restart required, prompted via the alert below).
+          accentColorControl
+
+          languageMenu
+        #endif
       }
 
       // App-wide defaults a preset inherits and can override in Edit Preset
-      // (view mode, accent color, background blur).
-      Section(
-        header: VStack(alignment: .leading, spacing: 4) {
-          Text("Theme")
-          Text("Presets can override these options.")
-            .font(.caption)
-            .textCase(.none)
-        }
-      ) {
-        #if os(iOS) || os(visionOS)
+      // (view mode, accent color, background blur). iOS-only as a section —
+      // macOS folds accent into Display above.
+      #if os(iOS) || os(visionOS)
+        Section(
+          header: VStack(alignment: .leading, spacing: 4) {
+            Text("Theme")
+            Text("Presets can override these options.")
+              .font(.caption)
+              .textCase(.none)
+          }
+        ) {
           // View mode (Grid / List). This is the app-wide default. It's
           // locked to Grid while in Quick Mix (tile-only by design). A preset
           // override no longer locks the control — the badge marks it, and the
@@ -252,29 +316,9 @@ struct SettingsView: View {
             .disabled(pickerLocked)
           }
           .padding(.vertical, 4)
-        #endif
 
-        VStack(alignment: .leading, spacing: 8) {
-          HStack(spacing: 6) {
-            Text("Accent Color")
-            #if os(iOS) || os(visionOS)
-              if accentColorOverridden {
-                overriddenByPresetBadge
-              }
-            #endif
-          }
-          SpectrumColorPicker(
-            selectedColor: Binding(
-              get: { globalSettings.customAccentColor },
-              // Use the setter so the choice persists (assigning the
-              // @Published directly never writes to UserDefaults).
-              set: { globalSettings.setAccentColor($0) }
-            )
-          )
-        }
-        .padding(.vertical, 4)
+          accentColorControl
 
-        #if os(iOS) || os(visionOS)
           // App-wide default blur for preset background artwork. On/off:
           // on applies `defaultBackgroundBlurRadius`, off is no blur.
           Toggle(
@@ -292,11 +336,15 @@ struct SettingsView: View {
               }
             }
           }
-        #endif
-      }
+        }
+      #endif
 
     }
     .navigationTitle("Settings")
+    #if os(macOS)
+      // Grouped form so macOS renders the same inset card sections as iOS.
+      .formStyle(.grouped)
+    #endif
     .tint(globalSettings.customAccentColor ?? .accentColor)
     // Presented as a sheet, this view has its own presentation context, so it
     // won't pick up the window's color scheme when appearance changes while
@@ -307,6 +355,8 @@ struct SettingsView: View {
     }
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
+    #endif
+    #if os(iOS) || os(macOS)
       .toolbar {
         ToolbarItem(placement: .confirmationAction) {
           Button("Done") {
@@ -314,6 +364,32 @@ struct SettingsView: View {
           }
           .tint(Color.primary)
         }
+      }
+    #endif
+    #if os(macOS)
+      .onChange(of: globalSettings.needsRestartForLanguageChange) { _, _ in
+        if globalSettings.needsRestartForLanguageChange {
+          showingRestartAlert = true
+          globalSettings.needsRestartForLanguageChange = false  // reset
+        }
+      }
+      .alert(
+        Text("Language Changed"),
+        isPresented: $showingRestartAlert
+      ) {
+        Button {
+          Language.restartApp()
+        } label: {
+          Text("Restart Now")
+        }
+        Button(role: .cancel) {
+        } label: {
+          Text("Later")
+        }
+      } message: {
+        Text(
+          "You will need to restart Blankie for the language change to take effect."
+        )
       }
     #endif
     .sheet(isPresented: $showingAbout) {
@@ -337,20 +413,21 @@ private struct PlaybackSettingsSection: View {
     Section(
       header: Text("Playback & Sounds")
     ) {
-      #if os(iOS) || os(visionOS)
-        Toggle(
-          "Autoplay on Open",
-          isOn: Binding(
-            get: { globalSettings.autoPlayOnLaunch },
-            set: { globalSettings.setAutoPlayOnLaunch($0) }
-          )
+      Toggle(
+        "Autoplay on Open",
+        isOn: Binding(
+          get: { globalSettings.autoPlayOnLaunch },
+          set: { globalSettings.setAutoPlayOnLaunch($0) }
         )
-        .tint(globalSettings.customAccentColor ?? .accentColor)
+      )
+      .tint(globalSettings.customAccentColor ?? .accentColor)
 
+      // Mix with Other Audio is AVAudioSession-based, so it has no macOS form.
+      #if os(iOS) || os(visionOS)
         mixWithOthersSection
-
-        spatialAvailabilitySection
       #endif
+
+      spatialAvailabilitySection
 
       NavigationLink(destination: SoundManagementView()) {
         HStack {
@@ -358,6 +435,26 @@ private struct PlaybackSettingsSection: View {
           Spacer()
         }
       }
+    }
+  }
+
+  /// Education-style availability gate: opting in just reveals the Spatial
+  /// Mix button on presets; sessions start (and end) in the mixer itself.
+  @ViewBuilder
+  private var spatialAvailabilitySection: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Toggle(
+        "Spatial Audio (Experimental)",
+        isOn: Binding(
+          get: { globalSettings.enableSpatialAudio },
+          set: { globalSettings.setEnableSpatialAudio($0) }
+        )
+      )
+      .tint(globalSettings.customAccentColor ?? .accentColor)
+
+      Text("Adds a Spatial Mix button to presets.")
+        .font(.caption)
+        .foregroundColor(.secondary)
     }
   }
 
@@ -398,26 +495,6 @@ private struct PlaybackSettingsSection: View {
         if globalSettings.mixWithOthers && !audioManager.isCarPlayConnected {
           mixWithOthersDetails
         }
-      }
-    }
-
-    /// Education-style availability gate: opting in just reveals the Spatial
-    /// Mix button on presets; sessions start (and end) in the mixer itself.
-    @ViewBuilder
-    private var spatialAvailabilitySection: some View {
-      VStack(alignment: .leading, spacing: 8) {
-        Toggle(
-          "Spatial Audio (Experimental)",
-          isOn: Binding(
-            get: { globalSettings.enableSpatialAudio },
-            set: { globalSettings.setEnableSpatialAudio($0) }
-          )
-        )
-        .tint(globalSettings.customAccentColor ?? .accentColor)
-
-        Text("Adds a Spatial Mix button to presets.")
-          .font(.caption)
-          .foregroundColor(.secondary)
       }
     }
 

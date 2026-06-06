@@ -83,6 +83,19 @@
         // summarize it; .contain keeps each tile individually navigable.
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("Sounds"))
+        // Clicking empty grid space drops keyboard focus (tiles' own taps win
+        // hit-testing); the next Tab then walks from the first tile again.
+        .contentShape(Rectangle())
+        .onTapGesture {
+          NSApp.keyWindow?.makeFirstResponder(nil)
+        }
+        // AppKit gives the first focusable view initial key focus on launch;
+        // drop it so the first Tab starts the walk from the first tile.
+        .onAppear {
+          DispatchQueue.main.async {
+            NSApp.keyWindow?.makeFirstResponder(nil)
+          }
+        }
       }
     }
 

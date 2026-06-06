@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-06-03
+## [2.0.0] - 2026-06-03
 
-Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below are primary for those platforms with the macOS app inheriting platform bug fixes.
+Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app around a Library sidebar with Liquid Glass throughout.
 
 ### Added
 
@@ -22,7 +22,7 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - **Library** (iPhone and iPad) - browse presets and sounds with artwork thumbnails, plus an Import menu for new presets, audio files, and `.blankie` files
 - **Quick Mix** - a lightweight soundboard for starting sounds quickly without saving a preset
 - **Sleep timer** - stop playback after a set time, with the option to add more time on the fly
-- **Spatial Audio, experimental** (iPhone and iPad) - opt in via Settings to place a preset's sounds around you on a draggable map, rendered binaurally on any headphones with optional head tracking on supported AirPods
+- **Spatial Audio, experimental** - opt in via Settings to place a preset's sounds around you on a draggable map, rendered binaurally on any headphones with optional head tracking on supported AirPods
 - Animated lock-screen artwork for presets, downloaded on demand to keep the app download small
 - Preset import and export as `.blankie` files for sharing
 - Per-preset accent color, grid or list layout, and background blur
@@ -30,6 +30,7 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - Interactive onboarding on first launch
 - Settings to toggle sound name labels and the progress border around playing sounds
 - **VoiceOver support** - labeled controls throughout, sliders that announce and adjust volume, sounds that announce their selection state, grouped sound credits and color pickers, and a Now Playing screen that properly holds focus
+- **Library sidebar** (macOS) - favorites, presets, and single sounds in a native sidebar that replaces the preset dropdown and hamburger menu, with menu-bar commands for every action and an always-visible volume slider and sleep timer in the bottom bar
 - **Full keyboard control of the sound grid** (macOS) - Tab to any sound, Space to toggle it, arrow keys to adjust its volume
 - **Dynamic Type support** - text scales to the preferred reading size with adaptive layouts and 44-point minimum touch targets
 - **Smooth fades and crossfades** - sounds ease in and out when played, paused, or toggled, and switching presets crossfades between mixes
@@ -43,10 +44,11 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - Re-normalized every built-in sound with two-way K-weighted (LUFS) loudness analysis so the whole library plays at a consistent level
 - Rebuilt audio playback on a shared audio engine so loudness normalization can now genuinely boost quiet sounds to the library's target level, a peak limiter on the final mix can prevent clipping, and playback can survives output-device switches and system audio resets
 - Rebuilt Settings and Preferences rows with idiomatic SwiftUI (Picker, LabeledContent, NavigationLink) so assistive technologies handle them natively
+- Unified Settings across platforms - macOS now uses the same Settings screen as iOS, opened from a sidebar gear or ⌘
 - Rebuilt the documentation website on Astro 6
 - Improved German (Deutsch) translations - thanks to **H. Rapp**
 - Improved Spanish (Español) translations - thanks to **Dizz7**
-- **Breaking**: minimum requirements are now iOS 26 and macOS 15.6
+- **Breaking**: minimum requirements are now iOS 26 and macOS 26 (Tahoe)
 
 ### Fixed
 
@@ -242,8 +244,8 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v1.1.0...HEAD
-[1.1.0]: https://github.com/codybrom/blankie/compare/v1.0.13...v1.1.0
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/codybrom/blankie/compare/v1.0.13...v2.0.0
 [1.0.13]: https://github.com/codybrom/blankie/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/codybrom/blankie/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/codybrom/blankie/compare/v1.0.10...v1.0.11
