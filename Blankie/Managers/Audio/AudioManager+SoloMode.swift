@@ -95,6 +95,11 @@ extension AudioManager {
       exitQuickMix()
     }
 
+    // Spatial sessions are bound to the preset mix; soloing ends them.
+    if SpatialSessionManager.shared.isActive {
+      SpatialSessionManager.shared.setMode(.off)
+    }
+
     // Switching directly from another solo sound: restore that sound's pre-solo
     // volume & selection first, so it doesn't stay selected at full volume and
     // leak into the mix the next time playback starts.

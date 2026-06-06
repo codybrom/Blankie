@@ -234,6 +234,9 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   private var customizationObserver: AnyCancellable?
   var isResetting = false
   private var isLoading = false
+  // Memoized spatial-cache existence (not private: re-analysis in
+  // Sound+Normalization invalidates it when the baked boost changes).
+  var spatialReadyCache: Bool?
 
   // Metadata properties
   @Published var channelCount: Int?
@@ -318,9 +321,18 @@ open class Sound: NSObject, ObservableObject, Identifiable {
 
       let shouldLoop =
         SoundCustomizationManager.shared.getCustomization(for: fileName)?.loopSound ?? true
-      let loadedPlayer = try SoundPlayer(fileURL: soundURL, loops: shouldLoop)
+      let wantsSpatial = isSpatialEligible
+      let loadedPlayer = try SoundPlayer(
+        fileURL: soundURL, loops: shouldLoop,
+        spatial: wantsSpatial,
+        spatialBoostDB: wantsSpatial ? normalizationBoostDB() : 0)
       loadedPlayer.onPlaybackFinished = { [weak self] in
         self?.handleNonLoopingFinished()
+      }
+      if wantsSpatial {
+        let placement = spatialPlacement()
+        loadedPlayer.spatialPosition = AudioEngineManager.point(
+          angleDegrees: placement.angle, distance: placement.distance)
       }
       player = loadedPlayer
       AudioEngineManager.shared.attach(loadedPlayer)
@@ -360,6 +372,101 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     Logger.sounds.debug("Sound: Deinitialized '\(self.fileName)'")
     customizationObserver?.cancel()
     volumeDebounceTimer?.invalidate()
+  }
+
+  // MARK: - Spatial Arrangement (experimental, session-scoped)
+
+  /// Whether this sound joins the spatial field right now: a session is
+  /// active, preset mode (spatial is preset-only — never solo or Quick Mix),
+  /// and the sound hasn't been taken out of the field this session.
+  var isSpatialEligible: Bool {
+    SpatialSessionManager.shared.isActive
+      && AudioManager.shared.soloModeSound == nil
+      && !AudioManager.shared.isQuickMix
+      && SpatialSessionManager.shared.isInField(fileName)
+  }
+
+  /// This sound's placement: the session's spot, or its default ring slot.
+  func spatialPlacement() -> (angle: Float, distance: Float) {
+    if let placement = SpatialSessionManager.shared.placement(for: fileName) {
+      return (placement.angle, placement.distance)
+    }
+    let slot = AudioEngineManager.defaultSpatialPlacement(for: "\(fileName).\(fileExtension)")
+    return (slot.angleDegrees, slot.distance)
+  }
+
+  /// Live-moves the sound in the field; optionally remembers the spot for the
+  /// rest of the session (in memory only — synchronous, so the mixer re-reads
+  /// fresh data immediately and released dots don't snap back).
+  @MainActor
+  func setSpatialPlacement(angleDegrees: Float, distance: Float, persist: Bool) {
+    let point = AudioEngineManager.point(angleDegrees: angleDegrees, distance: distance)
+    player?.spatialPosition = point
+    if let player, player.isSpatial {
+      player.node.position = point
+    }
+    if persist {
+      SpatialSessionManager.shared.setPlacement(
+        angle: angleDegrees, distance: distance, for: fileName)
+    }
+  }
+
+  /// Whether the sound can join the field right now: short sounds fold in
+  /// memory; long ones need their rendered mono cache (see prepareForSpatial).
+  /// The cache-existence check is memoized — the mixer reads this per redraw
+  /// (~10 Hz under head tracking) and a filesystem stat each time adds up.
+  var isSpatialReady: Bool {
+    // Unknown duration is NOT short (the player would silently stream flat);
+    // treat it as long and let the cache check settle it.
+    if let duration, duration <= SoundPlayer.bufferThreshold { return true }
+    if let cached = spatialReadyCache { return cached }
+    guard let url = getSoundURL() else { return false }
+    let ready = SpatialAudioCache.existingCache(for: url, boostDB: normalizationBoostDB()) != nil
+    spatialReadyCache = ready
+    return ready
+  }
+
+  /// Renders the mono cache a long sound needs before joining the field.
+  @MainActor
+  func prepareForSpatial() async -> Bool {
+    guard let url = getSoundURL() else { return false }
+    do {
+      _ = try await SpatialAudioCache.renderMonoCache(for: url, boostDB: normalizationBoostDB())
+      spatialReadyCache = true
+      return true
+    } catch {
+      Logger.sounds.error(
+        "Sound: Spatial render failed for '\(self.fileName, privacy: .public)': \(error, privacy: .public)"
+      )
+      return false
+    }
+  }
+
+  /// Rebuilds the player when spatial participation changes, preserving the
+  /// position of a playing or paused sound (stopped sounds reload fresh) and
+  /// resuming if it was audibly playing (and playback is globally on).
+  @MainActor
+  func rebuildPlayerForSpatialChange() {
+    guard isLoaded else { return }
+    let priorState = playbackState
+    let position = player?.currentTime ?? 0
+    unload()
+    loadSound()
+    if priorState != .stopped {
+      restorePlaybackPosition(position)
+    }
+    if priorState == .playing, AudioManager.shared.isGloballyPlaying {
+      play()
+    }
+  }
+
+  /// Seeks a freshly (re)loaded player to a position captured before a
+  /// rebuild. Seconds, not frames (a mono cache's frame count can differ);
+  /// marks .paused so playSelected doesn't re-randomize it as "stopped".
+  func restorePlaybackPosition(_ seconds: TimeInterval) {
+    guard let player, seconds > 0 else { return }
+    player.seek(toFrame: AVAudioFramePosition(seconds * player.sampleRate))
+    playbackState = .paused
   }
 
   // MARK: - Playback Completion

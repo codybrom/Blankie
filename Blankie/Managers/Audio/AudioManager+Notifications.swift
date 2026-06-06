@@ -214,6 +214,13 @@ extension AudioManager {
         return
       }
 
+      // A car route ends any spatial session (rationale on the helper).
+      if SpatialSessionManager.isCarAudioRouteActive {
+        Task { @MainActor in
+          SpatialSessionManager.shared.endSessionForCarAudio()
+        }
+      }
+
       switch reason {
       case .oldDeviceUnavailable:
         Logger.audio.debug("AudioManager: Audio route changed - old device unavailable")

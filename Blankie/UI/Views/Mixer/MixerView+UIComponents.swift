@@ -38,16 +38,36 @@ import SwiftUI
     /// Glass treatment.
     var topTrailingToolbarButton: some View {
       let target = editTarget
-      return Button {
-        target?.action()
-      } label: {
-        Image(systemName: target?.icon ?? "slider.vertical.3")
+      return HStack(spacing: 2) {
+        // Spatial mixer entry — preset mode only, and only when the user has
+        // opted into the experimental feature in Settings
+        if globalSettings.enableSpatialAudio,
+          audioManager.soloModeSound == nil, !audioManager.isQuickMix,
+          presetManager.currentPreset != nil
+        {
+          Button {
+            showingSpatialMixer = true
+          } label: {
+            // Not person.spatialaudio.*: those are restricted to referring to
+            // Apple's Spatial Audio feature, and our spatial mix is an in-app
+            // binaural render, not the system feature.
+            Image(systemName: "speaker.wave.1.arrowtriangles.up.right.down.left")
+          }
+          .tint(.primary)
+          .accessibilityLabel(Text("Spatial Mix"))
+        }
+
+        Button {
+          target?.action()
+        } label: {
+          Image(systemName: target?.icon ?? "slider.vertical.3")
+        }
+        // Toolbar buttons draw their symbol from the tint, so the accent has to
+        // be overridden here rather than via foregroundStyle on the label.
+        .tint(.primary)
+        .accessibilityLabel(target?.label ?? "Edit Preset")
+        .disabled(target == nil)
       }
-      // Toolbar buttons draw their symbol from the tint, so the accent has to
-      // be overridden here rather than via foregroundStyle on the label.
-      .tint(.primary)
-      .accessibilityLabel(target?.label ?? "Edit Preset")
-      .disabled(target == nil)
     }
 
     /// What the Edit button targets: the solo sound's editor, the Quick Mix

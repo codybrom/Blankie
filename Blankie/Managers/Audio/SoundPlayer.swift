@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import Accelerate
 import Foundation
 import os
 
@@ -37,9 +38,18 @@ final class SoundPlayer {
   let sampleRate: Double
   let mode: Mode
   let loops: Bool
+  /// Experimental: mono-folded for the 3D environment chain (the environment
+  /// node only spatializes mono inputs). Normalization boost is baked into
+  /// the fold since the EQ stage isn't in the spatial chain.
+  let isSpatial: Bool
+  /// Stable identifier used to derive this sound's 3D position.
+  let sourceName: String
 
   /// Owner-set callback fired once when a non-looping sound finishes playback.
   var onPlaybackFinished: (() -> Void)?
+
+  /// Preset-defined position in the spatial field (nil = stable default slot).
+  var spatialPosition: AVAudio3DPoint?
 
   // Absolute file frame at which the current schedule started.
   private var segmentBaseFrame: AVAudioFramePosition = 0
@@ -66,33 +76,104 @@ final class SoundPlayer {
 
   // MARK: - Init
 
-  init(fileURL: URL, loops: Bool) throws {
+  init(fileURL: URL, loops: Bool, spatial: Bool = false, spatialBoostDB: Float = 0) throws {
     self.loops = loops
-    let audioFile = try AVAudioFile(forReading: fileURL)
-    self.file = audioFile
+    self.sourceName = fileURL.lastPathComponent
 
-    let format = audioFile.processingFormat
-    self.totalFrames = audioFile.length
-    self.sampleRate = format.sampleRate
+    let sourceFile = try AVAudioFile(forReading: fileURL)
+    let sourceRate = sourceFile.processingFormat.sampleRate
+    let sourceDuration = sourceRate > 0 ? Double(sourceFile.length) / sourceRate : 0
+    let isLong = sourceDuration > SoundPlayer.bufferThreshold
 
+    let chosenFile: AVAudioFile
+    let chosenMode: Mode
+    let chosenSpatial: Bool
+
+    if spatial, isLong,
+      let cacheURL = SpatialAudioCache.existingCache(for: fileURL, boostDB: spatialBoostDB),
+      let cacheFile = try? AVAudioFile(forReading: cacheURL)
+    {
+      // Stream the rendered mono variant; its segments feed the environment
+      // node directly (boost is baked into the render).
+      chosenFile = cacheFile
+      chosenMode = .streaming
+      chosenSpatial = true
+      Logger.sounds.debug(
+        "SoundPlayer: Streaming spatial mono cache for '\(fileURL.lastPathComponent)'")
+    } else if !isLong,
+      let buffer = AVAudioPCMBuffer(
+        pcmFormat: sourceFile.processingFormat,
+        frameCapacity: AVAudioFrameCount(max(sourceFile.length, 1)))
+    {
+      try sourceFile.read(into: buffer)
+      chosenFile = sourceFile
+      if spatial, let mono = Self.monoFold(of: buffer, gainDB: spatialBoostDB) {
+        chosenMode = .buffered(mono)
+        chosenSpatial = true
+        Logger.sounds.debug(
+          "SoundPlayer: Spatial mono fold '\(fileURL.lastPathComponent)' (+\(spatialBoostDB) dB baked)"
+        )
+      } else {
+        chosenMode = .buffered(buffer)
+        chosenSpatial = false
+        Logger.sounds.debug(
+          "SoundPlayer: Buffered '\(fileURL.lastPathComponent)' (\(sourceDuration)s)")
+      }
+    } else {
+      // Long without a mono cache (or buffer alloc failed): stream flat. The
+      // spatial mixer offers "prepare" to render the cache.
+      chosenFile = sourceFile
+      chosenMode = .streaming
+      chosenSpatial = false
+      Logger.sounds.debug(
+        "SoundPlayer: Streaming '\(fileURL.lastPathComponent)' (\(sourceDuration)s)\(spatial && isLong ? " - spatial needs preparation" : "")"
+      )
+    }
+
+    self.file = chosenFile
+    self.mode = chosenMode
+    self.isSpatial = chosenSpatial
+    self.totalFrames = chosenFile.length
+    self.sampleRate = chosenFile.processingFormat.sampleRate
     self.node = AVAudioPlayerNode()
     self.gain = AVAudioUnitEQ(numberOfBands: 0)
     self.gain.globalGain = 0
+  }
 
-    let duration = sampleRate > 0 ? Double(totalFrames) / sampleRate : 0
-    if duration <= SoundPlayer.bufferThreshold,
-      let buffer = AVAudioPCMBuffer(
-        pcmFormat: format, frameCapacity: AVAudioFrameCount(max(totalFrames, 1)))
-    {
-      try audioFile.read(into: buffer)
-      self.mode = .buffered(buffer)
-      Logger.sounds.debug(
-        "SoundPlayer: Buffered '\(fileURL.lastPathComponent)' (\(duration)s)")
+  /// Averages all channels into a mono buffer with the normalization boost
+  /// baked in (hard-capped at full scale; the fold is for the spatial chain).
+  /// Shared with SpatialAudioCache's chunked offline render.
+  static func monoFold(of buffer: AVAudioPCMBuffer, gainDB: Float) -> AVAudioPCMBuffer? {
+    guard let src = buffer.floatChannelData,
+      let monoFormat = AVAudioFormat(
+        standardFormatWithSampleRate: buffer.format.sampleRate, channels: 1),
+      let mono = AVAudioPCMBuffer(pcmFormat: monoFormat, frameCapacity: buffer.frameLength),
+      let dst = mono.floatChannelData?.pointee
+    else { return nil }
+
+    let count = vDSP_Length(buffer.frameLength)
+    let channels = Int(buffer.format.channelCount)
+
+    if channels == 1 {
+      dst.update(from: src[0], count: Int(buffer.frameLength))
     } else {
-      self.mode = .streaming
-      Logger.sounds.debug(
-        "SoundPlayer: Streaming '\(fileURL.lastPathComponent)' (\(duration)s)")
+      var scale = 1.0 / Float(channels)
+      vDSP_vsmul(src[0], 1, &scale, dst, 1, count)
+      for channel in 1..<channels {
+        vDSP_vsma(src[channel], 1, &scale, dst, 1, dst, 1, count)
+      }
     }
+
+    if gainDB > 0 {
+      var gain = pow(10, gainDB / 20)
+      vDSP_vsmul(dst, 1, &gain, dst, 1, count)
+      var floor: Float = -1
+      var ceiling: Float = 1
+      vDSP_vclip(dst, 1, &floor, &ceiling, dst, 1, count)
+    }
+
+    mono.frameLength = buffer.frameLength
+    return mono
   }
 
   // MARK: - State
@@ -218,6 +299,14 @@ final class SoundPlayer {
     case .buffered(let buffer):
       if loops {
         scheduleBufferedLoop(buffer, fromFrame: start)
+      } else if isSpatial {
+        // Slice the mono fold from the start frame (file segments carry the
+        // source channel count and can't feed the mono chain).
+        let toPlay = Self.slice(of: buffer, from: start) ?? buffer
+        node.scheduleBuffer(toPlay, at: nil, completionCallbackType: .dataPlayedBack) {
+          [weak self] _ in
+          self?.fireFinishedIfCurrent(scheduleGeneration)
+        }
       } else {
         scheduleBufferedOnce(fromFrame: start, generation: scheduleGeneration)
       }
@@ -236,11 +325,40 @@ final class SoundPlayer {
   /// whole buffer gaplessly forever.
   private func scheduleBufferedLoop(_ buffer: AVAudioPCMBuffer, fromFrame: AVAudioFramePosition) {
     if fromFrame > 0 {
-      let tail = AVAudioFrameCount(totalFrames - fromFrame)
-      node.scheduleSegment(
-        file, startingFrame: fromFrame, frameCount: tail, at: nil, completionHandler: nil)
+      if isSpatial {
+        // File segments carry the source channel count and can't feed the
+        // mono chain; slice the tail out of the mono fold instead.
+        if let tail = Self.slice(of: buffer, from: fromFrame) {
+          node.scheduleBuffer(tail, at: nil, completionHandler: nil)
+        }
+      } else {
+        let tail = AVAudioFrameCount(totalFrames - fromFrame)
+        node.scheduleSegment(
+          file, startingFrame: fromFrame, frameCount: tail, at: nil, completionHandler: nil)
+      }
     }
     node.scheduleBuffer(buffer, at: nil, options: .loops, completionHandler: nil)
+  }
+
+  /// A copy of `buffer` from `frame` to its end, or nil when the slice would
+  /// be empty (frame 0 callers should just use the whole buffer).
+  private static func slice(
+    of buffer: AVAudioPCMBuffer, from frame: AVAudioFramePosition
+  ) -> AVAudioPCMBuffer? {
+    let total = AVAudioFramePosition(buffer.frameLength)
+    guard frame > 0, frame < total,
+      let src = buffer.floatChannelData,
+      let out = AVAudioPCMBuffer(
+        pcmFormat: buffer.format, frameCapacity: AVAudioFrameCount(total - frame)),
+      let dst = out.floatChannelData
+    else { return nil }
+
+    let count = Int(total - frame)
+    for channel in 0..<Int(buffer.format.channelCount) {
+      dst[channel].update(from: src[channel] + Int(frame), count: count)
+    }
+    out.frameLength = AVAudioFrameCount(count)
+    return out
   }
 
   /// Buffered, non-looping: play the segment once, then fire the finished callback.

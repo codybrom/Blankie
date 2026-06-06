@@ -348,6 +348,8 @@ private struct PlaybackSettingsSection: View {
         .tint(globalSettings.customAccentColor ?? .accentColor)
 
         mixWithOthersSection
+
+        spatialAvailabilitySection
       #endif
 
       NavigationLink(destination: SoundManagementView()) {
@@ -396,6 +398,26 @@ private struct PlaybackSettingsSection: View {
         if globalSettings.mixWithOthers && !audioManager.isCarPlayConnected {
           mixWithOthersDetails
         }
+      }
+    }
+
+    /// Education-style availability gate: opting in just reveals the Spatial
+    /// Mix button on presets; sessions start (and end) in the mixer itself.
+    @ViewBuilder
+    private var spatialAvailabilitySection: some View {
+      VStack(alignment: .leading, spacing: 8) {
+        Toggle(
+          "Spatial Audio (Experimental)",
+          isOn: Binding(
+            get: { globalSettings.enableSpatialAudio },
+            set: { globalSettings.setEnableSpatialAudio($0) }
+          )
+        )
+        .tint(globalSettings.customAccentColor ?? .accentColor)
+
+        Text("Adds a Spatial Mix button to presets.")
+          .font(.caption)
+          .foregroundColor(.secondary)
       }
     }
 

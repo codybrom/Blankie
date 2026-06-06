@@ -296,9 +296,10 @@ class CustomSoundManager {
     }
 
     do {
-      // Delete the file
+      // Delete the file, plus any rendered spatial mono variants of it
       if let soundURL = getURLForCustomSound(customSound) {
         try FileManager.default.removeItem(at: soundURL)
+        SpatialAudioCache.removeCaches(for: soundURL)
       }
 
       // Delete from database

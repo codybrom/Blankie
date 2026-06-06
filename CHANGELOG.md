@@ -22,6 +22,7 @@ Version 1.1 brings Blankie to iPhone, iPad, and CarPlay. The new features below 
 - **Library** (iPhone and iPad) - browse presets and sounds with artwork thumbnails, plus an Import menu for new presets, audio files, and `.blankie` files
 - **Quick Mix** - a lightweight soundboard for starting sounds quickly without saving a preset
 - **Sleep timer** - stop playback after a set time, with the option to add more time on the fly
+- **Spatial Audio, experimental** (iPhone and iPad) - opt in via Settings to place a preset's sounds around you on a draggable map, rendered binaurally on any headphones with optional head tracking on supported AirPods
 - Animated lock-screen artwork for presets, downloaded on demand to keep the app download small
 - Preset import and export as `.blankie` files for sharing
 - Per-preset accent color, grid or list layout, and background blur

@@ -233,6 +233,16 @@ extension AudioManager {
     }
   }
 
+  /// Rebuilds every loaded player when the session starts or ends (the mono
+  /// fold and graph chain are decided at load time); position/resume
+  /// semantics live in rebuildPlayerForSpatialChange.
+  @MainActor
+  func applySpatialAudioSetting() {
+    for sound in sounds where sound.isLoaded {
+      sound.rebuildPlayerForSpatialChange()
+    }
+  }
+
   private func stopAndRemoveCustomSounds() -> [String: (isSelected: Bool, volume: Float)] {
     let customSoundsToRemove = sounds.filter { $0.isCustom }
     var savedState: [String: (isSelected: Bool, volume: Float)] = [:]

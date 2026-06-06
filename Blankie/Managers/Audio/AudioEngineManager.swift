@@ -38,6 +38,11 @@ final class AudioEngineManager {
   /// Single mix-bus peak limiter (mainMixer → limiter → output).
   private(set) var limiter: AVAudioUnitEffect
 
+  /// Experimental 3D environment for spatial sounds (mono inputs only); lives
+  /// alongside the normal chain and feeds the same main mixer.
+  private(set) var environment = AVAudioEnvironmentNode()
+  private var environmentConnected = false
+
   /// Registered players keyed by identity. `Sound` owns removal via `detach`;
   /// an explicit registry lets rebuilds enumerate every node.
   private(set) var registered: [ObjectIdentifier: SoundPlayer] = [:]
@@ -83,9 +88,11 @@ final class AudioEngineManager {
   func recreateEngine() {
     registered.removeAll()
     limiterConnected = false
+    environmentConnected = false
     engine = AVAudioEngine()
     engine.isAutoShutdownEnabled = true
     limiter = Self.makeLimiter()
+    environment = AVAudioEnvironmentNode()
     observeEngineNotifications()
     // The fresh mixer defaults to 1.0; reapply the user's global volume.
     globalVolume =
@@ -105,20 +112,42 @@ final class AudioEngineManager {
 
   // MARK: - Graph attach / detach
 
-  /// Attaches a player's node + gain and wires node → gain → mainMixer with
-  /// the file's format (the mixer handles SR conversion). Idempotent.
+  /// Attaches a player and wires its chain: spatial players go node →
+  /// environment (mono, HRTF-positioned); everything else node → gain →
+  /// mainMixer with the file's format (the mixer handles SR conversion).
+  /// Idempotent.
   func attach(_ player: SoundPlayer) {
     let key = ObjectIdentifier(player)
     guard registered[key] == nil else { return }
 
     engine.attach(player.node)
-    engine.attach(player.gain)
-
-    let format = player.file.processingFormat
-    engine.connect(player.node, to: player.gain, format: format)
-    engine.connect(player.gain, to: engine.mainMixerNode, format: format)
+    connectPlayerChain(player)
 
     registered[key] = player
+  }
+
+  /// Wires (or re-wires after a rebuild) a player's output chain.
+  func connectPlayerChain(_ player: SoundPlayer) {
+    if player.isSpatial {
+      // Buffered spatial sounds carry their mono fold; streamed ones play a
+      // rendered mono cache, so the file's own format is already mono.
+      let format: AVAudioFormat
+      switch player.mode {
+      case .buffered(let mono): format = mono.format
+      case .streaming: format = player.file.processingFormat
+      }
+      connectEnvironmentIfNeeded()
+      engine.connect(player.node, to: environment, format: format)
+      player.node.renderingAlgorithm = .HRTFHQ
+      player.node.position = player.spatialPosition ?? Self.spatialPosition(for: player.sourceName)
+    } else {
+      if player.gain.engine == nil {
+        engine.attach(player.gain)
+      }
+      let format = player.file.processingFormat
+      engine.connect(player.node, to: player.gain, format: format)
+      engine.connect(player.gain, to: engine.mainMixerNode, format: format)
+    }
   }
 
   /// Stops a player, disconnects and detaches its nodes, and forgets it.
@@ -128,11 +157,70 @@ final class AudioEngineManager {
 
     player.stop()
     engine.disconnectNodeOutput(player.node)
-    engine.disconnectNodeOutput(player.gain)
     engine.detach(player.node)
-    engine.detach(player.gain)
+    if player.gain.engine != nil {
+      engine.disconnectNodeOutput(player.gain)
+      engine.detach(player.gain)
+    }
 
     registered[key] = nil
+  }
+
+  // MARK: - Spatial environment
+
+  /// Wires the 3D environment into the mix once (environment → mainMixer).
+  func connectEnvironmentIfNeeded() {
+    guard !environmentConnected else { return }
+
+    if environment.engine == nil {
+      engine.attach(environment)
+    }
+    engine.connect(environment, to: engine.mainMixerNode, format: nil)
+    applyHeadTrackingSetting()
+    environmentConnected = true
+  }
+
+  /// Applies the session's head-tracking mode to the live environment node
+  /// (no-op without compatible AirPods + the head-pose entitlement).
+  func applyHeadTrackingSetting() {
+    #if !os(visionOS)
+      environment.isListenerHeadTrackingEnabled =
+        SpatialSessionManager.shared.mode == .headTracked
+    #endif
+  }
+
+  /// Forces the environment chain to re-wire after a graph rebuild.
+  func resetEnvironmentConnection() {
+    environmentConnected = false
+  }
+
+  /// Converts a placement to engine coordinates (forward is -z, right is +x).
+  static func point(angleDegrees: Float, distance: Float, elevation: Float = 0) -> AVAudio3DPoint {
+    let radians = angleDegrees * .pi / 180
+    return AVAudio3DPoint(
+      x: distance * sin(radians), y: elevation, z: -distance * cos(radians))
+  }
+
+  /// Default ring slot from a stable hash of the sound's name (djb2, then a
+  /// Fibonacci mix — raw djb2 low bits are dominated by the shared ".m4a" /
+  /// ".wav" suffixes, which clustered every sound at nearly the same angle).
+  /// Swift's Hashable is seeded per launch, hence the hand-rolled hash.
+  /// Ear height only — placements are 2D throughout.
+  static func defaultSpatialPlacement(for name: String) -> (
+    angleDegrees: Float, distance: Float
+  ) {
+    var hash: UInt32 = 5381
+    for byte in name.utf8 {
+      hash = hash &* 33 &+ UInt32(byte)
+    }
+    hash = hash &* 2_654_435_761
+    return (Float((hash >> 16) % 360), 2.0)
+  }
+
+  /// A stable default position around the listener for un-placed sounds.
+  static func spatialPosition(for name: String) -> AVAudio3DPoint {
+    let slot = defaultSpatialPlacement(for: name)
+    return point(angleDegrees: slot.angleDegrees, distance: slot.distance)
   }
 
   // MARK: - Limiter chain

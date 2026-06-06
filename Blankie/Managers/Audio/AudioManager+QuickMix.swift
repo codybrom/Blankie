@@ -26,6 +26,11 @@ extension AudioManager {
     // Clear any current preset
     PresetManager.shared.clearCurrentPreset()
 
+    // Spatial sessions are bound to the preset mix; Quick Mix ends them.
+    if SpatialSessionManager.shared.isActive {
+      SpatialSessionManager.shared.setMode(.off)
+    }
+
     // Save original states of all sounds
     quickMixOriginalStates = sounds.map { sound in
       QuickMixState(sound: sound, isSelected: sound.isSelected, volume: sound.volume)
