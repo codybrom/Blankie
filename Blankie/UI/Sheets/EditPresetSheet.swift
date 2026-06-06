@@ -162,12 +162,15 @@ struct EditPresetSheet: View {
         .formStyle(.grouped)
         .frame(minWidth: 400, idealWidth: 500, minHeight: preset.isDefault ? 200 : 300)
         .toolbar {
-          // One trailing group: share sits beside Done instead of stranded
-          // bottom-left (where macOS sheets put .automatic items).
-          ToolbarItemGroup(placement: .confirmationAction) {
-            exportButton
+          // Keep these as separate items: macOS 26 sheet bottom bars render
+          // only ONE item per action slot, so grouping share with Done (or
+          // sharing the .confirmationAction placement) silently drops Done.
+          ToolbarItem(placement: .confirmationAction) {
             Button("Done") { isPresented = nil }
-              .keyboardShortcut(.escape)
+            .keyboardShortcut(.escape)
+          }
+          ToolbarItem(placement: .automatic) {
+            exportButton
           }
         }
       #endif
@@ -343,7 +346,6 @@ extension EditPresetSheet {
       }
     }
   }
-
 
   private func cleanupExportedFile() {
     if let url = exportedURL {
