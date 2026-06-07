@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Note: Currently unused
+/// Appearance + accent picker shown from the macOS bottom bar's palette popover
 struct ColorPickerView: View {
   @ObservedObject var globalSettings = GlobalSettings.shared
 
@@ -53,7 +53,7 @@ struct ColorPickerView: View {
         .font(.headline)
         .padding(.bottom, 4)
 
-      ForEach(AccentColor.allCases, id: \.self) { color in
+      ForEach(AccentColor.allCases.filter { $0 != .system }, id: \.self) { color in
         Button(action: {
           globalSettings.setAccentColor(color.color)
         }) {
@@ -68,9 +68,7 @@ struct ColorPickerView: View {
 
             Spacer()
 
-            if (color == .system && globalSettings.customAccentColor == nil)
-              || (color.color == globalSettings.customAccentColor)
-            {
+            if color.color == globalSettings.customAccentColor {
               Image(systemName: "checkmark")
                 .foregroundColor(.blue)
                 .accessibilityHidden(true)
@@ -81,8 +79,7 @@ struct ColorPickerView: View {
         .buttonStyle(.plain)
         .padding(.vertical, 4)
         .accessibilityAddTraits(
-          (color == .system && globalSettings.customAccentColor == nil)
-            || (color.color == globalSettings.customAccentColor) ? .isSelected : []
+          color.color == globalSettings.customAccentColor ? .isSelected : []
         )
       }
     }

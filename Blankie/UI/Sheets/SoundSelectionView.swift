@@ -110,7 +110,7 @@ struct SoundSelectionView: View {
 
           Spacer()
 
-          SoundCreditInfoButton(sound: sound)
+          SoundCreditInfoButton(sound: sound, accent: editingPreset?.accentColor)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -136,7 +136,7 @@ struct SoundSelectionView: View {
 
         Spacer()
 
-        SoundCreditInfoButton(sound: sound)
+        SoundCreditInfoButton(sound: sound, accent: editingPreset?.accentColor)
 
         Image(systemName: isRowSelected ? "checkmark" : "")
           .foregroundStyle(.tint)

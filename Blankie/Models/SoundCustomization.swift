@@ -17,6 +17,8 @@ struct SoundCustomization: Codable, Identifiable {
   var customIconName: String?
   var randomizeStartPosition: Bool?
   var loopSound: Bool?  // nil = default (true), false = play once and deselect
+  var fadeSound: Bool?  // nil = default (true), false = hard cut on play/pause
+  var isPresetUseOnly: Bool?  // nil = default (false), true = hidden outside presets
 
   // Audio normalization settings
   var normalizeAudio: Bool?
@@ -25,7 +27,8 @@ struct SoundCustomization: Codable, Identifiable {
   init(
     fileName: String, customTitle: String? = nil, customIconName: String? = nil,
     randomizeStartPosition: Bool? = nil,
-    normalizeAudio: Bool? = nil, volumeAdjustment: Float? = nil, loopSound: Bool? = nil
+    normalizeAudio: Bool? = nil, volumeAdjustment: Float? = nil, loopSound: Bool? = nil,
+    fadeSound: Bool? = nil, isPresetUseOnly: Bool? = nil
   ) {
     self.id = UUID()
     self.fileName = fileName
@@ -35,6 +38,8 @@ struct SoundCustomization: Codable, Identifiable {
     self.normalizeAudio = normalizeAudio
     self.volumeAdjustment = volumeAdjustment
     self.loopSound = loopSound
+    self.fadeSound = fadeSound
+    self.isPresetUseOnly = isPresetUseOnly
   }
 
   /// Returns the effective title (custom or original)
@@ -51,7 +56,7 @@ struct SoundCustomization: Codable, Identifiable {
   var hasCustomizations: Bool {
     return customTitle != nil || customIconName != nil
       || randomizeStartPosition != nil || normalizeAudio != nil || volumeAdjustment != nil
-      || loopSound != nil
+      || loopSound != nil || fadeSound != nil || isPresetUseOnly != nil
   }
 }
 
@@ -156,6 +161,34 @@ class SoundCustomizationManager: ObservableObject {
   func setLoopSound(_ loop: Bool?, for fileName: String) {
     var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
     customization.loopSound = loop
+
+    if customization.hasCustomizations {
+      customizations[fileName] = customization
+    } else {
+      customizations.removeValue(forKey: fileName)
+    }
+
+    saveCustomizationsInternal()
+  }
+
+  /// Set fade in/out for a sound
+  func setFadeSound(_ fade: Bool?, for fileName: String) {
+    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
+    customization.fadeSound = fade
+
+    if customization.hasCustomizations {
+      customizations[fileName] = customization
+    } else {
+      customizations.removeValue(forKey: fileName)
+    }
+
+    saveCustomizationsInternal()
+  }
+
+  /// Set preset-use-only for a sound
+  func setPresetUseOnly(_ presetOnly: Bool?, for fileName: String) {
+    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
+    customization.isPresetUseOnly = presetOnly
 
     if customization.hasCustomizations {
       customizations[fileName] = customization

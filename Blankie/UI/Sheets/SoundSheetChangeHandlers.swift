@@ -14,6 +14,8 @@ struct SoundSheetChangeHandlers: ViewModifier {
   @Binding var volumeAdjustment: Float
   @Binding var randomizeStartPosition: Bool
   @Binding var loopSound: Bool
+  @Binding var fadeSound: Bool
+  @Binding var isPresetUseOnly: Bool
   @Binding var soundName: String
   @Binding var selectedIcon: String
 
@@ -41,6 +43,12 @@ struct SoundSheetChangeHandlers: ViewModifier {
         updateSoundSettings()
       }
       .onChange(of: loopSound) { _, _ in
+        updateSoundSettings()
+      }
+      .onChange(of: fadeSound) { _, _ in
+        updateSoundSettings()
+      }
+      .onChange(of: isPresetUseOnly) { _, _ in
         updateSoundSettings()
       }
       .onChange(of: soundName) { _, _ in

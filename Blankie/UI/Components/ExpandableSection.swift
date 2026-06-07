@@ -40,7 +40,7 @@ struct ExpandableSection<Content: View>: View {
         }) {
           HStack {
             Text(title)
-              .font(.footnote.weight(.bold))
+              .font(.aboutHeading)
             Spacer()
             Image(systemName: "chevron.right")
               .foregroundColor(.secondary)

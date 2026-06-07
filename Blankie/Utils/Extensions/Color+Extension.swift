@@ -137,4 +137,24 @@ extension Color {
       return nil
     }
   }
+
+  /// White or black, whichever reads better over this color (perceived
+  /// brightness). Prominent button styles keep a white label even on light
+  /// tints, so accent-filled controls pick their label color with this.
+  var contrastingLabel: Color {
+    #if os(macOS)
+      guard let srgb = NSColor(self).usingColorSpace(.sRGB) else { return .white }
+      let (red, green, blue) = (srgb.redComponent, srgb.greenComponent, srgb.blueComponent)
+    #else
+      var red: CGFloat = 0
+      var green: CGFloat = 0
+      var blue: CGFloat = 0
+      var alpha: CGFloat = 0
+      guard UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+        return .white
+      }
+    #endif
+    let brightness = (0.299 * red) + (0.587 * green) + (0.114 * blue)
+    return brightness > 0.5 ? .black : .white
+  }
 }

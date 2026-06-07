@@ -82,6 +82,9 @@ struct EditPresetSheet: View {
   @State var exportedURL: URL?
   @State var isExporting = false
   @State var useCustomTheme = false
+  /// Whether this preset overrides the app-wide grid/list view mode. When off,
+  /// the preset stores `nil` and follows `GlobalSettings.showingListView`.
+  @State var useCustomViewMode = false
   @State var viewModeOverride: PresetViewMode?
   /// Whether this preset overrides the app-wide background blur. When off, the
   /// preset stores `nil` and follows `GlobalSettings.backgroundBlurRadius`.
@@ -118,6 +121,7 @@ struct EditPresetSheet: View {
     _staticArtworkPath = State(initialValue: preset.staticArtworkPath)
     _accentColor = State(initialValue: preset.accentColor)
     _useCustomTheme = State(initialValue: preset.accentColor != nil)
+    _useCustomViewMode = State(initialValue: preset.viewMode != nil)
     _viewModeOverride = State(initialValue: preset.viewMode)
     _useCustomBlur = State(initialValue: preset.backgroundBlurRadius != nil)
     // Seed with the effective value so enabling the override doesn't jump the
@@ -158,6 +162,9 @@ struct EditPresetSheet: View {
         .formStyle(.grouped)
         .frame(minWidth: 400, idealWidth: 500, minHeight: preset.isDefault ? 200 : 300)
         .toolbar {
+          // Keep these as separate items: macOS 26 sheet bottom bars render
+          // only ONE item per action slot, so grouping share with Done (or
+          // sharing the .confirmationAction placement) silently drops Done.
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") { isPresented = nil }
             .keyboardShortcut(.escape)
@@ -261,6 +268,9 @@ struct EditPresetSheet: View {
           SoundSheet(mode: .edit(sound), embedInNavigation: false)
         }
       }
+      // Match the editor's preset accent so the pushed Edit Sound page (which
+      // inherits tint when embedded) themes like the sheet that opened it.
+      .tint(activeAccentColor)
     }
   }
 
@@ -288,6 +298,35 @@ struct EditPresetSheet: View {
 // MARK: - Export Section
 
 extension EditPresetSheet {
+  /// Share-sheet preview: the preset's artwork when set, else the app icon.
+  private var sharePreview: SharePreview<Image, Image> {
+    if let artworkData = artworkData {
+      #if os(iOS)
+        if let uiImage = UIImage(data: artworkData) {
+          return SharePreview(
+            presetName,
+            image: Image(uiImage: uiImage),
+            icon: Image(systemName: "doc.fill")
+          )
+        }
+      #else
+        if let nsImage = NSImage(data: artworkData) {
+          return SharePreview(
+            presetName,
+            image: Image(nsImage: nsImage),
+            icon: Image(systemName: "doc.fill")
+          )
+        }
+      #endif
+    }
+    // The app icon is the default share preview image.
+    return SharePreview(
+      presetName,
+      image: Image("BlankieAppIconDisplay"),
+      icon: Image(systemName: "doc.fill")
+    )
+  }
+
   @ViewBuilder
   var exportButton: some View {
     if !preset.isDefault {
@@ -295,49 +334,7 @@ extension EditPresetSheet {
         ProgressView()
           .scaleEffect(0.8)
       } else {
-        ShareLink(
-          item: ExportablePreset(sheet: self),
-          preview: {
-            if let artworkData = artworkData {
-              #if os(iOS)
-                if let uiImage = UIImage(data: artworkData) {
-                  SharePreview(
-                    presetName,
-                    image: Image(uiImage: uiImage),
-                    icon: Image(systemName: "doc.fill")
-                  )
-                } else {
-                  SharePreview(
-                    presetName,
-                    image: Image("BlankieAppIconDisplay"),
-                    icon: Image(systemName: "doc.fill")
-                  )
-                }
-              #else
-                if let nsImage = NSImage(data: artworkData) {
-                  SharePreview(
-                    presetName,
-                    image: Image(nsImage: nsImage),
-                    icon: Image(systemName: "doc.fill")
-                  )
-                } else {
-                  SharePreview(
-                    presetName,
-                    image: Image("BlankieAppIconDisplay"),
-                    icon: Image(systemName: "doc.fill")
-                  )
-                }
-              #endif
-            } else {
-              // Use the app icon as the default share preview image
-              SharePreview(
-                presetName,
-                image: Image("BlankieAppIconDisplay"),
-                icon: Image(systemName: "doc.fill")
-              )
-            }
-          }()
-        ) {
+        ShareLink(item: ExportablePreset(sheet: self), preview: sharePreview) {
           Image(systemName: "square.and.arrow.up")
         }
         // The ShareLink label is icon-only so we must name it for VoiceOver.
@@ -361,6 +358,8 @@ extension EditPresetSheet {
     exportError = nil
   }
 
+  // Safety net only: the Edit affordances route the default preset to the
+  // create-preset flow instead of this sheet, so this should never show.
   var defaultPresetSection: some View {
     Group {
       Section {
@@ -369,7 +368,6 @@ extension EditPresetSheet {
           .foregroundColor(.secondary)
       }
       errorSection
-      visualsSection  // Artwork & Animated Artwork
     }
   }
 
@@ -487,18 +485,26 @@ extension EditPresetSheet {
     updatedPreset.staticArtworkPath = staticArtworkPath
     updatedPreset.lastModifiedVersion = currentVersion
 
-    // Save accent color
-    if useCustomTheme, let color = accentColor {
-      updatedPreset.accentColorName = color.toString
-    } else {
+    if preset.isDefault {
+      // The default preset takes no theme overrides (its sheet doesn't offer
+      // them); clear any set before this rule so they can't linger invisibly.
       updatedPreset.accentColorName = nil
+      updatedPreset.viewMode = nil
+      updatedPreset.backgroundBlurRadius = nil
+    } else {
+      // Save accent color
+      if useCustomTheme, let color = accentColor {
+        updatedPreset.accentColorName = color.toString
+      } else {
+        updatedPreset.accentColorName = nil
+      }
+
+      // Save per-preset view-mode override (nil = follow app setting).
+      updatedPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
+
+      // Save per-preset background blur override (nil = follow app setting).
+      updatedPreset.backgroundBlurRadius = useCustomBlur ? blurOverride : nil
     }
-
-    // Save per-preset view-mode override (nil = follow app setting).
-    updatedPreset.viewMode = viewModeOverride
-
-    // Save per-preset background blur override (nil = follow app setting).
-    updatedPreset.backgroundBlurRadius = useCustomBlur ? blurOverride : nil
 
     return updatedPreset
   }

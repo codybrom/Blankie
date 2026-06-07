@@ -12,6 +12,20 @@ import os
 // MARK: - Playback Controls
 extension Sound {
 
+  /// A 0.5s ramp would swallow most of a clip shorter than ~2s, so play/pause cut hard instead of fading.
+  private var isTooShortToFade: Bool {
+    guard let player else { return false }
+    return player.duration < Sound.fadeDuration * 4
+  }
+
+  /// Whether play/pause should ramp: per-sound preference (default on), with
+  /// the too-short cutoff as a hard floor.
+  private var shouldFade: Bool {
+    let wantsFade =
+      SoundCustomizationManager.shared.getCustomization(for: fileName)?.fadeSound ?? true
+    return wantsFade && !isTooShortToFade
+  }
+
   func play() {
     // Ensure player is loaded first
     if player == nil {
@@ -50,17 +64,18 @@ extension Sound {
 
     // One path for resume and fresh start: currentFrame is the paused position
     // for .paused sounds, the (possibly randomized) seek target otherwise.
-    // Start silent, then fade in.
-    player.setFadeLevel(0)
+    // Start silent, then fade in — unless fades are off for this sound.
+    let fadeIn = shouldFade ? Sound.fadeDuration : 0
+    player.setFadeLevel(fadeIn > 0 ? 0 : 1)
     player.play(fromFrame: player.currentFrame)
-    player.fade(to: 1, duration: Sound.fadeDuration)
+    player.fade(to: 1, duration: fadeIn)
     playbackState = .playing
     Logger.sounds.debug(
       "Sound: Playing '\(self.fileName)' from position: \(player.currentTime)s")
   }
 
   /// Repositions a non-playing sound for its next start: a random point in the
-  /// first 75% of the clip, or the beginning when randomization is off.
+  /// first 75% of a looping clip, or the beginning otherwise.
   func resetSoundPosition() {
     guard let player = self.player else {
       // If player doesn't exist yet, it will be positioned when loaded
@@ -80,7 +95,9 @@ extension Sound {
       shouldRandomizeStart = true  // Default to true for all sounds
     }
 
-    if shouldRandomizeStart {
+    // Random starts only make sense for looping beds (the loop wraps); a
+    // one-shot started mid-file just loses its beginning.
+    if shouldRandomizeStart && player.loops {
       guard player.duration > 0, player.duration.isFinite else {
         Logger.sounds.error(
           "Sound: Cannot randomize start position for '\(self.fileName, privacy: .public)' - invalid duration: \(player.duration, privacy: .public)"
@@ -120,7 +137,8 @@ extension Sound {
       // playback logic treat the sound as paused during the ramp; play() can
       // rescue a mid-fade pause by ramping back up.
       playbackState = .paused
-      currentPlayer.fade(to: 0, duration: Sound.fadeDuration) { [weak currentPlayer] in
+      currentPlayer.fade(to: 0, duration: shouldFade ? Sound.fadeDuration : 0) {
+        [weak currentPlayer] in
         currentPlayer?.pause()
       }
       Logger.sounds.debug("Sound: Fading out and pausing '\(self.fileName)'")

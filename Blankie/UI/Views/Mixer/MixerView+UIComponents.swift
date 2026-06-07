@@ -71,15 +71,22 @@ import SwiftUI
     }
 
     /// What the Edit button targets: the solo sound's editor, the Quick Mix
-    /// editor, or the current preset. `nil` when there's nothing to edit (the
-    /// button renders disabled rather than vanishing, so the slot never
-    /// collapses).
+    /// editor, or the current preset. The default preset has no editor —
+    /// there, the slot becomes a New Preset affordance (confirm, then the
+    /// creator seeded with the playing sounds). `nil` when there's nothing to
+    /// edit (the button renders disabled rather than vanishing, so the slot
+    /// never collapses).
     private var editTarget: (icon: String, label: String, action: () -> Void)? {
       if let soloSound = audioManager.soloModeSound {
         return ("slider.vertical.3", "Edit Sound", { soundToEdit = soloSound })
       } else if audioManager.isQuickMix {
         return ("slider.vertical.3", "Edit Quick Mix", { showingQuickMixEditor = true })
       } else if let currentPreset = presetManager.currentPreset {
+        if currentPreset.isDefault {
+          // Nothing playing means nothing to seed the new preset with.
+          guard audioManager.hasSelectedSounds else { return nil }
+          return ("square.and.pencil", "New Preset", { showingNewPresetConfirmation = true })
+        }
         return ("slider.vertical.3", "Edit Preset", { presetToEdit = currentPreset })
       } else {
         return nil
@@ -87,24 +94,4 @@ import SwiftUI
     }
   }
 
-  // MARK: - Liquid Glass Effect Extension
-
-  extension View {
-    @ViewBuilder
-    func modernGlassEffect(cornerRadius: CGFloat = 12) -> some View {
-      if #available(iOS 26.0, *) {
-        self.glassEffect(
-          .regular.interactive(), in: .rect(cornerRadius: cornerRadius, style: .continuous))
-      } else {
-        background(
-          .ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-        )
-        .overlay(
-          RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .strokeBorder(.primary.opacity(0.1), lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
-      }
-    }
-  }
 #endif

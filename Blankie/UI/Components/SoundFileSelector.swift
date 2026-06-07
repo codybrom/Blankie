@@ -25,8 +25,10 @@ struct SoundFileSelector: View {
             .foregroundStyle(.tint)
             .accessibilityHidden(true)
           VStack(alignment: .leading) {
+            // The full original file name matters (it's what the AI naming
+            // works from) — wrap rather than truncate.
             Text(selectedFile.lastPathComponent)
-              .lineLimit(1)
+              .fixedSize(horizontal: false, vertical: true)
             Text(formatFileSize(selectedFile))
               .font(.caption)
               .foregroundStyle(.secondary)

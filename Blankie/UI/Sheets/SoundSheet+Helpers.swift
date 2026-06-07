@@ -82,5 +82,7 @@ extension SoundSheet {
     normalizeAudio = true
     volumeAdjustment = 1.0
     loopSound = true
+    fadeSound = true
+    isPresetUseOnly = false
   }
 }

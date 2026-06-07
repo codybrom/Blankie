@@ -208,6 +208,12 @@ struct SpectrumColorPicker: View {
         handleSliderValueChange(newValue)
       }
       .tint(.clear)
+      #if os(macOS)
+        // macOS renders Slider labels inline (iOS keeps them a11y-only),
+        // which pushed the gradient track behind the label text. The form
+        // supplies its own heading; keep the label for VoiceOver only.
+        .labelsHidden()
+      #endif
       .frame(height: 44)
       .accessibilityValue(Text(currentColor.name))
   }

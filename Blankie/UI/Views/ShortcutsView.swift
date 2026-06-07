@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-/// A keyboard shortcut definition shared by the menu bar (`AppCommands`), the
-/// toolbar menu (`BlankieToolbar`), and the on-screen cheat sheet
-/// (`ShortcutsView`), so the three can't drift apart.
+/// A keyboard shortcut definition shared by the menu bar (`AppCommands`) and
+/// the on-screen cheat sheet (`ShortcutsView`), so the two can't drift apart.
 ///
 /// `KeyEquivalent` + `EventModifiers` are the source of truth: the displayed
 /// glyphs and the VoiceOver-spoken label are both derived from them.
@@ -84,13 +83,16 @@ struct AppShortcut: Identifiable {
 
 extension AppShortcut {
   // Canonical definitions. Bound entries are applied via `.keyboardShortcut(_:)`
-  // in AppCommands / BlankieToolbar; display-only entries (`closeWindow`,
-  // `playPause`) are owned by the system and just shown in the cheat sheet.
+  // in AppCommands; display-only entries (`closeWindow`, `playPause`) are owned
+  // by the system and just shown in the cheat sheet.
   static let playPause = AppShortcut("Play/Pause Sounds", mediaGlyph: "⏯")
+  static let toggleSidebar = AppShortcut("Show/Hide Sidebar", key: "s", modifiers: .command)
   static let manageSounds = AppShortcut("Manage Sounds", key: "o", modifiers: .command)
+  static let importFile = AppShortcut("Import", key: "i", modifiers: .command)
+  static let newWindow = AppShortcut("New Window", key: "n", modifiers: .command)
   static let keyboardShortcuts = AppShortcut(
     "Keyboard Shortcuts", key: "?", modifiers: [.command, .shift])
-  static let preferences = AppShortcut("Preferences", key: ",", modifiers: .command)
+  static let settings = AppShortcut("Settings", key: ",", modifiers: .command)
   static let closeWindow = AppShortcut("Close Window", key: "w", modifiers: .command)
   static let quit = AppShortcut("Quit", key: "q", modifiers: .command)
 }
@@ -112,8 +114,12 @@ struct ShortcutsView: View {
 
   let shortcuts: [AppShortcut] = [
     .playPause,
+    .toggleSidebar,
+    .manageSounds,
+    .importFile,
+    .newWindow,
     .closeWindow,
-    .preferences,
+    .settings,
     .keyboardShortcuts,
     .quit,
   ]

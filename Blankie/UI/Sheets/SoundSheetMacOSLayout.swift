@@ -18,6 +18,10 @@ struct SoundSheetMacOSLayout: View {
   @Binding var normalizeAudio: Bool
   @Binding var volumeAdjustment: Float
   @Binding var loopSound: Bool
+  @Binding var fadeSound: Bool
+  @Binding var isPresetUseOnly: Bool
+  @Binding var addToPresetIDs: Set<UUID>
+  @Binding var createMixPreset: Bool
   @Binding var isPreviewing: Bool
   @Binding var previewSound: Sound?
   @Binding var previewProgress: Double
@@ -55,6 +59,10 @@ struct SoundSheetMacOSLayout: View {
         normalizeAudio: $normalizeAudio,
         volumeAdjustment: $volumeAdjustment,
         loopSound: $loopSound,
+        fadeSound: $fadeSound,
+        isPresetUseOnly: $isPresetUseOnly,
+        addToPresetIDs: $addToPresetIDs,
+        createMixPreset: $createMixPreset,
         isPreviewing: $isPreviewing,
         previewSound: $previewSound,
         previewProgress: $previewProgress,

@@ -18,10 +18,6 @@ struct BlankieApp: App {
   @StateObject private var globalSettings = GlobalSettings.shared
   @Environment(\.scenePhase) private var scenePhase
 
-  #if os(macOS)
-    @State private var showingAbout = false
-  #endif
-
   // Initialize SwiftData
   init() {
     // Reset defaults if running UI tests
@@ -40,16 +36,12 @@ struct BlankieApp: App {
     @NSApplicationDelegateAdaptor(MacAppDelegate.self) private var appDelegate
     @StateObject private var windowObserver = WindowObserver.shared
     @State private var showingShortcuts = false
-    @State private var showingNewPresetPopover = false
-    @State private var presetName = ""
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
       Window("Blankie", id: "main") {
         WindowDefaults.defaultContentView(
-          showingAbout: $showingAbout,
-          showingShortcuts: $showingShortcuts,
-          showingNewPresetPopover: $showingNewPresetPopover,
-          presetName: $presetName
+          showingShortcuts: $showingShortcuts
         )
         .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
         .onChange(of: scenePhase) { oldPhase, newPhase in
@@ -58,16 +50,35 @@ struct BlankieApp: App {
       }
       .modelContainer(modelContainer)
       .defaultPosition(.center)
-      .windowResizability(.contentSize)
+      .windowResizability(.contentMinSize)
       .windowStyle(.automatic)
       .defaultSize(width: WindowDefaults.defaultWidth, height: WindowDefaults.defaultHeight)
       .windowToolbarStyle(.unified)
       .commandsReplaced {
-        AppCommands(showingAbout: $showingAbout, hasWindow: $windowObserver.hasVisibleWindow)
+        AppCommands(
+          showingShortcuts: $showingShortcuts,
+          hasWindow: $windowObserver.hasVisibleWindow
+        )
       }
 
+      // The scene must exist — with the Window scene's commands replaced, it's
+      // what contributes the standard app menu (Services/Hide/Quit; removing
+      // it gutted the menu). Its window is unreachable: the Settings item is
+      // replaced below to open the in-window pane instead. The replacement
+      // must attach HERE — a CommandGroup on the Window scene can't replace
+      // another scene's menu contribution (it duplicates the item instead).
       Settings {
-        PreferencesView()
+        SettingsView()
+      }
+      .commands {
+        CommandGroup(replacing: .appSettings) {
+          Button("Settings…") {
+            // The pane lives in the main window — reopen it if closed
+            AppState.shared.showingSettingsPane = true
+            openWindow(id: "main")
+          }
+          .keyboardShortcut(.settings)
+        }
       }
     }
 
@@ -128,10 +139,7 @@ struct BlankieApp: App {
           Group {
             #if os(macOS)
               WindowDefaults.defaultContentView(
-                showingAbout: .constant(false),
-                showingShortcuts: .constant(false),
-                showingNewPresetPopover: .constant(false),
-                presetName: .constant("")
+                showingShortcuts: .constant(false)
               )
               .frame(width: 450, height: 450)
             #else

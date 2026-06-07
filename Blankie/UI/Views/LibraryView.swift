@@ -10,9 +10,9 @@ import TipKit
 import UniformTypeIdentifiers
 import os
 
-/// Shared "now playing" treatment for Library rows. iPad sidebar rows highlight
-/// the whole row and tint the title with the active accent; iPhone page rows
-/// show an animated equalizer glyph in place of the old checkmark.
+/// Shared "now playing" treatment for Library rows. Sidebar rows highlight
+/// the whole row and tint the title with the active accent; every presentation
+/// shows an animated equalizer glyph in place of the old checkmark.
 enum LibraryRowStyle {
   static func titleColor(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
@@ -46,10 +46,13 @@ enum LibraryRowStyle {
 
   @ViewBuilder
   static func nowPlayingIndicator(
-    isCurrent: Bool, isPlaying: Bool, accent: Color, presentation: LibraryView.Presentation
+    isCurrent: Bool, isPlaying: Bool, accent: Color
   ) -> some View {
-    if isCurrent && presentation != .sidebar {
+    if isCurrent {
+      // Recreate on play/pause: the bars' repeatForever animations survive a
+      // non-animated height change, so a stopped row would keep bouncing.
       EqualizerIcon(isPlaying: isPlaying, accent: accent)
+        .id(isPlaying)
     }
   }
 }
@@ -121,6 +124,9 @@ struct PresetPickerRow: View {
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
+  #if os(macOS)
+    @ObservedObject private var appState = AppState.shared
+  #endif
   @Environment(\.dismiss) private var dismiss
 
   init(
@@ -149,6 +155,16 @@ struct PresetPickerRow: View {
     audioManager.soloModeSound == nil && presetManager.currentPreset?.id == preset.id
   }
 
+  /// macOS: Settings/About holds the detail pane, so any row click should
+  /// dismiss it and reveal the preset — current row included (single click).
+  private var settingsPaneShowing: Bool {
+    #if os(macOS)
+      return presentation == .sidebar && appState.showingSettingsPane
+    #else
+      return false
+    #endif
+  }
+
   var body: some View {
     HStack {
       // Tap target: applies the preset (disabled while editing, where taps
@@ -169,12 +185,31 @@ struct PresetPickerRow: View {
 
         LibraryRowStyle.nowPlayingIndicator(
           isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying,
-          accent: accent, presentation: presentation)
+          accent: accent)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
-      .onTapGesture {
-        if !isEditMode { applyPreset() }
+      // Sidebar (iPad/macOS): the current row needs a double tap/click, which
+      // toggles play–pause; elsewhere a single tap applies as usual.
+      .onTapGesture(count: presentation == .sidebar && isCurrent && !settingsPaneShowing ? 2 : 1) {
+        guard !isEditMode else { return }
+        #if os(macOS)
+          if settingsPaneShowing {
+            // Sub-page flags (About, Manage Sounds) reset via the pane's
+            // onDisappear — clearing them here flashes the settings root.
+            appState.showingSettingsPane = false
+            if !isCurrent { applyPreset() }
+            return
+          }
+        #endif
+        if presentation == .sidebar && isCurrent {
+          // Don't start a silent mix; pausing is always allowed.
+          if audioManager.isGloballyPlaying || audioManager.hasSelectedSounds {
+            audioManager.togglePlayback()
+          }
+        } else {
+          applyPreset()
+        }
       }
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
@@ -244,6 +279,9 @@ struct SoloPickerRow: View {
   let onSelection: (() -> Void)?
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
+  #if os(macOS)
+    @ObservedObject private var appState = AppState.shared
+  #endif
   @Environment(\.dismiss) private var dismiss
 
   init(
@@ -270,6 +308,16 @@ struct SoloPickerRow: View {
     audioManager.soloModeSound?.id == sound.id
   }
 
+  /// macOS: Settings/About holds the detail pane, so any row click should
+  /// dismiss it and reveal the solo sound — current row included (single click).
+  private var settingsPaneShowing: Bool {
+    #if os(macOS)
+      return presentation == .sidebar && appState.showingSettingsPane
+    #else
+      return false
+    #endif
+  }
+
   var body: some View {
     HStack {
       HStack(spacing: 10) {
@@ -277,7 +325,8 @@ struct SoloPickerRow: View {
           artworkId: nil,
           preset: nil,
           fallbackSystemImage: sound.systemIconName,
-          tint: accent
+          tint: accent,
+          isCircular: true
         )
         .accessibilityHidden(true)
 
@@ -288,12 +337,28 @@ struct SoloPickerRow: View {
 
         LibraryRowStyle.nowPlayingIndicator(
           isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying,
-          accent: accent, presentation: presentation)
+          accent: accent)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
       .contentShape(Rectangle())
-      .onTapGesture {
-        if !isEditMode { soloSound() }
+      // Sidebar (iPad/macOS): the current row needs a double tap/click, which
+      // toggles play–pause; elsewhere a single tap applies as usual.
+      .onTapGesture(count: presentation == .sidebar && isCurrent && !settingsPaneShowing ? 2 : 1) {
+        guard !isEditMode else { return }
+        #if os(macOS)
+          if settingsPaneShowing {
+            // Sub-page flags (About, Manage Sounds) reset via the pane's
+            // onDisappear — clearing them here flashes the settings root.
+            appState.showingSettingsPane = false
+            if !isCurrent { soloSound() }
+            return
+          }
+        #endif
+        if presentation == .sidebar && isCurrent {
+          audioManager.togglePlayback()
+        } else {
+          soloSound()
+        }
       }
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
@@ -371,12 +436,18 @@ struct LibraryView: View {
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
+  // Re-filter the Sounds section when per-sound customizations change
+  // (preset-use-only, loop, renames) — they live outside the audio manager.
+  @ObservedObject private var customizationManager = SoundCustomizationManager.shared
   @State private var showingNewPresetSheet = false
   @State private var presetToDelete: Preset?
   @State private var isEditMode = false
   @State private var showingSoundFilePicker = false
   @State private var importedSoundURL: URL?
   @State private var showingImportSoundSheet = false
+  #if os(macOS)
+    @State private var selectedPresetForEdit: Preset?
+  #endif
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var systemColorScheme
 
@@ -396,9 +467,11 @@ struct LibraryView: View {
 
   /// Non-favorited sounds, alphabetical by title, for the fixed Sounds (solo)
   /// section. Favorited sounds appear in the Favorites section instead — the
-  /// same split presets use, so nothing shows twice.
+  /// same split presets use, so nothing shows twice. Preset-use-only sounds
+  /// don't solo and stay out entirely.
   private var soloSounds: [Sound] {
     audioManager.sounds
+      .filter { !$0.isPresetUseOnly }
       .filter { !globalSettings.isStarred(GlobalSettings.soloToken(forFileName: $0.fileName)) }
       .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
   }
@@ -582,9 +655,19 @@ struct LibraryView: View {
         }
       default:
         if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
-          PresetPickerRow(
+          let row = PresetPickerRow(
             preset: preset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
             presentation: presentation, onSelection: onSelect)
+          #if os(macOS)
+            // macOS rename/delete replacing the old PresetPicker's per-row pencil
+            // and trash. Custom presets only — never the default or solo rows.
+            row.contextMenu {
+              Button("Edit Preset…") { selectedPresetForEdit = preset }
+              Button("Delete Preset…", role: .destructive) { presetToDelete = preset }
+            }
+          #else
+            row
+          #endif
         }
       }
     }
@@ -619,13 +702,29 @@ struct LibraryView: View {
         Spacer()
         LibraryRowStyle.nowPlayingIndicator(
           isCurrent: audioManager.isQuickMix, isPlaying: audioManager.isGloballyPlaying,
-          accent: accent, presentation: presentation)
+          accent: accent)
       }
     }
     .accessibilityAddTraits(audioManager.isQuickMix ? [.isSelected] : [])
     .listRowBackground(
       LibraryRowStyle.rowBackground(
         isCurrent: audioManager.isQuickMix, accent: accent, presentation: presentation))
+  }
+
+  /// The Add menu's items (New Preset / Import), shared by the iOS and macOS
+  /// toolbar branches so the actions aren't duplicated.
+  @ViewBuilder
+  private var addMenuContent: some View {
+    Button {
+      showingNewPresetSheet = true
+    } label: {
+      Label("New Preset", systemImage: "rectangle.stack.badge.plus")
+    }
+    Button {
+      showingSoundFilePicker = true
+    } label: {
+      Label("Import", systemImage: "square.and.arrow.down")
+    }
   }
 
   var body: some View {
@@ -665,6 +764,9 @@ struct LibraryView: View {
         TipView(createFirstPresetTip, arrowEdge: .top) { action in
           if action.id == "create" {
             showingNewPresetSheet = true
+          } else if action.id == "dismiss" {
+            // TipKit actions don't auto-dismiss; invalidate explicitly.
+            createFirstPresetTip.invalidate(reason: .actionPerformed)
           }
         }
         .listRowBackground(Color.clear)
@@ -731,8 +833,10 @@ struct LibraryView: View {
         // ALL PRESETS — Quick Mix and All Blankie Sounds are fixed rows at the
         // top; only the custom presets below are reorderable in Edit.
         Section {
-          // Quick Mix — always available, not favoritable (its own thing).
-          quickMixRow
+          // Quick Mix — not favoritable (its own thing); iOS/iPadOS only.
+          #if !os(macOS)
+            quickMixRow
+          #endif
 
           if showsDefaultInAllPresets {
             tokenRow(GlobalSettings.allSoundsToken)
@@ -760,10 +864,19 @@ struct LibraryView: View {
         }
       }
     }
-    // The sheet and pushed page keep their "Library" title; the sidebar is
+    // The iPhone page is the app's root screen, so it titles as "Blankie";
+    // the (currently unused) sheet keeps "Library"; the sidebar is
     // self-evidently the library, so it omits the title to leave the bar for
     // the controls.
-    .navigationTitle(presentation == .sidebar ? Text(verbatim: "") : Text("Library"))
+    .navigationTitle(
+      {
+        switch presentation {
+        case .sidebar: return Text(verbatim: "")
+        case .page: return Text(verbatim: "Blankie")
+        case .sheet: return Text("Library")
+        }
+      }()
+    )
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
     #endif
@@ -799,16 +912,7 @@ struct LibraryView: View {
         ToolbarItem(placement: .topBarTrailing) {
           if !isEditMode {
             Menu {
-              Button {
-                showingNewPresetSheet = true
-              } label: {
-                Label("New Preset", systemImage: "rectangle.stack.badge.plus")
-              }
-              Button {
-                showingSoundFilePicker = true
-              } label: {
-                Label("Import", systemImage: "square.and.arrow.down")
-              }
+              addMenuContent
             } label: {
               Label("Add", systemImage: "plus")
             }
@@ -826,6 +930,20 @@ struct LibraryView: View {
               Label("Settings", systemImage: "gearshape")
             }
             .tint(Color.primary)
+          }
+        }
+      }
+    #endif
+    #if os(macOS)
+      // The sidebar's window toolbar carries only the Add menu; the system
+      // adds the sidebar-toggle item automatically. No Edit toggle (reorder
+      // works via drag); Settings is the sidebar's footer gear.
+      .toolbar {
+        ToolbarItem(placement: .primaryAction) {
+          Menu {
+            addMenuContent
+          } label: {
+            Label("Add", systemImage: "plus")
           }
         }
       }
@@ -863,6 +981,11 @@ struct LibraryView: View {
         SoundSheet(mode: .add, preselectedFile: url)
       }
     }
+    #if os(macOS)
+      .sheet(item: $selectedPresetForEdit) { preset in
+        EditPresetSheet(preset: preset, isPresented: $selectedPresetForEdit)
+      }
+    #endif
     .alert(
       "Delete Preset",
       isPresented: .init(
@@ -892,22 +1015,28 @@ struct LibraryView: View {
   }
 }
 
-/// CarPlay-style leading artwork squircle for picker rows. Loads the preset's
+/// CarPlay-style leading artwork tile for picker rows. Loads the preset's
 /// saved artwork asynchronously (cached by `PresetArtworkManager`); when there
 /// is no artwork — solo sounds, Quick Mix, or a preset without a custom image —
-/// it shows the supplied glyph on a faintly tinted squircle so every row keeps
-/// the same leading footprint.
+/// it shows the supplied glyph on a faintly tinted tile so every row keeps
+/// the same leading footprint. Presets and Quick Mix use a squircle; sound
+/// rows use a circle to read as a different kind of item.
 struct PresetThumbnail: View {
   let artworkId: UUID?
   let preset: Preset?
   let fallbackSystemImage: String
   let tint: Color
+  var isCircular = false
 
   @Environment(\.displayScale) private var displayScale
   @State private var image: PlatformImage?
 
   private let size: CGFloat = 36
-  private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: 9, style: .continuous) }
+  private var shape: AnyShape {
+    isCircular
+      ? AnyShape(Circle())
+      : AnyShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+  }
 
   var body: some View {
     Group {
@@ -927,7 +1056,15 @@ struct PresetThumbnail: View {
     }
     .frame(width: size, height: size)
     .clipShape(shape)
-    .overlay { shape.strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5) }
+    // strokeBorder needs a concrete InsettableShape, which AnyShape isn't.
+    .overlay {
+      if isCircular {
+        Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+      } else {
+        RoundedRectangle(cornerRadius: 9, style: .continuous)
+          .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+      }
+    }
     .task(
       id:
         "\(artworkId?.uuidString ?? "nil")-\(preset?.animatedArtwork?.squarePreviewPath ?? preset?.animatedArtwork?.previewPath ?? "nil")"

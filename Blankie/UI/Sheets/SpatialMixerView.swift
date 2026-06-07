@@ -9,12 +9,14 @@ import AVFAudio
 import CoreMotion
 import SwiftUI
 
-#if os(iOS) || os(visionOS)
+#if os(iOS) || os(visionOS) || os(macOS)
 
   /// Streams the listener's live head yaw from compatible headphones so the
   /// grid can show which way they're actually facing (yaw nil = wedge rests
   /// at "up"), and tracks the output route for the capability hints — the
   /// binaural render works on any headphones, only tracking needs AirPods.
+  /// macOS has no AVAudioSession, so it skips route reading and only tracks
+  /// the AirPods connection (CMHeadphoneMotionManager is macOS 14+).
   final class HeadPoseMonitor: NSObject, ObservableObject, CMHeadphoneMotionManagerDelegate {
     /// One app-lifetime instance: CoreMotion delivers queued events AFTER
     /// updates stop — a deallocated manager/delegate was a use-after-free
@@ -54,11 +56,13 @@ import SwiftUI
 
     func beginRouteObservation() {
       refreshRoute()
-      routeObserver = NotificationCenter.default.addObserver(
-        forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
-      ) { [weak self] _ in
-        self?.refreshRoute()
-      }
+      #if os(iOS) || os(visionOS)
+        routeObserver = NotificationCenter.default.addObserver(
+          forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+          self?.refreshRoute()
+        }
+      #endif
       if manager.isDeviceMotionAvailable {
         manager.startConnectionStatusUpdates()
       }
@@ -100,11 +104,13 @@ import SwiftUI
     }
 
     private func refreshRoute() {
-      let headphonePorts: Set<AVAudioSession.Port> = [
-        .headphones, .bluetoothA2DP, .bluetoothHFP, .bluetoothLE,
-      ]
-      headphonesConnected = AVAudioSession.sharedInstance().currentRoute.outputs
-        .contains { headphonePorts.contains($0.portType) }
+      #if os(iOS) || os(visionOS)
+        let headphonePorts: Set<AVAudioSession.Port> = [
+          .headphones, .bluetoothA2DP, .bluetoothHFP, .bluetoothLE,
+        ]
+        headphonesConnected = AVAudioSession.sharedInstance().currentRoute.outputs
+          .contains { headphonePorts.contains($0.portType) }
+      #endif
       trackingAvailable = manager.isDeviceMotionAvailable && trackingDeviceConnected
     }
   }
@@ -134,93 +140,109 @@ import SwiftUI
     }
 
     var body: some View {
-      NavigationStack {
-        VStack(spacing: 12) {
-          controls
-
-          // Every state renders the same fixed layout (the strip reserves its
-          // space even when empty) so the map never resizes; pins and chips
-          // are the only things that come and go. Off = dimmed empty field.
-          Group {
-            SpatialGrid(
-              sounds: session.isActive ? gridSounds : [],
-              headYawDegrees: headPose.yawDegrees
-            )
-            .aspectRatio(1, contentMode: .fit)
-            .padding(.horizontal)
-
-            Text(
-              "Drag pins to place. Tap a pin to remove it from the spatial map. Placements aren't saved between sessions."
-            )
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 24)
-
-            ParkedSoundsRow(sounds: session.isActive ? parkedSounds : [])
-              .padding(.top, 10)
-          }
-          .disabled(!session.isActive)
-          .opacity(session.isActive ? 1 : 0.35)
-          .animation(.easeInOut(duration: 0.2), value: session.isActive)
-
-          Spacer()
-        }
-        .padding(.top)
-        .onAppear {
-          headPose.beginRouteObservation()
-          updatePoseMonitoring()
-        }
-        .onDisappear {
-          headPose.stop()
-          headPose.endRouteObservation()
-        }
-        .onChange(of: session.mode) { _, _ in updatePoseMonitoring() }
-        .navigationTitle("Spatial Mix")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-          // Only offered when pins have strayed from the even spread (it
-          // would be a no-op right after seeding or a previous reset).
-          if session.isActive, !isSpreadOut {
-            ToolbarItem(placement: .topBarLeading) {
-              Button {
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
-                  spreadOutSounds()
-                }
-              } label: {
-                // Toolbars force Labels to icon-only; an HStack keeps the text.
-                HStack(spacing: 4) {
-                  Image(systemName: "move.3d")
-                  Text("Arrange")
+      #if os(macOS)
+        // Inline pane swapped in for the sound grid (toggled from the window
+        // toolbar) — no sheet chrome; Arrange lives in the header row and the
+        // toolbar toggle stands in for Done.
+        mixerContent
+          .frame(maxWidth: 560)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+      #else
+        NavigationStack {
+          mixerContent
+            .navigationTitle("Spatial Mix")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              // Only offered when pins have strayed from the even spread (it
+              // would be a no-op right after seeding or a previous reset).
+              if session.isActive, !isSpreadOut {
+                ToolbarItem(placement: .topBarLeading) { arrangeButton }
+              }
+              ToolbarItem(placement: .principal) {
+                VStack(spacing: 0) {
+                  Text("Spatial Mix")
+                    .font(.headline)
+                  Text("Experimental")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
                 }
               }
-              .tint(.primary)
+              ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { dismiss() }
+                  .tint(.primary)
+              }
             }
-          }
-          ToolbarItem(placement: .principal) {
-            VStack(spacing: 0) {
-              Text("Spatial Mix")
-                .font(.headline)
-              Text("Experimental")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-            }
-          }
-          ToolbarItem(placement: .confirmationAction) {
-            // Untinted per HIG: nav buttons stay monochrome, not accent-colored.
-            Button("Done") { dismiss() }
-              .tint(.primary)
-          }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .presentationBackground {
+          // More translucent than a stock material: let the mixer glow through.
+          Rectangle()
+            .fill(.ultraThinMaterial)
+            .opacity(0.8)
+        }
+      #endif
+    }
+
+    /// Controls + map + parked row, with the head-pose lifecycle attached —
+    /// shared by the iOS sheet and the inline macOS pane.
+    private var mixerContent: some View {
+      VStack(spacing: 12) {
+        controls
+
+        // Every state renders the same fixed layout (the strip reserves its
+        // space even when empty) so the map never resizes; pins and chips
+        // are the only things that come and go. Off = dimmed empty field.
+        Group {
+          SpatialGrid(
+            sounds: session.isActive ? gridSounds : [],
+            headYawDegrees: headPose.yawDegrees
+          )
+          .aspectRatio(1, contentMode: .fit)
+          .padding(.horizontal)
+
+          Text(
+            "Drag pins to place. Tap a pin to remove it from the spatial map. Placements aren't saved between sessions."
+          )
+          .font(.caption)
+          .foregroundColor(.secondary)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, 24)
+
+          ParkedSoundsRow(sounds: session.isActive ? parkedSounds : [])
+            .padding(.top, 10)
+        }
+        .disabled(!session.isActive)
+        .opacity(session.isActive ? 1 : 0.35)
+        .animation(.easeInOut(duration: 0.2), value: session.isActive)
+
+        Spacer()
+      }
+      .padding(.top)
+      .onAppear {
+        headPose.beginRouteObservation()
+        updatePoseMonitoring()
+      }
+      .onDisappear {
+        headPose.stop()
+        headPose.endRouteObservation()
+      }
+      .onChange(of: session.mode) { _, _ in updatePoseMonitoring() }
+    }
+
+    private var arrangeButton: some View {
+      Button {
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) {
+          spreadOutSounds()
+        }
+      } label: {
+        // Toolbars force Labels to icon-only; an HStack keeps the text.
+        HStack(spacing: 4) {
+          Image(systemName: "move.3d")
+          Text("Arrange")
         }
       }
-      .presentationDetents([.large])
-      .presentationDragIndicator(.visible)
-      .presentationBackground {
-        // More translucent than a stock material: let the mixer glow through.
-        Rectangle()
-          .fill(.ultraThinMaterial)
-          .opacity(0.8)
-      }
+      .tint(.primary)
     }
 
     /// Whether the pins already sit in the even spread (seeded or previously
@@ -254,35 +276,53 @@ import SwiftUI
     /// Apple-style session control: Off | Fixed | Head Tracked.
     private var controls: some View {
       VStack(alignment: .leading, spacing: 10) {
-        Picker(
-          "Spatial Audio",
-          selection: Binding(
-            get: { session.mode },
-            set: { session.setMode($0) }
-          )
-        ) {
-          Text("Off").tag(SpatialSessionMode.off)
-          Text("Fixed").tag(SpatialSessionMode.fixed)
-          // Like Apple's control: the option only exists when tracking-capable
-          // headphones are connected.
-          if headPose.trackingAvailable {
-            Text("Head Tracked").tag(SpatialSessionMode.headTracked)
+        HStack(spacing: 12) {
+          Picker(
+            "Spatial Audio",
+            selection: Binding(
+              get: { session.mode },
+              set: { session.setMode($0) }
+            )
+          ) {
+            Text("Off").tag(SpatialSessionMode.off)
+            Text("Fixed").tag(SpatialSessionMode.fixed)
+            // Like Apple's control: the option only exists when tracking-capable
+            // headphones are connected.
+            if headPose.trackingAvailable {
+              Text("Head Tracked").tag(SpatialSessionMode.headTracked)
+            }
           }
+          .pickerStyle(.segmented)
+
+          // The macOS pane has no nav bar; Arrange rides the controls row.
+          #if os(macOS)
+            if session.isActive, !isSpreadOut {
+              arrangeButton
+            }
+          #endif
         }
-        .pickerStyle(.segmented)
         // AirPods-disconnect downgrades happen in HeadPoseMonitor's delegate.
 
         // Soft capability hints: the binaural render works on any headphones,
-        // so we inform rather than gate.
-        if session.isActive, !headPose.headphonesConnected {
-          Label("Connect headphones to hear the spatial effect", systemImage: "headphones")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        } else if session.isActive, !headPose.trackingAvailable {
-          Label("Head tracking needs compatible AirPods", systemImage: "headphones")
-            .font(.caption)
-            .foregroundColor(.secondary)
-        }
+        // so we inform rather than gate. macOS can't read the output route
+        // (no AVAudioSession), so it only shows the tracking hint.
+        #if os(iOS) || os(visionOS)
+          if session.isActive, !headPose.headphonesConnected {
+            Label("Connect headphones to hear the spatial effect", systemImage: "headphones")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          } else if session.isActive, !headPose.trackingAvailable {
+            Label("Head tracking needs compatible AirPods", systemImage: "headphones")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+        #else
+          if session.isActive, !headPose.trackingAvailable {
+            Label("Head tracking needs compatible AirPods", systemImage: "headphones")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+        #endif
       }
       .padding(14)
       .modernGlassEffect(cornerRadius: 16)
@@ -364,20 +404,12 @@ import SwiftUI
       }
     }
 
-    @ViewBuilder
     private func glassDisc(radius: CGFloat) -> some View {
-      Group {
-        if #available(iOS 26.0, *) {
-          Circle()
-            .fill(.black.opacity(0.12))
-            .glassEffect(.clear, in: Circle())
-        } else {
-          Circle()
-            .fill(.ultraThinMaterial)
-        }
-      }
-      .overlay(Circle().strokeBorder(.tint.opacity(0.3), lineWidth: 1))
-      .frame(width: radius * 2, height: radius * 2)
+      Circle()
+        .fill(.black.opacity(0.12))
+        .glassEffect(.clear, in: Circle())
+        .overlay(Circle().strokeBorder(.tint.opacity(0.3), lineWidth: 1))
+        .frame(width: radius * 2, height: radius * 2)
     }
 
     private func gridBackground(center: CGPoint, scale: CGFloat) -> some View {

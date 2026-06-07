@@ -27,6 +27,7 @@ private enum IPhonePage: Hashable {
     @StateObject var audioManager = AudioManager.shared
     @StateObject var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
+    @ObservedObject private var appState = AppState.shared
     /// iPhone navigation path. The Library is the stack's root and the app
     /// launches with the mixer pushed on top, so the mixer's back button (or
     /// an edge swipe) leads left to the Library.
@@ -39,9 +40,13 @@ private enum IPhonePage: Hashable {
     /// Keeps the solo backdrop up while sheet preview temporarily exits solo mode.
     @State private var soloBackdropSound: Sound?
     @State var presetToEdit: Preset?
+    /// Confirm-then-create flow replacing Edit Preset on the default preset.
+    @State var showingNewPresetConfirmation = false
+    @State var showingNewPresetSheet = false
     @State var showingSpatialMixer = false
     @State var soundsUpdateTrigger = 0
     @State var showingNowPlaying = false
+    @State private var showingVolumeZeroWarning = false
     @State private var isLandscape = false
     /// Anchors the zoom transition between the mini bar and the Now Playing cover.
     @Namespace private var nowPlayingNamespace
@@ -91,6 +96,34 @@ private enum IPhonePage: Hashable {
           Logger.ui.debug("MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
         }
       }
+      // Launch nag when Mix With Other Audio is on but Blankie's volume with
+      // media is zeroed — playback would be silent (mirrors Music.app's
+      // volume warning on macOS).
+      .onAppear {
+        if VolumeZeroWarning.shouldWarn() {
+          VolumeZeroWarning.markShown()
+          showingVolumeZeroWarning = true
+        }
+      }
+      .alert(
+        "Blankie's volume with other media is turned all the way down.",
+        isPresented: $showingVolumeZeroWarning
+      ) {
+        Button("OK") {}
+        Button("Don't Warn Again") {
+          VolumeZeroWarning.suppress()
+        }
+      } message: {
+        Text("To change it, adjust 'Blankie Volume with Media' in Settings.")
+      }
+      // Onboarding just created (and applied) a preset — land on it: close
+      // Settings if it hosted the onboarding, and show the mixer.
+      .onChange(of: appState.onboardingCreatedPreset) { _, created in
+        guard created else { return }
+        appState.onboardingCreatedPreset = false
+        showingSettings = false
+        iPhonePath = [.mixer]
+      }
 
       .sheet(isPresented: $showingSoundManagement) {
         NavigationStack {
@@ -117,6 +150,20 @@ private enum IPhonePage: Hashable {
       }
       .sheet(isPresented: $showingSpatialMixer) {
         SpatialMixerView()
+      }
+      // The default preset has no editor; its Edit slot offers to start a new
+      // preset from whatever is currently playing instead.
+      .alert("Create a Preset from Playing Sounds?", isPresented: $showingNewPresetConfirmation) {
+        Button("Cancel", role: .cancel) {}
+        Button("Create") { showingNewPresetSheet = true }
+      } message: {
+        Text("The default preset can't be edited. Start a new preset with your current sounds.")
+      }
+      .sheet(isPresented: $showingNewPresetSheet) {
+        CreatePresetSheet(
+          isPresented: $showingNewPresetSheet,
+          initialSelectedSounds: Set(audioManager.sounds.filter { $0.isSelected }.map(\.fileName))
+        )
       }
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)

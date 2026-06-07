@@ -7,49 +7,89 @@
 
 import SwiftUI
 
-#if os(iOS) || os(visionOS)
-  /// iPad sidebar. Hosts the full `LibraryView` so the sidebar *is* the Library
-  /// — the same view iPhone shows as a sheet. The enclosing `NavigationSplitView`
-  /// puts its show/hide toggle trailing; Settings rides in the Library's leading toolbar.
-  struct SidebarContentView: View {
+/// Sidebar hosting the full `LibraryView` so the sidebar *is* the Library. On
+/// iPad it's the same view iPhone shows as a sheet. iPad puts a Settings gear
+/// in the Library's leading toolbar (sheet binding from the split view's
+/// owner); macOS uses a sidebar footer row that toggles the detail-pane
+/// Settings takeover (⌘, does the same). The enclosing `NavigationSplitView`
+/// supplies the show/hide toggle.
+struct SidebarContentView: View {
+  #if os(iOS) || os(visionOS)
     @Binding var showingSettings: Bool
+  #else
+    @ObservedObject private var appState = AppState.shared
+  #endif
 
-    @StateObject private var presetManager = PresetManager.shared
-    @StateObject private var globalSettings = GlobalSettings.shared
-    @StateObject private var audioManager = AudioManager.shared
+  @StateObject private var presetManager = PresetManager.shared
+  @StateObject private var globalSettings = GlobalSettings.shared
+  @StateObject private var audioManager = AudioManager.shared
 
-    /// The sidebar follows the theming preset: its accent, then the app-wide
-    /// custom accent, then the system accent. `themingPreset` is nil during
-    /// solo / Quick Mix, so those use the app accent.
-    private var activeAccent: Color {
-      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
-    }
-
-    var body: some View {
-      LibraryView(presentation: .sidebar, onOpenSettings: { showingSettings = true })
-        .tint(activeAccent)
-        .onAppear {
-          pruneStarred()
-        }
-        .onChange(of: presetManager.presets) { _, _ in
-          pruneStarred()
-        }
-    }
-
-    // Drop starred tokens whose preset no longer exists. The Library only filters
-    // stale favorites out of its display; pruning persists the cleanup so the
-    // other consumers of `starredItems` (CarPlay, the future widget) don't carry
-    // dangling tokens.
-    private func pruneStarred() {
-      // Don't prune while presets are still loading — otherwise an empty/partial
-      // preset list at launch would drop every favorited custom preset (and
-      // persist the loss). The `.onChange(of: presetManager.presets)` re-runs
-      // this once they've loaded.
-      guard !presetManager.isLoading, !presetManager.presets.isEmpty else { return }
-      let validIDs = Set(presetManager.presets.map { $0.id.uuidString })
-      let validSounds = Set(audioManager.sounds.map { $0.fileName })
-      globalSettings.pruneStarredItems(
-        validPresetIDs: validIDs, validSoundFileNames: validSounds)
-    }
+  /// The sidebar follows the theming preset: its accent, then the app-wide
+  /// custom accent, then the system accent. `themingPreset` is nil during
+  /// solo / Quick Mix, so those use the app accent.
+  private var activeAccent: Color {
+    presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }
-#endif
+
+  var body: some View {
+    #if os(iOS) || os(visionOS)
+      // iPad: gear in the Library's leading toolbar.
+      let onOpenSettings: (() -> Void)? = { showingSettings = true }
+    #else
+      // macOS: the gear lives inside the sidebar as a footer row instead.
+      let onOpenSettings: (() -> Void)? = nil
+    #endif
+    return LibraryView(presentation: .sidebar, onOpenSettings: onOpenSettings)
+      .tint(activeAccent)
+      .onAppear {
+        pruneStarred()
+      }
+      .onChange(of: presetManager.presets) { _, _ in
+        pruneStarred()
+      }
+      #if os(macOS)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+          settingsFooter
+        }
+      #endif
+  }
+
+  #if os(macOS)
+    /// Bottom-of-sidebar Settings row (the classic Mac spot for it). Toggles
+    /// the Settings pane in the detail area rather than opening a sheet.
+    private var settingsFooter: some View {
+      VStack(spacing: 0) {
+        Divider()
+        HStack {
+          Button {
+            appState.showingSettingsPane.toggle()
+          } label: {
+            Label("Settings", systemImage: "gearshape")
+          }
+          .buttonStyle(.borderless)
+          .foregroundStyle(appState.showingSettingsPane ? activeAccent : .secondary)
+          Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+      }
+      .background(.thinMaterial)
+    }
+  #endif
+
+  // Drop starred tokens whose preset no longer exists. The Library only filters
+  // stale favorites out of its display; pruning persists the cleanup so the
+  // other consumers of `starredItems` (CarPlay, the future widget) don't carry
+  // dangling tokens.
+  private func pruneStarred() {
+    // Don't prune while presets are still loading — otherwise an empty/partial
+    // preset list at launch would drop every favorited custom preset (and
+    // persist the loss). The `.onChange(of: presetManager.presets)` re-runs
+    // this once they've loaded.
+    guard !presetManager.isLoading, !presetManager.presets.isEmpty else { return }
+    let validIDs = Set(presetManager.presets.map { $0.id.uuidString })
+    let validSounds = Set(audioManager.sounds.map { $0.fileName })
+    globalSettings.pruneStarredItems(
+      validPresetIDs: validIDs, validSoundFileNames: validSounds)
+  }
+}

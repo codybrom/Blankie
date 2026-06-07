@@ -11,6 +11,10 @@ import SwiftUI
 /// Renders nothing when the sound has no credit to show.
 struct SoundCreditInfoButton: View {
   let sound: Sound
+  /// Popovers are their own presentation context and don't inherit the
+  /// presenting hierarchy's tint, so callers with a preset accent pass it;
+  /// nil follows the app-wide accent.
+  var accent: Color?
 
   @State private var showingCredit = false
 
@@ -27,6 +31,7 @@ struct SoundCreditInfoButton: View {
       .accessibilityHint(Text("Shows credits for this sound"))
       .popover(isPresented: $showingCredit) {
         SoundCreditPopoverContent(credit: credit)
+          .tint(accent ?? GlobalSettings.shared.customAccentColor ?? .accentColor)
           #if !os(macOS)
             // Stay a popover on iPhone instead of expanding into a sheet.
             .presentationCompactAdaptation(.popover)
@@ -88,6 +93,9 @@ private struct SoundCreditPopoverContent: View {
             .accessibilityHidden(true)
         }
       }
+      // .tint, not the default link blue, which ignores the ambient tint
+      // on macOS.
+      .foregroundStyle(.tint)
       .accessibilityHint(hint ?? Text(verbatim: ""))
     } else {
       Text(text)

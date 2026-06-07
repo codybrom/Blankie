@@ -137,6 +137,17 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setDefaultLockScreenArtwork(_ value: AnimatedArtworkRef?) {
+    defaultLockScreenArtwork = value
+    if let value, let data = try? JSONEncoder().encode(value) {
+      UserDefaults.shared.set(data, forKey: UserDefaultsKeys.defaultLockScreenArtwork)
+    } else {
+      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.defaultLockScreenArtwork)
+    }
+    logCurrentSettings()
+  }
+
+  @MainActor
   func setBackgroundBlurRadius(_ value: Double) {
     backgroundBlurRadius = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.backgroundBlurRadius)

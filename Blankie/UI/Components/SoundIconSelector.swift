@@ -10,14 +10,14 @@ import SwiftUI
 struct SoundIconSelector: View {
   @Binding var selectedIcon: String
   @State private var iconSearchText = ""
-  @State private var selectedIconCategory = "Popular"
+  @State private var selectedIconCategory = IconCategory.popular
 
   // Icon categories with curated selections
   private let iconCategories = IconData.iconCategories
 
   private var searchResults: [String] {
     if iconSearchText.isEmpty {
-      return iconCategories[selectedIconCategory] ?? []
+      return selectedIconCategory.icons
     }
 
     // Search across all categories
@@ -71,8 +71,8 @@ struct SoundIconSelector: View {
             selection: $selectedIconCategory,
             label: Text("Category")
           ) {
-            ForEach(Array(iconCategories.keys).sorted(), id: \.self) { category in
-              Text(category).tag(category)
+            ForEach(IconCategory.sortedByLocalizedName, id: \.self) { category in
+              Text(category.localizedName).tag(category)
             }
           }
           .pickerStyle(.menu)
