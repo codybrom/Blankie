@@ -35,9 +35,11 @@ import SwiftUI
       CommandGroup(replacing: .appInfo) {
         Button {
           // Open the Settings pane directly on its About sub-page (sub-page
-          // flag first so the pane never flashes the settings root).
+          // flag first so the pane never flashes the settings root). The pane
+          // lives in the main window — reopen it if closed, or focus it.
           appState.showingSettingsAboutPage = true
           appState.showingSettingsPane = true
+          openWindow(id: "main")
         } label: {
           Text("About Blankie")
         }

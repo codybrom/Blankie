@@ -124,6 +124,9 @@ struct PresetPickerRow: View {
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
+  #if os(macOS)
+    @ObservedObject private var appState = AppState.shared
+  #endif
   @Environment(\.dismiss) private var dismiss
 
   init(
@@ -152,6 +155,16 @@ struct PresetPickerRow: View {
     audioManager.soloModeSound == nil && presetManager.currentPreset?.id == preset.id
   }
 
+  /// macOS: Settings/About holds the detail pane, so any row click should
+  /// dismiss it and reveal the preset — current row included (single click).
+  private var settingsPaneShowing: Bool {
+    #if os(macOS)
+      return presentation == .sidebar && appState.showingSettingsPane
+    #else
+      return false
+    #endif
+  }
+
   var body: some View {
     HStack {
       // Tap target: applies the preset (disabled while editing, where taps
@@ -178,8 +191,17 @@ struct PresetPickerRow: View {
       .contentShape(Rectangle())
       // Sidebar (iPad/macOS): the current row needs a double tap/click, which
       // toggles play–pause; elsewhere a single tap applies as usual.
-      .onTapGesture(count: presentation == .sidebar && isCurrent ? 2 : 1) {
+      .onTapGesture(count: presentation == .sidebar && isCurrent && !settingsPaneShowing ? 2 : 1) {
         guard !isEditMode else { return }
+        #if os(macOS)
+          if settingsPaneShowing {
+            // Sub-page flags (About, Manage Sounds) reset via the pane's
+            // onDisappear — clearing them here flashes the settings root.
+            appState.showingSettingsPane = false
+            if !isCurrent { applyPreset() }
+            return
+          }
+        #endif
         if presentation == .sidebar && isCurrent {
           // Don't start a silent mix; pausing is always allowed.
           if audioManager.isGloballyPlaying || audioManager.hasSelectedSounds {
@@ -257,6 +279,9 @@ struct SoloPickerRow: View {
   let onSelection: (() -> Void)?
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
+  #if os(macOS)
+    @ObservedObject private var appState = AppState.shared
+  #endif
   @Environment(\.dismiss) private var dismiss
 
   init(
@@ -281,6 +306,16 @@ struct SoloPickerRow: View {
 
   private var isCurrent: Bool {
     audioManager.soloModeSound?.id == sound.id
+  }
+
+  /// macOS: Settings/About holds the detail pane, so any row click should
+  /// dismiss it and reveal the solo sound — current row included (single click).
+  private var settingsPaneShowing: Bool {
+    #if os(macOS)
+      return presentation == .sidebar && appState.showingSettingsPane
+    #else
+      return false
+    #endif
   }
 
   var body: some View {
@@ -308,8 +343,17 @@ struct SoloPickerRow: View {
       .contentShape(Rectangle())
       // Sidebar (iPad/macOS): the current row needs a double tap/click, which
       // toggles play–pause; elsewhere a single tap applies as usual.
-      .onTapGesture(count: presentation == .sidebar && isCurrent ? 2 : 1) {
+      .onTapGesture(count: presentation == .sidebar && isCurrent && !settingsPaneShowing ? 2 : 1) {
         guard !isEditMode else { return }
+        #if os(macOS)
+          if settingsPaneShowing {
+            // Sub-page flags (About, Manage Sounds) reset via the pane's
+            // onDisappear — clearing them here flashes the settings root.
+            appState.showingSettingsPane = false
+            if !isCurrent { soloSound() }
+            return
+          }
+        #endif
         if presentation == .sidebar && isCurrent {
           audioManager.togglePlayback()
         } else {

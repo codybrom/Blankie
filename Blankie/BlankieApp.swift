@@ -18,7 +18,6 @@ struct BlankieApp: App {
   @StateObject private var globalSettings = GlobalSettings.shared
   @Environment(\.scenePhase) private var scenePhase
 
-
   // Initialize SwiftData
   init() {
     // Reset defaults if running UI tests
@@ -37,6 +36,7 @@ struct BlankieApp: App {
     @NSApplicationDelegateAdaptor(MacAppDelegate.self) private var appDelegate
     @StateObject private var windowObserver = WindowObserver.shared
     @State private var showingShortcuts = false
+    @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
       Window("Blankie", id: "main") {
@@ -72,8 +72,10 @@ struct BlankieApp: App {
       }
       .commands {
         CommandGroup(replacing: .appSettings) {
-          Button("Settings") {
+          Button("Settings…") {
+            // The pane lives in the main window — reopen it if closed
             AppState.shared.showingSettingsPane = true
+            openWindow(id: "main")
           }
           .keyboardShortcut(.settings)
         }

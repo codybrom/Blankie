@@ -17,8 +17,6 @@ import UniformTypeIdentifiers
     @ObservedObject var globalSettings = GlobalSettings.shared
     @StateObject private var presetManager = PresetManager.shared
 
-    @ObservedObject private var timerManager = TimerManager.shared
-
     @State private var showingTimerPopover = false
     @State private var showingSpatialMixer = false
     @State private var soundToEdit: Sound?
@@ -109,20 +107,6 @@ import UniformTypeIdentifiers
         return preset.isDefault ? "Blankie" : preset.name
       }
       return "Blankie"
-    }
-
-    /// Titlebar subtitle: a running sleep timer wins (same string as the iOS
-    /// Now Playing bar), then "Spatial Mix" while the pane replaces the grid
-    /// (its only label — the pane itself has no heading). Empty hides it.
-    private var windowSubtitle: String {
-      if timerManager.isTimerActive, let endTime = timerManager.getEndTime() {
-        return String(
-          localized: "Pausing at \(endTime.formatted(date: .omitted, time: .shortened))")
-      }
-      if showingSpatialMixer, spatialEntryAvailable {
-        return String(localized: "Spatial Mix")
-      }
-      return ""
     }
 
     /// Play would be silent: paused with nothing selected. Pause is never
@@ -273,20 +257,8 @@ import UniformTypeIdentifiers
               Spacer()
 
               // Sleep timer
-              Button(action: {
-                showingTimerPopover.toggle()
-              }) {
-                Image(systemName: "timer")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 20, height: 20)
-                  .foregroundColor(timerManager.isTimerActive ? activeAccent : .primary)
-              }
-              .buttonStyle(.borderless)
-              .accessibilityLabel("Sleep Timer")
-              .popover(isPresented: $showingTimerPopover, arrowEdge: .top) {
-                TimerView()
-              }
+              SleepTimerButton(
+                activeAccent: activeAccent, showingPopover: $showingTimerPopover)
 
               // Color picker menu
               Button(action: {
@@ -315,7 +287,11 @@ import UniformTypeIdentifiers
       }
 
       .navigationTitle(navigationTitle)
-      .navigationSubtitle(windowSubtitle)
+      .modifier(
+        WindowSubtitleModifier(
+          spatialMixerActive: showingSpatialMixer && spatialEntryAvailable
+            && !appState.showingSettingsPane)
+      )
       // Floating title: merge the detail's toolbar strip into the content,
       // mirroring the iPad detail's hidden navigation-bar background. The
       // Settings pane scrolls a form under the title, so it gets the standard
@@ -461,6 +437,13 @@ import UniformTypeIdentifiers
         appState.onboardingCreatedPreset = false
         appState.showingSettingsPane = false
       }
+      // Manage Sounds (⌘O sheet) takes the window — drop the Settings pane
+      // underneath so closing the sheet lands on the preset grid. (Sub-page
+      // flags reset via the pane's onDisappear.)
+      .onChange(of: appState.showingManageSounds) { _, showing in
+        guard showing else { return }
+        appState.showingSettingsPane = false
+      }
       .modifier(AudioErrorHandler())
     }
 
@@ -510,6 +493,57 @@ import UniformTypeIdentifiers
     private func handleMenuImport(_ result: Result<[URL], Error>) {
       guard case .success(let urls) = result, let url = urls.first else { return }
       AudioFileImporter.shared.handleIncomingFile(url)
+    }
+  }
+
+  /// Titlebar subtitle: a running sleep timer wins (same string as the iOS
+  /// Now Playing bar), then "Spatial Mix" while the pane replaces the grid
+  /// (its only label — the pane itself has no heading). Empty hides it.
+  /// Owns the TimerManager observation so its per-second tick invalidates only
+  /// this modifier, not the whole ContentView body (mirrors iOS, which scopes
+  /// the observation to NowPlayingBar).
+  private struct WindowSubtitleModifier: ViewModifier {
+    @ObservedObject private var timerManager = TimerManager.shared
+    let spatialMixerActive: Bool
+
+    func body(content: Content) -> some View {
+      content.navigationSubtitle(subtitle)
+    }
+
+    private var subtitle: String {
+      if timerManager.isTimerActive, let endTime = timerManager.getEndTime() {
+        return String(
+          localized: "Pausing at \(endTime.formatted(date: .omitted, time: .shortened))")
+      }
+      if spatialMixerActive {
+        return String(localized: "Spatial Mix")
+      }
+      return ""
+    }
+  }
+
+  /// Bottom-bar sleep timer button. Owns the TimerManager observation so timer
+  /// ticks re-render just this button (for the active tint), not ContentView.
+  private struct SleepTimerButton: View {
+    @ObservedObject private var timerManager = TimerManager.shared
+    let activeAccent: Color
+    @Binding var showingPopover: Bool
+
+    var body: some View {
+      Button(action: {
+        showingPopover.toggle()
+      }) {
+        Image(systemName: "timer")
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(width: 20, height: 20)
+          .foregroundColor(timerManager.isTimerActive ? activeAccent : .primary)
+      }
+      .buttonStyle(.borderless)
+      .accessibilityLabel("Sleep Timer")
+      .popover(isPresented: $showingPopover, arrowEdge: .top) {
+        TimerView()
+      }
     }
   }
 

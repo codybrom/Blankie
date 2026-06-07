@@ -108,24 +108,10 @@ struct SettingsView: View {
         #if os(macOS)
           if appState.showingSettingsAboutPage {
             AboutView()
-              .toolbar {
-                ToolbarItem(placement: .navigation) {
-                  Button {
-                    appState.showingSettingsAboutPage = false
-                  } label: {
-                    Label("Back", systemImage: "chevron.left")
-                  }
-                  .accessibilityLabel("Back to Settings")
-                }
-                // Same Done as the settings root — ends Settings entirely
-                // (the onDisappear below then resets this sub-page).
-                ToolbarItem(placement: .confirmationAction) {
-                  Button("Done") {
-                    appState.showingSettingsPane = false
-                  }
-                  .tint(Color.primary)
-                }
-              }
+              .toolbar { paneSubPageToolbar }
+          } else if appState.showingSettingsManageSoundsPage {
+            SoundManagementView()
+              .toolbar { paneSubPageToolbar }
           } else {
             settingsForm
           }
@@ -139,6 +125,7 @@ struct SettingsView: View {
         // itself flashed the root mid-fade-out.
         .onDisappear {
           appState.showingSettingsAboutPage = false
+          appState.showingSettingsManageSoundsPage = false
         }
       #endif
     } else {
@@ -149,6 +136,30 @@ struct SettingsView: View {
         #endif
     }
   }
+
+  #if os(macOS)
+    /// Back/Done toolbar shared by the pane's in-pane sub-pages (About,
+    /// Manage Sounds). Done ends Settings entirely — the pane's onDisappear
+    /// then resets the sub-page flags.
+    @ToolbarContentBuilder
+    private var paneSubPageToolbar: some ToolbarContent {
+      ToolbarItem(placement: .navigation) {
+        Button {
+          appState.showingSettingsAboutPage = false
+          appState.showingSettingsManageSoundsPage = false
+        } label: {
+          Label("Back", systemImage: "chevron.left")
+        }
+        .accessibilityLabel("Back to Settings")
+      }
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Done") {
+          appState.showingSettingsPane = false
+        }
+        .tint(Color.primary)
+      }
+    }
+  #endif
 
   /// App-wide accent color row: iOS shows it in Theme (with the preset
   /// override badge), macOS in Display.
@@ -574,12 +585,32 @@ private struct PlaybackSettingsSection: View {
 
       spatialAvailabilitySection
 
-      NavigationLink(destination: SoundManagementView()) {
-        HStack {
-          Text("Manage Sounds")
-          Spacer()
+      // Manage Sounds mirrors the About row: iOS pushes in the settings
+      // sheet's stack; macOS swaps in-pane (a push there escapes the pane).
+      // (In the unreachable macOS sheet/scene this row no-ops.)
+      #if os(macOS)
+        Button {
+          AppState.shared.showingSettingsManageSoundsPage = true
+        } label: {
+          HStack {
+            Text("Manage Sounds")
+            Spacer()
+            Image(systemName: "chevron.right")
+              .font(.footnote.weight(.semibold))
+              .foregroundStyle(.tertiary)
+              .accessibilityHidden(true)
+          }
+          .formRowLabel()
         }
-      }
+        .formRowButtonStyle()
+      #else
+        NavigationLink(destination: SoundManagementView()) {
+          HStack {
+            Text("Manage Sounds")
+            Spacer()
+          }
+        }
+      #endif
     }
   }
 

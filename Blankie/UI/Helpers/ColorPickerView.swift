@@ -7,8 +7,7 @@
 
 import SwiftUI
 
-/// Appearance + accent picker shown from the macOS bottom bar's palette
-/// popover. Concrete colors only — no "System" row (reset lives in Settings).
+/// Appearance + accent picker shown from the macOS bottom bar's palette popover
 struct ColorPickerView: View {
   @ObservedObject var globalSettings = GlobalSettings.shared
 

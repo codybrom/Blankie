@@ -23,6 +23,9 @@ class AppState: ObservableObject {
   /// not when the pane flag flips — so Done doesn't flash the settings root
   /// while the pane fades out.
   @Published var showingSettingsAboutPage = false
+  /// macOS: the Settings pane's Manage Sounds sub-page (in-pane swap like
+  /// About — a NavigationLink push escapes the pane). Same onDisappear reset.
+  @Published var showingSettingsManageSoundsPage = false
   /// Onboarding just created (and applied) a preset — each platform's root
   /// navigates to it (iPhone pushes the mixer, macOS closes the Settings
   /// pane) and resets the flag.

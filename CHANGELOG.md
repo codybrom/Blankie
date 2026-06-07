@@ -23,7 +23,7 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - **Apple Intelligence name and icon suggestions** - Where enabled/available, Blankie will use the on-device Apple Intelligence model to suggest a display name and icon when importing a sound (based on the file name), or a preset name based on the attached sounds. There is also one-tap re-roll and undo for each. The feature is available when importing/creating or editing sounds and presets.
 - **Add to Presets on import** - you can choose which presets a newly imported sound joins, or create a fresh "[IMPORTED_SOUND_NAME] Mix" preset in the same step
 - **Lock screen animation** - choose from multiple video backgrounds that play on your lockscreen while your preset plays
-- **Make New Preset from playing sounds** - When you're on the built-in "All Blankie Sound" preset, the button where "Edit Preset" normally lives offers to start a new preset from your current mix
+- **Make New Preset from playing sounds** - When you're on the built-in "All Blankie Sounds" preset, the button where "Edit Preset" normally lives offers to start a new preset from your current mix
 - Per-sound Fade In and Out, Preset Use Only, Loop and Randomize Start options
 - Theme overrides (view mode, accent color, background blur) can be set while creating a preset, not just when editing one
 - A heads-up at launch when the app volume is turned all the way down, like Music on the Mac
