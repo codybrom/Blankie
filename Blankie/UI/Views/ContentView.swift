@@ -152,12 +152,16 @@ import UniformTypeIdentifiers
       VStack(spacing: 0) {
         // Silence explained: an empty selection wins over the paused state
         // (play alone can't help there), accent-tinted to draw the eye.
-        if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds {
-          statusBanner("No Sounds Playing", systemImage: "speaker.slash.circle.fill")
-            .foregroundStyle(activeAccent)
-        } else if !audioManager.isGloballyPlaying {
-          statusBanner("Playback Paused", systemImage: "pause.circle.fill")
-            .foregroundStyle(.secondary)
+        // Suppressed while Settings holds the pane — the banner explains the
+        // grid, which isn't on screen (like the toolbar's mixer actions).
+        if !appState.showingSettingsPane {
+          if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds {
+            statusBanner("No Sounds Playing", systemImage: "speaker.slash.circle.fill")
+              .foregroundStyle(activeAccent)
+          } else if !audioManager.isGloballyPlaying {
+            statusBanner("Playback Paused", systemImage: "pause.circle.fill")
+              .foregroundStyle(.secondary)
+          }
         }
 
         // Main content: Settings takes over the pane while the sidebar gear is
@@ -445,6 +449,11 @@ import UniformTypeIdentifiers
       }
       .onChange(of: audioManager.isGloballyPlaying) { updateDockBadge() }
       .onChange(of: audioManager.hasSelectedSounds) { updateDockBadge() }
+      // Leaving preset mode (solo, Quick Mix, setting off) hides the spatial
+      // pane; drop the toggle too so it doesn't silently reappear on return.
+      .onChange(of: spatialEntryAvailable) { _, available in
+        if !available { showingSpatialMixer = false }
+      }
       // Onboarding just created (and applied) a preset — close the Settings
       // pane if it hosted the onboarding so the grid shows the new preset.
       .onChange(of: appState.onboardingCreatedPreset) { _, created in

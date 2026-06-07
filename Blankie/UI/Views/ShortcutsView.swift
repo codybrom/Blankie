@@ -92,7 +92,7 @@ extension AppShortcut {
   static let newWindow = AppShortcut("New Window", key: "n", modifiers: .command)
   static let keyboardShortcuts = AppShortcut(
     "Keyboard Shortcuts", key: "?", modifiers: [.command, .shift])
-  static let preferences = AppShortcut("Preferences", key: ",", modifiers: .command)
+  static let settings = AppShortcut("Settings", key: ",", modifiers: .command)
   static let closeWindow = AppShortcut("Close Window", key: "w", modifiers: .command)
   static let quit = AppShortcut("Quit", key: "q", modifiers: .command)
 }
@@ -119,7 +119,7 @@ struct ShortcutsView: View {
     .importFile,
     .newWindow,
     .closeWindow,
-    .preferences,
+    .settings,
     .keyboardShortcuts,
     .quit,
   ]

@@ -118,7 +118,7 @@ struct SettingsView: View {
                   .accessibilityLabel("Back to Settings")
                 }
                 // Same Done as the settings root — ends Settings entirely
-                // (also resets this sub-page via the pane flag's didSet).
+                // (the onDisappear below then resets this sub-page).
                 ToolbarItem(placement: .confirmationAction) {
                   Button("Done") {
                     appState.showingSettingsPane = false

@@ -80,6 +80,14 @@ struct PresetThemeSection: View {
           SpectrumColorPicker(selectedColor: $accentColor)
         }
       }
+      .onChange(of: useCustomTheme) { _, enabled in
+        // Seed with what the untouched picker shows (the app-wide custom
+        // accent, else the slider's resting color) so enabling alone saves
+        // an override — a nil accent persists as "no override".
+        if enabled, accentColor == nil {
+          accentColor = globalSettings.customAccentColor ?? .green
+        }
+      }
 
       // Background blur override (On = the single app-wide blur value). The
       // macOS window doesn't use a blurred backdrop, so hide this there.

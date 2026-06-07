@@ -199,7 +199,7 @@ extension SoundSheet {
     }
 
     let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
     var presets = presetManager.presets
     var changed = false
 
