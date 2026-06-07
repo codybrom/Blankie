@@ -350,7 +350,7 @@ import os
 
       let item = CPListItem(
         text: "Custom Mix",
-        detailText: "Current selections in \"All Blankie Sounds\"",
+        detailText: String(localized: "Current selections in \"\(preset.displayName)\""),
         image: getPresetArtwork(preset)
       )
 

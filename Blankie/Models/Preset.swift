@@ -90,7 +90,7 @@ struct Preset: Codable, Identifiable, Equatable {
 
   /// Display name for the preset (shows "All Blankie Sounds" for default preset)
   var displayName: String {
-    return isDefault ? "All Blankie Sounds" : name
+    return isDefault ? String(localized: "All Blankie Sounds") : name
   }
 
   /// Title to show when this preset is active (shows "Blankie" for default preset)
