@@ -17,7 +17,7 @@ enum LibraryRowStyle {
   static func titleColor(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
   ) -> Color {
-    presentation == .sidebar && isCurrent ? accent : .primary
+    (presentation == .sidebar || presentation == .menuBar) && isCurrent ? accent : .primary
   }
 
   /// Row backdrop. Sidebar: an inset accent pill behind only the active row,
@@ -29,7 +29,7 @@ enum LibraryRowStyle {
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
   ) -> AnyView? {
     switch presentation {
-    case .sidebar:
+    case .sidebar, .menuBar:
       guard isCurrent else { return nil }
       return AnyView(
         RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -230,7 +230,7 @@ struct PresetPickerRow: View {
       #if os(macOS)
         .accessibilityRepresentation {
           Button(preset.displayName) { activateRow() }
-            .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
+          .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
         }
       #endif
 
@@ -395,7 +395,7 @@ struct SoloPickerRow: View {
       #if os(macOS)
         .accessibilityRepresentation {
           Button(sound.title) { activateRow() }
-            .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
+          .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
         }
       #endif
 
@@ -449,6 +449,7 @@ struct LibraryView: View {
     case sheet
     case sidebar
     case page
+    case menuBar
   }
 
   var presentation: Presentation = .sheet
@@ -615,7 +616,7 @@ struct LibraryView: View {
   private var onSelect: (() -> Void)? {
     switch presentation {
     case .sheet: return { dismiss() }
-    case .page: return onSelection
+    case .page, .menuBar: return onSelection
     case .sidebar: return nil
     }
   }
@@ -778,6 +779,12 @@ struct LibraryView: View {
           #if os(iOS) || os(visionOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
           #endif
+      case .menuBar:
+        // Sidebar list style so the highlight pill and section headers match the
+        // main window's sidebar, on the popover's own material.
+        libraryList
+          .scrollContentBackground(.hidden)
+          .listStyle(.sidebar)
       }
     }
     // Carry the app accent into the sheet explicitly. A presented sheet doesn't
@@ -905,7 +912,7 @@ struct LibraryView: View {
         switch presentation {
         case .sidebar: return Text(verbatim: "")
         case .page: return Text(verbatim: "Blankie")
-        case .sheet: return Text("Library")
+        case .sheet, .menuBar: return Text("Library")
         }
       }()
     )
@@ -969,8 +976,17 @@ struct LibraryView: View {
     #if os(macOS)
       // The sidebar's window toolbar carries only the Add menu; the system
       // adds the sidebar-toggle item automatically. No Edit toggle (reorder
-      // works via drag); Settings is the sidebar's footer gear.
+      // works via drag); Settings is the sidebar's footer gear. The menu bar
+      // popover has no footer, so it surfaces Settings as a leading nav item.
       .toolbar {
+        if presentation == .menuBar, let onOpenSettings {
+          ToolbarItem(placement: .navigation) {
+            Button(action: onOpenSettings) {
+              Label("Settings", systemImage: "gearshape")
+            }
+            .accessibilityLabel(Text("Settings"))
+          }
+        }
         ToolbarItem(placement: .primaryAction) {
           Menu {
             addMenuContent
@@ -1063,11 +1079,11 @@ struct PresetThumbnail: View {
   @Environment(\.displayScale) private var displayScale
   @State private var image: PlatformImage?
 
-  private let size: CGFloat = 36
+  private let size: CGFloat = 32
   private var shape: AnyShape {
     isCircular
       ? AnyShape(Circle())
-      : AnyShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+      : AnyShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
   }
 
   var body: some View {
@@ -1081,7 +1097,7 @@ struct PresetThumbnail: View {
           .fill(tint.opacity(0.15))
           .overlay {
             Image(systemName: fallbackSystemImage)
-              .font(.system(size: 16, weight: .medium))
+              .font(.system(size: 14, weight: .medium))
               .foregroundStyle(tint)
           }
       }
@@ -1093,7 +1109,7 @@ struct PresetThumbnail: View {
       if isCircular {
         Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
       } else {
-        RoundedRectangle(cornerRadius: 9, style: .continuous)
+        RoundedRectangle(cornerRadius: 8, style: .continuous)
           .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
       }
     }

@@ -80,6 +80,27 @@ struct BlankieApp: App {
           .keyboardShortcut(.settings)
         }
       }
+
+      // Menu bar icon + click-through popover. `isInserted` tracks the
+      // "Show in Menu Bar" setting (and dragging the item out unchecks it).
+      MenuBarExtra(
+        isInserted: Binding(
+          get: { globalSettings.showMenuBarIcon },
+          // Guard equal writes: SwiftUI writes this binding back while evaluating
+          // the scene, and an unconditional setter would republish mid-update —
+          // an infinite "Publishing changes from within view updates" loop.
+          set: { newValue in
+            guard newValue != globalSettings.showMenuBarIcon else { return }
+            globalSettings.setShowMenuBarIcon(newValue)
+          }
+        )
+      ) {
+        MenuBarProbeView()
+      } label: {
+        MenuBarProbeLabel()
+      }
+      .menuBarExtraStyle(.window)
+      .modelContainer(modelContainer)
     }
 
   #elseif os(iOS) || os(visionOS)
