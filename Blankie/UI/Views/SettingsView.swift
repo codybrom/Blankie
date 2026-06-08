@@ -206,8 +206,10 @@ struct SettingsView: View {
     }
 
     /// App-level macOS settings: menu bar presence, Dock-icon behavior, the Dock
-    /// pause badge, and language. The Dock-hiding toggles are disabled unless the
-    /// menu bar icon is shown, so a closed window is never unreachable.
+    /// pause badge, and language. The Dock-hiding toggles only appear when the
+    /// menu bar icon is shown (so a closed window is never unreachable), and
+    /// "Hide Dock Icon When Window Is Closed" hides under Menu Bar Only, which
+    /// already keeps the Dock icon hidden.
     private var appSection: some View {
       Section(header: Text("App")) {
         Toggle(
@@ -219,25 +221,27 @@ struct SettingsView: View {
           Text("Show in Menu Bar")
         }
 
-        Toggle(
-          isOn: Binding(
-            get: { globalSettings.menuBarOnlyMode },
-            set: { globalSettings.setMenuBarOnlyMode($0) }
-          )
-        ) {
-          Text("Menu Bar Only")
-        }
-        .disabled(!globalSettings.showMenuBarIcon)
+        if globalSettings.showMenuBarIcon {
+          Toggle(
+            isOn: Binding(
+              get: { globalSettings.menuBarOnlyMode },
+              set: { globalSettings.setMenuBarOnlyMode($0) }
+            )
+          ) {
+            Text("Menu Bar Only")
+          }
 
-        Toggle(
-          isOn: Binding(
-            get: { globalSettings.hideDockWhenWindowClosed },
-            set: { globalSettings.setHideDockWhenWindowClosed($0) }
-          )
-        ) {
-          Text("Hide Dock Icon When Window Is Closed")
+          if !globalSettings.menuBarOnlyMode {
+            Toggle(
+              isOn: Binding(
+                get: { globalSettings.hideDockWhenWindowClosed },
+                set: { globalSettings.setHideDockWhenWindowClosed($0) }
+              )
+            ) {
+              Text("Hide Dock Icon When Window Is Closed")
+            }
+          }
         }
-        .disabled(!globalSettings.showMenuBarIcon || globalSettings.menuBarOnlyMode)
 
         Toggle(
           isOn: Binding(
