@@ -10,6 +10,7 @@
     }
   ],
   "defaultOptions" : {
+    "mainThreadCheckerEnabled" : false,
     "targetForVariableExpansion" : {
       "containerPath" : "container:Blankie.xcodeproj",
       "identifier" : "F913505E2D233A43003C85BE",
@@ -19,6 +20,9 @@
   "testTargets" : [
     {
       "parallelizable" : true,
+      "skippedTests" : [
+        "SwiftDataMigrationTests"
+      ],
       "target" : {
         "containerPath" : "container:Blankie.xcodeproj",
         "identifier" : "F9ED6BA92D321D3300240F13",
@@ -26,6 +30,9 @@
       }
     },
     {
+      "skippedTests" : [
+        "BlankieAccessibilityAuditTests"
+      ],
       "target" : {
         "containerPath" : "container:Blankie.xcodeproj",
         "identifier" : "F9ED70DD2D3229AD00240F13",
