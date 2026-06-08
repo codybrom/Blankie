@@ -46,6 +46,7 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - **VoiceOver support** - labeled controls throughout, sliders that announce and adjust volume, sounds that announce their selection state, grouped sound credits and color pickers, and a Now Playing screen that properly holds focus
 - **Library sidebar** (macOS) - favorites, presets, and single sounds in a native sidebar that replaces the preset dropdown and hamburger menu, with menu-bar commands for every action and an always-visible volume slider and sleep timer in the bottom bar
 - **Full keyboard control of the sound grid** (macOS) - Tab to any sound, Space to toggle it, arrow keys to adjust its volume
+- **Menu bar (macOS)** - Added a new popover to browse your Library, mix sounds, and start a timer without opening the main window. There's also options in settings to run Blankie from the menu bar only or hide the Dock icon when the window is closed
 - **Dynamic Type support** - text scales to the preferred reading size with adaptive layouts and 44-point minimum touch targets
 - **Smooth fades and crossfades** - sounds ease in and out when played, paused, or toggled, and switching presets crossfades between mixes
 - Play/Pause command in the macOS menu bar (Controls menu)
@@ -62,6 +63,7 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - New Preset and Edit Preset share one design, with a live preview of the preset's accent color while you pick it
 - Sounds show circular icons in the Library, matching CarPlay
 - The Mac window adapts its minimum size to the sidebar and opens at a roomier default size
+- The Dock icon badge that shows when Blankie is paused (macOS) is now configurable
 - Larger About page type on macOS with two-column sound credits, and Blankie Help moved into Settings
 - Rebuilt the documentation website on Astro 6
 - Improved German (Deutsch) translations - thanks to **H. Rapp**
