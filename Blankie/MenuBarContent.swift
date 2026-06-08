@@ -157,8 +157,11 @@
       case .mixer:
         mixerContent
       case .timer:
+        // Claim the timer's full height (fixedSize) so a short preceding screen
+        // (small preset / solo) can't squeeze the popover and clip it.
         // Start/cancel navigates back, not dismiss (which closes the popover).
         TimerView(onFinish: { go(to: .mixer) })
+          .fixedSize(horizontal: false, vertical: true)
       }
     }
 
@@ -321,8 +324,13 @@
           .opacity(sound.isSelected ? 1.0 : 0.4)
 
         VStack(alignment: .leading, spacing: 2) {
-          Text(LocalizedStringKey(sound.title))
-            .font(.callout)
+          if globalSettings.showSoundNames {
+            Text(LocalizedStringKey(sound.title))
+              .font(.callout)
+              // The slider carries the title for VoiceOver, so hide the visible
+              // copy to avoid a double announcement.
+              .accessibilityHidden(true)
+          }
           Slider(
             value: Binding(
               get: { Double(sound.volume) },
@@ -333,6 +341,7 @@
           .controlSize(.small)
           .tint(sound.isSelected ? accent : Color.gray)
           .disabled(!sound.isSelected)
+          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
         }
       }
       .padding(.vertical, 2)
