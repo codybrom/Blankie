@@ -84,8 +84,10 @@
         EmptyView()
       case .mixer:
         circleButton("chevron.backward") { go(to: .library) }
+          .accessibilityLabel(Text("Back"))
       case .timer:
         circleButton("chevron.backward") { go(to: .mixer) }
+          .accessibilityLabel(Text("Back"))
       }
     }
 
@@ -103,6 +105,7 @@
       .menuStyle(.borderlessButton)
       .menuIndicator(.hidden)
       .fixedSize()
+      .accessibilityLabel(Text("More Options"))
     }
 
     /// Glass circle for the back chevron / "⋯" menu.
@@ -177,9 +180,14 @@
           ScrollView {
             VStack(spacing: 0) {
               ForEach(filteredSounds) { sound in
-                MenuBarSoundRow(sound: sound)
-                  .padding(.horizontal, 12)
-                  .padding(.vertical, 4)
+                MenuBarSoundRow(
+                  sound: sound,
+                  accent: rowAccent,
+                  isGloballyPlaying: audioManager.isGloballyPlaying,
+                  showSoundNames: globalSettings.showSoundNames
+                )
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
               }
             }
             .background(
@@ -214,38 +222,35 @@
     @State private var listContentHeight: CGFloat = 300
     private let maxListHeight: CGFloat = 420
 
-    /// Mirrors `ContentView.filteredSounds`: a custom preset shows only its own
-    /// sounds, otherwise all but preset-use-only; sorted by the active order.
+    /// The sounds shown in the list, ordered. Shared with the main grid and iOS.
     private var filteredSounds: [Sound] {
-      let visible = audioManager.getVisibleSounds().filter { sound in
-        if let preset = presetManager.currentPreset, !preset.isDefault {
-          return preset.soundStates.contains { $0.fileName == sound.fileName }
-        } else {
-          return !sound.isPresetUseOnly
-        }
-      }
-      let order: [String]
-      if let preset = presetManager.currentPreset, !preset.isDefault,
-        let soundOrder = preset.soundOrder
-      {
-        order = soundOrder
-      } else {
-        order = audioManager.defaultSoundOrder
-      }
-      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
-      return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
+      audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
     /// Mixer title: solo sound, Quick Mix, or the preset name.
     private var mixerTitle: String {
-      if let solo = audioManager.soloModeSound { return solo.title }
-      if audioManager.isQuickMix { return "Quick Mix" }
+      if let solo = audioManager.soloModeSound {
+        return String(localized: String.LocalizationValue(solo.title))
+      }
+      if audioManager.isQuickMix { return String(localized: "Quick Mix") }
       return presetManager.currentPreset?.displayName ?? "Blankie"
     }
 
     /// Active accent: a theming preset's color wins; app accent in solo/Quick Mix.
     private var activeAccent: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    }
+
+    /// Accent for the sound rows: a custom preset's color, else the app accent.
+    /// Resolved once here so each row only observes its own sound. (Distinct from
+    /// `activeAccent`, which prefers the theming preset.)
+    private var rowAccent: Color {
+      if let preset = presetManager.currentPreset, !preset.isDefault,
+        let presetColor = preset.accentColor
+      {
+        return presetColor
+      }
+      return globalSettings.customAccentColor ?? .accentColor
     }
 
     private var controlBar: some View {
@@ -259,9 +264,12 @@
         }
         .buttonStyle(.borderless)
         .disabled(!audioManager.isGloballyPlaying && !audioManager.hasSelectedSounds)
+        .help(audioManager.isGloballyPlaying ? "Pause" : "Play")
+        .accessibilityLabel(audioManager.isGloballyPlaying ? Text("Pause") : Text("Play"))
 
         Image(systemName: "speaker.wave.2.fill")
           .foregroundStyle(.secondary)
+          .accessibilityHidden(true)
         Slider(
           value: Binding(
             get: { globalSettings.volume },
@@ -271,6 +279,9 @@
         )
         .controlSize(.small)
         .tint(activeAccent)
+        .accessibilityLabel(Text("All Sounds"))
+        .accessibilityValue(
+          Text(globalSettings.volume.formatted(.percent.precision(.fractionLength(0)))))
 
         // Sleep timer screen; tinted when active.
         Button {
@@ -282,6 +293,7 @@
         }
         .buttonStyle(.borderless)
         .help("Sleep Timer")
+        .accessibilityLabel(Text("Sleep Timer"))
       }
       .padding(.horizontal, 14)
       .padding(.vertical, 10)
@@ -289,21 +301,21 @@
   }
 
   /// Compact list row mirroring iOS `SoundRowView` (glass icon + title + inline
-  /// volume slider). Tap toggles the sound and starts playback if paused.
+  /// volume slider). Tap toggles the sound and starts playback if paused. The
+  /// parent resolves the shared accent / playing / show-names values so each row
+  /// only observes its own `sound`.
   private struct MenuBarSoundRow: View {
     @ObservedObject var sound: Sound
-    @ObservedObject private var audioManager = AudioManager.shared
-    @ObservedObject private var globalSettings = GlobalSettings.shared
-    @ObservedObject private var presetManager = PresetManager.shared
+    let accent: Color
+    let isGloballyPlaying: Bool
+    let showSoundNames: Bool
 
-    /// A custom preset's color overrides the sound's; otherwise the app accent.
-    private var accent: Color {
-      if let preset = presetManager.currentPreset, !preset.isDefault,
-        let presetColor = preset.accentColor
-      {
-        return presetColor
+    /// Toggle the sound, starting playback if the app was paused.
+    private func activate() {
+      sound.toggle()
+      if sound.isSelected && !AudioManager.shared.isGloballyPlaying {
+        AudioManager.shared.setGlobalPlaybackState(true)
       }
-      return globalSettings.customAccentColor ?? .accentColor
     }
 
     var body: some View {
@@ -311,20 +323,27 @@
         Image(systemName: sound.systemIconName)
           .font(.system(size: 20))
           .foregroundStyle(
-            !audioManager.isGloballyPlaying
-              ? Color.gray : (sound.isSelected ? accent : Color.gray)
+            !isGloballyPlaying ? Color.gray : (sound.isSelected ? accent : Color.gray)
           )
           .frame(width: 40, height: 40)
           .glassEffect(
-            sound.isSelected && audioManager.isGloballyPlaying
+            sound.isSelected && isGloballyPlaying
               ? .regular.tint(accent.opacity(0.5)).interactive()
               : .regular.interactive(),
             in: .circle
           )
           .opacity(sound.isSelected ? 1.0 : 0.4)
+          // VoiceOver: macOS doesn't expose .onTapGesture as an activation, so
+          // surface the toggle as a button on the icon (the slider is its own
+          // adjustable stop).
+          .accessibilityElement(children: .ignore)
+          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+          .accessibilityAddTraits(.isButton)
+          .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
+          .accessibilityAction { activate() }
 
         VStack(alignment: .leading, spacing: 2) {
-          if globalSettings.showSoundNames {
+          if showSoundNames {
             Text(LocalizedStringKey(sound.title))
               .font(.callout)
               // The slider carries the title for VoiceOver, so hide the visible
@@ -346,12 +365,7 @@
       }
       .padding(.vertical, 2)
       .contentShape(Rectangle())
-      .onTapGesture {
-        sound.toggle()
-        if sound.isSelected && !audioManager.isGloballyPlaying {
-          audioManager.setGlobalPlaybackState(true)
-        }
-      }
+      .onTapGesture { activate() }
     }
   }
 

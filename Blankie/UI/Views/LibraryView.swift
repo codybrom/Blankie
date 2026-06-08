@@ -976,17 +976,10 @@ struct LibraryView: View {
     #if os(macOS)
       // The sidebar's window toolbar carries only the Add menu; the system
       // adds the sidebar-toggle item automatically. No Edit toggle (reorder
-      // works via drag); Settings is the sidebar's footer gear. The menu bar
-      // popover has no footer, so it surfaces Settings as a leading nav item.
+      // works via drag); Settings is the sidebar's footer gear. (The menu bar
+      // popover has no toolbar surface — it reaches Settings via its own "⋯"
+      // header menu, not here.)
       .toolbar {
-        if presentation == .menuBar, let onOpenSettings {
-          ToolbarItem(placement: .navigation) {
-            Button(action: onOpenSettings) {
-              Label("Settings", systemImage: "gearshape")
-            }
-            .accessibilityLabel(Text("Settings"))
-          }
-        }
         ToolbarItem(placement: .primaryAction) {
           Menu {
             addMenuContent
