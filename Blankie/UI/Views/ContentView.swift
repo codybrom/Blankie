@@ -129,7 +129,6 @@ import UniformTypeIdentifiers
       }
       .frame(maxWidth: .infinity)
       .padding(.vertical, 6)
-      .background(.ultraThinMaterial)
     }
 
     var body: some View {
@@ -282,9 +281,8 @@ import UniformTypeIdentifiers
           .padding(.horizontal, 16)
         }
         .frame(maxWidth: .infinity)
-        .background(Color(NSColor.windowBackgroundColor).opacity(0.3))
-        .background(.ultraThinMaterial)
       }
+      .containerBackground(.ultraThinMaterial, for: .window)
 
       .navigationTitle(navigationTitle)
       .modifier(
