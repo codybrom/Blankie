@@ -16,10 +16,6 @@ extension GlobalSettings {
     // back to full on every launch.
     volume = UserDefaults.shared.object(forKey: UserDefaultsKeys.volume) as? Double ?? 1.0
 
-    appearance =
-      UserDefaults.shared.string(forKey: UserDefaultsKeys.appearance)
-      .flatMap { AppearanceMode(rawValue: $0) } ?? .system
-
     // Load saved accent color
     if let colorString = UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor) {
       customAccentColor = Color(fromString: colorString)

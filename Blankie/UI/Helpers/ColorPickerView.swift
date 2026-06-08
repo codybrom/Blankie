@@ -7,48 +7,12 @@
 
 import SwiftUI
 
-/// Appearance + accent picker shown from the macOS bottom bar's palette popover
+/// Accent color picker shown from the macOS bottom bar's palette popover
 struct ColorPickerView: View {
   @ObservedObject var globalSettings = GlobalSettings.shared
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text("Appearance")
-        .font(.headline)
-        .padding(.bottom, 4)
-
-      ForEach(AppearanceMode.allCases, id: \.self) { mode in
-        Button(action: {
-          withAnimation {
-            globalSettings.setAppearance(mode)
-          }
-        }) {
-          HStack {
-            Image(systemName: mode.icon)
-              .frame(width: 16, height: 16)
-              .accessibilityHidden(true)
-
-            Text(mode.localizedName)
-              .foregroundColor(.primary)
-
-            Spacer()
-
-            if globalSettings.appearance == mode {
-              Image(systemName: "checkmark")
-                .foregroundColor(.blue)
-                .accessibilityHidden(true)
-            }
-          }
-          .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.vertical, 4)
-        .accessibilityAddTraits(globalSettings.appearance == mode ? .isSelected : [])
-      }
-
-      Divider()
-        .padding(.vertical, 8)
-
       Text("Accent Color")
         .font(.headline)
         .padding(.bottom, 4)

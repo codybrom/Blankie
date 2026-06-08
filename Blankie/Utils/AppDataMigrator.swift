@@ -15,7 +15,8 @@ enum AppDataMigrator {
 
   /// UserDefaults keys for features that no longer exist so stale values don't linger
   private static let obsoleteKeys = [
-    "hideInactiveSounds"  // "Hide Inactive Sounds" feature removed in 1.1
+    "hideInactiveSounds",  // "Hide Inactive Sounds" feature removed in 1.1
+    "appearanceMode",  // Appearance picker removed in 2.0 — app is now dark-only
   ]
 
   /// Perform one-time migration of all app data
@@ -68,7 +69,6 @@ enum AppDataMigrator {
     let standardDefaults = UserDefaults.standard
     let keysToMigrate = [
       UserDefaultsKeys.volume,
-      UserDefaultsKeys.appearance,
       UserDefaultsKeys.accentColor,
       UserDefaultsKeys.autoPlayOnLaunch,
       UserDefaultsKeys.enableSpatialAudio,
@@ -267,7 +267,6 @@ enum AppDataMigrator {
     return [
       // GlobalSettings keys
       UserDefaultsKeys.volume,
-      UserDefaultsKeys.appearance,
       UserDefaultsKeys.accentColor,
       UserDefaultsKeys.autoPlayOnLaunch,
       UserDefaultsKeys.showSoundNames,

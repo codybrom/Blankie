@@ -402,19 +402,6 @@ struct SettingsView: View {
       Section(
         header: Text("Display")
       ) {
-        Picker(
-          selection: Binding(
-            get: { globalSettings.appearance },
-            set: { globalSettings.setAppearance($0) }
-          )
-        ) {
-          ForEach(AppearanceMode.allCases, id: \.self) { mode in
-            Text(mode.localizedName).tag(mode)
-          }
-        } label: {
-          Text("Appearance")
-        }
-
         Toggle(
           isOn: Binding(
             get: { globalSettings.showSoundNames },
@@ -552,10 +539,6 @@ struct SettingsView: View {
       .formStyle(.grouped)
     #endif
     .tint(globalSettings.customAccentColor ?? .accentColor)
-    // Presented as a sheet, this view has its own presentation context, so it
-    // won't pick up the window's color scheme when appearance changes while
-    // it's open. Apply it here too so dark/light flips the sheet immediately.
-    .preferredColorScheme(globalSettings.appearance.colorScheme)
     .task {
       showBetaTesterUI = await Bundle.main.isTestFlightOrDebug
     }

@@ -114,10 +114,11 @@ struct BlankieApp: App {
         MixerView()
           .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
           .withPresetOnboarding(showOnboarding: $showingOnboarding)
-          .preferredColorScheme(
-            globalSettings.appearance == .system
-              ? nil : (globalSettings.appearance == .dark ? .dark : .light)
-          )
+          // iOS/iPadOS lock dark via Info.plist UIUserInterfaceStyle; that key
+          // doesn't exist on visionOS, so force it here for that platform.
+          #if os(visionOS)
+            .preferredColorScheme(.dark)
+          #endif
           .onChange(of: scenePhase) { oldPhase, newPhase in
             handleScenePhaseChange(oldPhase: oldPhase, newPhase: newPhase)
             timerManager.handleScenePhaseChange()

@@ -59,43 +59,6 @@ enum AccentColor: CaseIterable {
   }
 }
 
-enum AppearanceMode: String, CaseIterable {
-  case system
-  case light
-  case dark
-
-  var localizedName: String {
-    switch self {
-    case .system: return String(localized: "Automatic")
-    case .light: return String(localized: "Light")
-    case .dark: return String(localized: "Dark")
-    }
-  }
-
-  var icon: String {
-    switch self {
-    case .system: return "circle.lefthalf.filled"
-    case .light: return "sun.max.fill"
-    case .dark: return "moon.fill"
-    }
-  }
-
-  /// The SwiftUI color scheme to force, or `nil` to follow the system. Used by
-  /// `preferredColorScheme` so views (including presented sheets) react when the
-  /// appearance setting changes.
-  var colorScheme: ColorScheme? {
-    switch self {
-    case .system: return nil
-    case .light: return .light
-    case .dark: return .dark
-    }
-  }
-
-  var displayName: String {
-    localizedName
-  }
-}
-
 extension Color {
   var toString: String {
     switch self {

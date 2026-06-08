@@ -11,14 +11,6 @@ import os
 
 extension GlobalSettings {
   @MainActor
-  func setAppearance(_ newAppearance: AppearanceMode) {
-    appearance = newAppearance
-    UserDefaults.shared.setValue(newAppearance.rawValue, forKey: UserDefaultsKeys.appearance)
-    updateAppAppearance()
-    logCurrentSettings()
-  }
-
-  @MainActor
   func setAccentColor(_ newColor: Color?) {
     customAccentColor = newColor
     if let color = newColor {
@@ -207,18 +199,4 @@ extension GlobalSettings {
     logCurrentSettings()
   }
 
-  private func updateAppAppearance() {
-    #if os(macOS)
-      DispatchQueue.main.async {
-        switch self.appearance {
-        case .system:
-          NSApp.appearance = nil
-        case .light:
-          NSApp.appearance = NSAppearance(named: .aqua)
-        case .dark:
-          NSApp.appearance = NSAppearance(named: .darkAqua)
-        }
-      }
-    #endif
-  }
 }

@@ -30,7 +30,6 @@ extension UserDefaults {
 
 enum UserDefaultsKeys {
   static let volume = "globalVolume"
-  static let appearance = "appearanceMode"
   static let accentColor = "customAccentColor"
   static let autoPlayOnLaunch = "autoPlayOnLaunch"
   static let enableSpatialAudio = "enableSpatialAudio"
@@ -82,7 +81,6 @@ class GlobalSettings: ObservableObject {
   }
 
   @Published var volume: Double
-  @Published var appearance: AppearanceMode
   @Published var customAccentColor: Color?
   @Published var autoPlayOnLaunch: Bool
   @Published var showSoundNames: Bool
@@ -129,7 +127,6 @@ class GlobalSettings: ObservableObject {
   private init() {
     // Initialize required properties first
     volume = 1.0
-    appearance = .system
     customAccentColor = nil
     autoPlayOnLaunch = false
     showSoundNames = true
@@ -319,7 +316,6 @@ extension GlobalSettings {
       """
       GlobalSettings: Current State
         - Volume: \(self.volume)
-        - Appearance: \(self.appearance.rawValue)
         - Custom Accent Color: \(self.customAccentColor?.toString ?? "System")
         - Autoplay on Open: \(self.autoPlayOnLaunch)
         - Enable Spatial Audio: \(self.enableSpatialAudio)
