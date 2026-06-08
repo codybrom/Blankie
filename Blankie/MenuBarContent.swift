@@ -1,5 +1,5 @@
 //
-//  MenuBarProbe.swift
+//  MenuBarContent.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 6/8/26.
@@ -11,7 +11,7 @@
   /// Popover content — a custom-header navigator (Library ← Mixer → Timer,
   /// opening on Mixer). A system `NavigationStack` wouldn't self-size in a
   /// `MenuBarExtra` window; the owned fixed-height header sizes to content.
-  struct MenuBarProbeView: View {
+  struct MenuBarContent: View {
     @ObservedObject private var audioManager = AudioManager.shared
     @ObservedObject private var globalSettings = GlobalSettings.shared
     @ObservedObject private var presetManager = PresetManager.shared
@@ -347,7 +347,7 @@
   }
 
   /// Menu bar label — Blankie's brand glyph.
-  struct MenuBarProbeLabel: View {
+  struct MenuBarLabel: View {
     var body: some View {
       Image("blankie.symbol")
     }

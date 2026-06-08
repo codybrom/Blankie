@@ -95,9 +95,9 @@ struct BlankieApp: App {
           }
         )
       ) {
-        MenuBarProbeView()
+        MenuBarContent()
       } label: {
-        MenuBarProbeLabel()
+        MenuBarLabel()
       }
       .menuBarExtraStyle(.window)
       .modelContainer(modelContainer)
