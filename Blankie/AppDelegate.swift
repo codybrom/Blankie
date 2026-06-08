@@ -16,6 +16,7 @@ import os
       applySavedLanguagePreference()
       clearRestartFlagIfNeeded()
       applyUITestingConfigurationIfNeeded()
+      DockPresenceManager.shared.start()
     }
 
     private func configureWindowAppearance() {

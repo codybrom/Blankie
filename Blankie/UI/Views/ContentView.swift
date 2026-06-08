@@ -425,6 +425,7 @@ import UniformTypeIdentifiers
       }
       .onChange(of: audioManager.isGloballyPlaying) { updateDockBadge() }
       .onChange(of: audioManager.hasSelectedSounds) { updateDockBadge() }
+      .onChange(of: globalSettings.showDockBadgeWhenPaused) { updateDockBadge() }
       // Leaving preset mode (solo, Quick Mix, setting off) hides the spatial
       // pane; drop the toggle too so it doesn't silently reappear on return.
       .onChange(of: spatialEntryAvailable) { _, available in
@@ -457,7 +458,8 @@ import UniformTypeIdentifiers
     /// with nothing selected (matching the in-window status banner).
     private func updateDockBadge() {
       let silent = !audioManager.isGloballyPlaying || !audioManager.hasSelectedSounds
-      NSApp.dockTile.badgeLabel = silent ? "⏸" : nil
+      NSApp.dockTile.badgeLabel =
+        (silent && globalSettings.showDockBadgeWhenPaused) ? "⏸" : nil
     }
 
     /// Persist a grid reorder. `source`/`destination` are indices into the
