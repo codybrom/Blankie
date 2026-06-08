@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TimerView: View {
-  @StateObject private var timerManager = TimerManager.shared
+  @ObservedObject private var timerManager = TimerManager.shared
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
@@ -80,7 +80,7 @@ struct TimerView: View {
     }
   }
 
-  private func addTimeButton(_ label: String, minutes: Int) -> some View {
+  private func addTimeButton(_ label: LocalizedStringKey, minutes: Int) -> some View {
     Button {
       timerManager.addTime(minutes: minutes)
     } label: {
