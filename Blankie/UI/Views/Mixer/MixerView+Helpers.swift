@@ -9,51 +9,9 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   extension MixerView {
-    // Calculate filtered sounds based on the current preset
+    // Filtered + ordered sounds for the current preset (shared with macOS).
     var filteredSounds: [Sound] {
-      return filterSounds()
-    }
-
-    private func filterSounds() -> [Sound] {
-      let visibleSounds = audioManager.getVisibleSounds()
-
-      let filteredSounds = visibleSounds.filter { sound in
-        guard let currentPreset = presetManager.currentPreset else {
-          // No current preset — show everything but preset-use-only sounds.
-          return !sound.isPresetUseOnly
-        }
-        // The default preset hides preset-use-only sounds; a custom preset
-        // shows only the sounds that belong to it.
-        if currentPreset.isDefault {
-          return !sound.isPresetUseOnly
-        }
-        return currentPreset.soundStates.contains { $0.fileName == sound.fileName }
-      }
-
-      // Sort filtered sounds according to preset order or default sound order
-      if let currentPreset = presetManager.currentPreset,
-        !currentPreset.isDefault,
-        let soundOrder = currentPreset.soundOrder
-      {
-        // Use preset's sound order for custom presets
-        let orderDict = Dictionary(uniqueKeysWithValues: soundOrder.enumerated().map { ($1, $0) })
-
-        return filteredSounds.sorted { sound1, sound2 in
-          let index1 = orderDict[sound1.fileName] ?? Int.max
-          let index2 = orderDict[sound2.fileName] ?? Int.max
-          return index1 < index2
-        }
-      } else {
-        // Use default sound order for default preset or no preset
-        let orderDict = Dictionary(
-          uniqueKeysWithValues: audioManager.defaultSoundOrder.enumerated().map { ($1, $0) })
-
-        return filteredSounds.sorted { sound1, sound2 in
-          let index1 = orderDict[sound1.fileName] ?? Int.max
-          let index2 = orderDict[sound2.fileName] ?? Int.max
-          return index1 < index2
-        }
-      }
+      audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
     // Determine if we're on iPad or Mac

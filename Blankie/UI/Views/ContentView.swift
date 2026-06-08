@@ -33,31 +33,7 @@ import UniformTypeIdentifiers
     @State private var isHoveringPlayButton = false
 
     private var filteredSounds: [Sound] {
-      let visible = audioManager.getVisibleSounds().filter { sound in
-        // A custom preset shows only its own sounds. The default preset (or
-        // no preset) shows everything except preset-use-only sounds.
-        let inCurrentPreset: Bool
-        if let preset = presetManager.currentPreset, !preset.isDefault {
-          inCurrentPreset = preset.soundStates.contains { $0.fileName == sound.fileName }
-        } else {
-          inCurrentPreset = !sound.isPresetUseOnly
-        }
-        return inCurrentPreset
-      }
-
-      // Sort by the active order so the grid is stable and reorders persist
-      // across launches (mirrors iOS MixerView). A custom preset uses its own
-      // `soundOrder`; otherwise the global `defaultSoundOrder`.
-      let order: [String]
-      if let preset = presetManager.currentPreset, !preset.isDefault,
-        let soundOrder = preset.soundOrder
-      {
-        order = soundOrder
-      } else {
-        order = audioManager.defaultSoundOrder
-      }
-      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
-      return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
+      audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
     var textColor: Color {
