@@ -288,6 +288,48 @@
       "systemIconName": "waveform",
       "title": "White Noise",
       "truePeakdBTP": -22.538137
+    },
+    {
+      "author": "Blankie",
+      "authorUrl": "https://blankie.rest",
+      "defaultOrder": 14,
+      "description": "Deep brown noise generated in Python with numpy (cumulative-sum white noise, 15 Hz high-pass, 400 Hz low-pass).",
+      "duration": 19.678,
+      "fileName": "brown-noise",
+      "license": "cc0",
+      "lufs": -27.19954,
+      "moods": [
+        "focus",
+        "sleep"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 1.0232387,
+      "soundName": "Deep Noise (Stereo)",
+      "soundUrl": "https://blankie.rest/credits",
+      "systemIconName": "waveform.low",
+      "title": "Deep Noise",
+      "truePeakdBTP": -12.1
+    },
+    {
+      "author": "Blankie",
+      "authorUrl": "https://blankie.rest",
+      "defaultOrder": 15,
+      "description": "Green noise generated in Python with numpy (pink noise band-passed 120 to 600 Hz).",
+      "duration": 8.971042,
+      "fileName": "green-noise",
+      "license": "cc0",
+      "lufs": -27.198704,
+      "moods": [
+        "relax",
+        "focus"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 1.0231403,
+      "soundName": "Green Noise (Stereo)",
+      "soundUrl": "https://blankie.rest/credits",
+      "systemIconName": "waveform.mid",
+      "title": "Green Noise",
+      "truePeakdBTP": -16.56
     }
   ]
 }
