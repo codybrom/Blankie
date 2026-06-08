@@ -204,6 +204,53 @@ struct SettingsView: View {
       }
       .pickerStyle(.menu)
     }
+
+    /// App-level macOS settings: menu bar presence, Dock-icon behavior, the Dock
+    /// pause badge, and language. The Dock-hiding toggles are disabled unless the
+    /// menu bar icon is shown, so a closed window is never unreachable.
+    private var appSection: some View {
+      Section(header: Text("App")) {
+        Toggle(
+          isOn: Binding(
+            get: { globalSettings.showMenuBarIcon },
+            set: { globalSettings.setShowMenuBarIcon($0) }
+          )
+        ) {
+          Text("Show in Menu Bar")
+        }
+
+        Toggle(
+          isOn: Binding(
+            get: { globalSettings.menuBarOnlyMode },
+            set: { globalSettings.setMenuBarOnlyMode($0) }
+          )
+        ) {
+          Text("Menu Bar Only")
+        }
+        .disabled(!globalSettings.showMenuBarIcon)
+
+        Toggle(
+          isOn: Binding(
+            get: { globalSettings.hideDockWhenWindowClosed },
+            set: { globalSettings.setHideDockWhenWindowClosed($0) }
+          )
+        ) {
+          Text("Hide Dock Icon When Window Is Closed")
+        }
+        .disabled(!globalSettings.showMenuBarIcon || globalSettings.menuBarOnlyMode)
+
+        Toggle(
+          isOn: Binding(
+            get: { globalSettings.showDockBadgeWhenPaused },
+            set: { globalSettings.setShowDockBadgeWhenPaused($0) }
+          )
+        ) {
+          Text("Show Dock Icon Badge When Paused")
+        }
+
+        languageMenu
+      }
+    }
   #endif
 
   private var settingsForm: some View {
@@ -396,15 +443,15 @@ struct SettingsView: View {
         #endif
 
         #if os(macOS)
-          // macOS keeps everything visual in one Display section: accent here
-          // (Theme is iOS-only), and the Language picker — iOS handles
-          // per-app language in system Settings; macOS picks it here
-          // (restart required, prompted via the alert below).
+          // Accent lives in Display (Theme is iOS-only). The Dock badge and
+          // Language moved to the App section below.
           accentColorControl
-
-          languageMenu
         #endif
       }
+
+      #if os(macOS)
+        appSection
+      #endif
 
       // App-wide defaults a preset inherits and can override in Edit Preset
       // (view mode, accent color, lock screen animation, background blur).
