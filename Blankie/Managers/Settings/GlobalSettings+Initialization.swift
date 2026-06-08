@@ -75,6 +75,18 @@ extension GlobalSettings {
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockScreenBackgroundEnabled) as? Bool
       ?? true
 
+    // Dock icon pause badge (macOS), default on.
+    showDockBadgeWhenPaused =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showDockBadgeWhenPaused) as? Bool ?? true
+
+    // Menu bar (macOS): show the icon (default on); the Dock-hiding modes off.
+    showMenuBarIcon =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showMenuBarIcon) as? Bool ?? true
+    menuBarOnlyMode =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.menuBarOnlyMode) as? Bool ?? false
+    hideDockWhenWindowClosed =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.hideDockWhenWindowClosed) as? Bool ?? false
+
     // App-wide default lock screen animation (used when a preset has none).
     if let data = UserDefaults.shared.data(forKey: UserDefaultsKeys.defaultLockScreenArtwork),
       let ref = try? JSONDecoder().decode(AnimatedArtworkRef.self, from: data)

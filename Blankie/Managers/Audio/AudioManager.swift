@@ -260,6 +260,29 @@ extension AudioManager {
     sounds
   }
 
+  /// Visible sounds for a preset context, ordered by the active sound order —
+  /// the single source for the mixer grid, the menu bar list, and iOS. A custom
+  /// (non-default) preset shows only its own sounds in its `soundOrder`; the
+  /// default preset (or none) shows everything but preset-use-only sounds, in
+  /// `defaultSoundOrder`. Unknown sounds sort last.
+  @MainActor
+  func orderedVisibleSounds(for preset: Preset?) -> [Sound] {
+    let visible = getVisibleSounds().filter { sound in
+      if let preset, !preset.isDefault {
+        return preset.soundStates.contains { $0.fileName == sound.fileName }
+      }
+      return !sound.isPresetUseOnly
+    }
+    let order: [String]
+    if let preset, !preset.isDefault, let soundOrder = preset.soundOrder {
+      order = soundOrder
+    } else {
+      order = defaultSoundOrder
+    }
+    let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+    return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
+  }
+
   /// Move a sound to a new position
   func moveSound(from sourceIndex: Int, to destinationIndex: Int) {
     guard sourceIndex < sounds.count && destinationIndex <= sounds.count else {

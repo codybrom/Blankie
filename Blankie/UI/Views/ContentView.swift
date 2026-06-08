@@ -33,31 +33,7 @@ import UniformTypeIdentifiers
     @State private var isHoveringPlayButton = false
 
     private var filteredSounds: [Sound] {
-      let visible = audioManager.getVisibleSounds().filter { sound in
-        // A custom preset shows only its own sounds. The default preset (or
-        // no preset) shows everything except preset-use-only sounds.
-        let inCurrentPreset: Bool
-        if let preset = presetManager.currentPreset, !preset.isDefault {
-          inCurrentPreset = preset.soundStates.contains { $0.fileName == sound.fileName }
-        } else {
-          inCurrentPreset = !sound.isPresetUseOnly
-        }
-        return inCurrentPreset
-      }
-
-      // Sort by the active order so the grid is stable and reorders persist
-      // across launches (mirrors iOS MixerView). A custom preset uses its own
-      // `soundOrder`; otherwise the global `defaultSoundOrder`.
-      let order: [String]
-      if let preset = presetManager.currentPreset, !preset.isDefault,
-        let soundOrder = preset.soundOrder
-      {
-        order = soundOrder
-      } else {
-        order = audioManager.defaultSoundOrder
-      }
-      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
-      return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
+      audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
     var textColor: Color {
@@ -129,7 +105,6 @@ import UniformTypeIdentifiers
       }
       .frame(maxWidth: .infinity)
       .padding(.vertical, 6)
-      .background(.ultraThinMaterial)
     }
 
     var body: some View {
@@ -282,9 +257,8 @@ import UniformTypeIdentifiers
           .padding(.horizontal, 16)
         }
         .frame(maxWidth: .infinity)
-        .background(Color(NSColor.windowBackgroundColor).opacity(0.3))
-        .background(.ultraThinMaterial)
       }
+      .containerBackground(.ultraThinMaterial, for: .window)
 
       .navigationTitle(navigationTitle)
       .modifier(
@@ -416,15 +390,12 @@ import UniformTypeIdentifiers
       }
       .onAppear {
         setupResetHandler()
-        updateDockBadge()
         // Launch nag when the app volume is zeroed (mirrors Music.app).
         // Deferred so the window finishes drawing before the modal runs.
         DispatchQueue.main.async {
           VolumeZeroWarning.showIfNeeded()
         }
       }
-      .onChange(of: audioManager.isGloballyPlaying) { updateDockBadge() }
-      .onChange(of: audioManager.hasSelectedSounds) { updateDockBadge() }
       // Leaving preset mode (solo, Quick Mix, setting off) hides the spatial
       // pane; drop the toggle too so it doesn't silently reappear on return.
       .onChange(of: spatialEntryAvailable) { _, available in
@@ -451,13 +422,6 @@ import UniformTypeIdentifiers
       audioManager.onReset = { @MainActor in
         showingTimerPopover = false
       }
-    }
-
-    /// Badge the Dock icon whenever the app is silent — paused, or "playing"
-    /// with nothing selected (matching the in-window status banner).
-    private func updateDockBadge() {
-      let silent = !audioManager.isGloballyPlaying || !audioManager.hasSelectedSounds
-      NSApp.dockTile.badgeLabel = silent ? "⏸" : nil
     }
 
     /// Persist a grid reorder. `source`/`destination` are indices into the

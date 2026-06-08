@@ -48,6 +48,10 @@ enum UserDefaultsKeys {
   static let defaultLockScreenArtwork = "defaultLockScreenArtwork"
   static let starredItems = "starredItems"
   static let backgroundBlurRadius = "backgroundBlurRadius"
+  static let showDockBadgeWhenPaused = "showDockBadgeWhenPaused"
+  static let showMenuBarIcon = "showMenuBarIcon"
+  static let menuBarOnlyMode = "menuBarOnlyMode"
+  static let hideDockWhenWindowClosed = "hideDockWhenWindowClosed"
 }
 
 /// Blur (in points) applied to a preset's background artwork behind the mixer
@@ -101,6 +105,16 @@ class GlobalSettings: ObservableObject {
   /// App-wide default blur (in points) for preset background artwork. A preset's
   /// own `backgroundBlurRadius` overrides this when set.
   @Published var backgroundBlurRadius: Double
+  /// macOS only: badge the Dock icon with a pause glyph while the app is
+  /// silent. On by default.
+  @Published var showDockBadgeWhenPaused: Bool
+  /// macOS only: show Blankie's icon in the menu bar. On by default.
+  @Published var showMenuBarIcon: Bool
+  /// macOS only: hide the Dock icon now (menu-bar-only mode). Off by default.
+  @Published var menuBarOnlyMode: Bool
+  /// macOS only: hide the Dock icon while the main window is closed. Off by
+  /// default.
+  @Published var hideDockWhenWindowClosed: Bool
 
   // Platform-specific settings
   /// Availability gate for the experimental spatial feature: shows the
@@ -132,6 +146,10 @@ class GlobalSettings: ObservableObject {
     availableLanguages = []
     lockScreenBackgroundEnabled = true
     backgroundBlurRadius = defaultBackgroundBlurRadius
+    showDockBadgeWhenPaused = true
+    showMenuBarIcon = true
+    menuBarOnlyMode = false
+    hideDockWhenWindowClosed = false
 
     // Then load actual values from UserDefaults
     loadBasicSettings()

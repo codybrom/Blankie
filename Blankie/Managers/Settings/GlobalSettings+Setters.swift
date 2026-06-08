@@ -65,6 +65,42 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setShowDockBadgeWhenPaused(_ value: Bool) {
+    showDockBadgeWhenPaused = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showDockBadgeWhenPaused)
+    logCurrentSettings()
+  }
+
+  @MainActor
+  func setShowMenuBarIcon(_ value: Bool) {
+    showMenuBarIcon = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showMenuBarIcon)
+    // The Dock-hiding modes need the menu bar icon as the way back, so clear
+    // them when it's off — the app can never hide both the Dock and the icon.
+    if !value {
+      menuBarOnlyMode = false
+      UserDefaults.shared.set(false, forKey: UserDefaultsKeys.menuBarOnlyMode)
+      hideDockWhenWindowClosed = false
+      UserDefaults.shared.set(false, forKey: UserDefaultsKeys.hideDockWhenWindowClosed)
+    }
+    logCurrentSettings()
+  }
+
+  @MainActor
+  func setMenuBarOnlyMode(_ value: Bool) {
+    menuBarOnlyMode = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.menuBarOnlyMode)
+    logCurrentSettings()
+  }
+
+  @MainActor
+  func setHideDockWhenWindowClosed(_ value: Bool) {
+    hideDockWhenWindowClosed = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.hideDockWhenWindowClosed)
+    logCurrentSettings()
+  }
+
+  @MainActor
   func setLockPortraitOrientationiOS(_ value: Bool) {
     lockPortraitOrientationiOS = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.lockPortraitOrientationiOS)
