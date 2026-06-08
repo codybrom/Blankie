@@ -154,18 +154,18 @@
       "duration": 568.437007,
       "fileName": "train",
       "license": "ccBy3",
-      "lufs": -26.181381,
+      "lufs": -24.6932,
       "moods": [
         "sleep",
         "focus"
       ],
-      "needsLimiter": true,
-      "normalizationFactor": 0.91005796,
+      "needsLimiter": false,
+      "normalizationFactor": 0.7667609,
       "soundName": "Trains of the Yamanote Line",
       "soundUrl": "https://freesound.org/s/259988/",
       "systemIconName": "tram.fill",
       "title": "Train",
-      "truePeakdBTP": 0.87218815
+      "truePeakdBTP": -2.109943
     },
     {
       "author": "Falcet",
