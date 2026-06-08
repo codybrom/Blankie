@@ -27,7 +27,6 @@ enum UITestingHelper {
     resetWindowFrameData()
     resetGlobalSettings()
     configureUITestingDefaults()
-    configureAppearanceMode()
     setConsistentWindowSize()
     resetSoundDefaults()
 
@@ -66,14 +65,6 @@ enum UITestingHelper {
 
     if ProcessInfo.processInfo.arguments.contains("-ScreenshotMode") {
       UserDefaults.standard.set(true, forKey: "forceStartPlayback")
-    }
-  }
-
-  private static func configureAppearanceMode() {
-    if ProcessInfo.processInfo.arguments.contains("-ForceDarkMode") {
-      UserDefaults.standard.set("dark", forKey: "appearanceMode")
-    } else {
-      UserDefaults.standard.set("light", forKey: "appearanceMode")
     }
   }
 

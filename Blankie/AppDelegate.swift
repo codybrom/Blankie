@@ -20,6 +20,8 @@ import os
     }
 
     private func configureWindowAppearance() {
+      // Blankie is dark-mode only. Lock the whole app to the dark appearance (the macOS counterpart to the iOS Info.plist UIUserInterfaceStyle = Dark key).
+      NSApp.appearance = NSAppearance(named: .darkAqua)
       DispatchQueue.main.async {
         if let window = NSApplication.shared.windows.first {
           window.hasShadow = true

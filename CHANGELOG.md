@@ -60,6 +60,7 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 - Rebuilt audio playback on a shared audio engine so loudness normalization can now genuinely boost quiet sounds to the library's target level, a peak limiter on the final mix can prevent clipping, and playback can survives output-device switches and system audio resets
 - Rebuilt Settings and Preferences rows with idiomatic SwiftUI (Picker, LabeledContent, NavigationLink) so assistive technologies handle them natively
 - Unified Settings across platforms - macOS uses the same Settings layout as iOS, and opens inside the main window
+- Blankie now always uses the dark system appearance on every platform. Dark is where it's most consistently readable and looks its best, so the Light and Automatic appearance options have been removed
 - New Preset and Edit Preset share one design, with a live preview of the preset's accent color while you pick it
 - Sounds show circular icons in the Library, matching CarPlay
 - The Mac window adapts its minimum size to the sidebar and opens at a roomier default size
@@ -72,6 +73,7 @@ Blankie 2 brings Blankie to iPhone, iPad, and CarPlay, and rebuilds the Mac app 
 ### Fixed
 
 - Audible pop when the fireplace sound loops (replaced with new sound)
+- Train sound is now a longer loop (of the same source)
 - If Blankie's global volume was saved at zero, it now prompts a warning on relaunch instead so you'll know what sounds aren't audible
 - Links and sound credits follow the accent color instead of always showing blue
 

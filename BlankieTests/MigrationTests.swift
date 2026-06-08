@@ -47,8 +47,8 @@ final class MigrationTests: XCTestCase {
       "Autoplay should migrate"
     )
     XCTAssertEqual(
-      UserDefaults.shared.string(forKey: UserDefaultsKeys.appearance), "light",
-      "Appearance should migrate"
+      UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor), "blue",
+      "Accent color should migrate"
     )
 
     // 5. Verify data cleaned up from standard
@@ -287,7 +287,7 @@ final class MigrationTests: XCTestCase {
   private func setupExistingUserData() {
     // Simulate realistic existing user settings
     UserDefaults.standard.set(0.8, forKey: UserDefaultsKeys.volume)
-    UserDefaults.standard.set("light", forKey: UserDefaultsKeys.appearance)
+    UserDefaults.standard.set("blue", forKey: UserDefaultsKeys.accentColor)
     UserDefaults.standard.set(true, forKey: UserDefaultsKeys.autoPlayOnLaunch)
     UserDefaults.standard.set(true, forKey: "hideInactiveSounds")
     UserDefaults.standard.set("en", forKey: UserDefaultsKeys.language)
@@ -310,7 +310,7 @@ final class MigrationTests: XCTestCase {
   private func clearAllTestKeys() {
     let testKeys = [
       UserDefaultsKeys.volume,
-      UserDefaultsKeys.appearance,
+      UserDefaultsKeys.accentColor,
       UserDefaultsKeys.autoPlayOnLaunch,
       "hideInactiveSounds",
       UserDefaultsKeys.language,

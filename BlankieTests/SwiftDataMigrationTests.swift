@@ -175,11 +175,11 @@ final class SwiftDataMigrationTests: XCTestCase {
 
     // 1. Setup existing data in shared UserDefaults (simulating partial migration)
     UserDefaults.shared.set(0.9, forKey: UserDefaultsKeys.volume)
-    UserDefaults.shared.set("dark", forKey: UserDefaultsKeys.appearance)
+    UserDefaults.shared.set("blue", forKey: UserDefaultsKeys.accentColor)
 
     // 2. Setup conflicting data in standard UserDefaults
     UserDefaults.standard.set(0.5, forKey: UserDefaultsKeys.volume)  // Different value
-    UserDefaults.standard.set("light", forKey: UserDefaultsKeys.appearance)  // Different value
+    UserDefaults.standard.set("red", forKey: UserDefaultsKeys.accentColor)  // Different value
     UserDefaults.standard.set(true, forKey: UserDefaultsKeys.autoPlayOnLaunch)  // New value
 
     // 3. Run migration
@@ -191,7 +191,7 @@ final class SwiftDataMigrationTests: XCTestCase {
       "Existing shared data should be preserved"
     )
     XCTAssertEqual(
-      UserDefaults.shared.string(forKey: UserDefaultsKeys.appearance), "dark",
+      UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor), "blue",
       "Existing shared data should be preserved"
     )
     XCTAssertEqual(
@@ -222,7 +222,7 @@ final class SwiftDataMigrationTests: XCTestCase {
     // Clear test UserDefaults
     let testKeys = [
       UserDefaultsKeys.volume,
-      UserDefaultsKeys.appearance,
+      UserDefaultsKeys.accentColor,
       UserDefaultsKeys.autoPlayOnLaunch,
       "customSoundSettings",
       "legacyPreset",

@@ -16,7 +16,6 @@ class BlankieTests: XCTestCase {
       // Reset global settings
       GlobalSettings.shared.setVolume(1.0)
       GlobalSettings.shared.setAccentColor(nil)
-      GlobalSettings.shared.setAppearance(.system)
       GlobalSettings.shared.setAutoPlayOnLaunch(false)
 
       // Reset audio manager
