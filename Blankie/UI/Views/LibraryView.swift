@@ -165,6 +165,30 @@ struct PresetPickerRow: View {
     #endif
   }
 
+  /// The row's primary activation, shared by the pointer tap and the macOS
+  /// VoiceOver action: apply the preset, or — on the current sidebar row —
+  /// toggle play/pause. No-op while editing (taps belong to reorder/delete).
+  private func activateRow() {
+    guard !isEditMode else { return }
+    #if os(macOS)
+      if settingsPaneShowing {
+        // Sub-page flags (About, Manage Sounds) reset via the pane's
+        // onDisappear — clearing them here flashes the settings root.
+        appState.showingSettingsPane = false
+        if !isCurrent { applyPreset() }
+        return
+      }
+    #endif
+    if presentation == .sidebar && isCurrent {
+      // Don't start a silent mix; pausing is always allowed.
+      if audioManager.isGloballyPlaying || audioManager.hasSelectedSounds {
+        audioManager.togglePlayback()
+      }
+    } else {
+      applyPreset()
+    }
+  }
+
   var body: some View {
     HStack {
       // Tap target: applies the preset (disabled while editing, where taps
@@ -192,24 +216,7 @@ struct PresetPickerRow: View {
       // Sidebar (iPad/macOS): the current row needs a double tap/click, which
       // toggles play–pause; elsewhere a single tap applies as usual.
       .onTapGesture(count: presentation == .sidebar && isCurrent && !settingsPaneShowing ? 2 : 1) {
-        guard !isEditMode else { return }
-        #if os(macOS)
-          if settingsPaneShowing {
-            // Sub-page flags (About, Manage Sounds) reset via the pane's
-            // onDisappear — clearing them here flashes the settings root.
-            appState.showingSettingsPane = false
-            if !isCurrent { applyPreset() }
-            return
-          }
-        #endif
-        if presentation == .sidebar && isCurrent {
-          // Don't start a silent mix; pausing is always allowed.
-          if audioManager.isGloballyPlaying || audioManager.hasSelectedSounds {
-            audioManager.togglePlayback()
-          }
-        } else {
-          applyPreset()
-        }
+        activateRow()
       }
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
@@ -217,6 +224,15 @@ struct PresetPickerRow: View {
       .accessibilityLabel(Text(preset.displayName))
       .accessibilityAddTraits(.isButton)
       .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
+      // macOS doesn't expose .onTapGesture as a VoiceOver activation, so the
+      // .isButton trait announces a button that can't be activated. Represent it
+      // as a real Button for assistive tech; iOS gets the action via .combine.
+      #if os(macOS)
+        .accessibilityRepresentation {
+          Button(preset.displayName) { activateRow() }
+            .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
+        }
+      #endif
 
       // Always-visible favorite toggle (hidden in edit mode, where the reorder
       // handle takes the trailing edge).
@@ -318,6 +334,27 @@ struct SoloPickerRow: View {
     #endif
   }
 
+  /// The row's primary activation, shared by the pointer tap and the macOS
+  /// VoiceOver action: solo the sound, or — on the current sidebar row — toggle
+  /// play/pause. No-op while editing (taps belong to reorder/delete).
+  private func activateRow() {
+    guard !isEditMode else { return }
+    #if os(macOS)
+      if settingsPaneShowing {
+        // Sub-page flags (About, Manage Sounds) reset via the pane's
+        // onDisappear — clearing them here flashes the settings root.
+        appState.showingSettingsPane = false
+        if !isCurrent { soloSound() }
+        return
+      }
+    #endif
+    if presentation == .sidebar && isCurrent {
+      audioManager.togglePlayback()
+    } else {
+      soloSound()
+    }
+  }
+
   var body: some View {
     HStack {
       HStack(spacing: 10) {
@@ -344,21 +381,7 @@ struct SoloPickerRow: View {
       // Sidebar (iPad/macOS): the current row needs a double tap/click, which
       // toggles play–pause; elsewhere a single tap applies as usual.
       .onTapGesture(count: presentation == .sidebar && isCurrent && !settingsPaneShowing ? 2 : 1) {
-        guard !isEditMode else { return }
-        #if os(macOS)
-          if settingsPaneShowing {
-            // Sub-page flags (About, Manage Sounds) reset via the pane's
-            // onDisappear — clearing them here flashes the settings root.
-            appState.showingSettingsPane = false
-            if !isCurrent { soloSound() }
-            return
-          }
-        #endif
-        if presentation == .sidebar && isCurrent {
-          audioManager.togglePlayback()
-        } else {
-          soloSound()
-        }
+        activateRow()
       }
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
@@ -366,6 +389,15 @@ struct SoloPickerRow: View {
       .accessibilityLabel(Text(sound.title))
       .accessibilityAddTraits(.isButton)
       .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
+      // macOS doesn't expose .onTapGesture as a VoiceOver activation, so the
+      // .isButton trait announces a button that can't be activated. Represent it
+      // as a real Button for assistive tech; iOS gets the action via .combine.
+      #if os(macOS)
+        .accessibilityRepresentation {
+          Button(sound.title) { activateRow() }
+            .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
+        }
+      #endif
 
       if !isEditMode {
         Button {

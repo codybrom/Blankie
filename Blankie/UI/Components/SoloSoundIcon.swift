@@ -78,6 +78,11 @@ struct SoloSoundIcon: View {
     .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
     .accessibilityValue(Text(audioManager.isGloballyPlaying ? "Playing" : "Paused"))
     .accessibilityHint(Text("Plays or pauses the sound"))
+    #if os(macOS)
+      // macOS doesn't expose .onTapGesture as a VoiceOver activation; register
+      // the toggle explicitly (matches SoundIcon's grid tiles).
+      .accessibilityAction { audioManager.togglePlayback() }
+    #endif
     .onTapGesture {
       // This icon only ever shows the soloed sound, so a tap toggles
       // playback rather than deselecting it.
