@@ -414,16 +414,12 @@ import UniformTypeIdentifiers
       }
       .onAppear {
         setupResetHandler()
-        updateDockBadge()
         // Launch nag when the app volume is zeroed (mirrors Music.app).
         // Deferred so the window finishes drawing before the modal runs.
         DispatchQueue.main.async {
           VolumeZeroWarning.showIfNeeded()
         }
       }
-      .onChange(of: audioManager.isGloballyPlaying) { updateDockBadge() }
-      .onChange(of: audioManager.hasSelectedSounds) { updateDockBadge() }
-      .onChange(of: globalSettings.showDockBadgeWhenPaused) { updateDockBadge() }
       // Leaving preset mode (solo, Quick Mix, setting off) hides the spatial
       // pane; drop the toggle too so it doesn't silently reappear on return.
       .onChange(of: spatialEntryAvailable) { _, available in
@@ -450,14 +446,6 @@ import UniformTypeIdentifiers
       audioManager.onReset = { @MainActor in
         showingTimerPopover = false
       }
-    }
-
-    /// Badge the Dock icon whenever the app is silent — paused, or "playing"
-    /// with nothing selected (matching the in-window status banner).
-    private func updateDockBadge() {
-      let silent = !audioManager.isGloballyPlaying || !audioManager.hasSelectedSounds
-      NSApp.dockTile.badgeLabel =
-        (silent && globalSettings.showDockBadgeWhenPaused) ? "⏸" : nil
     }
 
     /// Persist a grid reorder. `source`/`destination` are indices into the
