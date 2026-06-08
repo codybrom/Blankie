@@ -15,7 +15,8 @@
     /// Minimum window width while the sidebar is showing (sidebar + a usable
     /// detail grid).
     static let minWidthWithSidebar: CGFloat = 750
-    static let minHeight: CGFloat = 275
+    /// Minimum window height, sized so the grid and bottom bar stay usable.
+    static let minHeight: CGFloat = 420
     /// Launch size, sized for the sidebar-open layout.
     static let defaultWidth: CGFloat = 960
     static let defaultHeight: CGFloat = 635
