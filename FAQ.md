@@ -27,7 +27,7 @@ There are several ways to get started:
 
 4. **TestFlight (Beta Versions)**
 
-   Get early access to new features — and try Blankie for iPhone, iPad, and CarPlay (new in 1.1, coming to the App Store soon) — by joining our [TestFlight Public Beta](https://testflight.apple.com/join/XgpBpWv8)
+   Get early access to new features, and try Blankie for iPhone and iPad with CarPlay (new in Blankie 2, coming to the App Store soon), by joining our [TestFlight Public Beta](https://testflight.apple.com/join/XgpBpWv8)
 
 ## Is Blankie free?
 
@@ -55,7 +55,7 @@ Even if you don't write code, Blankie being open source benefits you in several 
 
 - **Freedom:** The open source MIT license means Blankie is free to use without cost or restrictions, today and in the future. It also means you can make your own version of Blankie or reuse portions of its code in your own projects (as long as you follow the license terms).
 
-Blankie's complete source code, including both the macOS app and this entire website, is available on [GitHub](https://github.com/codybrom/blankie) for anyone to explore, use, or contribute to.
+Blankie's complete source code, including both the Blankie app and this entire website, is available on [GitHub](https://github.com/codybrom/blankie) for anyone to explore, use, or contribute to.
 
 ## Is Blankie available in my language?
 
@@ -112,13 +112,13 @@ Check out our [Contributing guide](/CONTRIBUTING.md) for more information on how
 
 Yes! Presets store active sounds and their volume levels. You can save and load different combinations as presets. If you don't have any presets saved, Blankie will load whatever sounds were active when you last closed the app.
 
-To save a preset, click the "Presets" dropdown in the titlebar, and then click "New Preset". When you create your first preset, Blankie will automatically copy your current sound settings to it. Any changes you make to an active preset's sounds or volumes are saved immediately. There's no need to manually save your changes.
+To create a preset, go to your library and tap the + icon and choose New Preset. Choose your favorite sounds, then give it a name and hit done.
 
-To rename or delete a preset, click the "Presets" dropdown in the titlebar, and then click either the pencil or trash icon next to the preset you want to edit.
+To rename or delete a preset, you can open the preset editor while you're listening to it or use the Edit option on the library list..
 
 ## Can I add my own sounds?
 
-Yes! As of Blankie 1.1 you can import your own audio files and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins.
+Yes! As of Blankie 2 you can import your own audio files and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins.
 
 ## What customization options are available?
 
@@ -142,12 +142,11 @@ Open Preferences through either:
 
 ## What is the difference between Blankie and Blanket?
 
-Blankie is a native app for Apple platforms inspired by Blanket, but it's completely separate and independently developed:
+Blankie is a native app for Apple platforms inspired by Blanket, we use some of the same openly licensed sounds but it's completely separate and independently developed:
 
-- Built for macOS, iPhone, iPad, and CarPlay using Swift and SwiftUI
-- Designed to feel native across Mac, iPhone, and iPad
-- Built with different sound mixing and playback technology
-- Independent codebase (though we use some of the same openly licensed sounds)
+- Native apps for Mac, iPhone and iPad written in Swift
+- Different sound mixing and playback technology
+- Different features and developers
 
 ## Does Blankie collect any data?
 

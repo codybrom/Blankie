@@ -3,10 +3,10 @@
   
 # Blankie
 
-  Ambient sound mixer for macOS, iPhone, iPad & CarPlay
+  Ambient sound mixer for Mac, iPad, iPhone and CarPlay
   
   <p align="center">
-    <img src="https://img.shields.io/badge/macOS%2015.6+-111111?style=flat&logo=apple&logoColor=white" alt="macOS">
+    <img src="https://img.shields.io/badge/macOS%2026+-111111?style=flat&logo=apple&logoColor=white" alt="macOS">
     <img src="https://img.shields.io/badge/iOS%2026+-111111?style=flat&logo=apple&logoColor=white" alt="iOS">
     <img src="https://img.shields.io/badge/Swift%205-F05138?style=flat&logo=Swift&logoColor=white" alt="Swift">
     <img src="https://img.shields.io/badge/SwiftUI-0071e3.svg?style=flat&logo=swift&logoColor=white" alt="SwiftUI">
@@ -26,13 +26,13 @@
 - 📖 [FAQ](FAQ.md)
 - 🤝 [Contributing](CONTRIBUTING.md)
 - 💻 [Development Setup](DEVELOPMENT.md)
-- 🚀 [Release Process](notes/RELEASE.md)
+- 🚀 [Release Process](RELEASE.md)
 - 📋 [Changelog](CHANGELOG.md)
 - 🌐 [Website](https://blankie.rest)
 
 ## About
 
-Blankie helps you focus, relax, and sleep better by creating perfect ambient soundscapes. Mix and match 14 high-quality sounds to create your ideal environment for work, study, or rest.
+Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 23 high-quality sounds to create your ideal environment for work, study, or rest.
 
 **Why choose Blankie?**
 
@@ -43,14 +43,14 @@ Blankie helps you focus, relax, and sleep better by creating perfect ambient sou
 
 ## Features
 
-- **Universal app** for macOS, iPhone, iPad and CarPlay
-- **14 high-quality ambient sounds** including rain, waves, fireplace, and more
+- **Universal app** for Mac, iPad, iPhone and CarPlay
+- **23 high-quality ambient sounds** including rain, waves, fireplace, and more
 - **Import your own sounds** with automatic loudness matching
 - **Mix multiple sounds** with individual volume controls
-- **Customizable presets** with accent color, artwork, and layout — plus favorites and `.blankie` import/export
+- **Customizable presets** with colors, artwork and layouts that you can export and share with friends
 - **Quick Mix and a sleep timer** for fast, focused listening
 - **Animated lock-screen artwork** on iPhone and iPad
-- **System integration** with media keys, Control Center, and CarPlay, plus automatic light/dark mode
+- **System integration** with media keys, Control Center, AirPods and CarPlay
 - **12 languages supported** with more added by the community all the time
 
 ## Installation
@@ -73,7 +73,7 @@ Download the latest notarized release from [GitHub Releases](https://github.com/
 
 ### Beta Testing
 
-Blankie for iPhone, iPad, and CarPlay is available now in [TestFlight](https://testflight.apple.com/join/XgpBpWv8) and coming very soon to the App Store.
+Blankie for iPad and iPhone (with CarPlay) is testing now on [TestFlight](https://testflight.apple.com/join/XgpBpWv8) and coming very soon to the App Store.
 
 ## Development
 
