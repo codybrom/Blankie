@@ -449,7 +449,9 @@ import UniformTypeIdentifiers
           complete.append(fileName)
         }
         audioManager.defaultSoundOrder = complete
-        UserDefaults.standard.set(complete, forKey: "defaultSoundOrder")
+        // Must match the suite the order is read back from at launch
+        // (UserDefaults.shared / app group); .standard silently reverts.
+        UserDefaults.shared.set(complete, forKey: "defaultSoundOrder")
         audioManager.objectWillChange.send()
       }
     }

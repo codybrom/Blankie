@@ -252,7 +252,9 @@ import os
 
         // Update the default order
         audioManager.defaultSoundOrder = completeOrder
-        UserDefaults.standard.set(completeOrder, forKey: "defaultSoundOrder")
+        // Must match the suite the order is read back from at launch
+        // (UserDefaults.shared / app group); .standard silently reverts.
+        UserDefaults.shared.set(completeOrder, forKey: "defaultSoundOrder")
         audioManager.objectWillChange.send()
 
         // Force UI refresh
