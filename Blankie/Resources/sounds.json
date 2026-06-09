@@ -330,6 +330,157 @@
       "systemIconName": "waveform.mid",
       "title": "Green Noise",
       "truePeakdBTP": -16.56
+    },
+    {
+      "author": "ChristmasKrumble666",
+      "authorUrl": "https://freesound.org/people/ChristmasKrumble666/",
+      "defaultOrder": 16,
+      "description": "Drone and collage of ambient sounds layered with field recordings.",
+      "duration": 157.607596,
+      "fileName": "ambient-music",
+      "isMusic": true,
+      "license": "cc0",
+      "lufs": -19.467264,
+      "moods": [
+        "focus",
+        "relax"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 0.42011017,
+      "soundName": "Couple' Morning.wav",
+      "soundUrl": "https://freesound.org/s/742808/",
+      "systemIconName": "pianokeys.inverse",
+      "title": "Ambient Synth",
+      "truePeakdBTP": -4.27
+    },
+    {
+      "author": "yunclas",
+      "authorUrl": "https://freesound.org/people/yunclas/",
+      "defaultOrder": 17,
+      "description": "Acoustic guitar in open D tuning.",
+      "duration": 124.04102,
+      "fileName": "acoustic-guitar",
+      "isMusic": true,
+      "license": "cc0",
+      "lufs": -9.099611,
+      "moods": [
+        "focus",
+        "relax"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 0.12734462,
+      "soundName": "acoustic guitar in open D",
+      "soundUrl": "https://freesound.org/s/653928/",
+      "systemIconName": "guitars.fill",
+      "title": "Gentle Guitar",
+      "truePeakdBTP": 1.04
+    },
+    {
+      "author": "LilMati",
+      "authorUrl": "https://freesound.org/people/LilMati/",
+      "defaultOrder": 18,
+      "description": "Steady air conditioner fan hum.",
+      "duration": 65.63644,
+      "fileName": "fan",
+      "license": "cc0",
+      "lufs": -26.943624,
+      "moods": [
+        "sleep",
+        "focus"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 0.9935306,
+      "soundName": "Air Conditioner Fan Hum.wav",
+      "soundUrl": "https://freesound.org/s/515859/",
+      "systemIconName": "fan.desk",
+      "title": "Fan",
+      "truePeakdBTP": -11.98
+    },
+    {
+      "author": "Holizna",
+      "authorUrl": "https://freemusicarchive.org/music/holiznacc0/",
+      "defaultOrder": 19,
+      "description": "Lo-fi hip-hop beat from the album Lazy Summer Lofi.",
+      "duration": 120.00102,
+      "fileName": "lofi-beats",
+      "isMusic": true,
+      "license": "cc0",
+      "lufs": -16.672398,
+      "moods": [
+        "focus",
+        "relax"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 0.30452284,
+      "soundName": "Laundry On The Wire",
+      "soundUrl": "https://freemusicarchive.org/music/holiznacc0/lazy-summer-lofi-1/laundry-on-the-wiremp3/",
+      "systemIconName": "music.quarternote.3",
+      "title": "Lo-Fi Beats",
+      "truePeakdBTP": 0.15
+    },
+    {
+      "author": "sinewave1kHz",
+      "authorUrl": "https://freesound.org/people/sinewave1kHz/",
+      "defaultOrder": 20,
+      "description": "Strong wind moving through pine branches.",
+      "duration": 51.935782,
+      "fileName": "forest",
+      "license": "cc0",
+      "lufs": -34.196365,
+      "moods": [
+        "focus",
+        "relax"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 2.2899094,
+      "soundName": "Wind_pine.wav",
+      "soundUrl": "https://freesound.org/s/202989/",
+      "systemIconName": "tree.fill",
+      "title": "Forest",
+      "truePeakdBTP": -13.12
+    },
+    {
+      "author": "ikbenraar",
+      "authorUrl": "https://freesound.org/people/ikbenraar/",
+      "defaultOrder": 21,
+      "description": "The steady hum of an airplane cabin in flight.",
+      "duration": 54.840839,
+      "fileName": "airplane",
+      "license": "cc0",
+      "lufs": -30.26169,
+      "moods": [
+        "sleep",
+        "relax",
+        "focus"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 1.4557424,
+      "soundName": "Interior airplane.WAV",
+      "soundUrl": "https://freesound.org/s/133496/",
+      "systemIconName": "airplane",
+      "title": "Airplane",
+      "truePeakdBTP": -18.99
+    },
+    {
+      "author": "moviebuffgavin",
+      "authorUrl": "https://freesound.org/people/moviebuffgavin/",
+      "defaultOrder": 22,
+      "description": "The steady hum of a laundry room.",
+      "duration": 31.898912,
+      "fileName": "laundry-room",
+      "license": "cc0",
+      "lufs": -25.118107,
+      "moods": [
+        "sleep",
+        "focus"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 0.8052029,
+      "soundName": "Laundry Room Ambience.wav",
+      "soundUrl": "https://freesound.org/s/411914/",
+      "systemIconName": "washer.fill",
+      "title": "Laundry Room",
+      "truePeakdBTP": -4.14
     }
   ]
 }
