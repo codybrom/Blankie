@@ -71,6 +71,11 @@ class AudioManager: ObservableObject {
   var quickMixOriginalStates: [QuickMixState] = []
   var preQuickMixPreset: Preset?
 
+  /// Signature of the last selected-sound set published to Now Playing. Lets the
+  /// sound-change observer republish the system/CarPlay "Now Playing" sound list
+  /// only when the selection actually changes (not on every volume/state tick).
+  private var lastPublishedSelectionSignature: String?
+
   var modelContext: ModelContext?
   var nowPlayingManager: NowPlayingManager!
   @MainActor var isInitializing = true
@@ -159,6 +164,7 @@ extension AudioManager {
           Task { @MainActor in
             self.updateHasSelectedSounds()
             PresetManager.shared.updateCurrentPresetState()
+            self.refreshNowPlayingIfSelectionChanged()
           }
         }
         .store(in: &cancellables)
@@ -166,6 +172,19 @@ extension AudioManager {
 
     // Update initial state
     updateHasSelectedSounds()
+  }
+
+  /// Republishes Now Playing when the selected-sound set changes so the artist
+  /// line stays current as sounds toggle — not only on global play/pause. Quick
+  /// Mix and solo republish on their own paths, so they're skipped here.
+  @MainActor
+  private func refreshNowPlayingIfSelectionChanged() {
+    guard !isInitializing, !isQuickMix, soloModeSound == nil else { return }
+    let signature =
+      sounds.filter { $0.isSelected }.map(\.fileName).sorted().joined(separator: ",")
+    guard signature != lastPublishedSelectionSignature else { return }
+    lastPublishedSelectionSignature = signature
+    nowPlayingManager.republishCurrentPreset()
   }
 
   func updateHasSelectedSounds() {

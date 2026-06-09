@@ -171,6 +171,20 @@ final class NowPlayingManager {
         var effectivePreset = preset
         if effectivePreset != nil, effectivePreset?.animatedArtwork == nil {
           effectivePreset?.animatedArtwork = GlobalSettings.shared.defaultLockScreenArtwork
+        } else if effectivePreset == nil, AudioManager.shared.isQuickMix,
+          let defaultArtwork = GlobalSettings.shared.defaultLockScreenArtwork
+        {
+          // Quick Mix has no preset of its own, so it never reaches the
+          // fallback above. Give it the app-wide default lock screen animation
+          // via a throwaway preset that only carries the artwork.
+          effectivePreset = Preset(
+            id: UUID(),
+            name: "Quick Mix",
+            soundStates: [],
+            isDefault: false,
+            createdVersion: nil,
+            animatedArtwork: defaultArtwork
+          )
         }
         // CRITICAL: Load static artwork synchronously to avoid double-publishing
         // If we load async, the artwork loads after we publish, triggering a second update that restarts animated artwork
