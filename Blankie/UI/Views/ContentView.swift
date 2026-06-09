@@ -172,10 +172,10 @@ import UniformTypeIdentifiers
                   .fill((playButtonDisabled ? Color.gray : activeAccent).opacity(0.2))
                   .frame(width: 50, height: 50)
 
+                // Render as a font glyph, not .resizable, so the SF Symbol keeps
+                // its built-in optical centering (matches the grid/list).
                 Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 20, height: 20)
+                  .font(.system(size: 20))
                   .foregroundColor(playButtonDisabled ? .secondary : activeAccent)
                   .offset(x: audioManager.isGloballyPlaying ? 0 : 2)
               }
@@ -208,9 +208,7 @@ import UniformTypeIdentifiers
               // setups — same idea as Music/Spotify's in-app volume).
               HStack(spacing: 8) {
                 Image(systemName: "speaker.wave.2.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 16, height: 16)
+                  .font(.system(size: 16))
                   .foregroundColor(.secondary)
                   .accessibilityHidden(true)
 
@@ -240,9 +238,7 @@ import UniformTypeIdentifiers
                 showingColorPicker.toggle()
               }) {
                 Image(systemName: "paintpalette.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 20, height: 20)
+                  .font(.system(size: 20))
                   .foregroundColor(.primary)
               }
               .buttonStyle(.borderless)
@@ -500,9 +496,7 @@ import UniformTypeIdentifiers
         showingPopover.toggle()
       }) {
         Image(systemName: "timer")
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: 20, height: 20)
+          .font(.system(size: 20))
           .foregroundColor(timerManager.isTimerActive ? activeAccent : .primary)
       }
       .buttonStyle(.borderless)

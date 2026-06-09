@@ -168,6 +168,9 @@ import os
       }
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
+      // The Now Playing mini player floats over the bottom edge and its
+      // safe-area-bar inset doesn't reach this nested List
+      .contentMargins(.bottom, 72, for: .scrollContent)
       .transition(.opacity)
       .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
     }

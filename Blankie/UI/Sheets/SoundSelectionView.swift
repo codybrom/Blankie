@@ -77,7 +77,7 @@ struct SoundSelectionView: View {
       .frame(minWidth: 380, minHeight: 440)
       .navigationTitle("Sounds")
       .toolbar {
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItem(placement: .automatic) {
           Button("Clear All") { handleClearAll() }
             .disabled(selectedSounds.isEmpty)
             .tint(Color.primary)

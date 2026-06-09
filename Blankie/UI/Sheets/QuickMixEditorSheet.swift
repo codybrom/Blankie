@@ -14,12 +14,6 @@ import SwiftUI
     @ObservedObject private var audioManager = AudioManager.shared
     @State private var selectedSounds: [String] = []
 
-    private var orderedSounds: [Sound] {
-      selectedSounds.compactMap { fileName in
-        audioManager.sounds.first { $0.fileName == fileName && !$0.isPresetUseOnly }
-      }
-    }
-
     var body: some View {
       NavigationStack {
         List {
@@ -93,7 +87,12 @@ import SwiftUI
         }
       }
       .onAppear {
-        selectedSounds = globalSettings.quickMixSoundFileNames
+        // Drop any stale entries that can no longer stand alone (preset-only or
+        // since-removed sounds), so the order list, the count, and what Done
+        // saves all stay consistent with what's actually selectable.
+        selectedSounds = globalSettings.quickMixSoundFileNames.filter { fileName in
+          audioManager.sounds.contains { $0.fileName == fileName && !$0.isPresetUseOnly }
+        }
       }
       // Quick Mix has no preset, so use the app accent. Tinting the whole sheet
       // keeps the accent-colored sound icons stable across interactions.

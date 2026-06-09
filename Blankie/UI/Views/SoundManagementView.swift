@@ -40,7 +40,7 @@ struct SoundManagementView: View {
         .navigationBarTitleDisplayMode(.inline)
       #endif
       .toolbar {
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItem(placement: .automatic) {
           Button {
             showingFilePicker = true
           } label: {
