@@ -297,8 +297,10 @@ class SoundCustomizationManager: ObservableObject {
 
     do {
       let customizationArray = try JSONDecoder().decode([SoundCustomization].self, from: data)
+      // uniquingKeysWith (not uniqueKeysWithValues) so a duplicate fileName in
+      // the persisted array can't trap at launch - last entry wins.
       customizations = Dictionary(
-        uniqueKeysWithValues: customizationArray.map { ($0.fileName, $0) })
+        customizationArray.map { ($0.fileName, $0) }, uniquingKeysWith: { $1 })
       Logger.sounds.debug(
         "SoundCustomizationManager: Loaded \(self.customizations.count) customizations")
     } catch {

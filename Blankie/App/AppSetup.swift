@@ -89,7 +89,24 @@ struct AppSetup {
       Logger.app.debug("AppSetup: Successfully created SwiftData model container")
       return container
     } catch {
-      fatalError("AppSetup: Failed to create SwiftData model container: \(error)")
+      // A corrupt store or a failed lightweight migration must not crash-loop
+      // the app. Presets and settings live in UserDefaults and are unaffected,
+      // so degrade to an in-memory container (built-in sounds only this
+      // session) instead of taking the whole launch down.
+      Logger.app.error(
+        "AppSetup: Failed to open SwiftData store, falling back to in-memory (custom sounds unavailable this session): \(error.localizedDescription, privacy: .public)"
+      )
+      do {
+        let fallbackConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+        return try ModelContainer(
+          for: CustomSoundData.self, PresetArtwork.self,
+          configurations: fallbackConfiguration
+        )
+      } catch {
+        // An in-memory container has no external dependencies; if even this
+        // fails the runtime itself is broken and there is nothing to recover.
+        fatalError("AppSetup: Failed to create in-memory SwiftData container: \(error)")
+      }
     }
   }
 

@@ -290,7 +290,7 @@ enum AppDataMigrator {
       "timerLastSelectedMinutes",
 
       // SoundCustomization keys
-      "SoundCustomizations",
+      "soundCustomizations",
 
       // Preset storage keys (from PresetStorage.swift)
       "defaultPreset",
