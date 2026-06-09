@@ -439,7 +439,24 @@ import SwiftUI
         .formatted(date: .omitted, time: .shortened)
     }
 
+    // Volume controls. While mixing with other audio the iOS hardware slider
+    // would move every app's level together, so it can't isolate Blankie. In
+    // that mode we swap in a slider bound to volumeWithOtherAudio — Blankie's
+    // level over the other media — and label it so the change is obvious.
+    @ViewBuilder
     private var volumeSlider: some View {
+      #if os(iOS) || os(visionOS)
+        if globalSettings.mixWithOthers {
+          blankieVolumeRow
+        } else {
+          systemVolumeRow
+        }
+      #else
+        systemVolumeRow
+      #endif
+    }
+
+    private var systemVolumeRow: some View {
       HStack(spacing: 15) {
         Image(systemName: "speaker.fill")
           .foregroundColor(.gray)
@@ -477,6 +494,47 @@ import SwiftUI
       }
       .padding(.horizontal, 32)
     }
+
+    #if os(iOS) || os(visionOS)
+      /// Mixing mode: the slider controls Blankie's own level over the other
+      /// audio (volumeWithOtherAudio), tinted with the accent and headed
+      /// "Blankie Volume" so it's clearly not the device volume.
+      private var blankieVolumeRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Blankie Volume with Other Apps")
+            .font(.caption.weight(.semibold))
+            .foregroundColor(.white.opacity(0.7))
+            .accessibilityHidden(true)
+
+          HStack(spacing: 15) {
+            Image(systemName: "speaker.fill")
+              .foregroundColor(.gray)
+              .font(.caption)
+              .accessibilityHidden(true)
+
+            Slider(
+              value: Binding(
+                get: { globalSettings.volumeWithOtherAudio },
+                set: { globalSettings.setVolumeWithOtherAudio($0) }
+              ),
+              in: 0...1
+            )
+            .tint(accentColor)
+            .accessibilityLabel(Text("Blankie Volume with Other Apps"))
+            .accessibilityValue(
+              Text(
+                globalSettings.volumeWithOtherAudio.formatted(
+                  .percent.precision(.fractionLength(0)))))
+
+            Image(systemName: "speaker.wave.3.fill")
+              .foregroundColor(.gray)
+              .font(.caption)
+              .accessibilityHidden(true)
+          }
+        }
+        .padding(.horizontal, 32)
+      }
+    #endif
 
     // MARK: - Helper Properties
 
