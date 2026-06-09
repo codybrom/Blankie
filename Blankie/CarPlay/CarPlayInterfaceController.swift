@@ -26,6 +26,7 @@ import os
     private var quickMixTemplate: CPGridTemplate?
     private var soundsTemplate: CPListTemplate?
     var currentEditTemplate: CPListTemplate?
+    var currentTimerTemplate: CPListTemplate?
 
     // Public getter for interfaceController to allow access from methods
     var currentInterfaceController: CPInterfaceController? {
@@ -49,14 +50,22 @@ import os
       interfaceController = controller
       isConnected = true
 
-      // Initialize app and setup interface
+      // Observe Now Playing album-artist button taps (re-register defensively in
+      // case of a reconnect on the shared template).
+      CPNowPlayingTemplate.shared.remove(self)
+      CPNowPlayingTemplate.shared.add(self)
+
+      // Set the tab bar root synchronously — built-ins/presets are loaded at app
+      // launch, so awaiting the slower custom-sound load here just delayed the UI.
+      Logger.carPlay.debug("CarPlay: Setting up interface...")
+      setupTabBarInterface()
+
+      // Finish the heavier initialization (custom sounds) in the background, then
+      // refresh templates so custom sounds and any late state appear.
       Task { @MainActor in
-        Logger.carPlay.debug("CarPlay: Starting app initialization...")
-
+        Logger.carPlay.debug("CarPlay: Starting background app initialization...")
         await initializeCarPlayApp()
-
-        Logger.carPlay.debug("CarPlay: Setting up interface...")
-        setupTabBarInterface()
+        updateAllTemplates()
       }
 
       NotificationCenter.default.post(
@@ -68,6 +77,8 @@ import os
 
     @MainActor
     func disconnect() {
+      CPNowPlayingTemplate.shared.remove(self)
+      currentTimerTemplate = nil
       interfaceController = nil
       isConnected = false
 
@@ -265,6 +276,21 @@ import os
           }
         }
         .store(in: &cancellables)
+
+      // Swap the Now Playing timer glyph (and refresh the picker, if open) when a
+      // sleep timer starts, is canceled, or expires — from CarPlay or the phone.
+      TimerManager.shared.$isTimerActive
+        .removeDuplicates()
+        .sink { [weak self] _ in
+          Task { @MainActor in
+            guard let self else { return }
+            self.updateNowPlayingButtons()
+            if let timerTemplate = self.currentTimerTemplate {
+              TimerOptionsTemplate.updateTemplate(timerTemplate)
+            }
+          }
+        }
+        .store(in: &cancellables)
     }
 
     private func observePresetManagerChanges() {
@@ -309,7 +335,11 @@ import os
     }
 
     func nowPlayingTemplateAlbumArtistButtonTapped(_: CPNowPlayingTemplate) {
-      // Not used - we're using custom buttons instead
+      // The album line surfaces the running sleep timer ("N Minute Timer");
+      // tapping it opens the timer picker to set, restart, or cancel.
+      Task { @MainActor in
+        showTimerOptions()
+      }
     }
   }
 

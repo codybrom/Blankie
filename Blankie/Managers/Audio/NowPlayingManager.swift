@@ -58,6 +58,17 @@ final class NowPlayingManager {
       }
       .store(in: &cancellables)
 
+    // Refresh the album line when a sleep timer starts or ends so the
+    // "N Minute Timer" label appears/disappears (incremental update, no artwork
+    // restart). Republishing on every progress tick would be wasteful.
+    TimerManager.shared.$isTimerActive
+      .removeDuplicates()
+      .receive(on: RunLoop.main)
+      .sink { [weak self] _ in
+        self?.republishCurrentPreset()
+      }
+      .store(in: &cancellables)
+
     #if os(iOS)
       NotificationCenter.default.addObserver(
         self,
@@ -231,6 +242,23 @@ final class NowPlayingManager {
     } else {
       updatePresetModeInfo(creatorName: creatorName)
     }
+    // A running timer takes over the album line ("20 Minute Timer") so it shows
+    // on the lock screen / CarPlay regardless of mode, replacing the sounds list.
+    if TimerManager.shared.isTimerActive {
+      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = timerAlbumLabel()
+    }
+  }
+
+  /// "20 Minute Timer" / "1 Hour Timer" / "1 Hour 30 Minute Timer" from the
+  /// timer's total duration (adjectival singular, matching the in-app phrasing).
+  private func timerAlbumLabel() -> String {
+    let total = Int(TimerManager.shared.selectedDuration.rounded())
+    let hours = total / 3600
+    let minutes = (total % 3600) / 60
+    var parts: [String] = []
+    if hours > 0 { parts.append("\(hours) Hour") }
+    if minutes > 0 { parts.append("\(minutes) Minute") }
+    return parts.isEmpty ? "Timer" : parts.joined(separator: " ") + " Timer"
   }
 
   private func updateSoloModeInfo(soloSound: Sound) {
@@ -445,7 +473,12 @@ final class NowPlayingManager {
     let isFirst = lastObservedElapsed < 0
     let wrapped = elapsed < lastObservedElapsed - 0.5  // sound loop restarted
     let durationChanged = abs(duration - lastObservedDuration) > 0.5
-    guard isFirst || wrapped || durationChanged else { return }
+    // A timer never wraps and has constant duration, so it'd anchor once and rely
+    // on extrapolation — which CarPlay does unreliably, stalling the bar. Re-anchor
+    // each whole second (timing-only, in-place publish; artwork untouched).
+    let timerAdvanced =
+      TimerManager.shared.isTimerActive && floor(elapsed) > floor(lastObservedElapsed)
+    guard isFirst || wrapped || durationChanged || timerAdvanced else { return }
 
     updateProgress(currentTime: elapsed, duration: duration)
   }
