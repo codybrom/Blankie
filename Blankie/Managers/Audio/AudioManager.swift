@@ -92,6 +92,10 @@ class AudioManager: ObservableObject {
   var customSoundObserver: AnyCancellable?
   #if os(iOS) || os(visionOS)
     var audioSessionObserversSetup = false
+    /// Whether playback was active when an audio-session interruption began, so
+    /// the `.shouldResume` hint only resumes audio the user had actually going —
+    /// a call arriving while paused must not start the app playing on its own.
+    var wasPlayingWhenInterrupted = false
   #endif
 
   private init() {

@@ -162,6 +162,10 @@ extension AudioManager {
 
     private func handleInterruptionBegan() {
       Logger.audio.debug("AudioManager: Audio interruption began - pausing playback")
+      // Remember whether we were actually playing; Blankie keeps its session
+      // active while paused, so the interruption can end with .shouldResume even
+      // though the user had nothing going.
+      wasPlayingWhenInterrupted = isGloballyPlaying
       if isGloballyPlaying {
         Task { @MainActor in
           // Update Now Playing info to show paused state with current position
@@ -184,14 +188,19 @@ extension AudioManager {
     private func handleInterruptionEnded(userInfo: [AnyHashable: Any]) {
       if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-        if options.contains(.shouldResume) {
+        // Only resume if the system recommends it AND we were actually playing
+        // when the interruption began — .shouldResume alone is just a hint, and
+        // a call arriving while paused must not start the app playing on its own.
+        if options.contains(.shouldResume), wasPlayingWhenInterrupted {
           Logger.audio.debug(
             "AudioManager: Audio interruption ended with shouldResume flag - resuming playback")
           Task { @MainActor in
             self.setGlobalPlaybackState(true)
           }
         } else {
-          Logger.audio.debug("AudioManager: Audio interruption ended without shouldResume flag")
+          Logger.audio.debug(
+            "AudioManager: Audio interruption ended; not resuming (shouldResume: \(options.contains(.shouldResume)), wasPlaying: \(self.wasPlayingWhenInterrupted))"
+          )
         }
       }
     }
