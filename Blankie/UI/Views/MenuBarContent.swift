@@ -310,11 +310,13 @@
     let isGloballyPlaying: Bool
     let showSoundNames: Bool
 
-    /// Toggle the sound, starting playback if the app was paused.
+    /// Toggle the sound, or — when paused and this sound is already selected —
+    /// resume playback instead of deselecting it (matching the grid tile).
     private func activate() {
-      sound.toggle()
-      if sound.isSelected && !AudioManager.shared.isGloballyPlaying {
+      if !AudioManager.shared.isGloballyPlaying && sound.isSelected {
         AudioManager.shared.setGlobalPlaybackState(true)
+      } else {
+        sound.toggle()
       }
     }
 
@@ -344,11 +346,17 @@
 
         VStack(alignment: .leading, spacing: 2) {
           if showSoundNames {
-            Text(LocalizedStringKey(sound.title))
-              .font(.callout)
-              // The slider carries the title for VoiceOver, so hide the visible
-              // copy to avoid a double announcement.
-              .accessibilityHidden(true)
+            HStack(spacing: 4) {
+              Text(LocalizedStringKey(sound.title))
+                .font(.callout)
+              if sound.isMusic {
+                MusicTagBadge(
+                  isActive: sound.isSelected && isGloballyPlaying, accentColor: accent)
+              }
+            }
+            // The slider carries the title for VoiceOver, so hide the visible
+            // copy to avoid a double announcement.
+            .accessibilityHidden(true)
           }
           Slider(
             value: Binding(

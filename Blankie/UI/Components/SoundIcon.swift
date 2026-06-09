@@ -253,15 +253,23 @@ struct SoundIcon: View {
       #endif
 
       if globalSettings.showSoundNames {
-        Text(LocalizedStringKey(sound.title))
-          .font(titleFont)
-          .lineLimit(2)
-          .multilineTextAlignment(.center)
-          .frame(maxWidth: maxWidth - 20, minHeight: 32)  // Consistent padding and height for all sizes
-          .foregroundColor(.primary)
-          .contentShape(Rectangle())
-          // Hide so VoiceOver only reads once
-          .accessibilityHidden(true)
+        HStack(spacing: 4) {
+          Text(LocalizedStringKey(sound.title))
+            .font(titleFont)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .foregroundColor(.primary)
+
+          if sound.isMusic {
+            MusicTagBadge(
+              isActive: sound.isSelected && audioManager.isGloballyPlaying,
+              accentColor: accentColor)
+          }
+        }
+        .frame(maxWidth: maxWidth - 20, minHeight: 32)  // Consistent padding and height for all sizes
+        .contentShape(Rectangle())
+        // Hide so VoiceOver only reads once
+        .accessibilityHidden(true)
       }
     }
   }
