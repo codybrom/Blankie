@@ -17,8 +17,20 @@ struct ArchiveUtility {
 
     let archive = try Archive(url: archiveURL, accessMode: .read)
 
+    // .blankie archives are untrusted shared input. Resolve each entry path and
+    // confirm it stays inside the extraction directory so a crafted entry like
+    // "../../foo" can't write outside it (zip-slip).
+    let root = destinationURL.standardizedFileURL
+    let rootPrefix = root.path.hasSuffix("/") ? root.path : root.path + "/"
+
     for entry in archive {
-      let path = destinationURL.appendingPathComponent(entry.path)
+      let path = destinationURL.appendingPathComponent(entry.path).standardizedFileURL
+      guard path.path.hasPrefix(rootPrefix) else {
+        Logger.app.error(
+          "ArchiveUtility: Skipping archive entry escaping destination: \(entry.path, privacy: .public)"
+        )
+        continue
+      }
       if entry.type == .directory {
         try FileManager.default.createDirectory(at: path, withIntermediateDirectories: true)
       } else {

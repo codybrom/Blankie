@@ -353,8 +353,10 @@ extension PresetImporter {
         }
       }
 
-      // Import new sound
-      let soundFileURL = soundsDir.appendingPathComponent(soundMetadata.fileName)
+      // Import new sound. Reduce the manifest-supplied fileName to its final
+      // component so a crafted "../.." path can't read a file outside soundsDir.
+      let safeFileName = (soundMetadata.fileName as NSString).lastPathComponent
+      let soundFileURL = soundsDir.appendingPathComponent(safeFileName)
       let importedId = try await importNewSound(
         soundMetadata, soundFileURL, preset, &importedCount, customizations: customizations
       )
@@ -766,7 +768,12 @@ extension PresetImporter {
       staticArtworkPath: preset.staticArtworkPath,
       order: preset.order,
       isImported: true,  // Mark as imported
-      originalId: preset.id  // Store the original ID for duplicate detection
+      originalId: preset.id,  // Store the original ID for duplicate detection
+      // Carry the theme through import so shared presets keep their look.
+      moods: preset.moods,
+      accentColorName: preset.accentColorName,
+      viewMode: preset.viewMode,
+      backgroundBlurRadius: preset.backgroundBlurRadius
     )
 
     return newPreset

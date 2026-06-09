@@ -27,12 +27,13 @@ enum AnimatedArtworkFileStore {
   }
 
   static func absoluteURL(for relativePath: String) -> URL {
-    let trimmed =
-      relativePath.hasPrefix("\(directoryName)/")
-      ? String(relativePath.dropFirst(directoryName.count + 1))
-      : relativePath
+    // Artwork is always a flat file inside the Artwork directory. Reduce any
+    // incoming path to its final component so a traversal path decoded from an
+    // imported (untrusted) preset — e.g. "../../Documents/foo" — can't point a
+    // copy/remove/exists outside the directory.
+    let fileName = (relativePath as NSString).lastPathComponent
     return documentsDirectoryURL().appendingPathComponent(directoryName).appendingPathComponent(
-      trimmed)
+      fileName)
   }
 
   static func removeItemIfExists(relativePath: String?) {
