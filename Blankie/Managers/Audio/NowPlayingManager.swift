@@ -269,10 +269,17 @@ final class NowPlayingManager {
     let total = Int(TimerManager.shared.selectedDuration.rounded())
     let hours = total / 3600
     let minutes = (total % 3600) / 60
-    var parts: [String] = []
-    if hours > 0 { parts.append("\(hours) Hour") }
-    if minutes > 0 { parts.append("\(minutes) Minute") }
-    return parts.isEmpty ? "Timer" : parts.joined(separator: " ") + " Timer"
+    // This shows on the lock screen of a multi-language app, so localize each
+    // shape (translators can reorder the placeholders / set plurals per locale).
+    if hours > 0, minutes > 0 {
+      return String(localized: "\(hours) Hour \(minutes) Minute Timer")
+    } else if hours > 0 {
+      return String(localized: "\(hours) Hour Timer")
+    } else if minutes > 0 {
+      return String(localized: "\(minutes) Minute Timer")
+    } else {
+      return String(localized: "Timer")
+    }
   }
 
   private func updateSoloModeInfo(soloSound: Sound) {

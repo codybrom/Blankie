@@ -495,7 +495,7 @@ import SwiftUI
       /// "Blankie Volume" so it's clearly not the device volume.
       private var blankieVolumeRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-          Text("Blankie Volume with Other Apps")
+          Text("Blankie Volume with Media")
             .font(.caption.weight(.semibold))
             .foregroundColor(.white.opacity(0.7))
             .accessibilityHidden(true)
@@ -514,7 +514,7 @@ import SwiftUI
               in: 0...1
             )
             .tint(accentColor)
-            .accessibilityLabel(Text("Blankie Volume with Other Apps"))
+            .accessibilityLabel(Text("Blankie Volume with Media"))
             .accessibilityValue(
               Text(
                 globalSettings.volumeWithOtherAudio.formatted(
