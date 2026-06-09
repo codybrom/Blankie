@@ -262,9 +262,7 @@ final class NowPlayingManager {
   }
 
   private func updateSoloModeInfo(soloSound: Sound) {
-    // Only add an album line when the artist line is a credited author;
-    // otherwise the artist already says "Blankie" and the album is redundant.
-    if soloSound.creditedAuthor != nil {
+    if soloSound.isCustom, soloSound.creditedAuthor != nil {
       nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie"
     } else {
       nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyAlbumTitle)

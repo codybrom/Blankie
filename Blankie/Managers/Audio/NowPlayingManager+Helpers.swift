@@ -16,13 +16,8 @@ extension NowPlayingManager {
   ) {
     // Check if we're in solo mode
     if let soloSound = AudioManager.shared.soloModeSound {
-      // Check if the sound has a creator/credited author
-      let artist: String
-      if let resolvedAuthor = soloSound.creditedAuthor {
-        artist = "Sound by \(resolvedAuthor)"
-      } else {
-        artist = "Blankie"
-      }
+      // Built-in sound authors are shown in the dedicated credits screens, but for user-added sounds show the creator name if available
+      let artist = (soloSound.isCustom ? soloSound.creditedAuthor : nil) ?? "Blankie"
       return (title: soloSound.title, artist: artist)
     } else if let name = presetName {
       // Handle special presets

@@ -517,7 +517,7 @@ import SwiftUI
               .foregroundColor(.white)
               .lineLimit(1)
 
-            if let author = soloSound.creditedAuthor {
+            if soloSound.isCustom, let author = soloSound.creditedAuthor {
               Text(author)
                 .font(.title3)
                 .foregroundColor(.white.opacity(0.7))
