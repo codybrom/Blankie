@@ -291,8 +291,6 @@ extension SoundSheet {
 
     switch result {
     case .success:
-      // Remove any customizations for this sound
-      SoundCustomizationManager.shared.removeCustomization(for: customSound.fileName)
 
       // Reload custom sounds in AudioManager
       AudioManager.shared.loadCustomSounds()

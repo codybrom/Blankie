@@ -295,6 +295,10 @@ class CustomSoundManager {
       return .failure(CustomSoundError.databaseError)
     }
 
+    // Capture identifiers before the object is deleted/invalidated.
+    let fileName = customSound.fileName
+    let fileExtension = customSound.fileExtension
+
     do {
       // Delete the file, plus any rendered spatial mono variants of it
       if let soundURL = getURLForCustomSound(customSound) {
@@ -306,6 +310,10 @@ class CustomSoundManager {
       modelContext.delete(customSound)
       try modelContext.save()
 
+      // Centralized cleanup so every delete path (sheet, Manage Sounds, grid
+      // swipe) leaves nothing behind for this sound.
+      cleanUpResidualState(fileName: fileName, fileExtension: fileExtension)
+
       // Notify audio manager
       NotificationCenter.default.post(name: .customSoundDeleted, object: nil)
 
@@ -314,6 +322,31 @@ class CustomSoundManager {
       Logger.sounds.error(
         "CustomSoundManager: Failed to delete custom sound: \(error, privacy: .public)")
       return .failure(error)
+    }
+  }
+
+  /// Removes every trace a deleted custom sound leaves behind beyond its file
+  /// and SwiftData row: its customization, playback profile, persisted per-sound
+  /// preferences, and any Quick Mix / solo-favorite references. Previously these were
+  /// cleaned (if at all) only on a deferred launch pass, so a deleted sound
+  /// could linger in Quick Mix or as a stale CarPlay favorite until next launch.
+  @MainActor
+  private func cleanUpResidualState(fileName: String, fileExtension: String) {
+    SoundCustomizationManager.shared.removeCustomization(for: fileName)
+    PlaybackProfileStore.shared.removeProfile(for: "\(fileName).\(fileExtension)")
+
+    UserDefaults.shared.removeObject(forKey: "\(fileName)_isSelected")
+    UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
+    UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
+
+    let settings = GlobalSettings.shared
+    if settings.quickMixSoundFileNames.contains(fileName) {
+      settings.setQuickMixSoundFileNames(
+        settings.quickMixSoundFileNames.filter { $0 != fileName })
+    }
+    let soloToken = "solo:\(fileName)"
+    if settings.isStarred(soloToken) {
+      settings.toggleStarred(soloToken)
     }
   }
 

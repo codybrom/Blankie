@@ -123,6 +123,14 @@ extension AudioManager {
           if notification.name == .customSoundAdded {
             self?.addNewSoundToCurrentPreset()
           }
+
+          // Scrub the just-deleted sound from every preset now (loadCustomSounds
+          // has already rebuilt `sounds` without it). The load's own cleanup is
+          // deferred 5s, so without this a delete-then-quit could leave a preset
+          // referencing a missing sound — which fails validation at next launch.
+          if notification.name == .customSoundDeleted {
+            PresetManager.shared.cleanupDeletedCustomSounds()
+          }
         }
       }
   }

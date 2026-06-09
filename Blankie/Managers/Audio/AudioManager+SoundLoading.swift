@@ -142,7 +142,15 @@ extension AudioManager {
     let allCustomSounds = CustomSoundManager.shared.getAllCustomSounds()
     let customSoundData = allCustomSounds.filter { ids.contains($0.id) }
 
-    // Remove any existing custom sounds with these IDs to avoid duplicates
+    // Remove any existing custom sounds with these IDs to avoid duplicates.
+    // Tear them down first (the same recipe as stopAndRemoveCustomSounds): a
+    // removed-but-still-playing instance is no longer in `sounds`, so nothing
+    // could ever stop it, and its player would stay retained in the engine.
+    for sound in sounds
+    where sound.isCustom && (sound.customSoundDataID.map { ids.contains($0) } ?? false) {
+      sound.unload()
+      sound.isSelected = false
+    }
     sounds.removeAll { sound in
       guard sound.isCustom, let customId = sound.customSoundDataID else { return false }
       return ids.contains(customId)
