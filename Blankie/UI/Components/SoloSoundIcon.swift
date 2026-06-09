@@ -50,10 +50,12 @@ struct SoloSoundIcon: View {
         .frame(width: iconSize, height: iconSize)
         .glassEffect(.clear.interactive(), in: .circle)
 
+      // Render as a font glyph, not .resizable: SF Symbols keep their built-in
+      // optical centering this way (matching the grid/list/menu icons). With
+      // .resizable, the raw vector bounds get scaled and some glyphs — e.g.
+      // washer.fill's drum + basket — sit visibly off-center in the large disc.
       Image(systemName: sound.systemIconName)
-        .resizable()
-        .aspectRatio(contentMode: .fit)
-        .frame(width: iconSize * 0.64, height: iconSize * 0.64)
+        .font(.system(size: iconSize * 0.58))
         .foregroundColor(iconColor)
 
       if shouldShowProgressBorder {

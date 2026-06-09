@@ -178,10 +178,12 @@ struct SoundIcon: View {
           }
         }
 
+        // Render as a font glyph, not .resizable: SF Symbols keep their built-in
+        // optical centering this way (matching the iOS grid/list). With
+        // .resizable, the raw vector bounds get scaled and some glyphs — e.g.
+        // washer.fill's drum + basket — sit visibly off-center in the tile.
         Image(systemName: sound.systemIconName)
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: configuration.iconSize * 0.64, height: configuration.iconSize * 0.64)
+          .font(.system(size: configuration.iconSize * 0.58))
           .foregroundColor(iconColor)
       }
       .frame(width: configuration.iconSize, height: configuration.iconSize)
