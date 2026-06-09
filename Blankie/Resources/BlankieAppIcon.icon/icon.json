@@ -1,6 +1,6 @@
 {
   "fill" : {
-    "automatic-gradient" : "display-p3:0.00295,0.01355,0.19128,1.00000"
+    "automatic-gradient" : "display-p3:0.00000,0.04011,0.12721,1.00000"
   },
   "groups" : [
     {
@@ -26,7 +26,7 @@
           "fill-specializations" : [
             {
               "appearance" : "dark",
-              "value" : "none"
+              "value" : "automatic"
             },
             {
               "appearance" : "tinted",
@@ -34,12 +34,13 @@
             }
           ],
           "glass" : true,
+          "hidden" : false,
           "image-name" : "Ellipse 3.svg",
           "name" : "Ellipse 3",
           "opacity-specializations" : [
             {
               "appearance" : "dark",
-              "value" : 0.5
+              "value" : 0.9
             },
             {
               "appearance" : "tinted",
@@ -89,16 +90,13 @@
           "fill-specializations" : [
             {
               "value" : {
-                "linear-gradient" : [
-                  "srgb:0.99942,0.98555,0.00000,1.00000",
-                  "srgb:0.99942,0.98555,0.00000,0.50000"
-                ]
+                "automatic-gradient" : "srgb:0.99216,0.65098,0.06275,1.00000"
               }
             },
             {
               "appearance" : "dark",
               "value" : {
-                "automatic-gradient" : "srgb:0.99942,0.98555,0.00000,1.00000"
+                "automatic-gradient" : "srgb:0.99216,0.65098,0.06275,1.00000"
               }
             },
             {
