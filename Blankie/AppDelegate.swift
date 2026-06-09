@@ -206,6 +206,28 @@ import os
 
         Logger.app.debug("IOSAppDelegate: Async app core initialization complete")
       }
+
+      // Vend scenes explicitly — manifest-only connection is unreliable for a
+      // SwiftUI `@main` app hosting a CarPlay scene. The CarPlay role gets its
+      // delegate; the window role keeps SwiftUI's "Default Configuration". Role
+      // matched by raw value to avoid importing CarPlay into this file.
+      func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+      ) -> UISceneConfiguration {
+        if connectingSceneSession.role.rawValue
+          == "CPTemplateApplicationSceneSessionRoleApplication"
+        {
+          Logger.app.debug("IOSAppDelegate: Vending CarPlay scene configuration")
+          let configuration = UISceneConfiguration(
+            name: "CarPlay", sessionRole: connectingSceneSession.role)
+          configuration.delegateClass = CarPlaySceneDelegate.self
+          return configuration
+        }
+        return UISceneConfiguration(
+          name: "Default Configuration", sessionRole: connectingSceneSession.role)
+      }
     #endif
 
     func applicationDidBecomeActive(_: UIApplication) {

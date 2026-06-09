@@ -104,7 +104,7 @@
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>
-			<false />
+			<true />
 			<key>UISceneConfigurations</key>
 			<dict>
 				<key>UIWindowSceneSessionRoleApplication</key>
@@ -131,6 +131,8 @@
 		<array>
 			<string>audio</string>
 		</array>
+		<key>UIUserInterfaceStyle</key>
+		<string>Dark</string>
 		<key>UILaunchScreen</key>
 		<dict />
 		<key>UISupportedExternalDisplays</key>
