@@ -177,6 +177,12 @@ extension PresetManager {
 
     cleanupAnimatedArtworkFiles(for: preset)
 
+    // Delete the preset's stored artwork rows too — cleanupAnimatedArtworkFiles
+    // only removes the on-disk .mov/preview files, leaving the full-resolution
+    // PresetArtwork image blobs to accumulate in SwiftData forever otherwise.
+    let deletedPresetID = preset.id
+    Task { try? await PresetArtworkManager.shared.deleteArtwork(for: deletedPresetID) }
+
     let wasCurrentPreset = (currentPreset?.id == preset.id)
 
     presets.removeAll { $0.id == preset.id }
@@ -875,13 +881,13 @@ extension PresetManager {
     let defaultPreset = presets.first { $0.isDefault }
     let customPresets = presets.filter { !$0.isDefault }
 
-    // Move file I/O to background queue to prevent UI blocking
-    Task.detached {
-      if let defaultPreset = defaultPreset {
-        PresetStorage.saveDefaultPreset(defaultPreset)
-      }
-      PresetStorage.saveCustomPresets(customPresets)
+    // Write synchronously on the main actor. Encoding a handful of presets into
+    // UserDefaults is cheap, and the previous Task.detached produced unordered
+    // writes where two rapid saves could land the older snapshot last.
+    if let defaultPreset = defaultPreset {
+      PresetStorage.saveDefaultPreset(defaultPreset)
     }
+    PresetStorage.saveCustomPresets(customPresets)
 
     // Cache thumbnails for quick access
     Task {

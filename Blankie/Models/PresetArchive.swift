@@ -43,7 +43,7 @@ struct ArchiveCompatibility: Codable {
   let requiredFeatures: [String]
 
   init() {
-    minimumBlankieVersion = "1.1.0"
+    minimumBlankieVersion = "2.0.0"
     requiredFeatures = []
   }
 
