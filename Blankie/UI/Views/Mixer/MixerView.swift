@@ -68,11 +68,16 @@ private enum IPhonePage: Hashable {
           iPhoneLayout
         }
       }
-      .fullScreenCover(isPresented: $showingNowPlaying) {
+      // A sheet (not a fullScreenCover) so the player has the system's
+      // grab-anywhere interactive pull-to-dismiss; the large detent keeps it
+      // full-height. The player draws its own drag handle, so hide the system one.
+      .sheet(isPresented: $showingNowPlaying) {
         NowPlayingSheet(
           onDismiss: { showingNowPlaying = false },
           backgroundImage: backgroundImage
         )
+        .presentationDetents([.large])
+        .presentationDragIndicator(.hidden)
         .navigationTransition(.zoom(sourceID: "nowPlaying", in: nowPlayingNamespace))
       }
       .sheet(item: $soundToEdit) { sound in

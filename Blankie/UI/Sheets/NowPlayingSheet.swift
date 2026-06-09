@@ -50,15 +50,6 @@ import SwiftUI
       }
     #endif
 
-    private var screenSize: CGSize {
-      #if os(iOS)
-        if let window = activeWindow {
-          return window.bounds.size
-        }
-      #endif
-      return CGSize(width: 393, height: 852)
-    }
-
     private var safeAreaInsets: EdgeInsets {
       #if os(iOS)
         if let window = activeWindow {
@@ -80,11 +71,13 @@ import SwiftUI
     }
 
     var body: some View {
-      ZStack {
-        // Full-bleed background: fills the whole cover including the top safe
-        // area (behind the Dynamic Island), so the open player reads as a true
-        // full-screen surface. Rounded top corners still show while the zoom
-        // transition is mid-flight.
+      // Size to the presenting sheet (not the window): a large-detent sheet is a
+      // touch shorter than the full window, so framing to the sheet keeps the
+      // bottom controls on screen instead of clipped.
+      GeometryReader { proxy in
+       ZStack {
+        // Background fills the whole sheet. Rounded top corners show while the
+        // zoom transition is mid-flight and behind the sheet's own rounding.
         Color.black
           .overlay {
             if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
@@ -123,10 +116,11 @@ import SwiftUI
 
         // Content stays within the top safe area so the drag handle and
         // everything below it sit clear of the Dynamic Island.
-        expandedPlayerView(screenSize)
-          .padding(.top, safeAreaInsets.top > 0 ? safeAreaInsets.top : 10)
+        expandedPlayerView(proxy.size)
+          .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 10)
+       }
+       .frame(width: proxy.size.width, height: proxy.size.height)
       }
-      .frame(width: screenSize.width, height: screenSize.height)
       .ignoresSafeArea()
       .sheet(isPresented: $showingTimer) {
         TimerSheetView()
