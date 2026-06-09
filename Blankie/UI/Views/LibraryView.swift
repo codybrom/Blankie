@@ -464,6 +464,11 @@ struct LibraryView: View {
   /// Page-only: the current preset's background artwork (loaded by the
   /// mixer), reused here so the Library shares Now Playing's backdrop.
   var backgroundImage: PlatformImage?
+  /// Page-only: measured height of the stack's Now Playing bar. The bar's
+  /// `safeAreaBar` doesn't inset this root list, so the list reserves this much
+  /// bottom margin to clear it — derived, not hardcoded, so it tracks Dynamic
+  /// Type and device safe areas.
+  var bottomBarHeight: CGFloat = 0
 
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
@@ -776,6 +781,10 @@ struct LibraryView: View {
         libraryList
           .scrollContentBackground(.hidden)
           .background { pageBackground }
+          // Reserve the measured Now Playing bar height (plus a little breathing
+          // room) so the last row clears it — the stack's safeAreaBar doesn't
+          // inset this root list.
+          .contentMargins(.bottom, bottomBarHeight + 8, for: .scrollContent)
           #if os(iOS) || os(visionOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
           #endif

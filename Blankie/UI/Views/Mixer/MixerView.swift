@@ -48,6 +48,9 @@ private enum IPhonePage: Hashable {
     @State var showingNowPlaying = false
     @State private var showingVolumeZeroWarning = false
     @State private var isLandscape = false
+    // Measured Now Playing bar height, used to inset the iPhone Library list
+    // under it (the stack's safeAreaBar doesn't reach that root list).
+    @State private var nowPlayingBarHeight: CGFloat = 0
     /// Anchors the zoom transition between the mini bar and the Now Playing cover.
     @Namespace private var nowPlayingNamespace
 
@@ -283,7 +286,8 @@ private enum IPhonePage: Hashable {
           presentation: .page,
           onOpenSettings: { showingSettings = true },
           onSelection: { iPhonePath = [.mixer] },
-          backgroundImage: backgroundImage
+          backgroundImage: backgroundImage,
+          bottomBarHeight: nowPlayingBarHeight
         )
         .navigationDestination(for: IPhonePage.self) { _ in
           mixerPage
@@ -302,6 +306,7 @@ private enum IPhonePage: Hashable {
       NowPlayingBar(expandPlayer: $showingNowPlaying)
         .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
         .padding(.horizontal, 16)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { nowPlayingBarHeight = $0 }
     }
 
     @ViewBuilder
