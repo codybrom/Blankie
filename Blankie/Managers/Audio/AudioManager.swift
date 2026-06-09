@@ -15,6 +15,10 @@ import os
 class AudioManager: ObservableObject {
   var cancellables = Set<AnyCancellable>()
   static let shared = AudioManager()
+  /// True only during `shared`'s synchronous init. A plain static (not an
+  /// instance flag) so the music-exclusivity didSet can read it without
+  /// re-entering the still-initializing `shared` lazy static and trapping.
+  nonisolated(unsafe) static var isBootstrapping = true
   var onReset: (() -> Void)?
 
   @Published var sounds: [Sound] = []
@@ -70,6 +74,10 @@ class AudioManager: ObservableObject {
   var modelContext: ModelContext?
   var nowPlayingManager: NowPlayingManager!
   @MainActor var isInitializing = true
+  /// True while a preset's sound states are being applied. Suppresses the
+  /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
+  /// otherwise fight the preset restoring its own selection set.
+  var isApplyingPresetStates = false
   /// Set once custom sounds have been loaded from SwiftData. Guards against a
   /// second full reload — on the CarPlay build both `IOSAppDelegate` and
   /// `AppSetup` call `loadCustomSoundsWhenReady()`, and re-running the load
@@ -89,6 +97,9 @@ class AudioManager: ObservableObject {
     loadSounds()
     Logger.audio.debug("AudioManager: About to loadSavedState()")
     loadSavedState()
+
+    // Synchronous init done; the music-exclusivity didSet may reach `shared` now.
+    Self.isBootstrapping = false
 
     // Delay media controls and notification setup to avoid triggering audio session
     Task { @MainActor in

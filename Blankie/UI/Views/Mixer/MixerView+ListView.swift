@@ -110,6 +110,12 @@ import os
               // The row already exposes the title as its accessibility label so we hide the visible copy to prevent VoiceOver reading it twice
               .accessibilityHidden(true)
 
+            if sound.isMusic {
+              MusicTagBadge(
+                isActive: sound.isSelected && audioManager.isGloballyPlaying,
+                accentColor: accentColor)
+            }
+
             Spacer()
 
             Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))

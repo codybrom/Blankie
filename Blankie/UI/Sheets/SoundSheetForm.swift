@@ -20,6 +20,7 @@ struct SoundSheetForm: View {
   @Binding var loopSound: Bool
   @Binding var fadeSound: Bool
   @Binding var isPresetUseOnly: Bool
+  @Binding var isMusic: Bool
   @Binding var addToPresetIDs: Set<UUID>
   @Binding var createMixPreset: Bool
   @Binding var isPreviewing: Bool
@@ -40,6 +41,14 @@ struct SoundSheetForm: View {
   #if os(macOS)
     @State var showingCreditsEditor = false
   #endif
+
+  /// The music tag is user-editable only for custom sounds. Built-ins take it
+  /// from sounds.json (`isMusicDefault`) and must not be overridable. `.add` is
+  /// always a new custom import, so its tag is editable.
+  var isCustomSound: Bool {
+    if case .edit(let sound) = mode { return sound.isCustom }
+    return true
+  }
 
   var body: some View {
     Form {

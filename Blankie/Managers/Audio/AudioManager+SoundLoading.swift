@@ -107,6 +107,7 @@ extension AudioManager {
       normalizationFactor: normalizationFactor,
       truePeakdBTP: cachedProfile?.truePeakdBTP ?? soundData.truePeakdBTP,
       needsLimiter: cachedProfile?.needsLimiter ?? soundData.needsLimiter ?? false,
+      isMusic: soundData.isMusic ?? false,
       duration: soundData.duration
     )
   }

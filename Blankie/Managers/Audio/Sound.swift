@@ -27,6 +27,9 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   @Published var normalizationFactor: Float?
   let truePeakdBTP: Float?
   let needsLimiter: Bool
+  /// Music tag default from sounds.json (false for custom sounds); the
+  /// `isMusic` customization overrides it.
+  let isMusicDefault: Bool
 
   // Properties for unified sound model
   let isCustom: Bool
@@ -62,6 +65,12 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     return (customization?.isPresetUseOnly ?? false) || !(customization?.loopSound ?? true)
   }
 
+  /// Tagged as music. A preset plays at most one music sound at a time (the
+  /// last one selected wins). Seeded from sounds.json, overridable per sound.
+  var isMusic: Bool {
+    SoundCustomizationManager.shared.getCustomization(for: fileName)?.isMusic ?? isMusicDefault
+  }
+
   @Published var isSelected = false {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
@@ -69,6 +78,15 @@ open class Sound: NSObject, ObservableObject, Identifiable {
       // If sound was just selected, start playing it immediately when playback becomes active
       // Only do this after AudioManager is fully initialized to avoid circular dependency
       if isSelected, oldValue == false {
+        // A preset holds at most one music sound; selecting one turns every
+        // other selected music sound off (radio-button, last selected wins).
+        // Synchronous so the outgoing sound fades as this one comes in. Skipped
+        // during init: state restore runs there and reaching `shared` would trap
+        // (saved state already honors the invariant, so the deselect is moot).
+        if isMusic, !AudioManager.isBootstrapping {
+          AudioManager.shared.deselectOtherMusicSounds(except: self)
+        }
+
         DispatchQueue.main.async { [weak self] in
           guard let self = self else { return }
 
@@ -255,6 +273,7 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     title: String, systemIconName: String, fileName: String, fileExtension: String = "mp3",
     defaultOrder _: Int = 0, lufs: Float? = nil, normalizationFactor: Float? = nil,
     truePeakdBTP: Float? = nil, needsLimiter: Bool = false,
+    isMusic: Bool = false,
     isCustom: Bool = false, fileURL: URL? = nil, dateAdded: Date? = nil,
     customSoundDataID: UUID? = nil, duration: TimeInterval? = nil
   ) {
@@ -266,6 +285,7 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     self.normalizationFactor = normalizationFactor
     self.truePeakdBTP = truePeakdBTP
     self.needsLimiter = needsLimiter
+    self.isMusicDefault = isMusic
     self.isCustom = isCustom
     self.fileURL = fileURL
     self.dateAdded = dateAdded

@@ -95,13 +95,19 @@ import SwiftUI
             iconView
 
             if globalSettings.showSoundNames {
-              Text(LocalizedStringKey(sound.title))
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundColor(.primary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .accessibilityHidden(true)
+              HStack(spacing: 4) {
+                Text(LocalizedStringKey(sound.title))
+                  .font(.subheadline)
+                  .fontWeight(.medium)
+                  .foregroundColor(.primary)
+                  .multilineTextAlignment(.center)
+                  .lineLimit(2)
+
+                if sound.isMusic {
+                  MusicTagBadge(isActive: isLit, accentColor: accentColor)
+                }
+              }
+              .accessibilityHidden(true)
             }
           }
           .frame(maxWidth: .infinity)

@@ -208,6 +208,21 @@ extension AudioManager {
     }
   }
 
+  // MARK: - Music Exclusivity
+
+  /// Enforces the one-music-per-preset rule: when `keep` is selected, every
+  /// other selected music sound is deselected (fades out) so the mix holds at
+  /// most one music sound at a time (last selected wins). Applies to Quick Mix
+  /// too. No-op during preset apply / solo, which manage selection themselves.
+  func deselectOtherMusicSounds(except keep: Sound) {
+    guard soloModeSound == nil, !isApplyingPresetStates else { return }
+    for sound in sounds where sound.id != keep.id && sound.isSelected && sound.isMusic {
+      Logger.audio.debug(
+        "AudioManager: Music '\(sound.fileName)' yields the slot to '\(keep.fileName)'")
+      sound.isSelected = false
+    }
+  }
+
   // MARK: - Update Playing Sounds
 
   func updatePlayingSounds() {

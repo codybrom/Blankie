@@ -118,6 +118,20 @@ extension SoundSheetForm {
       }
       .disabled(!loopSound)
 
+      // Music sounds are mutually exclusive: a preset plays at most one at a
+      // time, so starting another music sound stops this one. Built-ins take
+      // their music tag from sounds.json, so the toggle is shown but disabled
+      // for them — editable only on custom sounds.
+      Toggle(isOn: $isMusic) {
+        Text("Music")
+        if isCustomSound {
+          Text("Only one music sound plays at a time. Starting another stops this one.")
+        } else {
+          Text("Built-in sounds keep their music tag.")
+        }
+      }
+      .disabled(!isCustomSound)
+
       Toggle(isOn: $normalizeAudio) {
         Text("Sound Check")
         Text(

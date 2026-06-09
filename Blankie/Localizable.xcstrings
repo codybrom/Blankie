@@ -17931,6 +17931,17 @@
         }
       }
     },
+    "Music" : {
+      "comment" : "Label for the toggle that tags a sound as music (a preset plays only one music sound at a time).",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Music"
+          }
+        }
+      }
+    },
     "Name" : {
       "comment" : "Label for the field where the user enters a display name.",
       "localizations" : {
@@ -19969,6 +19980,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "仅在开启循环播放音效时适用。"
+          }
+        }
+      }
+    },
+    "Only one music sound plays at a time. Starting another stops this one." : {
+      "comment" : "Footer explaining the Music toggle.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only one music sound plays at a time. Starting another stops this one."
           }
         }
       }

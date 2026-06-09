@@ -19,6 +19,7 @@ struct SoundCustomization: Codable, Identifiable {
   var loopSound: Bool?  // nil = default (true), false = play once and deselect
   var fadeSound: Bool?  // nil = default (true), false = hard cut on play/pause
   var isPresetUseOnly: Bool?  // nil = default (false), true = hidden outside presets
+  var isMusic: Bool?  // nil = default (sound's JSON value), overrides the music tag
 
   // Audio normalization settings
   var normalizeAudio: Bool?
@@ -28,7 +29,7 @@ struct SoundCustomization: Codable, Identifiable {
     fileName: String, customTitle: String? = nil, customIconName: String? = nil,
     randomizeStartPosition: Bool? = nil,
     normalizeAudio: Bool? = nil, volumeAdjustment: Float? = nil, loopSound: Bool? = nil,
-    fadeSound: Bool? = nil, isPresetUseOnly: Bool? = nil
+    fadeSound: Bool? = nil, isPresetUseOnly: Bool? = nil, isMusic: Bool? = nil
   ) {
     self.id = UUID()
     self.fileName = fileName
@@ -40,6 +41,7 @@ struct SoundCustomization: Codable, Identifiable {
     self.loopSound = loopSound
     self.fadeSound = fadeSound
     self.isPresetUseOnly = isPresetUseOnly
+    self.isMusic = isMusic
   }
 
   /// Returns the effective title (custom or original)
@@ -56,7 +58,7 @@ struct SoundCustomization: Codable, Identifiable {
   var hasCustomizations: Bool {
     return customTitle != nil || customIconName != nil
       || randomizeStartPosition != nil || normalizeAudio != nil || volumeAdjustment != nil
-      || loopSound != nil || fadeSound != nil || isPresetUseOnly != nil
+      || loopSound != nil || fadeSound != nil || isPresetUseOnly != nil || isMusic != nil
   }
 }
 
@@ -189,6 +191,20 @@ class SoundCustomizationManager: ObservableObject {
   func setPresetUseOnly(_ presetOnly: Bool?, for fileName: String) {
     var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
     customization.isPresetUseOnly = presetOnly
+
+    if customization.hasCustomizations {
+      customizations[fileName] = customization
+    } else {
+      customizations.removeValue(forKey: fileName)
+    }
+
+    saveCustomizationsInternal()
+  }
+
+  /// Set music tag for a sound
+  func setMusic(_ music: Bool?, for fileName: String) {
+    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
+    customization.isMusic = music
 
     if customization.hasCustomizations {
       customizations[fileName] = customization

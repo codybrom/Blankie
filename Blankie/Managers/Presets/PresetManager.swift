@@ -669,6 +669,11 @@ extension PresetManager {
 
   @MainActor
   func applySoundStates(_ targetStates: [PresetState]) {
+    // Suppress music-exclusivity enforcement while the preset restores its own
+    // selection set; we sanitize once at the end instead.
+    AudioManager.shared.isApplyingPresetStates = true
+    defer { AudioManager.shared.isApplyingPresetStates = false }
+
     let presetSoundFileNames = Set(targetStates.map(\.fileName))
 
     // Leaving solo mode: a solo sound that's in the preset keeps playing
@@ -707,6 +712,19 @@ extension PresetManager {
           sound.isSelected = state.isSelected
           sound.volume = state.volume
         }
+      }
+    }
+
+    // Enforce one music sound for legacy/imported presets that may carry more
+    // than one selected music sound. Keep the last one in the preset's order.
+    let selectedMusic = AudioManager.shared.sounds.filter { $0.isSelected && $0.isMusic }
+    if selectedMusic.count > 1 {
+      let keep = targetStates.last { state in
+        selectedMusic.contains { $0.fileName == state.fileName }
+      }?.fileName
+      for sound in selectedMusic where sound.fileName != keep {
+        Logger.presets.debug("  - Dropping extra music '\(sound.fileName)' (one music per preset)")
+        sound.isSelected = false
       }
     }
 

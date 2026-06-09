@@ -20,6 +20,7 @@ struct SoundSheetMacOSLayout: View {
   @Binding var loopSound: Bool
   @Binding var fadeSound: Bool
   @Binding var isPresetUseOnly: Bool
+  @Binding var isMusic: Bool
   @Binding var addToPresetIDs: Set<UUID>
   @Binding var createMixPreset: Bool
   @Binding var isPreviewing: Bool
@@ -61,6 +62,7 @@ struct SoundSheetMacOSLayout: View {
         loopSound: $loopSound,
         fadeSound: $fadeSound,
         isPresetUseOnly: $isPresetUseOnly,
+        isMusic: $isMusic,
         addToPresetIDs: $addToPresetIDs,
         createMixPreset: $createMixPreset,
         isPreviewing: $isPreviewing,

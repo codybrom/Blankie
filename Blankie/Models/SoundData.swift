@@ -47,6 +47,7 @@ struct SoundData: Codable {
   let duration: TimeInterval?
   let truePeakdBTP: Float?
   let needsLimiter: Bool?
+  let isMusic: Bool?
 }
 
 struct SoundsContainer: Codable {

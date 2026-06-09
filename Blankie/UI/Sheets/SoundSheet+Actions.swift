@@ -66,6 +66,9 @@ extension SoundSheet {
         if isPresetUseOnly != false {
           manager.setPresetUseOnly(isPresetUseOnly, for: customSound.fileName)
         }
+        if isMusic != false {
+          manager.setMusic(isMusic, for: customSound.fileName)
+        }
 
         // Add the new sound to the chosen presets (and/or a fresh
         // "<Name> Mix") after AudioManager loads it.
@@ -107,10 +110,11 @@ extension SoundSheet {
     let hasCustomLoop = loopSound != true  // Default is true
     let hasCustomFade = fadeSound != true  // Default is true
     let hasCustomPresetOnly = isPresetUseOnly != false  // Default is false
+    let hasCustomMusic = isMusic != sound.isMusicDefault  // Default varies per sound
 
     return hasCustomName || hasCustomIcon || hasCustomRandomization
       || hasCustomNormalization || hasCustomVolume || hasCustomLoop || hasCustomFade
-      || hasCustomPresetOnly
+      || hasCustomPresetOnly || hasCustomMusic
   }
 
   private func applyCustomizations(_ sound: Sound) {
@@ -163,6 +167,16 @@ extension SoundSheet {
       isPresetUseOnly != false ? isPresetUseOnly : nil,
       for: sound.fileName
     )
+
+    // Music tag is user-editable only for custom sounds; built-ins keep their
+    // sounds.json default, so never write an override for them. (The default
+    // varies per sound, so diff against the sound's own default.)
+    if sound.isCustom {
+      manager.setMusic(
+        isMusic != sound.isMusicDefault ? isMusic : nil,
+        for: sound.fileName
+      )
+    }
 
     // Going preset-only (directly or via loop-off) hides the tile from the
     // default grid; if the sound is selected there it would keep playing with
