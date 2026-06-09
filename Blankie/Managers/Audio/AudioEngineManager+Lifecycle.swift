@@ -57,8 +57,13 @@ extension AudioEngineManager {
     // here would resurrect them at full volume with nothing left to stop
     // them (Quick Mix exit racing a CarPlay detach did exactly that).
     var resumeFrames: [ObjectIdentifier: AVAudioFramePosition] = [:]
+    var frozenFrames: [ObjectIdentifier: AVAudioFramePosition] = [:]
     for (key, player) in registered {
       player.freeze()
+      // Capture every player's position, not just the ones we'll resume: stop()
+      // below clears it, and a paused (or globally-paused) sound must still
+      // continue from here when the user next presses play, not from frame 0.
+      frozenFrames[key] = player.currentFrame
       if player.isPlaying, !player.isFadingToSilence {
         resumeFrames[key] = player.currentFrame
       }
@@ -77,10 +82,22 @@ extension AudioEngineManager {
       for (key, player) in registered {
         guard let frame = resumeFrames[key] else { continue }
         player.play(fromFrame: frame)
+        // A player caught mid-fade-in keeps its partial fadeLevel across the
+        // rebuild; without this it resumes stuck at reduced (maybe near-zero)
+        // volume. Snap to full — updateVolume() below reads fadeLevel.
+        player.setFadeLevel(1)
       }
       // Reapply per-sound volumes (no-ops for sounds without a live player).
       for sound in AudioManager.shared.sounds {
         sound.updateVolume()
+      }
+    }
+
+    // Restore position for players we didn't resume (paused, or app globally
+    // paused) so a later play continues where they left off.
+    for (key, player) in registered where resumeFrames[key] == nil {
+      if let frame = frozenFrames[key] {
+        player.seek(toFrame: frame)
       }
     }
 
