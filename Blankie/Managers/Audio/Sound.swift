@@ -514,7 +514,11 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     if AudioManager.shared.soloModeSound?.id == id {
       Logger.sounds.debug(
         "Sound: Non-looping sound in solo mode finished, pausing global playback")
-      // Reset the sound position for next play; stay in solo mode but pause.
+      // A node that ran out of audio still reports isPlaying == true (it was
+      // never stopped), so resetSoundPosition()'s !isPlaying guard would no-op
+      // and strand the play head at the end — the next play finishes in one
+      // frame and the button looks dead. Stop first so the rewind takes.
+      player?.stop()
       resetSoundPosition()
       Task { @MainActor in
         AudioManager.shared.setGlobalPlaybackState(false)

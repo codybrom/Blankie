@@ -178,11 +178,20 @@ extension AudioManager {
       "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
     )
 
+    // There is nothing to play with no selected sounds (and no solo), so coerce
+    // any such request to paused. In-app buttons already gate on this; remote
+    // commands (lock screen / Control Center / CarPlay) did not, which let the
+    // app advertise rate 1.0 over silence and read as "playing" with no sound.
+    let shouldPlay = playing && (soloModeSound != nil || hasSelectedSounds)
+    if playing && !shouldPlay {
+      Logger.audio.debug("AudioManager: Ignoring play request with no selected sounds")
+    }
+
     // Update state first
-    isGloballyPlaying = playing
+    isGloballyPlaying = shouldPlay
 
     // Then handle playback
-    if playing {
+    if shouldPlay {
       playSelected()
     } else {
       pauseAll()

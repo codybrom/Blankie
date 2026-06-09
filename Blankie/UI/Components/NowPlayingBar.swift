@@ -162,14 +162,18 @@ import SwiftUI
     }
 
     private var playPauseButton: some View {
-      Button {
-        guard audioManager.hasSelectedSounds else { return }
+      // Pause must always be reachable: enable whenever the app is playing OR
+      // has sounds to start, matching every other surface's convention so the
+      // bar can never get stuck in a "playing" state with no way to pause.
+      let isInteractive = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
+      return Button {
+        guard isInteractive else { return }
         playPauseTrigger += 1
         audioManager.togglePlayback()
       } label: {
         Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
           .font(.system(size: 26))
-          .foregroundColor(audioManager.hasSelectedSounds ? accentColor : .secondary)
+          .foregroundColor(isInteractive ? accentColor : .secondary)
           .contentTransition(
             .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating)
           )
@@ -178,7 +182,7 @@ import SwiftUI
           .contentShape(Circle())
       }
       .buttonStyle(.plain)
-      .disabled(!audioManager.hasSelectedSounds)
+      .disabled(!isInteractive)
       .sensoryFeedback(.selection, trigger: playPauseTrigger)
       .accessibilityLabel(audioManager.isGloballyPlaying ? Text("Pause") : Text("Play"))
       .modifier(NowPlayingCircleGlass())
