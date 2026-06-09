@@ -42,8 +42,13 @@ import os
 
       var sections: [CPListSection] = []
 
-      // Get all sounds and sort alphabetically
-      let allSounds = AudioManager.shared.sounds.sorted { $0.title < $1.title }
+      // Get all sounds and sort alphabetically. Preset-use-only sounds (explicit
+      // or implied by a non-looping one-shot) are hidden here just like in the
+      // app's grid and Library Sounds list — they can't stand alone.
+      let allSounds =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .sorted { $0.title < $1.title }
 
       // Group sounds by first letter for better navigation
       let groupedSounds = Dictionary(grouping: allSounds) { sound in

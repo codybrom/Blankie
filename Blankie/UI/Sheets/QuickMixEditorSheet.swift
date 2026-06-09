@@ -16,7 +16,7 @@ import SwiftUI
 
     private var orderedSounds: [Sound] {
       selectedSounds.compactMap { fileName in
-        audioManager.sounds.first { $0.fileName == fileName }
+        audioManager.sounds.first { $0.fileName == fileName && !$0.isPresetUseOnly }
       }
     }
 
@@ -109,7 +109,11 @@ import SwiftUI
     @ObservedObject private var globalSettings = GlobalSettings.shared
 
     private var builtInSounds: [Sound] {
-      audioManager.sounds.filter { !$0.isCustom }.sorted { $0.title < $1.title }
+      // Preset-use-only sounds (explicit or implied by a non-looping one-shot)
+      // can't stand alone, so they're never eligible for Quick Mix.
+      audioManager.sounds
+        .filter { !$0.isCustom && !$0.isPresetUseOnly }
+        .sorted { $0.title < $1.title }
     }
 
     var body: some View {

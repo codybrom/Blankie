@@ -43,7 +43,12 @@ import os
       let quickMixSounds = CarPlayInterfaceController.shared.quickMixSoundFileNames
 
       return quickMixSounds.compactMap { fileName in
-        guard let sound = AudioManager.shared.sounds.first(where: { $0.fileName == fileName })
+        // Preset-use-only sounds can't stand alone, so they never appear as a
+        // Quick Mix button even if an old saved set still lists them.
+        guard
+          let sound = AudioManager.shared.sounds.first(where: {
+            $0.fileName == fileName && !$0.isPresetUseOnly
+          })
         else {
           return nil
         }
