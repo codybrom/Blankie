@@ -82,6 +82,12 @@ import os
       interfaceController = nil
       isConnected = false
 
+      // CarPlay teardown means the car route is gone and the only route left is
+      // the phone, where audio must not resume. Pause first so exitQuickMix's
+      // restore loop (which plays selected sounds while isGloballyPlaying) can't
+      // race the .oldDeviceUnavailable route pause onto the phone speaker.
+      AudioManager.shared.setGlobalPlaybackState(false)
+
       // Exit solo mode if active
       if AudioManager.shared.soloModeSound != nil {
         AudioManager.shared.exitSoloMode()
