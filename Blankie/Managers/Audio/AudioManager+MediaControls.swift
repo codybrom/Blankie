@@ -170,7 +170,7 @@ extension AudioManager {
         }
       } catch {
         Logger.audio.error(
-          "AudioManager: Failed to apply preset \(preset.name, privacy: .public): \(error, privacy: .public)"
+          "AudioManager: Failed to apply preset \(preset.name): \(error, privacy: .public)"
         )
       }
     case .solo(let sound):

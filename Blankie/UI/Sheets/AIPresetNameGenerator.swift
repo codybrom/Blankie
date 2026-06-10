@@ -148,7 +148,7 @@ public enum AIPresetNameGenerator {
           Logger.ui.debug("AIPresetNameGenerator: Unsupported guide: \(String(describing: guide))")
         case .decodingFailure(let description):
           Logger.ui.error(
-            "AIPresetNameGenerator: Decoding failure: \(String(describing: description), privacy: .public)"
+            "AIPresetNameGenerator: Decoding failure: \(String(describing: description))"
           )
         case .rateLimited(let retryAfter):
           Logger.ui.debug(

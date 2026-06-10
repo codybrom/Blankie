@@ -173,7 +173,7 @@ import os
         previewImage = UIImage(contentsOfFile: previewURL.path)
         if previewImage == nil {
           Logger.nowPlaying.error(
-            "Failed to load preview image from: \(previewURL, privacy: .public)")
+            "Failed to load preview image from: \(previewURL.lastPathComponent)")
         }
       }
 
