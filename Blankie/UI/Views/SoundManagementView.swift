@@ -80,7 +80,7 @@ struct SoundManagementView: View {
         }
       } message: {
         Text(
-          "Are you sure you want to delete '\(selectedSound?.title ?? "this sound")'? This action cannot be undone."
+          "Are you sure you want to delete '\(selectedSound?.title ?? String(localized: "this sound"))'? This action cannot be undone."
         )
       }
   }

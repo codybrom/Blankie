@@ -362,9 +362,9 @@ enum ODRError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .resourceNotFound(let id):
-      return "Resource not found: \(id)"
+      return String(localized: "Resource not found: \(id)")
     case .downloadFailed(let id, let error):
-      return "Failed to download \(id): \(error.localizedDescription)"
+      return String(localized: "Failed to download \(id): \(error.localizedDescription)")
     }
   }
 }

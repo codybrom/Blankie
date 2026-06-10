@@ -817,7 +817,7 @@ import os
     var errorDescription: String? {
       switch self {
       case .missingBundledAsset(let name):
-        return "Missing bundled asset: \(name)"
+        return String(localized: "Missing bundled asset: \(name)")
       }
     }
   }

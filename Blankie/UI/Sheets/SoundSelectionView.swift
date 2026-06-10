@@ -138,8 +138,9 @@ struct SoundSelectionView: View {
 
         SoundCreditInfoButton(sound: sound, accent: editingPreset?.accentColor)
 
-        Image(systemName: isRowSelected ? "checkmark" : "")
+        Image(systemName: "checkmark")
           .foregroundStyle(.tint)
+          .opacity(isRowSelected ? 1 : 0)
           .accessibilityHidden(true)
       }
     }
