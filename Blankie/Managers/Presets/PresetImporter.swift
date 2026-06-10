@@ -283,6 +283,9 @@ class PresetImporter {
         Logger.presets.debug("Import: Successfully extracted to \(extractionDir.lastPathComponent)")
 
       } catch {
+        // The success-path cleanup never sees this directory, so remove any
+        // partially extracted output (e.g. an aborted zip bomb) here.
+        try? FileManager.default.removeItem(at: extractionDir)
         Logger.presets.error("Import: Failed to extract archive: \(error, privacy: .public)")
         throw ImportError.invalidArchive
       }

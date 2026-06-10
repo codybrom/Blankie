@@ -12,6 +12,16 @@ import os
 /// ZIP archive utility using ZIPFoundation
 struct ArchiveUtility {
 
+  enum ArchiveError: Error {
+    case limitExceeded
+  }
+
+  // Caps for untrusted .blankie archives — far above any real preset
+  // (a manifest, artwork, and a few sounds capped at 50 MB each).
+  private static let maxEntryCount = 512
+  private static let maxTotalUncompressedBytes: Int64 = 512 << 20  // 512 MiB (8 sounds @ 50 MB + artwork)
+  private static let maxEntryUncompressedBytes: Int64 = 64 << 20  // 64 MiB per entry (clears a 50 MB sound)
+
   static func extract(from archiveURL: URL, to destinationURL: URL) throws {
     try FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true)
 
@@ -23,11 +33,20 @@ struct ArchiveUtility {
     let root = destinationURL.standardizedFileURL
     let rootPrefix = root.path.hasSuffix("/") ? root.path : root.path + "/"
 
+    var entryCount = 0
+    var totalBytes: Int64 = 0
+
     for entry in archive {
+      entryCount += 1
+      guard entryCount <= maxEntryCount else {
+        throw ArchiveError.limitExceeded
+      }
+      // A symlink could redirect later entries' writes outside the destination.
+      guard entry.type != .symlink else { continue }
       let path = destinationURL.appendingPathComponent(entry.path).standardizedFileURL
       guard path.path.hasPrefix(rootPrefix) else {
         Logger.app.error(
-          "ArchiveUtility: Skipping archive entry escaping destination: \(entry.path, privacy: .public)"
+          "ArchiveUtility: Skipping archive entry escaping destination: \(entry.path)"
         )
         continue
       }
@@ -36,7 +55,22 @@ struct ArchiveUtility {
       } else {
         let parent = path.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-        _ = try archive.extract(entry, to: path)
+        // Count decompressed bytes as they're written: header-declared sizes
+        // can lie, so the zip-bomb cap is enforced on actual output.
+        FileManager.default.createFile(atPath: path.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: path)
+        defer { try? handle.close() }
+        var entryBytes: Int64 = 0
+        _ = try archive.extract(entry) { data in
+          entryBytes += Int64(data.count)
+          totalBytes += Int64(data.count)
+          guard entryBytes <= maxEntryUncompressedBytes,
+            totalBytes <= maxTotalUncompressedBytes
+          else {
+            throw ArchiveError.limitExceeded
+          }
+          try handle.write(contentsOf: data)
+        }
       }
     }
   }
