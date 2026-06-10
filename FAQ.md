@@ -114,7 +114,7 @@ Yes! Presets store active sounds and their volume levels. You can save and load 
 
 To create a preset, go to your library and tap the + icon and choose New Preset. Choose your favorite sounds, then give it a name and hit done.
 
-To rename or delete a preset, you can open the preset editor while you're listening to it or use the Edit option on the library list..
+To rename or delete a preset, you can open the preset editor while you're listening to it or use the Edit option on the library list.
 
 ## Can I add my own sounds?
 
@@ -125,8 +125,8 @@ Yes! As of Blankie 2 you can import your own audio files and play them alongside
 - Import your own sounds and give any sound a custom SF Symbol icon
 - Give each preset its own accent color and Now Playing artwork
 - Set a grid or list layout for your sounds (iOS Only)
-- Star presets as favorites (iOS Only)
-- Set a sleep timer to stop playback automatically (iOS Only)
+- Star presets as favorites
+- Set a sleep timer to stop playback automatically
 - Set whether to auto-play on launch
 
 ## Where can I find keyboard shortcuts?
@@ -142,7 +142,7 @@ Open Preferences through either:
 
 ## What is the difference between Blankie and Blanket?
 
-Blankie is a native app for Apple platforms inspired by Blanket, we use some of the same openly licensed sounds but it's completely separate and independently developed:
+Blankie is a native app for Apple platforms inspired by Blanket. It uses some of the same openly licensed sounds but is completely separate and independently developed:
 
 - Native apps for Mac, iPhone and iPad written in Swift
 - Different sound mixing and playback technology
