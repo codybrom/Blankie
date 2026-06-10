@@ -75,6 +75,7 @@ struct AboutView: View {
     @State private var showingIconChooser = false
     @State private var appIconOptions: [AppIconOption] = []
     @State private var currentIconName: String? = UIApplication.shared.alternateIconName
+    @State private var showBetaIcon = false
   #endif
 
   private let appVersion =
@@ -138,6 +139,14 @@ struct AboutView: View {
         try? Tips.configure()
       #endif
     }
+    #if os(iOS)
+      .task {
+        // The Beta icon is only offered to TestFlight/debug builds; refresh the
+        // list once the async distribution check resolves.
+        showBetaIcon = await Bundle.main.isTestFlightOrDebug
+        appIconOptions = getAvailableAppIcons()
+      }
+    #endif
     // Tint the About content once so link/help icons that use Color.accentColor
     // resolve from the same environment as tinted rows (e.g. InspirationSection),
     // so one interaction can't flip them between system blue and the app accent.
@@ -243,7 +252,15 @@ extension AboutView {
   }
 
   private var copyrightText: some View {
-    Text("© 2026 Cody Bromley and contributors. All rights reserved.")
+    // Single source of truth: the bundle's NSHumanReadableCopyright, localized
+    // via InfoPlist.xcstrings (same value the system uses). localizedInfoDictionary
+    // gives the per-language value; fall back to the base plist so en (or any
+    // missing locale) still shows the copyright rather than the raw key.
+    let copyright =
+      (Bundle.main.localizedInfoDictionary?["NSHumanReadableCopyright"] as? String)
+      ?? (Bundle.main.infoDictionary?["NSHumanReadableCopyright"] as? String)
+      ?? ""
+    return Text(copyright)
       .font(.aboutCaption)
   }
 
@@ -371,13 +388,16 @@ extension AboutView {
           image: primaryImage
         ))
 
-      let knownAlternates: [(key: String, displayName: String)] = [
+      var knownAlternates: [(key: String, displayName: String)] = [
         (
           "BlankieAltIcon", String(localized: "Alternative")
         ),
         ("BlankieClassicIcon", String(localized: "Classic")),
-        ("BetaIcon", String(localized: "Beta")),
       ]
+      // Beta icon is for TestFlight/debug builds only, not App Store users.
+      if showBetaIcon {
+        knownAlternates.append(("BetaIcon", String(localized: "Beta")))
+      }
 
       for alternate in knownAlternates {
         let image =
