@@ -61,10 +61,9 @@ import SwiftUI
         .accessibilityHint(Text("Opens the full player"))
 
         #if os(iOS)
-          AirPlayRoutePickerView(
-            tint: .secondaryLabel,
-            activeTint: UIColor(accentColor),
-            forcesDarkAppearance: false
+          AirPlayRouteButton(
+            activeColor: accentColor,
+            inactiveColor: Color(.secondaryLabel)
           )
           .frame(width: 44, height: 44)
           .accessibilityLabel(Text("AirPlay"))

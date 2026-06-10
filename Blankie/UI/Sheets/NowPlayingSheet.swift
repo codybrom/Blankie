@@ -715,12 +715,15 @@ import SwiftUI
         // asks apps to permit rerouting of audio output when possible; this is
         // the system-standard control for it.
         #if os(iOS)
-          AirPlayRoutePickerView()
-            .frame(width: 44, height: 44)
-            .accessibilityLabel(Text("AirPlay"))
-            .frame(width: 56, height: 56)
-            .contentShape(Circle())
-            .modifier(NowPlayingActionGlass())
+          AirPlayRouteButton(
+            activeColor: accentColor,
+            inactiveColor: .white.opacity(0.35)
+          )
+          .frame(width: 44, height: 44)
+          .accessibilityLabel(Text("AirPlay"))
+          .frame(width: 56, height: 56)
+          .contentShape(Circle())
+          .modifier(NowPlayingActionGlass())
         #endif
 
         // Right: Timer
@@ -863,6 +866,89 @@ import SwiftUI
       // dark (i.e. making the whole app dark-only), so there is intentionally no
       // per-sheet appearance override here.
       func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
+    }
+
+    /// Watches the live output route and maps it to an SF Symbol plus whether
+    /// audio is leaving the built-in speaker. Drives the AirPlay button's icon
+    /// and tint so it reflects the kind of device audio is going to.
+    ///
+    /// Deliberately maps only to *generic* symbols (headphones, hifispeaker, car,
+    /// tv, airplayaudio) keyed off `portType`, the one reliable signal. We do NOT
+    /// try to show the specific product (AirPods, Beats, HomePod, Apple TV): those
+    /// glyphs are license-restricted to their exact product ("may only be used to
+    /// refer to Apple's AirPods"), and the only model hint the route exposes is
+    /// `portName` — a free, user-renameable string. Guessing the product from it
+    /// could incorrectly paint a restricted Apple/Beats glyph on the wrong (or a
+    /// third-party) device, which violates the SF Symbols license. So we don't.
+    ///
+    /// iOS 27 (in beta, unreleased) adds `AVSystemRoute.routeSymbolName`, where
+    /// the system hands back an already-vetted symbol — safe to show verbatim.
+    /// But it only covers routes from a media device extension (third-party
+    /// AirPlay-style receivers), not AirPods/HomePod/wired/built-in, so this
+    /// generic mapping still carries the everyday cases.
+    final class AudioRouteObserver: ObservableObject {
+      @Published private(set) var symbolName = "airplayaudio"
+      @Published private(set) var isExternal = false
+
+      init() {
+        update()
+        NotificationCenter.default.addObserver(
+          self, selector: #selector(routeChanged),
+          name: AVAudioSession.routeChangeNotification, object: nil)
+      }
+
+      @objc private func routeChanged() {
+        DispatchQueue.main.async { [weak self] in self?.update() }
+      }
+
+      private func update() {
+        let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
+        guard let port = outputs.first else {
+          (symbolName, isExternal) = ("airplayaudio", false)
+          return
+        }
+        switch port.portType {
+        case .builtInSpeaker, .builtInReceiver:
+          (symbolName, isExternal) = ("airplayaudio", false)
+        case .headphones, .bluetoothA2DP, .bluetoothLE, .bluetoothHFP:
+          // Generic personal-audio glyph for any wired/Bluetooth headset; we
+          // can't (and per the license shouldn't) claim it's a specific model.
+          (symbolName, isExternal) = ("headphones", true)
+        case .carAudio:
+          (symbolName, isExternal) = ("car", true)
+        case .HDMI, .displayPort:
+          (symbolName, isExternal) = ("tv", true)
+        case .usbAudio, .lineOut, .thunderbolt:
+          (symbolName, isExternal) = ("hifispeaker.fill", true)
+        case .airPlay:
+          // HomePod/Apple TV/AirPlay speakers all land here; the generic AirPlay
+          // glyph is both license-safe and the honest icon (class is unknowable).
+          (symbolName, isExternal) = ("airplayaudio", true)
+        default:
+          (symbolName, isExternal) = ("airplayaudio", true)
+        }
+      }
+    }
+
+    /// AirPlay control that shows a themed, route-category icon while still
+    /// presenting the system route picker. The icon is tinted with the theme
+    /// accent when audio is routed off-device and dimmed when it isn't; a
+    /// transparent `AVRoutePickerView` sits on top to capture the tap.
+    struct AirPlayRouteButton: View {
+      var activeColor: Color
+      var inactiveColor: Color
+      @StateObject private var route = AudioRouteObserver()
+
+      var body: some View {
+        AirPlayRoutePickerView(tint: .clear, activeTint: .clear)
+          .overlay {
+            Image(systemName: route.symbolName)
+              .font(.system(size: 20, weight: .medium))
+              .foregroundStyle(route.isExternal ? activeColor : inactiveColor)
+              .allowsHitTesting(false)
+              .accessibilityHidden(true)
+          }
+      }
     }
   #endif
 
