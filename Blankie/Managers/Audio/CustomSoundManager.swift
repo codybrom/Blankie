@@ -345,6 +345,19 @@ class CustomSoundManager {
   /// could linger in Quick Mix or as a stale CarPlay favorite until next launch.
   @MainActor
   private func cleanUpResidualState(fileName: String, fileExtension: String) {
+    // If this sound is the active solo or preview subject, leave those modes
+    // first. Otherwise soloModeSound/previewModeSound dangle on the removed
+    // instance — the app stays "in solo" against a ghost, suppressing the real
+    // mix and stalling preset persistence, and the persisted solo file name
+    // would point at a sound that no longer loads on next launch.
+    let audioManager = AudioManager.shared
+    if audioManager.soloModeSound?.fileName == fileName {
+      audioManager.exitSoloModeWithoutResuming()
+    }
+    if audioManager.previewModeSound?.fileName == fileName {
+      audioManager.exitPreviewMode()
+    }
+
     SoundCustomizationManager.shared.removeCustomization(for: fileName)
     // Custom profiles are keyed by the bare fileName (built-ins use
     // fileName.extension), so delete by the bare key or the profile leaks.
