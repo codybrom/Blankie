@@ -22,6 +22,8 @@ import os
     private var interfaceController: CPInterfaceController?
     private var cancellables = Set<AnyCancellable>()
     private var timerActiveObservation: Task<Void, Never>?
+    private var quickMixObservation: Task<Void, Never>?
+    private var starredItemsObservation: Task<Void, Never>?
 
     // Template references for updating
     private var presetsTemplate: CPListTemplate?
@@ -276,14 +278,12 @@ import os
         .store(in: &cancellables)
 
       // Refresh the Quick Mix grid when its membership or order changes on
-      // the phone (editor sheet or grid reorder)
-      GlobalSettings.shared.$quickMixSoundFileNames
-        .sink { [weak self] _ in
-          Task { @MainActor in
-            self?.updateQuickMixTemplate()
-          }
+      // the phone (editor sheet or grid reorder).
+      quickMixObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ GlobalSettings.shared.quickMixSoundFileNames }) {
+          self?.updateQuickMixTemplate()
         }
-        .store(in: &cancellables)
+      }
 
       // Swap the Now Playing timer glyph (and refresh the picker, if open) when a
       // sleep timer starts, is canceled, or expires — from CarPlay or the phone.
@@ -317,12 +317,12 @@ import os
         }
         .store(in: &cancellables)
 
-      // Observe favorites changes so the CarPlay Favorites section refreshes
-      GlobalSettings.shared.$starredItems
-        .sink { [weak self] _ in
+      // Observe favorites changes so the CarPlay Favorites section refreshes.
+      starredItemsObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ GlobalSettings.shared.starredItems }) {
           self?.updatePresetsTemplate()
         }
-        .store(in: &cancellables)
+      }
 
       // Refresh list artwork when a preset thumbnail is regenerated or removed
       // (the thumbnail re-cache finishes after the $presets-driven rebuild).

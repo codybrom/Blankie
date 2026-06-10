@@ -63,7 +63,7 @@ struct EditPresetSheet: View {
   @Binding var isPresented: Preset?
   @ObservedObject var presetManager = PresetManager.shared
   @ObservedObject var audioManager = AudioManager.shared
-  @ObservedObject var globalSettings = GlobalSettings.shared
+  let globalSettings = GlobalSettings.shared
   @State var presetName: String = ""
   @State var creatorName: String = ""
   @State var moods: Set<SoundMood> = []

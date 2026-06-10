@@ -37,7 +37,7 @@ struct SettingsView: View {
   /// of its own sheet/scene — fills the pane and Done closes it via AppState.
   var isPane = false
   @Environment(\.dismiss) private var dismiss
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   #if os(iOS) || os(visionOS)
     @ObservedObject private var audioManager = AudioManager.shared
     @ObservedObject private var presetManager = PresetManager.shared
@@ -597,7 +597,7 @@ private struct PlaybackSettingsSection: View {
   #if os(iOS) || os(visionOS)
     @ObservedObject private var audioManager = AudioManager.shared
   #endif
-  @ObservedObject var globalSettings: GlobalSettings
+  var globalSettings: GlobalSettings
 
   var body: some View {
     Section(

@@ -17,7 +17,7 @@ struct SoundWaveformView: View {
 
   @State private var waveformSamples: [Float] = []
   @State private var isLoading = false
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
 
   private let barWidth: CGFloat = 2
   private let barSpacing: CGFloat = 2

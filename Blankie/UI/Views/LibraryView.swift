@@ -140,7 +140,7 @@ struct PresetPickerRow: View {
   let onSelection: (() -> Void)?
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   #if os(macOS)
     @ObservedObject private var appState = AppState.shared
   #endif
@@ -311,7 +311,7 @@ struct SoloPickerRow: View {
   let presentation: LibraryView.Presentation
   let onSelection: (() -> Void)?
   @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   #if os(macOS)
     @ObservedObject private var appState = AppState.shared
   #endif
@@ -490,7 +490,7 @@ struct LibraryView: View {
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   // Re-filter the Sounds section when per-sound customizations change
   // (preset-use-only, loop, renames) — they live outside the audio manager.
   @ObservedObject private var customizationManager = SoundCustomizationManager.shared

@@ -10,7 +10,7 @@ import SwiftUI
 struct TimerView: View {
   @Bindable private var timerManager = TimerManager.shared
   @ObservedObject private var presetManager = PresetManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
   /// Runs instead of `dismiss()` after start/cancel, so a host like the menu bar
   /// popover can navigate without closing its whole window.

@@ -21,7 +21,7 @@ struct SidebarContentView: View {
   #endif
 
   @StateObject private var presetManager = PresetManager.shared
-  @StateObject private var globalSettings = GlobalSettings.shared
+  @State private var globalSettings = GlobalSettings.shared
   @StateObject private var audioManager = AudioManager.shared
 
   /// The sidebar follows the theming preset: its accent, then the app-wide

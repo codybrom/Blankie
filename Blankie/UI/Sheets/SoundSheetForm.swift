@@ -30,7 +30,7 @@ struct SoundSheetForm: View {
   @Binding var showingResetConfirmation: Bool
   @Binding var isDisappearing: Bool
 
-  @ObservedObject var globalSettings = GlobalSettings.shared
+  let globalSettings = GlobalSettings.shared
   @ObservedObject var presetManager = PresetManager.shared
   @State var showingIconPicker = false
   @State var isGeneratingDetails = false

@@ -62,7 +62,7 @@ import os
 
 struct AboutView: View {
   @ObservedObject private var creditsManager = SoundCreditsManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var isSoundCreditsExpanded = false
   @State private var isLicenseExpanded = false

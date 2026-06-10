@@ -11,7 +11,7 @@ import os
 
 struct SoundIcon: View {
   @ObservedObject var sound: Sound
-  @ObservedObject var globalSettings = GlobalSettings.shared
+  let globalSettings = GlobalSettings.shared
   @ObservedObject var audioManager = AudioManager.shared
   #if os(macOS)
     // macOS honors the current preset's accent (see `accentColor`); observe the

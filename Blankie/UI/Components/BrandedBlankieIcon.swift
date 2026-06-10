@@ -14,7 +14,7 @@ import SwiftUI
 struct BrandedBlankieIcon: View {
   let size: CGFloat
   var color: Color? = nil
-  @StateObject private var globalSettings = GlobalSettings.shared
+  @State private var globalSettings = GlobalSettings.shared
 
   var body: some View {
     Image("blankie.symbol")

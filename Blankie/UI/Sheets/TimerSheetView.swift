@@ -11,7 +11,7 @@ import SwiftUI
   struct TimerSheetView: View {
     @State private var timerManager = TimerManager.shared
     @StateObject private var presetManager = PresetManager.shared
-    @StateObject private var globalSettings = GlobalSettings.shared
+    @State private var globalSettings = GlobalSettings.shared
     @Environment(\.dismiss) private var dismiss
     // Scales the large countdown with Dynamic Type while keeping its default size.
     @ScaledMetric(relativeTo: .largeTitle) private var countdownFontSize: CGFloat = 48

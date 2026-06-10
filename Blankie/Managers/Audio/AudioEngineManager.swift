@@ -7,7 +7,6 @@
 
 import AVFoundation
 import AudioToolbox
-import Combine
 import os
 
 /// Owns the single shared `AVAudioEngine` and its graph. Every `SoundPlayer`
@@ -65,23 +64,16 @@ final class AudioEngineManager {
   /// Config-change observer token, re-bound whenever the engine is recreated.
   var configObserver: NSObjectProtocol?
 
-  private var settingsObservers = Set<AnyCancellable>()
-
   private init() {
     limiter = Self.makeLimiter()
     engine.isAutoShutdownEnabled = true
     observeEngineNotifications()
 
-    // Global volume and mix-with-others apply to the whole mix, so they live
-    // on the main mixer (per-sound updateVolume no longer multiplies them in).
-    GlobalSettings.shared.$volume
-      .combineLatest(
-        GlobalSettings.shared.$mixWithOthers, GlobalSettings.shared.$volumeWithOtherAudio
-      )
-      .sink { [weak self] volume, mixWithOthers, volumeWithOthers in
-        self?.globalVolume = Float(volume) * (mixWithOthers ? Float(volumeWithOthers) : 1)
-      }
-      .store(in: &settingsObservers)
+    // Global volume and mix-with-others apply to the whole mix, so they live on
+    // the main mixer (per-sound updateVolume no longer multiplies them in).
+    // GlobalSettings' setters call applyGlobalVolumeSettings() directly; seed
+    // the initial gain here.
+    applyGlobalVolumeSettings()
   }
 
   /// Recreates the engine + limiter after a media-services reset.
@@ -311,5 +303,14 @@ final class AudioEngineManager {
   var globalVolume: Float {
     get { engine.mainMixerNode.outputVolume }
     set { engine.mainMixerNode.outputVolume = newValue }
+  }
+
+  /// Recompute the main-mixer gain from the global volume settings. Called
+  /// synchronously by GlobalSettings' volume setters (the settings are mutated
+  /// only through them), keeping the volume slider's response crisp.
+  func applyGlobalVolumeSettings() {
+    let settings = GlobalSettings.shared
+    globalVolume =
+      Float(settings.volume) * (settings.mixWithOthers ? Float(settings.volumeWithOtherAudio) : 1)
   }
 }

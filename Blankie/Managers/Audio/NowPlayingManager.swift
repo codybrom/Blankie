@@ -6,7 +6,6 @@
 //
 
 import AVFoundation
-import Combine
 import MediaPlayer
 import Observation
 import SwiftUI
@@ -46,19 +45,18 @@ final class NowPlayingManager {
   // forces the first tick after (re)start to anchor.
   private var lastObservedElapsed: TimeInterval = -1
   private var lastObservedDuration: TimeInterval = 0
-  private var cancellables = Set<AnyCancellable>()
   private var timerActiveObservation: Task<Void, Never>?
+  private var lockScreenBgObservation: Task<Void, Never>?
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
   private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
 
   init() {
-    // Don't setup immediately to avoid triggering audio session
-    GlobalSettings.shared.$lockScreenBackgroundEnabled
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in
+    // Republish the lock-screen background when the user toggles the setting.
+    lockScreenBgObservation = Task { [weak self] in
+      for await _ in Observations({ GlobalSettings.shared.lockScreenBackgroundEnabled }) {
         self?.republishCurrentPreset()
       }
-      .store(in: &cancellables)
+    }
 
     // Refresh the album line when a sleep timer starts or ends so the
     // "N Minute Timer" label appears/disappears (incremental update, no artwork
@@ -92,7 +90,7 @@ final class NowPlayingManager {
     updateTimer?.invalidate()
     progressTimer?.invalidate()
     timerActiveObservation?.cancel()
-    cancellables.removeAll()
+    lockScreenBgObservation?.cancel()
     NotificationCenter.default.removeObserver(self)
   }
 

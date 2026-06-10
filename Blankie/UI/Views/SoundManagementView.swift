@@ -14,7 +14,7 @@ struct SoundManagementView: View {
   @Environment(\.dismiss) private var dismiss
   @Query private var customSoundData: [CustomSoundData]
   @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
 
   @State private var showingFilePicker = false
   @State private var showingImportSheet = false

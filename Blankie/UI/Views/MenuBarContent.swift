@@ -13,11 +13,10 @@
   /// `MenuBarExtra` window; the owned fixed-height header sizes to content.
   struct MenuBarContent: View {
     @ObservedObject private var audioManager = AudioManager.shared
-    @ObservedObject private var globalSettings = GlobalSettings.shared
+    private let globalSettings = GlobalSettings.shared
     @ObservedObject private var presetManager = PresetManager.shared
     private let timerManager = TimerManager.shared
     @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismiss) private var dismiss
 
     /// Screens ordered left-to-right, so the slide direction falls out of the
     /// raw value (a higher target slides in from the right).
@@ -129,7 +128,7 @@
     private func openMainWindow() {
       openWindow(id: "main")
       NSApp.activate()
-      dismiss()
+      NotificationCenter.default.post(name: .closeMenuBarPopover, object: nil)
     }
 
     private var headerTitle: String {
@@ -211,7 +210,7 @@
       AppState.shared.showingSettingsPane = true
       openWindow(id: "main")
       NSApp.activate()
-      dismiss()
+      NotificationCenter.default.post(name: .closeMenuBarPopover, object: nil)
     }
 
     @State private var listContentHeight: CGFloat = 300
@@ -372,10 +371,4 @@
     }
   }
 
-  /// Menu bar label — Blankie's brand glyph.
-  struct MenuBarLabel: View {
-    var body: some View {
-      Image("blankie.symbol")
-    }
-  }
 #endif

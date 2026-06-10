@@ -11,7 +11,7 @@ import os
 /// Shared view modifiers for all platforms
 struct SharedAppModifiers: ViewModifier {
   let appSetup: AppSetup
-  @ObservedObject var globalSettings: GlobalSettings
+  var globalSettings: GlobalSettings
   @StateObject private var audioFileImporter = AudioFileImporter.shared
 
   func body(content: Content) -> some View {

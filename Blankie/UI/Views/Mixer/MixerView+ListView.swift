@@ -12,7 +12,7 @@ import os
   // Separate view struct to properly observe Sound changes
   struct SoundRowView: View {
     @ObservedObject var sound: Sound
-    @ObservedObject var globalSettings: GlobalSettings
+    var globalSettings: GlobalSettings
     @ObservedObject var audioManager: AudioManager
     @ObservedObject var presetManager = PresetManager.shared
     @Environment(\.colorScheme) private var colorScheme

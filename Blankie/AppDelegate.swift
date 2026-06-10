@@ -10,6 +10,8 @@ import os
 
 #if os(macOS)
   final class MacAppDelegate: NSObject, NSApplicationDelegate {
+    private var menuBarController: MenuBarController?
+
     func applicationDidFinishLaunching(_: Notification) {
       configureWindowAppearance()
       setupNotificationObservers()
@@ -17,6 +19,7 @@ import os
       clearRestartFlagIfNeeded()
       applyUITestingConfigurationIfNeeded()
       DockPresenceManager.shared.start()
+      menuBarController = MenuBarController(modelContainer: SharedModelContainer.shared.container)
     }
 
     private func configureWindowAppearance() {

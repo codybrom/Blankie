@@ -15,7 +15,7 @@ struct CreatePresetSheet: View {
   var initialSelectedSounds: Set<String> = []
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   @State private var presetName = ""
   @State private var creatorName = ""
   @State private var error: String?

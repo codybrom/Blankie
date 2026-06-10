@@ -18,7 +18,7 @@ import SwiftUI
   struct GridSoundButton: View {
     @ObservedObject var sound: Sound
     @ObservedObject var audioManager = AudioManager.shared
-    @ObservedObject var globalSettings = GlobalSettings.shared
+    let globalSettings = GlobalSettings.shared
 
     /// Explicit lit-state override. Quick Mix passes `isQuickMix &&
     /// sound.isSelected`; the grid passes `nil` and falls back to the sound's

@@ -15,7 +15,7 @@ struct BlankieApp: App {
   private let appSetup: AppSetup
 
   // Shared state objects
-  @StateObject private var globalSettings = GlobalSettings.shared
+  @State private var globalSettings = GlobalSettings.shared
   @Environment(\.scenePhase) private var scenePhase
 
   // Initialize SwiftData
@@ -81,26 +81,6 @@ struct BlankieApp: App {
         }
       }
 
-      // Menu bar icon + click-through popover. `isInserted` tracks the
-      // "Show in Menu Bar" setting (and dragging the item out unchecks it).
-      MenuBarExtra(
-        isInserted: Binding(
-          get: { globalSettings.showMenuBarIcon },
-          // Guard equal writes: SwiftUI writes this binding back while evaluating
-          // the scene, and an unconditional setter would republish mid-update —
-          // an infinite "Publishing changes from within view updates" loop.
-          set: { newValue in
-            guard newValue != globalSettings.showMenuBarIcon else { return }
-            globalSettings.setShowMenuBarIcon(newValue)
-          }
-        )
-      ) {
-        MenuBarContent()
-      } label: {
-        MenuBarLabel()
-      }
-      .menuBarExtraStyle(.window)
-      .modelContainer(modelContainer)
     }
 
   #elseif os(iOS) || os(visionOS)

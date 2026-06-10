@@ -10,7 +10,7 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
   struct QuickMixEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var globalSettings = GlobalSettings.shared
+    private let globalSettings = GlobalSettings.shared
     @ObservedObject private var audioManager = AudioManager.shared
     @State private var selectedSounds: [String] = []
 
@@ -105,7 +105,7 @@ import SwiftUI
   struct QuickMixSoundPicker: View {
     @Binding var selectedSounds: [String]
     @ObservedObject private var audioManager = AudioManager.shared
-    @ObservedObject private var globalSettings = GlobalSettings.shared
+    private let globalSettings = GlobalSettings.shared
 
     private var builtInSounds: [Sound] {
       // Preset-use-only sounds (explicit or implied by a non-looping one-shot)

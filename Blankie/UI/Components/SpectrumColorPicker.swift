@@ -14,7 +14,7 @@ struct SpectrumColorPicker: View {
   @State private var showingChip = false
   @State private var isDragging = false
 
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   @Environment(\.colorScheme) private var colorScheme
 
   // Available colors in custom spectrum order

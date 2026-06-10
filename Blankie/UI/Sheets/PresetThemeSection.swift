@@ -21,7 +21,7 @@ struct PresetThemeSection: View {
   @Binding var blurOverride: Double
   var onEdited: (() -> Void)?
 
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
 
   var body: some View {
     Section {

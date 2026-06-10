@@ -13,7 +13,7 @@ struct PresetOnboardingSheet: View {
   @Binding var isPresented: Bool
   @ObservedObject private var audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   @State private var currentStep = 0
   @State private var selectedSounds: Set<String> = []
   @State private var presetName = ""
