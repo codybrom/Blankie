@@ -27,20 +27,37 @@ enum LibraryRowStyle {
   /// background.
   static func rowBackground(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
-  ) -> AnyView? {
+  ) -> RowBackground? {
     switch presentation {
     case .sidebar, .menuBar:
-      guard isCurrent else { return nil }
-      return AnyView(
+      return isCurrent ? RowBackground(style: .sidebarPill(accent)) : nil
+    case .page:
+      return RowBackground(style: .pageCard)
+    case .sheet:
+      return nil
+    }
+  }
+
+  /// Concrete row backdrop so the background carries static type info instead of
+  /// an `AnyView`. `rowBackground` returns `nil` for rows that want no custom
+  /// background, which `.listRowBackground(nil)` resolves to the list default.
+  struct RowBackground: View {
+    enum Style {
+      case sidebarPill(Color)  // inset accent pill behind the active sidebar/menu-bar row
+      case pageCard  // uniform dark glass card on the page presentation
+    }
+    let style: Style
+
+    var body: some View {
+      switch style {
+      case .sidebarPill(let accent):
         RoundedRectangle(cornerRadius: 10, style: .continuous)
           .fill(accent.opacity(0.15))
           .padding(.horizontal, 10)
           .padding(.vertical, 2)
-      )
-    case .page:
-      return AnyView(Rectangle().fill(.regularMaterial))
-    case .sheet:
-      return nil
+      case .pageCard:
+        Rectangle().fill(.regularMaterial)
+      }
     }
   }
 
