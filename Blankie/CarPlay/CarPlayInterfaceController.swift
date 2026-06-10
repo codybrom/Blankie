@@ -42,6 +42,12 @@ import os
       return GlobalSettings.shared.quickMixSoundFileNames
     }
 
+    /// The car display's pixel scale, for rendering template images at the right
+    /// resolution. Falls back to 2x before the interface controller connects.
+    var carDisplayScale: CGFloat {
+      interfaceController?.carTraitCollection.displayScale ?? 2
+    }
+
     override private init() {
       super.init()
       observeAudioManagerChanges()

@@ -80,40 +80,36 @@ import os
     }
 
     private static func getButtonImage(for sound: Sound, isPlaying: Bool) -> UIImage {
-      // Create a colored circle background with the icon
-      let size = CGSize(width: 100, height: 100)
-      let renderer = UIGraphicsImageRenderer(size: size)
+      // Render at CarPlay's expected grid-button size and the car display's pixel
+      // scale, so the icon is crisp instead of being upscaled from a fixed bitmap.
+      let size = CPGridTemplate.maximumGridButtonImageSize
+      let format = UIGraphicsImageRendererFormat()
+      format.scale = CarPlayInterfaceController.shared.carDisplayScale
+      let renderer = UIGraphicsImageRenderer(size: size, format: format)
 
       return renderer.image { _ in
-        // Get the color for this sound
         let backgroundColor = getBackgroundColor(for: sound, isPlaying: isPlaying)
 
-        // Draw the circle background with opacity (matching Blankie app)
+        // Circle background filling the button (matching the Blankie app).
         backgroundColor.withAlphaComponent(isPlaying ? 0.3 : 0.2).setFill()
-        let circle = UIBezierPath(ovalIn: CGRect(origin: .zero, size: size))
-        circle.fill()
+        UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
 
-        // Draw the icon in the center
-        let iconName = sound.systemIconName
-        let icon = UIImage(systemName: iconName) ?? UIImage(systemName: "speaker.wave.2")!
+        // Centered icon, proportions preserved from the previous 100pt button
+        // (50pt icon box, 36pt symbol).
+        let icon =
+          UIImage(systemName: sound.systemIconName) ?? UIImage(systemName: "speaker.wave.2")!
+        let configuredIcon = icon.withConfiguration(
+          UIImage.SymbolConfiguration(pointSize: size.width * 0.36, weight: .medium))
 
-        // Use configuration for better icon rendering
-        let iconConfig = UIImage.SymbolConfiguration(pointSize: 36, weight: .medium)
-        let configuredIcon = icon.withConfiguration(iconConfig)
-
-        let iconSize = CGSize(width: 50, height: 50)
+        let iconSide = size.width * 0.5
         let iconRect = CGRect(
-          x: (size.width - iconSize.width) / 2,
-          y: (size.height - iconSize.height) / 2,
-          width: iconSize.width,
-          height: iconSize.height
+          x: (size.width - iconSide) / 2,
+          y: (size.height - iconSide) / 2,
+          width: iconSide,
+          height: iconSide
         )
 
-        if isPlaying {
-          backgroundColor.setFill()
-        } else {
-          UIColor.systemGray.setFill()
-        }
+        (isPlaying ? backgroundColor : UIColor.systemGray).setFill()
         configuredIcon.withRenderingMode(.alwaysTemplate).draw(in: iconRect)
       }
     }
