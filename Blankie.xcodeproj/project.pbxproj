@@ -548,6 +548,7 @@
 				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphonesimulator*]" = YES;
 				"ENABLE_ON_DEMAND_RESOURCES[sdk=macosx*]" = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
@@ -610,6 +611,7 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
@@ -746,6 +748,7 @@
 				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphonesimulator*]" = YES;
 				"ENABLE_ON_DEMAND_RESOURCES[sdk=macosx*]" = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-CarPlay.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
@@ -931,6 +934,7 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-CarPlay.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
