@@ -75,51 +75,51 @@ import SwiftUI
       // touch shorter than the full window, so framing to the sheet keeps the
       // bottom controls on screen instead of clipped.
       GeometryReader { proxy in
-       ZStack {
-        // Background fills the whole sheet. Rounded top corners show while the
-        // zoom transition is mid-flight and behind the sheet's own rounding.
-        Color.black
-          .overlay {
-            if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
-              let image = backgroundImage
-            {
-              Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .blur(radius: 40)
-                .opacity(0.4)
-            } else {
-              LinearGradient(
-                colors: [
-                  accentColor.opacity(0.6),
-                  accentColor.opacity(0.3),
-                  Color.black.opacity(0.8),
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-              )
+        ZStack {
+          // Background fills the whole sheet. Rounded top corners show while the
+          // zoom transition is mid-flight and behind the sheet's own rounding.
+          Color.black
+            .overlay {
+              if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
+                let image = backgroundImage
+              {
+                Image(uiImage: image)
+                  .resizable()
+                  .aspectRatio(contentMode: .fill)
+                  .frame(maxWidth: .infinity, maxHeight: .infinity)
+                  .clipped()
+                  .blur(radius: 40)
+                  .opacity(0.4)
+              } else {
+                LinearGradient(
+                  colors: [
+                    accentColor.opacity(0.6),
+                    accentColor.opacity(0.3),
+                    Color.black.opacity(0.8),
+                  ],
+                  startPoint: .topLeading,
+                  endPoint: .bottomTrailing
+                )
+              }
             }
-          }
-          .clipShape(
-            UnevenRoundedRectangle(
-              topLeadingRadius: 38,
-              bottomLeadingRadius: 0,
-              bottomTrailingRadius: 0,
-              topTrailingRadius: 38,
-              style: .continuous
+            .clipShape(
+              UnevenRoundedRectangle(
+                topLeadingRadius: 38,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: 38,
+                style: .continuous
+              )
             )
-          )
-          .ignoresSafeArea()
-          .accessibilityHidden(true)
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
 
-        // Content stays within the top safe area so the drag handle and
-        // everything below it sit clear of the Dynamic Island.
-        expandedPlayerView(proxy.size)
-          .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 10)
-       }
-       .frame(width: proxy.size.width, height: proxy.size.height)
+          // Content stays within the top safe area so the drag handle and
+          // everything below it sit clear of the Dynamic Island.
+          expandedPlayerView(proxy.size)
+            .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 10)
+        }
+        .frame(width: proxy.size.width, height: proxy.size.height)
       }
       .ignoresSafeArea()
       .sheet(isPresented: $showingTimer) {
@@ -689,13 +689,8 @@ import SwiftUI
 
     // MARK: - Bottom Actions Row
 
-    @ViewBuilder
     private var bottomActionsRow: some View {
-      if #available(iOS 26.0, *) {
-        GlassEffectContainer(spacing: 20) {
-          bottomActionsContent
-        }
-      } else {
+      GlassEffectContainer(spacing: 20) {
         bottomActionsContent
       }
     }
@@ -772,15 +767,10 @@ import SwiftUI
 
   }
 
-  /// Liquid Glass circle for the bottom action buttons; material fallback for
-  /// earlier systems.
+  /// Liquid Glass circle for the bottom action buttons
   private struct NowPlayingActionGlass: ViewModifier {
     func body(content: Content) -> some View {
-      if #available(iOS 26.0, *) {
-        content.glassEffect(.regular.interactive(), in: .circle)
-      } else {
-        content.modernGlassEffect(cornerRadius: 28)
-      }
+      content.glassEffect(.regular.interactive(), in: .circle)
     }
   }
 

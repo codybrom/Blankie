@@ -23,11 +23,7 @@ import SwiftUI
     @State private var playPauseTrigger = 0
 
     var body: some View {
-      if #available(iOS 26.0, *) {
-        GlassEffectContainer(spacing: 12) {
-          barContent
-        }
-      } else {
+      GlassEffectContainer(spacing: 12) {
         barContent
       }
     }
@@ -191,25 +187,17 @@ import SwiftUI
 
   // MARK: - Glass Treatment
 
-  /// Liquid Glass capsule on iOS 26; material fallback for earlier systems.
+  /// Liquid Glass capsule
   private struct NowPlayingBarGlass: ViewModifier {
     func body(content: Content) -> some View {
-      if #available(iOS 26.0, *) {
-        content.glassEffect(.regular.interactive(), in: .capsule)
-      } else {
-        content.modernGlassEffect(cornerRadius: 29)
-      }
+      content.glassEffect(.regular.interactive(), in: .capsule)
     }
   }
 
   /// Circle variant for the standalone play/pause control.
   private struct NowPlayingCircleGlass: ViewModifier {
     func body(content: Content) -> some View {
-      if #available(iOS 26.0, *) {
-        content.glassEffect(.regular.interactive(), in: .circle)
-      } else {
-        content.modernGlassEffect(cornerRadius: 34)
-      }
+      content.glassEffect(.regular.interactive(), in: .circle)
     }
   }
 

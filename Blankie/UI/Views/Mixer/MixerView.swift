@@ -306,7 +306,11 @@ private enum IPhonePage: Hashable {
       NowPlayingBar(expandPlayer: $showingNowPlaying)
         .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
         .padding(.horizontal, 16)
-        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { nowPlayingBarHeight = $0 }
+        .onGeometryChange(for: CGFloat.self) {
+          $0.size.height
+        } action: {
+          nowPlayingBarHeight = $0
+        }
     }
 
     @ViewBuilder
@@ -395,15 +399,9 @@ private enum IPhonePage: Hashable {
   }
 
   extension View {
-    /// `safeAreaBar` keeps scroll edge effects correct under the mini player
-    /// on iOS 26; earlier systems fall back to a plain safe-area inset.
-    @ViewBuilder
+    /// `safeAreaBar` keeps scroll edge effects correct under the mini player.
     func nowPlayingBottomBar<Bar: View>(@ViewBuilder _ bar: () -> Bar) -> some View {
-      if #available(iOS 26.0, *) {
-        safeAreaBar(edge: .bottom) { bar() }
-      } else {
-        safeAreaInset(edge: .bottom) { bar() }
-      }
+      safeAreaBar(edge: .bottom) { bar() }
     }
   }
 

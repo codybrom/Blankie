@@ -507,15 +507,10 @@ import UniformTypeIdentifiers
     }
   }
 
-  struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-      Group {
-        ContentView(
-          showingShortcuts: .constant(false)
-        )
-        .frame(width: 600, height: 400)
-      }
-      .previewDisplayName("Blankie")
-    }
+  #Preview("Blankie") {
+    ContentView(
+      showingShortcuts: .constant(false)
+    )
+    .frame(width: 600, height: 400)
   }
 #endif
