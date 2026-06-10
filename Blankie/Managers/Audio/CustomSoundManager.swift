@@ -227,8 +227,9 @@ class CustomSoundManager {
       let data = try Data(contentsOf: source)
       Logger.sounds.debug("CustomSoundManager: Read \(data.count) bytes from source file")
 
-      // Write to destination
-      try data.write(to: destinationURL)
+      // Write to destination (atomic: all-or-nothing so a disk-full mid-write
+      // can't leave a truncated audio file behind).
+      try data.write(to: destinationURL, options: .atomic)
       Logger.sounds.debug("CustomSoundManager: Successfully copied file to \(destinationURL.path)")
 
       // Verify the copied file exists
@@ -350,9 +351,13 @@ class CustomSoundManager {
     // instance — the app stays "in solo" against a ghost, suppressing the real
     // mix and stalling preset persistence, and the persisted solo file name
     // would point at a sound that no longer loads on next launch.
+    //
+    // Use the resuming variant (which stops global playback) rather than
+    // exitSoloModeWithoutResuming: there's nothing to resume into, so leaving
+    // isGloballyPlaying true would strand a rate-1.0 Now Playing over silence.
     let audioManager = AudioManager.shared
     if audioManager.soloModeSound?.fileName == fileName {
-      audioManager.exitSoloModeWithoutResuming()
+      audioManager.exitSoloMode()
     }
     if audioManager.previewModeSound?.fileName == fileName {
       audioManager.exitPreviewMode()
@@ -480,17 +485,20 @@ enum CustomSoundError: Error, LocalizedError, Sendable {
   var errorDescription: String? {
     switch self {
     case .unsupportedFormat:
-      return "Unsupported audio format. Please use WAV, MP3, M4A, AAC, or AIFF files."
+      return String(
+        localized:
+          "Unsupported audio format. Blankie supports M4A, MP3, WAV, AIFF, FLAC, OGG, CAF, AAC, and AU files."
+      )
     case .fileCopyFailed:
-      return "Failed to copy the audio file."
+      return String(localized: "Failed to copy the audio file.")
     case .fileTooLarge:
-      return "Audio file is too large. Maximum size is 50MB."
+      return String(localized: "Audio file is too large. Maximum size is 50MB.")
     case .durationTooLong:
-      return "Audio file is too long. Maximum duration is 120 minutes."
+      return String(localized: "Audio file is too long. Maximum duration is 120 minutes.")
     case .invalidAudioFile(let error):
-      return "Invalid audio file: \(error.localizedDescription)"
+      return String(localized: "Invalid audio file: \(error.localizedDescription)")
     case .databaseError:
-      return "Failed to access the database."
+      return String(localized: "Failed to access the database.")
     }
   }
 }

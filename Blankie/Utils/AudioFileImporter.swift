@@ -75,6 +75,14 @@ class AudioFileImporter: ObservableObject {
   }
 
   func clearImport() {
+    // Remove the staged temp copy: by now the import has copied it into permanent
+    // storage, or the user cancelled. Scoped to the temporary directory so it can
+    // only ever delete a file stagedTempCopy created.
+    if let staged = fileToImport,
+      staged.path.hasPrefix(FileManager.default.temporaryDirectory.path)
+    {
+      try? FileManager.default.removeItem(at: staged)
+    }
     fileToImport = nil
     showingSoundSheet = false
   }
