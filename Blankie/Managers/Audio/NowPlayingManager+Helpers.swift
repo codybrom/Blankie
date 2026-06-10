@@ -22,19 +22,17 @@ extension NowPlayingManager {
     } else if let name = presetName {
       // Handle special presets
       let displayTitle: String
-      if name == "Quick Mix (CarPlay)" {
-        displayTitle = "Quick Mix"
-      } else if name != "Default" && !name.starts(with: "Preset ") {
+      if name != "Default" && !name.starts(with: "Preset ") {
         displayTitle = name
       } else {
-        displayTitle = "Custom Mix"
+        displayTitle = String(localized: "Custom Mix")
       }
 
       let artistInfo = getArtistInfo(creatorName: creatorName)
       return (title: displayTitle, artist: artistInfo)
     } else {
       let artistInfo = getArtistInfo(creatorName: creatorName)
-      return (title: "Custom Mix", artist: artistInfo)
+      return (title: String(localized: "Custom Mix"), artist: artistInfo)
     }
   }
 

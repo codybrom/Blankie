@@ -15,7 +15,7 @@ import os
   enum PresetListTemplate {
     static func createTemplate() -> CPListTemplate {
       let template = CPListTemplate(
-        title: "Presets",
+        title: String(localized: "Presets"),
         sections: []
       )
 
@@ -31,7 +31,7 @@ import os
       guard !PresetManager.shared.isLoading else {
         Logger.carPlay.debug(
           "PresetListTemplate: PresetManager still loading, showing loading state")
-        let loadingItem = CPListItem(text: "Loading presets...", detailText: nil)
+        let loadingItem = CPListItem(text: String(localized: "Loading presets..."), detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])
         return
@@ -123,7 +123,7 @@ import os
       let isActive = preset.id == currentPresetId
 
       let item = CPListItem(
-        text: "Current Soundscape",
+        text: String(localized: "Current Soundscape"),
         detailText: getPresetDetailText(preset),
         image: getPresetArtwork(preset)
       )
@@ -180,7 +180,7 @@ import os
       // Add sound names
       if activeSounds.isEmpty {
         if detailParts.isEmpty {
-          return "No active sounds"
+          return String(localized: "No active sounds")
         }
       } else {
         let soundNames = activeSounds.compactMap { soundState in
@@ -225,7 +225,7 @@ import os
         sections.append(
           CPListSection(
             items: [recentItem],
-            header: "Recent",
+            header: String(localized: "Recent"),
             sectionIndexTitle: "R"
           )
         )
@@ -260,7 +260,7 @@ import os
       sections.append(
         CPListSection(
           items: items,
-          header: "Favorites",
+          header: String(localized: "Favorites"),
           sectionIndexTitle: "F"
         )
       )
@@ -273,7 +273,7 @@ import os
       sections.append(
         CPListSection(
           items: allItems,
-          header: "Presets",
+          header: String(localized: "Presets"),
           sectionIndexTitle: "P"
         )
       )
@@ -302,15 +302,15 @@ import os
         sections.append(
           CPListSection(
             items: [allSoundsItem],
-            header: "Presets",
+            header: String(localized: "Presets"),
             sectionIndexTitle: "P"
           )
         )
       }
 
       let emptyItem = CPListItem(
-        text: "Create presets in iPhone app",
-        detailText: "Your saved presets will appear here"
+        text: String(localized: "Create presets in iPhone app"),
+        detailText: String(localized: "Your saved presets will appear here")
       )
       emptyItem.isEnabled = false
       sections.append(
@@ -324,7 +324,8 @@ import os
 
       let item = CPListItem(
         text: sound.title,
-        detailText: sound.isCustom ? "Custom sound" : "Solo sound"
+        detailText: sound.isCustom
+          ? String(localized: "Custom sound") : String(localized: "Solo sound")
       )
 
       item.playingIndicatorLocation = .leading
@@ -349,7 +350,7 @@ import os
       let isActive = preset.id == currentPresetId
 
       let item = CPListItem(
-        text: "Custom Mix",
+        text: String(localized: "Custom Mix"),
         detailText: String(localized: "Current selections in \"\(preset.displayName)\""),
         image: getPresetArtwork(preset)
       )

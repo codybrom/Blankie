@@ -16,7 +16,7 @@ import os
     @MainActor
     static func createTemplate() -> CPListTemplate {
       let template = CPListTemplate(
-        title: "Sounds",
+        title: String(localized: "Sounds"),
         sections: []
       )
 
@@ -32,7 +32,7 @@ import os
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
         Logger.carPlay.debug("SoundsListTemplate: No sounds loaded yet")
-        let loadingItem = CPListItem(text: "Loading sounds...", detailText: nil)
+        let loadingItem = CPListItem(text: String(localized: "Loading sounds..."), detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])
         return

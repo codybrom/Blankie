@@ -17,7 +17,7 @@ import os
       let gridButtons = createGridButtons()
 
       let template = CPGridTemplate(
-        title: "Quick Mix",
+        title: String(localized: "Quick Mix"),
         gridButtons: gridButtons
       )
 

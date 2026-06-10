@@ -20,7 +20,7 @@ import SwiftUI
       }
 
       if audioManager.isQuickMix {
-        return "Quick Mix"
+        return String(localized: "Quick Mix")
       }
 
       if let preset = presetManager.currentPreset {

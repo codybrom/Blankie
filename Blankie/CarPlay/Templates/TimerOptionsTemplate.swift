@@ -21,7 +21,7 @@ import os
 
     @MainActor
     static func createTemplate() -> CPListTemplate {
-      let template = CPListTemplate(title: "Timer", sections: [])
+      let template = CPListTemplate(title: String(localized: "Timer"), sections: [])
       updateTemplate(template)
       return template
     }
@@ -35,7 +35,8 @@ import os
         sections.append(activeTimerSection(timerManager))
       } else {
         // Explain what picking a duration does before any timer is running.
-        let info = CPListItem(text: "Blankie will pause at the end of the timer", detailText: nil)
+        let info = CPListItem(
+          text: String(localized: "Blankie will pause at the end of the timer"), detailText: nil)
         info.isEnabled = false
         sections.append(CPListSection(items: [info]))
       }
@@ -44,7 +45,7 @@ import os
       sections.append(
         CPListSection(
           items: durationItems,
-          header: timerManager.isTimerActive ? "Restart Timer" : nil,
+          header: timerManager.isTimerActive ? String(localized: "Restart Timer") : nil,
           sectionIndexTitle: nil
         )
       )
@@ -58,7 +59,7 @@ import os
       let status = CPListItem(text: pauseAtText(timerManager), detailText: nil)
       status.isEnabled = false
 
-      let cancel = CPListItem(text: "Cancel Timer", detailText: nil)
+      let cancel = CPListItem(text: String(localized: "Cancel Timer"), detailText: nil)
       cancel.setImage(tinted("xmark.circle.fill"))
       cancel.handler = { _, completion in
         Task { @MainActor in
@@ -104,18 +105,18 @@ import os
 
     /// "Blankie pauses at 10:36 AM", using the timer's fixed stop instant.
     private static func pauseAtText(_ timerManager: TimerManager) -> String {
-      guard let endTime = timerManager.getEndTime() else { return "Timer running" }
+      guard let endTime = timerManager.getEndTime() else { return String(localized: "Timer running") }
       let formatter = DateFormatter()
       formatter.timeStyle = .short
-      return "Blankie pauses at \(formatter.string(from: endTime))"
+      return String(localized: "Blankie pauses at \(formatter.string(from: endTime))")
     }
 
     private static func durationLabel(_ minutes: Int) -> String {
       if minutes >= 60 {
         let hours = minutes / 60
-        return hours == 1 ? "1 hour" : "\(hours) hours"
+        return hours == 1 ? String(localized: "1 hour") : String(localized: "\(hours) hours")
       }
-      return "\(minutes) minutes"
+      return String(localized: "\(minutes) minutes")
     }
   }
 
