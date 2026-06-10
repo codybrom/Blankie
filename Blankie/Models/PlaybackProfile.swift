@@ -198,7 +198,9 @@ class PlaybackProfileStore {
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       let data = try encoder.encode(profileArray)
-      try data.write(to: storageURL)
+      // Atomic: this overwrites a known-good store in place, so a crash or
+      // disk-full mid-write must not leave a truncated, undecodable file.
+      try data.write(to: storageURL, options: .atomic)
 
       Logger.presets.debug("PlaybackProfileStore: Saved \(profileArray.count) profiles")
     } catch {

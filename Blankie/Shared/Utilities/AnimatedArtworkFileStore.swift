@@ -54,8 +54,8 @@ enum AnimatedArtworkFileStore {
   static func writeData(_ data: Data, to relativePath: String) throws -> URL {
     try ensureBaseDirectory()
     let destination = absoluteURL(for: relativePath)
-    try? FileManager.default.removeItem(at: destination)
-    try data.write(to: destination)
+    // Atomic replace so a crash mid-write can't leave a truncated artwork file.
+    try data.write(to: destination, options: .atomic)
     return destination
   }
 
