@@ -34796,6 +34796,24 @@
         }
       }
     },
+    "Warm Piano" : {
+      "comment" : "The display name of a built-in ambient sound.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm Piano"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Warm Piano"
+          }
+        }
+      }
+    },
     "Waves" : {
       "comment" : "The display name of a built-in ambient sound.",
       "extractionState" : "manual",

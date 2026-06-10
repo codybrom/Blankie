@@ -481,6 +481,28 @@
       "systemIconName": "washer.fill",
       "title": "Laundry Room",
       "truePeakdBTP": -4.14
+    },
+    {
+      "author": "Cody Bromley",
+      "authorUrl": "https://blankie.rest",
+      "defaultOrder": 23,
+      "description": "An original piano berceuse composed for Blankie.",
+      "duration": 132.41381,
+      "fileName": "warm-piano",
+      "isMusic": true,
+      "license": "ccBy4",
+      "lufs": -28.62282,
+      "moods": [
+        "relax",
+        "sleep"
+      ],
+      "needsLimiter": false,
+      "normalizationFactor": 1.2054272,
+      "soundName": "Blankie Berceuse",
+      "soundUrl": "https://blankie.rest/credits",
+      "systemIconName": "pianokeys",
+      "title": "Warm Piano",
+      "truePeakdBTP": -11.32
     }
   ]
 }
