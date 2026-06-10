@@ -115,10 +115,82 @@
       "comment" : "Privacy - Motion Usage Description",
       "extractionState" : "extracted_with_value",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie zeigt Ihre aktuelle Hörrichtung im Spatial Mix anhand der Kopfposition Ihrer Kopfhörer an."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie shows your live listening direction in the Spatial Mix using your headphones’ head position."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie muestra tu dirección de escucha en directo en el Spatial Mix usando la posición de la cabeza de tus auriculares."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie affiche votre direction d’écoute en direct dans le Spatial Mix à partir de la position de votre tête détectée par vos écouteurs."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A Blankie a fejhallgatód fejpozíciója alapján mutatja az aktuális hallgatási irányodat a Spatial Mixben."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie mostra la tua direzione di ascolto in tempo reale nello Spatial Mix usando la posizione della testa rilevata dalle cuffie."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankieは、ヘッドフォンの頭の位置を使って、Spatial Mixでリアルタイムの聴取方向を表示します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie는 헤드폰의 머리 위치를 사용해 Spatial Mix에서 실시간 청취 방향을 표시합니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie pokazuje twój bieżący kierunek słuchania w Spatial Mix na podstawie pozycji głowy wykrywanej przez słuchawki."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "O Blankie mostra a sua direção de escuta em tempo real no Spatial Mix através da posição da cabeça detetada pelos auscultadores."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie, kulaklığınızın baş konumunu kullanarak Spatial Mix’te canlı dinleme yönünüzü gösterir."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Blankie 通过您耳机的头部位置，在空间混音中显示您的实时聆听方向。"
           }
         }
       }
