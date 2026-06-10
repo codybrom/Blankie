@@ -13,7 +13,6 @@ import {
   Keyboard,
   LayoutGrid,
   Zap,
-  FolderPlus,
   Smartphone,
 } from "lucide-react";
 import screenshot from "../assets/screenshot.png";
@@ -154,7 +153,7 @@ const title = "Features - Blankie";
             </li>
             <li class="flex items-center gap-3">
               <Check className="text-primary size-5 shrink-0" strokeWidth={2} />
-              One-click switching from toolbar preset picker
+              Switch between your favorites with media keys, Control Center or your headphones
             </li>
           </ul>
         </div>
@@ -219,31 +218,20 @@ const title = "Features - Blankie";
           <Sparkles className="text-primary size-7" strokeWidth={1.75} />
           What's Coming Next
         </h2>
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div
-            class="ring-foreground/10 rounded-xl bg-black/20 p-6 text-left ring-1"
-          >
-            <FolderPlus
-              className="text-primary mb-3 size-7"
-              strokeWidth={1.75}
-            />
-            <h3 class="mb-2 text-lg font-semibold">Import Custom Sounds</h3>
-            <p class="text-gray-200">
-              Add your own audio files to create truly personalized soundscapes.
-            </p>
-          </div>
-          <div
-            class="ring-foreground/10 rounded-xl bg-black/20 p-6 text-left ring-1"
-          >
-            <Smartphone
-              className="text-primary mb-3 size-7"
-              strokeWidth={1.75}
-            />
-            <h3 class="mb-2 text-lg font-semibold">iOS & iPadOS</h3>
-            <p class="text-gray-200">
-              Bring your favorite ambient sounds to iPhone and iPad.
-            </p>
-          </div>
+        <div
+          class="ring-foreground/10 mx-auto max-w-md rounded-xl bg-black/20 p-6 text-left ring-1"
+        >
+          <Smartphone className="text-primary mb-3 size-7" strokeWidth={1.75} />
+          <h3 class="mb-2 text-lg font-semibold">iPhone and iPad</h3>
+          <p class="text-gray-200">
+            Bring your soundscapes to iPhone and iPad this summer, with CarPlay
+            for the drive. Want it early? <a
+              href="https://testflight.apple.com/join/XgpBpWv8"
+              class="text-yellow-400 underline transition-colors hover:text-yellow-300"
+              target="_blank"
+              rel="noopener noreferrer">Join the TestFlight beta</a
+            >.
+          </p>
         </div>
         <p class="mt-6 text-gray-400">
           Have feature requests? <a
