@@ -119,11 +119,6 @@ extension AudioManager {
         Task { @MainActor in
           self?.loadCustomSounds()
 
-          // Auto-add newly imported sounds to current preset
-          if notification.name == .customSoundAdded {
-            self?.addNewSoundToCurrentPreset()
-          }
-
           // Scrub the just-deleted sound from every preset now (loadCustomSounds
           // has already rebuilt `sounds` without it). The load's own cleanup is
           // deferred 5s, so without this a delete-then-quit could leave a preset
@@ -135,31 +130,4 @@ extension AudioManager {
       }
   }
 
-  /// Automatically add newly imported sounds to the current preset
-  @MainActor
-  private func addNewSoundToCurrentPreset() {
-    guard let currentPreset = PresetManager.shared.currentPreset,
-      !currentPreset.isDefault
-    else {
-      Logger.audio.debug("AudioManager: No current custom preset to add new sound to")
-      return
-    }
-
-    // Get the newest sound (last in the list after loading)
-    guard let newestSound = sounds.last else {
-      Logger.audio.debug("AudioManager: No sounds available to add to preset")
-      return
-    }
-
-    Logger.audio.debug(
-      "AudioManager: Auto-adding '\(newestSound.fileName)' to current preset '\(currentPreset.displayName)'"
-    )
-
-    // Add the new sound to the current preset as unselected
-    newestSound.isSelected = false
-    newestSound.volume = 1.0
-
-    // This will trigger the preset update via the existing observer
-    PresetManager.shared.updateCurrentPresetState()
-  }
 }

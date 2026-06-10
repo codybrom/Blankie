@@ -90,11 +90,23 @@ class CustomSoundManager {
       }
     }
 
+    // If anything after the copy throws, remove the orphaned copy (and any
+    // playback profile createCustomSoundRecord stored) so a failed import
+    // leaves nothing behind. Cleared once the DB save commits.
+    var copiedURLForCleanup: URL?
+    defer {
+      if let url = copiedURLForCleanup {
+        try? FileManager.default.removeItem(at: url)
+        PlaybackProfileStore.shared.removeProfile(for: uniqueFileName)
+      }
+    }
+
     do {
       try await validateImportableAudioFile(at: sourceURL)
       let copiedURL = try copyFileForImport(
         sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension
       )
+      copiedURLForCleanup = copiedURL
       let importData = SoundImportData(
         sourceURL: sourceURL, copiedURL: copiedURL, title: title, iconName: iconName,
         uniqueFileName: uniqueFileName, fileExtension: fileExtension,
@@ -102,6 +114,7 @@ class CustomSoundManager {
       )
       let customSound = try await createCustomSoundRecord(from: importData)
       try saveCustomSoundToDatabase(customSound)
+      copiedURLForCleanup = nil
 
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
@@ -229,7 +242,7 @@ class CustomSoundManager {
       return destinationURL
     } catch {
       Logger.sounds.error(
-        "CustomSoundManager: Failed to copy file from \(source.path, privacy: .public) to \(destinationURL.path, privacy: .public): \(error.localizedDescription, privacy: .public)"
+        "CustomSoundManager: Failed to copy file from \(source.path) to \(destinationURL.path): \(error.localizedDescription, privacy: .public)"
       )
       throw error
     }
@@ -333,7 +346,9 @@ class CustomSoundManager {
   @MainActor
   private func cleanUpResidualState(fileName: String, fileExtension: String) {
     SoundCustomizationManager.shared.removeCustomization(for: fileName)
-    PlaybackProfileStore.shared.removeProfile(for: "\(fileName).\(fileExtension)")
+    // Custom profiles are keyed by the bare fileName (built-ins use
+    // fileName.extension), so delete by the bare key or the profile leaks.
+    PlaybackProfileStore.shared.removeProfile(for: fileName)
 
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isSelected")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")

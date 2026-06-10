@@ -268,17 +268,30 @@ extension PresetManager {
   }
 
   private func generateUpdatedPresetData(for preset: Preset) -> ([PresetState], [String]) {
-    let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
-
-    let newStates = AudioManager.shared.sounds
-      .filter { presetSoundFileNames.contains($0.fileName) }
-      .map { sound in
+    let newStates: [PresetState]
+    if preset.isDefault {
+      // The default preset tracks every available sound (matching
+      // updateCurrentPresetBeforeSave), so a freshly imported sound the user
+      // selects on the default grid is recorded and survives relaunch.
+      newStates = AudioManager.shared.sounds.map { sound in
         PresetState(
           fileName: sound.fileName,
           isSelected: sound.isSelected,
           volume: sound.volume
         )
       }
+    } else {
+      let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
+      newStates = AudioManager.shared.sounds
+        .filter { presetSoundFileNames.contains($0.fileName) }
+        .map { sound in
+          PresetState(
+            fileName: sound.fileName,
+            isSelected: sound.isSelected,
+            volume: sound.volume
+          )
+        }
+    }
 
     // Preserve the preset's existing sound order, not the global customOrder
     let currentSoundOrder = preset.soundOrder ?? preset.soundStates.map(\.fileName)
@@ -337,8 +350,27 @@ extension PresetManager {
   func cleanupDeletedCustomSounds() {
     Logger.presets.debug("PresetManager: Cleaning up deleted custom sounds from presets")
 
-    // Get current valid sound file names
+    // getAllCustomSounds() returns [] both for genuinely-empty and for a
+    // transient fetch/container failure. If no customs are visible yet presets
+    // still reference some, that's almost certainly a load failure this launch,
+    // not a deletion — bail rather than strip every custom state irreversibly.
+    let customRows = CustomSoundManager.shared.getAllCustomSounds()
+    let presetsReferenceCustoms = presets.contains { preset in
+      preset.soundStates.contains { state in
+        !AudioManager.shared.sounds.contains { $0.fileName == state.fileName }
+      }
+    }
+    if customRows.isEmpty && presetsReferenceCustoms {
+      Logger.presets.debug(
+        "PresetManager: Skipping cleanup - no custom sounds available but presets reference customs (likely a transient load failure)"
+      )
+      return
+    }
+
+    // Valid = loaded sounds UNION the SwiftData rows, so a row that exists but
+    // failed to load as a Sound this launch is still kept.
     let validSoundFileNames = Set(AudioManager.shared.sounds.map(\.fileName))
+      .union(customRows.map(\.fileName))
 
     // Update each preset to remove invalid sound states
     var didChange = false
