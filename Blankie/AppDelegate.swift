@@ -47,7 +47,10 @@ import os
     }
 
     private func applySavedLanguagePreference() {
-      if let languageCode = UserDefaults.standard.string(forKey: "languagePreference"),
+      // The language preference lives in the shared app-group suite (AppDataMigrator
+      // moves it there and removes it from standard); read it from the same place
+      // GlobalSettings writes it, or this fallback is always nil post-migration.
+      if let languageCode = UserDefaults.shared.string(forKey: UserDefaultsKeys.language),
         languageCode != "system"
       {
         Logger.app.debug("AppDelegate: Applying saved language \(languageCode) at launch")

@@ -78,9 +78,25 @@ extension AudioManager {
   /// one); it's idempotent and safe to re-run.
   @MainActor
   private func reconcileLaunchPlaybackState() {
+    // Custom sounds may be unavailable this session (SwiftData fell back to an
+    // in-memory store, or the rows haven't loaded). Union the loaded sounds with
+    // the SwiftData rows so a row that exists but didn't load as a Sound is still
+    // valid. If no rows are visible yet a solo favorite points at a non-built-in
+    // sound, that's a likely transient load failure, not a deletion — pass nil so
+    // solo favorites are kept rather than irreversibly pruned (mirrors the bail
+    // in PresetManager.cleanupDeletedCustomSounds).
+    let customRowNames = Set(CustomSoundManager.shared.getAllCustomSounds().map { $0.fileName })
+    let validNames = Set(sounds.map { $0.fileName }).union(customRowNames)
+    let soloFavoriteIsUnknown = GlobalSettings.shared.starredItems.contains { token in
+      guard let fileName = GlobalSettings.soloFileName(fromToken: token) else { return false }
+      return !validNames.contains(fileName)
+    }
+    let validSoundFileNames: Set<String>? =
+      (customRowNames.isEmpty && soloFavoriteIsUnknown) ? nil : validNames
+
     GlobalSettings.shared.pruneStarredItems(
       validPresetIDs: Set(PresetManager.shared.presets.map { $0.id.uuidString }),
-      validSoundFileNames: Set(sounds.map { $0.fileName }))
+      validSoundFileNames: validSoundFileNames)
 
     let hadSavedSolo = GlobalSettings.shared.getSavedSoloModeFileName() != nil
     let soloRestored = restoreSoloModeIfNeeded(soundsFullyLoaded: true)

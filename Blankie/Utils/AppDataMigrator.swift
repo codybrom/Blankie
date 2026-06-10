@@ -93,6 +93,10 @@ enum AppDataMigrator {
       // Legacy keys
       "presets",
       "customArtworkIds",
+      // v1.0.13 wrote this; GlobalSettings.migrateLegacySettings() reads it from
+      // the shared suite and flips it to autoPlayOnLaunch. Without migrating it,
+      // upgraders who turned off "always start paused" silently lose autoplay.
+      "alwaysStartPaused",
     ]
 
     var migratedCount = 0
@@ -296,6 +300,10 @@ enum AppDataMigrator {
       "defaultPreset",
       "savedPresets",
       "lastActivePresetID",
+
+      // Legacy key: GlobalSettings.migrateLegacySettings() reads this from the
+      // shared suite and flips it to autoPlayOnLaunch for 1.0.13 upgraders.
+      "alwaysStartPaused",
     ]
   }
 
