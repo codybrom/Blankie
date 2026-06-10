@@ -190,6 +190,17 @@ extension AudioManager {
     // Stop global playback
     setGlobalPlaybackState(false)
 
+    // A solo restored at launch skips the preset's applySoundStates, so
+    // presetStatesApplied never flips and later mix edits won't persist.
+    // Playback is already stopped above, so re-syncing here can't auto-start
+    // audio (the isSelected didSet autoplay is gated on isGloballyPlaying); it
+    // only corrects selection/volume to the preset and sets the flag.
+    if !PresetManager.shared.presetStatesApplied,
+      let preset = PresetManager.shared.currentPreset
+    {
+      PresetManager.shared.applySoundStates(preset.soundStates)
+    }
+
     // Update media control command state
     updateNextPreviousCommandState()
 

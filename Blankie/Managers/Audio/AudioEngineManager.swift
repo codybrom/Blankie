@@ -296,7 +296,12 @@ final class AudioEngineManager {
     Task { @MainActor in
       try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
       guard !self.engine.isRunning else { return }
-      self.ensureRunning()
+      // Recovering the engine isn't enough: if we were "playing" while it was
+      // down, nothing rescheduled the sounds, so the lock screen shows rate 1.0
+      // over silence. Resume the (solo-aware) selection once it's back.
+      if self.ensureRunning(), AudioManager.shared.isGloballyPlaying {
+        AudioManager.shared.playSelected()
+      }
     }
   }
 

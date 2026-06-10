@@ -266,12 +266,18 @@ extension AudioManager {
       return
     }
 
-    let state = sounds.map { sound in
-      [
+    // While soloing, the solo sound's live values are forced (selected, volume
+    // 1.0); persist its saved pre-solo originals instead so a background/quit
+    // mid-solo doesn't corrupt the user's real mix on the next launch.
+    let soloID = soloModeSound?.id
+    let state = sounds.map { sound -> [String: Any] in
+      let isSelected = (sound.id == soloID) ? (soloModeOriginalSelection ?? sound.isSelected) : sound.isSelected
+      let volume = (sound.id == soloID) ? (soloModeOriginalVolume ?? sound.volume) : sound.volume
+      return [
         "id": sound.id.uuidString,
         "fileName": sound.fileName,
-        "isSelected": sound.isSelected,
-        "volume": sound.volume,
+        "isSelected": isSelected,
+        "volume": volume,
       ]
     }
     UserDefaults.shared.set(state, forKey: "soundState")

@@ -524,7 +524,12 @@ open class Sound: NSObject, ObservableObject, Identifiable {
         AudioManager.shared.setGlobalPlaybackState(false)
       }
     } else {
-      // Normal mode - deselect the sound
+      // Normal mode - stop the exhausted node and rewind before deselecting,
+      // so the auto-deselect fade (and any re-tap rescue) can't ramp silence
+      // through a node whose schedule is already spent (same stale-isPlaying
+      // trap the solo branch above guards against).
+      player?.stop()
+      resetSoundPosition()
       isSelected = false
     }
   }
