@@ -37,6 +37,11 @@
 			</dict>
 			<key>CFBundleAlternateIcons</key>
 			<dict>
+				<key>BlankieAltIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieAltIcon</string>
+				</dict>
 				<key>BlankieClassicIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
