@@ -15,7 +15,7 @@
     @ObservedObject private var audioManager = AudioManager.shared
     @ObservedObject private var globalSettings = GlobalSettings.shared
     @ObservedObject private var presetManager = PresetManager.shared
-    @ObservedObject private var timerManager = TimerManager.shared
+    private let timerManager = TimerManager.shared
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismiss) private var dismiss
 

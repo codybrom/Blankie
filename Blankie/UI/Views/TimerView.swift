@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TimerView: View {
-  @ObservedObject private var timerManager = TimerManager.shared
+  @Bindable private var timerManager = TimerManager.shared
   @ObservedObject private var presetManager = PresetManager.shared
   @ObservedObject private var globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss

@@ -11,6 +11,7 @@ import os
 
   @preconcurrency import CarPlay
   import Combine
+  import Observation
   import SwiftData
   import SwiftUI
 
@@ -20,6 +21,7 @@ import os
     @Published private(set) var isConnected = false
     private var interfaceController: CPInterfaceController?
     private var cancellables = Set<AnyCancellable>()
+    private var timerActiveObservation: Task<Void, Never>?
 
     // Template references for updating
     private var presetsTemplate: CPListTemplate?
@@ -285,18 +287,16 @@ import os
 
       // Swap the Now Playing timer glyph (and refresh the picker, if open) when a
       // sleep timer starts, is canceled, or expires — from CarPlay or the phone.
-      TimerManager.shared.$isTimerActive
-        .removeDuplicates()
-        .sink { [weak self] _ in
-          Task { @MainActor in
-            guard let self else { return }
-            self.updateNowPlayingButtons()
-            if let timerTemplate = self.currentTimerTemplate {
-              TimerOptionsTemplate.updateTemplate(timerTemplate)
-            }
+      // Tracks only `isTimerActive`, so the 1 Hz remainingTime tick doesn't fire it.
+      timerActiveObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ TimerManager.shared.isTimerActive }) {
+          guard let self else { return }
+          self.updateNowPlayingButtons()
+          if let timerTemplate = self.currentTimerTemplate {
+            TimerOptionsTemplate.updateTemplate(timerTemplate)
           }
         }
-        .store(in: &cancellables)
+      }
     }
 
     private func observePresetManagerChanges() {

@@ -5,22 +5,24 @@
 //  Created by Cody Bromley on 1/29/25.
 //
 
-import Combine
 import Foundation
+import Observation
 import os
 
-class TimerManager: ObservableObject {
+@Observable
+class TimerManager {
   static let shared = TimerManager()
 
-  @Published var isTimerActive = false
-  @Published var remainingTime: TimeInterval = 0
-  @Published var selectedDuration: TimeInterval = 0
-  @Published var selectedHours: Int
-  @Published var selectedMinutes: Int
+  var isTimerActive = false
+  var remainingTime: TimeInterval = 0
+  var selectedDuration: TimeInterval = 0
+  var selectedHours: Int
+  var selectedMinutes: Int
 
-  private var timer: Timer?
+  // Plumbing the UI never reads; kept out of observation tracking.
+  @ObservationIgnored private var timer: Timer?
+  // Read by getEndTime() in view bodies, so it stays observation-tracked.
   private var startTime: Date?
-  private var cancellables = Set<AnyCancellable>()
 
   private init() {
     // Load saved duration or use defaults

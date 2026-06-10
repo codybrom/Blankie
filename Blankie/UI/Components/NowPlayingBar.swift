@@ -18,7 +18,7 @@ import SwiftUI
 
     @StateObject private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
-    @StateObject private var timerManager = TimerManager.shared
+    @State private var timerManager = TimerManager.shared
     @StateObject private var globalSettings = GlobalSettings.shared
     @State private var playPauseTrigger = 0
 

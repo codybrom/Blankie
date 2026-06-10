@@ -106,7 +106,7 @@ struct BlankieApp: App {
   #elseif os(iOS) || os(visionOS)
     @UIApplicationDelegateAdaptor(IOSAppDelegate.self) private var appDelegate
     @StateObject private var presetManager = PresetManager.shared
-    @StateObject private var timerManager = TimerManager.shared
+    @State private var timerManager = TimerManager.shared
     @State private var showingOnboarding = false
 
     var body: some Scene {

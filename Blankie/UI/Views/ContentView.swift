@@ -465,7 +465,7 @@ import UniformTypeIdentifiers
   /// this modifier, not the whole ContentView body (mirrors iOS, which scopes
   /// the observation to NowPlayingBar).
   private struct WindowSubtitleModifier: ViewModifier {
-    @ObservedObject private var timerManager = TimerManager.shared
+    private let timerManager = TimerManager.shared
     let spatialMixerActive: Bool
 
     func body(content: Content) -> some View {
@@ -487,7 +487,7 @@ import UniformTypeIdentifiers
   /// Bottom-bar sleep timer button. Owns the TimerManager observation so timer
   /// ticks re-render just this button (for the active tint), not ContentView.
   private struct SleepTimerButton: View {
-    @ObservedObject private var timerManager = TimerManager.shared
+    private let timerManager = TimerManager.shared
     let activeAccent: Color
     @Binding var showingPopover: Bool
 

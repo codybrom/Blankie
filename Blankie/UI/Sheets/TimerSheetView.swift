@@ -9,7 +9,7 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   struct TimerSheetView: View {
-    @StateObject private var timerManager = TimerManager.shared
+    @State private var timerManager = TimerManager.shared
     @StateObject private var presetManager = PresetManager.shared
     @StateObject private var globalSettings = GlobalSettings.shared
     @Environment(\.dismiss) private var dismiss

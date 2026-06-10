@@ -8,6 +8,7 @@
 import AVFoundation
 import Combine
 import MediaPlayer
+import Observation
 import SwiftUI
 import os
 
@@ -46,6 +47,7 @@ final class NowPlayingManager {
   private var lastObservedElapsed: TimeInterval = -1
   private var lastObservedDuration: TimeInterval = 0
   private var cancellables = Set<AnyCancellable>()
+  private var timerActiveObservation: Task<Void, Never>?
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
   private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
 
@@ -60,14 +62,14 @@ final class NowPlayingManager {
 
     // Refresh the album line when a sleep timer starts or ends so the
     // "N Minute Timer" label appears/disappears (incremental update, no artwork
-    // restart). Republishing on every progress tick would be wasteful.
-    TimerManager.shared.$isTimerActive
-      .removeDuplicates()
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in
+    // restart). The observation tracks only `isTimerActive`, so the 1 Hz
+    // remainingTime tick never fires it. This manager is @MainActor, so the
+    // task runs on the main actor (replacing the old `.receive(on: .main)`).
+    timerActiveObservation = Task { [weak self] in
+      for await _ in Observations({ TimerManager.shared.isTimerActive }) {
         self?.republishCurrentPreset()
       }
-      .store(in: &cancellables)
+    }
 
     #if os(iOS)
       NotificationCenter.default.addObserver(
@@ -89,6 +91,7 @@ final class NowPlayingManager {
     staticArtworkTask?.cancel()
     updateTimer?.invalidate()
     progressTimer?.invalidate()
+    timerActiveObservation?.cancel()
     cancellables.removeAll()
     NotificationCenter.default.removeObserver(self)
   }
