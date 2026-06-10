@@ -305,14 +305,13 @@ extension AudioManager {
         // Restore playback state: if it was playing before and should still be
         // playing. isSelected can flip mid-preview (e.g. the editor marking a
         // sound preset-only deselects it) — never resume a deselected sound.
+        //
+        // Call play() unconditionally: it no-ops when genuinely audible and
+        // rescues a sound still mid fade-out (node.isPlaying lags playbackState
+        // by ~0.5s, so an isPlaying guard here would skip the rescue and strand
+        // the sound silent while selected and globally playing).
         if originalState.isPlaying, isGloballyPlaying, sound.isSelected {
-          if !sound.isPlaying {
-            Logger.audio.debug(
-              "AudioManager: Resuming '\(sound.title)' - was playing before preview")
-            sound.play()
-          } else {
-            Logger.audio.debug("AudioManager: '\(sound.title)' already playing, continuing")
-          }
+          sound.play()
         }
       }
     }

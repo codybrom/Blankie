@@ -65,38 +65,12 @@ extension AudioManager {
     }
   }
 
+  /// Async shim retained for the macOS screenshot path. Forwards to
+  /// `setGlobalPlaybackState` so there is a single playback-state authority with
+  /// the no-selected-sounds coercion — never a second, weaker copy.
   func setPlaybackState(_ playing: Bool, forceUpdate: Bool = false) {
     Task { @MainActor [weak self] in
-      guard let self = self else { return }
-
-      guard !self.isInitializing || forceUpdate else {
-        Logger.audio.debug("AudioManager: Ignoring setPlaybackState during initialization")
-        return
-      }
-
-      if self.isGloballyPlaying != playing {
-        Logger.audio.debug(
-          "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
-        )
-        self.isGloballyPlaying = playing
-
-        if playing {
-          self.playSelected()
-        } else {
-          self.pauseAll()
-        }
-        let currentPreset = PresetManager.shared.currentPreset
-        self.nowPlayingManager.updateInfo(
-          preset: currentPreset,
-          presetName: currentPreset?.name,
-          creatorName: currentPreset?.creatorName,
-          artworkId: currentPreset?.artworkId,
-          isPlaying: playing
-        )
-      } else {
-        Logger.audio.debug(
-          "AudioManager: setPlaybackState called, but state is the same \(playing), ignoring")
-      }
+      self?.setGlobalPlaybackState(playing, forceUpdate: forceUpdate)
     }
   }
 

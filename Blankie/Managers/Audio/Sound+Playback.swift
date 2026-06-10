@@ -178,6 +178,11 @@ extension Sound {
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
 
+    // `volume = 0.75` above re-armed the debounced volume save; cancel it so it
+    // can't rewrite the key we just removed.
+    volumeDebounceTimer?.invalidate()
+    volumeDebounceTimer = nil
+
     Logger.sounds.debug("Sound: Reset complete for '\(self.fileName)'")
     isResetting = false
   }

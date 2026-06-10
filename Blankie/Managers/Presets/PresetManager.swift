@@ -251,8 +251,14 @@ extension PresetManager {
   func updateCurrentPresetState() {
     if isInitializing { return }
 
-    // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
-    if AudioManager.shared.soloModeSound != nil || !presetStatesApplied { return }
+    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // applied yet). Preview forces the previewed sound to volume 1.0, which must
+    // not bleed into the saved preset.
+    if AudioManager.shared.soloModeSound != nil || AudioManager.shared.previewModeSound != nil
+      || !presetStatesApplied
+    {
+      return
+    }
 
     guard let preset = currentPreset else { return }
 
@@ -505,6 +511,11 @@ extension PresetManager {
 
   @MainActor func preparePresetApplication(_ preset: Preset) {
     currentPreset = preset
+    // The mixer no longer matches the (now-current) preset until executePreset-
+    // Application's async applySoundStates runs. Clear the flag so a debounced
+    // updateCurrentPresetState / pre-save landing in that window can't write the
+    // OLD preset's mixer state into the new one. applySoundStates sets it back.
+    presetStatesApplied = false
     PresetStorage.saveLastActivePresetID(preset.id)
 
     // Pre-cache artwork for instant display
@@ -861,8 +872,11 @@ extension PresetManager {
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {
-    // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
-    guard AudioManager.shared.soloModeSound == nil, presetStatesApplied else { return }
+    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // applied yet). Preview forces the previewed sound to volume 1.0.
+    guard AudioManager.shared.soloModeSound == nil, AudioManager.shared.previewModeSound == nil,
+      presetStatesApplied
+    else { return }
 
     // Update current preset's state before saving
     if let currentPreset = currentPreset,
