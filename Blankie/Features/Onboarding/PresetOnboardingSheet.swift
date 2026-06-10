@@ -331,18 +331,17 @@ struct PresetOnboardingSheet: View {
             .foregroundStyle(.secondary)
 
           HStack(spacing: 8) {
-            ForEach(Array(selectedSounds.prefix(5)), id: \.self) { fileName in
-              if let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) {
-                Text(sound.title)
-                  .font(.caption)
-                  .padding(.horizontal, 12)
-                  .padding(.vertical, 6)
-                  .background((globalSettings.customAccentColor ?? .accentColor).opacity(0.2))
-                  .clipShape(Capsule())
-              }
+            let chips = audioManager.sounds.filter { selectedSounds.contains($0.fileName) }
+            ForEach(chips.prefix(5)) { sound in
+              Text(sound.title)
+                .font(.caption)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background((globalSettings.customAccentColor ?? .accentColor).opacity(0.2))
+                .clipShape(Capsule())
             }
-            if selectedSounds.count > 5 {
-              Text("+\(selectedSounds.count - 5) more")
+            if chips.count > 5 {
+              Text("+\(chips.count - 5) more")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 12)

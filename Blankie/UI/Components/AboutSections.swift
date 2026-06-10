@@ -106,23 +106,22 @@ struct TranslatorSection: View {
             columns: [GridItem(.fixed(columnWidth)), GridItem(.fixed(columnWidth))], spacing: 20
           ) {
             ForEach(gridLanguages, id: \.self) { language in
-              if let translatorList = translators[language], !translatorList.isEmpty {
-                VStack(spacing: 4) {
-                  Text(language)
-                    .font(.aboutCaption.weight(.medium))
-                    .italic()
-                    .foregroundStyle(.secondary)
+              let translatorList = translators[language] ?? []
+              VStack(spacing: 4) {
+                Text(language)
+                  .font(.aboutCaption.weight(.medium))
+                  .italic()
+                  .foregroundStyle(.secondary)
 
-                  Text(translatorList.joined(separator: ", "))
-                    .font(.aboutBody)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(width: columnWidth, alignment: .center)
-                // Read each language + its translators as one VoiceOver element.
-                .accessibilityElement(children: .combine)
+                Text(translatorList.joined(separator: ", "))
+                  .font(.aboutBody)
+                  .multilineTextAlignment(.center)
+                  .lineLimit(3)
+                  .fixedSize(horizontal: false, vertical: true)
               }
+              .frame(width: columnWidth, alignment: .center)
+              // Read each language + its translators as one VoiceOver element.
+              .accessibilityElement(children: .combine)
             }
           }
           .frame(maxWidth: .infinity)

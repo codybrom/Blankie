@@ -66,9 +66,13 @@ struct SoundSelectionView: View {
         ScrollView {
           LazyVStack(spacing: 0) {
             ForEach(orderedSounds, id: \.id) { sound in
-              macRow(for: sound)
-              if sound.id != orderedSounds.last?.id {
-                Divider().padding(.leading, 52)
+              // Wrap row + inter-row divider so each ForEach element yields one
+              // view (constant child count), instead of a bare trailing if.
+              VStack(spacing: 0) {
+                macRow(for: sound)
+                if sound.id != orderedSounds.last?.id {
+                  Divider().padding(.leading, 52)
+                }
               }
             }
           }
