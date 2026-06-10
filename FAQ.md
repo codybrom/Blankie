@@ -118,7 +118,7 @@ To rename or delete a preset, you can open the preset editor while you're listen
 
 ## Can I add my own sounds?
 
-Yes! As of Blankie 2 you can import your own audio files and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins.
+Yes! As of Blankie 2.0 you can import your own audio files and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins.
 
 ## What customization options are available?
 
@@ -129,16 +129,16 @@ Yes! As of Blankie 2 you can import your own audio files and play them alongside
 - Set a sleep timer to stop playback automatically
 - Set whether to auto-play on launch
 
-## Where can I find keyboard shortcuts?
+## Where can I find keyboard shortcuts for Mac?
 
-Access the full list of keyboard shortcuts from the "Keyboard Shortcuts" panel in the Titlebar menu.
+On your mac, open the Help menu and choose "Keyboard Shortcuts" for the full list.
 
-## How do I access Preferences?
+## How do I get to Settings?
 
-Open Preferences through either:
+Open Settings two ways:
 
-- The Settings menu in your Mac's menubar under Blankie
-- The titlebar menu
+- The Blankie menu in your Mac's menu bar (Blankie → Settings)
+- The gear in the sidebar footer
 
 ## What is the difference between Blankie and Blanket?
 
