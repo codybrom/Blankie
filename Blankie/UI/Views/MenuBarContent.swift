@@ -190,14 +190,9 @@
                 .padding(.vertical, 4)
               }
             }
-            .background(
-              GeometryReader { proxy in
-                Color.clear
-                  .onChange(of: proxy.size.height, initial: true) { _, height in
-                    listContentHeight = height
-                  }
-              }
-            )
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+              listContentHeight = height
+            }
           }
           .frame(height: min(listContentHeight, maxListHeight))
           .scrollDisabled(listContentHeight <= maxListHeight)

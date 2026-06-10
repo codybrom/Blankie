@@ -67,11 +67,8 @@ struct SoundWaveformView: View {
         }
       }
       .frame(width: geometry.size.width, height: height)
-      .onAppear {
-        loadWaveform(width: geometry.size.width)
-      }
-      .onChange(of: geometry.size.width) { _, newWidth in
-        loadWaveform(width: newWidth)
+      .task(id: geometry.size.width) {
+        await loadWaveform(width: geometry.size.width)
       }
     }
     .frame(height: height)
@@ -79,24 +76,23 @@ struct SoundWaveformView: View {
     .accessibilityHidden(true)
   }
 
-  private func loadWaveform(width: CGFloat) {
-    guard let url = getAudioURL(), !isLoading else { return }
+  private func loadWaveform(width: CGFloat) async {
+    guard let url = getAudioURL() else { return }
 
     isLoading = true
 
-    Task.detached(priority: .userInitiated) {
-      do {
-        let samples = try await extractAndDownsampleAudio(from: url, targetWidth: width)
-        await MainActor.run {
-          self.waveformSamples = samples
-          self.isLoading = false
-        }
-      } catch {
-        Logger.ui.error("Failed to load waveform: \(error, privacy: .public)")
-        await MainActor.run {
-          self.isLoading = false
-        }
-      }
+    do {
+      let samples = try await extractAndDownsampleAudio(from: url, targetWidth: width)
+      // Bail if the width changed mid-load (this task was cancelled) so a stale
+      // result can't overwrite the one the newer task is producing.
+      try Task.checkCancellation()
+      waveformSamples = samples
+      isLoading = false
+    } catch is CancellationError {
+      // Superseded by a newer width; leave state for that task to settle.
+    } catch {
+      Logger.ui.error("Failed to load waveform: \(error, privacy: .public)")
+      isLoading = false
     }
   }
 
