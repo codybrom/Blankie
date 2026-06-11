@@ -13,7 +13,7 @@ struct CreatePresetSheet: View {
   /// Sound file names to pre-select ("create from playing sounds" while on
   /// the default preset). Empty = start with nothing selected.
   var initialSelectedSounds: Set<String> = []
-  @ObservedObject private var presetManager = PresetManager.shared
+  private let presetManager = PresetManager.shared
   private let audioManager = AudioManager.shared
   private let globalSettings = GlobalSettings.shared
   @State private var presetName = ""

@@ -24,7 +24,7 @@ struct PresetOnboardingPresenter<Content: View>: View {
   }
 
   @StateObject private var onboardingManager = OnboardingManager.shared
-  @StateObject private var presetManager = PresetManager.shared
+  @State private var presetManager = PresetManager.shared
 
   var body: some View {
     content()

@@ -27,6 +27,8 @@ import os
     private var globalPlayingObservation: Task<Void, Never>?
     private var soloModeObservation: Task<Void, Never>?
     private var playbackStateObservation: Task<Void, Never>?
+    private var currentPresetObservation: Task<Void, Never>?
+    private var presetsObservation: Task<Void, Never>?
 
     // Template references for updating
     private var presetsTemplate: CPListTemplate?
@@ -322,22 +324,22 @@ import os
     }
 
     private func observePresetManagerChanges() {
-      // Observe current preset
-      PresetManager.shared.$currentPreset
-        .sink { [weak self] _ in
-          Task { @MainActor in
-            self?.updatePresetsTemplate()
-            self?.updateNowPlayingButtons()
-          }
+      // Observe current preset (PresetManager is @Observable now). Tracks the
+      // whole value so a rename/theme/artwork edit of the current preset
+      // refreshes too, not just a switch.
+      currentPresetObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ PresetManager.shared.currentPreset }) {
+          self?.updatePresetsTemplate()
+          self?.updateNowPlayingButtons()
         }
-        .store(in: &cancellables)
+      }
 
-      // Observe presets array changes
-      PresetManager.shared.$presets
-        .sink { [weak self] _ in
+      // Observe presets array changes (add/remove/reorder/rename/artwork).
+      presetsObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ PresetManager.shared.presets }) {
           self?.updatePresetsTemplate()
         }
-        .store(in: &cancellables)
+      }
 
       // Observe favorites changes so the CarPlay Favorites section refreshes.
       starredItemsObservation = Task { @MainActor [weak self] in

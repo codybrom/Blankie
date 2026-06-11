@@ -20,7 +20,7 @@ struct SidebarContentView: View {
     @ObservedObject private var appState = AppState.shared
   #endif
 
-  @StateObject private var presetManager = PresetManager.shared
+  @State private var presetManager = PresetManager.shared
   @State private var globalSettings = GlobalSettings.shared
   @State private var audioManager = AudioManager.shared
 

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TimerView: View {
   @Bindable private var timerManager = TimerManager.shared
-  @ObservedObject private var presetManager = PresetManager.shared
+  private let presetManager = PresetManager.shared
   private let globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
   /// Runs instead of `dismiss()` after start/cancel, so a host like the menu bar

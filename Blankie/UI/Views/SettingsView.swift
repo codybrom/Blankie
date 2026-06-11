@@ -40,7 +40,7 @@ struct SettingsView: View {
   private let globalSettings = GlobalSettings.shared
   #if os(iOS) || os(visionOS)
     private let audioManager = AudioManager.shared
-    @ObservedObject private var presetManager = PresetManager.shared
+    private let presetManager = PresetManager.shared
   #endif
   @State private var showingOnboarding = false
   #if os(macOS)

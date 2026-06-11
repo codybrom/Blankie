@@ -26,7 +26,7 @@ private enum IPhonePage: Hashable {
   struct MixerView: View {
     @State var audioManager = AudioManager.shared
     @State var globalSettings = GlobalSettings.shared
-    @StateObject var presetManager = PresetManager.shared
+    @State var presetManager = PresetManager.shared
     @ObservedObject private var appState = AppState.shared
     /// iPhone navigation path. The Library is the stack's root and the app
     /// launches with the mixer pushed on top, so the mixer's back button (or

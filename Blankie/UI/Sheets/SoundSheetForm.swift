@@ -31,7 +31,7 @@ struct SoundSheetForm: View {
   @Binding var isDisappearing: Bool
 
   let globalSettings = GlobalSettings.shared
-  @ObservedObject var presetManager = PresetManager.shared
+  let presetManager = PresetManager.shared
   @State var showingIconPicker = false
   @State var isGeneratingDetails = false
   @State var isGeneratingIcon = false

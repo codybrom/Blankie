@@ -13,7 +13,7 @@ struct SoundSelectionView: View {
   let editingPreset: Preset?
   @Environment(\.dismiss) private var dismiss
   private let audioManager = AudioManager.shared
-  @ObservedObject private var presetManager = PresetManager.shared
+  private let presetManager = PresetManager.shared
 
   private func handleSoundToggle(_ sound: Sound) {
     let isEditingActivePreset = editingPreset?.id == presetManager.currentPreset?.id

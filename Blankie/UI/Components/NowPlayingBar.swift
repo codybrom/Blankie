@@ -17,7 +17,7 @@ import SwiftUI
     @Binding var expandPlayer: Bool
 
     @State private var audioManager = AudioManager.shared
-    @StateObject private var presetManager = PresetManager.shared
+    @State private var presetManager = PresetManager.shared
     @State private var timerManager = TimerManager.shared
     @State private var globalSettings = GlobalSettings.shared
     @State private var playPauseTrigger = 0
@@ -227,7 +227,7 @@ import SwiftUI
     let properties: ArtworkProperties
 
     @State private var artworkImage: UIImage?
-    @StateObject private var presetManager = PresetManager.shared
+    @State private var presetManager = PresetManager.shared
 
     var body: some View {
       RoundedRectangle(cornerRadius: 4, style: .continuous)

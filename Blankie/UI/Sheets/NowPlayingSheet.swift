@@ -18,7 +18,7 @@ import SwiftUI
     var onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
     @State private var audioManager = AudioManager.shared
-    @StateObject private var presetManager = PresetManager.shared
+    @State private var presetManager = PresetManager.shared
     @State private var timerManager = TimerManager.shared
 
     @State private var globalSettings = GlobalSettings.shared

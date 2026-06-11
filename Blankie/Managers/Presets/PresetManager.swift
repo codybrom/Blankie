@@ -5,18 +5,18 @@
 //  Created by Cody Bromley on 1/1/25.
 //
 
-import Combine
 import Foundation
 import Observation
 import SwiftUI
 import os
 
-class PresetManager: ObservableObject {
-  private var isInitializing = true
+@Observable
+class PresetManager {
+  @ObservationIgnored private var isInitializing = true
   static let shared = PresetManager()
 
-  @Published private(set) var presets: [Preset] = []
-  @Published var currentPreset: Preset? {
+  private(set) var presets: [Preset] = []
+  var currentPreset: Preset? {
     didSet {
       AudioManager.shared.updateNowPlayingInfoForPreset(
         preset: currentPreset,
@@ -27,9 +27,9 @@ class PresetManager: ObservableObject {
     }
   }
 
-  @Published private(set) var hasCustomPresets: Bool = false
-  @Published private(set) var isLoading: Bool = true
-  @Published private(set) var error: Error?
+  private(set) var hasCustomPresets: Bool = false
+  private(set) var isLoading: Bool = true
+  private(set) var error: Error?
 
   /// The preset whose theme (accent, blur, view mode) should drive the UI, or
   /// nil when none should. Quick Mix already clears `currentPreset`, but solo
@@ -47,19 +47,18 @@ class PresetManager: ObservableObject {
     return currentPreset
   }
 
-  private var cancellables = Set<AnyCancellable>()
   /// Watches AudioManager's (now `@Observable`) sounds array for add/remove so a
   /// freshly imported or deleted sound re-checks preset divergence. Per-sound
   /// selection/volume changes arrive via `AudioManager.soundDidChange()`.
-  private var soundsObservation: Task<Void, Never>?
-  private var isInitialLoad = true
+  @ObservationIgnored private var soundsObservation: Task<Void, Never>?
+  @ObservationIgnored private var isInitialLoad = true
 
   /// Set by applySoundStates; until then the mixer may not match the preset.
-  var presetStatesApplied = false
+  @ObservationIgnored var presetStatesApplied = false
 
   // In-flight prefetch for nearby preset animated artwork; cancelled when the
   // current preset changes so stale prefetches don't compete with the new one.
-  private var nearbyArtworkPrefetchTask: Task<Void, Never>?
+  @ObservationIgnored private var nearbyArtworkPrefetchTask: Task<Void, Never>?
 
   private init() {
     Logger.presets.debug("PresetManager: --- Begin Initialization ---")
@@ -131,7 +130,6 @@ class PresetManager: ObservableObject {
   }
 
   deinit {
-    cancellables.forEach { $0.cancel() }
     soundsObservation?.cancel()
     Logger.presets.debug("PresetManager: Cleaned up")
   }
@@ -481,9 +479,6 @@ extension PresetManager {
       presets[index] = updatedPreset
       currentPreset = updatedPreset
       savePresets()
-
-      // Force UI update
-      objectWillChange.send()
 
       Logger.presets.debug("PresetManager: Successfully updated sound order")
 

@@ -61,7 +61,7 @@ struct ExportablePreset: Transferable {
 struct EditPresetSheet: View {
   let preset: Preset
   @Binding var isPresented: Preset?
-  @ObservedObject var presetManager = PresetManager.shared
+  let presetManager = PresetManager.shared
   let audioManager = AudioManager.shared
   let globalSettings = GlobalSettings.shared
   @State var presetName: String = ""

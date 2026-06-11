@@ -14,7 +14,7 @@ import os
     let sound: Sound
     var globalSettings: GlobalSettings
     let audioManager: AudioManager
-    @ObservedObject var presetManager = PresetManager.shared
+    let presetManager = PresetManager.shared
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {

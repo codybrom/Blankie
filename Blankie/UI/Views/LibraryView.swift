@@ -138,7 +138,7 @@ struct PresetPickerRow: View {
   let dismissOnSelect: Bool
   let presentation: LibraryView.Presentation
   let onSelection: (() -> Void)?
-  @ObservedObject private var presetManager = PresetManager.shared
+  private let presetManager = PresetManager.shared
   private let audioManager = AudioManager.shared
   private let globalSettings = GlobalSettings.shared
   #if os(macOS)
@@ -487,7 +487,7 @@ struct LibraryView: View {
   /// Type and device safe areas.
   var bottomBarHeight: CGFloat = 0
 
-  @ObservedObject private var presetManager = PresetManager.shared
+  private let presetManager = PresetManager.shared
   private let audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
   private let globalSettings = GlobalSettings.shared

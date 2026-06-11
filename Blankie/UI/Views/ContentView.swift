@@ -15,7 +15,7 @@ import UniformTypeIdentifiers
     @ObservedObject private var appState = AppState.shared
     let audioManager = AudioManager.shared
     let globalSettings = GlobalSettings.shared
-    @StateObject private var presetManager = PresetManager.shared
+    @State private var presetManager = PresetManager.shared
 
     @State private var showingTimerPopover = false
     @State private var showingSpatialMixer = false

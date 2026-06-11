@@ -14,7 +14,7 @@
   struct MenuBarContent: View {
     private let audioManager = AudioManager.shared
     private let globalSettings = GlobalSettings.shared
-    @ObservedObject private var presetManager = PresetManager.shared
+    private let presetManager = PresetManager.shared
     private let timerManager = TimerManager.shared
     @Environment(\.openWindow) private var openWindow
 

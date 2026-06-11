@@ -16,7 +16,7 @@ struct SoundIcon: View {
   #if os(macOS)
     // macOS honors the current preset's accent (see `accentColor`); observe the
     // manager so the grid re-tints when the active preset's color changes.
-    @ObservedObject var presetManager = PresetManager.shared
+    let presetManager = PresetManager.shared
   #endif
   @Environment(\.colorScheme) private var colorScheme
   let maxWidth: CGFloat
