@@ -10,9 +10,9 @@ import SwiftUI
 import os
 
 struct SoundIcon: View {
-  @ObservedObject var sound: Sound
+  let sound: Sound
   let globalSettings = GlobalSettings.shared
-  @ObservedObject var audioManager = AudioManager.shared
+  let audioManager = AudioManager.shared
   #if os(macOS)
     // macOS honors the current preset's accent (see `accentColor`); observe the
     // manager so the grid re-tints when the active preset's color changes.

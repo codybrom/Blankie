@@ -9,7 +9,7 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   struct QuickMixView: View {
-    @ObservedObject var audioManager = AudioManager.shared
+    let audioManager = AudioManager.shared
     let globalSettings = GlobalSettings.shared
 
     private var quickMixSounds: [Sound] {

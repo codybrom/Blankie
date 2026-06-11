@@ -14,7 +14,7 @@ struct CreatePresetSheet: View {
   /// the default preset). Empty = start with nothing selected.
   var initialSelectedSounds: Set<String> = []
   @ObservedObject private var presetManager = PresetManager.shared
-  @ObservedObject private var audioManager = AudioManager.shared
+  private let audioManager = AudioManager.shared
   private let globalSettings = GlobalSettings.shared
   @State private var presetName = ""
   @State private var creatorName = ""

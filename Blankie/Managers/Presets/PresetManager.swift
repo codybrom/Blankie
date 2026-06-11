@@ -7,6 +7,7 @@
 
 import Combine
 import Foundation
+import Observation
 import SwiftUI
 import os
 
@@ -47,6 +48,10 @@ class PresetManager: ObservableObject {
   }
 
   private var cancellables = Set<AnyCancellable>()
+  /// Watches AudioManager's (now `@Observable`) sounds array for add/remove so a
+  /// freshly imported or deleted sound re-checks preset divergence. Per-sound
+  /// selection/volume changes arrive via `AudioManager.soundDidChange()`.
+  private var soundsObservation: Task<Void, Never>?
   private var isInitialLoad = true
 
   /// Set by applySoundStates; until then the mixer may not match the preset.
@@ -59,15 +64,14 @@ class PresetManager: ObservableObject {
   private init() {
     Logger.presets.debug("PresetManager: --- Begin Initialization ---")
 
-    // Set up a single observer for state changes
-    AudioManager.shared.$sounds
-      .debounce(for: .milliseconds(800), scheduler: RunLoop.main)
-      .sink { [weak self] _ in
-        Task { @MainActor in
-          self?.updateCurrentPresetState()
-        }
+    // Re-evaluate preset divergence when the sound set changes (custom sound
+    // imported or deleted). `sounds.count` only emits on add/remove, not on the
+    // per-sound mutations already covered by AudioManager.soundDidChange().
+    soundsObservation = Task { @MainActor [weak self] in
+      for await _ in Observations({ AudioManager.shared.sounds.count }) {
+        self?.updateCurrentPresetState()
       }
-      .store(in: &cancellables)
+    }
 
     // Don't load presets immediately - wait for custom sounds to be loaded
     // This will be triggered by initializePresetManager() after AudioManager setup
@@ -128,6 +132,7 @@ class PresetManager: ObservableObject {
 
   deinit {
     cancellables.forEach { $0.cancel() }
+    soundsObservation?.cancel()
     Logger.presets.debug("PresetManager: Cleaned up")
   }
 }

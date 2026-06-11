@@ -24,7 +24,7 @@ private enum IPhonePage: Hashable {
 
 #if os(iOS) || os(visionOS)
   struct MixerView: View {
-    @StateObject var audioManager = AudioManager.shared
+    @State var audioManager = AudioManager.shared
     @State var globalSettings = GlobalSettings.shared
     @StateObject var presetManager = PresetManager.shared
     @ObservedObject private var appState = AppState.shared
@@ -44,7 +44,6 @@ private enum IPhonePage: Hashable {
     @State var showingNewPresetConfirmation = false
     @State var showingNewPresetSheet = false
     @State var showingSpatialMixer = false
-    @State var soundsUpdateTrigger = 0
     @State var showingNowPlaying = false
     @State private var showingVolumeZeroWarning = false
     @State private var isLandscape = false
@@ -91,8 +90,6 @@ private enum IPhonePage: Hashable {
           }
           .onDisappear {
             Logger.ui.debug("MixerView: SoundSheet disappeared for '\(sound.title)'")
-            // Trigger refresh when sound edit is closed in case sound properties changed
-            soundsUpdateTrigger += 1
           }
       }
       .onChange(of: soundToEdit) { oldValue, newValue in
@@ -145,9 +142,7 @@ private enum IPhonePage: Hashable {
             }
         }
         .onDisappear {
-          // Trigger refresh when sound management is closed in case sounds were imported
-          Logger.ui.debug("MixerView: SoundManagementView closed, triggering refresh")
-          soundsUpdateTrigger += 1
+          Logger.ui.debug("MixerView: SoundManagementView closed")
         }
       }
       .sheet(isPresented: $showingSettings) {
@@ -176,9 +171,7 @@ private enum IPhonePage: Hashable {
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
           .onDisappear {
-            // Trigger refresh when preset edit is closed in case preset was modified
-            Logger.ui.debug("MixerView: EditPresetSheet closed, triggering refresh")
-            soundsUpdateTrigger += 1
+            Logger.ui.debug("MixerView: EditPresetSheet closed")
 
             // CRITICAL: Re-establish media controls after sheet dismissal
             // Animated artwork video preview may have caused iOS to disconnect remote command handlers
@@ -188,43 +181,14 @@ private enum IPhonePage: Hashable {
           }
       }
       .modifier(AudioErrorHandler())
-      // Listen for changes that should trigger view updates
-      .onChange(of: audioManager.sounds.count) { oldValue, newValue in
-        // Sound imported or removed
-        Logger.ui.debug("MixerView: Sound count changed from \(oldValue) to \(newValue)")
-        soundsUpdateTrigger += 1
-      }
-      .onChange(of: presetManager.currentPreset?.id) { oldValue, newValue in
-        // Preset switched
-        Logger.ui.debug(
-          "MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")"
-        )
-        soundsUpdateTrigger += 1
-      }
+      // Sound add/remove, preset switches, and preset edits all flow through
+      // @Observable reads now (audioManager.sounds, presetManager.currentPreset),
+      // so the grid refreshes automatically — no manual trigger needed. Only the
+      // Quick Mix transition keeps a handler, since it has navigation side effects.
       .onChange(of: audioManager.isQuickMix) { _, isQuickMix in
         // Quick Mix is a grid-first mode — entering it (e.g. from the preset
         // picker) always lands on the mixer, never the Now Playing view.
         if isQuickMix { showingNowPlaying = false }
-      }
-      .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
-        // Preset content changed (sounds added/removed)
-        if let oldCount = oldValue, let newCount = newValue, oldCount != newCount {
-          Logger.ui.debug("MixerView: Preset sound count changed from \(oldCount) to \(newCount)")
-          soundsUpdateTrigger += 1
-        }
-      }
-      .onReceive(
-        NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))
-      ) { _ in
-        // Custom sound was imported
-        Logger.ui.debug("MixerView: Received CustomSoundImported notification")
-        soundsUpdateTrigger += 1
-      }
-      .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) {
-        _ in
-        // Preset was updated
-        Logger.ui.debug("MixerView: Received PresetUpdated notification")
-        soundsUpdateTrigger += 1
       }
     }
 

@@ -11,7 +11,7 @@ import os
 /// Interactive onboarding sheet that guides users through creating their first preset
 struct PresetOnboardingSheet: View {
   @Binding var isPresented: Bool
-  @ObservedObject private var audioManager = AudioManager.shared
+  private let audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
   private let globalSettings = GlobalSettings.shared
   @State private var currentStep = 0

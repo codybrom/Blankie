@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
 import os
 
@@ -63,10 +64,11 @@ struct SoundCustomization: Codable, Identifiable {
 }
 
 /// Manager for built-in sound customizations
-class SoundCustomizationManager: ObservableObject {
+@Observable
+class SoundCustomizationManager {
   static let shared = SoundCustomizationManager()
 
-  @Published private var customizations: [String: SoundCustomization] = [:]
+  private var customizations: [String: SoundCustomization] = [:]
 
   private let userDefaultsKey = "soundCustomizations"
 
@@ -266,7 +268,7 @@ class SoundCustomizationManager: ObservableObject {
 
   // MARK: - Persistence
 
-  private var saveTimer: Timer?
+  @ObservationIgnored private var saveTimer: Timer?
 
   private func saveCustomizationsInternal() {
     // Debounce saves to avoid excessive UserDefaults writes during initialization

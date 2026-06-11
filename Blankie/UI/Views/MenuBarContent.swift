@@ -12,7 +12,7 @@
   /// opening on Mixer). A system `NavigationStack` wouldn't self-size in a
   /// `MenuBarExtra` window; the owned fixed-height header sizes to content.
   struct MenuBarContent: View {
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let audioManager = AudioManager.shared
     private let globalSettings = GlobalSettings.shared
     @ObservedObject private var presetManager = PresetManager.shared
     private let timerManager = TimerManager.shared
@@ -299,7 +299,7 @@
   /// parent resolves the shared accent / playing / show-names values so each row
   /// only observes its own `sound`.
   private struct MenuBarSoundRow: View {
-    @ObservedObject var sound: Sound
+    let sound: Sound
     let accent: Color
     let isGloballyPlaying: Bool
     let showSoundNames: Bool

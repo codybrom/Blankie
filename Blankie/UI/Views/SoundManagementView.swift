@@ -13,7 +13,7 @@ struct SoundManagementView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
   @Query private var customSoundData: [CustomSoundData]
-  @ObservedObject private var audioManager = AudioManager.shared
+  private let audioManager = AudioManager.shared
   private let globalSettings = GlobalSettings.shared
 
   @State private var showingFilePicker = false

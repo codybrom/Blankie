@@ -11,7 +11,7 @@ import SwiftUI
   struct QuickMixEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     private let globalSettings = GlobalSettings.shared
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let audioManager = AudioManager.shared
     @State private var selectedSounds: [String] = []
 
     var body: some View {
@@ -79,6 +79,8 @@ import SwiftUI
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") {
               globalSettings.setQuickMixSoundFileNames(selectedSounds)
+              // Stop any sound that was just removed from an active mix.
+              audioManager.reconcileQuickMixMembership()
               dismiss()
             }
             .disabled(selectedSounds.isEmpty)
@@ -104,7 +106,7 @@ import SwiftUI
 
   struct QuickMixSoundPicker: View {
     @Binding var selectedSounds: [String]
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let audioManager = AudioManager.shared
     private let globalSettings = GlobalSettings.shared
 
     private var builtInSounds: [Sound] {

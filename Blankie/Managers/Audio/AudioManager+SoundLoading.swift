@@ -177,7 +177,7 @@ extension AudioManager {
     }
 
     // Re-setup observers for the new sounds
-    setupSoundObservers()
+    refreshSoundDerivedState()
   }
 
   @MainActor
@@ -233,7 +233,7 @@ extension AudioManager {
     }
 
     // Re-setup observers for the new sounds
-    setupSoundObservers()
+    refreshSoundDerivedState()
 
     // Deferred so preset cleanup can't starve the preset-apply task.
     Task(priority: .background) { @MainActor in

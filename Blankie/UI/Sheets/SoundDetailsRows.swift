@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Read-only technical detail rows, shown in Edit Sound's Details disclosure.
 struct SoundDetailsRows: View {
-  @ObservedObject var sound: Sound
+  let sound: Sound
   @State private var isReanalyzing = false
 
   var body: some View {

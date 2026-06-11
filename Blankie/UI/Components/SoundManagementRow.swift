@@ -12,7 +12,7 @@ struct SoundManagementRowContent: View {
   let isLast: Bool
   let onDelete: () -> Void
 
-  @ObservedObject private var audioManager = AudioManager.shared
+  private let audioManager = AudioManager.shared
 
   private var isCustomSound: Bool {
     sound.isCustom

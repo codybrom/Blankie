@@ -13,13 +13,13 @@
 import SwiftUI
 
 struct SoloSoundIcon: View {
-  @ObservedObject var sound: Sound
+  let sound: Sound
   var iconSize: CGFloat = 200
 
   private let globalSettings = GlobalSettings.shared
   // Observe playback so the disc/icon/border react to play–pause; reading
   // AudioManager.shared statically misses updates (SoundIcon does the same).
-  @ObservedObject private var audioManager = AudioManager.shared
+  private let audioManager = AudioManager.shared
 
   private var accentColor: Color {
     globalSettings.customAccentColor ?? .accentColor

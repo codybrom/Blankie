@@ -12,7 +12,7 @@ import SwiftUI
     @Binding var showingShortcuts: Bool
     @Binding var hasWindow: Bool
     @StateObject private var appState = AppState.shared
-    @StateObject private var audioManager = AudioManager.shared
+    @State private var audioManager = AudioManager.shared
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {

@@ -17,7 +17,7 @@ import SwiftUI
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var audioManager = AudioManager.shared
+    @State private var audioManager = AudioManager.shared
     @StateObject private var presetManager = PresetManager.shared
     @State private var timerManager = TimerManager.shared
 

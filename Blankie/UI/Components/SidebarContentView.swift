@@ -22,7 +22,7 @@ struct SidebarContentView: View {
 
   @StateObject private var presetManager = PresetManager.shared
   @State private var globalSettings = GlobalSettings.shared
-  @StateObject private var audioManager = AudioManager.shared
+  @State private var audioManager = AudioManager.shared
 
   /// The sidebar follows the theming preset: its accent, then the app-wide
   /// custom accent, then the system accent. `themingPreset` is nil during

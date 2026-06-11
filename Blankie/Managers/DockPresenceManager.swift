@@ -20,6 +20,7 @@
 
     private var cancellables = Set<AnyCancellable>()
     private var settingsObservation: Task<Void, Never>?
+    private var audioObservation: Task<Void, Never>?
 
     /// Begin observing the settings + window state. Call once after launch.
     func start() {
@@ -40,20 +41,25 @@
         }
       }
 
-      // WindowObserver and AudioManager are still ObservableObject (migrated in a
-      // later stage); keep their Combine subscriptions for now. The Dock pause
-      // badge must stay correct even with the main window closed — its in-window
-      // owner (ContentView) is gone, but the menu bar popover can still play.
+      // WindowObserver is still ObservableObject (migrated in a later stage);
+      // keep its Combine subscription for now. The Dock pause badge must stay
+      // correct even with the main window closed — its in-window owner
+      // (ContentView) is gone, but the menu bar popover can still play.
       WindowObserver.shared.$hasVisibleWindow
         .receive(on: RunLoop.main)
         .sink { [weak self] _ in self?.apply() }
         .store(in: &cancellables)
 
-      let audio = AudioManager.shared
-      Publishers.CombineLatest(audio.$isGloballyPlaying, audio.$hasSelectedSounds)
-        .receive(on: RunLoop.main)
-        .sink { [weak self] _ in self?.updateDockBadge() }
-        .store(in: &cancellables)
+      // AudioManager is @Observable: refresh the Dock pause badge whenever
+      // playback or the selection emptiness changes.
+      audioObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({
+          let audio = AudioManager.shared
+          return (audio.isGloballyPlaying, audio.hasSelectedSounds)
+        }) {
+          self?.updateDockBadge()
+        }
+      }
     }
 
     /// Badge the Dock icon whenever the app is silent — paused, or "playing"

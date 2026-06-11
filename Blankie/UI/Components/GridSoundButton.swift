@@ -16,8 +16,8 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   struct GridSoundButton: View {
-    @ObservedObject var sound: Sound
-    @ObservedObject var audioManager = AudioManager.shared
+    let sound: Sound
+    let audioManager = AudioManager.shared
     let globalSettings = GlobalSettings.shared
 
     /// Explicit lit-state override. Quick Mix passes `isQuickMix &&
@@ -28,13 +28,11 @@ import SwiftUI
     /// Mix mode enters quick mix and toggles membership.
     var onTap: () -> Void
 
-    /// Whether the tile should render as "lit up". Read live in `body` rather
-    /// than captured in `init`: in the grid the tile observes `sound`, but its
-    /// `init` doesn't re-run on a selection toggle (the parent isn't always
-    /// re-evaluated — AudioManager only republishes when the *count* of
-    /// selected sounds crosses 0↔1), so a stored copy would go stale and the
-    /// tile wouldn't light up when tapped. Quick Mix supplies an explicit
-    /// override, recomputed on each `QuickMixView` re-render.
+    /// Whether the tile should render as "lit up". Read live in `body` (the
+    /// `@Observable` `sound.isSelected` read tracks here) rather than captured in
+    /// `init`, which doesn't re-run on a selection toggle — a stored copy would
+    /// go stale and the tile wouldn't light up when tapped. Quick Mix supplies an
+    /// explicit override, recomputed on each `QuickMixView` re-render.
     var isActive: Bool { isActiveOverride ?? sound.isSelected }
 
     /// Quick Mix is the only caller that passes an explicit `isActive` override
@@ -48,7 +46,7 @@ import SwiftUI
       isActive: Bool? = nil,
       onTap: (() -> Void)? = nil
     ) {
-      self._sound = ObservedObject(wrappedValue: sound)
+      self.sound = sound
       self.isActiveOverride = isActive
       self.onTap =
         onTap ?? {

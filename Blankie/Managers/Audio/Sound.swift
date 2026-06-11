@@ -6,13 +6,14 @@
 //
 
 import AVFoundation
-import Combine
 import CoreMedia
+import Observation
 import SwiftUI
 import os
 
 /// Represents a single sound with its associated properties and playback controls.
-open class Sound: NSObject, ObservableObject, Identifiable {
+@Observable
+open class Sound: NSObject, Identifiable {
   public let id = UUID()
   let originalTitle: String
   let originalSystemIconName: String
@@ -23,8 +24,8 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   // playing; `Sound+Normalization.analyzeAndUpdateLUFS` writes these from an
   // extension in another file, so they cannot be `private(set)`. Without this
   // relaxation, volume stays stuck at factor 1.0 until next app launch.
-  @Published var lufs: Float?
-  @Published var normalizationFactor: Float?
+  var lufs: Float?
+  var normalizationFactor: Float?
   let truePeakdBTP: Float?
   let needsLimiter: Bool
   /// Music tag default from sounds.json (false for custom sounds); the
@@ -36,7 +37,7 @@ open class Sound: NSObject, ObservableObject, Identifiable {
   let fileURL: URL?
   let dateAdded: Date?
   let customSoundDataID: UUID?  // For linking to SwiftData if needed
-  private var _customSoundData: CustomSoundData?
+  @ObservationIgnored private var _customSoundData: CustomSoundData?
 
   /// SwiftData record backing a custom sound, fetched once then reused (the model object stays live).
   @MainActor var customSoundData: CustomSoundData? {
@@ -71,7 +72,7 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     SoundCustomizationManager.shared.getCustomization(for: fileName)?.isMusic ?? isMusicDefault
   }
 
-  @Published var isSelected = false {
+  var isSelected = false {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
 
@@ -179,15 +180,23 @@ open class Sound: NSObject, ObservableObject, Identifiable {
           }
         }
       }
+
+      // Selection changed: refresh derived selection state, preset divergence,
+      // and Now Playing. Replaces the old per-Sound Combine observer in
+      // AudioManager. Skipped during bootstrap (reaching `shared` would re-enter
+      // its still-running init); state restore there seeds the same state.
+      if !AudioManager.isBootstrapping {
+        AudioManager.shared.soundDidChange()
+      }
     }
   }
 
   /// Play/pause fades and preset crossfades all use this ramp length.
   static let fadeDuration: TimeInterval = 0.5
 
-  var volumeDebounceTimer: Timer?
+  @ObservationIgnored var volumeDebounceTimer: Timer?
 
-  @Published var volume: Float = 0.75 {
+  var volume: Float = 0.75 {
     didSet {
       guard volume >= 0, volume <= 1 else {
         Logger.sounds.error("Sound: Invalid volume for '\(self.fileName, privacy: .public)'")
@@ -217,14 +226,20 @@ open class Sound: NSObject, ObservableObject, Identifiable {
         UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
         Logger.sounds.debug("Sound: \(self.fileName) final volume saved as \(self.volume)")
       }
+
+      // Volume changed: re-evaluate preset divergence (a preset records each
+      // sound's volume). Replaces the old per-Sound Combine observer.
+      if !AudioManager.isBootstrapping {
+        AudioManager.shared.soundDidChange()
+      }
     }
   }
 
-  var player: SoundPlayer?
+  @ObservationIgnored var player: SoundPlayer?
 
   /// Explicit playback lifecycle. `var` (not `private(set)`) because
   /// Sound+Playback maintains it from another file (same relaxation as `lufs`).
-  @Published var playbackState: PlaybackState = .stopped
+  var playbackState: PlaybackState = .stopped
 
   enum PlaybackState {
     case stopped
@@ -256,18 +271,17 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     playbackState = .stopped
   }
 
-  private var customizationObserver: AnyCancellable?
-  var isResetting = false
-  private var isLoading = false
+  @ObservationIgnored var isResetting = false
+  @ObservationIgnored private var isLoading = false
   // Memoized spatial-cache existence (not private: re-analysis in
   // Sound+Normalization invalidates it when the baked boost changes).
-  var spatialReadyCache: Bool?
+  @ObservationIgnored var spatialReadyCache: Bool?
 
   // Metadata properties
-  @Published var channelCount: Int?
-  @Published var duration: TimeInterval?
-  @Published var fileSize: Int64?
-  @Published var fileFormat: String?
+  var channelCount: Int?
+  var duration: TimeInterval?
+  var fileSize: Int64?
+  var fileFormat: String?
 
   init(
     title: String, systemIconName: String, fileName: String, fileExtension: String = "mp3",
@@ -300,17 +314,11 @@ open class Sound: NSObject, ObservableObject, Identifiable {
     // Global volume rides the engine's main mixer (AudioEngineManager), so
     // sounds no longer observe it individually.
 
-    // Observe customization changes to trigger UI updates and volume changes
-    customizationObserver = SoundCustomizationManager.shared.objectWillChange
-      .sink { [weak self] _ in
-        DispatchQueue.main.async {
-          self?.objectWillChange.send()
-          // Update volume if player exists to apply new customization settings
-          if self?.player != nil {
-            self?.updateVolume()
-          }
-        }
-      }
+    // Customization-derived values (title, icon, music/preset-only tags) are
+    // computed reads of the now-@Observable SoundCustomizationManager, so views
+    // track them automatically — no manual observer needed. The live volume
+    // side effect of a customization change is applied by the editor's
+    // explicit `applyCustomizationInstantly` → `updateVolume()` path.
 
     // Don't load sound immediately to avoid triggering audio session during initialization
     // loadSound() will be called lazily when needed
@@ -397,7 +405,6 @@ open class Sound: NSObject, ObservableObject, Identifiable {
 
   deinit {
     Logger.sounds.debug("Sound: Deinitialized '\(self.fileName)'")
-    customizationObserver?.cancel()
     volumeDebounceTimer?.invalidate()
   }
 

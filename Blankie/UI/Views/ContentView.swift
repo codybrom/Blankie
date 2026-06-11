@@ -13,7 +13,7 @@ import UniformTypeIdentifiers
     @Binding var showingShortcuts: Bool
 
     @ObservedObject private var appState = AppState.shared
-    @ObservedObject var audioManager = AudioManager.shared
+    let audioManager = AudioManager.shared
     let globalSettings = GlobalSettings.shared
     @StateObject private var presetManager = PresetManager.shared
 
@@ -448,7 +448,6 @@ import UniformTypeIdentifiers
         // Must match the suite the order is read back from at launch
         // (UserDefaults.shared / app group); .standard silently reverts.
         UserDefaults.shared.set(complete, forKey: "defaultSoundOrder")
-        audioManager.objectWillChange.send()
       }
     }
 

@@ -24,6 +24,9 @@ import os
     private var timerActiveObservation: Task<Void, Never>?
     private var quickMixObservation: Task<Void, Never>?
     private var starredItemsObservation: Task<Void, Never>?
+    private var globalPlayingObservation: Task<Void, Never>?
+    private var soloModeObservation: Task<Void, Never>?
+    private var playbackStateObservation: Task<Void, Never>?
 
     // Template references for updating
     private var presetsTemplate: CPListTemplate?
@@ -258,23 +261,22 @@ import os
     // MARK: - Observers
 
     private func observeAudioManagerChanges() {
-      // Observe global playback state
-      AudioManager.shared.$isGloballyPlaying
-        .sink { [weak self] _ in
+      // Observe global playback state (AudioManager is @Observable now).
+      globalPlayingObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ AudioManager.shared.isGloballyPlaying }) {
           self?.updateAllTemplates()
         }
-        .store(in: &cancellables)
+      }
 
-      // Observe solo mode changes
-      AudioManager.shared.$soloModeSound
-        .sink { [weak self] _ in
-          Task { @MainActor in
-            self?.updateSoundsTemplate()
-            self?.updateQuickMixTemplate()
-            self?.updateNowPlayingButtons()
-          }
+      // Observe solo mode changes. Tracks the soloed sound's id so entering or
+      // leaving solo (or switching the soloed sound) refreshes the templates.
+      soloModeObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ AudioManager.shared.soloModeSound?.id }) {
+          self?.updateSoundsTemplate()
+          self?.updateQuickMixTemplate()
+          self?.updateNowPlayingButtons()
         }
-        .store(in: &cancellables)
+      }
 
       // Observe sound state changes
       NotificationCenter.default.publisher(for: .soundStateChanged)
@@ -282,6 +284,20 @@ import os
           self?.updateQuickMixTemplate()
         }
         .store(in: &cancellables)
+
+      // Mirror phone-side play/pause of individual sounds onto CarPlay's tiles.
+      // The Sounds list and Quick Mix grid both render a per-sound "playing"
+      // state; a CarPlay tap posts `.soundStateChanged`, but a phone-side toggle
+      // (which may not flip global playback) has no such signal. Tracking each
+      // sound's `playbackState` closes that phone → CarPlay direction.
+      playbackStateObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({
+          AudioManager.shared.sounds.map { $0.playbackState == .playing }
+        }) {
+          self?.updateSoundsTemplate()
+          self?.updateQuickMixTemplate()
+        }
+      }
 
       // Refresh the Quick Mix grid when its membership or order changes on
       // the phone (editor sheet or grid reorder).

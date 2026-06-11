@@ -11,9 +11,9 @@ import os
 #if os(iOS) || os(visionOS)
   // Separate view struct to properly observe Sound changes
   struct SoundRowView: View {
-    @ObservedObject var sound: Sound
+    let sound: Sound
     var globalSettings: GlobalSettings
-    @ObservedObject var audioManager: AudioManager
+    let audioManager: AudioManager
     @ObservedObject var presetManager = PresetManager.shared
     @Environment(\.colorScheme) private var colorScheme
 
@@ -157,9 +157,7 @@ import os
       List {
         ForEach(filteredSounds) { sound in
           soundRow(for: sound)
-            .id(
-              "\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)"
-            )
+            .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)")
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -172,7 +170,7 @@ import os
       // safe-area-bar inset doesn't reach this nested List
       .contentMargins(.bottom, 72, for: .scrollContent)
       .transition(.opacity)
-      .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
+      .id("\(globalSettings.showSoundNames)")
     }
 
     // Reorder handler shared by the list and grid views in `mainContentView`.
@@ -213,12 +211,9 @@ import os
 
         Logger.ui.debug("ListView: Complete order being sent: \(completeOrder)")
 
-        // Update the preset with the new order
+        // Update the preset with the new order. The grid re-sorts from the
+        // persisted order automatically (@Observable preset/sounds reads).
         presetManager.updateCurrentPresetWithOrder(completeOrder)
-
-        // Force UI refresh
-        soundsUpdateTrigger += 1
-        Logger.ui.debug("ListView: UI refresh triggered")
       } else {
         // We're reordering the main sound grid (default preset or no preset)
         Logger.ui.debug("ListView: Moving sounds in default view")
@@ -253,16 +248,12 @@ import os
 
         Logger.ui.debug("ListView: Complete default order being saved: \(completeOrder)")
 
-        // Update the default order
+        // Update the default order. Assigning the @Observable array re-sorts
+        // the grid automatically; no manual refresh needed.
         audioManager.defaultSoundOrder = completeOrder
         // Must match the suite the order is read back from at launch
         // (UserDefaults.shared / app group); .standard silently reverts.
         UserDefaults.shared.set(completeOrder, forKey: "defaultSoundOrder")
-        audioManager.objectWillChange.send()
-
-        // Force UI refresh
-        soundsUpdateTrigger += 1
-        Logger.ui.debug("ListView: UI refresh triggered for default view")
       }
     }
 

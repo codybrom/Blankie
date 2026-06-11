@@ -39,7 +39,7 @@ struct SettingsView: View {
   @Environment(\.dismiss) private var dismiss
   private let globalSettings = GlobalSettings.shared
   #if os(iOS) || os(visionOS)
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let audioManager = AudioManager.shared
     @ObservedObject private var presetManager = PresetManager.shared
   #endif
   @State private var showingOnboarding = false
@@ -595,7 +595,7 @@ struct SettingsView: View {
 // Settings list, above Sounds — not under Manage Sounds.
 private struct PlaybackSettingsSection: View {
   #if os(iOS) || os(visionOS)
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let audioManager = AudioManager.shared
   #endif
   var globalSettings: GlobalSettings
 
