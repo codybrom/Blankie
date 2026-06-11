@@ -47,8 +47,8 @@
             }
           ],
           "hidden" : false,
-          "image-name" : "path2.svg",
-          "name" : "path2",
+          "image-name" : "soundwave.svg",
+          "name" : "Soundwave",
           "position" : {
             "scale" : 1,
             "translation-in-points" : [
@@ -60,7 +60,7 @@
       ],
       "lighting" : "combined",
       "position" : {
-        "scale" : 0.75,
+        "scale" : 0.8543,
         "translation-in-points" : [
           28,
           1.6015625
@@ -113,10 +113,10 @@
           ],
           "glass" : true,
           "hidden" : false,
-          "image-name" : "Path-1.svg",
-          "name" : "Path-1",
+          "image-name" : "letter-b.svg",
+          "name" : "Letter B",
           "position" : {
-            "scale" : 0.75,
+            "scale" : 0.8543,
             "translation-in-points" : [
               28,
               -12.5

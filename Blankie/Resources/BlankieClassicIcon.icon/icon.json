@@ -11,8 +11,8 @@
             "solid" : "extended-gray:0.02005,1.00000"
           },
           "glass" : false,
-          "image-name" : "path2.svg",
-          "name" : "path2",
+          "image-name" : "blanket-outline.svg",
+          "name" : "Blanket Outline",
           "opacity" : 1
         },
         {
@@ -40,8 +40,8 @@
           ],
           "glass" : false,
           "hidden" : false,
-          "image-name" : "Path.svg",
-          "name" : "Path",
+          "image-name" : "blanket-white.svg",
+          "name" : "Blanket White",
           "opacity-specializations" : [
             {
               "appearance" : "dark",
@@ -66,8 +66,8 @@
           ],
           "glass" : true,
           "hidden" : false,
-          "image-name" : "path1.svg",
-          "name" : "path1",
+          "image-name" : "blanket-plaid.svg",
+          "name" : "Blanket Plaid",
           "opacity-specializations" : [
             {
               "value" : 0.25
@@ -94,8 +94,8 @@
             }
           ],
           "glass" : false,
-          "image-name" : "Shape.svg",
-          "name" : "Shape",
+          "image-name" : "blanket-fill.svg",
+          "name" : "Blanket Fill",
           "opacity-specializations" : [
             {
               "appearance" : "dark",
