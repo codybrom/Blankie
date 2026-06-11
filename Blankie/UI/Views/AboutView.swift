@@ -49,7 +49,6 @@ import os
 struct AboutView: View {
   @ObservedObject private var creditsManager = SoundCreditsManager.shared
   private let globalSettings = GlobalSettings.shared
-  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @State private var isSoundCreditsExpanded = false
   @State private var isLicenseExpanded = false
   @State private var isAcknowledgementsExpanded = false
@@ -76,27 +75,20 @@ struct AboutView: View {
       VStack(spacing: 20) {
         appIconView
         appInfoSection
-        linksSection
-
-        InspirationSection()
-        Divider().padding(.horizontal, 40).accessibilityHidden(true)
         DeveloperSection()
-
+        InspirationSection()
         if !contributors.isEmpty {
           Divider().padding(.horizontal, 40).accessibilityHidden(true)
           ContributorSection(contributors: contributors)
         }
-
         if !translators.isEmpty {
           Divider().padding(.horizontal, 40).accessibilityHidden(true)
           TranslatorSection(translators: translators)
         }
-
         if !betaTesters.isEmpty {
           Divider().padding(.horizontal, 40).accessibilityHidden(true)
           ContributorSection(title: "Beta Testers", contributors: betaTesters)
         }
-
         Divider().padding(.horizontal, 40).accessibilityHidden(true)
         copyrightText
         creditsAndLicenseSection
@@ -160,41 +152,6 @@ extension AboutView {
         .font(.aboutCaption)
         .foregroundStyle(.secondary)
     }
-  }
-
-  private var linksSection: some View {
-    let linksLayout =
-      dynamicTypeSize.isAccessibilitySize
-      ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 16))
-    return linksLayout {
-      HStack(spacing: 4) {
-        Image(systemName: "globe")
-          .accessibilityHidden(true)
-        // .tint (not the default link blue) so links follow the app accent.
-        Link("blankie.rest", destination: URL(string: "https://blankie.rest")!)
-          .foregroundStyle(.tint)
-          .handCursor()
-      }
-
-      Link(destination: URL(string: "https://github.com/codybrom/blankie")!) {
-        HStack(spacing: 4) {
-          Image(systemName: "star.fill").foregroundStyle(.yellow)
-          Text("Star on GitHub")
-            .foregroundStyle(.tint)
-        }
-      }
-      .handCursor()
-
-      Link(destination: URL(string: "https://github.com/codybrom/blankie/issues")!) {
-        HStack(spacing: 4) {
-          Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
-          Text("Report an Issue")
-            .foregroundStyle(.tint)
-        }
-      }
-      .handCursor()
-    }
-    .font(.aboutBody)
   }
 
   private var copyrightText: some View {

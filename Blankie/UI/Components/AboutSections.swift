@@ -63,15 +63,132 @@ struct ContributorSection: View {
         .font(.aboutHeading)
         .padding(.bottom, 4)
 
-      // One joined Text so long name lists wrap, and VoiceOver reads the
-      // list as a single phrase ("Hans, Fritz, …").
-      Text(contributors.joined(separator: ", "))
-        .font(.aboutBody)
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity, alignment: .center)
+      CenteredFlowLayout(itemSpacing: 8, lineSpacing: 10) {
+        // Names and dot separators are interleaved as separate items: a name is
+        // fixed so it never breaks mid-word, and the layout drops any separator
+        // that lands at the end of a line so dots stay strictly interior.
+        ForEach(contributors.indices, id: \.self) { index in
+          Text(contributors[index])
+            .font(.aboutBody)
+            .lineLimit(1)
+            .fixedSize()
+          if index < contributors.count - 1 {
+            Image(systemName: "circle.fill")
+              .font(.system(size: 4))
+              .foregroundStyle(.tertiary)
+              .flowSeparator()
+              .accessibilityHidden(true)
+          }
+        }
+      }
+      .frame(maxWidth: .infinity)
+      // Keep names within the same width as the section dividers (which inset 40).
+      .padding(.horizontal, 40)
+      // Clip the row-trailing separators the layout parks off-bounds.
+      .clipped()
+      // Read the whole list as one phrase rather than name-by-name with dots.
+      .accessibilityElement(children: .ignore)
+      .accessibilityLabel(Text(contributors.joined(separator: ", ")))
     }
     .frame(maxWidth: .infinity)
     .padding(.bottom, 4)
+  }
+}
+
+/// Marks a flow item as a separator: it glues to the preceding item's line and
+/// is dropped when it would land at a line's end, so separators stay interior.
+private struct FlowSeparatorKey: LayoutValueKey {
+  static let defaultValue = false
+}
+
+extension View {
+  fileprivate func flowSeparator() -> some View {
+    layoutValue(key: FlowSeparatorKey.self, value: true)
+  }
+}
+
+/// Wrapping flow layout that center-aligns each line. Each subview is placed
+/// whole, so a name is never broken across lines. Items tagged `flowSeparator()`
+/// never trigger a wrap and are hidden when they fall at the end of a line.
+struct CenteredFlowLayout: Layout {
+  var itemSpacing: CGFloat = 10
+  var lineSpacing: CGFloat = 10
+
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
+    let maxWidth = proposal.width ?? .infinity
+    let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+    let separators = subviews.map { $0[FlowSeparatorKey.self] }
+    let rows = rows(maxWidth: maxWidth, sizes: sizes, separators: separators)
+    let height =
+      rows.map { row in row.map { sizes[$0].height }.max() ?? 0 }.reduce(0, +)
+      + lineSpacing * CGFloat(max(0, rows.count - 1))
+    let widest = rows.map { rowWidth(visible($0, separators: separators), sizes: sizes) }.max() ?? 0
+    return CGSize(width: maxWidth.isFinite ? maxWidth : widest, height: height)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
+  ) {
+    let sizes = subviews.map { $0.sizeThatFits(.unspecified) }
+    let separators = subviews.map { $0[FlowSeparatorKey.self] }
+    let rows = rows(maxWidth: bounds.width, sizes: sizes, separators: separators)
+    var y = bounds.minY
+    for row in rows {
+      let rowHeight = row.map { sizes[$0].height }.max() ?? 0
+      let shown = visible(row, separators: separators)
+      // Center the visible items (the dropped trailing separator is excluded).
+      var x = bounds.minX + max(0, (bounds.width - rowWidth(shown, sizes: sizes)) / 2)
+      for itemIndex in row {
+        let size = sizes[itemIndex]
+        if shown.contains(itemIndex) {
+          subviews[itemIndex].place(
+            at: CGPoint(x: x, y: y + (rowHeight - size.height) / 2),
+            anchor: .topLeading,
+            proposal: ProposedViewSize(size)
+          )
+          x += size.width + itemSpacing
+        } else {
+          // Park the dropped separator off-bounds; the caller clips it away.
+          subviews[itemIndex].place(
+            at: CGPoint(x: bounds.minX, y: bounds.maxY + 1000),
+            anchor: .topLeading,
+            proposal: ProposedViewSize(size)
+          )
+        }
+      }
+      y += rowHeight + lineSpacing
+    }
+  }
+
+  /// A row with any trailing separators removed.
+  private func visible(_ row: [Int], separators: [Bool]) -> [Int] {
+    var row = row
+    while let last = row.last, separators[last] { row.removeLast() }
+    return row
+  }
+
+  private func rowWidth(_ row: [Int], sizes: [CGSize]) -> CGFloat {
+    row.map { sizes[$0].width }.reduce(0, +) + itemSpacing * CGFloat(max(0, row.count - 1))
+  }
+
+  private func rows(maxWidth: CGFloat, sizes: [CGSize], separators: [Bool]) -> [[Int]] {
+    var rows: [[Int]] = []
+    var row: [Int] = []
+    var x: CGFloat = 0
+    for index in sizes.indices {
+      let width = sizes[index].width
+      // Separators never wrap; they stay glued to the line of the preceding name.
+      if !separators[index], !row.isEmpty, x + itemSpacing + width > maxWidth {
+        rows.append(row)
+        row = []
+        x = 0
+      }
+      if !row.isEmpty { x += itemSpacing }
+      row.append(index)
+      x += width
+    }
+    if !row.isEmpty { rows.append(row) }
+    return rows
   }
 }
 

@@ -5149,9 +5149,6 @@
         }
       }
     },
-    "blankie.rest" : {
-      "shouldTranslate" : false
-    },
     "Blankie's volume with other media is turned all the way down." : {
       "localizations" : {
         "de" : {
