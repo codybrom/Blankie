@@ -43,6 +43,9 @@ struct SettingsView: View {
     private let presetManager = PresetManager.shared
   #endif
   @State private var showingOnboarding = false
+  #if os(iOS)
+    @State private var showingAppIconPicker = false
+  #endif
   #if os(macOS)
     /// Holds the in-pane About sub-page flag (app-level so the menu bar's
     /// About Blankie can open straight to it; reset when the pane closes).
@@ -318,6 +321,31 @@ struct SettingsView: View {
             AboutView()
           } label: {
             aboutRowLabel
+          }
+        #endif
+
+        #if os(iOS)
+          // App icon picker, promoted from the About page. Presented as its
+          // own sheet so dismissing it can't tear down the settings stack.
+          Button {
+            showingAppIconPicker = true
+          } label: {
+            Label {
+              Text("App Icon")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "app.dashed")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+            }
+            .formRowLabel()
+          }
+          .formRowButtonStyle()
+          .sheet(isPresented: $showingAppIconPicker) {
+            NavigationStack {
+              AppIconPickerView()
+            }
+            .presentationDetents([.fraction(2.0 / 3.0), .large])
           }
         #endif
 
