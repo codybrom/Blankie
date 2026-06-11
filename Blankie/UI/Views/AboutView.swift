@@ -14,17 +14,21 @@ import os
   extension UIApplication {
     /// Returns the currently active app icon image (supports alternate icons), falling back to the primary icon
     var currentAppIcon: UIImage? {
+      // 1024px display assets alias when GPU-minified to header size;
+      // downsample once with a proper filter instead.
+      currentAppIconFullSize?.preparingThumbnail(of: CGSize(width: 360, height: 360))
+        ?? currentAppIconFullSize
+    }
+
+    private var currentAppIconFullSize: UIImage? {
       // iOS 18: .icon files cannot be loaded with UIImage(named:)
       // We need to look for matching display assets in the asset catalog
 
-      // If an alternate icon is active, try to load its display asset
+      // If an alternate icon is active, load its display asset. (Display assets
+      // only: UIImage(named:) on a .icon-compiled name throws rather than
+      // returning nil.)
       if let altName = UIApplication.shared.alternateIconName {
-        // Try loading from asset catalog with "Display" suffix
         if let image = UIImage(named: "\(altName)Display") {
-          return image
-        }
-        // Try loading the alternate icon directly
-        if let image = UIImage(named: altName) {
           return image
         }
         Logger.ui.debug("AboutView: Unable to load alternate icon image '\(altName)'; falling back")

@@ -72,7 +72,7 @@
 
     private static func createSoundEditItem(_ sound: Sound) -> CPListItem {
       let isSelected = sound.isSelected
-      let percent = "\(Int(sound.volume * 100))%"
+      let percent = Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))
       let volumeText = String(localized: "\(percent) Volume")
 
       let item = CPListItem(
@@ -179,7 +179,7 @@
     }
 
     private static func createCurrentVolumeItem(for sound: Sound) -> CPListItem {
-      let percent = "\(Int(sound.volume * 100))%"
+      let percent = Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))
       let item = CPListItem(
         text: String(localized: "\(percent) Volume"),
         detailText: nil
@@ -212,7 +212,7 @@
         let isCurrentVolume = abs(sound.volume - volume) < 0.01
 
         let item = CPListItem(
-          text: "\(percentage)%",
+          text: (Double(percentage) / 100).formatted(.percent.precision(.fractionLength(0))),
           detailText: isCurrentVolume ? String(localized: "Current") : nil
         )
 
@@ -260,7 +260,7 @@
         let volume = Float(percentage) / 100.0
 
         let item = CPListItem(
-          text: "\(percentage)%",
+          text: (Double(percentage) / 100).formatted(.percent.precision(.fractionLength(0))),
           detailText: nil
         )
 
