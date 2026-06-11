@@ -194,6 +194,11 @@ open class Sound: NSObject, Identifiable {
   /// Play/pause fades and preset crossfades all use this ramp length.
   static let fadeDuration: TimeInterval = 0.5
 
+  /// Remote-command pauses cut instantly: Control Center re-derives "playing"
+  /// from live engine I/O, and any audible ramp (0.5s and 0.15s both
+  /// device-tested) made its transport button dance.
+  static let remotePauseFadeDuration: TimeInterval = 0
+
   @ObservationIgnored var volumeDebounceTimer: Timer?
 
   var volume: Float = 0.75 {

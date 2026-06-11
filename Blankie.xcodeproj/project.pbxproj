@@ -64,6 +64,9 @@
 				Resources/AnimatedArtwork/StreamLoop/StreamLoop.mov = (StreamLoop, );
 				Resources/AnimatedArtwork/Swirl/Swirl.mov = (Swirl, );
 			};
+			membershipExceptions = (
+				Managers/Audio/README.md,
+			);
 			target = F913505E2D233A43003C85BE /* Blankie */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */

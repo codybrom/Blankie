@@ -264,6 +264,27 @@ final class AudioEngineManager {
     }
   }
 
+  /// Pauses hardware I/O once nothing is rendering (graph stays intact;
+  /// `ensureRunning()` restarts on next play). An engine left running — even
+  /// over silence — makes iOS report the app as playing despite rate 0.
+  @discardableResult
+  func pauseIfIdle() -> Bool {
+    guard engine.isRunning else { return false }
+    guard !registered.values.contains(where: { $0.isPlaying }) else { return false }
+
+    pause()
+    return true
+  }
+
+  /// Unconditionally pauses hardware I/O (the post-retry safety net when a
+  /// player still claims to be rendering after a global pause).
+  func pause() {
+    guard engine.isRunning else { return }
+    engine.pause()
+    state = .paused
+    Logger.audio.debug("AudioEngineManager: Paused engine")
+  }
+
   /// Exponential backoff (0.25 · 2^n s, 5 tries); after the cap, reports the
   /// failure and leaves the app paused with controls alive.
   private func scheduleStartRetry() {

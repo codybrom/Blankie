@@ -134,6 +134,14 @@ final class NowPlayingManager {
     artworkId: UUID?,
     isPlaying: Bool
   ) async {
+    // Hold all publishing while a pause fade-out still renders: any write
+    // re-asserts "playing" (iOS re-derives it from live engine I/O). The
+    // engine-idle pause republishes once output is silent.
+    if !isPlaying, AudioEngineManager.shared.engine.isRunning {
+      stopProgressUpdates()
+      return
+    }
+
     setupNowPlaying()
 
     let resolvedPresetName = preset?.name ?? presetName
@@ -204,21 +212,23 @@ final class NowPlayingManager {
       // CRITICAL: We update keys in-place on the existing dictionary to preserve artwork objects
       let center = MPNowPlayingInfoCenter.default()
 
-      if center.nowPlayingInfo != nil {
+      if var updated = center.nowPlayingInfo {
         Logger.nowPlaying.debug(
           "NowPlayingManager: Incremental update (preserving animated artwork)")
-        // Update only non-artwork keys in-place
-        center.nowPlayingInfo?[MPMediaItemPropertyTitle] = nowPlayingInfo[MPMediaItemPropertyTitle]
-        center.nowPlayingInfo?[MPMediaItemPropertyArtist] =
-          nowPlayingInfo[MPMediaItemPropertyArtist]
-        center.nowPlayingInfo?[MPMediaItemPropertyAlbumTitle] =
-          nowPlayingInfo[MPMediaItemPropertyAlbumTitle]
-        center.nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] =
-          nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate]
-        center.nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] =
-          nowPlayingInfo[MPMediaItemPropertyPlaybackDuration]
-        center.nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] =
-          nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime]
+        // Merge the non-artwork keys and publish ONCE: each in-place key
+        // write is a full publish, and the early ones carry the stale rate
+        // (after a pause, that flicked Control Center back to "playing").
+        for key in [
+          MPMediaItemPropertyTitle,
+          MPMediaItemPropertyArtist,
+          MPMediaItemPropertyAlbumTitle,
+          MPNowPlayingInfoPropertyPlaybackRate,
+          MPMediaItemPropertyPlaybackDuration,
+          MPNowPlayingInfoPropertyElapsedPlaybackTime,
+        ] {
+          updated[key] = nowPlayingInfo[key]
+        }
+        center.nowPlayingInfo = updated
       } else {
         // No existing info (iOS cleared it), do full update
         Logger.nowPlaying.debug("NowPlayingManager: Full update (iOS cleared nowPlayingInfo)")

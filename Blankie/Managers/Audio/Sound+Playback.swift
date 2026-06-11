@@ -122,7 +122,9 @@ extension Sound {
     playbackState = .stopped
   }
 
-  func pause(immediate: Bool = false) {
+  /// `fadeDuration` overrides the standard ramp (nil = `Sound.fadeDuration`);
+  /// zero still pauses in place, unlike `immediate`, which stops and clears position.
+  func pause(immediate: Bool = false, fadeDuration requestedFade: TimeInterval? = nil) {
     guard let currentPlayer = player else { return }
 
     if immediate {
@@ -137,7 +139,7 @@ extension Sound {
       // playback logic treat the sound as paused during the ramp; play() can
       // rescue a mid-fade pause by ramping back up.
       playbackState = .paused
-      currentPlayer.fade(to: 0, duration: shouldFade ? Sound.fadeDuration : 0) {
+      currentPlayer.fade(to: 0, duration: shouldFade ? (requestedFade ?? Sound.fadeDuration) : 0) {
         [weak currentPlayer] in
         currentPlayer?.pause()
       }

@@ -11,9 +11,10 @@ import SwiftUI
 import os
 
 extension AudioManager {
-  /// Toggles the playback state of all selected sounds
-  @MainActor func togglePlayback() {
-    setGlobalPlaybackState(!isGloballyPlaying)
+  /// Toggles the playback state of all selected sounds; `pauseFadeDuration`
+  /// overrides the fade-out ramp when the toggle pauses.
+  @MainActor func togglePlayback(pauseFadeDuration: TimeInterval? = nil) {
+    setGlobalPlaybackState(!isGloballyPlaying, pauseFadeDuration: pauseFadeDuration)
   }
 
   @MainActor
@@ -129,20 +130,59 @@ extension AudioManager {
     }
   }
 
-  func pauseAll() {
+  /// `fadeDuration` overrides the fade-out ramp (remote pauses pass zero);
+  /// nil uses the standard `Sound.fadeDuration`.
+  func pauseAll(fadeDuration: TimeInterval? = nil) {
     Logger.audio.debug("AudioManager: Pausing all selected sounds")
 
     for sound in sounds where sound.isSelected {
-      sound.pause()
+      sound.pause(fadeDuration: fadeDuration)
     }
 
     // Note: We intentionally do NOT deactivate the audio session here
     // This keeps the Now Playing controls visible on lock screen/control center
     // The session will be deactivated when appropriate (background, termination, etc.)
+
+    scheduleEngineIdlePause(afterFade: fadeDuration ?? Sound.fadeDuration)
   }
 
+  /// After the pause fade-outs land, idles the engine and does the single
+  /// paused publish (held until then — see performNowPlayingUpdate). The
+  /// session stays active so the system controls remain visible.
+  private func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
+    Task { @MainActor [weak self] in
+      // Zero-length fades pause their nodes synchronously inside pauseAll,
+      // so the engine can idle in this same runloop turn — don't sleep.
+      if fadeDuration > 0 {
+        try? await Task.sleep(for: .seconds(fadeDuration + 0.1))
+      }
+      // Retry past straggling fades rather than leave the system UI stuck.
+      for _ in 0..<8 {
+        guard let self, !self.isGloballyPlaying, self.previewModeSound == nil else { return }
+        // Already idle (an earlier pause's task won): that pass published.
+        guard AudioEngineManager.shared.engine.isRunning else { return }
+        if AudioEngineManager.shared.pauseIfIdle() {
+          self.nowPlayingManager.republishCurrentPreset()
+          return
+        }
+        try? await Task.sleep(for: .seconds(0.15))
+      }
+      // Safety net: a player still claims to be rendering after every retry.
+      // Globally paused is the truth — force the pause rather than strand the
+      // system UI on "playing" (the original stuck-button bug).
+      guard let self, !self.isGloballyPlaying, self.previewModeSound == nil else { return }
+      Logger.audio.error("AudioManager: Engine never idled after pause; forcing engine pause")
+      AudioEngineManager.shared.pause()
+      self.nowPlayingManager.republishCurrentPreset()
+    }
+  }
+
+  /// `pauseFadeDuration` overrides the fade-out ramp when pausing (remote
+  /// commands pass `Sound.remotePauseFadeDuration`); ignored on play.
   @MainActor
-  public func setGlobalPlaybackState(_ playing: Bool, forceUpdate: Bool = false) {
+  public func setGlobalPlaybackState(
+    _ playing: Bool, forceUpdate: Bool = false, pauseFadeDuration: TimeInterval? = nil
+  ) {
     guard !isInitializing || forceUpdate else {
       Logger.audio.debug("AudioManager: Ignoring setPlaybackState during initialization")
       return
@@ -168,7 +208,7 @@ extension AudioManager {
     if shouldPlay {
       playSelected()
     } else {
-      pauseAll()
+      pauseAll(fadeDuration: pauseFadeDuration)
     }
 
     // Always update Now Playing info with full preset details
