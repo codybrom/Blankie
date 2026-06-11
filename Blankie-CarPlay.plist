@@ -71,6 +71,11 @@
 					<key>CFBundleIconName</key>
 					<string>BlankiePurpleIcon</string>
 				</dict>
+				<key>BlankieDarkIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieDarkIcon</string>
+				</dict>
 				<key>BlankieAltIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
@@ -156,6 +161,11 @@
 				<dict>
 					<key>CFBundleIconName</key>
 					<string>BlankiePurpleIcon</string>
+				</dict>
+				<key>BlankieDarkIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieDarkIcon</string>
 				</dict>
 				<key>BlankieAltIcon</key>
 				<dict>

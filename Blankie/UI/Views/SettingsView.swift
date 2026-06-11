@@ -345,7 +345,7 @@ struct SettingsView: View {
             NavigationStack {
               AppIconPickerView()
             }
-            .presentationDetents([.fraction(2.0 / 3.0), .large])
+            .presentationDetents([.large])
           }
         #endif
 

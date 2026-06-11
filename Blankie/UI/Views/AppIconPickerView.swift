@@ -30,8 +30,8 @@ import os
     var body: some View {
       ScrollView {
         LazyVGrid(
-          columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 4),
-          spacing: 20
+          columns: Array(repeating: GridItem(.flexible(), spacing: 20), count: 3),
+          spacing: 24
         ) {
           ForEach(options) { option in
             iconCell(for: option)
@@ -103,20 +103,30 @@ import os
         ("BlankieBlueIcon", String(localized: "Blue")),
         ("BlankieIndigoIcon", String(localized: "Indigo")),
         ("BlankiePurpleIcon", String(localized: "Purple")),
-        ("BlankieAltIcon", String(localized: "Alternative")),
+        ("BlankieDarkIcon", String(localized: "Dark")),
         ("BlankieBetaIcon", String(localized: "Beta")),
+        ("BlankieAltIcon", String(localized: "Alternative")),
         ("BlankieClassicIcon", String(localized: "Classic")),
       ]
 
       for alternate in knownAlternates {
+        // Display assets only: UIImage(named:) on a .icon-compiled name throws
+        // NSInternalInconsistencyException rather than returning nil.
         let image =
-          UIImage(named: "\(alternate.key)Display") ?? UIImage(named: alternate.key)
-          ?? UIImage(systemName: "app.fill")
+          UIImage(named: "\(alternate.key)Display") ?? UIImage(systemName: "app.fill")
         options.append(
           AppIconOption(name: alternate.key, displayName: alternate.displayName, image: image))
       }
 
-      return options
+      // The display assets are 1024px; drawing them at tile size aliases badly
+      // (and holds ~70 MB of bitmaps). Downsample once with a proper filter.
+      return options.map { option in
+        AppIconOption(
+          name: option.name,
+          displayName: option.displayName,
+          image: option.image?.preparingThumbnail(of: CGSize(width: 360, height: 360))
+            ?? option.image)
+      }
     }
 
     private func setAppIcon(_ name: String?) {
