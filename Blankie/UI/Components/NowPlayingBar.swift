@@ -12,9 +12,14 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
 
   /// Compact glass bar pinned above the bottom safe area on iPhone and iPad.
-  /// Tapping the bar opens the full Now Playing cover; play/pause stays inline.
+  /// Tapping the bar steps one level toward what's playing: from the iPhone
+  /// Library it shows the mixer, from the mixer it expands the full Now
+  /// Playing cover. Play/pause stays inline.
   struct NowPlayingBar: View {
-    @Binding var expandPlayer: Bool
+    /// True when the tap shows the mixer rather than expanding the player —
+    /// only affects the announced hint; the owner supplies the action itself.
+    var showsMixer = false
+    let onTap: () -> Void
 
     @State private var audioManager = AudioManager.shared
     @State private var presetManager = PresetManager.shared
@@ -32,7 +37,7 @@ import SwiftUI
     /// glass shapes read as separate controls that share one glass tissue.
     private var barContent: some View {
       HStack(spacing: 12) {
-        expandButton
+        openButton
         playPauseButton
       }
       #if os(iOS)
@@ -40,12 +45,12 @@ import SwiftUI
       #endif
     }
 
-    /// The glass capsule: the expand button fills the leading side, with the
+    /// The glass capsule: the open button fills the leading side, with the
     /// system AirPlay route picker as its own control at the trailing end.
-    private var expandButton: some View {
+    private var openButton: some View {
       HStack(spacing: 0) {
         Button {
-          expandPlayer = true
+          onTap()
         } label: {
           HStack(spacing: 10) {
             artworkView
@@ -58,7 +63,7 @@ import SwiftUI
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Now Playing"))
-        .accessibilityHint(Text("Opens the full player"))
+        .accessibilityHint(showsMixer ? Text("Shows the mixer") : Text("Opens the full player"))
 
         #if os(iOS)
           AirPlayRouteButton(
@@ -299,7 +304,7 @@ import SwiftUI
   }
 
   #Preview {
-    NowPlayingBar(expandPlayer: .constant(false))
+    NowPlayingBar {}
       .padding(.horizontal, 16)
   }
 

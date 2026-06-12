@@ -10,14 +10,16 @@ import TipKit
 import UniformTypeIdentifiers
 import os
 
-/// Shared "now playing" treatment for Library rows. Sidebar rows highlight
-/// the whole row and tint the title with the active accent; every presentation
-/// shows an animated equalizer glyph in place of the old checkmark.
+/// Shared "now playing" treatment for Library rows. The current row's title
+/// tints with the active accent (sidebar rows also highlight the whole row);
+/// every presentation shows an animated equalizer glyph in place of the old
+/// checkmark.
 enum LibraryRowStyle {
   static func titleColor(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
   ) -> Color {
-    (presentation == .sidebar || presentation == .menuBar) && isCurrent ? accent : .primary
+    let tints = presentation == .sidebar || presentation == .menuBar || presentation == .page
+    return tints && isCurrent ? accent : .primary
   }
 
   /// Row backdrop. Sidebar: an inset accent pill behind only the active row,

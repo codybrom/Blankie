@@ -264,17 +264,31 @@ private enum IPhonePage: Hashable {
       }
     }
 
+    /// On the iPhone stack's Library root, the bar tap steps "in" to the mixer
+    /// instead of expanding the player (Library → mixer → full player); from
+    /// the mixer — and always on iPad, where the mixer is the ever-present
+    /// detail — it expands Now Playing.
+    private var barShowsMixer: Bool {
+      !isLargeDevice && iPhonePath.isEmpty
+    }
+
     /// Mini player pinned above the bottom safe area; the zoom transition into
     /// the Now Playing cover originates from it.
     private var nowPlayingBar: some View {
-      NowPlayingBar(expandPlayer: $showingNowPlaying)
-        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
-        .padding(.horizontal, 16)
-        .onGeometryChange(for: CGFloat.self) {
-          $0.size.height
-        } action: {
-          nowPlayingBarHeight = $0
+      NowPlayingBar(showsMixer: barShowsMixer) {
+        if barShowsMixer {
+          iPhonePath = [.mixer]
+        } else {
+          showingNowPlaying = true
         }
+      }
+      .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+      .padding(.horizontal, 16)
+      .onGeometryChange(for: CGFloat.self) {
+        $0.size.height
+      } action: {
+        nowPlayingBarHeight = $0
+      }
     }
 
     @ViewBuilder
