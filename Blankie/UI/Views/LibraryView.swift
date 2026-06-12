@@ -263,7 +263,8 @@ struct PresetPickerRow: View {
           Image(systemName: globalSettings.isStarred(starToken) ? "star.fill" : "star")
             .foregroundStyle(
               globalSettings.isStarred(starToken)
-                ? accent
+                // Follow the active theming tint, not the preset's accent override.
+                ? globalSettings.customAccentColor ?? .accentColor
                 : .secondary)
         }
         .buttonStyle(.borderless)
@@ -503,9 +504,9 @@ struct LibraryView: View {
   @State private var showingSoundFilePicker = false
   @State private var importedSoundURL: URL?
   @State private var showingImportSoundSheet = false
-  #if os(macOS)
-    @State private var selectedPresetForEdit: Preset?
-  #endif
+  @State private var selectedPresetForEdit: Preset?
+  @State private var soundToEdit: Sound?
+  @State private var soundToDelete: Sound?
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var systemColorScheme
 
@@ -601,6 +602,28 @@ struct LibraryView: View {
     if let index = offsets.first, nonFavoriteCustomTokens.indices.contains(index) {
       requestDelete(nonFavoriteCustomTokens[index])
     }
+  }
+
+  /// Edit-mode − on the Sounds section: only custom sounds are deletable, and
+  /// deletion routes through the same confirmation alert as the swipe action.
+  private func deleteSounds(at offsets: IndexSet) {
+    if let index = offsets.first, soloSounds.indices.contains(index),
+      soloSounds[index].isCustom
+    {
+      soundToDelete = soloSounds[index]
+    }
+  }
+
+  private func deleteCustomSound(_ sound: Sound) {
+    guard sound.isCustom,
+      let id = sound.customSoundDataID,
+      let record = CustomSoundManager.shared.getCustomSound(by: id)
+    else { return }
+    if case .failure(let error) = CustomSoundManager.shared.deleteCustomSound(record) {
+      Logger.ui.error("LibraryView: Failed to delete custom sound: \(error, privacy: .public)")
+      return
+    }
+    AudioManager.shared.loadCustomSounds()
   }
 
   /// Reorder the non-favorited custom presets, persisting their master `order`.
@@ -700,9 +723,7 @@ struct LibraryView: View {
   @ViewBuilder
   private func tokenRow(_ token: String) -> some View {
     if let sound = audioManager.sound(forSoloToken: token) {
-      SoloPickerRow(
-        sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
-        presentation: presentation, onSelection: onSelect)
+      soloRow(sound)
     } else {
       switch token {
       case GlobalSettings.allSoundsToken:
@@ -716,19 +737,69 @@ struct LibraryView: View {
           let row = PresetPickerRow(
             preset: preset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
             presentation: presentation, onSelection: onSelect)
+          // Custom presets only — never the default or solo rows. macOS uses a
+          // context menu (replacing the old per-row pencil and trash); iOS/iPadOS
+          // offers the same edit/delete choice via a trailing swipe.
           #if os(macOS)
-            // macOS rename/delete replacing the old PresetPicker's per-row pencil
-            // and trash. Custom presets only — never the default or solo rows.
             row.contextMenu {
               Button("Edit Preset…") { selectedPresetForEdit = preset }
               Button("Delete Preset…", role: .destructive) { presetToDelete = preset }
             }
           #else
-            row
+            row.swipeActions(edge: .trailing, allowsFullSwipe: false) {
+              Button(role: .destructive) {
+                presetToDelete = preset
+              } label: {
+                Label("Delete", systemImage: "trash")
+              }
+              // Clear the inherited app accent so the destructive role's own
+              // danger color shows; Edit keeps the default (app accent) tint.
+              .tint(nil)
+              Button {
+                selectedPresetForEdit = preset
+              } label: {
+                Label("Edit", systemImage: "slider.vertical.3")
+              }
+            }
           #endif
         }
       }
     }
+  }
+
+  /// A solo-sound row. Edit any sound and Delete custom ones — via a trailing
+  /// swipe on iOS/iPadOS, a context menu on macOS (matching the preset rows).
+  @ViewBuilder
+  private func soloRow(_ sound: Sound) -> some View {
+    let row = SoloPickerRow(
+      sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+      presentation: presentation, onSelection: onSelect)
+    #if os(macOS)
+      row.contextMenu {
+        Button("Edit Sound…") { soundToEdit = sound }
+        if sound.isCustom {
+          Button("Delete Sound…", role: .destructive) { soundToDelete = sound }
+        }
+      }
+    #else
+      row.swipeActions(edge: .trailing, allowsFullSwipe: false) {
+        if sound.isCustom {
+          Button(role: .destructive) {
+            soundToDelete = sound
+          } label: {
+            Label("Delete", systemImage: "trash")
+          }
+          // Clear the inherited app accent so the destructive role's own
+          // danger color shows; Edit keeps the default (app accent) tint.
+          .tint(nil)
+        }
+        Button {
+          soundToEdit = sound
+        } label: {
+          Label("Edit", systemImage: "slider.vertical.3")
+        }
+      }
+    #endif
   }
 
   private var quickMixRow: some View {
@@ -920,13 +991,14 @@ struct LibraryView: View {
         }
 
         // SOUNDS — solo a single sound. Listed alphabetically and fixed
-        // (not reorderable); tap the star to favorite a sound.
+        // (not reorderable); tap the star to favorite a sound. Custom sounds
+        // delete via the edit-mode − or a swipe; built-ins gate that off.
         Section {
           ForEach(soloSounds, id: \.id) { sound in
-            SoloPickerRow(
-              sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
-              presentation: presentation, onSelection: onSelect)
+            soloRow(sound)
+              .deleteDisabled(!sound.isCustom)
           }
+          .onDelete(perform: deleteSounds)
         } header: {
           Text("Sounds")
         }
@@ -1026,7 +1098,10 @@ struct LibraryView: View {
     // modifiers — so presented sheets keep the system appearance.
     .environment(\.colorScheme, presentation == .page ? .dark : systemColorScheme)
     .sheet(isPresented: $showingNewPresetSheet) {
-      CreatePresetSheet(isPresented: $showingNewPresetSheet)
+      CreatePresetSheet(
+        isPresented: $showingNewPresetSheet,
+        onCreated: { onSelection?() }
+      )
     }
     .fileImporter(
       isPresented: $showingSoundFilePicker,
@@ -1051,11 +1126,31 @@ struct LibraryView: View {
         SoundSheet(mode: .add, preselectedFile: url)
       }
     }
-    #if os(macOS)
-      .sheet(item: $selectedPresetForEdit) { preset in
-        EditPresetSheet(preset: preset, isPresented: $selectedPresetForEdit)
+    .sheet(item: $selectedPresetForEdit) { preset in
+      EditPresetSheet(preset: preset, isPresented: $selectedPresetForEdit)
+    }
+    .sheet(item: $soundToEdit) { sound in
+      SoundSheet(mode: .edit(sound))
+    }
+    .alert(
+      "Delete Sound",
+      isPresented: .init(
+        get: { soundToDelete != nil },
+        set: { if !$0 { soundToDelete = nil } }
+      )
+    ) {
+      Button("Cancel", role: .cancel) { soundToDelete = nil }
+      Button("Delete", role: .destructive) {
+        if let sound = soundToDelete { deleteCustomSound(sound) }
+        soundToDelete = nil
       }
-    #endif
+    } message: {
+      if let sound = soundToDelete {
+        Text(
+          "Are you sure you want to delete '\(sound.title)'? This action cannot be undone."
+        )
+      }
+    }
     .alert(
       "Delete Preset",
       isPresented: .init(

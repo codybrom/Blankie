@@ -307,7 +307,8 @@ import UniformTypeIdentifiers
                 }
               }
             } label: {
-              Image(systemName: onDefaultPreset ? "square.and.pencil" : "slider.vertical.3")
+              Image(
+                systemName: onDefaultPreset ? "rectangle.stack.badge.plus" : "slider.vertical.3")
             }
             .accessibilityLabel(
               audioManager.soloModeSound != nil

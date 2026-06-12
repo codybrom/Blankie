@@ -13,6 +13,9 @@ struct CreatePresetSheet: View {
   /// Sound file names to pre-select ("create from playing sounds" while on
   /// the default preset). Empty = start with nothing selected.
   var initialSelectedSounds: Set<String> = []
+  /// Fired after the new preset is created and applied so the owner can
+  /// navigate to it (iPhone Library pushes the mixer); nil at the mixer.
+  var onCreated: (() -> Void)?
   private let presetManager = PresetManager.shared
   private let audioManager = AudioManager.shared
   private let globalSettings = GlobalSettings.shared
@@ -265,11 +268,20 @@ extension CreatePresetSheet {
           await presetManager.cacheThumbnail(for: newPreset)
         }
 
+        // Leave solo/Quick Mix first, like a Library row tap, so the prior
+        // mix doesn't linger as the current selection.
+        if audioManager.soloModeSound != nil {
+          audioManager.exitSoloModeWithoutResuming()
+        }
+        if audioManager.isQuickMix {
+          audioManager.exitQuickMix()
+        }
         try presetManager.applyPreset(newPreset)
         await MainActor.run {
           didCreatePreset = true
         }
         isPresented = false
+        onCreated?()
       } catch {
         await MainActor.run {
           self.error = "Failed to create preset"
