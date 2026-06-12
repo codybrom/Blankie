@@ -1,0 +1,17 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M-40 540C150 470 260 424 380 428C560 434 800 510 1064 552L1064 1080L-40 1080Z" fill="url(#backGrad)"/>
+<!-- moonlit rim along the crest -->
+<path d="M-40 540C150 470 260 424 380 428C560 434 800 510 1064 552" stroke="url(#backRim)" stroke-width="6" fill="none"/>
+<defs>
+<linearGradient id="backGrad" x1="512" y1="420" x2="512" y2="1080" gradientUnits="userSpaceOnUse">
+<stop stop-color="#CE9D3E"/>
+<stop offset="1" stop-color="#A97E22"/>
+</linearGradient>
+<linearGradient id="backRim" x1="-40" y1="0" x2="1064" y2="0" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFEFC4" stop-opacity="0.05"/>
+<stop offset="0.35" stop-color="#FFEFC4" stop-opacity="0.3"/>
+<stop offset="0.72" stop-color="#FFF4D2" stop-opacity="0.75"/>
+<stop offset="1" stop-color="#FFEFC4" stop-opacity="0.35"/>
+</linearGradient>
+</defs>
+</svg>

@@ -86,10 +86,25 @@
 					<key>CFBundleIconName</key>
 					<string>BlankieClassicIcon</string>
 				</dict>
-				<key>BlankieBetaIcon</key>
+				<key>BlankiePatchworkIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
-					<string>BlankieBetaIcon</string>
+					<string>BlankiePatchworkIcon</string>
+				</dict>
+				<key>BlankieSliderIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieSliderIcon</string>
+				</dict>
+				<key>BlankieWavesIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieWavesIcon</string>
+				</dict>
+				<key>BlankieLeopardIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieLeopardIcon</string>
 				</dict>
 			</dict>
 		</dict>
@@ -177,10 +192,25 @@
 					<key>CFBundleIconName</key>
 					<string>BlankieClassicIcon</string>
 				</dict>
-				<key>BlankieBetaIcon</key>
+				<key>BlankiePatchworkIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
-					<string>BlankieBetaIcon</string>
+					<string>BlankiePatchworkIcon</string>
+				</dict>
+				<key>BlankieSliderIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieSliderIcon</string>
+				</dict>
+				<key>BlankieWavesIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieWavesIcon</string>
+				</dict>
+				<key>BlankieLeopardIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieLeopardIcon</string>
 				</dict>
 			</dict>
 		</dict>

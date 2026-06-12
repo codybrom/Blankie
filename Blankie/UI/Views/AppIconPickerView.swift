@@ -90,7 +90,7 @@ import os
         ))
 
       // Color variants mirror the in-app accent palette (AccentColor).
-      let knownAlternates: [(key: String, displayName: String)] = [
+      var knownAlternates: [(key: String, displayName: String)] = [
         ("BlankieRedIcon", String(localized: "Red")),
         ("BlankiePinkIcon", String(localized: "Pink")),
         ("BlankieOrangeIcon", String(localized: "Orange")),
@@ -104,10 +104,17 @@ import os
         ("BlankieIndigoIcon", String(localized: "Indigo")),
         ("BlankiePurpleIcon", String(localized: "Purple")),
         ("BlankieDarkIcon", String(localized: "Dark")),
-        ("BlankieBetaIcon", String(localized: "Beta")),
+        ("BlankieSliderIcon", String(localized: "Slider")),
         ("BlankieAltIcon", String(localized: "Alternative")),
+        ("BlankieWavesIcon", String(localized: "Waves")),
         ("BlankieClassicIcon", String(localized: "Classic")),
+        ("BlankiePatchworkIcon", String(localized: "Inspired by Blanket by Rafael Mardojai CM")),
       ]
+
+      // Leopard is a developer-only icon, surfaced only in local Debug builds.
+      #if DEBUG
+        knownAlternates.append(("BlankieLeopardIcon", String(localized: "Leopard")))
+      #endif
 
       for alternate in knownAlternates {
         // Display assets only: UIImage(named:) on a .icon-compiled name throws

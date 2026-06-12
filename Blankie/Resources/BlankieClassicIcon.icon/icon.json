@@ -7,9 +7,19 @@
       "blur-material" : 0.5,
       "layers" : [
         {
-          "fill" : {
-            "solid" : "extended-gray:0.02005,1.00000"
-          },
+          "fill-specializations" : [
+            {
+              "value" : {
+                "solid" : "srgb:0.11000,0.07500,0.01000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-gray:0.02005,1.00000"
+              }
+            }
+          ],
           "glass" : false,
           "image-name" : "blanket-outline.svg",
           "name" : "Blanket Outline",
@@ -33,9 +43,7 @@
             },
             {
               "appearance" : "dark",
-              "value" : {
-                "solid" : "srgb:1.00000,0.82913,0.00000,1.00000"
-              }
+              "value" : "none"
             }
           ],
           "glass" : false,
@@ -45,7 +53,7 @@
           "opacity-specializations" : [
             {
               "appearance" : "dark",
-              "value" : 0.8
+              "value" : 0.6
             }
           ]
         },
@@ -54,7 +62,7 @@
           "fill-specializations" : [
             {
               "value" : {
-                "solid" : "srgb:0.26052,0.26052,0.26052,1.00000"
+                "solid" : "srgb:0.52000,0.40000,0.06000,1.00000"
               }
             },
             {
@@ -70,7 +78,7 @@
           "name" : "Blanket Plaid",
           "opacity-specializations" : [
             {
-              "value" : 0.25
+              "value" : 0.18
             },
             {
               "appearance" : "dark",
@@ -79,18 +87,31 @@
           ]
         },
         {
+          "blend-mode" : "multiply",
+          "glass" : false,
+          "image-name" : "blanket-shade.svg",
+          "name" : "Blanket Shade",
+          "opacity-specializations" : [
+            {
+              "value" : 1
+            },
+            {
+              "appearance" : "dark",
+              "value" : 0
+            }
+          ]
+        },
+        {
           "blend-mode" : "normal",
           "fill-specializations" : [
             {
               "value" : {
-                "automatic-gradient" : "display-p3:0.95556,0.89022,0.43115,1.00000"
+                "automatic-gradient" : "display-p3:0.97647,0.92549,0.31373,1.00000"
               }
             },
             {
               "appearance" : "dark",
-              "value" : {
-                "automatic-gradient" : "extended-gray:0.79463,1.00000"
-              }
+              "value" : "automatic"
             }
           ],
           "glass" : false,
@@ -99,7 +120,7 @@
           "opacity-specializations" : [
             {
               "appearance" : "dark",
-              "value" : 0.15
+              "value" : 0.35
             }
           ]
         }
@@ -115,9 +136,9 @@
       },
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.6
+        "opacity" : 0.78
       },
-      "specular" : false,
+      "specular" : true,
       "translucency" : {
         "enabled" : true,
         "value" : 0.5
