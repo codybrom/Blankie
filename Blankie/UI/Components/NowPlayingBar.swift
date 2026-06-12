@@ -84,7 +84,12 @@ import SwiftUI
           isQuickMix: audioManager.isQuickMix,
           presetArtworkId: presetManager.currentPreset?.artworkId,
           animatedArtwork: presetManager.currentPreset?.animatedArtwork,
-          accentColor: globalSettings.customAccentColor
+          // Match the library/Now Playing artwork tint: the active preset's
+          // accent, falling back to the app accent (themingPreset is nil during
+          // solo / Quick Mix, so those correctly use the app accent).
+          accentColor: presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor,
+          playingIcons: audioManager.playingSoundIcons(),
+          isDefaultPreset: presetManager.currentPreset?.isDefault ?? true
         )
       )
       .accessibilityHidden(true)
@@ -212,12 +217,16 @@ import SwiftUI
     let presetArtworkId: UUID?
     let animatedArtwork: AnimatedArtworkRef?
     let accentColor: Color?
+    let playingIcons: [String]
+    let isDefaultPreset: Bool
 
     static func == (lhs: ArtworkProperties, rhs: ArtworkProperties) -> Bool {
       lhs.timerActive == rhs.timerActive && lhs.soloSound?.id == rhs.soloSound?.id
         && lhs.hasSelectedSounds == rhs.hasSelectedSounds && lhs.isQuickMix == rhs.isQuickMix
         && lhs.presetArtworkId == rhs.presetArtworkId
         && lhs.animatedArtwork == rhs.animatedArtwork
+        && lhs.playingIcons == rhs.playingIcons
+        && lhs.isDefaultPreset == rhs.isDefaultPreset
     }
   }
 
@@ -230,53 +239,62 @@ import SwiftUI
     @State private var presetManager = PresetManager.shared
 
     var body: some View {
-      RoundedRectangle(cornerRadius: 4, style: .continuous)
-        .fill(Color.secondary.opacity(0.2))
-        .frame(width: 36, height: 36)
-        .overlay {
-          if let soloSound = properties.soloSound {
-            Image(systemName: soloSound.systemIconName)
-              .font(.system(size: 15, weight: .medium))
-              .foregroundStyle(properties.accentColor ?? .accentColor)
-          } else if !properties.hasSelectedSounds && !properties.isQuickMix {
-            Image(systemName: "speaker.slash.fill")
-              .font(.system(size: 13, weight: .medium))
-              .foregroundStyle(.secondary)
-          } else if let image = artworkImage {
-            Image(uiImage: image)
-              .resizable()
-              .scaledToFill()
-          } else {
-            Image(systemName: "waveform")
-              .font(.system(size: 13, weight: .medium))
-              .foregroundStyle(.secondary)
-          }
+      Group {
+        if let soloSound = properties.soloSound {
+          FallbackArtwork(
+            glyph: .symbol(soloSound.systemIconName),
+            accent: properties.accentColor ?? .accentColor,
+            size: 36, cornerRadius: 4, glyphFraction: 0.44)
+        } else if !properties.hasSelectedSounds && !properties.isQuickMix {
+          RoundedRectangle(cornerRadius: 4, style: .continuous)
+            .fill(Color.secondary.opacity(0.2))
+            .overlay {
+              Image(systemName: "speaker.slash.fill")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
+            }
+        } else if let image = artworkImage {
+          Image(uiImage: image)
+            .resizable()
+            .scaledToFill()
+        } else {
+          // Quick Mix → grid, All Blankie Sounds → the Blankie mark, a custom
+          // preset → a montage of its sounds; matching the preset's library tile.
+          FallbackArtwork(
+            glyph: .playback(
+              isQuickMix: properties.isQuickMix,
+              isDefaultPreset: properties.isDefaultPreset,
+              icons: properties.playingIcons),
+            accent: properties.accentColor ?? .accentColor,
+            size: 36, cornerRadius: 4, glyphFraction: 0.5)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-        .task(
-          id:
-            "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")"
-        ) {
-          // Only load artwork when not in solo/no sounds mode
-          guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix
-          else {
-            artworkImage = nil
-            return
-          }
+      }
+      .frame(width: 36, height: 36)
+      .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+      .task(
+        id:
+          "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")"
+      ) {
+        // Only load artwork when not in solo/no sounds mode
+        guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix
+        else {
+          artworkImage = nil
+          return
+        }
 
-          // Try to load from artworkId first
-          if let artworkId = properties.presetArtworkId,
-            let data = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
-            let image = UIImage(data: data)
-          {
-            artworkImage = image
-          } else if let preset = presetManager.currentPreset {
-            // Fallback: Use animated artwork preview if available
-            artworkImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
-          } else {
-            artworkImage = nil
-          }
+        // Try to load from artworkId first
+        if let artworkId = properties.presetArtworkId,
+          let data = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
+          let image = UIImage(data: data)
+        {
+          artworkImage = image
+        } else if let preset = presetManager.currentPreset {
+          // Fallback: Use animated artwork preview if available
+          artworkImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+        } else {
+          artworkImage = nil
         }
+      }
     }
   }
 

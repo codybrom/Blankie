@@ -103,72 +103,54 @@ extension NowPlayingManager {
     }
   #endif
 
-  /// Render a soloed sound's SF Symbol into lock-screen artwork: the app-accent
-  /// glyph centered on a dark card, mirroring the in-app placeholder. Returns
-  /// nil on platforms where it isn't rendered (caller falls back to default).
-  func soloArtwork(for sound: Sound) -> MPMediaItemArtwork? {
+  /// Rasterize the shared `FallbackArtwork` fallback into lock-screen / CarPlay
+  /// artwork. Rendered full-bleed (cornerRadius 0) since the system rounds the
+  /// corners itself.
+  private func fallbackArtworkImage(glyph: FallbackArtwork.Glyph, fraction: CGFloat)
+    -> MPMediaItemArtwork?
+  {
+    let side: CGFloat = 512
+    // Match the library / Now Playing artwork tint: the active preset's accent,
+    // falling back to the app accent (themingPreset is nil during solo / Quick
+    // Mix, so those correctly use the app accent).
+    let accent =
+      PresetManager.shared.themingPreset?.accentColor
+      ?? GlobalSettings.shared.customAccentColor ?? .accentColor
+    let view = FallbackArtwork(
+      glyph: glyph,
+      accent: accent,
+      size: side,
+      cornerRadius: 0,
+      glyphFraction: fraction
+    )
+    let renderer = ImageRenderer(content: view)
+    renderer.scale = 1
+    renderer.isOpaque = true
     #if os(iOS) || os(visionOS)
-      let side: CGFloat = 512
-      let accent = UIColor(GlobalSettings.shared.customAccentColor ?? Color.accentColor)
-      let config = UIImage.SymbolConfiguration(pointSize: side * 0.4, weight: .regular)
-      guard
-        let symbol = UIImage(systemName: sound.systemIconName, withConfiguration: config)?
-          .withTintColor(accent, renderingMode: .alwaysOriginal)
-      else { return nil }
-
-      let format = UIGraphicsImageRendererFormat.preferred()
-      format.opaque = true
-      let renderer = UIGraphicsImageRenderer(
-        size: CGSize(width: side, height: side), format: format)
-      let image = renderer.image { _ in
-        UIColor(white: 0.11, alpha: 1).setFill()
-        UIRectFill(CGRect(x: 0, y: 0, width: side, height: side))
-        let target = symbol.size
-        symbol.draw(at: CGPoint(x: (side - target.width) / 2, y: (side - target.height) / 2))
-      }
+      guard let image = renderer.uiImage else { return nil }
+      return Self.makeArtwork(from: image)
+    #elseif os(macOS)
+      guard let image = renderer.nsImage else { return nil }
       return Self.makeArtwork(from: image)
     #else
       return nil
     #endif
   }
 
+  /// A soloed sound's lock-screen artwork: its SF Symbol in the accent on the
+  /// dark tinted card, mirroring the in-app placeholder.
+  func soloArtwork(for sound: Sound) -> MPMediaItemArtwork? {
+    fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
+  }
+
+  /// The fallback shown when a preset/mix has no custom or animated artwork:
+  /// Quick Mix → grid, "All Blankie Sounds" → the Blankie mark, a custom preset
+  /// → a montage of its playing sounds — matching the preset's library tile.
   func loadArtwork() -> MPMediaItemArtwork? {
-    #if os(iOS) || os(visionOS)
-      let side: CGFloat = 512
-      let accent = GlobalSettings.shared.customAccentColor
-      let accentColor = accent ?? Color.accentColor
-
-      // Render the same BrandedBlankieIcon view used in-app so the palette
-      // gradient and inner circles look identical on the lock screen / CarPlay.
-      let card = ZStack {
-        Color(white: 0.11)
-        BrandedBlankieIcon(size: side * 0.5, color: accentColor)
-      }
-      .frame(width: side, height: side)
-
-      let renderer = ImageRenderer(content: card)
-      renderer.scale = 1
-      renderer.isOpaque = true
-      guard let image = renderer.uiImage else { return nil }
-      return Self.makeArtwork(from: image)
-    #elseif os(macOS)
-      let side: CGFloat = 512
-      let accent = GlobalSettings.shared.customAccentColor
-      let accentColor = accent ?? Color.accentColor
-
-      let card = ZStack {
-        Color(white: 0.11)
-        BrandedBlankieIcon(size: side * 0.5, color: accentColor)
-      }
-      .frame(width: side, height: side)
-
-      let renderer = ImageRenderer(content: card)
-      renderer.scale = 1
-      renderer.isOpaque = true
-      guard let image = renderer.nsImage else { return nil }
-      return Self.makeArtwork(from: image)
-    #else
-      return nil
-    #endif
+    let glyph = FallbackArtwork.Glyph.playback(
+      isQuickMix: AudioManager.shared.isQuickMix,
+      isDefaultPreset: PresetManager.shared.currentPreset?.isDefault ?? true,
+      icons: AudioManager.shared.playingSoundIcons())
+    return fallbackArtworkImage(glyph: glyph, fraction: 0.5)
   }
 }

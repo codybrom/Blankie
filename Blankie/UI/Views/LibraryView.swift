@@ -215,7 +215,10 @@ struct PresetPickerRow: View {
           artworkId: preset.artworkId,
           preset: preset,
           fallbackSystemImage: preset.isDefault ? "square.stack" : "music.note",
-          tint: accent
+          tint: accent,
+          compositeIcons: preset.isDefault
+            ? nil : AudioManager.shared.compositeSoundIcons(for: preset),
+          useBrand: preset.isDefault
         )
         .accessibilityHidden(true)
 
@@ -1094,6 +1097,11 @@ struct PresetThumbnail: View {
   let fallbackSystemImage: String
   let tint: Color
   var isCircular = false
+  /// When set (and no saved artwork), the tile shows a montage of these sound
+  /// icons instead of `fallbackSystemImage`, matching what the preset plays.
+  var compositeIcons: [String]? = nil
+  /// "All Blankie Sounds" always shows the Blankie mark rather than a montage.
+  var useBrand = false
 
   @Environment(\.displayScale) private var displayScale
   @State private var image: PlatformImage?
@@ -1105,6 +1113,12 @@ struct PresetThumbnail: View {
       : AnyShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
   }
 
+  private var glyphForFallback: FallbackArtwork.Glyph {
+    if useBrand { return .brand }
+    if let compositeIcons, !compositeIcons.isEmpty { return .composite(compositeIcons) }
+    return .symbol(fallbackSystemImage)
+  }
+
   var body: some View {
     Group {
       if let image {
@@ -1112,13 +1126,14 @@ struct PresetThumbnail: View {
           .resizable()
           .aspectRatio(contentMode: .fill)
       } else {
-        shape
-          .fill(tint.opacity(0.15))
-          .overlay {
-            Image(systemName: fallbackSystemImage)
-              .font(.system(size: 14, weight: .medium))
-              .foregroundStyle(tint)
-          }
+        FallbackArtwork(
+          glyph: glyphForFallback,
+          accent: tint,
+          size: size,
+          cornerRadius: 8,
+          isCircular: isCircular,
+          glyphFraction: useBrand ? 0.5 : 0.44
+        )
       }
     }
     .frame(width: size, height: size)

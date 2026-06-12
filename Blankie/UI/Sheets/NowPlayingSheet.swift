@@ -306,16 +306,14 @@ import SwiftUI
     private func artworkView(size: CGFloat) -> some View {
       Group {
         if let soloSound = audioManager.soloModeSound {
-          // Solo has no preset artwork: use the same placeholder card as a
-          // no-artwork preset, but with the sound's own icon and the app accent.
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color.white.opacity(0.1))
-            .frame(width: size, height: size)
-            .overlay {
-              Image(systemName: soloSound.systemIconName)
-                .font(.system(size: size * 0.35))
-                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-            }
+          // Solo has no preset artwork: the shared fallback with the sound's
+          // own icon and the app accent.
+          FallbackArtwork(
+            glyph: .symbol(soloSound.systemIconName),
+            accent: globalSettings.customAccentColor ?? .accentColor,
+            size: size,
+            glyphFraction: 0.4
+          )
         } else if let image = backgroundImage {
           Image(uiImage: image)
             .resizable()
@@ -323,15 +321,18 @@ import SwiftUI
             .frame(width: size, height: size)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         } else {
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color.white.opacity(0.1))
-            .frame(width: size, height: size)
-            .overlay {
-              BrandedBlankieIcon(
-                size: size * 0.35,
-                color: presetManager.currentPreset?.accentColor
-              )
-            }
+          // No custom/animated artwork: Quick Mix → grid, All Blankie Sounds →
+          // the Blankie mark, a custom preset → a montage of its playing sounds.
+          FallbackArtwork(
+            glyph: .playback(
+              isQuickMix: audioManager.isQuickMix,
+              isDefaultPreset: presetManager.currentPreset?.isDefault ?? true,
+              icons: audioManager.playingSoundIcons()),
+            accent: presetManager.currentPreset?.accentColor
+              ?? globalSettings.customAccentColor ?? .accentColor,
+            size: size,
+            glyphFraction: 0.5
+          )
         }
       }
       .scaleEffect(audioManager.isGloballyPlaying ? 1.0 : 0.85)

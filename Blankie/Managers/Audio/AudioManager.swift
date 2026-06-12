@@ -337,6 +337,45 @@ extension AudioManager {
     return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
   }
 
+  /// SF Symbol names for a preset's *selected* sounds, in the preset's order,
+  /// for composite fallback artwork — a montage of the sounds it plays. Resolved
+  /// from `soundStates` directly (ordered by `soundOrder` when present) so a
+  /// stale or partial `soundOrder` can't drop selected sounds. Deduped and
+  /// capped at `limit`; unknown file names are skipped.
+  @MainActor
+  func compositeSoundIcons(for preset: Preset, limit: Int = 4) -> [String] {
+    let selected = preset.soundStates.filter(\.isSelected).map(\.fileName)
+    let ordered: [String]
+    if let order = preset.soundOrder {
+      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+      ordered = selected.sorted { (rank[$0] ?? Int.max) < (rank[$1] ?? Int.max) }
+    } else {
+      ordered = selected
+    }
+    let iconForFile = Dictionary(
+      sounds.map { ($0.fileName, $0.systemIconName) }, uniquingKeysWith: { first, _ in first })
+    return Self.dedupedIcons(ordered.compactMap { iconForFile[$0] }, limit: limit)
+  }
+
+  /// Icons for the sounds currently selected (what's actually playing), for the
+  /// Now Playing / lock-screen fallback so it matches the preset's library art.
+  @MainActor
+  func playingSoundIcons(limit: Int = 4) -> [String] {
+    Self.dedupedIcons(sounds.filter(\.isSelected).map(\.systemIconName), limit: limit)
+  }
+
+  /// Distinct icon names in order. Several sounds can share a symbol, and a
+  /// montage of identical glyphs reads worse than the single icon. Capped at `limit`.
+  private static func dedupedIcons(_ icons: [String], limit: Int) -> [String] {
+    var seen = Set<String>()
+    var result: [String] = []
+    for icon in icons where seen.insert(icon).inserted {
+      result.append(icon)
+      if result.count == limit { break }
+    }
+    return result
+  }
+
   /// Move a sound to a new position
   func moveSound(from sourceIndex: Int, to destinationIndex: Int) {
     guard sourceIndex < sounds.count && destinationIndex <= sounds.count else {
