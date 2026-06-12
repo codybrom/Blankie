@@ -14,9 +14,18 @@
     // MARK: - Main Edit Template
 
     static func createTemplate() -> CPListTemplate {
-      // Get current preset name for the title
+      // Title from the current preset, applying the app-wide display rule:
+      // the unnamed Default and auto-named "Preset N" mixes show as "Custom Mix"
+      // (matching Now Playing), while real preset names render verbatim.
       let currentPreset = PresetManager.shared.currentPreset
-      let presetName = currentPreset?.name ?? String(localized: "Current Mix")
+      let presetName: String
+      if let name = currentPreset?.name {
+        presetName =
+          (name == "Default" || name.starts(with: "Preset "))
+          ? String(localized: "Custom Mix") : name
+      } else {
+        presetName = String(localized: "Current Mix")
+      }
 
       let template = CPListTemplate(
         title: presetName,

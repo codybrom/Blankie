@@ -31,6 +31,7 @@ import os
     private var presetsObservation: Task<Void, Never>?
 
     // Template references for updating
+    private var homeTemplate: CPListTemplate?
     private var presetsTemplate: CPListTemplate?
     private var quickMixTemplate: CPGridTemplate?
     private var soundsTemplate: CPListTemplate?
@@ -163,13 +164,15 @@ import os
     private func setupTabBarInterface() {
       guard let interfaceController = interfaceController else { return }
 
-      // Create all three templates
+      // Create all tab templates
+      homeTemplate = HomeListTemplate.createTemplate()
       presetsTemplate = PresetListTemplate.createTemplate()
       quickMixTemplate = QuickMixGridTemplate.createTemplate()
       soundsTemplate = SoundsListTemplate.createTemplate()
 
       // Validate that templates were created successfully
-      guard let presetsTemplate = presetsTemplate,
+      guard let homeTemplate = homeTemplate,
+        let presetsTemplate = presetsTemplate,
         let quickMixTemplate = quickMixTemplate,
         let soundsTemplate = soundsTemplate
       else {
@@ -180,8 +183,10 @@ import os
       // Setup Now Playing template with edit functionality
       setupNowPlayingTemplate()
 
-      // Create tab bar with all three tabs
+      // Create the tab bar. Home (now playing + favorites) leads; Presets and
+      // Sounds are the full browse lists; Quick Mix builds an ad-hoc mix.
       let tabBar = CPTabBarTemplate(templates: [
+        homeTemplate,
         presetsTemplate,
         soundsTemplate,
         quickMixTemplate,
@@ -202,6 +207,13 @@ import os
 
     // MARK: - Template Updates
 
+    func updateHomeTemplate() {
+      guard let homeTemplate = homeTemplate else { return }
+      Task { @MainActor in
+        HomeListTemplate.updateTemplate(homeTemplate)
+      }
+    }
+
     func updatePresetsTemplate() {
       guard let presetsTemplate = presetsTemplate else { return }
       PresetListTemplate.updateTemplate(presetsTemplate)
@@ -220,6 +232,7 @@ import os
     }
 
     func updateAllTemplates() {
+      updateHomeTemplate()
       updatePresetsTemplate()
       updateQuickMixTemplate()
       updateSoundsTemplate()
@@ -274,6 +287,7 @@ import os
       // leaving solo (or switching the soloed sound) refreshes the templates.
       soloModeObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ AudioManager.shared.soloModeSound?.id }) {
+          self?.updateHomeTemplate()
           self?.updateSoundsTemplate()
           self?.updateQuickMixTemplate()
           self?.updateNowPlayingButtons()
@@ -329,6 +343,7 @@ import os
       // refreshes too, not just a switch.
       currentPresetObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ PresetManager.shared.currentPreset }) {
+          self?.updateHomeTemplate()
           self?.updatePresetsTemplate()
           self?.updateNowPlayingButtons()
         }
@@ -337,14 +352,15 @@ import os
       // Observe presets array changes (add/remove/reorder/rename/artwork).
       presetsObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ PresetManager.shared.presets }) {
+          self?.updateHomeTemplate()
           self?.updatePresetsTemplate()
         }
       }
 
-      // Observe favorites changes so the CarPlay Favorites section refreshes.
+      // Observe favorites changes so the Home Favorites section refreshes.
       starredItemsObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ GlobalSettings.shared.starredItems }) {
-          self?.updatePresetsTemplate()
+          self?.updateHomeTemplate()
         }
       }
 
@@ -353,6 +369,7 @@ import os
       NotificationCenter.default.publisher(for: .presetThumbnailUpdated)
         .receive(on: DispatchQueue.main)
         .sink { [weak self] _ in
+          self?.updateHomeTemplate()
           self?.updatePresetsTemplate()
         }
         .store(in: &cancellables)

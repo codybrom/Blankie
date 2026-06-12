@@ -33,19 +33,18 @@ import os
       let timerManager = TimerManager.shared
       if timerManager.isTimerActive {
         sections.append(activeTimerSection(timerManager))
-      } else {
-        // Explain what picking a duration does before any timer is running.
-        let info = CPListItem(
-          text: String(localized: "Blankie will pause at the end of the timer"), detailText: nil)
-        info.isEnabled = false
-        sections.append(CPListSection(items: [info]))
       }
 
+      // Inactive: the header doubles as the one-line explainer of what picking a
+      // duration does. Active: the stop time already shows on Cancel above, so
+      // the header just labels the restart options.
       let durationItems = durationsInMinutes.map { createDurationItem($0) }
       sections.append(
         CPListSection(
           items: durationItems,
-          header: timerManager.isTimerActive ? String(localized: "Restart Timer") : nil,
+          header: timerManager.isTimerActive
+            ? String(localized: "Restart Timer")
+            : String(localized: "Blankie will pause at the end of the timer"),
           sectionIndexTitle: nil
         )
       )
@@ -54,12 +53,11 @@ import os
     }
 
     private static func activeTimerSection(_ timerManager: TimerManager) -> CPListSection {
-      // Show the fixed stop instant ("pauses at 10:36 AM"), not a live countdown:
-      // this list is a static snapshot and a frozen MM:SS reads as a stuck timer.
-      let status = CPListItem(text: pauseAtText(timerManager), detailText: nil)
-      status.isEnabled = false
-
-      let cancel = CPListItem(text: String(localized: "Cancel Timer"), detailText: nil)
+      // Caption the cancel row with the fixed stop instant ("pauses at 10:36 AM"),
+      // not a live countdown: this list is a static snapshot and a frozen MM:SS
+      // reads as a stuck timer.
+      let cancel = CPListItem(
+        text: String(localized: "Cancel Timer"), detailText: pauseAtText(timerManager))
       cancel.setImage(tinted("xmark.circle.fill"))
       cancel.handler = { _, completion in
         Task { @MainActor in
@@ -69,7 +67,7 @@ import os
         }
       }
 
-      return CPListSection(items: [status, cancel])
+      return CPListSection(items: [cancel])
     }
 
     private static func createDurationItem(_ minutes: Int) -> CPListItem {
@@ -105,7 +103,9 @@ import os
 
     /// "Blankie pauses at 10:36 AM", using the timer's fixed stop instant.
     private static func pauseAtText(_ timerManager: TimerManager) -> String {
-      guard let endTime = timerManager.getEndTime() else { return String(localized: "Timer running") }
+      guard let endTime = timerManager.getEndTime() else {
+        return String(localized: "Timer running")
+      }
       let formatter = DateFormatter()
       formatter.timeStyle = .short
       return String(localized: "Blankie pauses at \(formatter.string(from: endTime))")

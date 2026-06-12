@@ -314,13 +314,8 @@ final class NowPlayingManager {
       nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyAlbumTitle)
       return
     }
-    let activeSounds = AudioManager.shared.sounds.filter { $0.isPlaying }
-    if !activeSounds.isEmpty {
-      let soundNames = activeSounds.map { $0.title }.joined(separator: ", ")
-      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = soundNames
-    } else {
-      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie"
-    }
+    // Same preset-ordered, switched-on list as the artist line.
+    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = soundNameSummary(currentMixSoundTitles())
   }
 
   private func updateDurationFromPlayingSounds() {

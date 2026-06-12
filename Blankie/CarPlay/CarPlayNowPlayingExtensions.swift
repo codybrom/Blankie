@@ -17,7 +17,8 @@ import os
   import SwiftUI
 
   extension CarPlayInterfaceController {
-    /// Setup the Now Playing template with edit functionality (only when not in solo mode)
+    /// Setup the Now Playing template: a favorite button for the current solo
+    /// sound or preset (plus edit for presets), and the global sleep timer.
     @MainActor
     func setupNowPlayingTemplate() {
       let nowPlayingTemplate = CPNowPlayingTemplate.shared
@@ -34,23 +35,28 @@ import os
         }
       }
 
-      // Make the album/artist string a button that opens the timer picker.
-      nowPlayingTemplate.isAlbumArtistButtonEnabled = true
+      // The album line only surfaces the timer ("N Minute Timer") while one is
+      // running, so make it a tappable shortcut to the timer picker only then.
+      // Without a timer it shows the sound names and shouldn't act as a button.
+      nowPlayingTemplate.isAlbumArtistButtonEnabled = TimerManager.shared.isTimerActive
 
-      // Favorite + edit buttons show only when a preset is playing. This already
-      // excludes Quick Mix — entering it clears `currentPreset` — and solo mode.
-      // Quick Mix has its own CarPlay tab and isn't favoritable.
-      if AudioManager.shared.soloModeSound == nil, let preset = PresetManager.shared.currentPreset {
+      // A soloed sound is favoritable under its own `solo:` token, just like in
+      // the picker and sidebar — show a favorite button (no edit, since there's
+      // nothing to mix). Presets get favorite + edit. Quick Mix has its own
+      // CarPlay tab and isn't favoritable, so it falls through to timer-only.
+      if let soloSound = AudioManager.shared.soloModeSound {
+        let favoriteButton = Self.favoriteButton(
+          for: GlobalSettings.soloToken(forFileName: soloSound.fileName)
+        ) { [weak self] in self?.updateNowPlayingButtons() }
+
+        nowPlayingTemplate.updateNowPlayingButtons([favoriteButton, timerButton])
+        Logger.carPlay.debug(
+          "CarPlay: Now Playing configured with favorite + timer buttons (solo mode)")
+      } else if let preset = PresetManager.shared.currentPreset {
         let favoriteToken =
           preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
-        let isFavorite = GlobalSettings.shared.isStarred(favoriteToken)
-        let favoriteButton = CPNowPlayingImageButton(
-          image: UIImage(systemName: isFavorite ? "star.fill" : "star")!
-        ) { [weak self] _ in
-          Task { @MainActor in
-            GlobalSettings.shared.toggleStarred(favoriteToken)
-            self?.updateNowPlayingButtons()
-          }
+        let favoriteButton = Self.favoriteButton(for: favoriteToken) {
+          [weak self] in self?.updateNowPlayingButtons()
         }
 
         let editButton = CPNowPlayingImageButton(image: UIImage(systemName: "slider.horizontal.3")!)
@@ -64,10 +70,27 @@ import os
         Logger.carPlay.debug(
           "CarPlay: Now Playing configured with favorite + timer + edit buttons (preset mode)")
       } else {
-        // Solo mode or Quick Mix: only the global timer button applies.
+        // Quick Mix (no preset): only the global timer button applies.
         nowPlayingTemplate.updateNowPlayingButtons([timerButton])
         Logger.carPlay.debug(
-          "CarPlay: Now Playing configured with timer button only (solo / Quick Mix)")
+          "CarPlay: Now Playing configured with timer button only (Quick Mix)")
+      }
+    }
+
+    /// A star button that toggles the given starred token, filled while starred.
+    /// `onToggle` refreshes the Now Playing buttons so the glyph updates in place.
+    @MainActor
+    private static func favoriteButton(
+      for token: String, onToggle: @escaping @MainActor () -> Void
+    ) -> CPNowPlayingImageButton {
+      let isFavorite = GlobalSettings.shared.isStarred(token)
+      return CPNowPlayingImageButton(
+        image: UIImage(systemName: isFavorite ? "star.fill" : "star")!
+      ) { _ in
+        Task { @MainActor in
+          GlobalSettings.shared.toggleStarred(token)
+          onToggle()
+        }
       }
     }
 

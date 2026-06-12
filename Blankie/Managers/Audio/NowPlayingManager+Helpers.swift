@@ -19,6 +19,11 @@ extension NowPlayingManager {
       // Built-in sound authors are shown in the dedicated credits screens, but for user-added sounds show the creator name if available
       let artist = (soloSound.isCustom ? soloSound.creditedAuthor : nil) ?? "Blankie"
       return (title: soloSound.title, artist: artist)
+    } else if AudioManager.shared.isQuickMix {
+      // Quick Mix has no preset of its own; name it explicitly rather than
+      // letting it fall through to the generic "Custom Mix".
+      let artistInfo = getArtistInfo(creatorName: creatorName)
+      return (title: String(localized: "Quick Mix"), artist: artistInfo)
     } else if let name = presetName {
       // Handle special presets
       let displayTitle: String
@@ -37,19 +42,36 @@ extension NowPlayingManager {
   }
 
   private func getArtistInfo(creatorName: String? = nil) -> String {
-    // If creator name is provided, show it first
+    // Creator name wins; otherwise list the sounds currently in the mix.
     if let creator = creatorName {
       return creator
     }
+    return soundNameSummary(currentMixSoundTitles())
+  }
 
-    // Otherwise show active sounds
-    let activeSounds = AudioManager.shared.sounds.filter { $0.isSelected }
-    if !activeSounds.isEmpty {
-      let soundNames = activeSounds.map { $0.title }.joined(separator: ", ")
-      return soundNames
-    } else {
-      return "Blankie"
-    }
+  /// Titles of the sounds currently in the mix, in the preset's display order
+  /// (the same `orderedVisibleSounds` order as the mixer grid), filtered to the
+  /// ones switched on. Selection is the on/off truth — a just-deselected sound
+  /// keeps rendering through its fade-out, so filtering on `isPlaying` would
+  /// leave it listed after the user turned it off.
+  func currentMixSoundTitles() -> [String] {
+    AudioManager.shared.orderedVisibleSounds(for: PresetManager.shared.currentPreset)
+      .filter { $0.isSelected }
+      .map { $0.title }
+  }
+
+  /// One metadata line for the lock screen / CarPlay from the mix's sound names.
+  /// Those labels are system-rendered with no width API and hard-truncate
+  /// mid-word ("Grass St…"). A short mix shows its names in full; once the list
+  /// would overflow a conservative character budget, fall back to a single
+  /// count ("6 sounds") — clean, and trivially localizable as one plural string.
+  func soundNameSummary(_ titles: [String]) -> String {
+    guard !titles.isEmpty else { return "Blankie" }
+    let joined = titles.joined(separator: ", ")
+    let budget = 50
+    // The count branch is only reached with 2+ names, so the plural is safe.
+    if joined.count <= budget || titles.count == 1 { return joined }
+    return String(localized: "\(titles.count) sounds")
   }
 
   func loadCustomArtwork(from data: Data?) -> MPMediaItemArtwork? {

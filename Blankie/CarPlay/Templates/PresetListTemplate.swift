@@ -40,34 +40,25 @@ import os
       let customPresets = PresetManager.shared.presets.filter { !$0.isDefault }
       let defaultPreset = PresetManager.shared.presets.first { $0.isDefault }
 
+      // The Presets tab is the full browse list — every preset plus All Sounds.
+      // Recent and Favorites live on the Home tab, so there's no dedup here.
       var sections: [CPListSection] = []
 
-      addRecentSection(to: &sections)
-      addFavoritesSection(to: &sections)
-
-      // Favorited presets already appear in the Favorites section above, so
-      // exclude them from "Presets" / "All Sounds" to avoid duplicate rows.
-      let starred = GlobalSettings.shared.starredItems
-      let nonFavoriteCustoms = customPresets.filter { !starred.contains($0.id.uuidString) }
-      let allSoundsFavorited = starred.contains(GlobalSettings.allSoundsToken)
-
       if customPresets.isEmpty {
-        // No custom presets: show All Sounds (unless it's already favorited)
-        // plus the "create presets" hint.
-        addEmptyStateSection(to: &sections, defaultPreset: allSoundsFavorited ? nil : defaultPreset)
+        addEmptyStateSection(to: &sections, defaultPreset: defaultPreset)
       } else {
-        if !nonFavoriteCustoms.isEmpty {
-          addCustomPresetsSection(to: &sections, customPresets: nonFavoriteCustoms)
-        }
-        if !allSoundsFavorited {
-          addAllSoundsSection(to: &sections, defaultPreset: defaultPreset)
-        }
+        // All Blankie Sounds is a fixed row at the top (as in the in-app list);
+        // the named presets follow, alphabetized with the A–Z scrubber.
+        addAllSoundsSection(to: &sections, defaultPreset: defaultPreset)
+        addCustomPresetsSection(to: &sections, customPresets: customPresets)
       }
 
       template.updateSections(sections)
     }
 
-    private static func createPresetListItem(_ preset: Preset) -> CPListItem {
+    // Shared row builders — also used by HomeListTemplate's Now Playing and
+    // Favorites sections. Internal (not private) so Home can compose them.
+    static func createPresetListItem(_ preset: Preset) -> CPListItem {
       let currentPresetId = PresetManager.shared.currentPreset?.id
       let isActive = preset.id == currentPresetId
 
@@ -217,66 +208,35 @@ import os
       return nil
     }
 
-    private static func addRecentSection(to sections: inout [CPListSection]) {
-      if let currentPreset = PresetManager.shared.currentPreset,
-        !currentPreset.isDefault
-      {
-        let recentItem = createPresetListItem(currentPreset)
-        sections.append(
-          CPListSection(
-            items: [recentItem],
-            header: String(localized: "Recent"),
-            sectionIndexTitle: "R"
-          )
-        )
-      }
-    }
-
-    // Favorited (starred) presets, in the user's saved order. Shares the
-    // `GlobalSettings.starredItems` token list with the iPad sidebar. Quick Mix
-    // has its own CarPlay tab, so its token is skipped here.
-    private static func addFavoritesSection(to sections: inout [CPListSection]) {
-      let presets = PresetManager.shared.presets
-      let items: [CPListItem] = GlobalSettings.shared.starredItems.compactMap { token in
-        if let sound = AudioManager.shared.sound(forSoloToken: token) {
-          return createSoloItem(sound)
-        }
-        switch token {
-        case GlobalSettings.allSoundsToken:
-          guard let defaultPreset = presets.first(where: { $0.isDefault }) else { return nil }
-          return createAllSoundsItem(defaultPreset)
-        case GlobalSettings.quickMixToken:
-          return nil
-        default:
-          guard let preset = presets.first(where: { $0.id.uuidString == token }) else {
-            return nil
-          }
-          return createPresetListItem(preset)
-        }
-      }
-
-      guard !items.isEmpty else { return }
-
-      sections.append(
-        CPListSection(
-          items: items,
-          header: String(localized: "Favorites"),
-          sectionIndexTitle: "F"
-        )
-      )
-    }
-
     private static func addCustomPresetsSection(
       to sections: inout [CPListSection], customPresets: [Preset]
     ) {
-      let allItems = customPresets.map { createPresetListItem($0) }
-      sections.append(
-        CPListSection(
-          items: allItems,
-          header: String(localized: "Presets"),
-          sectionIndexTitle: "P"
+      // Alphabetical, split into one section per first letter so CarPlay's A–Z
+      // scrubber can jump by letter. No visible headers — the index rail is the
+      // only affordance — and "#" (non-letter starts) sorts last, list-app style.
+      let sorted = customPresets.sorted {
+        $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+      }
+      let groups = Dictionary(grouping: sorted) { sectionIndexLetter(for: $0.name) }
+      let letters = groups.keys.sorted { a, b in
+        if a == "#" { return false }
+        if b == "#" { return true }
+        return a < b
+      }
+      for letter in letters {
+        let items = (groups[letter] ?? []).map { createPresetListItem($0) }
+        sections.append(
+          CPListSection(items: items, header: nil, sectionIndexTitle: letter)
         )
-      )
+      }
+    }
+
+    /// First letter of a preset name for the A–Z index, or "#" for names that
+    /// don't start with a Latin letter (numbers, symbols, other scripts).
+    private static func sectionIndexLetter(for name: String) -> String {
+      guard let first = name.first(where: { !$0.isWhitespace }) else { return "#" }
+      let upper = String(first).uppercased()
+      return upper.range(of: "^[A-Z]$", options: .regularExpression) != nil ? upper : "#"
     }
 
     private static func addAllSoundsSection(
@@ -319,13 +279,17 @@ import os
     }
 
     // Favorited solo sound — selecting it enters solo mode for that sound.
-    private static func createSoloItem(_ sound: Sound) -> CPListItem {
+    // `@MainActor` for the `creditedAuthor` lookup.
+    @MainActor
+    static func createSoloItem(_ sound: Sound) -> CPListItem {
       let isActive = AudioManager.shared.soloModeSound?.id == sound.id
 
+      // Caption only when a custom sound credits an artist; built-in authors live
+      // in the credits screens. No generic "Custom sound" / "Solo sound" label.
       let item = CPListItem(
         text: sound.title,
-        detailText: sound.isCustom
-          ? String(localized: "Custom sound") : String(localized: "Solo sound")
+        detailText: sound.isCustom ? sound.creditedAuthor : nil,
+        image: SoundsListTemplate.getSoundImage(for: sound)
       )
 
       item.playingIndicatorLocation = .leading
@@ -345,13 +309,15 @@ import os
       return item
     }
 
-    private static func createAllSoundsItem(_ preset: Preset) -> CPListItem {
+    static func createAllSoundsItem(_ preset: Preset) -> CPListItem {
       let currentPresetId = PresetManager.shared.currentPreset?.id
       let isActive = preset.id == currentPresetId
 
+      // Named and styled like any other preset row — "All Blankie Sounds" with
+      // its active sounds underneath, matching the in-app preset list.
       let item = CPListItem(
-        text: String(localized: "Custom Mix"),
-        detailText: String(localized: "Current selections in \"\(preset.displayName)\""),
+        text: preset.displayName,
+        detailText: getPresetDetailText(preset),
         image: getPresetArtwork(preset)
       )
 
