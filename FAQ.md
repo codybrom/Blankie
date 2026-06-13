@@ -21,7 +21,7 @@ There are several ways to get started:
    - Visit the [Blankie cask page on brew.sh](https://formulae.brew.sh/cask/blankie) for more information
 
 3. **Direct Download**
-   - Download the latest .zip from the [Releases](https://github.com/codybrom/blankie/releases) on GitHub
+   - Download `Blankie.zip` from the newest version on the [Releases](https://github.com/codybrom/blankie/releases) page on GitHub
    - Copy the app to your Applications folder
    - Open Blankie and click a sound to start!
 

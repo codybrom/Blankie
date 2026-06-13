@@ -31,7 +31,20 @@ Pick the scheme by what you're archiving:
 - **Mac** (App Store, GitHub, Homebrew): archive from **`Blankie (Universal)`** with the **Any Mac** destination. This uses the standard entitlements (no CarPlay).
 - **iOS** (App Store, TestFlight): archive from **`Blankie (Universal with CarPlay)`** with the **Any iOS Device** destination, so the CarPlay entitlement is included. This requires the `com.apple.developer.carplay-audio` entitlement on the release bundle ID (see [CARPLAY.md](CARPLAY.md)).
 
-The iOS build also ships animated artwork as On-Demand Resources (~385 MB, hosted by Apple). They are bundled into the archive and uploaded with the build to App Store Connect, so no separate upload step is required, but expect the upload to take longer.
+The iOS build also ships animated artwork as On-Demand Resources (~385 MB, hosted by Apple). The source `.mov` files are not stored in git. The "Fetch Animated Artwork" build phase pulls them from the [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1) GitHub Release on first build (see [DEVELOPMENT.md](DEVELOPMENT.md)). At archive time they are bundled into the build and uploaded to App Store Connect as ODR, so no separate upload step is required, but expect the upload to take longer.
+
+> **Updating animated artwork:** if you add, remove, or replace any `.mov`, publish a fresh asset release and point the fetch script at it. Anchor it to an empty orphan commit so it stays out of code history:
+>
+> ```bash
+> EMPTY_TREE=$(git hash-object -t tree /dev/null)
+> ANCHOR=$(git commit-tree "$EMPTY_TREE" -m "Animated artwork binary assets (release anchor)")
+> git tag artwork-assets-v2 "$ANCHOR" && git push origin artwork-assets-v2
+> gh release create artwork-assets-v2 --title "Animated Artwork Assets v2" \
+>   --notes "Binary .mov assets fetched by scripts/fetch_animated_artwork.sh." \
+>   Blankie/Resources/AnimatedArtwork/*/*.mov
+> ```
+>
+> Then regenerate `scripts/animated-artwork.manifest` (one `name sha256 bytes` line per video) and bump the default `TAG` in `scripts/fetch_animated_artwork.sh` to the new tag.
 
 ## Creating a Release
 

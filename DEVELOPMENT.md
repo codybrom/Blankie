@@ -59,7 +59,19 @@ This guide will help you set up your development environment for contributing to
 
    > **Note**: You cannot use the same bundle identifier as the official Blankie app.
 
-5. **Open and build the project**
+5. **Animated artwork assets**
+
+   The animated artwork videos (`Blankie/Resources/AnimatedArtwork/<Name>/<Name>.mov`) are not stored in git. They are published as assets on the [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1) GitHub Release so cloning the repository stays fast. Xcode pulls them automatically on first build via the "Fetch Animated Artwork" build phase, so you usually do not need to do anything.
+
+   To fetch them manually (or re-verify them), run:
+
+   ```bash
+   scripts/fetch_animated_artwork.sh
+   ```
+
+   It downloads only what is missing and checks every file against `scripts/animated-artwork.manifest` (SHA-256). Pass `--force` to re-download everything.
+
+6. **Open and build the project**
 
    ```bash
    open Blankie.xcodeproj
