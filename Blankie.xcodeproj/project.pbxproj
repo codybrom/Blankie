@@ -144,6 +144,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F91350862D233A44003C85BE /* Build configuration list for PBXNativeTarget "Blankie" */;
 			buildPhases = (
+				F9DA7AFE7C400000000000A1 /* Fetch Animated Artwork */,
 				F913505B2D233A43003C85BE /* Sources */,
 				F913505D2D233A43003C85BE /* Resources */,
 				F921EDC02D27408E00D4F3D3 /* Run Script */,
@@ -330,6 +331,31 @@
 				"",
 				"",
 				"",
+				"",
+			);
+		};
+		F9DA7AFE7C400000000000A1 /* Fetch Animated Artwork */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			name = "Fetch Animated Artwork";
+			shellPath = /bin/sh;
+			shellScript = (
+				"#!/bin/sh",
+				"# Animated-artwork .mov files are stored outside of git",
+				"# Run scripts/fetch_animated_artwork.sh to fetch/confirm existence",
+				"set -e",
+				"cd \"$SRCROOT\"",
+				"[ -f scripts/animated-artwork.manifest ] || exit 0",
+				"missing=0",
+				"while read -r name _; do",
+				"  [ -z \"$name\" ] && continue",
+				"  case \"$name\" in '#'*) continue;; esac",
+				"  [ -f \"Blankie/Resources/AnimatedArtwork/$name/$name.mov\" ] || missing=1",
+				"done < scripts/animated-artwork.manifest",
+				"if [ \"$missing\" -eq 1 ]; then",
+				"  echo \"Animated artwork missing - fetching from GitHub Release...\"",
+				"  scripts/fetch_animated_artwork.sh",
+				"fi",
 				"",
 			);
 		};

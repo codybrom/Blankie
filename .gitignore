@@ -94,3 +94,10 @@ buildServer.json
 scheduled_tasks.lock
 # blankifi compiled binary cache
 scripts/.build/
+
+# Animated-artwork videos are fetched from a GitHub Release, not stored in git.
+# Run scripts/fetch_animated_artwork.sh to populate these.
+# Previews/metadata are still tracked in git.
+Blankie/Resources/AnimatedArtwork/**/*.mov
+# In-progress download temp files from the fetch script.
+Blankie/Resources/AnimatedArtwork/**/*.mov.download

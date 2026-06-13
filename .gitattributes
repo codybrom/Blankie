@@ -1,3 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
-*.mov filter=lfs diff=lfs merge=lfs -text
+
+# Animated-artwork .mov files are NOT tracked in git (LFS or otherwise).
+# They ship as assets on the "artwork-assets-*" GitHub Release and are pulled
+# into place by scripts/fetch_animated_artwork.sh. See scripts/animated-artwork.manifest.
