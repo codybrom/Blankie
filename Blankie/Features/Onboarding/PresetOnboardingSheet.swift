@@ -473,24 +473,25 @@ struct PresetOnboardingSheet: View {
   }
 
   private func togglePreview(for sound: Sound) {
+    // Use preview mode (not solo mode): it plays the sound without touching
+    // soloModeSound, so the live mixer background behind the sheet stays static,
+    // and it persists no solo token.
     if previewingSound == sound.fileName {
-      // Stop preview - exit solo mode
-      audioManager.exitSoloMode()
+      audioManager.exitPreviewMode()
       previewingSound = nil
     } else {
       // Stop any currently previewing sound
       if previewingSound != nil {
-        audioManager.exitSoloMode()
+        audioManager.exitPreviewMode()
       }
-      // Start new preview (solo mode)
-      audioManager.toggleSoloMode(for: sound)
+      audioManager.enterPreviewMode(for: sound)
       previewingSound = sound.fileName
     }
   }
 
   private func stopAllPreviews() {
     if previewingSound != nil {
-      audioManager.exitSoloMode()
+      audioManager.exitPreviewMode()
     }
     previewingSound = nil
   }

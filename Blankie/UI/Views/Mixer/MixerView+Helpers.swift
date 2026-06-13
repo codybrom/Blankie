@@ -55,6 +55,9 @@ import SwiftUI
               .overlay(
                 Color.black.opacity(0.15)
               )
+              // Distinct identity per image so artwork swaps crossfade.
+              .id(ObjectIdentifier(artworkImage))
+              .transition(.opacity)
           }
           // Layer 2: Shared accent gradient — matches Quick Mix so the
           // default preset, custom accent presets, solo mode, and Quick Mix
@@ -65,8 +68,13 @@ import SwiftUI
                 ? (globalSettings.customAccentColor ?? .accentColor)
                 : (preset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
             )
+            .transition(.opacity)
           }
         }
+        // Crossfade background changes rather than hard-cutting. The gradient↔
+        // artwork flip animates off isSolo; artwork swaps animate via the
+        // withAnimation around the backgroundImage assignment below.
+        .animation(.easeInOut(duration: 0.35), value: isSolo)
         .accessibilityHidden(true)
       }
       .ignoresSafeArea()
@@ -75,10 +83,12 @@ import SwiftUI
           "\(preset?.id.uuidString ?? "")-\(preset?.artworkId?.uuidString ?? "")-\(preset?.animatedArtwork?.previewPath ?? "")"
       ) {
         guard let preset = preset else {
-          backgroundImage = nil
+          withAnimation(.easeInOut(duration: 0.35)) { backgroundImage = nil }
           return
         }
-        backgroundImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+        // Keep the old image until the next loads, then crossfade to it.
+        let loaded = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+        withAnimation(.easeInOut(duration: 0.35)) { backgroundImage = loaded }
       }
     }
   }

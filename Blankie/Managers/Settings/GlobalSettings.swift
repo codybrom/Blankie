@@ -30,7 +30,9 @@ extension UserDefaults {
 enum UserDefaultsKeys {
   static let volume = "globalVolume"
   static let accentColor = "customAccentColor"
+  /// Legacy autoplay key (pre-2.0). Migrated to `autoPlayOnLaunchMac`
   static let autoPlayOnLaunch = "autoPlayOnLaunch"
+  static let autoPlayOnLaunchMac = "autoPlayOnLaunchMac"
   static let enableSpatialAudio = "enableSpatialAudio"
   static let language = "languagePreference"
   static let mixWithOthers = "mixWithOthers"

@@ -14,6 +14,7 @@ private struct AnimationTrigger: Equatable {
   let soloMode: UUID?
   let quickMix: Bool
   let listView: Bool
+  let isLoading: Bool
 }
 
 /// The iPhone stack's pushed pages. The Library is the stack ROOT (spatially
@@ -340,7 +341,12 @@ private enum IPhonePage: Hashable {
     @ViewBuilder
     private var mainContentView: some View {
       Group {
-        if let soloSound = soloLayoutSound {
+        if presetManager.isLoading {
+          // Until the restore completes, currentPreset is nil and the grid would
+          // flash every sound (reading as the default preset). Show nothing over
+          // the neutral background; content fades in once the preset is applied.
+          Color.clear
+        } else if let soloSound = soloLayoutSound {
           soloModeView(for: soloSound)
         } else if audioManager.isQuickMix {
           // Quick Mix mode view
@@ -355,7 +361,8 @@ private enum IPhonePage: Hashable {
         value: AnimationTrigger(
           soloMode: soloLayoutSound?.id,
           quickMix: audioManager.isQuickMix,
-          listView: showingListView
+          listView: showingListView,
+          isLoading: presetManager.isLoading
         )
       )
       .onChange(of: audioManager.soloModeSound) { oldValue, newValue in

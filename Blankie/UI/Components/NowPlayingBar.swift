@@ -182,7 +182,6 @@ import SwiftUI
           .contentTransition(
             .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating)
           )
-          .offset(x: audioManager.isGloballyPlaying ? 0 : 1)
           .frame(width: 68, height: 68)
           .contentShape(Circle())
       }

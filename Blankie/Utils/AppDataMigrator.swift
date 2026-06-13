@@ -14,10 +14,19 @@ enum AppDataMigrator {
   private static let migrationCompletedKey = "unifiedMigrationCompleted"
 
   /// UserDefaults keys for features that no longer exist so stale values don't linger
-  private static let obsoleteKeys = [
-    "hideInactiveSounds",  // "Hide Inactive Sounds" feature removed in 1.1
-    "appearanceMode",  // Appearance picker removed in 2.0 — app is now dark-only
-  ]
+  private static var obsoleteKeys: [String] {
+    var keys = [
+      "hideInactiveSounds",  // "Hide Inactive Sounds" feature removed in 1.1
+      "appearanceMode",  // Appearance picker removed in 2.0 — app is now dark-only
+    ]
+    #if os(iOS) || os(visionOS)
+      // Autoplay is macOS-only; sweep the legacy keys on iOS so no stale value
+      // can sync to a Mac. (macOS migrates them into autoPlayOnLaunchMac.)
+      keys.append(UserDefaultsKeys.autoPlayOnLaunch)
+      keys.append("alwaysStartPaused")
+    #endif
+    return keys
+  }
 
   /// Perform one-time migration of all app data
   static func performAllMigrations() {
@@ -67,10 +76,9 @@ enum AppDataMigrator {
     }
 
     let standardDefaults = UserDefaults.standard
-    let keysToMigrate = [
+    var keysToMigrate = [
       UserDefaultsKeys.volume,
       UserDefaultsKeys.accentColor,
-      UserDefaultsKeys.autoPlayOnLaunch,
       UserDefaultsKeys.enableSpatialAudio,
       UserDefaultsKeys.language,
       UserDefaultsKeys.mixWithOthers,
@@ -93,11 +101,14 @@ enum AppDataMigrator {
       // Legacy keys
       "presets",
       "customArtworkIds",
-      // v1.0.13 wrote this; GlobalSettings.migrateLegacySettings() reads it from
-      // the shared suite and flips it to autoPlayOnLaunch. Without migrating it,
-      // upgraders who turned off "always start paused" silently lose autoplay.
-      "alwaysStartPaused",
     ]
+    // macOS only: carry the legacy autoplay keys into the shared suite so
+    // GlobalSettings can migrate them into autoPlayOnLaunchMac. (iOS purges
+    // them via obsoleteKeys.)
+    #if os(macOS)
+      keysToMigrate.append(UserDefaultsKeys.autoPlayOnLaunch)
+      keysToMigrate.append("alwaysStartPaused")
+    #endif
 
     var migratedCount = 0
     for key in keysToMigrate {
@@ -268,11 +279,10 @@ enum AppDataMigrator {
 
   /// Get list of keys that need to be migrated
   private static func getUserDefaultsKeysToMigrate() -> [String] {
-    return [
+    var keys = [
       // GlobalSettings keys
       UserDefaultsKeys.volume,
       UserDefaultsKeys.accentColor,
-      UserDefaultsKeys.autoPlayOnLaunch,
       UserDefaultsKeys.showSoundNames,
       UserDefaultsKeys.iconSize,
       UserDefaultsKeys.showingListView,
@@ -300,11 +310,14 @@ enum AppDataMigrator {
       "defaultPreset",
       "savedPresets",
       "lastActivePresetID",
-
-      // Legacy key: GlobalSettings.migrateLegacySettings() reads this from the
-      // shared suite and flips it to autoPlayOnLaunch for 1.0.13 upgraders.
-      "alwaysStartPaused",
     ]
+    // macOS only: carried forward so GlobalSettings can migrate them into
+    // autoPlayOnLaunchMac. (iOS purges them via obsoleteKeys.)
+    #if os(macOS)
+      keys.append(UserDefaultsKeys.autoPlayOnLaunch)
+      keys.append("alwaysStartPaused")
+    #endif
+    return keys
   }
 
   /// Migrate a list of keys from standard to shared UserDefaults

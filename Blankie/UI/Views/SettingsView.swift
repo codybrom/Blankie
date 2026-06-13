@@ -631,14 +631,17 @@ private struct PlaybackSettingsSection: View {
     Section(
       header: Text("Playback & Sounds")
     ) {
-      Toggle(
-        "Autoplay on Open",
-        isOn: Binding(
-          get: { globalSettings.autoPlayOnLaunch },
-          set: { globalSettings.setAutoPlayOnLaunch($0) }
+      // Autoplay on Open is macOS-only (iOS stays alive in the background).
+      #if os(macOS)
+        Toggle(
+          "Autoplay on Open",
+          isOn: Binding(
+            get: { globalSettings.autoPlayOnLaunch },
+            set: { globalSettings.setAutoPlayOnLaunch($0) }
+          )
         )
-      )
-      .tint(globalSettings.customAccentColor ?? .accentColor)
+        .tint(globalSettings.customAccentColor ?? .accentColor)
+      #endif
 
       // Mix with Other Audio is AVAudioSession-based, so it has no macOS form.
       #if os(iOS) || os(visionOS)

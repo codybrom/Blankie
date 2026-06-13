@@ -21,10 +21,11 @@ extension GlobalSettings {
     logCurrentSettings()
   }
 
+  /// macOS-only; stored under the platform-scoped autoPlayOnLaunchMac key.
   @MainActor
   func setAutoPlayOnLaunch(_ value: Bool) {
     autoPlayOnLaunch = value
-    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.autoPlayOnLaunch)
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.autoPlayOnLaunchMac)
     logCurrentSettings()
   }
 
