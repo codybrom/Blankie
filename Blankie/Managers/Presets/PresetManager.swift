@@ -240,6 +240,88 @@ extension PresetManager {
     savePresets()
     Logger.presets.debug("PresetManager: --- End Delete Preset ---")
   }
+
+  /// Custom sounds that deleting `preset` would leave orphaned: members of it,
+  /// in no *other* custom preset, and not currently selected. The default preset
+  /// always contains every sound, so it never counts as "another preset" here —
+  /// it only matters through the live-selection check. Built-ins are excluded
+  /// since they can't be deleted.
+  @MainActor
+  func orphanedCustomSounds(ifDeleting preset: Preset) -> [Sound] {
+    guard !preset.isDefault else { return [] }
+    let audio = AudioManager.shared
+    let presetMembers = Set(preset.soundStates.map(\.fileName))
+    let otherCustomMembers = Set(
+      presets
+        .filter { !$0.isDefault && $0.id != preset.id }
+        .flatMap { $0.soundStates.map(\.fileName) })
+    // "Selected/playing on the default preset" — the live selection when the
+    // default is the active context, otherwise the default's saved selection.
+    // Deliberately NOT the live selection of the custom preset being deleted:
+    // its own playing sounds would otherwise be spared and undercounted.
+    let defaultIsActive = currentPreset == nil || (currentPreset?.isDefault ?? false)
+    let selectedOnDefault: Set<String>
+    if defaultIsActive {
+      selectedOnDefault = Set(audio.sounds.filter(\.isSelected).map(\.fileName))
+    } else {
+      selectedOnDefault = Set(
+        presets.first { $0.isDefault }?.soundStates.filter(\.isSelected).map(\.fileName) ?? [])
+    }
+    return audio.sounds.filter { sound in
+      sound.isCustom
+        && presetMembers.contains(sound.fileName)
+        && !otherCustomMembers.contains(sound.fileName)
+        && !selectedOnDefault.contains(sound.fileName)
+        && audio.soloModeSound?.id != sound.id
+        && audio.previewModeSound?.id != sound.id
+    }
+  }
+
+  /// Deletes `preset`, and when asked, every custom sound it leaves orphaned.
+  /// Orphans are captured before the preset is removed so the membership basis
+  /// is still intact, then deleted through the normal custom-sound path.
+  @MainActor
+  func deletePreset(_ preset: Preset, alsoDeleteOrphanedSounds: Bool) {
+    let orphans = alsoDeleteOrphanedSounds ? orphanedCustomSounds(ifDeleting: preset) : []
+    deletePreset(preset)
+    for sound in orphans {
+      guard let id = sound.customSoundDataID,
+        let data = CustomSoundManager.shared.getCustomSound(by: id)
+      else { continue }
+      _ = CustomSoundManager.shared.deleteCustomSound(data)
+    }
+  }
+
+  /// Adds or removes `fileName` from a custom preset, live. Removing it from the
+  /// active preset stops the sound if it's currently playing (matching the Edit
+  /// Preset screen). No-op for the default preset, which always holds everything.
+  @MainActor
+  func setSound(_ fileName: String, member: Bool, ofPreset presetID: UUID, volume: Float) {
+    guard let index = presets.firstIndex(where: { $0.id == presetID }), !presets[index].isDefault
+    else { return }
+    var preset = presets[index]
+    let alreadyMember = preset.soundStates.contains { $0.fileName == fileName }
+    if member, !alreadyMember {
+      preset.soundStates.append(PresetState(fileName: fileName, isSelected: false, volume: volume))
+    } else if !member, alreadyMember {
+      preset.soundStates.removeAll { $0.fileName == fileName }
+      if currentPreset?.id == presetID,
+        let sound = AudioManager.shared.sounds.first(where: { $0.fileName == fileName }),
+        sound.isSelected
+      {
+        sound.isSelected = false
+      }
+    } else {
+      return
+    }
+    preset.lastModifiedVersion =
+      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    presets[index] = preset
+    if currentPreset?.id == presetID {
+      currentPreset = preset
+    }
+    savePresets()
+  }
 }
 
 // MARK: - Preset State Management

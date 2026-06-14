@@ -1133,25 +1133,39 @@ struct LibraryView: View {
       isPresented: .init(
         get: { presetToDelete != nil },
         set: { if !$0 { presetToDelete = nil } }
-      )
-    ) {
-      Button("Cancel", role: .cancel) {
-        presetToDelete = nil
-      }
-
-      Button("Delete", role: .destructive) {
-        if let preset = presetToDelete {
-          Task {
-            presetManager.deletePreset(preset)
-            presetToDelete = nil
-          }
+      ),
+      presenting: presetToDelete
+    ) { preset in
+      let orphanCount = presetManager.orphanedCustomSounds(ifDeleting: preset).count
+      if orphanCount == 0 {
+        Button("Delete", role: .destructive) {
+          presetManager.deletePreset(preset)
+          presetToDelete = nil
+        }
+      } else {
+        Button(
+          orphanCount == 1
+            ? String(localized: "Delete Preset & 1 Sound")
+            : String(localized: "Delete Preset & \(orphanCount) Sounds"),
+          role: .destructive
+        ) {
+          presetManager.deletePreset(preset, alsoDeleteOrphanedSounds: true)
+          presetToDelete = nil
+        }
+        Button("Delete Preset Only", role: .destructive) {
+          presetManager.deletePreset(preset)
+          presetToDelete = nil
         }
       }
-    } message: {
-      if let preset = presetToDelete {
-        Text(
-          "Are you sure you want to delete '\(preset.name)'? This action cannot be undone."
-        )
+      Button("Cancel", role: .cancel) { presetToDelete = nil }
+    } message: { preset in
+      let count = presetManager.orphanedCustomSounds(ifDeleting: preset).count
+      if count == 0 {
+        Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
+      } else if count == 1 {
+        Text("1 custom sound is used only by '\(preset.name)'. Delete it too?")
+      } else {
+        Text("\(count) custom sounds are used only by '\(preset.name)'. Delete them too?")
       }
     }
   }
