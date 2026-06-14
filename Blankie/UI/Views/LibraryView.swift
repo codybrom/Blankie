@@ -166,7 +166,13 @@ struct PresetPickerRow: View {
   }
 
   private var accent: Color {
-    preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    // The iPhone page keeps every row on the app's main accent so the Library
+    // reads as one stable surface; other presentations tint each row by its
+    // own preset accent (and highlight the current row with it).
+    if presentation == .page {
+      return globalSettings.customAccentColor ?? .accentColor
+    }
+    return preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }
 
   /// This preset is the one currently driving playback (solo mode pre-empts it).
@@ -484,9 +490,6 @@ struct LibraryView: View {
   /// navigate forward to the mixer (the Library is the stack root, so there
   /// is nothing to dismiss).
   var onSelection: (() -> Void)?
-  /// Page-only: the current preset's background artwork (loaded by the
-  /// mixer), reused here so the Library shares Now Playing's backdrop.
-  var backgroundImage: PlatformImage?
   /// Page-only: measured height of the stack's Now Playing bar. The bar's
   /// `safeAreaBar` doesn't inset this root list, so the list reserves this much
   /// bottom margin to clear it — derived, not hardcoded, so it tracks Dynamic
@@ -673,51 +676,23 @@ struct LibraryView: View {
 
   // MARK: - Page backdrop
 
-  /// Now Playing's accent rule: the preset accent, except solo mode (and any
-  /// preset-less state), which uses the app accent.
-  private var pageAccent: Color {
-    if audioManager.soloModeSound != nil {
-      return globalSettings.customAccentColor ?? .accentColor
-    }
-    return presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
-      ?? .accentColor
-  }
-
-  /// Page-only backdrop mirroring Now Playing: a black base with the preset's
-  /// blurred artwork, falling back to an accent gradient (solo and Quick Mix
-  /// always use the gradient, like Now Playing does).
+  /// Page-only backdrop: an accent gradient over black. Unlike Now Playing, the
+  /// iPhone Library never adopts the playing preset's artwork or accent — it
+  /// stays on the app's main accent so the list reads as a stable home screen.
   private var pageBackground: some View {
-    Color.black
+    let accent = globalSettings.customAccentColor ?? .accentColor
+    return Color.black
       .overlay {
-        if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
-          let image = backgroundImage
-        {
-          #if os(macOS)
-            Image(nsImage: image)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-              .blur(radius: 40)
-              .opacity(0.4)
-          #else
-            Image(uiImage: image)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-              .blur(radius: 40)
-              .opacity(0.4)
-          #endif
-        } else {
-          LinearGradient(
-            colors: [
-              pageAccent.opacity(0.6),
-              pageAccent.opacity(0.3),
-              Color.black.opacity(0.8),
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
-        }
+        LinearGradient(
+          colors: [
+            accent.opacity(0.6),
+            accent.opacity(0.3),
+            Color.black.opacity(0.8),
+          ],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
       }
-      .clipped()
       .ignoresSafeArea()
       .accessibilityHidden(true)
   }

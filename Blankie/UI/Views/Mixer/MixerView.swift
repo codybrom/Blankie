@@ -251,7 +251,6 @@ private enum IPhonePage: Hashable {
           presentation: .page,
           onOpenSettings: { showingSettings = true },
           onSelection: { iPhonePath = [.mixer] },
-          backgroundImage: backgroundImage,
           bottomBarHeight: nowPlayingBarHeight
         )
         .navigationDestination(for: IPhonePage.self) { _ in

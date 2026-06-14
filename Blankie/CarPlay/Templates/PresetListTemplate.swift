@@ -189,10 +189,9 @@ import os
     }
 
     private static func getPresetArtwork(_ preset: Preset) -> UIImage? {
-      // Check if we have a cached thumbnail for this preset
+      // Real (custom or animated) artwork is pre-rasterized into a cached
+      // thumbnail by the main app whenever a preset is created or modified.
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
-
-      // Use app group UserDefaults for sharing between app and CarPlay
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
 
       if let thumbnailData = userDefaults.data(forKey: thumbnailKey),
@@ -201,11 +200,42 @@ import os
         return image
       }
 
-      // For CarPlay, we rely on pre-cached thumbnails from the main app
-      // Thumbnails should be cached by the main app when presets are created/modified
+      // No real artwork — render the same tinted FallbackArtwork the library
+      // shows for this preset (the Blankie mark for "All Blankie Sounds", a
+      // montage of its sounds otherwise) so CarPlay rows are never imageless.
+      // CarPlay templates are always built on the main thread.
+      return MainActor.assumeIsolated { fallbackArtwork(for: preset) }
+    }
 
-      // Return nil if no cached thumbnail is available
-      return nil
+    /// Rasterize the shared `FallbackArtwork` for a preset with no custom or
+    /// animated artwork, matching its in-app library tile.
+    @MainActor
+    private static func fallbackArtwork(for preset: Preset) -> UIImage? {
+      let accent = preset.accentColor ?? GlobalSettings.shared.customAccentColor ?? .accentColor
+
+      let glyph: FallbackArtwork.Glyph
+      let glyphFraction: CGFloat
+      if preset.isDefault {
+        glyph = .brand
+        glyphFraction = 0.5
+      } else {
+        let icons = AudioManager.shared.compositeSoundIcons(for: preset)
+        glyph = icons.isEmpty ? .symbol("music.note") : .composite(icons)
+        glyphFraction = 0.44
+      }
+
+      // 44pt is the CarPlay list image footprint; render at 2x for crisp glyphs.
+      let view = FallbackArtwork(
+        glyph: glyph,
+        accent: accent,
+        size: 44,
+        cornerRadius: 0,
+        glyphFraction: glyphFraction
+      )
+      let renderer = ImageRenderer(content: view)
+      renderer.scale = 2
+      renderer.isOpaque = true
+      return renderer.uiImage
     }
 
     private static func addCustomPresetsSection(
