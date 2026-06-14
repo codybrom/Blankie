@@ -200,6 +200,17 @@ import os
         }
       #endif
 
+      // Reclaim leftover import/share staging in tmp + Documents/Inbox that
+      // iOS doesn't clean for us (accumulates across versions over time).
+      // Detached so the FileManager work stays off the main thread.
+      Task.detached {
+        StorageMaintenance.clean()
+        #if DEBUG
+          // Itemize on-disk usage (post-cleanup) so the Settings number is legible.
+          StorageReport.log()
+        #endif
+      }
+
       return true
     }
 
