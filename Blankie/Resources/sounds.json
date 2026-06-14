@@ -5,21 +5,29 @@
       "authorUrl": "https://freesound.org/people/alex36917/",
       "defaultOrder": 0,
       "description": "This is a light to medium rain storm. A little thunder may be heard. Towards the end of the sound, there is a train horn in the distance.",
-      "duration": 126.316009,
+      "duration": 92.26068,
       "fileName": "rain",
       "license": "ccBy4",
-      "lufs": -29.52703,
+      "loopCut": {
+        "source": "524605__alex36917__rain-ambience.wav",
+        "method": "loopfind --prefer-long --ctx 2.0",
+        "startSec": 4.0,
+        "endSec": 96.261,
+        "crossfadeSec": 1.5,
+        "note": "Start/end intensity matched. Ends before train horn (onset 115.6s, loud at 124.5s)"
+      },
+      "lufs": -29.31037,
       "moods": [
         "sleep",
         "relax"
       ],
       "needsLimiter": true,
-      "normalizationFactor": 1.3376778,
+      "normalizationFactor": 1.3047235,
       "soundName": "rain ambience",
       "soundUrl": "https://freesound.org/s/524605/",
       "systemIconName": "cloud.rain",
       "title": "Rain",
-      "truePeakdBTP": -0.49889737
+      "truePeakdBTP": -0.09582323
     },
     {
       "author": "Digifish music",
@@ -47,104 +55,139 @@
       "authorUrl": "https://freesound.org/people/felix.blume/",
       "defaultOrder": 2,
       "description": "Wind whistling with some squalls in a field in Texas.",
-      "duration": 212.318005,
+      "duration": 211.137506,
       "fileName": "wind",
       "license": "cc0",
-      "lufs": -17.755798,
+      "loopCut": {
+        "source": "217506__felixblume__wind-blowing-in-a-field-in-texas-usa.wav",
+        "method": "loopfind --prefer-long",
+        "startSec": 0.001,
+        "endSec": 211.139,
+        "crossfadeSec": 0.25
+      },
+      "lufs": -17.739557,
       "moods": [
         "focus",
         "relax"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 0.3449768,
+      "normalizationFactor": 0.34433237,
       "soundName": "Wind blowing in a field in Texas, USA",
       "soundUrl": "https://freesound.org/s/217506/",
       "systemIconName": "wind",
       "title": "Wind",
-      "truePeakdBTP": -0.47630668
+      "truePeakdBTP": -0.44027612
     },
     {
       "author": "Luftrum",
       "authorUrl": "https://freesound.org/people/Luftrum/",
       "defaultOrder": 3,
       "description": "Close field recording of medium ambient waves crushing on the shore of Kalundborg Fjord at Røsnæs. Water cascading through small stones as it pulls back into the ocean.",
-      "duration": 120.0,
+      "duration": 115.429138,
       "fileName": "waves",
       "license": "ccBy4",
-      "lufs": -23.07977,
+      "loopCut": {
+        "source": "48412__luftrum__oceanwavescrushing.wav",
+        "method": "loopfind --prefer-long",
+        "startSec": 1.36,
+        "endSec": 116.789,
+        "crossfadeSec": 0.5
+      },
+      "lufs": -23.026615,
       "moods": [
         "sleep",
         "relax"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 0.6367786,
+      "normalizationFactor": 0.6328937,
       "soundName": "oceanwavescrushing.wav",
       "soundUrl": "https://freesound.org/s/48412/",
       "systemIconName": "water.waves",
       "title": "Waves",
-      "truePeakdBTP": -0.62647456
+      "truePeakdBTP": -1.2500726
     },
     {
       "author": "gluckose",
       "authorUrl": "https://freesound.org/people/gluckose/",
       "defaultOrder": 4,
       "description": "A small meandering stream in the woods.",
-      "duration": 145.529002,
+      "duration": 148.28644,
       "fileName": "stream",
       "license": "cc0",
-      "lufs": -39.858967,
+      "loopCut": {
+        "source": "333987__gluckose__stream2.wav",
+        "method": "loopfind",
+        "startSec": 0.0,
+        "endSec": 148.286,
+        "crossfadeSec": 0.25
+      },
+      "lufs": -39.0464,
       "moods": [
         "sleep",
         "relax"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 4.394893,
+      "normalizationFactor": 4.0023947,
       "soundName": "stream2.wav",
       "soundUrl": "https://freesound.org/s/333987/",
       "systemIconName": "humidity",
       "title": "Stream",
-      "truePeakdBTP": -16.530338
+      "truePeakdBTP": -15.663198
     },
     {
       "author": "kvgarlic",
       "authorUrl": "https://freesound.org/people/kvgarlic/",
       "defaultOrder": 5,
       "description": "This wood thrush was recorded around 7:30 in the morning in heavy woods in deep southern Illinois.",
-      "duration": 132.480998,
+      "duration": 128.101088,
       "fileName": "birds",
       "license": "cc0",
-      "lufs": -40.513535,
+      "loopCut": {
+        "source": "156826__kvgarlic__woodthrushinmorningshawneeforestmay272012.wav",
+        "method": "loopfind --prefer-long",
+        "startSec": 1.87,
+        "endSec": 129.971,
+        "crossfadeSec": 0.4
+      },
+      "lufs": -40.51765,
       "moods": [
         "focus",
         "relax"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 4.7388906,
+      "normalizationFactor": 4.741137,
       "soundName": "WoodThrushinMorningShawneeForestMay272012.wav",
       "soundUrl": "https://freesound.org/s/156826/",
       "systemIconName": "bird",
       "title": "Birds",
-      "truePeakdBTP": -24.37481
+      "truePeakdBTP": -24.517021
     },
     {
       "author": "Lisa Redfern",
       "defaultOrder": 6,
       "description": "Crickets chirping in the night.",
-      "duration": 49.32,
+      "duration": 46.855601,
       "fileName": "summer-night",
       "license": "publicDomain",
-      "lufs": -27.160065,
+      "loopCut": {
+        "source": "Night_Sounds_-_Crickets-Lisa_Redfern-591005346.wav",
+        "method": "loopfind --prefer-long",
+        "startSec": 0.059,
+        "endSec": 46.914,
+        "crossfadeSec": 0.25
+      },
+      "lufs": -14.196191,
       "moods": [
         "sleep",
         "relax"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 1.018599,
+      "normalizationFactor": 0.22898631,
       "soundName": "Crickets Chirping At Night",
       "soundUrl": "https://soundbible.com/2083-Crickets-Chirping-At-Night.html",
       "systemIconName": "moon.stars.fill",
       "title": "Summer Night",
-      "truePeakdBTP": -16.031225
+      "truePeakdBTP": -3.295281
     },
     {
       "author": "SDLx",
@@ -172,10 +215,16 @@
       "authorUrl": "https://freesound.org/people/Falcet/",
       "defaultOrder": 8,
       "description": "Rope squeaks on boat.",
-      "duration": 42.0,
+      "duration": 40.602771,
       "fileName": "boat",
       "license": "cc0",
-      "lufs": -49.852524,
+      "loopCut": {
+        "source": "439365__falcet__ambience_sea_boat_night_ropes_4.wav",
+        "method": "blankifi fix --xfade-ms 250",
+        "crossfadeSec": 0.25,
+        "note": "Auto-trimmed quiet edges from full source"
+      },
+      "lufs": -49.76899,
       "moods": [
         "sleep",
         "relax"
@@ -186,66 +235,87 @@
       "soundUrl": "https://freesound.org/s/439365/",
       "systemIconName": "sailboat.fill",
       "title": "Boat",
-      "truePeakdBTP": -25.2551
+      "truePeakdBTP": -25.552116
     },
     {
       "author": "gezortenplotz",
       "authorUrl": "https://freesound.org/people/gezortenplotz/",
       "defaultOrder": 9,
       "description": "Street level in New York.",
-      "duration": 24.641995,
+      "duration": 21.416961,
       "fileName": "city",
       "license": "ccBy3",
-      "lufs": -38.157074,
+      "loopCut": {
+        "source": "44796__gezortenplotz__nyc_street-leve02l.wav",
+        "method": "loopfind",
+        "startSec": 0.003,
+        "endSec": 21.42,
+        "crossfadeSec": 0.25
+      },
+      "lufs": -38.039604,
       "moods": [
         "focus"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 3.6128814,
+      "normalizationFactor": 3.5643487,
       "soundName": "NYC_street leve02l.wav",
       "soundUrl": "https://freesound.org/s/44796/",
       "systemIconName": "building.2",
       "title": "City",
-      "truePeakdBTP": -18.73026
+      "truePeakdBTP": -18.747208
     },
     {
       "author": "stephan",
       "defaultOrder": 10,
       "description": "Contains persons talking and other sounds, none of the words are discernible.",
-      "duration": 16.661995,
+      "duration": 12.820771,
       "fileName": "coffee-shop",
       "license": "publicDomain",
-      "lufs": -23.216496,
+      "loopCut": {
+        "source": "Restaurant Ambiance -SoundBible.com-628640170.wav",
+        "method": "loopfind --min-len 8",
+        "startSec": 0.0,
+        "endSec": 12.821,
+        "crossfadeSec": 0.25
+      },
+      "lufs": -22.56161,
       "moods": [
         "focus"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 0.6468816,
+      "normalizationFactor": 0.5999022,
       "soundName": "Restaurant Ambiance",
       "soundUrl": "https://soundbible.com/1664-Restaurant-Ambiance.html",
       "systemIconName": "cup.and.saucer.fill",
       "title": "Coffee Shop",
-      "truePeakdBTP": -9.762714
+      "truePeakdBTP": -8.590274
     },
     {
       "author": "NPS & MSU Acoustic Atlas",
       "defaultOrder": 11,
       "description": "Very small crackles and sizzle burn sound effects along with air movement.",
-      "duration": 29.790703,
+      "duration": 26.496893,
       "fileName": "fireplace",
       "license": "publicDomain",
-      "lufs": -42.894432,
+      "loopCut": {
+        "source": "yell-YELLPealeCabinWoodstove20160914T15ms.mp3",
+        "method": "loopfind",
+        "startSec": 0.347,
+        "endSec": 26.844,
+        "crossfadeSec": 0.25
+      },
+      "lufs": -44.002853,
       "moods": [
         "relax",
         "sleep"
       ],
       "needsLimiter": true,
-      "normalizationFactor": 6.233351,
+      "normalizationFactor": 7.081784,
       "soundName": "Woodstove",
       "soundUrl": "https://www.nps.gov/media/video/view.htm?id=1E69FA23-BC88-460E-8EFD-8D3BA8B06C53",
       "systemIconName": "fireplace",
       "title": "Fireplace",
-      "truePeakdBTP": -1.0641433
+      "truePeakdBTP": -1.2723314
     },
     {
       "author": "Blankie",
@@ -308,7 +378,7 @@
       "soundUrl": "https://blankie.rest/credits",
       "systemIconName": "waveform.low",
       "title": "Deep Noise",
-      "truePeakdBTP": -12.1
+      "truePeakdBTP": -12.099489
     },
     {
       "author": "Blankie",
@@ -329,7 +399,7 @@
       "soundUrl": "https://blankie.rest/credits",
       "systemIconName": "waveform.mid",
       "title": "Green Noise",
-      "truePeakdBTP": -16.56
+      "truePeakdBTP": -16.555126
     },
     {
       "author": "ChristmasKrumble666",
@@ -351,7 +421,7 @@
       "soundUrl": "https://freesound.org/s/742808/",
       "systemIconName": "pianokeys.inverse",
       "title": "Ambient Synth",
-      "truePeakdBTP": -4.27
+      "truePeakdBTP": -4.2743454
     },
     {
       "author": "yunclas",
@@ -373,7 +443,7 @@
       "soundUrl": "https://freesound.org/s/653928/",
       "systemIconName": "guitars.fill",
       "title": "Gentle Guitar",
-      "truePeakdBTP": 1.04
+      "truePeakdBTP": 1.0351397
     },
     {
       "author": "LilMati",
@@ -394,7 +464,7 @@
       "soundUrl": "https://freesound.org/s/515859/",
       "systemIconName": "fan.desk",
       "title": "Fan",
-      "truePeakdBTP": -11.98
+      "truePeakdBTP": -11.977426
     },
     {
       "author": "Holizna",
@@ -416,7 +486,7 @@
       "soundUrl": "https://freemusicarchive.org/music/holiznacc0/lazy-summer-lofi-1/laundry-on-the-wiremp3/",
       "systemIconName": "music.quarternote.3",
       "title": "Lo-Fi Beats",
-      "truePeakdBTP": 0.15
+      "truePeakdBTP": 0.15277258
     },
     {
       "author": "sinewave1kHz",
@@ -437,7 +507,7 @@
       "soundUrl": "https://freesound.org/s/202989/",
       "systemIconName": "tree.fill",
       "title": "Forest",
-      "truePeakdBTP": -13.12
+      "truePeakdBTP": -13.119295
     },
     {
       "author": "ikbenraar",
@@ -459,7 +529,7 @@
       "soundUrl": "https://freesound.org/s/133496/",
       "systemIconName": "airplane",
       "title": "Airplane",
-      "truePeakdBTP": -18.99
+      "truePeakdBTP": -18.990189
     },
     {
       "author": "moviebuffgavin",
@@ -480,7 +550,7 @@
       "soundUrl": "https://freesound.org/s/411914/",
       "systemIconName": "washer.fill",
       "title": "Laundry Room",
-      "truePeakdBTP": -4.14
+      "truePeakdBTP": -4.139728
     },
     {
       "author": "Cody Bromley",
@@ -502,7 +572,7 @@
       "soundUrl": "https://blankie.rest/credits",
       "systemIconName": "pianokeys",
       "title": "Warm Piano",
-      "truePeakdBTP": -11.32
+      "truePeakdBTP": -11.317333
     }
   ]
 }
