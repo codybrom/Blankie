@@ -18,6 +18,7 @@ extension SoundSheet {
       selectedIcon: $selectedIcon,
       selectedFile: $selectedFile,
       isImporting: $isImporting,
+      convertToAACOnImport: $convertToAACOnImport,
 
       randomizeStartPosition: $randomizeStartPosition,
       normalizeAudio: $normalizeAudio,
@@ -65,6 +66,7 @@ extension SoundSheet {
       selectedIcon: $selectedIcon,
       selectedFile: $selectedFile,
       isImporting: $isImporting,
+      convertToAACOnImport: $convertToAACOnImport,
 
       randomizeStartPosition: $randomizeStartPosition,
       normalizeAudio: $normalizeAudio,

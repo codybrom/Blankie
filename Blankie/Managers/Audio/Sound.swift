@@ -18,7 +18,11 @@ open class Sound: NSObject, Identifiable {
   let originalTitle: String
   let originalSystemIconName: String
   let fileName: String
-  let fileExtension: String
+  // `fileExtension` and `fileURL` are `var` so an in-place AAC conversion can
+  // repoint a custom sound at its re-encoded file (CustomSoundManager.convertToAAC)
+  // without rebuilding the whole sound list — which keeps the open editor and the
+  // grid (both observing this instance) coherent.
+  var fileExtension: String
   // `lufs` and `normalizationFactor` are `var` (not `let`) because deferred
   // LUFS analysis can complete after a custom sound is already loaded and
   // playing; `Sound+Normalization.analyzeAndUpdateLUFS` writes these from an
@@ -34,7 +38,7 @@ open class Sound: NSObject, Identifiable {
 
   // Properties for unified sound model
   let isCustom: Bool
-  let fileURL: URL?
+  var fileURL: URL?
   let dateAdded: Date?
   let customSoundDataID: UUID?  // For linking to SwiftData if needed
   @ObservationIgnored private var _customSoundData: CustomSoundData?

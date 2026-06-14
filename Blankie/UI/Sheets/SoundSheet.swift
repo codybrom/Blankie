@@ -48,6 +48,9 @@ struct SoundSheet: View {
   /// custom preset), plus an optional fresh "<Name> Mix" preset.
   @State var addToPresetIDs: Set<UUID> = []
   @State var createMixPreset: Bool = false
+  /// Import only: re-encode the picked file to AAC. User-toggled for eligible
+  /// files; forced by file size for very large ones (see CustomSoundManager).
+  @State var convertToAACOnImport: Bool = false
 
   // Track initial values to detect changes
   @State var initialSoundName: String = ""

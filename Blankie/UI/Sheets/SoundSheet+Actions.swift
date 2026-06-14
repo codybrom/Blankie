@@ -41,13 +41,15 @@ extension SoundSheet {
     let title = soundName.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
     let icon = selectedIcon
     let randomize = randomizeStartPosition
+    let convert = convertToAACOnImport
 
     Task {
       let result = await CustomSoundManager.shared.importSound(
         from: file,
         title: title,
         iconName: icon,
-        randomizeStartPosition: randomize
+        randomizeStartPosition: randomize,
+        convertToAAC: convert
       )
 
       isProcessing = false
@@ -191,6 +193,12 @@ extension SoundSheet {
 
     // Force save all customizations
     manager.saveCustomizations()
+
+    // The loop flag is baked into the player at load time, so a live edit to
+    // the loop toggle needs the player rebuilt to take effect (runs after the
+    // deselect above so a default-preset sound that loop-off just removed isn't
+    // revived).
+    sound.reloadForLoopChange()
   }
 
   // MARK: - Preset Integration

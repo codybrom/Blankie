@@ -5,6 +5,7 @@
 //  Created by Cody Bromley on 6/4/25.
 //
 
+import AVFoundation
 import SwiftUI
 
 struct SoundSheetForm: View {
@@ -14,6 +15,7 @@ struct SoundSheetForm: View {
   @Binding var selectedIcon: String
   @Binding var selectedFile: URL?
   @Binding var isImporting: Bool
+  @Binding var convertToAACOnImport: Bool
   @Binding var randomizeStartPosition: Bool
   @Binding var normalizeAudio: Bool
   @Binding var volumeAdjustment: Float
@@ -35,6 +37,15 @@ struct SoundSheetForm: View {
   @State var showingIconPicker = false
   @State var isGeneratingDetails = false
   @State var isGeneratingIcon = false
+  /// Import-time AAC conversion state for the picked file, refreshed on each file
+  /// change. `forced` is true over the raw-import ceiling (toggle locks on);
+  /// `estimate` is non-nil when conversion is worth offering (drives the savings
+  /// caption). Both internal so the Audio section (other file) can read them.
+  @State var importConvertForced = false
+  @State var importConvertEstimate: CustomSoundManager.CompressionEstimate?
+  /// The editor's preset-membership list starts folded; the row's trailing
+  /// summary shows the count (or "None") without expanding.
+  @State private var presetMembershipExpanded = false
   /// Pre-AI values for one-tap undo of the last suggestion, per field.
   @State var aiNameUndo: String?
   @State var aiIconUndo: String?
@@ -67,14 +78,17 @@ struct SoundSheetForm: View {
       // Basic Information
       basicInformationSection
 
+      // Credits (read-only)
+      creditsSection
+
       // Audio Processing (includes preview)
       audioProcessingSection
 
       // Add to Presets (import only)
       addToPresetsSection
 
-      // Credits (read-only)
-      creditsSection
+      // Preset membership (edit only)
+      presetMembershipSection
 
       // Technical Details (edit mode only)
       technicalDetailsSection
@@ -94,6 +108,9 @@ struct SoundSheetForm: View {
     // again if the person swaps the file).
     .task(id: selectedFile) {
       await autoSuggestDetailsIfNeeded()
+    }
+    .task(id: selectedFile) {
+      await refreshImportConversion()
     }
     #if os(macOS)
       .sheet(isPresented: $showingCreditsEditor) {
@@ -184,6 +201,70 @@ extension SoundSheetForm {
     Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
       .foregroundStyle(isOn ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
       .accessibilityHidden(true)
+  }
+
+  /// Edit mode: a folded list to view and toggle which custom presets this sound
+  /// belongs to. Membership changes apply live. The collapsed row's trailing
+  /// summary shows the membership count (or "None"), so unused sounds are easy to
+  /// spot without expanding. (The default preset always holds every sound, so it
+  /// isn't listed.)
+  @ViewBuilder
+  var presetMembershipSection: some View {
+    if case .edit(let sound) = mode {
+      Section {
+        DisclosureGroup(isExpanded: $presetMembershipExpanded) {
+          if customPresets.isEmpty {
+            Text("You don't have any presets yet.")
+              .foregroundStyle(.secondary)
+          } else {
+            ForEach(customPresets) { preset in
+              let isOn = preset.soundStates.contains { $0.fileName == sound.fileName }
+              Button {
+                presetManager.setSound(
+                  sound.fileName, member: !isOn, ofPreset: preset.id, volume: sound.volume)
+              } label: {
+                HStack(spacing: 10) {
+                  selectionIndicator(isOn: isOn)
+                  Text(preset.name)
+                }
+                .contentShape(Rectangle())
+              }
+              .buttonStyle(.plain)
+              .accessibilityAddTraits(isOn ? [.isSelected] : [])
+            }
+          }
+        } label: {
+          Text("Presets (\(presetMembershipCount(for: sound)))")
+        }
+      }
+    }
+  }
+
+  /// Number of custom presets containing `sound` (0 reads as unused everywhere).
+  private func presetMembershipCount(for sound: Sound) -> Int {
+    customPresets.filter {
+      $0.soundStates.contains { $0.fileName == sound.fileName }
+    }.count
+  }
+
+  /// Recomputes the import-conversion state for the picked file. Reads size and
+  /// duration under a brief security scope (the file may be outside the sandbox)
+  /// and resets the opt-in each time the file changes so a stale "on" from a
+  /// previous pick can't carry over to an ineligible one.
+  func refreshImportConversion() async {
+    convertToAACOnImport = false
+    guard mode.isAdd, let url = selectedFile else {
+      importConvertForced = false
+      importConvertEstimate = nil
+      return
+    }
+    let didScope = url.startAccessingSecurityScopedResource()
+    defer { if didScope { url.stopAccessingSecurityScopedResource() } }
+    let bytes = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
+    let seconds = (try? await AVURLAsset(url: url).load(.duration)).map(CMTimeGetSeconds)
+    importConvertForced = bytes > CustomSoundManager.maxRawImportBytes
+    importConvertEstimate = CustomSoundManager.shared.compressionEstimate(
+      forExtension: url.pathExtension, currentBytes: bytes, duration: seconds)
   }
 }
 

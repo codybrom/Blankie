@@ -158,6 +158,30 @@ extension Sound {
     Logger.sounds.debug("Sound: Stopped '\(self.fileName)'")
   }
 
+  /// Rebuilds the live player when the loop preference changed. `loops` is
+  /// fixed when the player is created, so editing the toggle on a loaded sound
+  /// has no effect until the player is recreated — without this a sound loaded
+  /// as looping keeps looping. A sound that is audibly playing resumes (as the
+  /// new loop mode); anything paused/stopped just gets a fresh player for its
+  /// next start.
+  func reloadForLoopChange() {
+    guard let player else { return }  // not loaded: next load reads the new value
+
+    let desiredLoop =
+      SoundCustomizationManager.shared.getCustomization(for: fileName)?.loopSound ?? true
+    guard player.loops != desiredLoop else { return }
+
+    let wasPlaying = playbackState == .playing
+    Logger.sounds.debug(
+      "Sound: Reloading '\(self.fileName)' for loop change (loops=\(desiredLoop), wasPlaying=\(wasPlaying))"
+    )
+    unload()
+    loadSound()
+    if wasPlaying {
+      play()
+    }
+  }
+
   func reset() {
     guard !isResetting else { return }
     isResetting = true

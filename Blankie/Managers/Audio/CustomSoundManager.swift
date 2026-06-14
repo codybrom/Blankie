@@ -16,6 +16,12 @@ class CustomSoundManager {
   static let shared = CustomSoundManager()
 
   let customSoundsDirectory = "CustomSounds"
+
+  /// Files at or below this size import as-is. Larger ones are still allowed but
+  /// stream-transcoded to AAC on import: copying the raw bytes loads the whole
+  /// file into memory, and very large uncompressed audio strains playback.
+  static let maxRawImportBytes: Int64 = 150 * 1024 * 1024
+
   private var modelContext: ModelContext?
 
   private init() {
@@ -68,7 +74,8 @@ class CustomSoundManager {
   /// - Returns: A Result with the created CustomSoundData or an error
   @MainActor
   func importSound(
-    from sourceURL: URL, title: String, iconName: String, randomizeStartPosition: Bool = true
+    from sourceURL: URL, title: String, iconName: String, randomizeStartPosition: Bool = true,
+    convertToAAC: Bool = false
   ) async -> Result<
     CustomSoundData, CustomSoundError
   > {
@@ -103,18 +110,45 @@ class CustomSoundManager {
 
     do {
       try await validateImportableAudioFile(at: sourceURL)
-      let copiedURL = try copyFileForImport(
-        sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension
-      )
+
+      // Stream-transcode to AAC instead of copying as-is when the user opted in
+      // (convertToAAC) or the file is over the raw-import ceiling: a raw copy
+      // loads the whole file into memory, and very large uncompressed audio
+      // strains playback. Otherwise import the file unchanged.
+      let sourceBytes =
+        (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
+      let copiedURL: URL
+      let storedExtension: String
+      if convertToAAC || sourceBytes > Self.maxRawImportBytes {
+        guard let directoryURL = getCustomSoundsDirectoryURL() else {
+          throw CustomSoundError.fileCopyFailed
+        }
+        let destinationURL = directoryURL.appendingPathComponent("\(uniqueFileName).m4a")
+        try await Self.transcodeToAAC(source: sourceURL, destination: destinationURL)
+        copiedURL = destinationURL
+        storedExtension = "m4a"
+        Logger.sounds.debug(
+          "CustomSoundManager: import converted to AAC (\(sourceBytes) bytes, forced: \(sourceBytes > Self.maxRawImportBytes))"
+        )
+      } else {
+        copiedURL = try copyFileForImport(
+          sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension
+        )
+        storedExtension = fileExtension
+      }
       copiedURLForCleanup = copiedURL
       let importData = SoundImportData(
         sourceURL: sourceURL, copiedURL: copiedURL, title: title, iconName: iconName,
-        uniqueFileName: uniqueFileName, fileExtension: fileExtension,
+        uniqueFileName: uniqueFileName, fileExtension: storedExtension,
         randomizeStartPosition: randomizeStartPosition
       )
       let customSound = try await createCustomSoundRecord(from: importData)
       try saveCustomSoundToDatabase(customSound)
       copiedURLForCleanup = nil
+
+      // The keeper copy is in CustomSounds. Drop the picker's staged source
+      // so it doesn't linger in tmp/Inbox (a no-op for the user's in-place files).
+      removeStagedImportSource(sourceURL)
 
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
@@ -492,7 +526,7 @@ enum CustomSoundError: Error, LocalizedError, Sendable {
     case .fileCopyFailed:
       return String(localized: "Failed to copy the audio file.")
     case .fileTooLarge:
-      return String(localized: "Audio file is too large. Maximum size is 50MB.")
+      return String(localized: "Audio file is too large. Maximum size is 150MB.")
     case .durationTooLong:
       return String(localized: "Audio file is too long. Maximum duration is 120 minutes.")
     case .invalidAudioFile(let error):

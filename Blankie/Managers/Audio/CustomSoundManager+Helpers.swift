@@ -13,6 +13,29 @@ import os
 // MARK: - Helper Methods
 
 extension CustomSoundManager {
+  /// Deletes an import source only if it lives in our own transient staging
+  /// (`tmp` or `Documents/Inbox`) — i.e. a copy iOS made for the file picker, or
+  /// an open-in/share drop. The user's original files elsewhere are security-
+  /// scoped and never touched. Pairs with the launch-time staging sweep so a
+  /// just-imported source doesn't linger until the next launch.
+  func removeStagedImportSource(_ url: URL) {
+    let path = url.standardizedFileURL.path
+    var roots = [URL(fileURLWithPath: NSTemporaryDirectory()).standardizedFileURL.path]
+    if let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+      roots.append(docs.appendingPathComponent("Inbox").standardizedFileURL.path)
+    }
+    guard roots.contains(where: { path == $0 || path.hasPrefix($0 + "/") }) else { return }
+    do {
+      try FileManager.default.removeItem(at: url)
+      Logger.sounds.debug(
+        "CustomSoundManager: removed staged import source \(url.lastPathComponent, privacy: .public)"
+      )
+    } catch {
+      Logger.sounds.error(
+        "CustomSoundManager: couldn't remove staged import source: \(error, privacy: .public)")
+    }
+  }
+
   func getCustomSoundsDirectoryURL() -> URL? {
     // Use app group container if available, otherwise fall back to documents directory
     if let appGroupURL = AppGroupConfiguration.documentsURL {
@@ -66,21 +89,9 @@ extension CustomSoundManager {
   func validateAudioFile(at url: URL) async throws -> Result<Void, Error> {
     Logger.sounds.debug("CustomSoundManager: Validating audio file at \(url.lastPathComponent)")
 
-    // Check file size (max 50MB)
-    do {
-      let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-      if let fileSize = attributes[.size] as? UInt64 {
-        let maxSize: UInt64 = 50 * 1024 * 1024  // 50MB
-        if fileSize > maxSize {
-          Logger.sounds.debug("CustomSoundManager: File too large: \(fileSize) bytes")
-          return .failure(CustomSoundError.fileTooLarge)
-        }
-      }
-    } catch {
-      Logger.sounds.error(
-        "CustomSoundManager: Failed to get file attributes: \(error, privacy: .public)")
-      return .failure(CustomSoundError.invalidAudioFile(error))
-    }
+    // No hard size cap: files over the raw-import ceiling are still accepted and
+    // stream-transcoded to AAC on import (see importSound). Duration is the real
+    // bound, checked below.
 
     // Verify it's a valid audio file and check duration
     do {
