@@ -645,7 +645,7 @@ extension PresetManager {
       // Cancel any stale prefetch from the previous current-preset.
       nearbyArtworkPrefetchTask?.cancel()
       nearbyArtworkPrefetchTask = Task {
-        await OnDemandResourceManager.shared.preloadResources(odrIds)
+        await BackgroundResourceManager.shared.preload(odrIds)
       }
     #endif
   }

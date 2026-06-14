@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>BAHasManagedAssetPacks</key>
+		<true/>
+		<key>BAUsesAppleHosting</key>
+		<true/>
+		<key>BAAppGroupID</key>
+		<string>$(APP_GROUP_IDENTIFIER)</string>
 		<key>CFBundleIcons</key>
 		<dict>
 			<key>CFBundlePrimaryIcon</key>

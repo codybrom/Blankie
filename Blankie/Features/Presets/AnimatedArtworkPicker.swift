@@ -102,8 +102,8 @@ import os
       defer { isProcessing = false }
 
       do {
-        // Request the video file from ODR (downloads if needed)
-        let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
+        // Ensure the video's Background Assets pack is downloaded.
+        _ = try await BackgroundResourceManager.shared.resourceURL(for: asset.id)
 
         // Preview images remain bundled for fast gallery display
         guard
@@ -134,11 +134,9 @@ import os
           AnimatedArtworkFileStore.removeItemIfExists(relativePath: oldSquarePreview)
         }
 
-        // Copy new files
+        // Copy only the small preview images into Documents (used as the static
+        // artwork fallback). The video stays in its Background Assets pack.
         let assetId = UUID()
-        let loopRel = AnimatedArtworkFileStore.makeRelativeLoopPath(
-          for: assetId, fileExtension: videoURL.pathExtension
-        )
         let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
           for: assetId, fileExtension: previewURL.pathExtension
         )
@@ -146,14 +144,13 @@ import os
           for: assetId, fileExtension: squarePreviewURL.pathExtension, suffix: "Square"
         )
 
-        _ = try AnimatedArtworkFileStore.copyItem(at: videoURL, to: loopRel)
         _ = try AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
         _ = try AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
 
         await MainActor.run {
           artwork = AnimatedArtworkRef(
             source: .bundled,
-            loopPath: loopRel,
+            loopPath: nil,
             previewPath: previewRel,
             squarePreviewPath: squarePreviewRel,
             preferredAspect: "3x4",
@@ -346,18 +343,16 @@ import os
     let onTap: () -> Void
     let onUncache: () -> Void
 
-    @StateObject private var odrManager = OnDemandResourceManager.shared
+    @StateObject private var resourceManager = BackgroundResourceManager.shared
     @State private var showingUncacheConfirmation = false
 
-    var resourceState: ResourceState {
-      // Return the actual ODR state - this accurately reflects whether
-      // the video needs to be downloaded from Apple's servers
-      return odrManager.getResourceState(asset.id)
+    var resourceState: BackgroundResourceState {
+      // Reflects whether the video's asset pack is on the device.
+      return resourceManager.state(for: asset.id)
     }
 
     var isCached: Bool {
-      // Can only uncache if the resource is actually in ODR storage
-      // (not just selected/copied to Documents)
+      // Can only remove if the asset pack is actually downloaded.
       if case .available = resourceState {
         return true
       }
@@ -449,7 +444,7 @@ import os
       }
       .alert("Remove Downloaded Video?", isPresented: $showingUncacheConfirmation) {
         Button("Remove Download", role: .destructive) {
-          odrManager.releaseResource(asset.id)
+          Task { await resourceManager.removeResource(asset.id) }
           onUncache()
         }
         Button("Cancel", role: .cancel) {}
@@ -544,14 +539,13 @@ import os
     @State private var player: AVPlayer?
     @State private var showInfo = false
     @State private var isLoading = true
-    @State private var loadError: String?
     @State private var showingDeleteConfirmation = false
     @State private var setupTask: Task<Void, Never>?
     @State private var loopObserver: NSObjectProtocol?
-    @StateObject private var odrManager = OnDemandResourceManager.shared
+    @StateObject private var resourceManager = BackgroundResourceManager.shared
 
-    var resourceState: ResourceState {
-      odrManager.getResourceState(asset.id)
+    var resourceState: BackgroundResourceState {
+      resourceManager.state(for: asset.id)
     }
 
     var isCached: Bool {
@@ -624,18 +618,15 @@ import os
                   .font(.subheadline)
 
               case .failed(let error):
+                let isOffline = (error as? BackgroundResourceError)?.isOffline ?? false
                 VStack(spacing: 12) {
-                  Image(systemName: "exclamationmark.triangle.fill")
+                  Image(systemName: isOffline ? "wifi.slash" : "exclamationmark.triangle.fill")
                     .font(.largeTitle)
-                    .foregroundColor(.red)
-
-                  Text("Failed to load video")
-                    .foregroundColor(.white)
-                    .font(.headline)
+                    .foregroundColor(isOffline ? .white : .red)
 
                   Text(error.localizedDescription)
-                    .foregroundColor(.secondary)
-                    .font(.caption)
+                    .foregroundColor(.white)
+                    .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                 }
@@ -751,7 +742,7 @@ import os
         }
         .alert("Remove Downloaded Video?", isPresented: $showingDeleteConfirmation) {
           Button("Remove Download", role: .destructive) {
-            odrManager.releaseResource(asset.id)
+            Task { await resourceManager.removeResource(asset.id) }
             onDelete()
             onDismiss()
           }
@@ -766,8 +757,8 @@ import os
       setupTask?.cancel()
       setupTask = Task {
         do {
-          // Request the video file from ODR (downloads if needed)
-          let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
+          // Ensure the video's Background Assets pack is downloaded, then play it.
+          let videoURL = try await BackgroundResourceManager.shared.resourceURL(for: asset.id)
           // If the sheet dismissed during the download, stop here.
           if Task.isCancelled { return }
 
@@ -800,11 +791,9 @@ import os
         } catch is CancellationError {
           // Sheet dismissed before download finished; nothing to do.
         } catch {
-          // Handle download failure - show error UI
-          await MainActor.run {
-            self.loadError = error.localizedDescription
-            self.isLoading = false
-          }
+          // Keep `isLoading` true so the overlay's `.failed` branch (driven by
+          // resourceState) stays on screen. Setting it false here collapsed the
+          // view to a black background instead of showing the error.
           Logger.ui.error("Failed to load video for preview: \(error, privacy: .public)")
         }
       }
@@ -835,9 +824,8 @@ import os
       let license: String
     }
 
-    // Files are copied flat to bundle root with unique names
-    var videoResourceName: String { id }
-    var videoExtension: String { "mov" }
+    // Preview images + metadata are bundled and resolved by name; the video is
+    // delivered separately as a Background Assets pack (id == asset-pack id).
     var previewResourceName: String { id }
     var previewExtension: String { "jpg" }
     var squarePreviewResourceName: String { "\(id)Square" }
