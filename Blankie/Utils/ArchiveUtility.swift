@@ -43,7 +43,12 @@ struct ArchiveUtility {
       }
       // A symlink could redirect later entries' writes outside the destination.
       guard entry.type != .symlink else { continue }
-      let path = destinationURL.appendingPathComponent(entry.path).standardizedFileURL
+      // Use appending(path:directoryHint:) (no filesystem access) rather than
+      // appendingPathComponent, which stats the path and canonicalizes the base
+      // (e.g. /var -> /private/var). That canonicalization made `path` diverge
+      // from `rootPrefix` and the containment check rejected every entry.
+      let path = root.appending(path: entry.path, directoryHint: .inferFromPath)
+        .standardizedFileURL
       guard path.path.hasPrefix(rootPrefix) else {
         Logger.app.error(
           "ArchiveUtility: Skipping archive entry escaping destination: \(entry.path)"
