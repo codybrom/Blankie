@@ -258,6 +258,13 @@ extension AudioManager {
     // Set preview mode (this doesn't trigger UI changes like solo mode)
     previewModeSound = sound
 
+    #if os(iOS) || os(visionOS)
+      // Activate the playback session here too: previews must be audible while
+      // the app is globally paused, where playSelected() (the usual activation
+      // point) never runs and the session would otherwise stay inactive.
+      setupAudioSessionForPlayback()
+    #endif
+
     // Set the sound to full volume for preview (will be adjusted by customization)
     sound.volume = 1.0
 
