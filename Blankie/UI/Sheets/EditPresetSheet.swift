@@ -41,6 +41,12 @@ struct EditPresetSheet: View {
   @State var error: String?
   @State var showingSoundSelection = false
   @State var artworkData: Data?
+  /// The artwork data already persisted for this preset — seeded from the
+  /// existing artwork on open and updated after each save. Lets us tell a real
+  /// artwork change from the seeded preview, so edits don't re-save and re-id
+  /// the artwork on every change (that id-churn reloaded the mixer background
+  /// repeatedly, which showed as a purple/blue strobe).
+  @State var savedArtworkData: Data?
   @State var artworkId: UUID?
   @State var animatedArtwork: AnimatedArtworkRef?
   @State var staticArtworkPath: String?
@@ -257,13 +263,16 @@ struct EditPresetSheet: View {
           Logger.ui.debug(
             "EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")"
           )
-          if artworkData != nil {
-            // Generate new ID for the new artwork
-            Logger.ui.debug("EditPresetSheet: Generating new artwork ID and applying changes")
+          if artworkData != savedArtworkData {
+            // A genuinely new image was picked — mint a new id and persist.
+            // Comparing against the seeded baseline (not just `!= nil`) avoids
+            // treating a cancel — where artworkData is still the seeded preview
+            // — as a new pick, which minted a dangling id and dropped the art.
+            Logger.ui.debug("EditPresetSheet: New artwork picked, applying changes")
             artworkId = UUID()
             applyChangesInstantly()
           } else {
-            Logger.ui.debug("EditPresetSheet: No artwork data, user likely cancelled")
+            Logger.ui.debug("EditPresetSheet: Artwork unchanged, user likely cancelled")
           }
         }
     #endif
@@ -496,7 +505,11 @@ extension EditPresetSheet {
       if let id = artworkId {
         if let image = await PresetArtworkManager.shared.loadArtwork(id: id) {
           await MainActor.run {
-            self.artworkData = image.jpegData(compressionQuality: 0.8)
+            let data = image.jpegData(compressionQuality: 0.8)
+            self.artworkData = data
+            // Baseline: the seeded preview is the already-saved artwork, so an
+            // unchanged sheet never counts as an artwork edit.
+            self.savedArtworkData = data
           }
         }
       }
@@ -560,7 +573,14 @@ extension EditPresetSheet {
     }
   }
 
-  func createUpdatedPreset() async -> Preset {
+  /// Builds the up-to-date `Preset` value from the editor state.
+  ///
+  /// `persistArtworkChanges` runs the artwork save/delete against the store as a
+  /// side effect — correct when applying edits, but it MUST be `false` for
+  /// export. Export only needs a read-only snapshot; running the artwork
+  /// mutation there deleted the stored preset's artwork (export doesn't persist
+  /// the returned value, so the delete/replace orphaned it).
+  func createUpdatedPreset(persistArtworkChanges: Bool = true) async -> Preset {
     let currentVersion =
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
 
@@ -578,8 +598,11 @@ extension EditPresetSheet {
       updatedPreset.soundOrder = soundOrder
     }
 
-    // Handle artwork (allowed for all presets including default)
-    await handleArtworkChanges()
+    // Handle artwork (allowed for all presets including default). Skipped for
+    // export so building the archive never mutates the stored preset's artwork.
+    if persistArtworkChanges {
+      await handleArtworkChanges()
+    }
 
     // Update preset properties
     updatedPreset.artworkId = artworkId
@@ -649,20 +672,28 @@ extension EditPresetSheet {
 
   private func handleArtworkChanges() async {
     if let data = artworkData {
-      // Save artwork (this will update existing or create new)
+      // Only persist when the image actually changed. Opening the sheet seeds
+      // `artworkData` from the existing artwork for the preview; without this
+      // guard every edit re-saved it under a new id, and that id-churn reloaded
+      // the mixer background over and over (the purple/blue strobe).
+      guard data != savedArtworkData else { return }
       do {
         let savedId = try await PresetArtworkManager.shared.saveArtwork(
           data, for: preset.id, type: .artwork
         )
         artworkId = savedId
+        savedArtworkData = data
         Logger.ui.debug("EditPresetSheet: Saved artwork with ID: \(savedId)")
       } catch {
         Logger.ui.error("EditPresetSheet: Failed to save artwork: \(error, privacy: .public)")
       }
     } else if artworkId == nil, preset.artworkId != nil {
-      // Artwork was deleted - clean up old artwork
+      // Artwork was deleted - clean up old artwork. Delete by the PRESET id
+      // (the method filters on `presetId`); passing `preset.artworkId` (the
+      // row's own id) matched nothing, orphaning the row and its file mirror.
       do {
-        try await PresetArtworkManager.shared.deleteArtwork(for: preset.artworkId!)
+        try await PresetArtworkManager.shared.deleteArtwork(for: preset.id, type: .artwork)
+        savedArtworkData = nil
         Logger.ui.debug("EditPresetSheet: Deleted old artwork")
       } catch {
         Logger.ui.error("EditPresetSheet: Failed to delete old artwork: \(error, privacy: .public)")
