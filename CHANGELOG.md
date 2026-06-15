@@ -18,10 +18,10 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 ### Added
 
 - **iPhone and iPad support** - Blankie is now a universal app, with layouts that adapt to each screen, iPad Split View, and an iPad sidebar for favorite presets, Quick Mix, and settings
-- **CarPlay support** - Connect Blankie for iPhone to your car with CarPlay for a tabbed infotainment interface with all your Presets (Recent, Favorites, and All), Sounds and Quick Mix for simple mixes. Blankie's Now Playing screen also gives you one-tap favoriting, a simple preset editor and a sleep timer you can set or cancel right from CarPlay.
+- **CarPlay support** - Connect Blankie for iPhone to your car with CarPlay for a tabbed infotainment interface. A Home tab shows what's playing plus your recents and favorites, a Presets and Soundss tabs lists everything A to Z and Quick Mix lets you make simple mixes. Blankie's Now Playing screen also gives you one-tap favoriting, a simple preset editor and a sleep timer you can set or cancel right from CarPlay.
 - **Menu bar control (macOS)** - Added a new popover to browse your Library, mix sounds, and start a timer without opening the main window. There's also options in settings to run Blankie from the menu bar only or hide the Dock icon when the window is closed.
-- **Custom sounds** - Blankie now lets you import your own audio files and play them alongside the built-in library, with automatic loudness matching so they play right at a comparable volume
-- **Nine new built-in sounds** - Airplane, Ambient Synth, Deep Noise, Fan, Forest, Gentle Guitar, Green Noise, Laundry Room, and Lo-Fi Beats
+- **Custom sounds** - Blankie now lets you import your own audio files and play them alongside the built-in library, with automatic loudness matching so they play right at a comparable volume. Import most audio formats with the option to convert to AAC to save space .
+- **Ten new built-in sounds** - Airplane, Ambient Synth, Deep Noise, Fan, Forest, Gentle Guitar, Green Noise, Laundry Room, Lo-Fi Beats and Warm Piano
 - **Music Loops** - some loops are now tagged as music, which tells a preset to only play one music loop at a time. Start another music loop and it will replace the playing one. Ambient Synth, Gentle Guitar, and Lo-Fi Beats come tagged, and you can tag your own imports too.
 - **Favorites** - star presets or individual sounds to promote them in the iPad sidebar and CarPlay and step through them with system-wide Now Playing next/previous controls
 - **Single sound playback** - play and favorite any sound on its own without making a preset
@@ -40,6 +40,7 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Drag to reorder sounds in both grid and list views
 - Interactive onboarding on first launch. Onboarding is always skippable and finishes on your new preset.
 - Settings to toggle sound name labels and a visual progress border around playing sounds
+- **App icon picker** - choose your ideal app icon from a grid in Settings, with twelve accent-color variants, a Dark version and a few others
 - A heads-up at launch when the app volume is turned all the way down
 - **VoiceOver support** - labeled controls throughout, sliders that announce and adjust volume, sounds that announce their selection state, grouped sound credits and color pickers, and a Now Playing screen that properly holds focus
 - **Full keyboard control of the sound grid** (macOS) - Tab to any sound, Space to toggle it, arrow keys to adjust its volume
@@ -50,7 +51,7 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 
 - New app icon, redesigned for Liquid Glass with dark and tinted variants
 - Rebuilt on new audio engine so loudness normalization runs live and can now genuinely boost quiet sounds to the library's target level, a peak limiter on the final mix can prevent clipping and playback can survive output-device switches and system audio resets
-- Re-normalized every built-in sound with two-way K-weighted (LUFS) loudness analysis so the whole library plays at a consistent level and migrated all built-in sounds to M4A (AAC)
+- Improved the built-in sound library: re-normalized every sound with two-way K-weighted (LUFS) loudness analysis so the whole library plays at a consistent level, migrated all built-in sounds to M4A (AAC), recut the loops on most sounds so they now repeat without audible seams. Most notably, replaced the fireplace sound entirely, and made train a longer loop from the same source
 - Blankie now always uses the dark system appearance on every platform to improve contrast and readability
 - The Mac window now adapts its minimum size to the sidebar and opens at a roomier default size
 - The Dock icon badge that shows when Blankie is paused (macOS) is now configurable
@@ -61,8 +62,6 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 
 ### Fixed
 
-- Noticeable loop seam when the fireplace sound repeated (replaced with new sound)
-- Train sound is now a longer loop (of the same source)
 - If Blankie's global volume was saved at zero, it now prompts a warning on relaunch instead so you'll know what sounds aren't audible
 
 ### Removed
