@@ -87,27 +87,24 @@ class PresetArtworkManager: ObservableObject {
       throw PresetArtworkError.noModelContext
     }
 
-    // Check if artwork already exists for this preset and type
-    let typeString = type.rawValue
-    let descriptor = FetchDescriptor<PresetArtwork>(
-      predicate: #Predicate { artwork in
-        artwork.presetId == presetId && artwork.imageType == typeString
-      }
-    )
-
-    // Replace any existing record so the saved artwork gets a NEW id. The whole
-    // display layer treats artworkId as the artwork's content identity — views
-    // reload via `.task(id: artworkId)` and images are memo-cached by id — so
-    // reusing the id on an edit left every surface (mixer, Now Playing, lock
-    // screen, library thumbnails) showing the stale cached image until relaunch.
-    if let existingArtwork = try context.fetch(descriptor).first {
-      context.delete(existingArtwork)
-      imageCache.removeValue(forKey: existingArtwork.id)
+    // Replace every existing record of this type so the saved artwork gets a NEW
+    // id. The whole display layer treats artworkId as the artwork's content
+    // identity — views reload via `.task(id: artworkId)` and images are
+    // memo-cached by id — so reusing the id on an edit left every surface (mixer,
+    // Now Playing, lock screen, library thumbnails) showing the stale cached
+    // image until relaunch. Delete all matches, not just the first, so a legacy
+    // duplicate row can't survive and shadow the new artwork.
+    for artwork in try existingArtwork(for: presetId, type: type, in: context) {
+      purgeArtwork(artwork, in: context)
     }
 
     let artwork = PresetArtwork(presetId: presetId, imageData: imageData, type: type)
     context.insert(artwork)
     try context.save()
+
+    // Mirror to an app-group file so the artwork survives a SwiftData store
+    // rebuild (the DB row can vanish on a bad migration; the file rehydrates it).
+    writeArtworkFile(imageData, for: artwork.id)
 
     // Warm the cache under the new id so the new image appears immediately.
     if let image = PlatformImage(data: imageData) {
@@ -129,9 +126,6 @@ class PresetArtworkManager: ObservableObject {
       return nil
     }
 
-    // Run migration lazily when artwork is first accessed
-    migrateExistingArtworkIfNeeded()
-
     let descriptor = FetchDescriptor<PresetArtwork>(
       predicate: #Predicate { $0.id == id }
     )
@@ -143,6 +137,8 @@ class PresetArtworkManager: ObservableObject {
       {
         // Cache the image
         imageCache[id] = image
+        // Back-fill the file mirror for artwork saved before mirroring existed.
+        mirrorArtworkFileIfMissing(imageData, for: id)
         return image
       }
     } catch {
@@ -150,21 +146,15 @@ class PresetArtworkManager: ObservableObject {
         "PresetArtworkManager: Failed to load artwork: \(error, privacy: .public)")
     }
 
-    return nil
-  }
-
-  /// Load artwork for a preset
-  func loadArtwork(for presetId: UUID) async throws -> Data? {
-    guard let context = modelContext else {
-      throw PresetArtworkError.noModelContext
+    // DB miss (e.g. the store was rebuilt and lost its rows) — rehydrate from
+    // the app-group file mirror if one exists.
+    if let data = await readArtworkFile(for: id), let image = PlatformImage(data: data) {
+      imageCache[id] = image
+      Logger.presets.debug("PresetArtworkManager: Rehydrated artwork \(id) from file mirror")
+      return image
     }
 
-    let descriptor = FetchDescriptor<PresetArtwork>(
-      predicate: #Predicate { $0.presetId == presetId }
-    )
-
-    let results = try context.fetch(descriptor)
-    return results.first?.imageData
+    return nil
   }
 
   /// Load raw artwork data by artwork ID
@@ -181,12 +171,15 @@ class PresetArtworkManager: ObservableObject {
 
       do {
         let results = try context.fetch(descriptor)
-        return results.first?.imageData
+        if let data = results.first?.imageData {
+          return data
+        }
       } catch {
         Logger.presets.error(
           "PresetArtworkManager: Failed to load artwork data: \(error, privacy: .public)")
-        return nil
       }
+      // Fall back to the app-group file mirror if the DB row is gone.
+      return await readArtworkFile(for: id)
     }.value
   }
 
@@ -238,6 +231,28 @@ class PresetArtworkManager: ObservableObject {
     return CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions)
   }
 
+  /// All artwork rows for a preset of the given type. Filters on the `type`
+  /// accessor — which treats a legacy empty `imageType` as `.artwork` — rather
+  /// than a raw-string predicate, so artwork saved before `imageType` existed
+  /// still matches.
+  private func existingArtwork(for presetId: UUID, type: PresetImageType, in context: ModelContext)
+    throws -> [PresetArtwork]
+  {
+    let descriptor = FetchDescriptor<PresetArtwork>(
+      predicate: #Predicate { $0.presetId == presetId }
+    )
+    return try context.fetch(descriptor).filter { $0.type == type }
+  }
+
+  /// Delete one artwork row and purge every trace of it — the memory cache and
+  /// the app-group file mirror. Does not save; callers batch the save.
+  private func purgeArtwork(_ artwork: PresetArtwork, in context: ModelContext) {
+    let id = artwork.id
+    context.delete(artwork)
+    imageCache.removeValue(forKey: id)
+    removeArtworkFile(for: id)
+  }
+
   /// Delete artwork for a preset
   func deleteArtwork(for presetId: UUID) async throws {
     guard let context = modelContext else {
@@ -249,7 +264,7 @@ class PresetArtworkManager: ObservableObject {
     )
 
     if let artwork = try context.fetch(descriptor).first {
-      context.delete(artwork)
+      purgeArtwork(artwork, in: context)
       try context.save()
       Logger.presets.debug("PresetArtworkManager: Deleted artwork for preset \(presetId)")
     }
@@ -261,18 +276,9 @@ class PresetArtworkManager: ObservableObject {
       throw PresetArtworkError.noModelContext
     }
 
-    let typeString = type.rawValue
-    let descriptor = FetchDescriptor<PresetArtwork>(
-      predicate: #Predicate { artwork in
-        artwork.presetId == presetId && artwork.imageType == typeString
-      }
-    )
-
-    let artworks = try context.fetch(descriptor)
+    let artworks = try existingArtwork(for: presetId, type: type, in: context)
     for artwork in artworks {
-      context.delete(artwork)
-      // Remove from cache
-      imageCache.removeValue(forKey: artwork.id)
+      purgeArtwork(artwork, in: context)
     }
 
     if !artworks.isEmpty {
@@ -334,15 +340,14 @@ class PresetArtworkManager: ObservableObject {
     let descriptor = FetchDescriptor<PresetArtwork>()
     let allArtwork = try context.fetch(descriptor)
 
-    // Find and delete orphaned artwork
+    // Find and delete orphaned artwork. Purging clears the memory cache and the
+    // app-group file mirror too, so a stranded mirror can't rehydrate "deleted"
+    // artwork via the load-by-id fallback.
     var deletedCount = 0
     for artwork in allArtwork where !referencedArtworkIds.contains(artwork.id) {
       Logger.presets.debug("PresetArtworkManager: Deleting orphaned artwork \(artwork.id)")
-      context.delete(artwork)
+      purgeArtwork(artwork, in: context)
       deletedCount += 1
-
-      // Also remove from cache
-      imageCache.removeValue(forKey: artwork.id)
     }
 
     if deletedCount > 0 {
@@ -350,42 +355,6 @@ class PresetArtworkManager: ObservableObject {
       Logger.presets.debug("PresetArtworkManager: Deleted \(deletedCount) orphaned artwork items")
     } else {
       Logger.presets.debug("PresetArtworkManager: No orphaned artwork found")
-    }
-  }
-
-  private var hasMigrationRun = false
-
-  /// Migrate existing artwork records to have proper imageType values
-  /// Only runs when artwork is actually being accessed, not during cold start
-  private func migrateExistingArtworkIfNeeded() {
-    guard !hasMigrationRun,
-      let context = modelContext
-    else { return }
-
-    hasMigrationRun = true
-
-    Task {
-      do {
-        let descriptor = FetchDescriptor<PresetArtwork>()
-        let allArtwork = try context.fetch(descriptor)
-
-        var migratedCount = 0
-        for artwork in allArtwork where artwork.imageType.isEmpty {
-          artwork.imageType = PresetImageType.artwork.rawValue
-          artwork.updatedAt = Date()
-          migratedCount += 1
-        }
-
-        if migratedCount > 0 {
-          try context.save()
-          Logger.presets.debug(
-            "PresetArtworkManager: Migrated \(migratedCount) artwork records to have imageType")
-        }
-      } catch {
-        Logger.presets.error(
-          "PresetArtworkManager: Lazy migration failed: \(error, privacy: .public)")
-        hasMigrationRun = false  // Allow retry later
-      }
     }
   }
 
@@ -435,6 +404,44 @@ class PresetArtworkManager: ObservableObject {
       return nil
     }
   #endif
+
+  // MARK: - App-group file mirror
+
+  /// Durable file copy of an artwork blob, keyed by artwork id, in the shared
+  /// app-group container (like custom sounds — not the per-app container). Lets
+  /// artwork survive a SwiftData store rebuild: if the DB row is lost, the load
+  /// paths fall back to this file. Returns nil when the app group is
+  /// unavailable, in which case the SwiftData blob remains the only copy.
+  nonisolated private static func artworkFileURL(for id: UUID) -> URL? {
+    AppGroupConfiguration.documentsURL?
+      .appendingPathComponent("PresetArtwork", isDirectory: true)
+      .appendingPathComponent(id.uuidString)
+  }
+
+  private func writeArtworkFile(_ data: Data, for id: UUID) {
+    guard let url = Self.artworkFileURL(for: id) else { return }
+    // Serialized + off-main via the shared mirror actor so saving artwork never
+    // blocks the UI and concurrent writes can't interleave.
+    Task { await AppGroupFileMirror.shared.write(data, to: url) }
+  }
+
+  /// Back-fill the mirror for artwork saved before mirroring existed.
+  private func mirrorArtworkFileIfMissing(_ data: Data, for id: UUID) {
+    guard let url = Self.artworkFileURL(for: id),
+      !FileManager.default.fileExists(atPath: url.path)
+    else { return }
+    writeArtworkFile(data, for: id)
+  }
+
+  private func readArtworkFile(for id: UUID) async -> Data? {
+    guard let url = Self.artworkFileURL(for: id) else { return nil }
+    return await AppGroupFileMirror.shared.read(at: url)
+  }
+
+  private func removeArtworkFile(for id: UUID) {
+    guard let url = Self.artworkFileURL(for: id) else { return }
+    Task { await AppGroupFileMirror.shared.remove(at: url) }
+  }
 }
 
 enum PresetArtworkError: LocalizedError {
