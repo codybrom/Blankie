@@ -6,100 +6,113 @@
 //
 
 import AVFoundation
-import XCTest
+import Testing
 
 @testable import Blankie
 
 /// Verifies the planned engine graph drives sounds to the -27 LUFS target and
 /// the limiter holds true peak under the ceiling. Renders offline via
 /// EngineRenderHarness, measures with the production AudioAnalyzer overloads —
-/// the same math gates production and tests.
-final class EngineLoudnessTests: XCTestCase {
+/// the same math gates production and tests. Serialized: offline renders are
+/// memory-heavy and shouldn't run concurrently.
+@Suite(.serialized) struct EngineLoudnessTests {
 
-  private let targetLUFS: Float = -27.0
+  private let targetLUFS = AudioAnalyzer.targetLUFS
   private let renderSeconds: Double = 30.0
 
   // TEST_HOST = Blankie.app, so Bundle.main resolves bundled sounds exactly
   // the way Sound.getSoundURL() does.
   private func bundledSoundURL(_ name: String) throws -> URL {
-    try XCTUnwrap(
+    try #require(
       Bundle.main.url(forResource: name, withExtension: "m4a"),
       "Missing bundled sound \(name).m4a")
   }
 
-  // MARK: - Loudness convergence
-
-  /// The headline proof: fireplace (-42.89 LUFS source, factor 6.233) must
-  /// come out of the graph at the target loudness. This is the bug.
-  func testFireplaceRendersAtTargetLUFS() async throws {
-    let url = try bundledSoundURL("fireplace")
-    let boostDB = 20 * log10(Float(6.233351))
-
-    let buffer = try EngineRenderHarness.render(
-      fileURL: url, boostDB: boostDB, attenuation: 1.0,
-      seconds: renderSeconds, throughLimiter: false)
-
-    let measured = try XCTUnwrap(AudioAnalyzer.integratedLUFS(buffer: buffer))
-    XCTAssertEqual(
-      measured, targetLUFS, accuracy: 0.5,
-      "Fireplace should render near \(targetLUFS) LUFS, got \(measured)")
+  /// The shipped normalization data for a built-in sound, read from sounds.json
+  /// — the same source the app loads. Reading it (rather than hardcoding factors)
+  /// keeps these tests passing across recuts, and makes them fail loudly if a
+  /// sound is recut without regenerating its factor.
+  private func soundData(_ fileName: String) throws -> SoundData {
+    let url = try #require(
+      Bundle.main.url(forResource: "sounds", withExtension: "json"),
+      "sounds.json missing from bundle")
+    let container = try JSONDecoder().decode(SoundsContainer.self, from: Data(contentsOf: url))
+    return try #require(
+      container.sounds.first { $0.fileName == fileName }, "\(fileName) missing from sounds.json")
   }
 
-  /// Boat is gain-capped at +18 dB (maxGainDB) from -49.85 LUFS, so it can
-  /// only reach ≈ -31.85 — assert the capped target, not -27.
-  func testBoatRendersAtGainCappedTarget() async throws {
-    let url = try bundledSoundURL("boat")
-    let boostDB = 20 * log10(Float(7.943282))
+  // MARK: - Loudness convergence
+
+  /// The headline proof: applying fireplace's shipped normalization factor must
+  /// bring it out of the graph at the target loudness.
+  @Test func fireplaceRendersAtTargetLUFS() async throws {
+    let factor = try #require(soundData("fireplace").normalizationFactor)
 
     let buffer = try EngineRenderHarness.render(
-      fileURL: url, boostDB: boostDB, attenuation: 1.0,
+      fileURL: try bundledSoundURL("fireplace"), boostDB: 20 * log10(factor), attenuation: 1.0,
       seconds: renderSeconds, throughLimiter: false)
 
-    let measured = try XCTUnwrap(AudioAnalyzer.integratedLUFS(buffer: buffer))
-    let cappedTarget = Float(-49.852524) + 18.0
-    XCTAssertEqual(
-      measured, cappedTarget, accuracy: 0.5,
+    let measured = try #require(AudioAnalyzer.integratedLUFS(buffer: buffer))
+    #expect(
+      abs(measured - targetLUFS) <= 0.5,
+      "Fireplace's shipped normalization should render near \(targetLUFS) LUFS, got \(measured)")
+  }
+
+  /// Boat is too quiet to reach the target within the gain cap, so it lands at
+  /// source + maxGainDB rather than the target. Values from sounds.json.
+  @Test func boatRendersAtGainCappedTarget() async throws {
+    let sound = try soundData("boat")
+    let factor = try #require(sound.normalizationFactor)
+    let sourceLUFS = try #require(sound.lufs)
+
+    let buffer = try EngineRenderHarness.render(
+      fileURL: try bundledSoundURL("boat"), boostDB: 20 * log10(factor), attenuation: 1.0,
+      seconds: renderSeconds, throughLimiter: false)
+
+    let measured = try #require(AudioAnalyzer.integratedLUFS(buffer: buffer))
+    let cappedTarget = sourceLUFS + AudioAnalyzer.maxGainDB
+    #expect(
+      abs(measured - cappedTarget) <= 0.5,
       "Boat (gain-capped) should render near \(cappedTarget) LUFS, got \(measured)")
   }
 
-  /// Attenuation path: storm (factor 0.347 < 1) lands on target via node
-  /// volume. Also answers empirically whether player-node volume applies when
-  /// the node feeds an EQ rather than a mixer directly.
-  func testStormAttenuatesToTarget() async throws {
-    let url = try bundledSoundURL("storm")
+  /// Attenuation path: storm's factor is < 1, applied as node-volume attenuation
+  /// (not EQ gain), and must land on target. Factor from sounds.json.
+  @Test func stormAttenuatesToTarget() async throws {
+    let factor = try #require(soundData("storm").normalizationFactor)
+
     let buffer = try EngineRenderHarness.render(
-      fileURL: url, boostDB: 0, attenuation: Float(0.34659564),
+      fileURL: try bundledSoundURL("storm"), boostDB: 0, attenuation: factor,
       seconds: renderSeconds, throughLimiter: false)
 
-    let measured = try XCTUnwrap(AudioAnalyzer.integratedLUFS(buffer: buffer))
-    XCTAssertEqual(
-      measured, targetLUFS, accuracy: 0.5,
+    let measured = try #require(AudioAnalyzer.integratedLUFS(buffer: buffer))
+    #expect(
+      abs(measured - targetLUFS) <= 0.5,
       "Storm should attenuate to ≈ \(targetLUFS) LUFS, got \(measured)")
   }
 
   // MARK: - True-peak ceiling with limiter
 
-  func testTruePeakStaysUnderCeilingWithLimiter() async throws {
-    let url = try bundledSoundURL("fireplace")
-    let boostDB = 20 * log10(Float(6.233351))
+  @Test func truePeakStaysUnderCeilingWithLimiter() async throws {
+    let factor = try #require(soundData("fireplace").normalizationFactor)
 
     let buffer: AVAudioPCMBuffer
     do {
       buffer = try EngineRenderHarness.render(
-        fileURL: url, boostDB: boostDB, attenuation: 1.0,
+        fileURL: try bundledSoundURL("fireplace"), boostDB: 20 * log10(factor), attenuation: 1.0,
         seconds: renderSeconds, throughLimiter: true)
     } catch EngineRenderError.limiterUnavailable(let status) {
-      throw XCTSkip(
-        "PeakLimiter AU unavailable in manual rendering (OSStatus \(status)); "
-          + "verify limiter behavior on a real build (flagged unknown #1).")
+      try Test.cancel(
+        "PeakLimiter AU unavailable in manual rendering (OSStatus \(status)); verify limiter behavior on a real build (flagged unknown #1)."
+      )
     }
 
-    // The PeakLimiter AU's ceiling is 0 dBFS (no ceiling parameter exists);
-    // for live playback the requirement is no digital clipping, and without
-    // the limiter this signal would hit ≈ +14.8 dBTP.
-    let truePeak = try XCTUnwrap(AudioAnalyzer.truePeakdBTP(buffer: buffer))
-    XCTAssertLessThanOrEqual(
-      truePeak, 0.1,
+    // The PeakLimiter AU's ceiling is 0 dBFS (no ceiling parameter exists); for
+    // live playback the requirement is no digital clipping, and without the
+    // limiter this signal would hit ≈ +14.8 dBTP.
+    let truePeak = try #require(AudioAnalyzer.truePeakdBTP(buffer: buffer))
+    #expect(
+      truePeak <= 0.1,
       "Limiter should prevent digital clipping (ceiling ≈ 0 dBFS), got \(truePeak) dBTP")
   }
 
@@ -107,29 +120,29 @@ final class EngineLoudnessTests: XCTestCase {
 
   /// Self-referential: measure the synthesized file, derive the boost the app
   /// would apply (clamped to maxGainDB), assert the render lands accordingly.
-  func testSynthesizedQuietToneBoosts() async throws {
+  @Test func synthesizedQuietToneBoosts() async throws {
     let url = try Self.makeQuietToneURL(channels: 2)
     defer { try? FileManager.default.removeItem(at: url) }
 
     let (measuredIn, measuredOut, boostDB) = try Self.boostRoundTrip(url, target: targetLUFS)
     let expected = min(measuredIn + boostDB, targetLUFS)
     // Looser tolerance: AAC round-trip + offline render drift.
-    XCTAssertEqual(
-      measuredOut, expected, accuracy: 0.75,
+    #expect(
+      abs(measuredOut - expected) <= 0.75,
       "Boosted synthesized tone should land near \(expected) LUFS, got \(measuredOut)")
   }
 
-  /// MONO sources lose ≈3 dB through the mixer (constant-power pan law on
-  /// mono inputs). This test documents that behavior so Stage 3 knows to
-  /// compensate mono customs (+3 dB or upmix at decode). Built-ins are stereo.
-  func testMonoSourceRendersThreeDBLow() async throws {
+  /// MONO sources lose ≈3 dB through the mixer (constant-power pan law on mono
+  /// inputs). This test documents that behavior so Stage 3 knows to compensate
+  /// mono customs (+3 dB or upmix at decode). Built-ins are stereo.
+  @Test func monoSourceRendersThreeDBLow() async throws {
     let url = try Self.makeQuietToneURL(channels: 1)
     defer { try? FileManager.default.removeItem(at: url) }
 
     let (measuredIn, measuredOut, boostDB) = try Self.boostRoundTrip(url, target: targetLUFS)
     let expected = min(measuredIn + boostDB, targetLUFS) - 3.0
-    XCTAssertEqual(
-      measuredOut, expected, accuracy: 0.75,
+    #expect(
+      abs(measuredOut - expected) <= 0.75,
       "Mono source should land ≈3 dB under \(expected + 3.0) LUFS, got \(measuredOut)")
   }
 
@@ -138,12 +151,12 @@ final class EngineLoudnessTests: XCTestCase {
     _ url: URL, target: Float
   ) throws -> (measuredIn: Float, measuredOut: Float, boostDB: Float) {
     let probe = try AVAudioFile(forReading: url)
-    let probeBuffer = try XCTUnwrap(
+    let probeBuffer = try #require(
       AVAudioPCMBuffer(
         pcmFormat: probe.processingFormat, frameCapacity: AVAudioFrameCount(probe.length)))
     try probe.read(into: probeBuffer)
 
-    let measuredIn = try XCTUnwrap(AudioAnalyzer.integratedLUFS(buffer: probeBuffer))
+    let measuredIn = try #require(AudioAnalyzer.integratedLUFS(buffer: probeBuffer))
     let boostDB = min(target - measuredIn, AudioAnalyzer.maxGainDB)
 
     // 8s = exactly the two scheduled passes of the 4s fixture (no silent tail
@@ -152,14 +165,14 @@ final class EngineLoudnessTests: XCTestCase {
       fileURL: url, boostDB: boostDB, attenuation: 1.0,
       seconds: 8.0, throughLimiter: false)
 
-    let measuredOut = try XCTUnwrap(AudioAnalyzer.integratedLUFS(buffer: out))
+    let measuredOut = try #require(AudioAnalyzer.integratedLUFS(buffer: out))
     return (measuredIn, measuredOut, boostDB)
   }
 
   // MARK: - Fixtures
 
-  /// Writes a short, deterministic low-level sine tone to a temp .m4a using
-  /// the same AAC settings blankifi's writeM4A uses. Ships nothing.
+  /// Writes a short, deterministic low-level sine tone to a temp .m4a using the
+  /// same AAC settings blankifi's writeM4A uses. Ships nothing.
   private static func makeQuietToneURL(channels: UInt32) throws -> URL {
     let sampleRate = 44_100.0
     let seconds = 4.0
@@ -183,7 +196,7 @@ final class EngineLoudnessTests: XCTestCase {
       AVEncoderBitRateKey: 192_000,
     ]
     let file = try AVAudioFile(forWriting: url, settings: settings)
-    let buffer = try XCTUnwrap(
+    let buffer = try #require(
       AVAudioPCMBuffer(
         pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(frameCount)))
     buffer.frameLength = AVAudioFrameCount(frameCount)

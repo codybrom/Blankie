@@ -6,15 +6,18 @@
 //
 
 import AVFoundation
-import XCTest
+import Testing
 
 @testable import Blankie
 
-/// Stage-1 tests for the Sound playback facade — pure logic only, no audio
-/// session or hardware. Real playback (play() success, position read-back,
-/// fades, loop completion) is device/integration territory; see the skip
-/// marker at the bottom so the gap stays visible in test reports.
-final class PlaybackPositionTests: XCTestCase {
+/// Stage-1 tests for the Sound playback facade. Real playback (live position
+/// read-back during playback and loop completion) needs a running engine and
+/// audio hardware, so it stays on the on-device soak checklist rather than here.
+///
+/// Serialized + main-actor: these drive the shared audio engine and run-loop
+/// timers, which XCTest ran on the main thread — `@MainActor` preserves that.
+@Suite(.serialized) @MainActor
+struct PlaybackPositionTests {
 
   /// Sound whose loadSound() never touches the filesystem or audio session.
   private final class HeadlessSound: Sound {
@@ -32,64 +35,64 @@ final class PlaybackPositionTests: XCTestCase {
 
   /// The randomization rule (Sound+Loading/Sound+Playback) is
   /// start ∈ 0..<duration*0.75; assert the bound semantics directly.
-  func testRandomStartStaysWithinFirst75Percent() {
+  @Test func randomStartStaysWithinFirst75Percent() {
     let duration: Double = 120.0
     let maxPosition = duration * 0.75
 
     for _ in 0..<1_000 {
       let position = Double.random(in: 0..<maxPosition)
-      XCTAssertGreaterThanOrEqual(position, 0)
-      XCTAssertLessThan(position, maxPosition)
+      #expect(position >= 0)
+      #expect(position < maxPosition)
     }
   }
 
   // MARK: - Facade defaults without a player
 
-  func testFacadeDefaultsWhenUnloaded() {
+  @Test func facadeDefaultsWhenUnloaded() {
     let sound = HeadlessSound(fileName: "headless-facade")
 
-    XCTAssertFalse(sound.isLoaded)
-    XCTAssertFalse(sound.isPlaying)
-    XCTAssertEqual(sound.playbackPosition, 0)
-    XCTAssertEqual(sound.playbackDuration, 0)
-    XCTAssertEqual(sound.playbackState, .stopped)
+    #expect(!sound.isLoaded)
+    #expect(!sound.isPlaying)
+    #expect(sound.playbackPosition == 0)
+    #expect(sound.playbackDuration == 0)
+    #expect(sound.playbackState == .stopped)
   }
 
   // MARK: - State transitions without a player
 
   /// pause()/stop() early-return when no player exists: they must not crash,
   /// flip selection, or leave playbackState anything but .stopped.
-  func testPauseAndStopAreSafeWithoutPlayer() {
+  @Test func pauseAndStopAreSafeWithoutPlayer() {
     let sound = HeadlessSound(fileName: "headless-transition")
-    XCTAssertNil(sound.player)
+    #expect(sound.player == nil)
 
     sound.pause()
-    XCTAssertEqual(sound.playbackState, .stopped)
+    #expect(sound.playbackState == .stopped)
     sound.pause(immediate: true)
-    XCTAssertEqual(sound.playbackState, .stopped)
+    #expect(sound.playbackState == .stopped)
     sound.stop()
-    XCTAssertEqual(sound.playbackState, .stopped)
+    #expect(sound.playbackState == .stopped)
     sound.resetSoundPosition()
 
-    XCTAssertNil(sound.player)
-    XCTAssertFalse(sound.isSelected)
+    #expect(sound.player == nil)
+    #expect(!sound.isSelected)
   }
 
-  func testUnloadResetsStateAndPlayer() {
+  @Test func unloadResetsStateAndPlayer() {
     let sound = HeadlessSound(fileName: "headless-unload")
     sound.playbackState = .paused  // simulate a stale state before teardown
 
     sound.unload()
 
-    XCTAssertNil(sound.player)
-    XCTAssertEqual(sound.playbackState, .stopped)
+    #expect(sound.player == nil)
+    #expect(sound.playbackState == .stopped)
   }
 
   // MARK: - Engine graph hygiene
 
-  /// Repeated load/unload (the preview sheet pattern) must not accumulate
-  /// nodes in the engine — unload() detaches what loadSound() attached.
-  func testEngineRegistryReturnsToBaselineAfterUnload() {
+  /// Repeated load/unload (the preview sheet pattern) must not accumulate nodes
+  /// in the engine — unload() detaches what loadSound() attached.
+  @Test func engineRegistryReturnsToBaselineAfterUnload() {
     let sound = Sound(
       title: "Leak Probe", systemIconName: "speaker.wave.2",
       fileName: "fireplace", fileExtension: "m4a")
@@ -97,13 +100,13 @@ final class PlaybackPositionTests: XCTestCase {
 
     for _ in 0..<3 {
       sound.loadSound()
-      XCTAssertTrue(sound.isLoaded, "Bundled fireplace.m4a should load")
-      XCTAssertEqual(
-        AudioEngineManager.shared.registered.count, baseline + 1,
+      #expect(sound.isLoaded, "Bundled fireplace.m4a should load")
+      #expect(
+        AudioEngineManager.shared.registered.count == baseline + 1,
         "loadSound must attach exactly one player")
       sound.unload()
-      XCTAssertEqual(
-        AudioEngineManager.shared.registered.count, baseline,
+      #expect(
+        AudioEngineManager.shared.registered.count == baseline,
         "unload must detach the player it attached")
     }
   }
@@ -112,25 +115,25 @@ final class PlaybackPositionTests: XCTestCase {
 
   /// node.volume must always be baseVolume × fadeLevel; a zero-duration fade
   /// applies instantly and fires its completion synchronously.
-  func testFadeLayerScalesNodeVolume() {
+  @Test func fadeLayerScalesNodeVolume() throws {
     let sound = Sound(
       title: "Fade Probe", systemIconName: "speaker.wave.2",
       fileName: "fireplace", fileExtension: "m4a")
     sound.loadSound()
-    guard let player = sound.player else { return XCTFail("fireplace.m4a should load") }
+    let player = try #require(sound.player, "fireplace.m4a should load")
     defer { sound.unload() }
 
     player.volume = 0.8
     player.setFadeLevel(0.5)
-    XCTAssertEqual(player.node.volume, 0.4, accuracy: 0.001)
+    #expect(abs(player.node.volume - 0.4) < 0.001)
 
     player.setFadeLevel(1)
-    XCTAssertEqual(player.node.volume, 0.8, accuracy: 0.001)
+    #expect(abs(player.node.volume - 0.8) < 0.001)
 
     var completed = false
     player.fade(to: 0, duration: 0) { completed = true }
-    XCTAssertTrue(completed, "Zero-duration fade must complete synchronously")
-    XCTAssertEqual(player.node.volume, 0, accuracy: 0.001)
+    #expect(completed, "Zero-duration fade must complete synchronously")
+    #expect(abs(player.node.volume - 0) < 0.001)
   }
 
   // MARK: - Fast toggle race (regression)
@@ -138,21 +141,21 @@ final class PlaybackPositionTests: XCTestCase {
   /// Toggling off then on during the fade-out must rescue the sound: play()
   /// ramps it back up, and the superseded fade's completion must NOT pause it
   /// after the original fade deadline passes.
-  func testFastPauseReplayRescuesFadeOut() throws {
+  @Test func fastPauseReplayRescuesFadeOut() throws {
     let sound = Sound(
       title: "Toggle Probe", systemIconName: "speaker.wave.2",
       fileName: "fireplace", fileExtension: "m4a")
     defer { sound.unload() }
 
     sound.loadSound()
-    guard sound.isLoaded else { return XCTFail("fireplace.m4a should load") }
+    try #require(sound.isLoaded, "fireplace.m4a should load")
     guard AudioEngineManager.shared.ensureRunning() else {
-      throw XCTSkip("Audio engine unavailable in this test environment")
+      try Test.cancel("Audio engine unavailable in this test environment")
     }
 
     sound.play()
-    XCTAssertEqual(sound.playbackState, .playing)
-    XCTAssertTrue(sound.isPlaying)
+    #expect(sound.playbackState == .playing)
+    #expect(sound.isPlaying)
 
     // Let the fade-in progress (fades are run-loop timers); a pause at
     // fadeLevel ≈ 0 short-circuits to an instant stop, which isn't this race.
@@ -164,22 +167,22 @@ final class PlaybackPositionTests: XCTestCase {
     // The rescue race only exists mid-fade; a starved run loop (heavy CI/host
     // load) is an environment problem, not a regression.
     guard (sound.player?.fadeLevel ?? 0) >= 0.1 else {
-      throw XCTSkip("Fade-in timer didn't advance — run loop starved in this environment")
+      try Test.cancel("Fade-in timer didn't advance — run loop starved in this environment")
     }
 
     // Fade-out pause, then immediately play again (the fast off/on toggle).
     sound.pause()
-    XCTAssertEqual(sound.playbackState, .paused)
-    XCTAssertTrue(sound.isPlaying, "Node keeps rendering during the fade-out")
+    #expect(sound.playbackState == .paused)
+    #expect(sound.isPlaying, "Node keeps rendering during the fade-out")
 
     sound.play()
-    XCTAssertEqual(sound.playbackState, .playing, "Rescue must restore intent")
+    #expect(sound.playbackState == .playing, "Rescue must restore intent")
 
     // Let the original 0.5s fade deadline pass; its completion must not fire.
     RunLoop.current.run(until: Date(timeIntervalSinceNow: Sound.fadeDuration + 0.3))
-    XCTAssertTrue(sound.isPlaying, "Superseded fade completion must not pause the sound")
-    XCTAssertEqual(sound.playbackState, .playing)
-    XCTAssertEqual(sound.player?.fadeLevel ?? 0, 1.0, accuracy: 0.01, "Fade should be back at full")
+    #expect(sound.isPlaying, "Superseded fade completion must not pause the sound")
+    #expect(sound.playbackState == .playing)
+    #expect(abs((sound.player?.fadeLevel ?? 0) - 1.0) < 0.01, "Fade should be back at full")
   }
 
   // MARK: - Spatial placement persistence (regression: dots snapping back)
@@ -188,47 +191,36 @@ final class PlaybackPositionTests: XCTestCase {
   /// back through the same path the grid dots use — an async hop (or a dropped
   /// write) makes released dots snap to their old position. Ending the session
   /// must discard placements (experimental: nothing persists between sessions).
-  @MainActor
-  func testSessionPlacementRoundTrip() throws {
+  @Test func sessionPlacementRoundTrip() throws {
     let session = SpatialSessionManager.shared
     defer { session.setMode(.off) }
 
     guard let rain = AudioManager.shared.sounds.first(where: { $0.fileName == "rain" }) else {
-      throw XCTSkip("Built-in rain sound unavailable in this test host")
+      try Test.cancel("Built-in rain sound unavailable in this test host")
     }
 
     session.setMode(.fixed)
-    XCTAssertTrue(session.isActive)
+    #expect(session.isActive)
 
     // The exact call the drag gesture makes on release.
     rain.setSpatialPlacement(angleDegrees: 123, distance: 1.5, persist: true)
 
-    XCTAssertEqual(session.placement(for: "rain")?.angle, 123)
-    XCTAssertEqual(session.placement(for: "rain")?.distance, 1.5)
+    #expect(session.placement(for: "rain")?.angle == 123)
+    #expect(session.placement(for: "rain")?.distance == 1.5)
 
     // The read-back path the dot uses immediately after release.
     let placement = rain.spatialPlacement()
-    XCTAssertEqual(placement.angle, 123, "Dot must read back the dropped position, not default")
-    XCTAssertEqual(placement.distance, 1.5)
+    #expect(placement.angle == 123, "Dot must read back the dropped position, not default")
+    #expect(placement.distance == 1.5)
 
     // Taking a sound out of the field is session state too.
     session.setInField(false, for: "rain")
-    XCTAssertFalse(rain.isSpatialEligible)
+    #expect(!rain.isSpatialEligible)
     session.setInField(true, for: "rain")
 
     // Ending the session discards everything.
     session.setMode(.off)
-    XCTAssertNil(session.placement(for: "rain"), "Session end must discard placements")
-    XCTAssertFalse(session.isActive)
-  }
-
-  // MARK: - Integration placeholder
-
-  /// Documents what cannot run headless so the gap is visible, not silent.
-  func testRealPlaybackPositionAfterPlay_Integration() throws {
-    throw XCTSkip(
-      "Requires a running engine + audio hardware: play() success, position "
-        + "read-back during playback, and loop completion. "
-        + "Covered by the on-device soak checklist.")
+    #expect(session.placement(for: "rain") == nil, "Session end must discard placements")
+    #expect(!session.isActive)
   }
 }
