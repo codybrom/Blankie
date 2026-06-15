@@ -11,6 +11,10 @@ import SwiftUI
 import UniformTypeIdentifiers
 import os
 
+#if os(macOS)
+  import AppKit
+#endif
+
 extension UTType {
   static let blankie = UTType(exportedAs: "com.codybrom.blankie.preset")
 }
@@ -21,41 +25,6 @@ extension UTType {
 /// and resolve the live instance at the destination.
 struct SoundEditDestination: Hashable {
   let fileName: String
-}
-
-// MARK: - Exportable Preset
-
-struct ExportablePreset: Transferable {
-  let sheet: EditPresetSheet
-
-  static var transferRepresentation: some TransferRepresentation {
-    FileRepresentation(exportedContentType: .blankie) { exportable in
-      // Generate the export file on-demand
-      let updatedPreset = await exportable.sheet.createUpdatedPreset()
-      let tempArchiveURL = try await PresetExporter.shared.createArchive(for: updatedPreset)
-
-      // Move to Documents directory for proper sharing
-      let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        .first!
-      let fileName = "\(updatedPreset.name).blankie"
-        .replacingOccurrences(of: "/", with: "-")
-        .replacingOccurrences(of: ":", with: "-")
-      let finalURL = documentsPath.appendingPathComponent(fileName)
-
-      // Remove existing file if it exists
-      try? FileManager.default.removeItem(at: finalURL)
-
-      // Move the file
-      try FileManager.default.moveItem(at: tempArchiveURL, to: finalURL)
-
-      // Store the URL for cleanup later
-      await MainActor.run {
-        exportable.sheet.exportedURL = finalURL
-      }
-
-      return SentTransferredFile(finalURL, allowAccessingOriginalFile: true)
-    }
-  }
 }
 
 struct EditPresetSheet: View {
@@ -81,15 +50,12 @@ struct EditPresetSheet: View {
   @State var exportError: String?
   @State var exportedURL: URL?
   @State var isExporting = false
+  @State var showingShareSheet = false
   @State var useCustomTheme = false
   /// Whether this preset overrides the app-wide grid/list view mode. When off,
   /// the preset stores `nil` and follows `GlobalSettings.showingListView`.
   @State var useCustomViewMode = false
   @State var viewModeOverride: PresetViewMode?
-  /// Whether this preset overrides the app-wide background blur. When off, the
-  /// preset stores `nil` and follows `GlobalSettings.backgroundBlurRadius`.
-  @State var useCustomBlur = false
-  @State var blurOverride: Double = defaultBackgroundBlurRadius
   #if os(iOS) || os(visionOS)
     @State var soundEditMode: EditMode = .inactive
   #endif
@@ -307,54 +273,181 @@ struct EditPresetSheet: View {
 // MARK: - Export Section
 
 extension EditPresetSheet {
-  /// Share-sheet preview: the preset's artwork when set, else the app icon.
-  private var sharePreview: SharePreview<Image, Image> {
-    if let artworkData = artworkData {
-      #if os(iOS)
-        if let uiImage = UIImage(data: artworkData) {
-          return SharePreview(
-            presetName,
-            image: Image(uiImage: uiImage),
-            icon: Image(systemName: "doc.fill")
-          )
-        }
-      #else
-        if let nsImage = NSImage(data: artworkData) {
-          return SharePreview(
-            presetName,
-            image: Image(nsImage: nsImage),
-            icon: Image(systemName: "doc.fill")
-          )
-        }
-      #endif
-    }
-    // The app icon is the default share preview image.
-    return SharePreview(
-      presetName,
-      image: Image("BlankieAppIconDisplay"),
-      icon: Image(systemName: "doc.fill")
-    )
-  }
-
   @ViewBuilder
   var exportButton: some View {
     if !preset.isDefault {
-      if isExporting {
-        ProgressView()
-          .scaleEffect(0.8)
-      } else {
-        ShareLink(item: ExportablePreset(sheet: self), preview: sharePreview) {
-          Image(systemName: "square.and.arrow.up")
-        }
-        // The ShareLink label is icon-only so we must name it for VoiceOver.
-        .accessibilityLabel(Text("Share Preset"))
-        .onDisappear {
-          // Clean up the exported file when share sheet dismisses
-          cleanupExportedFile()
-        }
+      Group {
+        #if os(iOS) || os(visionOS)
+          // ShareLink builds the archive lazily inside its Transferable, so the
+          // share sheet sits there silently for seconds (large custom sounds)
+          // and the app looks frozen. Build it ourselves behind a spinner, then
+          // hand the ready file to the system share sheet.
+          Button {
+            Task { await prepareAndPresentShare() }
+          } label: {
+            if isExporting {
+              ProgressView()
+                .scaleEffect(0.8)
+            } else {
+              Image(systemName: "square.and.arrow.up")
+            }
+          }
+          .disabled(isExporting)
+          .accessibilityLabel(Text(isExporting ? "Preparing Export" : "Share Preset"))
+          .sheet(isPresented: $showingShareSheet, onDismiss: cleanupExportedFile) {
+            if let exportedURL {
+              PresetShareSheet(url: exportedURL)
+            }
+          }
+        #else
+          // macOS: one pull-down menu offers both the native share sheet and a
+          // plain "Export to File…" save panel. Kept in a single menu because a
+          // macOS sheet toolbar renders only one item per action slot.
+          if isExporting {
+            ProgressView()
+              .scaleEffect(0.8)
+          } else {
+            Menu {
+              Button {
+                Task { await prepareAndPresentMacShare() }
+              } label: {
+                Label("Share…", systemImage: "square.and.arrow.up")
+              }
+              Button {
+                Task { await exportToFile() }
+              } label: {
+                Label("Export to File…", systemImage: "arrow.down.doc")
+              }
+            } label: {
+              Image(systemName: "square.and.arrow.up")
+            }
+            .accessibilityLabel(Text("Export Preset"))
+          }
+        #endif
+      }
+      .alert(
+        "Export Failed",
+        isPresented: Binding(
+          get: { exportError != nil },
+          set: { if !$0 { exportError = nil } }
+        )
+      ) {
+        Button("OK", role: .cancel) { exportError = nil }
+      } message: {
+        if let exportError { Text(exportError) }
       }
     }
   }
+
+  /// Builds the `.blankie` archive for the current edits and moves it into
+  /// Documents for sharing. The heavy file work (copying custom sounds, zipping)
+  /// runs off the main actor inside `PresetExporter`, so callers can show a
+  /// spinner while awaiting without blocking the UI.
+  @MainActor
+  private func buildExportArchive() async throws -> URL {
+    // Read-only snapshot: never mutate the stored preset's artwork while
+    // building the archive (edits are already persisted via applyChangesInstantly).
+    let updatedPreset = await createUpdatedPreset(persistArtworkChanges: false)
+    let tempArchiveURL = try await PresetExporter.shared.createArchive(for: updatedPreset)
+
+    let documentsPath = try FileManager.default.url(
+      for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+    let fileName = "\(updatedPreset.name).blankie"
+      .replacingOccurrences(of: "/", with: "-")
+      .replacingOccurrences(of: ":", with: "-")
+    let finalURL = documentsPath.appendingPathComponent(fileName)
+
+    try? FileManager.default.removeItem(at: finalURL)
+    try FileManager.default.moveItem(at: tempArchiveURL, to: finalURL)
+
+    exportedURL = finalURL
+    return finalURL
+  }
+
+  /// Runs an export action behind the toolbar spinner, surfacing any failure in
+  /// the Export Failed alert. A no-op while another export is already in flight.
+  @MainActor
+  private func runExport(_ body: () async throws -> Void) async {
+    guard !isExporting else { return }
+    isExporting = true
+    defer { isExporting = false }
+    do {
+      try await body()
+    } catch {
+      Logger.ui.error("Preset export failed: \(error.localizedDescription, privacy: .public)")
+      // Show ExportError's user-facing message; for an unexpected system error
+      // show a friendly fallback rather than leaking a raw error string.
+      if error is PresetExporter.ExportError {
+        exportError = error.localizedDescription
+      } else {
+        exportError = String(
+          localized: "Couldn't export this preset. Please try again.",
+          comment: "Alert message shown when exporting a preset fails for an unexpected reason.")
+      }
+    }
+  }
+
+  #if os(iOS) || os(visionOS)
+    /// Builds the archive behind a spinner, then presents the system share
+    /// sheet once the file is ready.
+    @MainActor
+    private func prepareAndPresentShare() async {
+      await runExport {
+        _ = try await buildExportArchive()
+        showingShareSheet = true
+      }
+    }
+  #endif
+
+  #if os(macOS)
+    /// Builds the archive behind the toolbar spinner, then presents the native
+    /// macOS share menu for the ready file. Building first — instead of letting a
+    /// ShareLink resolve it lazily — means the menu never sits there silently
+    /// while a large custom-sound archive copies and zips.
+    @MainActor
+    private func prepareAndPresentMacShare() async {
+      await runExport {
+        presentMacSharePicker(for: try await buildExportArchive())
+      }
+    }
+
+    private func presentMacSharePicker(for url: URL) {
+      // Fall back to the main window if none is key, so the user's Share tap
+      // never silently does nothing.
+      guard let anchor = (NSApp.keyWindow ?? NSApp.mainWindow)?.contentView else {
+        Logger.ui.error("Preset share: no window available to present the share picker")
+        return
+      }
+      let picker = NSSharingServicePicker(items: [url])
+      // Anchor near the top-trailing corner, beside the toolbar share button.
+      // (SwiftUI doesn't expose the toolbar item's view to anchor to precisely.)
+      let rect = NSRect(x: anchor.bounds.maxX - 1, y: anchor.bounds.maxY - 1, width: 1, height: 1)
+      picker.show(relativeTo: rect, of: anchor, preferredEdge: .minY)
+    }
+
+    /// Lets the user pick a destination with a save panel, then writes the
+    /// built archive there (behind the same spinner as the share path).
+    @MainActor
+    private func exportToFile() async {
+      guard !isExporting else { return }
+
+      // Pick the destination before the spinner — the save panel is the user's
+      // step, not part of the work being awaited behind the spinner.
+      let panel = NSSavePanel()
+      panel.allowedContentTypes = [.blankie]
+      panel.nameFieldStringValue = "\(presetName).blankie"
+      panel.canCreateDirectories = true
+      guard panel.runModal() == .OK, let destination = panel.url else { return }
+
+      await runExport {
+        let builtURL = try await buildExportArchive()
+        try? FileManager.default.removeItem(at: destination)
+        try FileManager.default.copyItem(at: builtURL, to: destination)
+        // The Documents working copy isn't needed once it's saved elsewhere.
+        cleanupExportedFile()
+      }
+    }
+  #endif
 
   private func cleanupExportedFile() {
     if let url = exportedURL {
@@ -703,3 +796,18 @@ extension EditPresetSheet {
     #endif
   }
 }
+
+#if os(iOS) || os(visionOS)
+  /// Presents the system share sheet for an already-built export file, so the
+  /// archive can be shared once it's ready (after the spinner) rather than
+  /// inside ShareLink's silent lazy resolution.
+  private struct PresetShareSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+      UIActivityViewController(activityItems: [url], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ controller: UIActivityViewController, context: Context) {}
+  }
+#endif
