@@ -17,8 +17,6 @@ struct PresetThemeSection: View {
   @Binding var viewModeOverride: PresetViewMode?
   @Binding var useCustomTheme: Bool
   @Binding var accentColor: Color?
-  @Binding var useCustomBlur: Bool
-  @Binding var blurOverride: Double
   var onEdited: (() -> Void)?
 
   private let globalSettings = GlobalSettings.shared
@@ -88,35 +86,6 @@ struct PresetThemeSection: View {
           accentColor = globalSettings.customAccentColor ?? .green
         }
       }
-
-      // Background blur override (On = the single app-wide blur value). The
-      // macOS window doesn't use a blurred backdrop, so hide this there.
-      #if !os(macOS)
-        VStack(alignment: .leading, spacing: 12) {
-          Toggle("Customize Background Blur", isOn: $useCustomBlur)
-
-          if useCustomBlur {
-            Picker(
-              "Customize Background Blur",
-              selection: Binding<Double>(
-                get: { blurOverride },
-                set: { blurOverride = $0 }
-              )
-            ) {
-              Text("No Blur").tag(0.0)
-              Text("Blurred").tag(defaultBackgroundBlurRadius)
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-          }
-        }
-        .onChange(of: useCustomBlur) { _, _ in
-          onEdited?()
-        }
-        .onChange(of: blurOverride) { _, _ in
-          onEdited?()
-        }
-      #endif
     }
   }
 }

@@ -123,11 +123,6 @@ struct EditPresetSheet: View {
     _useCustomTheme = State(initialValue: preset.accentColor != nil)
     _useCustomViewMode = State(initialValue: preset.viewMode != nil)
     _viewModeOverride = State(initialValue: preset.viewMode)
-    _useCustomBlur = State(initialValue: preset.backgroundBlurRadius != nil)
-    // Seed with the effective value so enabling the override doesn't jump the
-    // background; normalize legacy radii (e.g. the old "High" 15) to on/off.
-    let effectiveBlur = preset.backgroundBlurRadius ?? GlobalSettings.shared.backgroundBlurRadius
-    _blurOverride = State(initialValue: effectiveBlur > 0 ? defaultBackgroundBlurRadius : 0)
   }
 
   var orderedSounds: [Sound] {
@@ -516,8 +511,9 @@ extension EditPresetSheet {
       // Save per-preset view-mode override (nil = follow app setting).
       updatedPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
 
-      // Save per-preset background blur override (nil = follow app setting).
-      updatedPreset.backgroundBlurRadius = useCustomBlur ? blurOverride : nil
+      // Background blur is now an all-or-nothing global Display setting, so
+      // clear any legacy per-preset override as presets are edited.
+      updatedPreset.backgroundBlurRadius = nil
     }
 
     return updatedPreset

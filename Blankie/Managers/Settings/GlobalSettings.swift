@@ -55,8 +55,8 @@ enum UserDefaultsKeys {
 }
 
 /// Blur (in points) applied to a preset's background artwork behind the mixer
-/// when "Blur Background" is on. Blur is now on/off: any radius > 0 means on,
-/// at this value. Presets may override this with their own `backgroundBlurRadius`.
+/// when "Blur Background" is on. Blur is on/off and app-wide: any radius > 0
+/// means on, at this value. (Per-preset blur was removed; see `Preset`.)
 let defaultBackgroundBlurRadius: Double = 7.5
 
 @Observable

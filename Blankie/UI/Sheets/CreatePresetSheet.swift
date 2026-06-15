@@ -35,8 +35,6 @@ struct CreatePresetSheet: View {
   @State private var accentColor: Color?
   @State private var useCustomViewMode = false
   @State private var viewModeOverride: PresetViewMode?
-  @State private var useCustomBlur = false
-  @State private var blurOverride: Double = defaultBackgroundBlurRadius
   @State private var didCreatePreset = false
   #if os(iOS) || os(visionOS)
     @State private var selectedImage: UIImage?
@@ -80,9 +78,7 @@ struct CreatePresetSheet: View {
           useCustomViewMode: $useCustomViewMode,
           viewModeOverride: $viewModeOverride,
           useCustomTheme: $useCustomTheme,
-          accentColor: $accentColor,
-          useCustomBlur: $useCustomBlur,
-          blurOverride: $blurOverride
+          accentColor: $accentColor
         )
       }
       .navigationTitle("New Preset")
@@ -329,7 +325,7 @@ extension CreatePresetSheet {
     // (toggled off = nil = follow the app-wide setting).
     newPreset.accentColorName = useCustomTheme ? accentColor?.toString : nil
     newPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
-    newPreset.backgroundBlurRadius = useCustomBlur ? blurOverride : nil
+    // Background blur is now a global Display setting, not a per-preset override.
 
     Logger.ui.debug(
       "CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "set" : "none")"

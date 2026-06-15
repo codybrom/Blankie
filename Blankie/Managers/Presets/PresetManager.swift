@@ -897,9 +897,6 @@ extension PresetManager {
       // Migrate any presets that contain old sound names with file extensions
       migratePresetSoundNames()
 
-      // Migrate legacy blur radii to the on/off model
-      migratePresetBlurValues()
-
       // Ensure all custom presets have order values
       ensurePresetOrder()
 
@@ -1076,41 +1073,6 @@ extension PresetManager {
         PresetStorage.saveDefaultPreset(defaultPreset)
       }
       PresetStorage.saveCustomPresets(customPresets)
-    }
-  }
-
-  /// Migrates per-preset blur overrides from the old radius choices (e.g.
-  /// "High" 15) to the on/off model: any radius > 0 becomes the single
-  /// `defaultBackgroundBlurRadius`, 0 stays off, nil keeps following the app
-  /// setting.
-  private func migratePresetBlurValues() {
-    var migratedPresets = [Preset]()
-    var hasMigrations = false
-
-    for preset in presets {
-      if let radius = preset.backgroundBlurRadius,
-        radius != 0, radius != defaultBackgroundBlurRadius
-      {
-        var migratedPreset = preset
-        migratedPreset.backgroundBlurRadius = defaultBackgroundBlurRadius
-        migratedPresets.append(migratedPreset)
-        hasMigrations = true
-        Logger.presets.debug(
-          "PresetManager: Migrating blur in preset '\(preset.name)': \(radius) -> \(defaultBackgroundBlurRadius)"
-        )
-      } else {
-        migratedPresets.append(preset)
-      }
-    }
-
-    if hasMigrations {
-      setPresets(migratedPresets)
-      Logger.presets.debug("PresetManager: Blur migration completed, saving updated presets")
-
-      if let defaultPreset = migratedPresets.first(where: { $0.isDefault }) {
-        PresetStorage.saveDefaultPreset(defaultPreset)
-      }
-      PresetStorage.saveCustomPresets(migratedPresets.filter { !$0.isDefault })
     }
   }
 
