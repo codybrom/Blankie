@@ -59,4 +59,19 @@ struct AppGroupConfiguration {
       Logger.app.error("AppGroup: Failed to create documents directory: \(error, privacy: .public)")
     }
   }
+
+  /// Atomically write `data` to a file in the shared container with no file
+  /// protection, creating intermediate directories. No protection so a locked
+  /// device or headless CarPlay launch before first unlock can still read it
+  /// (parity with the SQLite store and audio files). Used by the durable file
+  /// mirrors for preset artwork and custom-sound metadata.
+  static func writeProtectionlessFile(_ data: Data, to url: URL) throws {
+    try FileManager.default.createDirectory(
+      at: url.deletingLastPathComponent(), withIntermediateDirectories: true,
+      attributes: [.protectionKey: FileProtectionType.none])
+    // Atomic replace so a crash mid-write can't leave a truncated file.
+    try data.write(to: url, options: .atomic)
+    try? FileManager.default.setAttributes(
+      [.protectionKey: FileProtectionType.none], ofItemAtPath: url.path)
+  }
 }
