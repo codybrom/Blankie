@@ -17,6 +17,13 @@ import os
   struct AnimatedArtworkPicker: View {
     @Binding var artwork: AnimatedArtworkRef?
     @Binding var staticArtworkPath: String?
+    /// Row label. Defaults to the per-preset wording; the app-wide default in
+    /// Settings passes "Default Animation" instead.
+    let label: LocalizedStringKey
+    /// Accent used by the gallery (pills, selection, Choose button). Passed in
+    /// by the call site so Settings uses the app-wide accent and Edit Preset
+    /// uses the edited preset's accent — never the unrelated playing preset's.
+    let accent: Color
     let onChange: () -> Void
 
     @State private var showingGallery = false
@@ -27,10 +34,14 @@ import os
     init(
       artwork: Binding<AnimatedArtworkRef?>,
       staticArtworkPath: Binding<String?>,
+      label: LocalizedStringKey = "Lock Screen Animation",
+      accent: Color = GlobalSettings.shared.customAccentColor ?? .accentColor,
       onChange: @escaping () -> Void
     ) {
       _artwork = artwork
       _staticArtworkPath = staticArtworkPath
+      self.label = label
+      self.accent = accent
       self.onChange = onChange
       _selectedBundledIdentifier = State(initialValue: artwork.wrappedValue?.bundledIdentifier)
     }
@@ -40,7 +51,7 @@ import os
         showingGallery = true
       } label: {
         HStack {
-          Text("Lock Screen Animation")
+          Text(label)
           Spacer()
           if let identifier = selectedBundledIdentifier,
             let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == identifier })
@@ -61,6 +72,7 @@ import os
       .sheet(isPresented: $showingGallery) {
         AnimatedArtworkGallery(
           selectedIdentifier: $selectedBundledIdentifier,
+          accent: accent,
           onSelect: { asset in
             Task {
               await applyBundledAsset(asset)
@@ -171,6 +183,7 @@ import os
 
   private struct AnimatedArtworkGallery: View {
     @Binding var selectedIdentifier: String?
+    let accent: Color
     let onSelect: (BundledAnimatedLoop) -> Void
     let onClear: () -> Void
 
@@ -239,6 +252,7 @@ import os
               GalleryCard(
                 asset: asset,
                 isSelected: selectedIdentifier == asset.id,
+                accent: accent,
                 onTap: {
                   previewingAsset = asset
                 },
@@ -259,6 +273,7 @@ import os
                   label: "All",
                   icon: "square.grid.2x2",
                   isSelected: selectedCategory == nil,
+                  accent: accent,
                   onTap: { selectedCategory = nil }
                 )
                 ForEach(categories, id: \.id) { category in
@@ -266,6 +281,7 @@ import os
                     label: category.displayName,
                     icon: category.icon,
                     isSelected: selectedCategory == category.id,
+                    accent: accent,
                     onTap: { selectedCategory = category.id }
                   )
                 }
@@ -293,6 +309,7 @@ import os
         .sheet(item: $previewingAsset) { asset in
           FullScreenPreview(
             asset: asset,
+            accent: accent,
             onSelect: {
               onSelect(asset)
             },
@@ -317,6 +334,7 @@ import os
     let label: String
     let icon: String
     let isSelected: Bool
+    let accent: Color
     let onTap: () -> Void
 
     var body: some View {
@@ -326,9 +344,7 @@ import os
       }
       if isSelected {
         // Prominent glass fills with the accent and picks a legible label automatically.
-        pill.buttonStyle(.glassProminent).tint(
-          PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared.customAccentColor
-            ?? .accentColor)
+        pill.buttonStyle(.glassProminent).tint(accent)
       } else {
         pill.buttonStyle(.glass)
       }
@@ -340,6 +356,7 @@ import os
   private struct GalleryCard: View {
     let asset: BundledAnimatedLoop
     let isSelected: Bool
+    let accent: Color
     let onTap: () -> Void
     let onUncache: () -> Void
 
@@ -374,7 +391,7 @@ import os
               .cornerRadius(12)
               .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                  .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
+                  .strokeBorder(isSelected ? accent : Color.clear, lineWidth: 3)
               )
           }
 
@@ -417,7 +434,7 @@ import os
               HStack {
                 Spacer()
                 Image(systemName: "checkmark.circle.fill")
-                  .foregroundColor(.accentColor)
+                  .foregroundColor(accent)
                   .font(.title2)
                   .padding(8)
                   .background(Color.black.opacity(0.5))
@@ -532,6 +549,7 @@ import os
 
   private struct FullScreenPreview: View {
     let asset: BundledAnimatedLoop
+    let accent: Color
     let onSelect: () -> Void
     let onDismiss: () -> Void
     let onDelete: () -> Void
@@ -555,10 +573,7 @@ import os
       return false
     }
 
-    private var accentColor: Color {
-      PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared.customAccentColor
-        ?? .accentColor
-    }
+    private var accentColor: Color { accent }
 
     var body: some View {
       NavigationStack {

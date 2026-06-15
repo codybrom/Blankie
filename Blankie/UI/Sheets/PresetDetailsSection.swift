@@ -50,6 +50,7 @@ struct PresetDetailsSection: View {
         AnimatedArtworkPicker(
           artwork: $animatedArtwork,
           staticArtworkPath: $staticArtworkPath,
+          accent: accent,
           onChange: { onEdited?() }
         )
       #endif
