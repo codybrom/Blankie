@@ -262,6 +262,8 @@ import Testing
       "waves_volume",
       "timerLastSelectedHours",
       "timerLastSelectedMinutes",
+      "customSoundSettings",
+      "legacyPreset",
       "unifiedMigrationCompleted",
     ]
 
