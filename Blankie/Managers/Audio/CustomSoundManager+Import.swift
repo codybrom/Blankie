@@ -101,6 +101,7 @@ extension CustomSoundManager {
         context.insert(customSound)
         try context.save()
       }
+      writeMirror(for: customSound)
       copiedURLForCleanup = nil
 
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)

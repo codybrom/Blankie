@@ -144,6 +144,7 @@ class CustomSoundManager {
       )
       let customSound = try await createCustomSoundRecord(from: importData)
       try saveCustomSoundToDatabase(customSound)
+      writeMirror(for: customSound)
       copiedURLForCleanup = nil
 
       // The keeper copy is in CustomSounds. Drop the picker's staged source
@@ -401,6 +402,9 @@ class CustomSoundManager {
     // Custom profiles are keyed by the bare fileName (built-ins use
     // fileName.extension), so delete by the bare key or the profile leaks.
     PlaybackProfileStore.shared.removeProfile(for: fileName)
+    // Drop the file mirror so a stranded sidecar can't resurrect the sound on
+    // the next launch reconcile.
+    removeMirror(fileName: fileName)
 
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isSelected")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
@@ -422,6 +426,8 @@ class CustomSoundManager {
   @MainActor
   func saveContext() throws {
     try modelContext?.save()
+    // Keep every sound's file mirror in step with the store after an edit save.
+    syncAllMirrors()
   }
 
   // MARK: - Migration

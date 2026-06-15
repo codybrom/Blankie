@@ -61,8 +61,14 @@ extension AudioManager {
       Logger.audio.debug("AudioManager: Custom sounds already loaded, skipping reload")
     } else {
       Logger.audio.debug("AudioManager: Loading custom sounds with SwiftData coordination...")
+      // Restore any rows lost to a store rebuild from their file mirror before
+      // loading, so recovered sounds reappear this launch.
+      await CustomSoundManager.shared.reconcileCustomSoundsFromDisk()
       loadCustomSounds()
       hasLoadedCustomSounds = true
+      // Back-fill mirrors for sounds saved before mirroring existed, so existing
+      // libraries gain durability without waiting for an edit.
+      CustomSoundManager.shared.syncAllMirrors()
     }
 
     // Initialize PresetManager with ALL sounds loaded

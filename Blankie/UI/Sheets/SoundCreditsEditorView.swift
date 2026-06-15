@@ -92,6 +92,8 @@ struct SoundCreditsEditorView: View {
           editableCredits.customLicenseUrl.isEmpty ? nil : editableCredits.customLicenseUrl
 
         try modelContext.save()
+        // Refresh the file mirror so edited credits survive a store rebuild.
+        CustomSoundManager.shared.writeMirror(for: data)
       }
     } catch {
       Logger.ui.error("Error saving credits: \(error, privacy: .public)")
