@@ -314,10 +314,10 @@ extension AudioManager {
       // Create customization for the custom sound using individual setters
       let manager = SoundCustomizationManager.shared
 
-      // Only set values that differ from defaults to avoid creating unnecessary customizations
-      if data.title != data.fileName {
-        manager.setCustomTitle(data.title, for: data.fileName)
-      }
+      // Only set values that differ from defaults to avoid creating unnecessary
+      // customizations. Title is omitted on purpose: Sound.title already falls back to
+      // originalTitle (== data.title), so mirroring it here only created a redundant
+      // customTitle that could mask a real one (e.g. a renamed sound from an import).
       if data.systemIconName != "waveform.circle" {
         manager.setCustomIcon(data.systemIconName, for: data.fileName)
       }

@@ -237,8 +237,12 @@ class PresetImporter {
 
     try await importArtwork(for: &preset, from: archiveURL)
 
-    let idMapping = try await importCustomSounds(for: preset, from: archiveURL)
+    // Apply the archive's sound customizations (custom titles, icons, etc.) before
+    // importing the sound files. Importing a sound posts .customSoundAdded, whose
+    // observer auto-creates a customization from the sound's base title — which would
+    // otherwise trip importFromManifest's skip-if-exists guard and drop the real names.
     try await SoundCustomizationImporter.importFromManifest(from: archiveURL)
+    let idMapping = try await importCustomSounds(for: preset, from: archiveURL)
 
     // Imported custom sounds get fresh IDs, so remap the preset's sound states
     if !idMapping.isEmpty {
