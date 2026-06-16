@@ -436,39 +436,63 @@ extension PresetManager {
 
   }
 
+  /// Outcome of deciding which custom-sound states to keep. Pure and `Equatable`
+  /// so the data-loss-critical guard can be unit tested without the singletons.
+  enum CustomSoundCleanupDecision: Equatable {
+    /// No custom rows visible yet presets still reference customs — almost
+    /// certainly a transient load failure this launch, so keep everything.
+    case skipTransient
+    /// The per-preset filtered states, in the same order as the input.
+    case filtered([[PresetState]])
+  }
+
+  /// Pure decision core for `cleanupDeletedCustomSounds`: the transient-failure
+  /// guard and the "loaded UNION rows" valid-set, isolated from the singletons
+  /// so the irreversible-data-loss edges are testable.
+  static func customSoundCleanupDecision(
+    presetStates: [[PresetState]],
+    loadedSoundFileNames: Set<String>,
+    customRowFileNames: Set<String>
+  ) -> CustomSoundCleanupDecision {
+    // getAllCustomSounds() returns [] both for genuinely-empty and for a
+    // transient fetch/container failure. If no customs are visible yet presets
+    // still reference some, that's almost certainly a load failure, not a
+    // deletion — bail rather than strip every custom state irreversibly.
+    let presetsReferenceCustoms = presetStates.contains { states in
+      states.contains { !loadedSoundFileNames.contains($0.fileName) }
+    }
+    if customRowFileNames.isEmpty && presetsReferenceCustoms {
+      return .skipTransient
+    }
+
+    // Valid = loaded sounds UNION the SwiftData rows, so a row that exists but
+    // failed to load as a Sound this launch is still kept.
+    let valid = loadedSoundFileNames.union(customRowFileNames)
+    return .filtered(presetStates.map { states in states.filter { valid.contains($0.fileName) } })
+  }
+
   /// Remove deleted custom sounds from all presets
   @MainActor
   func cleanupDeletedCustomSounds() {
     Logger.presets.debug("PresetManager: Cleaning up deleted custom sounds from presets")
 
-    // getAllCustomSounds() returns [] both for genuinely-empty and for a
-    // transient fetch/container failure. If no customs are visible yet presets
-    // still reference some, that's almost certainly a load failure this launch,
-    // not a deletion — bail rather than strip every custom state irreversibly.
     let customRows = CustomSoundManager.shared.getAllCustomSounds()
-    let presetsReferenceCustoms = presets.contains { preset in
-      preset.soundStates.contains { state in
-        !AudioManager.shared.sounds.contains { $0.fileName == state.fileName }
-      }
-    }
-    if customRows.isEmpty && presetsReferenceCustoms {
+    let decision = Self.customSoundCleanupDecision(
+      presetStates: presets.map(\.soundStates),
+      loadedSoundFileNames: Set(AudioManager.shared.sounds.map(\.fileName)),
+      customRowFileNames: Set(customRows.map(\.fileName))
+    )
+    guard case .filtered(let filteredStates) = decision else {
       Logger.presets.debug(
         "PresetManager: Skipping cleanup - no custom sounds available but presets reference customs (likely a transient load failure)"
       )
       return
     }
 
-    // Valid = loaded sounds UNION the SwiftData rows, so a row that exists but
-    // failed to load as a Sound this launch is still kept.
-    let validSoundFileNames = Set(AudioManager.shared.sounds.map(\.fileName))
-      .union(customRows.map(\.fileName))
-
     // Update each preset to remove invalid sound states
     var didChange = false
-    for (index, preset) in presets.enumerated() {
-      let validSoundStates = preset.soundStates.filter { soundState in
-        validSoundFileNames.contains(soundState.fileName)
-      }
+    for (index, validSoundStates) in filteredStates.enumerated() {
+      let preset = presets[index]
 
       // Only update if there were changes
       if validSoundStates.count != preset.soundStates.count {

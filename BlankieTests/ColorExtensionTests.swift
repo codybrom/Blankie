@@ -45,4 +45,19 @@ import Testing
     #expect(Color.white.contrastingLabel == Color.black)
     #expect(Color.black.contrastingLabel == Color.white)
   }
+
+  /// Pins the 0.5 perceived-brightness cutoff — corner cases (white/black) alone
+  /// don't catch a wrong threshold. A mid-light gray gets black, mid-dark white.
+  @Test func contrastingLabelCutoffBoundary() {
+    #expect(Color(white: 0.6).contrastingLabel == Color.black)
+    #expect(Color(white: 0.4).contrastingLabel == Color.white)
+  }
+
+  /// Pins the luma weighting direction (green ≫ red ≫ blue): pure green is
+  /// "light" (luma 0.587 → black label), pure blue is "dark" (0.114 → white).
+  @Test func contrastingLabelUsesLumaWeights() {
+    #expect(Color(red: 0, green: 1, blue: 0).contrastingLabel == Color.black)
+    #expect(Color(red: 0, green: 0, blue: 1).contrastingLabel == Color.white)
+    #expect(Color(red: 1, green: 0, blue: 0).contrastingLabel == Color.white)
+  }
 }

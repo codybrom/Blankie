@@ -62,18 +62,31 @@ import Testing
     try PresetImporter.shared.validateCompatibility(manifest)  // must not throw
   }
 
-  /// The preset decodes back from the archive with identity and content intact.
+  /// The preset decodes back from the archive with identity AND the full optional
+  /// payload intact — artwork/moods/order/view mode are the fields most likely to
+  /// silently vanish on a CodingKeys change, and they ride this export path.
   @Test func readPresetRoundTrips() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
-    let original = PresetFactory.makePreset(name: "Rainy Night")
+    let artwork = AnimatedArtworkRef(
+      source: .custom, loopPath: "loop.mov", previewPath: "preview.png",
+      squarePreviewPath: "square.png", preferredAspect: "3:4", bundledIdentifier: "rainforest")
+    let original = PresetFactory.makePreset(
+      name: "Rainy Night", animatedArtwork: artwork, staticArtworkPath: "static/art.png",
+      moods: [.sleep, .relax], viewMode: .list, backgroundBlurRadius: 8.0)
     try ArchiveSupport.writeValidArchiveDir(at: dir, preset: original)
 
     let decoded = try await PresetImporter.shared.readPreset(from: dir)
     #expect(decoded.id == original.id)
     #expect(decoded.name == "Rainy Night")
     #expect(decoded.soundStates == original.soundStates)
+    #expect(decoded.soundOrder == original.soundOrder)
     #expect(decoded.accentColorName == original.accentColorName)
+    #expect(decoded.viewMode == original.viewMode)
+    #expect(decoded.backgroundBlurRadius == original.backgroundBlurRadius)
+    #expect(decoded.moods == original.moods)
+    #expect(decoded.animatedArtwork == original.animatedArtwork)
+    #expect(decoded.staticArtworkPath == original.staticArtworkPath)
   }
 
   /// An archive with no sounds directory reports zero custom sounds.

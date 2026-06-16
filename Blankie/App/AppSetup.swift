@@ -191,7 +191,7 @@ struct AppSetup {
   /// Move a persistently-unreadable store (and its `-wal`/`-shm` sidecars) into
   /// a `CorruptedStore` folder beside it. Moved, never deleted, so a future
   /// build or manual tool can still salvage it. Keeps only the most recent copy.
-  private static func quarantineStore(at storeURL: URL) {
+  static func quarantineStore(at storeURL: URL) {
     let fileManager = FileManager.default
     let quarantineDir = storeURL.deletingLastPathComponent()
       .appendingPathComponent("CorruptedStore", isDirectory: true)

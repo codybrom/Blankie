@@ -21,10 +21,16 @@ import Testing
 @Suite(.serialized) @MainActor final class TimerManagerTests {
   private let snapshot = DefaultsSnapshot(["timerLastSelectedHours", "timerLastSelectedMinutes"])
   private let timer = TimerManager.shared
+  private let audioManager = AudioManager.shared
 
-  init() { timer.stopTimer() }
+  init() {
+    timer.stopTimer()
+    audioManager.isGloballyPlaying = false
+  }
   deinit {
     timer.stopTimer()
+    timer.now = { Date() }  // restore the real clock for other suites
+    audioManager.isGloballyPlaying = false
     snapshot.restore()
   }
 
@@ -75,5 +81,62 @@ import Testing
     timer.startTimer(duration: 4500)
     #expect(UserDefaults.shared.integer(forKey: "timerLastSelectedHours") == 1)
     #expect(UserDefaults.shared.integer(forKey: "timerLastSelectedMinutes") == 15)
+  }
+
+  // MARK: - Expiry (deterministic via the injected clock + tick())
+
+  /// Reaching zero deactivates the timer AND pauses global playback — the sleep
+  /// timer's entire purpose. Driven via the injected clock so it's deterministic
+  /// instead of waiting on the 1 Hz run-loop timer.
+  @Test func expiryStopsTimerAndPausesAudio() async {
+    let t0 = Date(timeIntervalSince1970: 1000)
+    timer.now = { t0 }
+    audioManager.isGloballyPlaying = true
+
+    timer.startTimer(duration: 600)
+    timer.now = { t0.addingTimeInterval(601) }
+    timer.tick()  // expiry dispatches a main-actor stop+pause task
+
+    for _ in 0..<100 where timer.isTimerActive { await Task.yield() }
+
+    #expect(!timer.isTimerActive)
+    #expect(timer.remainingTime == 0)
+    #expect(!audioManager.isGloballyPlaying, "expiry pauses playback")
+  }
+
+  /// remainingTime tracks the clock and clamps to zero (never negative).
+  @Test func tickCountsDownAndClampsAtZero() async {
+    let t0 = Date(timeIntervalSince1970: 5000)
+    timer.now = { t0 }
+    timer.startTimer(duration: 600)
+
+    timer.now = { t0.addingTimeInterval(100) }
+    timer.tick()
+    #expect(isClose(timer.remainingTime, 500, tol: 1.0))
+
+    timer.now = { t0.addingTimeInterval(10_000) }
+    timer.tick()
+    #expect(timer.remainingTime == 0)
+
+    for _ in 0..<100 where timer.isTimerActive { await Task.yield() }  // drain expiry task
+  }
+
+  /// A timer re-armed between expiry and the deferred pause task must NOT be
+  /// paused by that stale task (the generation guard).
+  @Test func reArmBeforeDeferredPauseIsNotCancelled() async {
+    let t0 = Date(timeIntervalSince1970: 8000)
+    timer.now = { t0 }
+    audioManager.isGloballyPlaying = true
+
+    timer.startTimer(duration: 600)
+    timer.now = { t0.addingTimeInterval(601) }
+    timer.tick()  // dispatches the stale expiry task (captures the old generation)
+    timer.startTimer(duration: 600)  // re-arm synchronously bumps the generation
+
+    for _ in 0..<100 { await Task.yield() }
+
+    #expect(timer.isTimerActive, "the re-armed timer stays active")
+    #expect(
+      audioManager.isGloballyPlaying, "the stale expiry task must not pause the new session")
   }
 }

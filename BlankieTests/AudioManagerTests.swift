@@ -69,4 +69,38 @@ struct AudioManagerTests {
     #expect(
       !audioManager.isGloballyPlaying, "A play request with no selected sounds must stay paused")
   }
+
+  /// Turning off the LAST selected sound pauses global playback — silence must
+  /// never read as a silent "playing" state (the lock-screen/CarPlay stuck
+  /// transport bug). The pause is dispatched to the main actor, so we await it.
+  @Test func deselectingLastSoundPausesPlayback() async {
+    audioManager.sounds[0].isSelected = true
+    audioManager.updateHasSelectedSounds()
+    audioManager.isGloballyPlaying = true
+
+    audioManager.sounds[0].isSelected = false
+    audioManager.updateHasSelectedSounds()  // dispatches the auto-pause task
+
+    for _ in 0..<100 where audioManager.isGloballyPlaying { await Task.yield() }
+    #expect(!audioManager.isGloballyPlaying)
+
+    audioManager.sounds[0].isSelected = false
+  }
+
+  /// Deselecting one of several selected sounds keeps playback going.
+  @Test func deselectingOneOfManyKeepsPlaying() async {
+    audioManager.sounds[0].isSelected = true
+    audioManager.sounds[1].isSelected = true
+    audioManager.updateHasSelectedSounds()
+    audioManager.isGloballyPlaying = true
+
+    audioManager.sounds[0].isSelected = false
+    audioManager.updateHasSelectedSounds()
+
+    for _ in 0..<20 { await Task.yield() }
+    #expect(audioManager.isGloballyPlaying, "playback continues while a sound stays selected")
+
+    audioManager.isGloballyPlaying = false
+    audioManager.sounds[1].isSelected = false
+  }
 }

@@ -45,4 +45,15 @@ import Testing
   @Test func unknownScriptFallsBackToStandard() {
     #expect(Locale(identifier: "und").scriptCategory == .standard)
   }
+
+  /// Shipped localizations are bare identifiers (no explicit script subtag), so
+  /// the real runtime path relies on implicit script resolution. Exercise it for
+  /// both standard and CJK languages.
+  @Test func bareIdentifiersResolveScriptCategory() {
+    #expect(Locale(identifier: "en").scriptCategory == .standard)
+    #expect(Locale(identifier: "de").scriptCategory == .standard)
+    #expect(Locale(identifier: "ja").scriptCategory == .cjk)
+    #expect(Locale(identifier: "ko").scriptCategory == .cjk)
+    #expect(Locale(identifier: "zh").scriptCategory == .cjk)
+  }
 }
