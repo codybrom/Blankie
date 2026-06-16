@@ -10,13 +10,13 @@ import SwiftUI
 import os
 
 struct SoundIcon: View {
-  @ObservedObject var sound: Sound
-  @ObservedObject var globalSettings = GlobalSettings.shared
-  @ObservedObject var audioManager = AudioManager.shared
+  let sound: Sound
+  let globalSettings = GlobalSettings.shared
+  let audioManager = AudioManager.shared
   #if os(macOS)
     // macOS honors the current preset's accent (see `accentColor`); observe the
     // manager so the grid re-tints when the active preset's color changes.
-    @ObservedObject var presetManager = PresetManager.shared
+    let presetManager = PresetManager.shared
   #endif
   @Environment(\.colorScheme) private var colorScheme
   let maxWidth: CGFloat
@@ -178,10 +178,12 @@ struct SoundIcon: View {
           }
         }
 
+        // Render as a font glyph, not .resizable: SF Symbols keep their built-in
+        // optical centering this way (matching the iOS grid/list). With
+        // .resizable, the raw vector bounds get scaled and some glyphs — e.g.
+        // washer.fill's drum + basket — sit visibly off-center in the tile.
         Image(systemName: sound.systemIconName)
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: configuration.iconSize * 0.64, height: configuration.iconSize * 0.64)
+          .font(.system(size: configuration.iconSize * 0.58))
           .foregroundColor(iconColor)
       }
       .frame(width: configuration.iconSize, height: configuration.iconSize)
@@ -251,15 +253,23 @@ struct SoundIcon: View {
       #endif
 
       if globalSettings.showSoundNames {
-        Text(LocalizedStringKey(sound.title))
-          .font(titleFont)
-          .lineLimit(2)
-          .multilineTextAlignment(.center)
-          .frame(maxWidth: maxWidth - 20, minHeight: 32)  // Consistent padding and height for all sizes
-          .foregroundColor(.primary)
-          .contentShape(Rectangle())
-          // Hide so VoiceOver only reads once
-          .accessibilityHidden(true)
+        HStack(spacing: 4) {
+          Text(LocalizedStringKey(sound.title))
+            .font(titleFont)
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+            .foregroundColor(.primary)
+
+          if sound.isMusic {
+            MusicTagBadge(
+              isActive: sound.isSelected && audioManager.isGloballyPlaying,
+              accentColor: accentColor)
+          }
+        }
+        .frame(maxWidth: maxWidth - 20, minHeight: 32)  // Consistent padding and height for all sizes
+        .contentShape(Rectangle())
+        // Hide so VoiceOver only reads once
+        .accessibilityHidden(true)
       }
     }
   }

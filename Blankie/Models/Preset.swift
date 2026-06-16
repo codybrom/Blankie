@@ -79,8 +79,10 @@ struct Preset: Codable, Identifiable, Equatable {
   /// app-wide `GlobalSettings.showingListView` setting.
   var viewMode: PresetViewMode?
 
-  /// Per-preset override for the background-artwork blur radius (in points).
-  /// `nil` = follow the app-wide `GlobalSettings.backgroundBlurRadius`.
+  /// Legacy per-preset blur override (in points), retained only so older
+  /// presets still decode. Blur is now an all-or-nothing global Display setting
+  /// (`GlobalSettings.backgroundBlurRadius`); this value is no longer applied
+  /// and is cleared when a preset is saved.
   var backgroundBlurRadius: Double?
 
   var accentColor: Color? {

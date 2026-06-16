@@ -7,7 +7,6 @@
 
 import AVFoundation
 import AudioToolbox
-import Combine
 import os
 
 /// Owns the single shared `AVAudioEngine` and its graph. Every `SoundPlayer`
@@ -65,23 +64,16 @@ final class AudioEngineManager {
   /// Config-change observer token, re-bound whenever the engine is recreated.
   var configObserver: NSObjectProtocol?
 
-  private var settingsObservers = Set<AnyCancellable>()
-
   private init() {
     limiter = Self.makeLimiter()
     engine.isAutoShutdownEnabled = true
     observeEngineNotifications()
 
-    // Global volume and mix-with-others apply to the whole mix, so they live
-    // on the main mixer (per-sound updateVolume no longer multiplies them in).
-    GlobalSettings.shared.$volume
-      .combineLatest(
-        GlobalSettings.shared.$mixWithOthers, GlobalSettings.shared.$volumeWithOtherAudio
-      )
-      .sink { [weak self] volume, mixWithOthers, volumeWithOthers in
-        self?.globalVolume = Float(volume) * (mixWithOthers ? Float(volumeWithOthers) : 1)
-      }
-      .store(in: &settingsObservers)
+    // Global volume and mix-with-others apply to the whole mix, so they live on
+    // the main mixer (per-sound updateVolume no longer multiplies them in).
+    // GlobalSettings' setters call applyGlobalVolumeSettings() directly; seed
+    // the initial gain here.
+    applyGlobalVolumeSettings()
   }
 
   /// Recreates the engine + limiter after a media-services reset.
@@ -118,9 +110,16 @@ final class AudioEngineManager {
   /// Idempotent.
   func attach(_ player: SoundPlayer) {
     let key = ObjectIdentifier(player)
-    guard registered[key] == nil else { return }
+    // Trust the registry only while the node is still attached. A teardown can
+    // leave a node detached (engine == nil) with a stale registry entry, and
+    // playing a detached node crashes — so re-wire it instead of no-op'ing.
+    if registered[key] != nil, player.node.engine != nil {
+      return
+    }
 
-    engine.attach(player.node)
+    if player.node.engine == nil {
+      engine.attach(player.node)
+    }
     connectPlayerChain(player)
 
     registered[key] = player
@@ -272,6 +271,27 @@ final class AudioEngineManager {
     }
   }
 
+  /// Pauses hardware I/O once nothing is rendering (graph stays intact;
+  /// `ensureRunning()` restarts on next play). An engine left running — even
+  /// over silence — makes iOS report the app as playing despite rate 0.
+  @discardableResult
+  func pauseIfIdle() -> Bool {
+    guard engine.isRunning else { return false }
+    guard !registered.values.contains(where: { $0.isPlaying }) else { return false }
+
+    pause()
+    return true
+  }
+
+  /// Unconditionally pauses hardware I/O (the post-retry safety net when a
+  /// player still claims to be rendering after a global pause).
+  func pause() {
+    guard engine.isRunning else { return }
+    engine.pause()
+    state = .paused
+    Logger.audio.debug("AudioEngineManager: Paused engine")
+  }
+
   /// Exponential backoff (0.25 · 2^n s, 5 tries); after the cap, reports the
   /// failure and leaves the app paused with controls alive.
   private func scheduleStartRetry() {
@@ -296,7 +316,12 @@ final class AudioEngineManager {
     Task { @MainActor in
       try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
       guard !self.engine.isRunning else { return }
-      self.ensureRunning()
+      // Recovering the engine isn't enough: if we were "playing" while it was
+      // down, nothing rescheduled the sounds, so the lock screen shows rate 1.0
+      // over silence. Resume the (solo-aware) selection once it's back.
+      if self.ensureRunning(), AudioManager.shared.isGloballyPlaying {
+        AudioManager.shared.playSelected()
+      }
     }
   }
 
@@ -306,5 +331,14 @@ final class AudioEngineManager {
   var globalVolume: Float {
     get { engine.mainMixerNode.outputVolume }
     set { engine.mainMixerNode.outputVolume = newValue }
+  }
+
+  /// Recompute the main-mixer gain from the global volume settings. Called
+  /// synchronously by GlobalSettings' volume setters (the settings are mutated
+  /// only through them), keeping the volume slider's response crisp.
+  func applyGlobalVolumeSettings() {
+    let settings = GlobalSettings.shared
+    globalVolume =
+      Float(settings.volume) * (settings.mixWithOthers ? Float(settings.volumeWithOtherAudio) : 1)
   }
 }

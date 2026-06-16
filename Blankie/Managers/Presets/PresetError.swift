@@ -23,13 +23,13 @@ enum PresetError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .invalidPreset:
-      return "The preset is invalid or corrupted"
+      return String(localized: "The preset is invalid or corrupted")
     case .saveFailed:
-      return "Failed to save preset"
+      return String(localized: "Failed to save preset")
     case .loadFailed:
-      return "Failed to load preset"
+      return String(localized: "Failed to load preset")
     case .defaultPresetMissing:
-      return "Default preset is missing"
+      return String(localized: "Default preset is missing")
     }
   }
 }

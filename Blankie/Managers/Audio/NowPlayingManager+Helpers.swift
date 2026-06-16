@@ -16,47 +16,62 @@ extension NowPlayingManager {
   ) {
     // Check if we're in solo mode
     if let soloSound = AudioManager.shared.soloModeSound {
-      // Check if the sound has a creator/credited author
-      let artist: String
-      if let resolvedAuthor = soloSound.creditedAuthor {
-        artist = "Sound by \(resolvedAuthor)"
-      } else {
-        artist = "Blankie"
-      }
+      // Built-in sound authors are shown in the dedicated credits screens, but for user-added sounds show the creator name if available
+      let artist = (soloSound.isCustom ? soloSound.creditedAuthor : nil) ?? "Blankie"
       return (title: soloSound.title, artist: artist)
+    } else if AudioManager.shared.isQuickMix {
+      // Quick Mix has no preset of its own; name it explicitly rather than
+      // letting it fall through to the generic "Custom Mix".
+      let artistInfo = getArtistInfo(creatorName: creatorName)
+      return (title: String(localized: "Quick Mix"), artist: artistInfo)
     } else if let name = presetName {
       // Handle special presets
       let displayTitle: String
-      if name == "Quick Mix (CarPlay)" {
-        displayTitle = "Quick Mix"
-      } else if name != "Default" && !name.starts(with: "Preset ") {
+      if name != "Default" && !name.starts(with: "Preset ") {
         displayTitle = name
       } else {
-        displayTitle = "Custom Mix"
+        displayTitle = String(localized: "Custom Mix")
       }
 
       let artistInfo = getArtistInfo(creatorName: creatorName)
       return (title: displayTitle, artist: artistInfo)
     } else {
       let artistInfo = getArtistInfo(creatorName: creatorName)
-      return (title: "Custom Mix", artist: artistInfo)
+      return (title: String(localized: "Custom Mix"), artist: artistInfo)
     }
   }
 
   private func getArtistInfo(creatorName: String? = nil) -> String {
-    // If creator name is provided, show it first
+    // Creator name wins; otherwise list the sounds currently in the mix.
     if let creator = creatorName {
       return creator
     }
+    return soundNameSummary(currentMixSoundTitles())
+  }
 
-    // Otherwise show active sounds
-    let activeSounds = AudioManager.shared.sounds.filter { $0.isSelected }
-    if !activeSounds.isEmpty {
-      let soundNames = activeSounds.map { $0.title }.joined(separator: ", ")
-      return soundNames
-    } else {
-      return "Blankie"
-    }
+  /// Titles of the sounds currently in the mix, in the preset's display order
+  /// (the same `orderedVisibleSounds` order as the mixer grid), filtered to the
+  /// ones switched on. Selection is the on/off truth — a just-deselected sound
+  /// keeps rendering through its fade-out, so filtering on `isPlaying` would
+  /// leave it listed after the user turned it off.
+  func currentMixSoundTitles() -> [String] {
+    AudioManager.shared.orderedVisibleSounds(for: PresetManager.shared.currentPreset)
+      .filter { $0.isSelected }
+      .map { $0.title }
+  }
+
+  /// One metadata line for the lock screen / CarPlay from the mix's sound names.
+  /// Those labels are system-rendered with no width API and hard-truncate
+  /// mid-word ("Grass St…"). A short mix shows its names in full; once the list
+  /// would overflow a conservative character budget, fall back to a single
+  /// count ("6 sounds") — clean, and trivially localizable as one plural string.
+  func soundNameSummary(_ titles: [String]) -> String {
+    guard !titles.isEmpty else { return "Blankie" }
+    let joined = titles.joined(separator: ", ")
+    let budget = 50
+    // The count branch is only reached with 2+ names, so the plural is safe.
+    if joined.count <= budget || titles.count == 1 { return joined }
+    return String(localized: "\(titles.count) sounds")
   }
 
   func loadCustomArtwork(from data: Data?) -> MPMediaItemArtwork? {
@@ -88,72 +103,54 @@ extension NowPlayingManager {
     }
   #endif
 
-  /// Render a soloed sound's SF Symbol into lock-screen artwork: the app-accent
-  /// glyph centered on a dark card, mirroring the in-app placeholder. Returns
-  /// nil on platforms where it isn't rendered (caller falls back to default).
-  func soloArtwork(for sound: Sound) -> MPMediaItemArtwork? {
+  /// Rasterize the shared `FallbackArtwork` fallback into lock-screen / CarPlay
+  /// artwork. Rendered full-bleed (cornerRadius 0) since the system rounds the
+  /// corners itself.
+  private func fallbackArtworkImage(glyph: FallbackArtwork.Glyph, fraction: CGFloat)
+    -> MPMediaItemArtwork?
+  {
+    let side: CGFloat = 512
+    // Match the library / Now Playing artwork tint: the active preset's accent,
+    // falling back to the app accent (themingPreset is nil during solo / Quick
+    // Mix, so those correctly use the app accent).
+    let accent =
+      PresetManager.shared.themingPreset?.accentColor
+      ?? GlobalSettings.shared.customAccentColor ?? .accentColor
+    let view = FallbackArtwork(
+      glyph: glyph,
+      accent: accent,
+      size: side,
+      cornerRadius: 0,
+      glyphFraction: fraction
+    )
+    let renderer = ImageRenderer(content: view)
+    renderer.scale = 1
+    renderer.isOpaque = true
     #if os(iOS) || os(visionOS)
-      let side: CGFloat = 512
-      let accent = UIColor(GlobalSettings.shared.customAccentColor ?? Color.accentColor)
-      let config = UIImage.SymbolConfiguration(pointSize: side * 0.4, weight: .regular)
-      guard
-        let symbol = UIImage(systemName: sound.systemIconName, withConfiguration: config)?
-          .withTintColor(accent, renderingMode: .alwaysOriginal)
-      else { return nil }
-
-      let format = UIGraphicsImageRendererFormat.preferred()
-      format.opaque = true
-      let renderer = UIGraphicsImageRenderer(
-        size: CGSize(width: side, height: side), format: format)
-      let image = renderer.image { _ in
-        UIColor(white: 0.11, alpha: 1).setFill()
-        UIRectFill(CGRect(x: 0, y: 0, width: side, height: side))
-        let target = symbol.size
-        symbol.draw(at: CGPoint(x: (side - target.width) / 2, y: (side - target.height) / 2))
-      }
+      guard let image = renderer.uiImage else { return nil }
+      return Self.makeArtwork(from: image)
+    #elseif os(macOS)
+      guard let image = renderer.nsImage else { return nil }
       return Self.makeArtwork(from: image)
     #else
       return nil
     #endif
   }
 
+  /// A soloed sound's lock-screen artwork: its SF Symbol in the accent on the
+  /// dark tinted card, mirroring the in-app placeholder.
+  func soloArtwork(for sound: Sound) -> MPMediaItemArtwork? {
+    fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
+  }
+
+  /// The fallback shown when a preset/mix has no custom or animated artwork:
+  /// Quick Mix → grid, "All Blankie Sounds" → the Blankie mark, a custom preset
+  /// → a montage of its playing sounds — matching the preset's library tile.
   func loadArtwork() -> MPMediaItemArtwork? {
-    #if os(iOS) || os(visionOS)
-      let side: CGFloat = 512
-      let accent = GlobalSettings.shared.customAccentColor
-      let accentColor = accent ?? Color.accentColor
-
-      // Render the same BrandedBlankieIcon view used in-app so the palette
-      // gradient and inner circles look identical on the lock screen / CarPlay.
-      let card = ZStack {
-        Color(white: 0.11)
-        BrandedBlankieIcon(size: side * 0.5, color: accentColor)
-      }
-      .frame(width: side, height: side)
-
-      let renderer = ImageRenderer(content: card)
-      renderer.scale = 1
-      renderer.isOpaque = true
-      guard let image = renderer.uiImage else { return nil }
-      return Self.makeArtwork(from: image)
-    #elseif os(macOS)
-      let side: CGFloat = 512
-      let accent = GlobalSettings.shared.customAccentColor
-      let accentColor = accent ?? Color.accentColor
-
-      let card = ZStack {
-        Color(white: 0.11)
-        BrandedBlankieIcon(size: side * 0.5, color: accentColor)
-      }
-      .frame(width: side, height: side)
-
-      let renderer = ImageRenderer(content: card)
-      renderer.scale = 1
-      renderer.isOpaque = true
-      guard let image = renderer.nsImage else { return nil }
-      return Self.makeArtwork(from: image)
-    #else
-      return nil
-    #endif
+    let glyph = FallbackArtwork.Glyph.playback(
+      isQuickMix: AudioManager.shared.isQuickMix,
+      isDefaultPreset: PresetManager.shared.currentPreset?.isDefault ?? true,
+      icons: AudioManager.shared.playingSoundIcons())
+    return fallbackArtworkImage(glyph: glyph, fraction: 0.5)
   }
 }

@@ -12,8 +12,8 @@ struct SoundSelectionView: View {
   let orderedSounds: [Sound]
   let editingPreset: Preset?
   @Environment(\.dismiss) private var dismiss
-  @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var presetManager = PresetManager.shared
+  private let audioManager = AudioManager.shared
+  private let presetManager = PresetManager.shared
 
   private func handleSoundToggle(_ sound: Sound) {
     let isEditingActivePreset = editingPreset?.id == presetManager.currentPreset?.id
@@ -66,9 +66,13 @@ struct SoundSelectionView: View {
         ScrollView {
           LazyVStack(spacing: 0) {
             ForEach(orderedSounds, id: \.id) { sound in
-              macRow(for: sound)
-              if sound.id != orderedSounds.last?.id {
-                Divider().padding(.leading, 52)
+              // Wrap row + inter-row divider so each ForEach element yields one
+              // view (constant child count), instead of a bare trailing if.
+              VStack(spacing: 0) {
+                macRow(for: sound)
+                if sound.id != orderedSounds.last?.id {
+                  Divider().padding(.leading, 52)
+                }
               }
             }
           }
@@ -77,7 +81,7 @@ struct SoundSelectionView: View {
       .frame(minWidth: 380, minHeight: 440)
       .navigationTitle("Sounds")
       .toolbar {
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItem(placement: .automatic) {
           Button("Clear All") { handleClearAll() }
             .disabled(selectedSounds.isEmpty)
             .tint(Color.primary)
@@ -138,8 +142,9 @@ struct SoundSelectionView: View {
 
         SoundCreditInfoButton(sound: sound, accent: editingPreset?.accentColor)
 
-        Image(systemName: isRowSelected ? "checkmark" : "")
+        Image(systemName: "checkmark")
           .foregroundStyle(.tint)
+          .opacity(isRowSelected ? 1 : 0)
           .accessibilityHidden(true)
       }
     }

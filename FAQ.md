@@ -21,13 +21,13 @@ There are several ways to get started:
    - Visit the [Blankie cask page on brew.sh](https://formulae.brew.sh/cask/blankie) for more information
 
 3. **Direct Download**
-   - Download the latest .zip from the [Releases](https://github.com/codybrom/blankie/releases) on GitHub
+   - Download `Blankie.zip` from the newest version on the [Releases](https://github.com/codybrom/blankie/releases) page on GitHub
    - Copy the app to your Applications folder
    - Open Blankie and click a sound to start!
 
 4. **TestFlight (Beta Versions)**
 
-   Get early access to new features — and try Blankie for iPhone, iPad, and CarPlay (new in 1.1, coming to the App Store soon) — by joining our [TestFlight Public Beta](https://testflight.apple.com/join/XgpBpWv8)
+   Get early access to new features, and try Blankie for iPhone and iPad with CarPlay (new in Blankie 2, coming to the App Store soon), by joining our [TestFlight Public Beta](https://testflight.apple.com/join/XgpBpWv8)
 
 ## Is Blankie free?
 
@@ -55,7 +55,7 @@ Even if you don't write code, Blankie being open source benefits you in several 
 
 - **Freedom:** The open source MIT license means Blankie is free to use without cost or restrictions, today and in the future. It also means you can make your own version of Blankie or reuse portions of its code in your own projects (as long as you follow the license terms).
 
-Blankie's complete source code, including both the macOS app and this entire website, is available on [GitHub](https://github.com/codybrom/blankie) for anyone to explore, use, or contribute to.
+Blankie's complete source code, including both the Blankie app and this entire website, is available on [GitHub](https://github.com/codybrom/blankie) for anyone to explore, use, or contribute to.
 
 ## Is Blankie available in my language?
 
@@ -112,46 +112,45 @@ Check out our [Contributing guide](/CONTRIBUTING.md) for more information on how
 
 Yes! Presets store active sounds and their volume levels. You can save and load different combinations as presets. If you don't have any presets saved, Blankie will load whatever sounds were active when you last closed the app.
 
-To save a preset, click the "Presets" dropdown in the titlebar, and then click "New Preset". When you create your first preset, Blankie will automatically copy your current sound settings to it. Any changes you make to an active preset's sounds or volumes are saved immediately. There's no need to manually save your changes.
+To create a preset, go to your library and tap the + icon and choose New Preset. Choose your favorite sounds, then give it a name and hit done.
 
-To rename or delete a preset, click the "Presets" dropdown in the titlebar, and then click either the pencil or trash icon next to the preset you want to edit.
+To rename or delete a preset, you can open the preset editor while you're listening to it or use the Edit option on the library list.
 
 ## Can I add my own sounds?
 
-Yes! As of Blankie 1.1 you can import your own audio files and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins.
+Yes! As of Blankie 2.0 you can import your own audio files and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins.
 
 ## What customization options are available?
 
 - Import your own sounds and give any sound a custom SF Symbol icon
 - Give each preset its own accent color and Now Playing artwork
 - Set a grid or list layout for your sounds (iOS Only)
-- Star presets as favorites (iOS Only)
-- Set a sleep timer to stop playback automatically (iOS Only)
+- Star presets as favorites
+- Set a sleep timer to stop playback automatically
 - Set whether to auto-play on launch
 
-## Where can I find keyboard shortcuts?
+## Where can I find keyboard shortcuts for Mac?
 
-Access the full list of keyboard shortcuts from the "Keyboard Shortcuts" panel in the Titlebar menu.
+On your mac, open the Help menu and choose "Keyboard Shortcuts" for the full list.
 
-## How do I access Preferences?
+## How do I get to Settings?
 
-Open Preferences through either:
+Open Settings two ways:
 
-- The Settings menu in your Mac's menubar under Blankie
-- The titlebar menu
+- The Blankie menu in your Mac's menu bar (Blankie → Settings)
+- The gear in the sidebar footer
 
 ## What is the difference between Blankie and Blanket?
 
-Blankie is a native app for Apple platforms inspired by Blanket, but it's completely separate and independently developed:
+Blankie is a native app for Apple platforms inspired by Blanket. It uses some of the same openly licensed sounds but is completely separate and independently developed:
 
-- Built for macOS, iPhone, iPad, and CarPlay using Swift and SwiftUI
-- Designed to feel native across Mac, iPhone, and iPad
-- Built with different sound mixing and playback technology
-- Independent codebase (though we use some of the same openly licensed sounds)
+- Native apps for Mac, iPhone and iPad written in Swift
+- Different sound mixing and playback technology
+- Different features and developers
 
 ## Does Blankie collect any data?
 
-No. Blankie doesn't collect any data or connect to the internet. When distributed through Apple's platforms, Apple provides basic anonymous statistics about downloads and crashes, but the app itself never collects or transmits any data. See our [Privacy Policy](https://blankie.rest/privacy) for more details.
+No. Blankie never collects any user data, usage analytics or identifiers that can be used to track you. Blankie never transmits any information about you. The only time Blankie connects to the internet is to download animated artwork from Apple's servers (not Blankie's), which sends no personal data. When you download Blankie from one of Apple's platforms, Apple collects basic anonymous statistics about downloads and crashes, some of which may be shared with us but without any ability to identify you. See our [Privacy Policy](https://blankie.rest/privacy) for more details.
 
 ## I found a bug. How do I report it?
 

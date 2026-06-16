@@ -4,12 +4,11 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 1.1.x   | ✅        |
-| 1.0.x   | ✅        |
-| < 1.0   | ❌        |
+| 2.0.x   | ✅        |
+| < 2.0   | ❌        |
 
-Security fixes ship in the latest release on the App Store and Homebrew.
-Older versions are not patched individually.
+Security fixes ship in the latest release on the App Store and Homebrew. Update
+to the current 2.x release to stay covered. Older versions are no longer maintained.
 
 ## Reporting a Vulnerability
 

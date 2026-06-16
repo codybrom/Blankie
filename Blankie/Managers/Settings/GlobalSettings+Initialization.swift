@@ -23,9 +23,23 @@ extension GlobalSettings {
       customAccentColor = nil
     }
 
-    // Default to false for autoPlayOnLaunch if not set (safer default)
-    autoPlayOnLaunch =
-      UserDefaults.shared.object(forKey: UserDefaultsKeys.autoPlayOnLaunch) as? Bool ?? false
+    // Autoplay is macOS-only (stored under autoPlayOnLaunchMac); on first launch
+    // after the rename, carry the legacy autoPlayOnLaunch value forward.
+    #if os(macOS)
+      if let mac = UserDefaults.shared.object(forKey: UserDefaultsKeys.autoPlayOnLaunchMac) as? Bool
+      {
+        autoPlayOnLaunch = mac
+      } else if let legacy = UserDefaults.shared.object(forKey: UserDefaultsKeys.autoPlayOnLaunch)
+        as? Bool
+      {
+        autoPlayOnLaunch = legacy
+        UserDefaults.shared.set(legacy, forKey: UserDefaultsKeys.autoPlayOnLaunchMac)
+      } else {
+        autoPlayOnLaunch = false
+      }
+    #else
+      autoPlayOnLaunch = false
+    #endif
 
     // Show labels preference (default to true)
     showSoundNames =
@@ -43,9 +57,9 @@ extension GlobalSettings {
     // Show list view preference (default to false - grid view)
     showingListView = UserDefaults.shared.bool(forKey: UserDefaultsKeys.showingListView)
 
-    // Show progress border preference (default to false)
+    // Show progress border preference (default to true)
     showProgressBorder =
-      UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? false
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? true
 
     // Lock portrait orientation on iOS preference (default to false)
     lockPortraitOrientationiOS =
@@ -81,7 +95,8 @@ extension GlobalSettings {
     menuBarOnlyMode =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.menuBarOnlyMode) as? Bool ?? false
     hideDockWhenWindowClosed =
-      UserDefaults.shared.object(forKey: UserDefaultsKeys.hideDockWhenWindowClosed) as? Bool ?? false
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.hideDockWhenWindowClosed) as? Bool
+      ?? false
 
     // App-wide default lock screen animation (used when a preset has none).
     if let data = UserDefaults.shared.data(forKey: UserDefaultsKeys.defaultLockScreenArtwork),
@@ -132,14 +147,17 @@ extension GlobalSettings {
   }
 
   func migrateLegacySettings() {
-    // Migration: Convert old alwaysStartPaused setting to new autoPlayOnLaunch setting
-    if let oldValue = UserDefaults.shared.object(forKey: "alwaysStartPaused") as? Bool {
-      Logger.settings.debug(
-        "GlobalSettings: Migrating alwaysStartPaused(\(oldValue)) to autoPlayOnLaunch(\(!oldValue))"
-      )
-      autoPlayOnLaunch = !oldValue  // Flip the logic
-      UserDefaults.shared.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunch)
-      UserDefaults.shared.removeObject(forKey: "alwaysStartPaused")  // Remove old key
-    }
+    #if os(macOS)
+      // `alwaysStartPaused` is a legacy key that predates `autoPlayOnLaunch` and stores the opposite
+      // value. When present, its inverse overrides the value loadBasicSettings
+      // already carried forward.
+      if let oldValue = UserDefaults.shared.object(forKey: "alwaysStartPaused") as? Bool {
+        autoPlayOnLaunch = !oldValue
+        UserDefaults.shared.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunchMac)
+        UserDefaults.shared.removeObject(forKey: "alwaysStartPaused")
+      }
+      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.autoPlayOnLaunch)
+    #endif
+    // iOS purges the legacy autoplay keys via AppDataMigrator's obsoleteKeys.
   }
 }

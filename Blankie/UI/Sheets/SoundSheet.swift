@@ -34,6 +34,7 @@ struct SoundSheet: View {
   @State var loopSound: Bool = true
   @State var fadeSound: Bool = true
   @State var isPresetUseOnly: Bool = false
+  @State var isMusic: Bool = false
   @State var isPreviewing: Bool = false
   @State var previewSound: Sound?
   @State var previewProgress: Double = 0
@@ -47,6 +48,9 @@ struct SoundSheet: View {
   /// custom preset), plus an optional fresh "<Name> Mix" preset.
   @State var addToPresetIDs: Set<UUID> = []
   @State var createMixPreset: Bool = false
+  /// Import only: re-encode the picked file to AAC. User-toggled for eligible
+  /// files; forced by file size for very large ones (see CustomSoundManager).
+  @State var convertToAACOnImport: Bool = false
 
   // Track initial values to detect changes
   @State var initialSoundName: String = ""
@@ -57,6 +61,7 @@ struct SoundSheet: View {
   @State var initialLoopSound: Bool = true
   @State var initialFadeSound: Bool = true
   @State var initialIsPresetUseOnly: Bool = false
+  @State var initialIsMusic: Bool = false
 
   let isFilePreselected: Bool
   let embedInNavigation: Bool
@@ -85,6 +90,7 @@ struct SoundSheet: View {
       _loopSound = State(initialValue: values.loopSound)
       _fadeSound = State(initialValue: values.fadeSound)
       _isPresetUseOnly = State(initialValue: values.isPresetUseOnly)
+      _isMusic = State(initialValue: values.isMusic)
       _initialSoundName = State(initialValue: values.initialSoundName)
       _initialSelectedIcon = State(initialValue: values.initialSelectedIcon)
       _initialRandomizeStartPosition = State(
@@ -94,6 +100,7 @@ struct SoundSheet: View {
       _initialLoopSound = State(initialValue: values.initialLoopSound)
       _initialFadeSound = State(initialValue: values.initialFadeSound)
       _initialIsPresetUseOnly = State(initialValue: values.initialIsPresetUseOnly)
+      _initialIsMusic = State(initialValue: values.initialIsMusic)
     }
   }
 
@@ -157,6 +164,7 @@ struct SoundSheet: View {
           loopSound: $loopSound,
           fadeSound: $fadeSound,
           isPresetUseOnly: $isPresetUseOnly,
+          isMusic: $isMusic,
           soundName: $soundName,
           selectedIcon: $selectedIcon,
           startPreview: startPreview,

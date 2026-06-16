@@ -13,9 +13,9 @@ import UniformTypeIdentifiers
     @Binding var showingShortcuts: Bool
 
     @ObservedObject private var appState = AppState.shared
-    @ObservedObject var audioManager = AudioManager.shared
-    @ObservedObject var globalSettings = GlobalSettings.shared
-    @StateObject private var presetManager = PresetManager.shared
+    let audioManager = AudioManager.shared
+    let globalSettings = GlobalSettings.shared
+    @State private var presetManager = PresetManager.shared
 
     @State private var showingTimerPopover = false
     @State private var showingSpatialMixer = false
@@ -91,6 +91,15 @@ import UniformTypeIdentifiers
       !audioManager.isGloballyPlaying && !audioManager.hasSelectedSounds
     }
 
+    /// A status strip sized to the banner's natural height (a hidden banner
+    /// fixes it) so the visible banner can animate in/out without reflowing the
+    /// grid. Used at the top (with the banner overlaid) and bottom (empty, for
+    /// symmetry) — no magic-number height.
+    private var reservedStatusStrip: some View {
+      statusBanner("Playback Paused", systemImage: "pause.circle.fill")
+        .hidden()
+    }
+
     /// Top-of-window strip explaining why nothing is audible; tint at the call
     /// site.
     private func statusBanner(_ title: LocalizedStringKey, systemImage: String) -> some View {
@@ -109,26 +118,42 @@ import UniformTypeIdentifiers
 
     var body: some View {
       VStack(spacing: 0) {
-        // Silence explained: an empty selection wins over the paused state
-        // (play alone can't help there), accent-tinted to draw the eye.
-        // Suppressed while Settings holds the pane — the banner explains the
-        // grid, which isn't on screen (like the toolbar's mixer actions).
-        if !appState.showingSettingsPane {
-          if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds {
-            statusBanner("No Sounds Playing", systemImage: "speaker.slash.circle.fill")
-              .foregroundStyle(activeAccent)
-          } else if !audioManager.isGloballyPlaying {
-            statusBanner("Playback Paused", systemImage: "pause.circle.fill")
-              .foregroundStyle(.secondary)
+        // Status strip with reserved height so the banner animates in/out
+        // without reflowing the grid (an animated grid/ScrollView resize flashes
+        // a scrollbar, and shifts the sound icons). The banner is an overlay on
+        // a hidden sizing copy; the strip is mirrored at the bottom for balance.
+        //
+        // Silence explained: an empty selection wins over the paused state (play
+        // alone can't help there), accent-tinted to draw the eye. Both are
+        // suppressed while Settings holds the pane (the banner explains the grid,
+        // which isn't on screen) and while presets load (currentPreset is nil and
+        // nothing is selected yet, so it would briefly read "No Sounds Playing").
+        reservedStatusStrip
+          .overlay {
+            if !appState.showingSettingsPane, !presetManager.isLoading {
+              if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds {
+                statusBanner("No Sounds Playing", systemImage: "speaker.slash.circle.fill")
+                  .foregroundStyle(activeAccent)
+                  .transition(.opacity)
+              } else if !audioManager.isGloballyPlaying {
+                statusBanner("Playback Paused", systemImage: "pause.circle.fill")
+                  .foregroundStyle(.secondary)
+                  .transition(.opacity)
+              }
+            }
           }
-        }
 
         // Main content: Settings takes over the pane while the sidebar gear is
         // active; the spatial mixer replaces the grid while toggled on
         // (preset mode only); solo mode swaps the grid for one large icon with
         // no volume slider (mirrors MixerView's soloModeView); otherwise the
         // shared long-press lift-and-reorder grid with SoundIcon tiles.
-        if appState.showingSettingsPane {
+        if presetManager.isLoading {
+          // Until the restore completes, currentPreset is nil and the grid would
+          // flash the full default sound set. Show nothing over the window
+          // material; the grid appears once the restored preset is applied.
+          Color.clear
+        } else if appState.showingSettingsPane {
           SettingsView(isPane: true)
             .transition(.opacity)
         } else if showingSpatialMixer, spatialEntryAvailable {
@@ -154,6 +179,9 @@ import UniformTypeIdentifiers
           .frame(maxHeight: .infinity)
         }
 
+        // Mirror of the top status strip so the grid stays vertically centered.
+        reservedStatusStrip
+
         // App bar
         VStack(spacing: 0) {
           Rectangle()
@@ -173,11 +201,8 @@ import UniformTypeIdentifiers
                   .frame(width: 50, height: 50)
 
                 Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 20, height: 20)
+                  .font(.system(size: 20))
                   .foregroundColor(playButtonDisabled ? .secondary : activeAccent)
-                  .offset(x: audioManager.isGloballyPlaying ? 0 : 2)
               }
             }
             .buttonStyle(.borderless)
@@ -208,9 +233,7 @@ import UniformTypeIdentifiers
               // setups — same idea as Music/Spotify's in-app volume).
               HStack(spacing: 8) {
                 Image(systemName: "speaker.wave.2.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 16, height: 16)
+                  .font(.system(size: 16))
                   .foregroundColor(.secondary)
                   .accessibilityHidden(true)
 
@@ -240,9 +263,7 @@ import UniformTypeIdentifiers
                 showingColorPicker.toggle()
               }) {
                 Image(systemName: "paintpalette.fill")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(width: 20, height: 20)
+                  .font(.system(size: 20))
                   .foregroundColor(.primary)
               }
               .buttonStyle(.borderless)
@@ -311,7 +332,8 @@ import UniformTypeIdentifiers
                 }
               }
             } label: {
-              Image(systemName: onDefaultPreset ? "square.and.pencil" : "slider.vertical.3")
+              Image(
+                systemName: onDefaultPreset ? "rectangle.stack.badge.plus" : "slider.vertical.3")
             }
             .accessibilityLabel(
               audioManager.soloModeSound != nil
@@ -449,8 +471,9 @@ import UniformTypeIdentifiers
           complete.append(fileName)
         }
         audioManager.defaultSoundOrder = complete
-        UserDefaults.standard.set(complete, forKey: "defaultSoundOrder")
-        audioManager.objectWillChange.send()
+        // Must match the suite the order is read back from at launch
+        // (UserDefaults.shared / app group); .standard silently reverts.
+        UserDefaults.shared.set(complete, forKey: "defaultSoundOrder")
       }
     }
 
@@ -467,7 +490,7 @@ import UniformTypeIdentifiers
   /// this modifier, not the whole ContentView body (mirrors iOS, which scopes
   /// the observation to NowPlayingBar).
   private struct WindowSubtitleModifier: ViewModifier {
-    @ObservedObject private var timerManager = TimerManager.shared
+    private let timerManager = TimerManager.shared
     let spatialMixerActive: Bool
 
     func body(content: Content) -> some View {
@@ -489,7 +512,7 @@ import UniformTypeIdentifiers
   /// Bottom-bar sleep timer button. Owns the TimerManager observation so timer
   /// ticks re-render just this button (for the active tint), not ContentView.
   private struct SleepTimerButton: View {
-    @ObservedObject private var timerManager = TimerManager.shared
+    private let timerManager = TimerManager.shared
     let activeAccent: Color
     @Binding var showingPopover: Bool
 
@@ -498,9 +521,7 @@ import UniformTypeIdentifiers
         showingPopover.toggle()
       }) {
         Image(systemName: "timer")
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(width: 20, height: 20)
+          .font(.system(size: 20))
           .foregroundColor(timerManager.isTimerActive ? activeAccent : .primary)
       }
       .buttonStyle(.borderless)
@@ -511,15 +532,10 @@ import UniformTypeIdentifiers
     }
   }
 
-  struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-      Group {
-        ContentView(
-          showingShortcuts: .constant(false)
-        )
-        .frame(width: 600, height: 400)
-      }
-      .previewDisplayName("Blankie")
-    }
+  #Preview("Blankie") {
+    ContentView(
+      showingShortcuts: .constant(false)
+    )
+    .frame(width: 600, height: 400)
   }
 #endif

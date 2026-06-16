@@ -11,9 +11,10 @@ import SwiftUI
 import os
 
 extension AudioManager {
-  /// Toggles the playback state of all selected sounds
-  @MainActor func togglePlayback() {
-    setGlobalPlaybackState(!isGloballyPlaying)
+  /// Toggles the playback state of all selected sounds; `pauseFadeDuration`
+  /// overrides the fade-out ramp when the toggle pauses.
+  @MainActor func togglePlayback(pauseFadeDuration: TimeInterval? = nil) {
+    setGlobalPlaybackState(!isGloballyPlaying, pauseFadeDuration: pauseFadeDuration)
   }
 
   @MainActor
@@ -65,38 +66,12 @@ extension AudioManager {
     }
   }
 
+  /// Async shim retained for the macOS screenshot path. Forwards to
+  /// `setGlobalPlaybackState` so there is a single playback-state authority with
+  /// the no-selected-sounds coercion — never a second, weaker copy.
   func setPlaybackState(_ playing: Bool, forceUpdate: Bool = false) {
     Task { @MainActor [weak self] in
-      guard let self = self else { return }
-
-      guard !self.isInitializing || forceUpdate else {
-        Logger.audio.debug("AudioManager: Ignoring setPlaybackState during initialization")
-        return
-      }
-
-      if self.isGloballyPlaying != playing {
-        Logger.audio.debug(
-          "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
-        )
-        self.isGloballyPlaying = playing
-
-        if playing {
-          self.playSelected()
-        } else {
-          self.pauseAll()
-        }
-        let currentPreset = PresetManager.shared.currentPreset
-        self.nowPlayingManager.updateInfo(
-          preset: currentPreset,
-          presetName: currentPreset?.name,
-          creatorName: currentPreset?.creatorName,
-          artworkId: currentPreset?.artworkId,
-          isPlaying: playing
-        )
-      } else {
-        Logger.audio.debug(
-          "AudioManager: setPlaybackState called, but state is the same \(playing), ignoring")
-      }
+      self?.setGlobalPlaybackState(playing, forceUpdate: forceUpdate)
     }
   }
 
@@ -155,20 +130,59 @@ extension AudioManager {
     }
   }
 
-  func pauseAll() {
+  /// `fadeDuration` overrides the fade-out ramp (remote pauses pass zero);
+  /// nil uses the standard `Sound.fadeDuration`.
+  func pauseAll(fadeDuration: TimeInterval? = nil) {
     Logger.audio.debug("AudioManager: Pausing all selected sounds")
 
     for sound in sounds where sound.isSelected {
-      sound.pause()
+      sound.pause(fadeDuration: fadeDuration)
     }
 
     // Note: We intentionally do NOT deactivate the audio session here
     // This keeps the Now Playing controls visible on lock screen/control center
     // The session will be deactivated when appropriate (background, termination, etc.)
+
+    scheduleEngineIdlePause(afterFade: fadeDuration ?? Sound.fadeDuration)
   }
 
+  /// After the pause fade-outs land, idles the engine and does the single
+  /// paused publish (held until then — see performNowPlayingUpdate). The
+  /// session stays active so the system controls remain visible.
+  private func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
+    Task { @MainActor [weak self] in
+      // Zero-length fades pause their nodes synchronously inside pauseAll,
+      // so the engine can idle in this same runloop turn — don't sleep.
+      if fadeDuration > 0 {
+        try? await Task.sleep(for: .seconds(fadeDuration + 0.1))
+      }
+      // Retry past straggling fades rather than leave the system UI stuck.
+      for _ in 0..<8 {
+        guard let self, !self.isGloballyPlaying, self.previewModeSound == nil else { return }
+        // Already idle (an earlier pause's task won): that pass published.
+        guard AudioEngineManager.shared.engine.isRunning else { return }
+        if AudioEngineManager.shared.pauseIfIdle() {
+          self.nowPlayingManager.republishCurrentPreset()
+          return
+        }
+        try? await Task.sleep(for: .seconds(0.15))
+      }
+      // Safety net: a player still claims to be rendering after every retry.
+      // Globally paused is the truth — force the pause rather than strand the
+      // system UI on "playing" (the original stuck-button bug).
+      guard let self, !self.isGloballyPlaying, self.previewModeSound == nil else { return }
+      Logger.audio.error("AudioManager: Engine never idled after pause; forcing engine pause")
+      AudioEngineManager.shared.pause()
+      self.nowPlayingManager.republishCurrentPreset()
+    }
+  }
+
+  /// `pauseFadeDuration` overrides the fade-out ramp when pausing (remote
+  /// commands pass `Sound.remotePauseFadeDuration`); ignored on play.
   @MainActor
-  public func setGlobalPlaybackState(_ playing: Bool, forceUpdate: Bool = false) {
+  public func setGlobalPlaybackState(
+    _ playing: Bool, forceUpdate: Bool = false, pauseFadeDuration: TimeInterval? = nil
+  ) {
     guard !isInitializing || forceUpdate else {
       Logger.audio.debug("AudioManager: Ignoring setPlaybackState during initialization")
       return
@@ -178,14 +192,23 @@ extension AudioManager {
       "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
     )
 
+    // There is nothing to play with no selected sounds (and no solo), so coerce
+    // any such request to paused. In-app buttons already gate on this; remote
+    // commands (lock screen / Control Center / CarPlay) did not, which let the
+    // app advertise rate 1.0 over silence and read as "playing" with no sound.
+    let shouldPlay = playing && (soloModeSound != nil || hasSelectedSounds)
+    if playing && !shouldPlay {
+      Logger.audio.debug("AudioManager: Ignoring play request with no selected sounds")
+    }
+
     // Update state first
-    isGloballyPlaying = playing
+    isGloballyPlaying = shouldPlay
 
     // Then handle playback
-    if playing {
+    if shouldPlay {
       playSelected()
     } else {
-      pauseAll()
+      pauseAll(fadeDuration: pauseFadeDuration)
     }
 
     // Always update Now Playing info with full preset details
@@ -205,6 +228,21 @@ extension AudioManager {
         artworkId: currentPreset?.artworkId,
         isPlaying: isGloballyPlaying
       )
+    }
+  }
+
+  // MARK: - Music Exclusivity
+
+  /// Enforces the one-music-per-preset rule: when `keep` is selected, every
+  /// other selected music sound is deselected (fades out) so the mix holds at
+  /// most one music sound at a time (last selected wins). Applies to Quick Mix
+  /// too. No-op during preset apply / solo, which manage selection themselves.
+  func deselectOtherMusicSounds(except keep: Sound) {
+    guard soloModeSound == nil, !isApplyingPresetStates else { return }
+    for sound in sounds where sound.id != keep.id && sound.isSelected && sound.isMusic {
+      Logger.audio.debug(
+        "AudioManager: Music '\(sound.fileName)' yields the slot to '\(keep.fileName)'")
+      sound.isSelected = false
     }
   }
 

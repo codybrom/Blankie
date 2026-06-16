@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Observation
 import SwiftUI
 import os
 
@@ -19,6 +20,7 @@ struct SoundCustomization: Codable, Identifiable {
   var loopSound: Bool?  // nil = default (true), false = play once and deselect
   var fadeSound: Bool?  // nil = default (true), false = hard cut on play/pause
   var isPresetUseOnly: Bool?  // nil = default (false), true = hidden outside presets
+  var isMusic: Bool?  // nil = default (sound's JSON value), overrides the music tag
 
   // Audio normalization settings
   var normalizeAudio: Bool?
@@ -28,7 +30,7 @@ struct SoundCustomization: Codable, Identifiable {
     fileName: String, customTitle: String? = nil, customIconName: String? = nil,
     randomizeStartPosition: Bool? = nil,
     normalizeAudio: Bool? = nil, volumeAdjustment: Float? = nil, loopSound: Bool? = nil,
-    fadeSound: Bool? = nil, isPresetUseOnly: Bool? = nil
+    fadeSound: Bool? = nil, isPresetUseOnly: Bool? = nil, isMusic: Bool? = nil
   ) {
     self.id = UUID()
     self.fileName = fileName
@@ -40,6 +42,7 @@ struct SoundCustomization: Codable, Identifiable {
     self.loopSound = loopSound
     self.fadeSound = fadeSound
     self.isPresetUseOnly = isPresetUseOnly
+    self.isMusic = isMusic
   }
 
   /// Returns the effective title (custom or original)
@@ -56,15 +59,16 @@ struct SoundCustomization: Codable, Identifiable {
   var hasCustomizations: Bool {
     return customTitle != nil || customIconName != nil
       || randomizeStartPosition != nil || normalizeAudio != nil || volumeAdjustment != nil
-      || loopSound != nil || fadeSound != nil || isPresetUseOnly != nil
+      || loopSound != nil || fadeSound != nil || isPresetUseOnly != nil || isMusic != nil
   }
 }
 
 /// Manager for built-in sound customizations
-class SoundCustomizationManager: ObservableObject {
+@Observable
+class SoundCustomizationManager {
   static let shared = SoundCustomizationManager()
 
-  @Published private var customizations: [String: SoundCustomization] = [:]
+  private var customizations: [String: SoundCustomization] = [:]
 
   private let userDefaultsKey = "soundCustomizations"
 
@@ -199,6 +203,20 @@ class SoundCustomizationManager: ObservableObject {
     saveCustomizationsInternal()
   }
 
+  /// Set music tag for a sound
+  func setMusic(_ music: Bool?, for fileName: String) {
+    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
+    customization.isMusic = music
+
+    if customization.hasCustomizations {
+      customizations[fileName] = customization
+    } else {
+      customizations.removeValue(forKey: fileName)
+    }
+
+    saveCustomizationsInternal()
+  }
+
   /// Reset all customizations for a specific sound
   func resetCustomizations(for fileName: String) {
     customizations.removeValue(forKey: fileName)
@@ -250,7 +268,7 @@ class SoundCustomizationManager: ObservableObject {
 
   // MARK: - Persistence
 
-  private var saveTimer: Timer?
+  @ObservationIgnored private var saveTimer: Timer?
 
   private func saveCustomizationsInternal() {
     // Debounce saves to avoid excessive UserDefaults writes during initialization
@@ -281,8 +299,10 @@ class SoundCustomizationManager: ObservableObject {
 
     do {
       let customizationArray = try JSONDecoder().decode([SoundCustomization].self, from: data)
+      // uniquingKeysWith (not uniqueKeysWithValues) so a duplicate fileName in
+      // the persisted array can't trap at launch - last entry wins.
       customizations = Dictionary(
-        uniqueKeysWithValues: customizationArray.map { ($0.fileName, $0) })
+        customizationArray.map { ($0.fileName, $0) }, uniquingKeysWith: { $1 })
       Logger.sounds.debug(
         "SoundCustomizationManager: Loaded \(self.customizations.count) customizations")
     } catch {

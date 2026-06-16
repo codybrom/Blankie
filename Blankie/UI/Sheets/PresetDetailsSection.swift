@@ -34,7 +34,7 @@ struct PresetDetailsSection: View {
 
   @State private var isGeneratingName = false
   @State private var aiAvailable = false
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
 
   var body: some View {
     Section {
@@ -50,6 +50,7 @@ struct PresetDetailsSection: View {
         AnimatedArtworkPicker(
           artwork: $animatedArtwork,
           staticArtworkPath: $staticArtworkPath,
+          accent: accent,
           onChange: { onEdited?() }
         )
       #endif

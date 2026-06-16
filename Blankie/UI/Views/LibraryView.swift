@@ -6,18 +6,19 @@
 //
 
 import SwiftUI
-import TipKit
 import UniformTypeIdentifiers
 import os
 
-/// Shared "now playing" treatment for Library rows. Sidebar rows highlight
-/// the whole row and tint the title with the active accent; every presentation
-/// shows an animated equalizer glyph in place of the old checkmark.
+/// Shared "now playing" treatment for Library rows. The current row's title
+/// tints with the active accent (sidebar rows also highlight the whole row);
+/// every presentation shows an animated equalizer glyph in place of the old
+/// checkmark.
 enum LibraryRowStyle {
   static func titleColor(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
   ) -> Color {
-    (presentation == .sidebar || presentation == .menuBar) && isCurrent ? accent : .primary
+    let tints = presentation == .sidebar || presentation == .menuBar || presentation == .page
+    return tints && isCurrent ? accent : .primary
   }
 
   /// Row backdrop. Sidebar: an inset accent pill behind only the active row,
@@ -27,20 +28,37 @@ enum LibraryRowStyle {
   /// background.
   static func rowBackground(
     isCurrent: Bool, accent: Color, presentation: LibraryView.Presentation
-  ) -> AnyView? {
+  ) -> RowBackground? {
     switch presentation {
     case .sidebar, .menuBar:
-      guard isCurrent else { return nil }
-      return AnyView(
+      return isCurrent ? RowBackground(style: .sidebarPill(accent)) : nil
+    case .page:
+      return RowBackground(style: .pageCard)
+    case .sheet:
+      return nil
+    }
+  }
+
+  /// Concrete row backdrop so the background carries static type info instead of
+  /// an `AnyView`. `rowBackground` returns `nil` for rows that want no custom
+  /// background, which `.listRowBackground(nil)` resolves to the list default.
+  struct RowBackground: View {
+    enum Style {
+      case sidebarPill(Color)  // inset accent pill behind the active sidebar/menu-bar row
+      case pageCard  // uniform dark glass card on the page presentation
+    }
+    let style: Style
+
+    var body: some View {
+      switch style {
+      case .sidebarPill(let accent):
         RoundedRectangle(cornerRadius: 10, style: .continuous)
           .fill(accent.opacity(0.15))
           .padding(.horizontal, 10)
           .padding(.vertical, 2)
-      )
-    case .page:
-      return AnyView(Rectangle().fill(.regularMaterial))
-    case .sheet:
-      return nil
+      case .pageCard:
+        Rectangle().fill(.regularMaterial)
+      }
     }
   }
 
@@ -121,9 +139,9 @@ struct PresetPickerRow: View {
   let dismissOnSelect: Bool
   let presentation: LibraryView.Presentation
   let onSelection: (() -> Void)?
-  @ObservedObject private var presetManager = PresetManager.shared
-  @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let presetManager = PresetManager.shared
+  private let audioManager = AudioManager.shared
+  private let globalSettings = GlobalSettings.shared
   #if os(macOS)
     @ObservedObject private var appState = AppState.shared
   #endif
@@ -147,7 +165,13 @@ struct PresetPickerRow: View {
   }
 
   private var accent: Color {
-    preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    // The iPhone page keeps every row on the app's main accent so the Library
+    // reads as one stable surface; other presentations tint each row by its
+    // own preset accent (and highlight the current row with it).
+    if presentation == .page {
+      return globalSettings.customAccentColor ?? .accentColor
+    }
+    return preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }
 
   /// This preset is the one currently driving playback (solo mode pre-empts it).
@@ -198,7 +222,10 @@ struct PresetPickerRow: View {
           artworkId: preset.artworkId,
           preset: preset,
           fallbackSystemImage: preset.isDefault ? "square.stack" : "music.note",
-          tint: accent
+          tint: accent,
+          compositeIcons: preset.isDefault
+            ? nil : AudioManager.shared.compositeSoundIcons(for: preset),
+          useBrand: preset.isDefault
         )
         .accessibilityHidden(true)
 
@@ -243,7 +270,8 @@ struct PresetPickerRow: View {
           Image(systemName: globalSettings.isStarred(starToken) ? "star.fill" : "star")
             .foregroundStyle(
               globalSettings.isStarred(starToken)
-                ? accent
+                // Follow the active theming tint, not the preset's accent override.
+                ? globalSettings.customAccentColor ?? .accentColor
                 : .secondary)
         }
         .buttonStyle(.borderless)
@@ -274,7 +302,6 @@ struct PresetPickerRow: View {
           audioManager.exitQuickMix()
         }
         try presetManager.applyPreset(preset, forceReapply: wasSolo)
-        OnboardingManager.shared.markPresetSwitched()
         if dismissOnSelect { dismiss() }
         onSelection?()
       } catch {
@@ -293,8 +320,8 @@ struct SoloPickerRow: View {
   let dismissOnSelect: Bool
   let presentation: LibraryView.Presentation
   let onSelection: (() -> Void)?
-  @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let audioManager = AudioManager.shared
+  private let globalSettings = GlobalSettings.shared
   #if os(macOS)
     @ObservedObject private var appState = AppState.shared
   #endif
@@ -461,32 +488,30 @@ struct LibraryView: View {
   /// navigate forward to the mixer (the Library is the stack root, so there
   /// is nothing to dismiss).
   var onSelection: (() -> Void)?
-  /// Page-only: the current preset's background artwork (loaded by the
-  /// mixer), reused here so the Library shares Now Playing's backdrop.
-  var backgroundImage: PlatformImage?
+  /// Page-only: measured height of the stack's Now Playing bar. The bar's
+  /// `safeAreaBar` doesn't inset this root list, so the list reserves this much
+  /// bottom margin to clear it — derived, not hardcoded, so it tracks Dynamic
+  /// Type and device safe areas.
+  var bottomBarHeight: CGFloat = 0
 
-  @ObservedObject private var presetManager = PresetManager.shared
-  @ObservedObject private var audioManager = AudioManager.shared
+  private let presetManager = PresetManager.shared
+  private let audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   // Re-filter the Sounds section when per-sound customizations change
   // (preset-use-only, loop, renames) — they live outside the audio manager.
-  @ObservedObject private var customizationManager = SoundCustomizationManager.shared
+  private let customizationManager = SoundCustomizationManager.shared
   @State private var showingNewPresetSheet = false
   @State private var presetToDelete: Preset?
   @State private var isEditMode = false
   @State private var showingSoundFilePicker = false
   @State private var importedSoundURL: URL?
   @State private var showingImportSoundSheet = false
-  #if os(macOS)
-    @State private var selectedPresetForEdit: Preset?
-  #endif
+  @State private var selectedPresetForEdit: Preset?
+  @State private var soundToEdit: Sound?
+  @State private var soundToDelete: Sound?
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var systemColorScheme
-
-  // TipKit tips
-  private let createFirstPresetTip = CreateFirstPresetTip()
-  private let switchPresetsTip = SwitchPresetsTip()
 
   private var sortedCustomPresets: [Preset] {
     presetManager.presets
@@ -578,6 +603,28 @@ struct LibraryView: View {
     }
   }
 
+  /// Edit-mode − on the Sounds section: only custom sounds are deletable, and
+  /// deletion routes through the same confirmation alert as the swipe action.
+  private func deleteSounds(at offsets: IndexSet) {
+    if let index = offsets.first, soloSounds.indices.contains(index),
+      soloSounds[index].isCustom
+    {
+      soundToDelete = soloSounds[index]
+    }
+  }
+
+  private func deleteCustomSound(_ sound: Sound) {
+    guard sound.isCustom,
+      let id = sound.customSoundDataID,
+      let record = CustomSoundManager.shared.getCustomSound(by: id)
+    else { return }
+    if case .failure(let error) = CustomSoundManager.shared.deleteCustomSound(record) {
+      Logger.ui.error("LibraryView: Failed to delete custom sound: \(error, privacy: .public)")
+      return
+    }
+    AudioManager.shared.loadCustomSounds()
+  }
+
   /// Reorder the non-favorited custom presets, persisting their master `order`.
   private func reorderAllPresets(from offsets: IndexSet, to destination: Int) {
     var tokens = nonFavoriteCustomTokens
@@ -623,51 +670,23 @@ struct LibraryView: View {
 
   // MARK: - Page backdrop
 
-  /// Now Playing's accent rule: the preset accent, except solo mode (and any
-  /// preset-less state), which uses the app accent.
-  private var pageAccent: Color {
-    if audioManager.soloModeSound != nil {
-      return globalSettings.customAccentColor ?? .accentColor
-    }
-    return presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
-      ?? .accentColor
-  }
-
-  /// Page-only backdrop mirroring Now Playing: a black base with the preset's
-  /// blurred artwork, falling back to an accent gradient (solo and Quick Mix
-  /// always use the gradient, like Now Playing does).
+  /// Page-only backdrop: an accent gradient over black. Unlike Now Playing, the
+  /// iPhone Library never adopts the playing preset's artwork or accent — it
+  /// stays on the app's main accent so the list reads as a stable home screen.
   private var pageBackground: some View {
-    Color.black
+    let accent = globalSettings.customAccentColor ?? .accentColor
+    return Color.black
       .overlay {
-        if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
-          let image = backgroundImage
-        {
-          #if os(macOS)
-            Image(nsImage: image)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-              .blur(radius: 40)
-              .opacity(0.4)
-          #else
-            Image(uiImage: image)
-              .resizable()
-              .aspectRatio(contentMode: .fill)
-              .blur(radius: 40)
-              .opacity(0.4)
-          #endif
-        } else {
-          LinearGradient(
-            colors: [
-              pageAccent.opacity(0.6),
-              pageAccent.opacity(0.3),
-              Color.black.opacity(0.8),
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-          )
-        }
+        LinearGradient(
+          colors: [
+            accent.opacity(0.6),
+            accent.opacity(0.3),
+            Color.black.opacity(0.8),
+          ],
+          startPoint: .topLeading,
+          endPoint: .bottomTrailing
+        )
       }
-      .clipped()
       .ignoresSafeArea()
       .accessibilityHidden(true)
   }
@@ -675,9 +694,7 @@ struct LibraryView: View {
   @ViewBuilder
   private func tokenRow(_ token: String) -> some View {
     if let sound = audioManager.sound(forSoloToken: token) {
-      SoloPickerRow(
-        sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
-        presentation: presentation, onSelection: onSelect)
+      soloRow(sound)
     } else {
       switch token {
       case GlobalSettings.allSoundsToken:
@@ -691,19 +708,69 @@ struct LibraryView: View {
           let row = PresetPickerRow(
             preset: preset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
             presentation: presentation, onSelection: onSelect)
+          // Custom presets only — never the default or solo rows. macOS uses a
+          // context menu (replacing the old per-row pencil and trash); iOS/iPadOS
+          // offers the same edit/delete choice via a trailing swipe.
           #if os(macOS)
-            // macOS rename/delete replacing the old PresetPicker's per-row pencil
-            // and trash. Custom presets only — never the default or solo rows.
             row.contextMenu {
               Button("Edit Preset…") { selectedPresetForEdit = preset }
               Button("Delete Preset…", role: .destructive) { presetToDelete = preset }
             }
           #else
-            row
+            row.swipeActions(edge: .trailing, allowsFullSwipe: false) {
+              Button(role: .destructive) {
+                presetToDelete = preset
+              } label: {
+                Label("Delete", systemImage: "trash")
+              }
+              // Clear the inherited app accent so the destructive role's own
+              // danger color shows; Edit keeps the default (app accent) tint.
+              .tint(nil)
+              Button {
+                selectedPresetForEdit = preset
+              } label: {
+                Label("Edit", systemImage: "slider.vertical.3")
+              }
+            }
           #endif
         }
       }
     }
+  }
+
+  /// A solo-sound row. Edit any sound and Delete custom ones — via a trailing
+  /// swipe on iOS/iPadOS, a context menu on macOS (matching the preset rows).
+  @ViewBuilder
+  private func soloRow(_ sound: Sound) -> some View {
+    let row = SoloPickerRow(
+      sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+      presentation: presentation, onSelection: onSelect)
+    #if os(macOS)
+      row.contextMenu {
+        Button("Edit Sound…") { soundToEdit = sound }
+        if sound.isCustom {
+          Button("Delete Sound…", role: .destructive) { soundToDelete = sound }
+        }
+      }
+    #else
+      row.swipeActions(edge: .trailing, allowsFullSwipe: false) {
+        if sound.isCustom {
+          Button(role: .destructive) {
+            soundToDelete = sound
+          } label: {
+            Label("Delete", systemImage: "trash")
+          }
+          // Clear the inherited app accent so the destructive role's own
+          // danger color shows; Edit keeps the default (app accent) tint.
+          .tint(nil)
+        }
+        Button {
+          soundToEdit = sound
+        } label: {
+          Label("Edit", systemImage: "slider.vertical.3")
+        }
+      }
+    #endif
   }
 
   private var quickMixRow: some View {
@@ -715,7 +782,6 @@ struct LibraryView: View {
         }
         if !audioManager.isQuickMix {
           audioManager.enterQuickMix()
-          OnboardingManager.shared.markQuickMixUsed()
         }
         onSelect?()
       }
@@ -776,6 +842,10 @@ struct LibraryView: View {
         libraryList
           .scrollContentBackground(.hidden)
           .background { pageBackground }
+          // Reserve the measured Now Playing bar height (plus a little breathing
+          // room) so the last row clears it — the stack's safeAreaBar doesn't
+          // inset this root list.
+          .contentMargins(.bottom, bottomBarHeight + 8, for: .scrollContent)
           #if os(iOS) || os(visionOS)
             .toolbarColorScheme(.dark, for: .navigationBar)
           #endif
@@ -799,19 +869,6 @@ struct LibraryView: View {
   @ViewBuilder
   private var libraryList: some View {
     List {
-      if !presetManager.hasCustomPresets {
-        TipView(createFirstPresetTip, arrowEdge: .top) { action in
-          if action.id == "create" {
-            showingNewPresetSheet = true
-          } else if action.id == "dismiss" {
-            // TipKit actions don't auto-dismiss; invalidate explicitly.
-            createFirstPresetTip.invalidate(reason: .actionPerformed)
-          }
-        }
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
-      }
-
       if presetManager.isLoading {
         HStack {
           Spacer()
@@ -891,13 +948,14 @@ struct LibraryView: View {
         }
 
         // SOUNDS — solo a single sound. Listed alphabetically and fixed
-        // (not reorderable); tap the star to favorite a sound.
+        // (not reorderable); tap the star to favorite a sound. Custom sounds
+        // delete via the edit-mode − or a swipe; built-ins gate that off.
         Section {
           ForEach(soloSounds, id: \.id) { sound in
-            SoloPickerRow(
-              sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
-              presentation: presentation, onSelection: onSelect)
+            soloRow(sound)
+              .deleteDisabled(!sound.isCustom)
           }
+          .onDelete(perform: deleteSounds)
         } header: {
           Text("Sounds")
         }
@@ -997,7 +1055,10 @@ struct LibraryView: View {
     // modifiers — so presented sheets keep the system appearance.
     .environment(\.colorScheme, presentation == .page ? .dark : systemColorScheme)
     .sheet(isPresented: $showingNewPresetSheet) {
-      CreatePresetSheet(isPresented: $showingNewPresetSheet)
+      CreatePresetSheet(
+        isPresented: $showingNewPresetSheet,
+        onCreated: { onSelection?() }
+      )
     }
     .fileImporter(
       isPresented: $showingSoundFilePicker,
@@ -1022,35 +1083,69 @@ struct LibraryView: View {
         SoundSheet(mode: .add, preselectedFile: url)
       }
     }
-    #if os(macOS)
-      .sheet(item: $selectedPresetForEdit) { preset in
-        EditPresetSheet(preset: preset, isPresented: $selectedPresetForEdit)
+    .sheet(item: $selectedPresetForEdit) { preset in
+      EditPresetSheet(preset: preset, isPresented: $selectedPresetForEdit)
+    }
+    .sheet(item: $soundToEdit) { sound in
+      SoundSheet(mode: .edit(sound))
+    }
+    .alert(
+      "Delete Sound",
+      isPresented: .init(
+        get: { soundToDelete != nil },
+        set: { if !$0 { soundToDelete = nil } }
+      )
+    ) {
+      Button("Cancel", role: .cancel) { soundToDelete = nil }
+      Button("Delete", role: .destructive) {
+        if let sound = soundToDelete { deleteCustomSound(sound) }
+        soundToDelete = nil
       }
-    #endif
+    } message: {
+      if let sound = soundToDelete {
+        Text(
+          "Are you sure you want to delete '\(sound.title)'? This action cannot be undone."
+        )
+      }
+    }
     .alert(
       "Delete Preset",
       isPresented: .init(
         get: { presetToDelete != nil },
         set: { if !$0 { presetToDelete = nil } }
-      )
-    ) {
-      Button("Cancel", role: .cancel) {
-        presetToDelete = nil
-      }
-
-      Button("Delete", role: .destructive) {
-        if let preset = presetToDelete {
-          Task {
-            presetManager.deletePreset(preset)
-            presetToDelete = nil
-          }
+      ),
+      presenting: presetToDelete
+    ) { preset in
+      let orphanCount = presetManager.orphanedCustomSounds(ifDeleting: preset).count
+      if orphanCount == 0 {
+        Button("Delete", role: .destructive) {
+          presetManager.deletePreset(preset)
+          presetToDelete = nil
+        }
+      } else {
+        Button(
+          orphanCount == 1
+            ? String(localized: "Delete Preset & 1 Sound")
+            : String(localized: "Delete Preset & \(orphanCount) Sounds"),
+          role: .destructive
+        ) {
+          presetManager.deletePreset(preset, alsoDeleteOrphanedSounds: true)
+          presetToDelete = nil
+        }
+        Button("Delete Preset Only", role: .destructive) {
+          presetManager.deletePreset(preset)
+          presetToDelete = nil
         }
       }
-    } message: {
-      if let preset = presetToDelete {
-        Text(
-          "Are you sure you want to delete '\(preset.name)'? This action cannot be undone."
-        )
+      Button("Cancel", role: .cancel) { presetToDelete = nil }
+    } message: { preset in
+      let count = presetManager.orphanedCustomSounds(ifDeleting: preset).count
+      if count == 0 {
+        Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
+      } else if count == 1 {
+        Text("1 custom sound is used only by '\(preset.name)'. Delete it too?")
+      } else {
+        Text("\(count) custom sounds are used only by '\(preset.name)'. Delete them too?")
       }
     }
   }
@@ -1068,6 +1163,11 @@ struct PresetThumbnail: View {
   let fallbackSystemImage: String
   let tint: Color
   var isCircular = false
+  /// When set (and no saved artwork), the tile shows a montage of these sound
+  /// icons instead of `fallbackSystemImage`, matching what the preset plays.
+  var compositeIcons: [String]? = nil
+  /// "All Blankie Sounds" always shows the Blankie mark rather than a montage.
+  var useBrand = false
 
   @Environment(\.displayScale) private var displayScale
   @State private var image: PlatformImage?
@@ -1079,6 +1179,12 @@ struct PresetThumbnail: View {
       : AnyShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
   }
 
+  private var glyphForFallback: FallbackArtwork.Glyph {
+    if useBrand { return .brand }
+    if let compositeIcons, !compositeIcons.isEmpty { return .composite(compositeIcons) }
+    return .symbol(fallbackSystemImage)
+  }
+
   var body: some View {
     Group {
       if let image {
@@ -1086,13 +1192,14 @@ struct PresetThumbnail: View {
           .resizable()
           .aspectRatio(contentMode: .fill)
       } else {
-        shape
-          .fill(tint.opacity(0.15))
-          .overlay {
-            Image(systemName: fallbackSystemImage)
-              .font(.system(size: 14, weight: .medium))
-              .foregroundStyle(tint)
-          }
+        FallbackArtwork(
+          glyph: glyphForFallback,
+          accent: tint,
+          size: size,
+          cornerRadius: 8,
+          isCircular: isCircular,
+          glyphFraction: useBrand ? 0.5 : 0.44
+        )
       }
     }
     .frame(width: size, height: size)

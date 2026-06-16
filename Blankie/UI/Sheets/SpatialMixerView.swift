@@ -120,7 +120,7 @@ import SwiftUI
   /// it into space or keep it in your head. Placements are session-scoped and
   /// discarded when the session ends — nothing is written to presets.
   struct SpatialMixerView: View {
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let audioManager = AudioManager.shared
     @ObservedObject private var session = SpatialSessionManager.shared
     @ObservedObject private var headPose = HeadPoseMonitor.shared
     @Environment(\.dismiss) private var dismiss
@@ -174,6 +174,9 @@ import SwiftUI
             }
         }
         .presentationDetents([.large])
+        // Give the square spatial canvas a full-height page on iPad instead of a
+        // small centered form sheet that wastes the screen and crowds the map.
+        .presentationSizing(.page)
         .presentationDragIndicator(.visible)
         .presentationBackground {
           // More translucent than a stock material: let the mixer glow through.
@@ -504,7 +507,7 @@ import SwiftUI
   }
 
   private struct ParkedDot: View {
-    @ObservedObject var sound: Sound
+    let sound: Sound
     @State private var isPreparing = false
 
     var body: some View {
@@ -608,7 +611,7 @@ import SwiftUI
   // MARK: - Sound Dot
 
   private struct SpatialDot: View {
-    @ObservedObject var sound: Sound
+    let sound: Sound
     @ObservedObject private var session = SpatialSessionManager.shared
     let center: CGPoint
     let scale: CGFloat

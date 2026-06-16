@@ -137,6 +137,28 @@ extension AudioManager {
     preQuickMixPreset = nil
   }
 
+  /// After the Quick Mix membership changes (the editor's Done), stop and
+  /// deselect any sound that's still playing but is no longer part of the mix.
+  /// Without this a removed sound keeps sounding — and a removed *music* sound
+  /// only stops once the next music sound claims the slot. No-op outside an
+  /// active Quick Mix session.
+  @MainActor
+  func reconcileQuickMixMembership() {
+    guard isQuickMix else { return }
+    let members = Set(GlobalSettings.shared.quickMixSoundFileNames)
+    for sound in sounds where sound.isSelected && !members.contains(sound.fileName) {
+      Logger.audio.debug("AudioManager: Quick Mix dropped '\(sound.fileName)' — stopping it")
+      sound.isSelected = false
+      sound.pause()
+    }
+
+    // The mix may now be empty; reflect that in the global play state.
+    let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
+    setGlobalPlaybackState(hasActiveSounds)
+
+    nowPlayingManager.updateInfo(presetName: "Quick Mix", isPlaying: hasActiveSounds)
+  }
+
   @MainActor
   func toggleQuickMixSound(_ sound: Sound) {
     guard isQuickMix else { return }

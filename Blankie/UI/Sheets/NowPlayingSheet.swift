@@ -17,11 +17,11 @@ import SwiftUI
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var audioManager = AudioManager.shared
-    @StateObject private var presetManager = PresetManager.shared
-    @StateObject private var timerManager = TimerManager.shared
+    @State private var audioManager = AudioManager.shared
+    @State private var presetManager = PresetManager.shared
+    @State private var timerManager = TimerManager.shared
 
-    @StateObject private var globalSettings = GlobalSettings.shared
+    @State private var globalSettings = GlobalSettings.shared
     /// Presented from inside the cover — a sheet attached to the base
     /// hierarchy can't present over a fullScreenCover.
     @State private var showingTimer = false
@@ -50,15 +50,6 @@ import SwiftUI
       }
     #endif
 
-    private var screenSize: CGSize {
-      #if os(iOS)
-        if let window = activeWindow {
-          return window.bounds.size
-        }
-      #endif
-      return CGSize(width: 393, height: 852)
-    }
-
     private var safeAreaInsets: EdgeInsets {
       #if os(iOS)
         if let window = activeWindow {
@@ -80,57 +71,70 @@ import SwiftUI
     }
 
     var body: some View {
-      ZStack {
-        // Full-bleed background: fills the whole cover including the top safe
-        // area (behind the Dynamic Island), so the open player reads as a true
-        // full-screen surface. Rounded top corners still show while the zoom
-        // transition is mid-flight.
-        Color.black
-          .overlay {
-            if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
-              let image = backgroundImage
-            {
-              Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .blur(radius: 40)
-                .opacity(0.4)
-            } else {
-              LinearGradient(
-                colors: [
-                  accentColor.opacity(0.6),
-                  accentColor.opacity(0.3),
-                  Color.black.opacity(0.8),
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-              )
+      // Size to the presenting sheet (not the window): a large-detent sheet is a
+      // touch shorter than the full window, so framing to the sheet keeps the
+      // bottom controls on screen instead of clipped.
+      GeometryReader { proxy in
+        ZStack {
+          // Background fills the whole sheet. Rounded top corners show while the
+          // zoom transition is mid-flight and behind the sheet's own rounding.
+          Color.black
+            .overlay {
+              if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
+                let image = backgroundImage
+              {
+                Image(uiImage: image)
+                  .resizable()
+                  .aspectRatio(contentMode: .fill)
+                  .frame(maxWidth: .infinity, maxHeight: .infinity)
+                  .clipped()
+                  .blur(radius: 40)
+                  .opacity(0.4)
+              } else {
+                LinearGradient(
+                  colors: [
+                    accentColor.opacity(0.6),
+                    accentColor.opacity(0.3),
+                    Color.black.opacity(0.8),
+                  ],
+                  startPoint: .topLeading,
+                  endPoint: .bottomTrailing
+                )
+              }
             }
-          }
-          .clipShape(
-            UnevenRoundedRectangle(
-              topLeadingRadius: 38,
-              bottomLeadingRadius: 0,
-              bottomTrailingRadius: 0,
-              topTrailingRadius: 38,
-              style: .continuous
+            .clipShape(
+              UnevenRoundedRectangle(
+                topLeadingRadius: 38,
+                bottomLeadingRadius: 0,
+                bottomTrailingRadius: 0,
+                topTrailingRadius: 38,
+                style: .continuous
+              )
             )
-          )
-          .ignoresSafeArea()
-          .accessibilityHidden(true)
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
 
-        // Content stays within the top safe area so the drag handle and
-        // everything below it sit clear of the Dynamic Island.
-        expandedPlayerView(screenSize)
-          .padding(.top, safeAreaInsets.top > 0 ? safeAreaInsets.top : 10)
+          // Content stays within the top safe area so the drag handle and
+          // everything below it sit clear of the Dynamic Island.
+          expandedPlayerView(proxy.size)
+            .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 10)
+        }
+        .frame(width: proxy.size.width, height: proxy.size.height)
       }
-      .frame(width: screenSize.width, height: screenSize.height)
       .ignoresSafeArea()
       .sheet(isPresented: $showingTimer) {
-        TimerSheetView()
-          .presentationDetents([.medium, .large])
+        // Detents and presentationSizing don't compose — when both are set the
+        // detents win and presentationSizing is ignored, leaving iPad stuck at
+        // the short `.medium` height that clips the picker. So size by idiom:
+        // iPad gets a standard `.form` sheet (tall enough, no detents); iPhone
+        // keeps its draggable medium/large detents.
+        if isPad {
+          TimerSheetView()
+            .presentationSizing(.form)
+        } else {
+          TimerSheetView()
+            .presentationDetents([.medium, .large])
+        }
       }
     }
 
@@ -312,16 +316,14 @@ import SwiftUI
     private func artworkView(size: CGFloat) -> some View {
       Group {
         if let soloSound = audioManager.soloModeSound {
-          // Solo has no preset artwork: use the same placeholder card as a
-          // no-artwork preset, but with the sound's own icon and the app accent.
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color.white.opacity(0.1))
-            .frame(width: size, height: size)
-            .overlay {
-              Image(systemName: soloSound.systemIconName)
-                .font(.system(size: size * 0.35))
-                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
-            }
+          // Solo has no preset artwork: the shared fallback with the sound's
+          // own icon and the app accent.
+          FallbackArtwork(
+            glyph: .symbol(soloSound.systemIconName),
+            accent: globalSettings.customAccentColor ?? .accentColor,
+            size: size,
+            glyphFraction: 0.4
+          )
         } else if let image = backgroundImage {
           Image(uiImage: image)
             .resizable()
@@ -329,15 +331,18 @@ import SwiftUI
             .frame(width: size, height: size)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         } else {
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(Color.white.opacity(0.1))
-            .frame(width: size, height: size)
-            .overlay {
-              BrandedBlankieIcon(
-                size: size * 0.35,
-                color: presetManager.currentPreset?.accentColor
-              )
-            }
+          // No custom/animated artwork: Quick Mix → grid, All Blankie Sounds →
+          // the Blankie mark, a custom preset → a montage of its playing sounds.
+          FallbackArtwork(
+            glyph: .playback(
+              isQuickMix: audioManager.isQuickMix,
+              isDefaultPreset: presetManager.currentPreset?.isDefault ?? true,
+              icons: audioManager.playingSoundIcons()),
+            accent: presetManager.currentPreset?.accentColor
+              ?? globalSettings.customAccentColor ?? .accentColor,
+            size: size,
+            glyphFraction: 0.5
+          )
         }
       }
       .scaleEffect(audioManager.isGloballyPlaying ? 1.0 : 0.85)
@@ -439,7 +444,24 @@ import SwiftUI
         .formatted(date: .omitted, time: .shortened)
     }
 
+    // Volume controls. While mixing with other audio the iOS hardware slider
+    // would move every app's level together, so it can't isolate Blankie. In
+    // that mode we swap in a slider bound to volumeWithOtherAudio — Blankie's
+    // level over the other media — and label it so the change is obvious.
+    @ViewBuilder
     private var volumeSlider: some View {
+      #if os(iOS) || os(visionOS)
+        if globalSettings.mixWithOthers {
+          blankieVolumeRow
+        } else {
+          systemVolumeRow
+        }
+      #else
+        systemVolumeRow
+      #endif
+    }
+
+    private var systemVolumeRow: some View {
       HStack(spacing: 15) {
         Image(systemName: "speaker.fill")
           .foregroundColor(.gray)
@@ -477,6 +499,47 @@ import SwiftUI
       }
       .padding(.horizontal, 32)
     }
+
+    #if os(iOS) || os(visionOS)
+      /// Mixing mode: the slider controls Blankie's own level over the other
+      /// audio (volumeWithOtherAudio), tinted with the accent and headed
+      /// "Blankie Volume" so it's clearly not the device volume.
+      private var blankieVolumeRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+          Text("Blankie Volume with Media")
+            .font(.caption.weight(.semibold))
+            .foregroundColor(.white.opacity(0.7))
+            .accessibilityHidden(true)
+
+          HStack(spacing: 15) {
+            Image(systemName: "speaker.fill")
+              .foregroundColor(.gray)
+              .font(.caption)
+              .accessibilityHidden(true)
+
+            Slider(
+              value: Binding(
+                get: { globalSettings.volumeWithOtherAudio },
+                set: { globalSettings.setVolumeWithOtherAudio($0) }
+              ),
+              in: 0...1
+            )
+            .tint(accentColor)
+            .accessibilityLabel(Text("Blankie Volume with Media"))
+            .accessibilityValue(
+              Text(
+                globalSettings.volumeWithOtherAudio.formatted(
+                  .percent.precision(.fractionLength(0)))))
+
+            Image(systemName: "speaker.wave.3.fill")
+              .foregroundColor(.gray)
+              .font(.caption)
+              .accessibilityHidden(true)
+          }
+        }
+        .padding(.horizontal, 32)
+      }
+    #endif
 
     // MARK: - Helper Properties
 
@@ -517,7 +580,7 @@ import SwiftUI
               .foregroundColor(.white)
               .lineLimit(1)
 
-            if let author = soloSound.creditedAuthor {
+            if soloSound.isCustom, let author = soloSound.creditedAuthor {
               Text(author)
                 .font(.title3)
                 .foregroundColor(.white.opacity(0.7))
@@ -637,13 +700,8 @@ import SwiftUI
 
     // MARK: - Bottom Actions Row
 
-    @ViewBuilder
     private var bottomActionsRow: some View {
-      if #available(iOS 26.0, *) {
-        GlassEffectContainer(spacing: 20) {
-          bottomActionsContent
-        }
-      } else {
+      GlassEffectContainer(spacing: 20) {
         bottomActionsContent
       }
     }
@@ -668,12 +726,15 @@ import SwiftUI
         // asks apps to permit rerouting of audio output when possible; this is
         // the system-standard control for it.
         #if os(iOS)
-          AirPlayRoutePickerView()
-            .frame(width: 44, height: 44)
-            .accessibilityLabel(Text("AirPlay"))
-            .frame(width: 56, height: 56)
-            .contentShape(Circle())
-            .modifier(NowPlayingActionGlass())
+          AirPlayRouteButton(
+            activeColor: accentColor,
+            inactiveColor: .white.opacity(0.35)
+          )
+          .frame(width: 44, height: 44)
+          .accessibilityLabel(Text("AirPlay"))
+          .frame(width: 56, height: 56)
+          .contentShape(Circle())
+          .modifier(NowPlayingActionGlass())
         #endif
 
         // Right: Timer
@@ -720,15 +781,10 @@ import SwiftUI
 
   }
 
-  /// Liquid Glass circle for the bottom action buttons; material fallback for
-  /// earlier systems.
+  /// Liquid Glass circle for the bottom action buttons
   private struct NowPlayingActionGlass: ViewModifier {
     func body(content: Content) -> some View {
-      if #available(iOS 26.0, *) {
-        content.glassEffect(.regular.interactive(), in: .circle)
-      } else {
-        content.modernGlassEffect(cornerRadius: 28)
-      }
+      content.glassEffect(.regular.interactive(), in: .circle)
     }
   }
 
@@ -821,6 +877,89 @@ import SwiftUI
       // dark (i.e. making the whole app dark-only), so there is intentionally no
       // per-sheet appearance override here.
       func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
+    }
+
+    /// Watches the live output route and maps it to an SF Symbol plus whether
+    /// audio is leaving the built-in speaker. Drives the AirPlay button's icon
+    /// and tint so it reflects the kind of device audio is going to.
+    ///
+    /// Deliberately maps only to *generic* symbols (headphones, hifispeaker, car,
+    /// tv, airplayaudio) keyed off `portType`, the one reliable signal. We do NOT
+    /// try to show the specific product (AirPods, Beats, HomePod, Apple TV): those
+    /// glyphs are license-restricted to their exact product ("may only be used to
+    /// refer to Apple's AirPods"), and the only model hint the route exposes is
+    /// `portName` — a free, user-renameable string. Guessing the product from it
+    /// could incorrectly paint a restricted Apple/Beats glyph on the wrong (or a
+    /// third-party) device, which violates the SF Symbols license. So we don't.
+    ///
+    /// iOS 27 (in beta, unreleased) adds `AVSystemRoute.routeSymbolName`, where
+    /// the system hands back an already-vetted symbol — safe to show verbatim.
+    /// But it only covers routes from a media device extension (third-party
+    /// AirPlay-style receivers), not AirPods/HomePod/wired/built-in, so this
+    /// generic mapping still carries the everyday cases.
+    final class AudioRouteObserver: ObservableObject {
+      @Published private(set) var symbolName = "airplayaudio"
+      @Published private(set) var isExternal = false
+
+      init() {
+        update()
+        NotificationCenter.default.addObserver(
+          self, selector: #selector(routeChanged),
+          name: AVAudioSession.routeChangeNotification, object: nil)
+      }
+
+      @objc private func routeChanged() {
+        DispatchQueue.main.async { [weak self] in self?.update() }
+      }
+
+      private func update() {
+        let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
+        guard let port = outputs.first else {
+          (symbolName, isExternal) = ("airplayaudio", false)
+          return
+        }
+        switch port.portType {
+        case .builtInSpeaker, .builtInReceiver:
+          (symbolName, isExternal) = ("airplayaudio", false)
+        case .headphones, .bluetoothA2DP, .bluetoothLE, .bluetoothHFP:
+          // Generic personal-audio glyph for any wired/Bluetooth headset; we
+          // can't (and per the license shouldn't) claim it's a specific model.
+          (symbolName, isExternal) = ("headphones", true)
+        case .carAudio:
+          (symbolName, isExternal) = ("car", true)
+        case .HDMI, .displayPort:
+          (symbolName, isExternal) = ("tv", true)
+        case .usbAudio, .lineOut, .thunderbolt:
+          (symbolName, isExternal) = ("hifispeaker.fill", true)
+        case .airPlay:
+          // HomePod/Apple TV/AirPlay speakers all land here; the generic AirPlay
+          // glyph is both license-safe and the honest icon (class is unknowable).
+          (symbolName, isExternal) = ("airplayaudio", true)
+        default:
+          (symbolName, isExternal) = ("airplayaudio", true)
+        }
+      }
+    }
+
+    /// AirPlay control that shows a themed, route-category icon while still
+    /// presenting the system route picker. The icon is tinted with the theme
+    /// accent when audio is routed off-device and dimmed when it isn't; a
+    /// transparent `AVRoutePickerView` sits on top to capture the tap.
+    struct AirPlayRouteButton: View {
+      var activeColor: Color
+      var inactiveColor: Color
+      @StateObject private var route = AudioRouteObserver()
+
+      var body: some View {
+        AirPlayRoutePickerView(tint: .clear, activeTint: .clear)
+          .overlay {
+            Image(systemName: route.symbolName)
+              .font(.system(size: 20, weight: .medium))
+              .foregroundStyle(route.isExternal ? activeColor : inactiveColor)
+              .allowsHitTesting(false)
+              .accessibilityHidden(true)
+          }
+      }
     }
   #endif
 

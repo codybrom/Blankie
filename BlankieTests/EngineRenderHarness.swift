@@ -7,7 +7,6 @@
 
 import AVFoundation
 import AudioToolbox
-import XCTest
 
 /// Errors surfaced by the offline rendering harness.
 enum EngineRenderError: Error, CustomStringConvertible {
@@ -33,7 +32,8 @@ enum EngineRenderError: Error, CustomStringConvertible {
 /// tests can measure rendered audio with the production AudioAnalyzer math.
 enum EngineRenderHarness {
 
-  /// Instantiates Apple's PeakLimiter AU, or throws so tests can XCTSkip.
+  /// Instantiates Apple's PeakLimiter AU, or throws so the loudness test can
+  /// skip (via `Test.cancel`) when the AU is unavailable in manual rendering.
   static func makeLimiter() throws -> AVAudioUnit {
     var description = AudioComponentDescription(
       componentType: kAudioUnitType_Effect,

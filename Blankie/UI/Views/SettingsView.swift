@@ -37,12 +37,15 @@ struct SettingsView: View {
   /// of its own sheet/scene — fills the pane and Done closes it via AppState.
   var isPane = false
   @Environment(\.dismiss) private var dismiss
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   #if os(iOS) || os(visionOS)
-    @ObservedObject private var audioManager = AudioManager.shared
-    @ObservedObject private var presetManager = PresetManager.shared
+    private let audioManager = AudioManager.shared
+    private let presetManager = PresetManager.shared
   #endif
   @State private var showingOnboarding = false
+  #if os(iOS)
+    @State private var showingAppIconPicker = false
+  #endif
   #if os(macOS)
     /// Holds the in-pane About sub-page flag (app-level so the menu bar's
     /// About Blankie can open straight to it; reset when the pane closes).
@@ -92,9 +95,6 @@ struct SettingsView: View {
     }
     private var accentColorOverridden: Bool {
       presetManager.themingPreset?.accentColorName != nil
-    }
-    private var blurOverridden: Bool {
-      presetManager.themingPreset?.backgroundBlurRadius != nil
     }
   #endif
 
@@ -321,6 +321,34 @@ struct SettingsView: View {
           }
         #endif
 
+        #if os(iOS)
+          // App icon picker, promoted from the About page. Presented as its
+          // own sheet so dismissing it can't tear down the settings stack.
+          Button {
+            showingAppIconPicker = true
+          } label: {
+            Label {
+              Text("Change App Icon")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "app.dashed")
+                .symbolRenderingMode(.hierarchical)
+                .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+            }
+            .formRowLabel()
+          }
+          .formRowButtonStyle()
+          .sheet(isPresented: $showingAppIconPicker) {
+            NavigationStack {
+              AppIconPickerView()
+            }
+            .presentationDetents([.large])
+            // Page-sized on iPad so the icon grid gets room instead of a small
+            // centered form sheet.
+            .presentationSizing(.page)
+          }
+        #endif
+
         // Help row, relocated from the About page's footer.
         Link(destination: URL(string: "https://blankie.rest/faq")!) {
           HStack {
@@ -422,14 +450,58 @@ struct SettingsView: View {
         }
 
         #if os(iOS) || os(visionOS)
-          // Animated preset artwork as the Lock Screen / Now Playing background.
+          // Animated artwork on the Lock Screen / Now Playing card. The toggle
+          // is the on/off; the default picker chooses what Quick Mix and All
+          // Blankie Sounds use (presets can still carry their own). Both share
+          // one row so no separator sits between them — the picker reads as a
+          // sub-option of the toggle, not a sibling row.
+          VStack(alignment: .leading, spacing: 12) {
+            Toggle(
+              isOn: Binding(
+                get: { globalSettings.lockScreenBackgroundEnabled },
+                set: { globalSettings.setLockScreenBackgroundEnabled($0) }
+              )
+            ) {
+              Text("Lock Screen Animations")
+            }
+
+            #if os(iOS)
+              if globalSettings.lockScreenBackgroundEnabled {
+                AnimatedArtworkPicker(
+                  artwork: Binding(
+                    get: { globalSettings.defaultLockScreenArtwork },
+                    set: { globalSettings.setDefaultLockScreenArtwork($0) }
+                  ),
+                  staticArtworkPath: .constant(nil),
+                  label: "Default Animation",
+                  onChange: {
+                    // Republish so the lock screen reflects the new default now.
+                    if let preset = presetManager.currentPreset {
+                      audioManager.nowPlayingManager.forceRefresh(
+                        preset: preset, isPlaying: audioManager.isGloballyPlaying)
+                    }
+                  }
+                )
+                // Indented and nudged down so it reads as a sub-option of the
+                // toggle above rather than a peer control.
+                .padding(.top, 8)
+                .padding(.leading, 16)
+              }
+            #endif
+          }
+
+          // App-wide blur for the preset background artwork. All-or-nothing: on
+          // applies `defaultBackgroundBlurRadius`, off is no blur. (The macOS
+          // window doesn't use a blurred backdrop, so it's iOS-only.)
           Toggle(
             isOn: Binding(
-              get: { globalSettings.lockScreenBackgroundEnabled },
-              set: { globalSettings.setLockScreenBackgroundEnabled($0) }
+              get: { globalSettings.backgroundBlurRadius > 0 },
+              set: {
+                globalSettings.setBackgroundBlurRadius($0 ? defaultBackgroundBlurRadius : 0)
+              }
             )
           ) {
-            Text("Lock Screen Animations")
+            Text("Blur Background Images")
           }
         #endif
 
@@ -445,14 +517,14 @@ struct SettingsView: View {
       #endif
 
       // App-wide defaults a preset inherits and can override in Edit Preset
-      // (view mode, accent color, lock screen animation, background blur).
-      // iOS-only as a section — macOS folds accent into Display above.
+      // (view mode, accent color). iOS-only as a section — macOS folds accent
+      // into Display above.
       #if os(iOS) || os(visionOS)
         Section {
           // View mode (Grid / List). This is the app-wide default. It's
           // locked to Grid while in Quick Mix (tile-only by design). A preset
           // override no longer locks the control — the badge marks it, and the
-          // picker still shows/edits the app-wide default like Accent and Blur.
+          // picker still shows/edits the app-wide default like Accent.
           let presetOverride = presetViewModeOverride
           let pickerLocked = audioManager.isQuickMix
 
@@ -483,51 +555,9 @@ struct SettingsView: View {
           .padding(.vertical, 4)
 
           accentColorControl
-
-          // App-wide default lock screen animation, used for any preset that
-          // doesn't set its own. Hidden while Lock Screen Animations is off.
-          #if os(iOS)
-            if globalSettings.lockScreenBackgroundEnabled {
-              AnimatedArtworkPicker(
-                artwork: Binding(
-                  get: { globalSettings.defaultLockScreenArtwork },
-                  set: { globalSettings.setDefaultLockScreenArtwork($0) }
-                ),
-                staticArtworkPath: .constant(nil),
-                onChange: {
-                  // Republish so the lock screen reflects the new default now.
-                  if let preset = presetManager.currentPreset {
-                    audioManager.nowPlayingManager.forceRefresh(
-                      preset: preset, isPlaying: audioManager.isGloballyPlaying)
-                  }
-                }
-              )
-            }
-          #endif
-
-          // App-wide default blur for preset background artwork. On/off:
-          // on applies `defaultBackgroundBlurRadius`, off is no blur.
-          Toggle(
-            isOn: Binding(
-              get: { globalSettings.backgroundBlurRadius > 0 },
-              set: {
-                globalSettings.setBackgroundBlurRadius($0 ? defaultBackgroundBlurRadius : 0)
-              }
-            )
-          ) {
-            HStack(spacing: 6) {
-              Text("Blur Background Images")
-              if blurOverridden {
-                overriddenByPresetBadge
-              }
-            }
-          }
         } header: {
           VStack(alignment: .leading, spacing: 4) {
-            Text("Theme")
-            Text("Your presets can customize these options")
-              .font(.caption)
-              .textCase(.none)
+            Text("Default Theme")
           }
         }
       #endif
@@ -595,22 +625,25 @@ struct SettingsView: View {
 // Settings list, above Sounds — not under Manage Sounds.
 private struct PlaybackSettingsSection: View {
   #if os(iOS) || os(visionOS)
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let audioManager = AudioManager.shared
   #endif
-  @ObservedObject var globalSettings: GlobalSettings
+  var globalSettings: GlobalSettings
 
   var body: some View {
     Section(
       header: Text("Playback & Sounds")
     ) {
-      Toggle(
-        "Autoplay on Open",
-        isOn: Binding(
-          get: { globalSettings.autoPlayOnLaunch },
-          set: { globalSettings.setAutoPlayOnLaunch($0) }
+      // Autoplay on Open is macOS-only (iOS stays alive in the background).
+      #if os(macOS)
+        Toggle(
+          "Autoplay on Open",
+          isOn: Binding(
+            get: { globalSettings.autoPlayOnLaunch },
+            set: { globalSettings.setAutoPlayOnLaunch($0) }
+          )
         )
-      )
-      .tint(globalSettings.customAccentColor ?? .accentColor)
+        .tint(globalSettings.customAccentColor ?? .accentColor)
+      #endif
 
       // Mix with Other Audio is AVAudioSession-based, so it has no macOS form.
       #if os(iOS) || os(visionOS)

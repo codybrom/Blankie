@@ -190,6 +190,17 @@ extension AudioManager {
     // Stop global playback
     setGlobalPlaybackState(false)
 
+    // A solo restored at launch skips the preset's applySoundStates, so
+    // presetStatesApplied never flips and later mix edits won't persist.
+    // Playback is already stopped above, so re-syncing here can't auto-start
+    // audio (the isSelected didSet autoplay is gated on isGloballyPlaying); it
+    // only corrects selection/volume to the preset and sets the flag.
+    if !PresetManager.shared.presetStatesApplied,
+      let preset = PresetManager.shared.currentPreset
+    {
+      PresetManager.shared.applySoundStates(preset.soundStates)
+    }
+
     // Update media control command state
     updateNextPreviousCommandState()
 
@@ -247,6 +258,13 @@ extension AudioManager {
     // Set preview mode (this doesn't trigger UI changes like solo mode)
     previewModeSound = sound
 
+    #if os(iOS) || os(visionOS)
+      // Activate the playback session here too: previews must be audible while
+      // the app is globally paused, where playSelected() (the usual activation
+      // point) never runs and the session would otherwise stay inactive.
+      setupAudioSessionForPlayback()
+    #endif
+
     // Set the sound to full volume for preview (will be adjusted by customization)
     sound.volume = 1.0
 
@@ -294,14 +312,13 @@ extension AudioManager {
         // Restore playback state: if it was playing before and should still be
         // playing. isSelected can flip mid-preview (e.g. the editor marking a
         // sound preset-only deselects it) — never resume a deselected sound.
+        //
+        // Call play() unconditionally: it no-ops when genuinely audible and
+        // rescues a sound still mid fade-out (node.isPlaying lags playbackState
+        // by ~0.5s, so an isPlaying guard here would skip the rescue and strand
+        // the sound silent while selected and globally playing).
         if originalState.isPlaying, isGloballyPlaying, sound.isSelected {
-          if !sound.isPlaying {
-            Logger.audio.debug(
-              "AudioManager: Resuming '\(sound.title)' - was playing before preview")
-            sound.play()
-          } else {
-            Logger.audio.debug("AudioManager: '\(sound.title)' already playing, continuing")
-          }
+          sound.play()
         }
       }
     }

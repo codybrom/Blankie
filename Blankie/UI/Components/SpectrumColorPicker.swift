@@ -14,7 +14,7 @@ struct SpectrumColorPicker: View {
   @State private var showingChip = false
   @State private var isDragging = false
 
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   @Environment(\.colorScheme) private var colorScheme
 
   // Available colors in custom spectrum order
@@ -171,33 +171,22 @@ struct SpectrumColorPicker: View {
       }
     }
 
-    if #available(macOS 26.0, *) {
-      Slider(
-        value: $sliderValue,
-        in: 0...Double(spectrumColors.count - 1),
-        label: {
-          Text("Accent Color")
-        },
-        ticks: {
-          SliderTickContentForEach(
-            stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
-            id: \.self
-          ) { value in
-            SliderTick(value)
-          }
-        },
-        onEditingChanged: onEditing
-      )
-    } else {
-      Slider(
-        value: $sliderValue,
-        in: 0...Double(spectrumColors.count - 1),
-        onEditingChanged: onEditing,
-        label: {
-          Text("Accent Color")
+    Slider(
+      value: $sliderValue,
+      in: 0...Double(spectrumColors.count - 1),
+      label: {
+        Text("Accent Color")
+      },
+      ticks: {
+        SliderTickContentForEach(
+          stride(from: 0.0, through: 11.0, by: 1.0).map { $0 },
+          id: \.self
+        ) { value in
+          SliderTick(value)
         }
-      )
-    }
+      },
+      onEditingChanged: onEditing
+    )
   }
 
   // Color slider with ticks

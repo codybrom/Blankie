@@ -14,9 +14,18 @@
     // MARK: - Main Edit Template
 
     static func createTemplate() -> CPListTemplate {
-      // Get current preset name for the title
+      // Title from the current preset, applying the app-wide display rule:
+      // the unnamed Default and auto-named "Preset N" mixes show as "Custom Mix"
+      // (matching Now Playing), while real preset names render verbatim.
       let currentPreset = PresetManager.shared.currentPreset
-      let presetName = currentPreset?.name ?? "Current Mix"
+      let presetName: String
+      if let name = currentPreset?.name {
+        presetName =
+          (name == "Default" || name.starts(with: "Preset "))
+          ? String(localized: "Custom Mix") : name
+      } else {
+        presetName = String(localized: "Current Mix")
+      }
 
       let template = CPListTemplate(
         title: presetName,
@@ -30,7 +39,8 @@
     static func updateTemplate(_ template: CPListTemplate) {
       // Get the current preset to determine which sounds to show
       guard let currentPreset = PresetManager.shared.currentPreset else {
-        let noPresetItem = CPListItem(text: "No preset selected", detailText: nil)
+        let noPresetItem = CPListItem(
+          text: String(localized: "No preset selected"), detailText: nil)
         let section = CPListSection(items: [noPresetItem])
         template.updateSections([section])
         return
@@ -44,7 +54,8 @@
       }
 
       guard !presetSounds.isEmpty else {
-        let emptySoundsItem = CPListItem(text: "No sounds in this preset", detailText: nil)
+        let emptySoundsItem = CPListItem(
+          text: String(localized: "No sounds in this preset"), detailText: nil)
         let section = CPListSection(items: [emptySoundsItem])
         template.updateSections([section])
         return
@@ -70,11 +81,13 @@
 
     private static func createSoundEditItem(_ sound: Sound) -> CPListItem {
       let isSelected = sound.isSelected
-      let volumeText = "\(Int(sound.volume * 100))% Volume"
+      let percent = Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))
+      let volumeText = String(localized: "\(percent) Volume")
 
       let item = CPListItem(
         text: sound.title,
-        detailText: isSelected ? "Playing • \(volumeText)" : "Stopped"
+        detailText: isSelected
+          ? String(localized: "Playing • \(volumeText)") : String(localized: "Stopped")
       )
 
       // Set icon with playing/stopped state
@@ -153,7 +166,7 @@
 
     static func createVolumeAdjustmentTemplate(for sound: Sound) -> CPListTemplate {
       let template = CPListTemplate(
-        title: "\(sound.title) Volume",
+        title: String(localized: "\(sound.title) Volume"),
         sections: []
       )
 
@@ -175,9 +188,9 @@
     }
 
     private static func createCurrentVolumeItem(for sound: Sound) -> CPListItem {
-      let currentVolumeText = "\(Int(sound.volume * 100))%"
+      let percent = Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))
       let item = CPListItem(
-        text: "\(currentVolumeText) Volume",
+        text: String(localized: "\(percent) Volume"),
         detailText: nil
       )
       item.isEnabled = false
@@ -186,8 +199,8 @@
 
     private static func createTurnOffItem(for sound: Sound) -> CPListItem {
       let item = CPListItem(
-        text: "Stop",
-        detailText: "Turn off this sound"
+        text: String(localized: "Stop"),
+        detailText: String(localized: "Turn off this sound")
       )
       item.handler = { _, completion in
         Task { @MainActor in
@@ -208,8 +221,8 @@
         let isCurrentVolume = abs(sound.volume - volume) < 0.01
 
         let item = CPListItem(
-          text: "\(percentage)%",
-          detailText: isCurrentVolume ? "Current" : nil
+          text: (Double(percentage) / 100).formatted(.percent.precision(.fractionLength(0))),
+          detailText: isCurrentVolume ? String(localized: "Current") : nil
         )
 
         if isCurrentVolume {
@@ -245,7 +258,7 @@
 
       // Header text
       let headerItem = CPListItem(
-        text: "Choose a volume to start \(sound.title)",
+        text: String(localized: "Choose a volume to start \(sound.title)"),
         detailText: nil
       )
       headerItem.isEnabled = false
@@ -256,7 +269,7 @@
         let volume = Float(percentage) / 100.0
 
         let item = CPListItem(
-          text: "\(percentage)%",
+          text: (Double(percentage) / 100).formatted(.percent.precision(.fractionLength(0))),
           detailText: nil
         )
 

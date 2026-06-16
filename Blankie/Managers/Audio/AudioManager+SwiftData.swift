@@ -61,8 +61,14 @@ extension AudioManager {
       Logger.audio.debug("AudioManager: Custom sounds already loaded, skipping reload")
     } else {
       Logger.audio.debug("AudioManager: Loading custom sounds with SwiftData coordination...")
+      // Restore any rows lost to a store rebuild from their file mirror before
+      // loading, so recovered sounds reappear this launch.
+      await CustomSoundManager.shared.reconcileCustomSoundsFromDisk()
       loadCustomSounds()
       hasLoadedCustomSounds = true
+      // Back-fill mirrors for sounds saved before mirroring existed, so existing
+      // libraries gain durability without waiting for an edit.
+      CustomSoundManager.shared.syncAllMirrors()
     }
 
     // Initialize PresetManager with ALL sounds loaded
@@ -78,9 +84,25 @@ extension AudioManager {
   /// one); it's idempotent and safe to re-run.
   @MainActor
   private func reconcileLaunchPlaybackState() {
+    // Custom sounds may be unavailable this session (SwiftData fell back to an
+    // in-memory store, or the rows haven't loaded). Union the loaded sounds with
+    // the SwiftData rows so a row that exists but didn't load as a Sound is still
+    // valid. If no rows are visible yet a solo favorite points at a non-built-in
+    // sound, that's a likely transient load failure, not a deletion — pass nil so
+    // solo favorites are kept rather than irreversibly pruned (mirrors the bail
+    // in PresetManager.cleanupDeletedCustomSounds).
+    let customRowNames = Set(CustomSoundManager.shared.getAllCustomSounds().map { $0.fileName })
+    let validNames = Set(sounds.map { $0.fileName }).union(customRowNames)
+    let soloFavoriteIsUnknown = GlobalSettings.shared.starredItems.contains { token in
+      guard let fileName = GlobalSettings.soloFileName(fromToken: token) else { return false }
+      return !validNames.contains(fileName)
+    }
+    let validSoundFileNames: Set<String>? =
+      (customRowNames.isEmpty && soloFavoriteIsUnknown) ? nil : validNames
+
     GlobalSettings.shared.pruneStarredItems(
       validPresetIDs: Set(PresetManager.shared.presets.map { $0.id.uuidString }),
-      validSoundFileNames: Set(sounds.map { $0.fileName }))
+      validSoundFileNames: validSoundFileNames)
 
     let hadSavedSolo = GlobalSettings.shared.getSavedSoloModeFileName() != nil
     let soloRestored = restoreSoloModeIfNeeded(soundsFullyLoaded: true)
@@ -119,39 +141,15 @@ extension AudioManager {
         Task { @MainActor in
           self?.loadCustomSounds()
 
-          // Auto-add newly imported sounds to current preset
-          if notification.name == .customSoundAdded {
-            self?.addNewSoundToCurrentPreset()
+          // Scrub the just-deleted sound from every preset now (loadCustomSounds
+          // has already rebuilt `sounds` without it). The load's own cleanup is
+          // deferred 5s, so without this a delete-then-quit could leave a preset
+          // referencing a missing sound — which fails validation at next launch.
+          if notification.name == .customSoundDeleted {
+            PresetManager.shared.cleanupDeletedCustomSounds()
           }
         }
       }
   }
 
-  /// Automatically add newly imported sounds to the current preset
-  @MainActor
-  private func addNewSoundToCurrentPreset() {
-    guard let currentPreset = PresetManager.shared.currentPreset,
-      !currentPreset.isDefault
-    else {
-      Logger.audio.debug("AudioManager: No current custom preset to add new sound to")
-      return
-    }
-
-    // Get the newest sound (last in the list after loading)
-    guard let newestSound = sounds.last else {
-      Logger.audio.debug("AudioManager: No sounds available to add to preset")
-      return
-    }
-
-    Logger.audio.debug(
-      "AudioManager: Auto-adding '\(newestSound.fileName)' to current preset '\(currentPreset.displayName)'"
-    )
-
-    // Add the new sound to the current preset as unselected
-    newestSound.isSelected = false
-    newestSound.volume = 1.0
-
-    // This will trigger the preset update via the existing observer
-    PresetManager.shared.updateCurrentPresetState()
-  }
 }

@@ -12,19 +12,70 @@ import os
 /// ZIP archive utility using ZIPFoundation
 struct ArchiveUtility {
 
+  enum ArchiveError: Error {
+    case limitExceeded
+  }
+
+  // Caps for untrusted .blankie archives — far above any real preset
+  // (a manifest, artwork, and a few sounds capped at 50 MB each).
+  private static let maxEntryCount = 512
+  private static let maxTotalUncompressedBytes: Int64 = 512 << 20  // 512 MiB (8 sounds @ 50 MB + artwork)
+  private static let maxEntryUncompressedBytes: Int64 = 64 << 20  // 64 MiB per entry (clears a 50 MB sound)
+
   static func extract(from archiveURL: URL, to destinationURL: URL) throws {
     try FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true)
 
     let archive = try Archive(url: archiveURL, accessMode: .read)
 
+    // .blankie archives are untrusted shared input. Resolve each entry path and
+    // confirm it stays inside the extraction directory so a crafted entry like
+    // "../../foo" can't write outside it (zip-slip).
+    let root = destinationURL.standardizedFileURL
+    let rootPrefix = root.path.hasSuffix("/") ? root.path : root.path + "/"
+
+    var entryCount = 0
+    var totalBytes: Int64 = 0
+
     for entry in archive {
-      let path = destinationURL.appendingPathComponent(entry.path)
+      entryCount += 1
+      guard entryCount <= maxEntryCount else {
+        throw ArchiveError.limitExceeded
+      }
+      // A symlink could redirect later entries' writes outside the destination.
+      guard entry.type != .symlink else { continue }
+      // Use appending(path:directoryHint:) (no filesystem access) rather than
+      // appendingPathComponent, which stats the path and canonicalizes the base
+      // (e.g. /var -> /private/var). That canonicalization made `path` diverge
+      // from `rootPrefix` and the containment check rejected every entry.
+      let path = root.appending(path: entry.path, directoryHint: .inferFromPath)
+        .standardizedFileURL
+      guard path.path.hasPrefix(rootPrefix) else {
+        Logger.app.error(
+          "ArchiveUtility: Skipping archive entry escaping destination: \(entry.path)"
+        )
+        continue
+      }
       if entry.type == .directory {
         try FileManager.default.createDirectory(at: path, withIntermediateDirectories: true)
       } else {
         let parent = path.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
-        _ = try archive.extract(entry, to: path)
+        // Count decompressed bytes as they're written: header-declared sizes
+        // can lie, so the zip-bomb cap is enforced on actual output.
+        FileManager.default.createFile(atPath: path.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: path)
+        defer { try? handle.close() }
+        var entryBytes: Int64 = 0
+        _ = try archive.extract(entry) { data in
+          entryBytes += Int64(data.count)
+          totalBytes += Int64(data.count)
+          guard entryBytes <= maxEntryUncompressedBytes,
+            totalBytes <= maxTotalUncompressedBytes
+          else {
+            throw ArchiveError.limitExceeded
+          }
+          try handle.write(contentsOf: data)
+        }
       }
     }
   }

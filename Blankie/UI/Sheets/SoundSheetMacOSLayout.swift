@@ -14,12 +14,14 @@ struct SoundSheetMacOSLayout: View {
   @Binding var selectedIcon: String
   @Binding var selectedFile: URL?
   @Binding var isImporting: Bool
+  @Binding var convertToAACOnImport: Bool
   @Binding var randomizeStartPosition: Bool
   @Binding var normalizeAudio: Bool
   @Binding var volumeAdjustment: Float
   @Binding var loopSound: Bool
   @Binding var fadeSound: Bool
   @Binding var isPresetUseOnly: Bool
+  @Binding var isMusic: Bool
   @Binding var addToPresetIDs: Set<UUID>
   @Binding var createMixPreset: Bool
   @Binding var isPreviewing: Bool
@@ -55,12 +57,14 @@ struct SoundSheetMacOSLayout: View {
         selectedIcon: $selectedIcon,
         selectedFile: $selectedFile,
         isImporting: $isImporting,
+        convertToAACOnImport: $convertToAACOnImport,
         randomizeStartPosition: $randomizeStartPosition,
         normalizeAudio: $normalizeAudio,
         volumeAdjustment: $volumeAdjustment,
         loopSound: $loopSound,
         fadeSound: $fadeSound,
         isPresetUseOnly: $isPresetUseOnly,
+        isMusic: $isMusic,
         addToPresetIDs: $addToPresetIDs,
         createMixPreset: $createMixPreset,
         isPreviewing: $isPreviewing,

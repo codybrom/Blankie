@@ -10,15 +10,9 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
   struct QuickMixEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var globalSettings = GlobalSettings.shared
-    @ObservedObject private var audioManager = AudioManager.shared
+    private let globalSettings = GlobalSettings.shared
+    private let audioManager = AudioManager.shared
     @State private var selectedSounds: [String] = []
-
-    private var orderedSounds: [Sound] {
-      selectedSounds.compactMap { fileName in
-        audioManager.sounds.first { $0.fileName == fileName }
-      }
-    }
 
     var body: some View {
       NavigationStack {
@@ -85,6 +79,8 @@ import SwiftUI
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") {
               globalSettings.setQuickMixSoundFileNames(selectedSounds)
+              // Stop any sound that was just removed from an active mix.
+              audioManager.reconcileQuickMixMembership()
               dismiss()
             }
             .disabled(selectedSounds.isEmpty)
@@ -93,7 +89,12 @@ import SwiftUI
         }
       }
       .onAppear {
-        selectedSounds = globalSettings.quickMixSoundFileNames
+        // Drop any stale entries that can no longer stand alone (preset-only or
+        // since-removed sounds), so the order list, the count, and what Done
+        // saves all stay consistent with what's actually selectable.
+        selectedSounds = globalSettings.quickMixSoundFileNames.filter { fileName in
+          audioManager.sounds.contains { $0.fileName == fileName && !$0.isPresetUseOnly }
+        }
       }
       // Quick Mix has no preset, so use the app accent. Tinting the whole sheet
       // keeps the accent-colored sound icons stable across interactions.
@@ -105,11 +106,15 @@ import SwiftUI
 
   struct QuickMixSoundPicker: View {
     @Binding var selectedSounds: [String]
-    @ObservedObject private var audioManager = AudioManager.shared
-    @ObservedObject private var globalSettings = GlobalSettings.shared
+    private let audioManager = AudioManager.shared
+    private let globalSettings = GlobalSettings.shared
 
     private var builtInSounds: [Sound] {
-      audioManager.sounds.filter { !$0.isCustom }.sorted { $0.title < $1.title }
+      // Preset-use-only sounds (explicit or implied by a non-looping one-shot)
+      // can't stand alone, so they're never eligible for Quick Mix.
+      audioManager.sounds
+        .filter { !$0.isCustom && !$0.isPresetUseOnly }
+        .sorted { $0.title < $1.title }
     }
 
     var body: some View {

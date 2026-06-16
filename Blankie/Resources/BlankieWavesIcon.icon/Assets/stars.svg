@@ -1,0 +1,61 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <radialGradient id="glow">
+    <stop offset="0%" stop-color="#FFF9E8" stop-opacity="0.75"/>
+    <stop offset="100%" stop-color="#FFF9E8" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="haze">
+    <stop offset="0%" stop-color="#FFD98A" stop-opacity="0.16"/>
+    <stop offset="100%" stop-color="#FFD98A" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+
+<!-- warm horizon glow above the blanket -->
+<ellipse cx="560" cy="510" rx="490" ry="165" fill="url(#haze)"/>
+
+<!-- four-point twinkles -->
+<circle cx="744" cy="176" r="16" fill="url(#glow)"/>
+<path d="M744 158Q747.2 172.8 762 176Q747.2 179.2 744 194Q740.8 179.2 726 176Q740.8 172.8 744 158Z" fill="#FFF9E8" fill-opacity="0.92"/>
+<circle cx="306" cy="86" r="10" fill="url(#glow)"/>
+<path d="M306 76Q307.8 84.2 316 86Q307.8 87.8 306 96Q304.2 87.8 296 86Q304.2 84.2 306 76Z" fill="#FFF9E8" fill-opacity="0.8"/>
+<circle cx="888" cy="120" r="12" fill="url(#glow)"/>
+<path d="M888 107Q890.3 117.7 901 120Q890.3 122.3 888 133Q885.7 122.3 875 120Q885.7 117.7 888 107Z" fill="#FFF9E8" fill-opacity="0.85"/>
+
+<!-- glow halos -->
+<circle cx="196" cy="186" r="15" fill="url(#glow)"/>
+<circle cx="486" cy="112" r="13" fill="url(#glow)"/>
+<circle cx="572" cy="318" r="14" fill="url(#glow)"/>
+<circle cx="932" cy="428" r="14" fill="url(#glow)"/>
+
+<!-- bright sparkles -->
+<circle cx="196" cy="186" r="3.2" fill="#FFF9E8" fill-opacity="0.84"/>
+<circle cx="486" cy="112" r="2.8" fill="#FFF9E8" fill-opacity="0.80"/>
+<circle cx="572" cy="318" r="3.0" fill="#FFF9E8" fill-opacity="0.80"/>
+<circle cx="932" cy="428" r="3.0" fill="#FFF9E8" fill-opacity="0.80"/>
+
+<!-- mid stars -->
+<circle cx="118" cy="320" r="2.2" fill="#FFF9E8" fill-opacity="0.58"/>
+<circle cx="398" cy="232" r="2.0" fill="#FFF9E8" fill-opacity="0.54"/>
+<circle cx="582" cy="196" r="2.4" fill="#FFF9E8" fill-opacity="0.62"/>
+<circle cx="646" cy="88"  r="2.2" fill="#FFF9E8" fill-opacity="0.58"/>
+<circle cx="840" cy="300" r="2.2" fill="#FFF9E8" fill-opacity="0.56"/>
+<circle cx="962" cy="256" r="2.0" fill="#FFF9E8" fill-opacity="0.54"/>
+<circle cx="260" cy="322" r="2.0" fill="#FFF9E8" fill-opacity="0.52"/>
+<circle cx="548" cy="388" r="2.2" fill="#FFF9E8" fill-opacity="0.56"/>
+
+<!-- small stars -->
+<circle cx="96"  cy="142" r="1.6" fill="#FFF9E8" fill-opacity="0.38"/>
+<circle cx="160" cy="84"  r="1.6" fill="#FFF9E8" fill-opacity="0.36"/>
+<circle cx="236" cy="158" r="1.6" fill="#FFF9E8" fill-opacity="0.40"/>
+<circle cx="348" cy="162" r="1.8" fill="#FFF9E8" fill-opacity="0.42"/>
+<circle cx="420" cy="78"  r="1.6" fill="#FFF9E8" fill-opacity="0.36"/>
+<circle cx="520" cy="268" r="1.7" fill="#FFF9E8" fill-opacity="0.40"/>
+<circle cx="560" cy="60"  r="1.6" fill="#FFF9E8" fill-opacity="0.34"/>
+<circle cx="770" cy="70"  r="1.6" fill="#FFF9E8" fill-opacity="0.36"/>
+<circle cx="946" cy="178" r="1.6" fill="#FFF9E8" fill-opacity="0.38"/>
+<circle cx="964" cy="348" r="1.7" fill="#FFF9E8" fill-opacity="0.38"/>
+<circle cx="64"  cy="226" r="1.6" fill="#FFF9E8" fill-opacity="0.36"/>
+<circle cx="124" cy="414" r="1.6" fill="#FFF9E8" fill-opacity="0.34"/>
+<circle cx="208" cy="392" r="1.6" fill="#FFF9E8" fill-opacity="0.32"/>
+<circle cx="652" cy="328" r="1.7" fill="#FFF9E8" fill-opacity="0.40"/>
+</svg>

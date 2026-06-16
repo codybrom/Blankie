@@ -21,7 +21,7 @@ import bg4 from "../assets/bg-4.png";
 
 const title = "Press Kit";
 const description =
-  "Press kit for Blankie — the free, open-source ambient sound mixer for iPhone, iPad, Mac, and CarPlay. Facts, screenshots, logos, and contact information.";
+  "Press kit for Blankie, the free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay support. Facts, screenshots, logos, and contact information.";
 
 // Stable, original-file download links (GitHub raw preserves filenames)
 const raw =
@@ -29,13 +29,14 @@ const raw =
 
 const facts: [string, string][] = [
   ["App name", "Blankie"],
+  ["Version", "2.0.0"],
   ["Developer", "Cody Bromley (independent developer)"],
-  ["Price", "Free — no ads, in-app purchases, subscriptions, or accounts"],
-  ["Platforms", "iPhone, iPad, Mac, CarPlay"],
-  ["Requires", "iOS 26 or later · macOS 15.6 or later"],
+  ["Price", "Free. No ads, in-app purchases, subscriptions or accounts"],
+  ["Platforms", "iPhone, iPad, Mac (CarPlay supported)"],
+  ["Requires", "iOS 26 or later · macOS 26 or later"],
   [
     "First released",
-    "April 2025 (Mac) · iPhone, iPad & CarPlay coming soon (public TestFlight open now)",
+    "April 2025 on the Mac App Store · iPad and iPhone (with CarPlay) coming Summer 2026",
   ],
   [
     "Languages",
@@ -45,7 +46,7 @@ const facts: [string, string][] = [
   ["License", "Open source under MIT (code) · openly licensed sounds"],
   [
     "Privacy",
-    "No data collection, no tracking, no analytics — works fully offline",
+    "No data collection, no tracking, no analytics. Listen 100% offline",
   ],
 ];
 
@@ -58,12 +59,15 @@ const links: [string, string][] = [
 ];
 
 const highlights = [
-  "The only actively maintained open-source ambient sound mixer we know of on the App Store — and one of the only ambient apps with CarPlay at any price",
-  "Mix 14 hand-tuned sounds, or import your own audio with automatic loudness matching (two-way K-weighted LUFS analysis)",
+  "Only ambient sound app with CarPlay",
+  "Includes a mix of 23 different ambient sounds, static noises and music loops",
+  "Customize with artwork, colors and your own sounds, then export and share with friends",
+  "Built natively for iOS 26 with Liquid Glass",
+  "All features and sounds free forever, with no ads or subscriptions or trackers of any kind",
+  "Listen 100% offline and even import your sounds from voice memos and your files",
   "Sleep timer with animated lock-screen artwork to drift off to",
-  "Built natively for iOS 26 with Liquid Glass, full VoiceOver and Dynamic Type support",
-  "Free forever — funded only by optional donations, never ads or subscriptions",
-  "Quietly trusted at scale: one institution deployed 500 copies to its managed devices in a single day (March 2026) — we can't tell who, because the app doesn't track anyone",
+  "Fully accessible with VoiceOver and Dynamic Type support",
+  "Open source and actively maintained with community contributors and translators around the world",
 ];
 
 const coverage: [string, string, string][] = [
@@ -76,7 +80,7 @@ const coverage: [string, string, string][] = [
     "“Freie Mac-App mischt individuelle Klanglandschaften”",
     "April 2025",
   ],
-  ["MacGadget", "Repeat coverage of releases and the iOS beta", "2025–2026"],
+  ["MacGadget", "Repeat coverage of releases and the iOS beta", "2025 to 2026"],
   ["AAPL Ch.", "Mac release coverage (Japan)", "May 2025"],
 ];
 
@@ -111,8 +115,8 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
         Blankie Press Kit
       </h1>
       <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-200">
-        Everything you need to write about Blankie — the free, open-source
-        ambient sound mixer for iPhone, iPad, Mac, and CarPlay.
+        Everything you need to write about Blankie, the free, open-source
+        ambient sound mixer for Mac, iPad and iPhone with CarPlay.
       </p>
       <p class="mt-6">
         <a
@@ -136,9 +140,7 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
           One-liner
         </p>
         <p class="text-lg text-gray-100">
-          Blankie is a free, open-source ambient sound mixer for iPhone, iPad,
-          Mac, and CarPlay — no ads, no subscriptions, no accounts, and it works
-          fully offline.
+          Blankie is a free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay. No ads, no subscriptions, no accounts, and it works fully offline.
         </p>
       </Card>
       <Card className="gap-0 p-8">
@@ -147,14 +149,14 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
         </p>
         <p class="text-gray-100">
           Blankie helps people focus, relax, and sleep by mixing high-quality
-          ambient sounds — rain, waves, fireplaces, coffee shops, and more —
+          ambient sounds (rain, waves, fireplaces, coffee shops, and more)
           into custom soundscapes. Listeners can import their own audio, which
           Blankie loudness-matches automatically, set a sleep timer with
           animated lock-screen artwork, and take their mixes on the road with
           CarPlay. Inspired by Blanket for Linux and built natively for Apple
           platforms by independent developer Cody Bromley, Blankie is
           MIT-licensed, localized in 12 languages, fully accessible with
-          VoiceOver, and free forever — supported only by optional donations.
+          VoiceOver, and free forever.
         </p>
       </Card>
     </div>
@@ -271,7 +273,7 @@ const assets: { img: ImageMetadata; file: string; label: string }[] = [
     <Card className="gap-0 p-8">
       <p class="text-gray-100">
         Cody Bromley is an independent developer who built Blankie as a love
-        letter to Blanket for Linux — and to the idea that calm shouldn't have a
+        letter to Blanket for Linux, and to the idea that calm shouldn't have a
         paywall. He develops Blankie in the open with community contributors and
         translators around the world. He's happy to talk about indie
         development, open source on the App Store, audio engineering, or why the

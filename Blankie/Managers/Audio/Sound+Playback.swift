@@ -122,7 +122,9 @@ extension Sound {
     playbackState = .stopped
   }
 
-  func pause(immediate: Bool = false) {
+  /// `fadeDuration` overrides the standard ramp (nil = `Sound.fadeDuration`);
+  /// zero still pauses in place, unlike `immediate`, which stops and clears position.
+  func pause(immediate: Bool = false, fadeDuration requestedFade: TimeInterval? = nil) {
     guard let currentPlayer = player else { return }
 
     if immediate {
@@ -137,7 +139,7 @@ extension Sound {
       // playback logic treat the sound as paused during the ramp; play() can
       // rescue a mid-fade pause by ramping back up.
       playbackState = .paused
-      currentPlayer.fade(to: 0, duration: shouldFade ? Sound.fadeDuration : 0) {
+      currentPlayer.fade(to: 0, duration: shouldFade ? (requestedFade ?? Sound.fadeDuration) : 0) {
         [weak currentPlayer] in
         currentPlayer?.pause()
       }
@@ -154,6 +156,30 @@ extension Sound {
     currentPlayer.stop()
     playbackState = .stopped
     Logger.sounds.debug("Sound: Stopped '\(self.fileName)'")
+  }
+
+  /// Rebuilds the live player when the loop preference changed. `loops` is
+  /// fixed when the player is created, so editing the toggle on a loaded sound
+  /// has no effect until the player is recreated — without this a sound loaded
+  /// as looping keeps looping. A sound that is audibly playing resumes (as the
+  /// new loop mode); anything paused/stopped just gets a fresh player for its
+  /// next start.
+  func reloadForLoopChange() {
+    guard let player else { return }  // not loaded: next load reads the new value
+
+    let desiredLoop =
+      SoundCustomizationManager.shared.getCustomization(for: fileName)?.loopSound ?? true
+    guard player.loops != desiredLoop else { return }
+
+    let wasPlaying = playbackState == .playing
+    Logger.sounds.debug(
+      "Sound: Reloading '\(self.fileName)' for loop change (loops=\(desiredLoop), wasPlaying=\(wasPlaying))"
+    )
+    unload()
+    loadSound()
+    if wasPlaying {
+      play()
+    }
   }
 
   func reset() {
@@ -177,6 +203,11 @@ extension Sound {
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isSelected")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
+
+    // `volume = 0.75` above re-armed the debounced volume save; cancel it so it
+    // can't rewrite the key we just removed.
+    volumeDebounceTimer?.invalidate()
+    volumeDebounceTimer = nil
 
     Logger.sounds.debug("Sound: Reset complete for '\(self.fileName)'")
     isResetting = false

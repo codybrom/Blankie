@@ -10,6 +10,8 @@ import os
 
 #if os(macOS)
   final class MacAppDelegate: NSObject, NSApplicationDelegate {
+    private var menuBarController: MenuBarController?
+
     func applicationDidFinishLaunching(_: Notification) {
       configureWindowAppearance()
       setupNotificationObservers()
@@ -17,6 +19,7 @@ import os
       clearRestartFlagIfNeeded()
       applyUITestingConfigurationIfNeeded()
       DockPresenceManager.shared.start()
+      menuBarController = MenuBarController(modelContainer: SharedModelContainer.shared.container)
     }
 
     private func configureWindowAppearance() {
@@ -47,7 +50,10 @@ import os
     }
 
     private func applySavedLanguagePreference() {
-      if let languageCode = UserDefaults.standard.string(forKey: "languagePreference"),
+      // The language preference lives in the shared app-group suite (AppDataMigrator
+      // moves it there and removes it from standard); read it from the same place
+      // GlobalSettings writes it, or this fallback is always nil post-migration.
+      if let languageCode = UserDefaults.shared.string(forKey: UserDefaultsKeys.language),
         languageCode != "system"
       {
         Logger.app.debug("AppDelegate: Applying saved language \(languageCode) at launch")
@@ -194,6 +200,17 @@ import os
         }
       #endif
 
+      // Reclaim leftover import/share staging in tmp + Documents/Inbox that
+      // iOS doesn't clean for us (accumulates across versions over time).
+      // Detached so the FileManager work stays off the main thread.
+      Task.detached {
+        StorageMaintenance.clean()
+        #if DEBUG
+          // Itemize on-disk usage (post-cleanup) so the Settings number is legible.
+          StorageReport.log()
+        #endif
+      }
+
       return true
     }
 
@@ -205,6 +222,28 @@ import os
         await AudioManager.shared.loadCustomSoundsWhenReady()
 
         Logger.app.debug("IOSAppDelegate: Async app core initialization complete")
+      }
+
+      // Vend scenes explicitly — manifest-only connection is unreliable for a
+      // SwiftUI `@main` app hosting a CarPlay scene. The CarPlay role gets its
+      // delegate; the window role keeps SwiftUI's "Default Configuration". Role
+      // matched by raw value to avoid importing CarPlay into this file.
+      func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+      ) -> UISceneConfiguration {
+        if connectingSceneSession.role.rawValue
+          == "CPTemplateApplicationSceneSessionRoleApplication"
+        {
+          Logger.app.debug("IOSAppDelegate: Vending CarPlay scene configuration")
+          let configuration = UISceneConfiguration(
+            name: "CarPlay", sessionRole: connectingSceneSession.role)
+          configuration.delegateClass = CarPlaySceneDelegate.self
+          return configuration
+        }
+        return UISceneConfiguration(
+          name: "Default Configuration", sessionRole: connectingSceneSession.role)
       }
     #endif
 

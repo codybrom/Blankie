@@ -7,10 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AAAA0000000000000000AA02 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA0000000000000000AA03 /* ZIPFoundation */; };
+		F95914D92FDF1D2300808460 /* BlankieAssetDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F9C0AF062E0DAF7A00E4530D /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F9C0AA3E2E0DADF300E4530D /* ZIPFoundation */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		F95914D62FDF1D2300808460 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F91350572D233A43003C85BE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F95914CF2FDF1D2300808460;
+			remoteInfo = BlankieAssets;
+		};
 		F9ED6BAE2D321D3300240F13 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F91350572D233A43003C85BE /* Project object */;
@@ -27,11 +36,24 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		F95914D82FDF1D2300808460 /* Embed ExtensionKit Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "$(EXTENSIONS_FOLDER_PATH)";
+			dstSubfolder = Product;
+			files = (
+				F95914D92FDF1D2300808460 /* BlankieAssetDownloader.appex in Embed ExtensionKit Extensions */,
+			);
+			name = "Embed ExtensionKit Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		F913505F2D233A43003C85BE /* Blankie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blankie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F921ED992D272AE300D4F3D3 /* Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		F93A3B112D26E93600EFC1C9 /* Blankie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Blankie.entitlements; sourceTree = "<group>"; };
 		F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Blankie.xcodeproj; sourceTree = "<group>"; };
+		F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = BlankieAssetDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9ED65FE2D321AF800240F13 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		F9ED66022D321B7D00240F13 /* Blankie.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Blankie.xctestplan; sourceTree = "<group>"; };
 		F9ED6BAA2D321D3300240F13 /* BlankieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlankieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -39,36 +61,52 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F95914DE2FDF1D2300808460 /* Exceptions for "BlankieAssets" folder in "BlankieAssetDownloader" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */;
+		};
 		F97812B62EA2EF1E00580F1A /* Exceptions for "Blankie" folder in "Blankie" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			assetTagsByRelativePath = {
-				Resources/AnimatedArtwork/Abstract1/Abstract1.mov = (Abstract1, );
-				Resources/AnimatedArtwork/Abstract2/Abstract2.mov = (Abstract2, );
-				Resources/AnimatedArtwork/Abstract3/Abstract3.mov = (Abstract3, );
-				Resources/AnimatedArtwork/Abstract4/Abstract4.mov = (Abstract4, );
-				Resources/AnimatedArtwork/Beach/Beach.mov = (Beach, );
-				Resources/AnimatedArtwork/Bokeh/Bokeh.mov = (Bokeh, );
-				Resources/AnimatedArtwork/CityLoop/CityLoop.mov = (CityLoop, );
-				Resources/AnimatedArtwork/GoldenWaves/GoldenWaves.mov = (GoldenWaves, );
-				Resources/AnimatedArtwork/GrassWaves/GrassWaves.mov = (GrassWaves, );
-				Resources/AnimatedArtwork/LavaLamp/LavaLamp.mov = (LavaLamp, );
-				Resources/AnimatedArtwork/LinenDark/LinenDark.mov = (LinenDark, );
-				Resources/AnimatedArtwork/LinenLight/LinenLight.mov = (LinenLight, );
-				Resources/AnimatedArtwork/NeonDrive/NeonDrive.mov = (NeonDrive, );
-				Resources/AnimatedArtwork/OceanWaves/OceanWaves.mov = (OceanWaves, );
-				Resources/AnimatedArtwork/PaperPentagons/PaperPentagons.mov = (PaperPentagons, );
-				Resources/AnimatedArtwork/Pillows/Pillows.mov = (Pillows, );
-				Resources/AnimatedArtwork/RainLoop/RainLoop.mov = (RainLoop, );
-				Resources/AnimatedArtwork/RecordPlayer/RecordPlayer.mov = (RecordPlayer, );
-				Resources/AnimatedArtwork/Squares/Squares.mov = (Squares, );
-				Resources/AnimatedArtwork/StreamLoop/StreamLoop.mov = (StreamLoop, );
-				Resources/AnimatedArtwork/Swirl/Swirl.mov = (Swirl, );
-			};
+			membershipExceptions = (
+				Managers/Audio/README.md,
+				Resources/AnimatedArtwork/Abstract1/Abstract1.mov,
+				Resources/AnimatedArtwork/Abstract2/Abstract2.mov,
+				Resources/AnimatedArtwork/Abstract3/Abstract3.mov,
+				Resources/AnimatedArtwork/Abstract4/Abstract4.mov,
+				Resources/AnimatedArtwork/Beach/Beach.mov,
+				Resources/AnimatedArtwork/Bokeh/Bokeh.mov,
+				Resources/AnimatedArtwork/CityLoop/CityLoop.mov,
+				Resources/AnimatedArtwork/GoldenWaves/GoldenWaves.mov,
+				Resources/AnimatedArtwork/GrassWaves/GrassWaves.mov,
+				Resources/AnimatedArtwork/LavaLamp/LavaLamp.mov,
+				Resources/AnimatedArtwork/LinenDark/LinenDark.mov,
+				Resources/AnimatedArtwork/LinenLight/LinenLight.mov,
+				Resources/AnimatedArtwork/NeonDrive/NeonDrive.mov,
+				Resources/AnimatedArtwork/OceanWaves/OceanWaves.mov,
+				Resources/AnimatedArtwork/PaperPentagons/PaperPentagons.mov,
+				Resources/AnimatedArtwork/Pillows/Pillows.mov,
+				Resources/AnimatedArtwork/RainLoop/RainLoop.mov,
+				Resources/AnimatedArtwork/RecordPlayer/RecordPlayer.mov,
+				Resources/AnimatedArtwork/Squares/Squares.mov,
+				Resources/AnimatedArtwork/StreamLoop/StreamLoop.mov,
+				Resources/AnimatedArtwork/Swirl/Swirl.mov,
+			);
 			target = F913505E2D233A43003C85BE /* Blankie */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		F95914D12FDF1D2300808460 /* BlankieAssets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F95914DE2FDF1D2300808460 /* Exceptions for "BlankieAssets" folder in "BlankieAssetDownloader" target */,
+			);
+			path = BlankieAssets;
+			sourceTree = "<group>";
+		};
 		F9BC93262D41457D00E450FC /* Blankie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -90,6 +128,17 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AAAA0000000000000000AA01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				AAAA0000000000000000AA02 /* ZIPFoundation in Frameworks */,
+			);
+		};
+		F95914CD2FDF1D2300808460 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 		F9C0AF052E0DAF7000E4530D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -105,6 +154,7 @@
 				F91350602D233A43003C85BE /* Products */,
 				F9ED65FD2D321AF800240F13 /* Frameworks */,
 				F9BC93262D41457D00E450FC /* Blankie */,
+				F95914D12FDF1D2300808460 /* BlankieAssets */,
 				F9ED6DAB2D321F5D00240F13 /* BlankieTests */,
 				F9ED70DF2D3229AD00240F13 /* BlankieUITests */,
 				F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */,
@@ -120,6 +170,7 @@
 				F913505F2D233A43003C85BE /* Blankie.app */,
 				F9ED6BAA2D321D3300240F13 /* BlankieTests.xctest */,
 				F9ED70DE2D3229AD00240F13 /* BlankieUITests.xctest */,
+				F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -144,13 +195,16 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F91350862D233A44003C85BE /* Build configuration list for PBXNativeTarget "Blankie" */;
 			buildPhases = (
-				F9DA7AFE7C400000000000A1 /* Fetch Animated Artwork */,
 				F913505B2D233A43003C85BE /* Sources */,
 				F913505D2D233A43003C85BE /* Resources */,
 				F921EDC02D27408E00D4F3D3 /* Run Script */,
 				F9C0AF052E0DAF7000E4530D /* Frameworks */,
+				F95914D82FDF1D2300808460 /* Embed ExtensionKit Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				F95914D72FDF1D2300808460 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F9BC93262D41457D00E450FC /* Blankie */,
@@ -163,11 +217,30 @@
 			productReference = F913505F2D233A43003C85BE /* Blankie.app */;
 			productType = "com.apple.product-type.application";
 		};
+		F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F95914DF2FDF1D2300808460 /* Build configuration list for PBXNativeTarget "BlankieAssetDownloader" */;
+			buildPhases = (
+				F95914CC2FDF1D2300808460 /* Sources */,
+				F95914CD2FDF1D2300808460 /* Frameworks */,
+				F95914CE2FDF1D2300808460 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				F95914D12FDF1D2300808460 /* BlankieAssets */,
+			);
+			name = BlankieAssetDownloader;
+			productName = BlankieAssets;
+			productReference = F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */;
+			productType = "com.apple.product-type.extensionkit-extension";
+		};
 		F9ED6BA92D321D3300240F13 /* BlankieTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = F9ED6BB02D321D3300240F13 /* Build configuration list for PBXNativeTarget "BlankieTests" */;
 			buildPhases = (
 				F9ED6BA62D321D3300240F13 /* Sources */,
+				AAAA0000000000000000AA01 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -178,6 +251,9 @@
 				F9ED6DAB2D321F5D00240F13 /* BlankieTests */,
 			);
 			name = BlankieTests;
+			packageProductDependencies = (
+				AAAA0000000000000000AA03 /* ZIPFoundation */,
+			);
 			productName = BlankieTests;
 			productReference = F9ED6BAA2D321D3300240F13 /* BlankieTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -208,35 +284,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				KnownAssetTags = (
-					Abstract1,
-					Abstract2,
-					Abstract3,
-					Abstract4,
-					Beach,
-					Bokeh,
-					CityLoop,
-					GoldenWaves,
-					GrassWaves,
-					LavaLamp,
-					LinenDark,
-					LinenLight,
-					NeonDrive,
-					OceanWaves,
-					PaperPentagons,
-					Pillows,
-					RainLoop,
-					RecordPlayer,
-					Squares,
-					StreamLoop,
-					Swirl,
-				);
-				LastSwiftUpdateCheck = 1640;
+				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					F913505E2D233A43003C85BE = {
 						CreatedOnToolsVersion = 16.2;
 						LastSwiftMigration = 1620;
+					};
+					F95914CF2FDF1D2300808460 = {
+						CreatedOnToolsVersion = 26.5;
 					};
 					F9ED6BA92D321D3300240F13 = {
 						CreatedOnToolsVersion = 16.2;
@@ -286,12 +342,18 @@
 				F913505E2D233A43003C85BE /* Blankie */,
 				F9ED6BA92D321D3300240F13 /* BlankieTests */,
 				F9ED70DD2D3229AD00240F13 /* BlankieUITests */,
+				F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		F913505D2D233A43003C85BE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		F95914CE2FDF1D2300808460 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
 			);
@@ -334,35 +396,15 @@
 				"",
 			);
 		};
-		F9DA7AFE7C400000000000A1 /* Fetch Animated Artwork */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			name = "Fetch Animated Artwork";
-			shellPath = /bin/sh;
-			shellScript = (
-				"#!/bin/sh",
-				"# Animated-artwork .mov files are stored outside of git",
-				"# Run scripts/fetch_animated_artwork.sh to fetch/confirm existence",
-				"set -e",
-				"cd \"$SRCROOT\"",
-				"[ -f scripts/animated-artwork.manifest ] || exit 0",
-				"missing=0",
-				"while read -r name _; do",
-				"  [ -z \"$name\" ] && continue",
-				"  case \"$name\" in '#'*) continue;; esac",
-				"  [ -f \"Blankie/Resources/AnimatedArtwork/$name/$name.mov\" ] || missing=1",
-				"done < scripts/animated-artwork.manifest",
-				"if [ \"$missing\" -eq 1 ]; then",
-				"  echo \"Animated artwork missing - fetching from GitHub Release...\"",
-				"  scripts/fetch_animated_artwork.sh",
-				"fi",
-				"",
-			);
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		F913505B2D233A43003C85BE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
+		F95914CC2FDF1D2300808460 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
 			);
@@ -380,6 +422,12 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F95914D72FDF1D2300808460 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			platformFilter = ios;
+			target = F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */;
+			targetProxy = F95914D62FDF1D2300808460 /* PBXContainerItemProxy */;
+		};
 		F9ED6BAF2D321D3300240F13 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilters = (
@@ -537,6 +585,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Blankie.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Blankie-macOS.entitlements";
 				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
@@ -544,17 +593,15 @@
 				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphoneos*]" = YES;
-				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphonesimulator*]" = YES;
-				"ENABLE_ON_DEMAND_RESOURCES[sdk=macosx*]" = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors. All rights reserved.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -564,7 +611,7 @@
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
@@ -572,13 +619,11 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
-				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -603,20 +648,22 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Blankie.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Blankie-macOS.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "$(CODE_SIGN_IDENTITY)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors. All rights reserved.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -626,7 +673,7 @@
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
@@ -634,13 +681,11 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
-				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -655,6 +700,162 @@
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
+		};
+		F95914DA2FDF1D2300808460 /* Debug configuration for PBXNativeTarget "BlankieAssetDownloader" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieAssets/BlankieAssets.entitlements;
+				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieAssets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieAssets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).BlankieAssets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F95914DB2FDF1D2300808460 /* Debug-CarPlay configuration for PBXNativeTarget "BlankieAssetDownloader" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieAssets/BlankieAssets.entitlements;
+				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieAssets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieAssets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).BlankieAssets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = "Debug-CarPlay";
+		};
+		F95914DC2FDF1D2300808460 /* Release configuration for PBXNativeTarget "BlankieAssetDownloader" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieAssets/BlankieAssets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieAssets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieAssets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).BlankieAssets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F95914DD2FDF1D2300808460 /* Release-CarPlay configuration for PBXNativeTarget "BlankieAssetDownloader" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieAssets/BlankieAssets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieAssets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieAssets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).BlankieAssets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = "Release-CarPlay";
 		};
 		F9E62BDE2DE8BD360004A3F8 /* Debug-CarPlay configuration for PBXProject "Blankie" */ = {
 			isa = XCBuildConfiguration;
@@ -735,6 +936,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Blankie-CarPlay.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Blankie-macOS.entitlements";
 				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
@@ -742,17 +944,15 @@
 				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphoneos*]" = YES;
-				"ENABLE_ON_DEMAND_RESOURCES[sdk=iphonesimulator*]" = YES;
-				"ENABLE_ON_DEMAND_RESOURCES[sdk=macosx*]" = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-CarPlay.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors. All rights reserved.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = NO;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = NO;
@@ -762,7 +962,7 @@
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
@@ -770,13 +970,11 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
-				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				"OTHER_SWIFT_FLAGS[sdk=iphoneos*]" = "-DCARPLAY_ENABLED";
 				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-DCARPLAY_ENABLED";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
@@ -810,7 +1008,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
@@ -842,7 +1040,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).uitests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -924,20 +1122,22 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "Blankie-CarPlay.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Blankie-macOS.entitlements";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "$(CODE_SIGN_IDENTITY)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-CarPlay.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Cody Bromley and contributors. All rights reserved.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = NO;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = NO;
@@ -947,7 +1147,7 @@
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
 				INFOPLIST_KEY_UIStatusBarHidden = NO;
 				INFOPLIST_KEY_UIStatusBarStyle = "";
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
@@ -955,13 +1155,11 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
-				ON_DEMAND_RESOURCES_INITIAL_INSTALL_TAGS = RainLoop;
-				ON_DEMAND_RESOURCES_PREFETCH_ORDER = "CityLoop StreamLoop Abstract1";
 				"OTHER_SWIFT_FLAGS[sdk=iphoneos*]" = "-DCARPLAY_ENABLED";
 				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-DCARPLAY_ENABLED";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
@@ -996,7 +1194,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
@@ -1028,7 +1226,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).uitests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1056,7 +1254,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
@@ -1089,7 +1287,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.4;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
@@ -1121,7 +1319,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).uitests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1148,7 +1346,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMotionUsageDescription = "Blankie shows your live listening direction in the Spatial Mix using your headphones' head position.";
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).uitests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1179,6 +1377,16 @@
 				F9E62BDF2DE8BD360004A3F8 /* Debug-CarPlay configuration for PBXNativeTarget "Blankie" */,
 				F91350882D233A44003C85BE /* Release configuration for PBXNativeTarget "Blankie" */,
 				F9E62BE32DE8BD410004A3F8 /* Release-CarPlay configuration for PBXNativeTarget "Blankie" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		F95914DF2FDF1D2300808460 /* Build configuration list for PBXNativeTarget "BlankieAssetDownloader" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F95914DA2FDF1D2300808460 /* Debug configuration for PBXNativeTarget "BlankieAssetDownloader" */,
+				F95914DB2FDF1D2300808460 /* Debug-CarPlay configuration for PBXNativeTarget "BlankieAssetDownloader" */,
+				F95914DC2FDF1D2300808460 /* Release configuration for PBXNativeTarget "BlankieAssetDownloader" */,
+				F95914DD2FDF1D2300808460 /* Release-CarPlay configuration for PBXNativeTarget "BlankieAssetDownloader" */,
 			);
 			defaultConfigurationName = Release;
 		};
@@ -1216,6 +1424,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		AAAA0000000000000000AA03 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F9C0AA3D2E0DADF300E4530D /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
 		F9C0AA3E2E0DADF300E4530D /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F9C0AA3D2E0DADF300E4530D /* XCRemoteSwiftPackageReference "ZIPFoundation" */;

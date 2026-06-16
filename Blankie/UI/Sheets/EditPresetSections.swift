@@ -54,7 +54,7 @@ extension EditPresetSheet {
   }
 }
 
-// MARK: - Visuals Section (View Mode, Accent Color, Background Blur)
+// MARK: - Visuals Section (View Mode, Accent Color)
 
 extension EditPresetSheet {
   var visualsSection: some View {
@@ -63,8 +63,6 @@ extension EditPresetSheet {
       viewModeOverride: $viewModeOverride,
       useCustomTheme: $useCustomTheme,
       accentColor: $accentColor,
-      useCustomBlur: $useCustomBlur,
-      blurOverride: $blurOverride,
       onEdited: { applyChangesInstantly() }
     )
   }

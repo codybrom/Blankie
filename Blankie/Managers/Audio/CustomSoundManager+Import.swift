@@ -49,6 +49,17 @@ extension CustomSoundManager {
       }
     }
 
+    // If anything after the copy throws, remove the orphaned copy (and its stored
+    // playback profile) so a failed import leaves nothing behind. Cleared once the
+    // DB save commits. Mirrors the primary importSound path.
+    var copiedURLForCleanup: URL?
+    defer {
+      if let url = copiedURLForCleanup {
+        try? FileManager.default.removeItem(at: url)
+        PlaybackProfileStore.shared.removeProfile(for: uniqueFileName)
+      }
+    }
+
     do {
       // Still validate the file, but skip LUFS analysis
       let validationResult = try await validateAudioFile(at: sourceURL)
@@ -63,7 +74,8 @@ extension CustomSoundManager {
 
       let destinationURL = directoryURL.appendingPathComponent("\(uniqueFileName).\(fileExtension)")
       let data = try Data(contentsOf: sourceURL)
-      try data.write(to: destinationURL)
+      try data.write(to: destinationURL, options: .atomic)
+      copiedURLForCleanup = destinationURL
 
       let copiedURL = destinationURL
 
@@ -89,6 +101,8 @@ extension CustomSoundManager {
         context.insert(customSound)
         try context.save()
       }
+      writeMirror(for: customSound)
+      copiedURLForCleanup = nil
 
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
@@ -121,6 +135,10 @@ extension CustomSoundManager {
 
     // CRITICAL: Preserve the original ID so preset references work
     customSound.id = metadata.id
+    // Carry the archive's integrity hash through (the file is copied byte-for-byte
+    // here, so it stays valid); matches PresetImporter's direct-creation path,
+    // which previously was the only place that set it.
+    customSound.sha256Hash = metadata.sha256Hash
 
     return customSound
   }
@@ -145,7 +163,11 @@ extension CustomSoundManager {
       filename: fileName,
       integratedLUFS: lufs,
       truePeakdBTP: estimatedTruePeak,
-      gainDB: min(AudioAnalyzer.targetLUFS - lufs, AudioAnalyzer.maxGainDB),
+      // Floor at minimumLUFS like the analyzer, so a near-silent import is left
+      // at unity instead of being boosted by the full +18 dB.
+      gainDB: lufs > AudioAnalyzer.minimumLUFS
+        ? min(AudioAnalyzer.targetLUFS - lufs, AudioAnalyzer.maxGainDB)
+        : 0,
       needsLimiter: lufs < -30.0  // Need limiter for very quiet sounds
     )
     PlaybackProfileStore.shared.store(profile)

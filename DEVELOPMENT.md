@@ -59,13 +59,54 @@ This guide will help you set up your development environment for contributing to
 
    > **Note**: You cannot use the same bundle identifier as the official Blankie app.
 
-5. **Open and build the project**
+5. **Animated artwork assets**
+
+   The animated artwork videos are not stored in git or bundled into the app. On iOS they ship as Apple-hosted [Background Assets](https://developer.apple.com/documentation/backgroundassets) asset packs. The source `.mov` files live as assets on the [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1) GitHub Release so cloning the repository stays light.
+
+   You do not need the videos to build and run the app, only to package the asset packs. To fetch the videos and/or builds the packs, run:
+
+   ```bash
+   scripts/package_animated_artwork.sh
+   ```
+
+   This script downloads any missing files, then idempotently writes one `build/AssetPacks/<Name>.aar` per artwork item. Pass `--force` to re-download, or artwork ids (e.g. `RainLoop Beach`) to limit it. Preview images and metadata are bundled in the app for instant gallery display. See [RELEASE.md](RELEASE.md) for uploading the packs to App Store Connect.
+
+6. **Open and build the project**
 
    ```bash
    open Blankie.xcodeproj
    ```
 
    Then build and run using Xcode (⌘+R).
+
+## Animated artwork (Background Assets)
+
+On iOS the animated lock-screen artwork ships as Apple-hosted [Managed Background Assets](https://developer.apple.com/documentation/backgroundassets). Each artwork is one asset pack, downloaded on demand.
+
+A pack's ID is the artwork id (`RainLoop`), and it holds a single file at `<id>/<id>.mov`. `BackgroundResourceManager` (`Blankie/Managers/BackgroundResourceManager.swift`) wraps `AssetPackManager.shared`:
+
+- `resourceURL(for:)` downloads the pack if needed and returns a playable URL.
+- `availableURL(for:)` returns a URL synchronously for a pack that's already on the device (the Now Playing path uses this).
+- `state(for:)` and `states` drive the gallery's download UI; progress comes from `statusUpdates(forAssetPackWithID:)`.
+- `removeResource(_:)` deletes the pack and frees every byte. The video plays straight from the pack and is never copied into Documents, so "Remove Download" actually reclaims the space.
+
+Videos stay out of the app bundle and out of git. Preview images and metadata stay bundled so the gallery loads instantly. Custom (user-imported) artwork is untouched, still in `Documents/Artwork`.
+
+### Deployment target
+
+We target iOS 26.4 for `ensureLocalAvailability(of:requireLatestVersion:)` and `assetPackIsAvailableLocally(withID:)`. To get an `AssetPack` from an id, we call `AssetPackManager.assetPack(withID:)`, isolated in `resolveAssetPack(id:)`. Apple's docs point that call toward `AssetPackManager.manifest`, but `manifest` is iOS 27 and isn't in the iOS 26 SDK yet. There's a `TODO(iOS 27 SDK)` marker to move the helper to the manifest API when the minimum target hits 27.
+
+### One-time project setup
+
+The app target is already wired up. `Blankie-Info.plist` and `Blankie-CarPlay.plist` carry `BAHasManagedAssetPacks` (true), `BAUsesAppleHosting` (true), and `BAAppGroupID` (`$(APP_GROUP_IDENTIFIER)`, which resolves to `group.com.codybrom.blankie`). Apple-hosted projects use only those three keys, so leave out `BAManifestURL`, `BAMaxInstallSize`, and the rest.
+
+The downloader extension has to be added in Xcode, since it can't be scripted:
+
+1. Add the extension. File → New → Target → Application Extension → Background Download. Pick **Apple-Hosted, Managed** as the type, name it (e.g. `BlankieAssetDownloader`), Finish, then Activate the scheme. Its principal type conforms to StoreKit's `StoreDownloaderExtension` and can stay empty. The system's default implementation does the scheduling, so `import StoreKit` and leave the inherited `BADownloaderExtension` methods alone.
+2. Share the App Group. In Signing & Capabilities, add the extension to `group.com.codybrom.blankie`, the same group the app uses. Both targets need it.
+3. Add the extension to both schemes ("Blankie (Universal)" and "Blankie (Universal with CarPlay)") so it embeds in every iOS archive.
+
+`EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE` stays on for local testing. App Store builds pull the packs from App Store Connect, not the bundle. To try packs on device before uploading, build them with `scripts/package_animated_artwork.sh` and follow Apple's [Testing asset packs locally](https://developer.apple.com/documentation/backgroundassets/testing-asset-packs-locally).
 
 ## Code Style
 

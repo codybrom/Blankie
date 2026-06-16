@@ -120,7 +120,8 @@ class CustomSoundData {
       moods: moods,
       duration: duration,
       truePeakdBTP: nil,  // custom sounds get true-peak/limiter from their cached PlaybackProfile
-      needsLimiter: nil
+      needsLimiter: nil,
+      isMusic: nil  // custom sounds tag as music via the per-sound editor toggle
     )
   }
 }

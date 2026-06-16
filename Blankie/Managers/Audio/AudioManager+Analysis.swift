@@ -28,8 +28,11 @@ extension AudioManager {
       await withTaskGroup(of: Void.self) { group in
         for sound in batch {
           group.addTask {
-            // Check if we need to analyze this sound
-            let profileKey = "\(sound.fileName).\(sound.fileExtension)"
+            // Check if we need to analyze this sound. Custom profiles are keyed
+            // by the bare fileName; built-ins by fileName.extension (matches
+            // soundsNeedingAnalysis and the delete-cleanup key).
+            let profileKey =
+              sound.isCustom ? sound.fileName : "\(sound.fileName).\(sound.fileExtension)"
             let existingProfile = PlaybackProfileStore.shared.profile(for: profileKey)
 
             if forceReanalysis || existingProfile == nil {

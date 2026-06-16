@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>BAHasManagedAssetPacks</key>
+		<true/>
+		<key>BAUsesAppleHosting</key>
+		<true/>
+		<key>BAAppGroupID</key>
+		<string>$(APP_GROUP_IDENTIFIER)</string>
 		<key>CFBundleIcons</key>
 		<dict>
 			<key>CFBundlePrimaryIcon</key>
@@ -11,6 +17,71 @@
 			</dict>
 			<key>CFBundleAlternateIcons</key>
 			<dict>
+				<key>BlankieRedIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieRedIcon</string>
+				</dict>
+				<key>BlankiePinkIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankiePinkIcon</string>
+				</dict>
+				<key>BlankieOrangeIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieOrangeIcon</string>
+				</dict>
+				<key>BlankieBrownIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieBrownIcon</string>
+				</dict>
+				<key>BlankieYellowIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieYellowIcon</string>
+				</dict>
+				<key>BlankieGreenIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieGreenIcon</string>
+				</dict>
+				<key>BlankieMintIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieMintIcon</string>
+				</dict>
+				<key>BlankieTealIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieTealIcon</string>
+				</dict>
+				<key>BlankieCyanIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieCyanIcon</string>
+				</dict>
+				<key>BlankieBlueIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieBlueIcon</string>
+				</dict>
+				<key>BlankieIndigoIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieIndigoIcon</string>
+				</dict>
+				<key>BlankiePurpleIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankiePurpleIcon</string>
+				</dict>
+				<key>BlankieDarkIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieDarkIcon</string>
+				</dict>
 				<key>BlankieAltIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
@@ -21,10 +92,25 @@
 					<key>CFBundleIconName</key>
 					<string>BlankieClassicIcon</string>
 				</dict>
-				<key>BetaIcon</key>
+				<key>BlankiePatchworkIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
-					<string>BetaIcon</string>
+					<string>BlankiePatchworkIcon</string>
+				</dict>
+				<key>BlankieSliderIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieSliderIcon</string>
+				</dict>
+				<key>BlankieWavesIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieWavesIcon</string>
+				</dict>
+				<key>BlankieLeopardIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieLeopardIcon</string>
 				</dict>
 			</dict>
 		</dict>
@@ -37,15 +123,100 @@
 			</dict>
 			<key>CFBundleAlternateIcons</key>
 			<dict>
+				<key>BlankieRedIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieRedIcon</string>
+				</dict>
+				<key>BlankiePinkIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankiePinkIcon</string>
+				</dict>
+				<key>BlankieOrangeIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieOrangeIcon</string>
+				</dict>
+				<key>BlankieBrownIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieBrownIcon</string>
+				</dict>
+				<key>BlankieYellowIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieYellowIcon</string>
+				</dict>
+				<key>BlankieGreenIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieGreenIcon</string>
+				</dict>
+				<key>BlankieMintIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieMintIcon</string>
+				</dict>
+				<key>BlankieTealIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieTealIcon</string>
+				</dict>
+				<key>BlankieCyanIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieCyanIcon</string>
+				</dict>
+				<key>BlankieBlueIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieBlueIcon</string>
+				</dict>
+				<key>BlankieIndigoIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieIndigoIcon</string>
+				</dict>
+				<key>BlankiePurpleIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankiePurpleIcon</string>
+				</dict>
+				<key>BlankieDarkIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieDarkIcon</string>
+				</dict>
+				<key>BlankieAltIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieAltIcon</string>
+				</dict>
 				<key>BlankieClassicIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
 					<string>BlankieClassicIcon</string>
 				</dict>
-				<key>BetaIcon</key>
+				<key>BlankiePatchworkIcon</key>
 				<dict>
 					<key>CFBundleIconName</key>
-					<string>BetaIcon</string>
+					<string>BlankiePatchworkIcon</string>
+				</dict>
+				<key>BlankieSliderIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieSliderIcon</string>
+				</dict>
+				<key>BlankieWavesIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieWavesIcon</string>
+				</dict>
+				<key>BlankieLeopardIcon</key>
+				<dict>
+					<key>CFBundleIconName</key>
+					<string>BlankieLeopardIcon</string>
 				</dict>
 			</dict>
 		</dict>

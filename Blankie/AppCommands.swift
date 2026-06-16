@@ -8,11 +8,16 @@
 import SwiftUI
 
 #if os(macOS)
+  import AppKit
+  import UniformTypeIdentifiers
+  import os
+
   struct AppCommands: Commands {
     @Binding var showingShortcuts: Bool
     @Binding var hasWindow: Bool
     @StateObject private var appState = AppState.shared
-    @StateObject private var audioManager = AudioManager.shared
+    @State private var audioManager = AudioManager.shared
+    @State private var presetManager = PresetManager.shared
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
@@ -62,6 +67,15 @@ import SwiftUI
         }
         .keyboardShortcut(.importFile)
 
+        Button("Export Current Preset…") {
+          Task { await exportCurrentPreset() }
+        }
+        .keyboardShortcut(.exportPreset)
+        // Disabled when no preset is effectively in control: Quick Mix already
+        // clears currentPreset, but solo preserves it — so gate on solo too, so
+        // ⌘E never exports the hidden preset while you're hearing one sound.
+        .disabled(presetManager.currentPreset == nil || audioManager.soloModeSound != nil)
+
         Button("Manage Sounds") {
           appState.showingManageSounds = true
         }
@@ -88,6 +102,41 @@ import SwiftUI
             NSWorkspace.shared.open(url)
           }
         }
+      }
+    }
+
+    /// Exports the currently playing preset as a `.blankie` file. Lives here
+    /// (rather than the Edit sheet) so ⌘E works from anywhere — the archive
+    /// build is the same off-main-actor `PresetExporter` path the sheet uses.
+    @MainActor
+    private func exportCurrentPreset() async {
+      guard let preset = presetManager.currentPreset else { return }
+
+      // The save panel is the user's step, so it runs before any await.
+      let panel = NSSavePanel()
+      panel.allowedContentTypes = [.blankie]
+      panel.nameFieldStringValue =
+        "\(preset.name).blankie"
+        .replacingOccurrences(of: "/", with: "-")
+        .replacingOccurrences(of: ":", with: "-")
+      panel.canCreateDirectories = true
+      guard panel.runModal() == .OK, let destination = panel.url else { return }
+
+      do {
+        let builtURL = try await PresetExporter.shared.createArchive(for: preset)
+        try? FileManager.default.removeItem(at: destination)
+        try FileManager.default.copyItem(at: builtURL, to: destination)
+        try? FileManager.default.removeItem(at: builtURL)
+      } catch {
+        Logger.ui.error("Preset export failed: \(error.localizedDescription, privacy: .public)")
+        let alert = NSAlert()
+        alert.messageText = String(localized: "Export Failed")
+        alert.informativeText =
+          (error as? PresetExporter.ExportError)?.errorDescription
+          ?? String(
+            localized: "Couldn't export this preset. Please try again.",
+            comment: "Alert shown when exporting a preset fails for an unexpected reason.")
+        alert.runModal()
       }
     }
   }

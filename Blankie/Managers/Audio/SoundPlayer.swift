@@ -283,10 +283,19 @@ final class SoundPlayer {
   /// having been stopped/rebuilt in between). Call while attached to a
   /// running engine.
   func play(fromFrame: AVAudioFramePosition, completion: (() -> Void)? = nil) {
-    generation += 1
-    if node.engine != nil {
-      node.stop()
+    // -[AVAudioPlayerNode play] raises an Obj-C exception — uncatchable in Swift,
+    // so a hard crash — when the node isn't attached to a running engine. Callers
+    // attach() + ensureRunning() first; this is the last-line guard so a stale or
+    // torn-down graph degrades to "didn't start" instead of aborting the app. The
+    // next play() reschedules cleanly once the engine is back.
+    guard let nodeEngine = node.engine, nodeEngine.isRunning else {
+      Logger.sounds.error(
+        "SoundPlayer: play(fromFrame:) skipped — node not attached to a running engine")
+      return
     }
+
+    generation += 1
+    node.stop()
 
     let start = max(0, min(fromFrame, max(totalFrames - 1, 0)))
     segmentBaseFrame = start

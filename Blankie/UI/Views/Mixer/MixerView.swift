@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import TipKit
 import os
 
 // Animation trigger struct to consolidate multiple animation values
@@ -14,6 +13,7 @@ private struct AnimationTrigger: Equatable {
   let soloMode: UUID?
   let quickMix: Bool
   let listView: Bool
+  let isLoading: Bool
 }
 
 /// The iPhone stack's pushed pages. The Library is the stack ROOT (spatially
@@ -24,9 +24,9 @@ private enum IPhonePage: Hashable {
 
 #if os(iOS) || os(visionOS)
   struct MixerView: View {
-    @StateObject var audioManager = AudioManager.shared
-    @StateObject var globalSettings = GlobalSettings.shared
-    @StateObject var presetManager = PresetManager.shared
+    @State var audioManager = AudioManager.shared
+    @State var globalSettings = GlobalSettings.shared
+    @State var presetManager = PresetManager.shared
     @ObservedObject private var appState = AppState.shared
     /// iPhone navigation path. The Library is the stack's root and the app
     /// launches with the mixer pushed on top, so the mixer's back button (or
@@ -44,10 +44,12 @@ private enum IPhonePage: Hashable {
     @State var showingNewPresetConfirmation = false
     @State var showingNewPresetSheet = false
     @State var showingSpatialMixer = false
-    @State var soundsUpdateTrigger = 0
     @State var showingNowPlaying = false
     @State private var showingVolumeZeroWarning = false
     @State private var isLandscape = false
+    // Measured Now Playing bar height, used to inset the iPhone Library list
+    // under it (the stack's safeAreaBar doesn't reach that root list).
+    @State private var nowPlayingBarHeight: CGFloat = 0
     /// Anchors the zoom transition between the mini bar and the Now Playing cover.
     @Namespace private var nowPlayingNamespace
 
@@ -68,11 +70,20 @@ private enum IPhonePage: Hashable {
           iPhoneLayout
         }
       }
-      .fullScreenCover(isPresented: $showingNowPlaying) {
+      // A sheet (not a fullScreenCover) so the player has the system's
+      // grab-anywhere interactive pull-to-dismiss; the large detent keeps it
+      // full-height. The player draws its own drag handle, so hide the system one.
+      .sheet(isPresented: $showingNowPlaying) {
         NowPlayingSheet(
           onDismiss: { showingNowPlaying = false },
           backgroundImage: backgroundImage
         )
+        .presentationDetents([.large])
+        // On iPad a sheet with detents would otherwise render as a small
+        // centered form sheet, clipping the bottom controls. `.page` gives it a
+        // proper full-height presentation; on iPhone this is a no-op.
+        .presentationSizing(.page)
+        .presentationDragIndicator(.hidden)
         .navigationTransition(.zoom(sourceID: "nowPlaying", in: nowPlayingNamespace))
       }
       .sheet(item: $soundToEdit) { sound in
@@ -83,8 +94,6 @@ private enum IPhonePage: Hashable {
           }
           .onDisappear {
             Logger.ui.debug("MixerView: SoundSheet disappeared for '\(sound.title)'")
-            // Trigger refresh when sound edit is closed in case sound properties changed
-            soundsUpdateTrigger += 1
           }
       }
       .onChange(of: soundToEdit) { oldValue, newValue in
@@ -136,17 +145,20 @@ private enum IPhonePage: Hashable {
               }
             }
         }
+        .presentationSizing(.page)
         .onDisappear {
-          // Trigger refresh when sound management is closed in case sounds were imported
-          Logger.ui.debug("MixerView: SoundManagementView closed, triggering refresh")
-          soundsUpdateTrigger += 1
+          Logger.ui.debug("MixerView: SoundManagementView closed")
         }
       }
       .sheet(isPresented: $showingSettings) {
         SettingsView()
+          // A full settings screen, not a dialog — give it a page on iPad
+          // instead of the default small centered form sheet.
+          .presentationSizing(.page)
       }
       .sheet(isPresented: $showingQuickMixEditor) {
         QuickMixEditorSheet()
+          .presentationSizing(.page)
       }
       .sheet(isPresented: $showingSpatialMixer) {
         SpatialMixerView()
@@ -168,9 +180,7 @@ private enum IPhonePage: Hashable {
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
           .onDisappear {
-            // Trigger refresh when preset edit is closed in case preset was modified
-            Logger.ui.debug("MixerView: EditPresetSheet closed, triggering refresh")
-            soundsUpdateTrigger += 1
+            Logger.ui.debug("MixerView: EditPresetSheet closed")
 
             // CRITICAL: Re-establish media controls after sheet dismissal
             // Animated artwork video preview may have caused iOS to disconnect remote command handlers
@@ -180,43 +190,14 @@ private enum IPhonePage: Hashable {
           }
       }
       .modifier(AudioErrorHandler())
-      // Listen for changes that should trigger view updates
-      .onChange(of: audioManager.sounds.count) { oldValue, newValue in
-        // Sound imported or removed
-        Logger.ui.debug("MixerView: Sound count changed from \(oldValue) to \(newValue)")
-        soundsUpdateTrigger += 1
-      }
-      .onChange(of: presetManager.currentPreset?.id) { oldValue, newValue in
-        // Preset switched
-        Logger.ui.debug(
-          "MixerView: Current preset changed from \(oldValue?.uuidString ?? "nil") to \(newValue?.uuidString ?? "nil")"
-        )
-        soundsUpdateTrigger += 1
-      }
+      // Sound add/remove, preset switches, and preset edits all flow through
+      // @Observable reads now (audioManager.sounds, presetManager.currentPreset),
+      // so the grid refreshes automatically — no manual trigger needed. Only the
+      // Quick Mix transition keeps a handler, since it has navigation side effects.
       .onChange(of: audioManager.isQuickMix) { _, isQuickMix in
         // Quick Mix is a grid-first mode — entering it (e.g. from the preset
         // picker) always lands on the mixer, never the Now Playing view.
         if isQuickMix { showingNowPlaying = false }
-      }
-      .onChange(of: presetManager.currentPreset?.soundStates.count) { oldValue, newValue in
-        // Preset content changed (sounds added/removed)
-        if let oldCount = oldValue, let newCount = newValue, oldCount != newCount {
-          Logger.ui.debug("MixerView: Preset sound count changed from \(oldCount) to \(newCount)")
-          soundsUpdateTrigger += 1
-        }
-      }
-      .onReceive(
-        NotificationCenter.default.publisher(for: Notification.Name("CustomSoundImported"))
-      ) { _ in
-        // Custom sound was imported
-        Logger.ui.debug("MixerView: Received CustomSoundImported notification")
-        soundsUpdateTrigger += 1
-      }
-      .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PresetUpdated"))) {
-        _ in
-        // Preset was updated
-        Logger.ui.debug("MixerView: Received PresetUpdated notification")
-        soundsUpdateTrigger += 1
       }
     }
 
@@ -278,7 +259,7 @@ private enum IPhonePage: Hashable {
           presentation: .page,
           onOpenSettings: { showingSettings = true },
           onSelection: { iPhonePath = [.mixer] },
-          backgroundImage: backgroundImage
+          bottomBarHeight: nowPlayingBarHeight
         )
         .navigationDestination(for: IPhonePage.self) { _ in
           mixerPage
@@ -291,12 +272,31 @@ private enum IPhonePage: Hashable {
       }
     }
 
+    /// On the iPhone stack's Library root, the bar tap steps "in" to the mixer
+    /// instead of expanding the player (Library → mixer → full player); from
+    /// the mixer — and always on iPad, where the mixer is the ever-present
+    /// detail — it expands Now Playing.
+    private var barShowsMixer: Bool {
+      !isLargeDevice && iPhonePath.isEmpty
+    }
+
     /// Mini player pinned above the bottom safe area; the zoom transition into
     /// the Now Playing cover originates from it.
     private var nowPlayingBar: some View {
-      NowPlayingBar(expandPlayer: $showingNowPlaying)
-        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
-        .padding(.horizontal, 16)
+      NowPlayingBar(showsMixer: barShowsMixer) {
+        if barShowsMixer {
+          iPhonePath = [.mixer]
+        } else {
+          showingNowPlaying = true
+        }
+      }
+      .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+      .padding(.horizontal, 16)
+      .onGeometryChange(for: CGFloat.self) {
+        $0.size.height
+      } action: {
+        nowPlayingBarHeight = $0
+      }
     }
 
     @ViewBuilder
@@ -348,7 +348,12 @@ private enum IPhonePage: Hashable {
     @ViewBuilder
     private var mainContentView: some View {
       Group {
-        if let soloSound = soloLayoutSound {
+        if presetManager.isLoading {
+          // Until the restore completes, currentPreset is nil and the grid would
+          // flash every sound (reading as the default preset). Show nothing over
+          // the neutral background; content fades in once the preset is applied.
+          Color.clear
+        } else if let soloSound = soloLayoutSound {
           soloModeView(for: soloSound)
         } else if audioManager.isQuickMix {
           // Quick Mix mode view
@@ -363,7 +368,8 @@ private enum IPhonePage: Hashable {
         value: AnimationTrigger(
           soloMode: soloLayoutSound?.id,
           quickMix: audioManager.isQuickMix,
-          listView: showingListView
+          listView: showingListView,
+          isLoading: presetManager.isLoading
         )
       )
       .onChange(of: audioManager.soloModeSound) { oldValue, newValue in
@@ -385,15 +391,9 @@ private enum IPhonePage: Hashable {
   }
 
   extension View {
-    /// `safeAreaBar` keeps scroll edge effects correct under the mini player
-    /// on iOS 26; earlier systems fall back to a plain safe-area inset.
-    @ViewBuilder
+    /// `safeAreaBar` keeps scroll edge effects correct under the mini player.
     func nowPlayingBottomBar<Bar: View>(@ViewBuilder _ bar: () -> Bar) -> some View {
-      if #available(iOS 26.0, *) {
-        safeAreaBar(edge: .bottom) { bar() }
-      } else {
-        safeAreaInset(edge: .bottom) { bar() }
-      }
+      safeAreaBar(edge: .bottom) { bar() }
     }
   }
 

@@ -18,17 +18,17 @@ enum AudioError: Error, LocalizedError {
   var errorDescription: String? {
     switch self {
     case .engineStartFailed:
-      return "Audio engine failed to start"
+      return String(localized: "Audio engine failed to start")
     case .fileNotFound:
-      return "Audio file could not be found"
+      return String(localized: "Audio file could not be found")
     case .loadFailed(let error):
-      return "Failed to load audio: \(error.localizedDescription)"
+      return String(localized: "Failed to load audio: \(error.localizedDescription)")
     case .playbackFailed(let error):
-      return "Playback failed: \(error.localizedDescription)"
+      return String(localized: "Playback failed: \(error.localizedDescription)")
     case .invalidVolume:
-      return "Invalid volume level specified"
+      return String(localized: "Invalid volume level specified")
     case .systemAudioError(let message):
-      return "System audio error: \(message)"
+      return String(localized: "System audio error: \(message)")
     }
   }
 }

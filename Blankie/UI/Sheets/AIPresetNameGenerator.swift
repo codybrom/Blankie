@@ -148,7 +148,7 @@ public enum AIPresetNameGenerator {
           Logger.ui.debug("AIPresetNameGenerator: Unsupported guide: \(String(describing: guide))")
         case .decodingFailure(let description):
           Logger.ui.error(
-            "AIPresetNameGenerator: Decoding failure: \(String(describing: description), privacy: .public)"
+            "AIPresetNameGenerator: Decoding failure: \(String(describing: description))"
           )
         case .rateLimited(let retryAfter):
           Logger.ui.debug(
@@ -200,14 +200,14 @@ public enum AIPresetNameGenerator {
         )
 
         Logger.ui.debug(
-          "AIPresetNameGenerator: naming from file '\(fileName, privacy: .public)' (icon: \(includingIcon))"
+          "AIPresetNameGenerator: naming from file '\(fileName)' (icon: \(includingIcon))"
         )
         let name = try await session.respond(
           to: "Name this sound file: \(fileName)",
           generating: AISoundName.self
         ).content.name
         Logger.ui.debug(
-          "AIPresetNameGenerator: name for '\(fileName, privacy: .public)' = '\(name, privacy: .public)'"
+          "AIPresetNameGenerator: name for '\(fileName)' = '\(name)'"
         )
         guard !name.isEmpty, name.count <= 40 else {
           Logger.ui.debug("AIPresetNameGenerator: name rejected (empty or > 40 chars)")
@@ -297,7 +297,7 @@ public enum AIPresetNameGenerator {
       }
 
       Logger.ui.debug(
-        "AIPresetNameGenerator: picking category for '\(name, privacy: .public)' from \(IconData.categoryNames.count) options"
+        "AIPresetNameGenerator: picking category for '\(name)' from \(IconData.categoryNames.count) options"
       )
       let categoryContent = try await freshSession().respond(
         to: "Pick the icon category that best fits an ambient sound named \"\(name)\".",
@@ -305,7 +305,7 @@ public enum AIPresetNameGenerator {
       ).content
       let category = try categoryContent.value(String.self, forProperty: "category")
       Logger.ui.debug(
-        "AIPresetNameGenerator: category for '\(name, privacy: .public)' = '\(category, privacy: .public)'"
+        "AIPresetNameGenerator: category for '\(name)' = '\(category, privacy: .public)'"
       )
 
       guard let categoryIcons = IconData.iconCategories[category], !categoryIcons.isEmpty
@@ -331,7 +331,7 @@ public enum AIPresetNameGenerator {
       ).content
       let symbol = try symbolContent.value(String.self, forProperty: "symbol")
       Logger.ui.debug(
-        "AIPresetNameGenerator: symbol for '\(name, privacy: .public)' = '\(symbol, privacy: .public)'"
+        "AIPresetNameGenerator: symbol for '\(name)' = '\(symbol, privacy: .public)'"
       )
 
       // The constraint guarantees catalog membership; verify anyway.

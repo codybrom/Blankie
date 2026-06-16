@@ -80,6 +80,8 @@ iOSInjectionProject/
 
 # Local configurations and caches
 Configuration.xcconfig
+.env
+.env.*
 releases/*
 .ignored
 .mcp.json

@@ -1,6 +1,6 @@
 # Contributing to Blankie
 
-> Hi, @codybrom here, and I'm thrilled you're interested in contributing to Blankie! I was inspired to create Blankie because an incredible community of people came together to support it's inspiration, [Blanket](https://github.com/rafaelmardojai/blanket). My hope for Blankie is that a similar community will come together to support its development and growth. I'm excited to see what we can build together!
+> Hi, @codybrom here, and I'm thrilled you're interested in contributing to Blankie! I was inspired to create Blankie because an incredible community of people came together to support its inspiration, [Blanket](https://github.com/rafaelmardojai/blanket). My hope for Blankie is that a similar community will come together to support its development and growth. I'm excited to see what we can build together!
 
 This document outlines the guidelines, expectations, and processes for contributing to this project. Following these will ensure a smooth and efficient contribution experience for everyone.
 
@@ -25,7 +25,7 @@ There are many ways you can contribute, including:
 If you'd like to help out with the source code, follow these guidelines:
 
 1. **Fork the Repository:** Start by forking the [Blankie repository](https://github.com/codybrom/blankie) to your GitHub account. You can then clone the forked repository to your local machine.
-2. **Set Up Your Development Configuration:** Follow the [development setup instructions](README.md#development-setup) to create a `Configuration.xcconfig` file with your own development team and bundle identifier (this file is ignored by git to keep your personal settings private). You may not use the same bundle identifier as the main Blankie app and you should not update these fields in configuration of the project itself. Please keep your personal settings private.
+2. **Set Up Your Development Configuration:** Follow the [development setup instructions](DEVELOPMENT.md) to create a `Configuration.xcconfig` file with your own development team and bundle identifier (this file is ignored by git to keep your personal settings private). You may not use the same bundle identifier as the main Blankie app and you should not update these fields in configuration of the project itself. Please keep your personal settings private.
 3. **Make the Changes:** Write clean and clear code following [Swift.org's guidelines](https://www.swift.org/documentation/api-design-guidelines/). Use appropriate comments and match the existing code style and conventions in the project. Blankie uses `swift-format` with default settings to keep code clean and consistent. You can run it via Xcode (Editor > Structure > Format File with ‘swift-format’) or command line to ensure consistent formatting. If you're unsure about style, feel free to ask in an issue or pull request.
     * Keep your changes focused and avoid unrelated changes in the same pull request. PRs that make unnecessary changes or are too large may be rejected or asked to be split into smaller PRs.
     * If you're adding new features, consider opening an issue first to discuss the feature and gather feedback before starting development.
@@ -48,7 +48,7 @@ Before implementing changes that might alter core functionality in serious ways:
 2. **Maintain Core Requirements**
    * Maintain consistent volume normalization across all sounds
    * Ensure smooth transitions between sound states (play/pause/volume)
-   * Preserve compatibility with system media controls on every platform (macOS, iOS, iPadOS, and CarPlay)
+   * Preserve compatibility with system media controls on every platform (macOS, iOS, and iPadOS), including CarPlay
    * Protect functionality of existing user-saved presets
 
 3. **Implement Carefully**

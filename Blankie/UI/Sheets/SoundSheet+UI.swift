@@ -18,6 +18,7 @@ extension SoundSheet {
       selectedIcon: $selectedIcon,
       selectedFile: $selectedFile,
       isImporting: $isImporting,
+      convertToAACOnImport: $convertToAACOnImport,
 
       randomizeStartPosition: $randomizeStartPosition,
       normalizeAudio: $normalizeAudio,
@@ -25,6 +26,7 @@ extension SoundSheet {
       loopSound: $loopSound,
       fadeSound: $fadeSound,
       isPresetUseOnly: $isPresetUseOnly,
+      isMusic: $isMusic,
       addToPresetIDs: $addToPresetIDs,
       createMixPreset: $createMixPreset,
       isPreviewing: $isPreviewing,
@@ -64,6 +66,7 @@ extension SoundSheet {
       selectedIcon: $selectedIcon,
       selectedFile: $selectedFile,
       isImporting: $isImporting,
+      convertToAACOnImport: $convertToAACOnImport,
 
       randomizeStartPosition: $randomizeStartPosition,
       normalizeAudio: $normalizeAudio,
@@ -71,6 +74,7 @@ extension SoundSheet {
       loopSound: $loopSound,
       fadeSound: $fadeSound,
       isPresetUseOnly: $isPresetUseOnly,
+      isMusic: $isMusic,
       addToPresetIDs: $addToPresetIDs,
       createMixPreset: $createMixPreset,
       isPreviewing: $isPreviewing,

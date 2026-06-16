@@ -16,7 +16,7 @@ import os
     @MainActor
     static func createTemplate() -> CPListTemplate {
       let template = CPListTemplate(
-        title: "Sounds",
+        title: String(localized: "Sounds"),
         sections: []
       )
 
@@ -32,7 +32,7 @@ import os
       // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
         Logger.carPlay.debug("SoundsListTemplate: No sounds loaded yet")
-        let loadingItem = CPListItem(text: "Loading sounds...", detailText: nil)
+        let loadingItem = CPListItem(text: String(localized: "Loading sounds..."), detailText: nil)
         let section = CPListSection(items: [loadingItem])
         template.updateSections([section])
         return
@@ -42,8 +42,13 @@ import os
 
       var sections: [CPListSection] = []
 
-      // Get all sounds and sort alphabetically
-      let allSounds = AudioManager.shared.sounds.sorted { $0.title < $1.title }
+      // Get all sounds and sort alphabetically. Preset-use-only sounds (explicit
+      // or implied by a non-looping one-shot) are hidden here just like in the
+      // app's grid and Library Sounds list — they can't stand alone.
+      let allSounds =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .sorted { $0.title < $1.title }
 
       // Group sounds by first letter for better navigation
       let groupedSounds = Dictionary(grouping: allSounds) { sound in

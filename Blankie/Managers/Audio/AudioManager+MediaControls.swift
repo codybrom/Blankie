@@ -62,9 +62,10 @@ extension AudioManager {
     commandCenter.pauseCommand.addTarget { [weak self] _ in
       Logger.audio.debug("AudioManager: Media key pause command received")
       Task { @MainActor in
-        // Only pause if we're currently playing
+        // Only pause if we're currently playing; remote pauses cut instantly
+        // (see Sound.remotePauseFadeDuration).
         if self?.isGloballyPlaying ?? false {
-          self?.setGlobalPlaybackState(false)
+          self?.setGlobalPlaybackState(false, pauseFadeDuration: Sound.remotePauseFadeDuration)
         }
       }
       return .success
@@ -73,7 +74,8 @@ extension AudioManager {
     commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
       Logger.audio.debug("AudioManager: Media key toggle command received")
       Task { @MainActor in
-        self?.togglePlayback()
+        // Same instant remote pause as pauseCommand (ignored when resuming).
+        self?.togglePlayback(pauseFadeDuration: Sound.remotePauseFadeDuration)
       }
       return .success
     }
@@ -170,7 +172,7 @@ extension AudioManager {
         }
       } catch {
         Logger.audio.error(
-          "AudioManager: Failed to apply preset \(preset.name, privacy: .public): \(error, privacy: .public)"
+          "AudioManager: Failed to apply preset \(preset.name): \(error, privacy: .public)"
         )
       }
     case .solo(let sound):

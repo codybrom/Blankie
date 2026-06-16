@@ -84,5 +84,6 @@ extension SoundSheet {
     loopSound = true
     fadeSound = true
     isPresetUseOnly = false
+    isMusic = sound.isMusicDefault
   }
 }

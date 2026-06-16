@@ -130,7 +130,7 @@ if effectiveVolume > softLimitThreshold {
 
 Blankie performs audio analysis **at runtime**, not during build:
 
-- **Built-in sounds**: Analyzed on first use or when profiles are missing
+- **Built-in sounds**: Ship with precomputed loudness profiles in `sounds.json`; re-analyzed only if a profile is missing
 - **Custom sounds**: Analyzed when added or when opening the sound editor
 - **On-demand**: Via the batch analysis function for all sounds
 

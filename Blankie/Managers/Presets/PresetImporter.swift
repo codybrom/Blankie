@@ -237,8 +237,12 @@ class PresetImporter {
 
     try await importArtwork(for: &preset, from: archiveURL)
 
-    let idMapping = try await importCustomSounds(for: preset, from: archiveURL)
+    // Apply the archive's sound customizations (custom titles, icons, etc.) before
+    // importing the sound files. Importing a sound posts .customSoundAdded, whose
+    // observer auto-creates a customization from the sound's base title — which would
+    // otherwise trip importFromManifest's skip-if-exists guard and drop the real names.
     try await SoundCustomizationImporter.importFromManifest(from: archiveURL)
+    let idMapping = try await importCustomSounds(for: preset, from: archiveURL)
 
     // Imported custom sounds get fresh IDs, so remap the preset's sound states
     if !idMapping.isEmpty {
@@ -283,6 +287,9 @@ class PresetImporter {
         Logger.presets.debug("Import: Successfully extracted to \(extractionDir.lastPathComponent)")
 
       } catch {
+        // The success-path cleanup never sees this directory, so remove any
+        // partially extracted output (e.g. an aborted zip bomb) here.
+        try? FileManager.default.removeItem(at: extractionDir)
         Logger.presets.error("Import: Failed to extract archive: \(error, privacy: .public)")
         throw ImportError.invalidArchive
       }
@@ -353,8 +360,10 @@ extension PresetImporter {
         }
       }
 
-      // Import new sound
-      let soundFileURL = soundsDir.appendingPathComponent(soundMetadata.fileName)
+      // Import new sound. Reduce the manifest-supplied fileName to its final
+      // component so a crafted "../.." path can't read a file outside soundsDir.
+      let safeFileName = (soundMetadata.fileName as NSString).lastPathComponent
+      let soundFileURL = soundsDir.appendingPathComponent(safeFileName)
       let importedId = try await importNewSound(
         soundMetadata, soundFileURL, preset, &importedCount, customizations: customizations
       )
@@ -577,64 +586,63 @@ extension PresetImporter {
     // Capture the preset ID to look it up later
     let presetId = preset.id
 
-    // Schedule the ODR download asynchronously - don't block import
+    // Restore the artwork reference + previews, then download the video pack.
     Task { @MainActor in
+      // Preview images are bundled (not part of the asset pack). Copy the small
+      // ones into Documents as the static artwork fallback. The video itself is
+      // served from its Background Assets pack and is never copied to Documents.
+      guard
+        let previewURL = Bundle.main.url(
+          forResource: "\(bundledId)/\(bundledId)", withExtension: "jpg"),
+        let squarePreviewURL = Bundle.main.url(
+          forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
+      else {
+        Logger.presets.error(
+          "Import: Failed to find preview images for '\(bundledId, privacy: .public)'")
+        return
+      }
+
+      let assetId = UUID()
+      let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
+        for: assetId, fileExtension: "jpg")
+      let squarePreviewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
+        for: assetId, fileExtension: "jpg", suffix: "Square")
+
+      _ = try? AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
+      _ = try? AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
+
+      // Update the preset's animated artwork reference (bundled video resolves
+      // via bundledIdentifier at playback time, so loopPath stays nil).
+      var updatedAnimated = animated
+      updatedAnimated.loopPath = nil
+      updatedAnimated.previewPath = previewRel
+      updatedAnimated.squarePreviewPath = squarePreviewRel
+      updatedAnimated.bundledIdentifier = bundledId
+
+      if let index = PresetManager.shared.presets.firstIndex(where: { $0.id == presetId }) {
+        var updatedPreset = PresetManager.shared.presets[index]
+        updatedPreset.animatedArtwork = updatedAnimated
+        PresetManager.shared.updatePresetAtIndex(index, with: updatedPreset)
+        PresetManager.shared.savePresets()
+        Logger.presets.debug("Import: Successfully restored bundled animation '\(bundledId)'")
+      }
+
+      // Best-effort: pull the video's asset pack so it's ready for playback (iOS).
       do {
-        // Request the video file from ODR (downloads if needed)
-        let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(bundledId)
-        Logger.presets.debug("Import: Successfully downloaded ODR resource '\(bundledId)'")
-
-        // Get preview images from bundle (these are always available, not part of ODR)
-        guard
-          let previewURL = Bundle.main.url(
-            forResource: "\(bundledId)/\(bundledId)", withExtension: "jpg"),
-          let squarePreviewURL = Bundle.main.url(
-            forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
-        else {
-          Logger.presets.error(
-            "Import: Failed to find preview images for '\(bundledId, privacy: .public)'")
-          return
-        }
-
-        // Copy files to Documents
-        let assetId = UUID()
-        let loopRel = AnimatedArtworkFileStore.makeRelativeLoopPath(
-          for: assetId, fileExtension: "mov")
-        let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
-          for: assetId, fileExtension: "jpg")
-        let squarePreviewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
-          for: assetId, fileExtension: "jpg", suffix: "Square")
-
-        _ = try? AnimatedArtworkFileStore.copyItem(at: videoURL, to: loopRel)
-        _ = try? AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
-        _ = try? AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
-
-        // Update the preset's animated artwork reference
-        var updatedAnimated = animated
-        updatedAnimated.loopPath = loopRel
-        updatedAnimated.previewPath = previewRel
-        updatedAnimated.squarePreviewPath = squarePreviewRel
-
-        // Update the preset in PresetManager using the captured preset ID
-        if let index = PresetManager.shared.presets.firstIndex(where: { $0.id == presetId }) {
-          var updatedPreset = PresetManager.shared.presets[index]
-          updatedPreset.animatedArtwork = updatedAnimated
-          PresetManager.shared.updatePresetAtIndex(index, with: updatedPreset)
-          PresetManager.shared.savePresets()
-          Logger.presets.debug("Import: Successfully restored bundled animation '\(bundledId)'")
-        }
-
+        _ = try await BackgroundResourceManager.shared.resourceURL(for: bundledId)
+        Logger.presets.debug("Import: Downloaded artwork pack '\(bundledId)'")
       } catch {
         Logger.presets.error(
-          "Import: Failed to download ODR resource '\(bundledId, privacy: .public)': \(error, privacy: .public)"
+          "Import: Failed to download artwork pack '\(bundledId, privacy: .public)': \(error, privacy: .public)"
         )
         // Don't throw - preset can still be used without animated artwork
       }
     }
 
-    // Set up the animated artwork reference with the bundled identifier
-    // The actual files will be downloaded and copied asynchronously
+    // Set up the animated artwork reference with the bundled identifier so the
+    // preset is usable immediately; previews + video arrive asynchronously above.
     var updatedAnimated = animated
+    updatedAnimated.loopPath = nil
     updatedAnimated.bundledIdentifier = bundledId
     preset.animatedArtwork = updatedAnimated
 
@@ -766,7 +774,12 @@ extension PresetImporter {
       staticArtworkPath: preset.staticArtworkPath,
       order: preset.order,
       isImported: true,  // Mark as imported
-      originalId: preset.id  // Store the original ID for duplicate detection
+      originalId: preset.id,  // Store the original ID for duplicate detection
+      // Carry the theme through import so shared presets keep their look.
+      moods: preset.moods,
+      accentColorName: preset.accentColorName,
+      viewMode: preset.viewMode,
+      backgroundBlurRadius: preset.backgroundBlurRadius
     )
 
     return newPreset

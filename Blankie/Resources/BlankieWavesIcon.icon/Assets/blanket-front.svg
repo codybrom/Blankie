@@ -1,0 +1,27 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- blanket body -->
+<path d="M-40 900C100 870 250 812 430 808C640 804 880 852 1064 882L1064 1080L-40 1080Z" fill="url(#frontGrad)"/>
+<!-- folded-back hem -->
+<path d="M-40 900C100 870 250 812 430 808C640 804 880 852 1064 882L1064 926C880 896 640 848 430 852C250 856 100 914 -40 944Z" fill="url(#hemGrad)"/>
+<!-- moonlit rim along the hem crest -->
+<path d="M-40 900C100 870 250 812 430 808C640 804 880 852 1064 882" stroke="url(#frontRim)" stroke-width="4" fill="none"/>
+<!-- fold shadow under hem edge -->
+<path d="M-40 944C100 914 250 856 430 852C640 848 880 896 1064 926" stroke="#B9881C" stroke-opacity="0.4" stroke-width="5" fill="none"/>
+<!-- running stitch -->
+<path d="M-40 930C100 900 250 842 430 838C640 834 880 882 1064 912" stroke="#A1731A" stroke-opacity="0.85" stroke-width="6" stroke-linecap="round" stroke-dasharray="24 26" fill="none"/>
+<defs>
+<linearGradient id="frontGrad" x1="512" y1="800" x2="512" y2="1080" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F8CF5A"/>
+<stop offset="1" stop-color="#E8B430"/>
+</linearGradient>
+<linearGradient id="hemGrad" x1="512" y1="800" x2="512" y2="950" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFE292"/>
+<stop offset="1" stop-color="#F6C95E"/>
+</linearGradient>
+<linearGradient id="frontRim" x1="-40" y1="0" x2="1064" y2="0" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FFF4D2" stop-opacity="0.1"/>
+<stop offset="0.72" stop-color="#FFF8DE" stop-opacity="0.45"/>
+<stop offset="1" stop-color="#FFF4D2" stop-opacity="0.25"/>
+</linearGradient>
+</defs>
+</svg>

@@ -9,12 +9,12 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   struct QuickMixView: View {
-    @ObservedObject var audioManager = AudioManager.shared
-    @ObservedObject var globalSettings = GlobalSettings.shared
+    let audioManager = AudioManager.shared
+    let globalSettings = GlobalSettings.shared
 
     private var quickMixSounds: [Sound] {
       return globalSettings.quickMixSoundFileNames.compactMap { fileName in
-        audioManager.sounds.first { $0.fileName == fileName && !$0.isCustom }
+        audioManager.sounds.first { $0.fileName == fileName && !$0.isCustom && !$0.isPresetUseOnly }
       }
     }
 

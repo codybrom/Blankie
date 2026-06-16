@@ -11,9 +11,9 @@ import os
 /// Interactive onboarding sheet that guides users through creating their first preset
 struct PresetOnboardingSheet: View {
   @Binding var isPresented: Bool
-  @ObservedObject private var audioManager = AudioManager.shared
+  private let audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let globalSettings = GlobalSettings.shared
   @State private var currentStep = 0
   @State private var selectedSounds: Set<String> = []
   @State private var presetName = ""
@@ -102,6 +102,10 @@ struct PresetOnboardingSheet: View {
     .interactiveDismissDisabled()
     #if os(macOS)
       .frame(width: 500, height: 640)
+    #else
+      // Page-sized on iPad so the paged flow fills the canvas instead of
+      // squeezing into a small centered form sheet (no-op on iPhone).
+      .presentationSizing(.page)
     #endif
   }
 
@@ -331,18 +335,17 @@ struct PresetOnboardingSheet: View {
             .foregroundStyle(.secondary)
 
           HStack(spacing: 8) {
-            ForEach(Array(selectedSounds.prefix(5)), id: \.self) { fileName in
-              if let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) {
-                Text(sound.title)
-                  .font(.caption)
-                  .padding(.horizontal, 12)
-                  .padding(.vertical, 6)
-                  .background((globalSettings.customAccentColor ?? .accentColor).opacity(0.2))
-                  .clipShape(Capsule())
-              }
+            let chips = audioManager.sounds.filter { selectedSounds.contains($0.fileName) }
+            ForEach(chips.prefix(5)) { sound in
+              Text(sound.title)
+                .font(.caption)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background((globalSettings.customAccentColor ?? .accentColor).opacity(0.2))
+                .clipShape(Capsule())
             }
-            if selectedSounds.count > 5 {
-              Text("+\(selectedSounds.count - 5) more")
+            if chips.count > 5 {
+              Text("+\(chips.count - 5) more")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 12)
@@ -474,24 +477,25 @@ struct PresetOnboardingSheet: View {
   }
 
   private func togglePreview(for sound: Sound) {
+    // Use preview mode (not solo mode): it plays the sound without touching
+    // soloModeSound, so the live mixer background behind the sheet stays static,
+    // and it persists no solo token.
     if previewingSound == sound.fileName {
-      // Stop preview - exit solo mode
-      audioManager.exitSoloMode()
+      audioManager.exitPreviewMode()
       previewingSound = nil
     } else {
       // Stop any currently previewing sound
       if previewingSound != nil {
-        audioManager.exitSoloMode()
+        audioManager.exitPreviewMode()
       }
-      // Start new preview (solo mode)
-      audioManager.toggleSoloMode(for: sound)
+      audioManager.enterPreviewMode(for: sound)
       previewingSound = sound.fileName
     }
   }
 
   private func stopAllPreviews() {
     if previewingSound != nil {
-      audioManager.exitSoloMode()
+      audioManager.exitPreviewMode()
     }
     previewingSound = nil
   }
@@ -575,7 +579,6 @@ struct PresetOnboardingSheet: View {
         try PresetManager.shared.applyPreset(newPreset)
 
         // Mark onboarding as complete
-        onboardingManager.markPresetCreated()
         onboardingManager.completeOnboarding()
 
         // Land the user on their new preset (the roots navigate and reset

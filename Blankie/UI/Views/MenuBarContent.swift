@@ -12,12 +12,11 @@
   /// opening on Mixer). A system `NavigationStack` wouldn't self-size in a
   /// `MenuBarExtra` window; the owned fixed-height header sizes to content.
   struct MenuBarContent: View {
-    @ObservedObject private var audioManager = AudioManager.shared
-    @ObservedObject private var globalSettings = GlobalSettings.shared
-    @ObservedObject private var presetManager = PresetManager.shared
-    @ObservedObject private var timerManager = TimerManager.shared
+    private let audioManager = AudioManager.shared
+    private let globalSettings = GlobalSettings.shared
+    private let presetManager = PresetManager.shared
+    private let timerManager = TimerManager.shared
     @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismiss) private var dismiss
 
     /// Screens ordered left-to-right, so the slide direction falls out of the
     /// raw value (a higher target slides in from the right).
@@ -129,7 +128,7 @@
     private func openMainWindow() {
       openWindow(id: "main")
       NSApp.activate()
-      dismiss()
+      NotificationCenter.default.post(name: .closeMenuBarPopover, object: nil)
     }
 
     private var headerTitle: String {
@@ -190,14 +189,9 @@
                 .padding(.vertical, 4)
               }
             }
-            .background(
-              GeometryReader { proxy in
-                Color.clear
-                  .onChange(of: proxy.size.height, initial: true) { _, height in
-                    listContentHeight = height
-                  }
-              }
-            )
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { height in
+              listContentHeight = height
+            }
           }
           .frame(height: min(listContentHeight, maxListHeight))
           .scrollDisabled(listContentHeight <= maxListHeight)
@@ -216,7 +210,7 @@
       AppState.shared.showingSettingsPane = true
       openWindow(id: "main")
       NSApp.activate()
-      dismiss()
+      NotificationCenter.default.post(name: .closeMenuBarPopover, object: nil)
     }
 
     @State private var listContentHeight: CGFloat = 300
@@ -305,16 +299,18 @@
   /// parent resolves the shared accent / playing / show-names values so each row
   /// only observes its own `sound`.
   private struct MenuBarSoundRow: View {
-    @ObservedObject var sound: Sound
+    let sound: Sound
     let accent: Color
     let isGloballyPlaying: Bool
     let showSoundNames: Bool
 
-    /// Toggle the sound, starting playback if the app was paused.
+    /// Toggle the sound, or — when paused and this sound is already selected —
+    /// resume playback instead of deselecting it (matching the grid tile).
     private func activate() {
-      sound.toggle()
-      if sound.isSelected && !AudioManager.shared.isGloballyPlaying {
+      if !AudioManager.shared.isGloballyPlaying && sound.isSelected {
         AudioManager.shared.setGlobalPlaybackState(true)
+      } else {
+        sound.toggle()
       }
     }
 
@@ -344,11 +340,17 @@
 
         VStack(alignment: .leading, spacing: 2) {
           if showSoundNames {
-            Text(LocalizedStringKey(sound.title))
-              .font(.callout)
-              // The slider carries the title for VoiceOver, so hide the visible
-              // copy to avoid a double announcement.
-              .accessibilityHidden(true)
+            HStack(spacing: 4) {
+              Text(LocalizedStringKey(sound.title))
+                .font(.callout)
+              if sound.isMusic {
+                MusicTagBadge(
+                  isActive: sound.isSelected && isGloballyPlaying, accentColor: accent)
+              }
+            }
+            // The slider carries the title for VoiceOver, so hide the visible
+            // copy to avoid a double announcement.
+            .accessibilityHidden(true)
           }
           Slider(
             value: Binding(
@@ -369,10 +371,4 @@
     }
   }
 
-  /// Menu bar label — Blankie's brand glyph.
-  struct MenuBarLabel: View {
-    var body: some View {
-      Image("blankie.symbol")
-    }
-  }
 #endif

@@ -20,7 +20,7 @@ import SwiftUI
       }
 
       if audioManager.isQuickMix {
-        return "Quick Mix"
+        return String(localized: "Quick Mix")
       }
 
       if let preset = presetManager.currentPreset {
@@ -85,7 +85,9 @@ import SwiftUI
         if currentPreset.isDefault {
           // Nothing playing means nothing to seed the new preset with.
           guard audioManager.hasSelectedSounds else { return nil }
-          return ("square.and.pencil", "New Preset", { showingNewPresetConfirmation = true })
+          return (
+            "rectangle.stack.badge.plus", "New Preset", { showingNewPresetConfirmation = true }
+          )
         }
         return ("slider.vertical.3", "Edit Preset", { presetToEdit = currentPreset })
       } else {

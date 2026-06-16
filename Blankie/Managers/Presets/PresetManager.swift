@@ -5,17 +5,18 @@
 //  Created by Cody Bromley on 1/1/25.
 //
 
-import Combine
 import Foundation
+import Observation
 import SwiftUI
 import os
 
-class PresetManager: ObservableObject {
-  private var isInitializing = true
+@Observable
+class PresetManager {
+  @ObservationIgnored private var isInitializing = true
   static let shared = PresetManager()
 
-  @Published private(set) var presets: [Preset] = []
-  @Published var currentPreset: Preset? {
+  private(set) var presets: [Preset] = []
+  var currentPreset: Preset? {
     didSet {
       AudioManager.shared.updateNowPlayingInfoForPreset(
         preset: currentPreset,
@@ -26,9 +27,9 @@ class PresetManager: ObservableObject {
     }
   }
 
-  @Published private(set) var hasCustomPresets: Bool = false
-  @Published private(set) var isLoading: Bool = true
-  @Published private(set) var error: Error?
+  private(set) var hasCustomPresets: Bool = false
+  private(set) var isLoading: Bool = true
+  private(set) var error: Error?
 
   /// The preset whose theme (accent, blur, view mode) should drive the UI, or
   /// nil when none should. Quick Mix already clears `currentPreset`, but solo
@@ -46,28 +47,30 @@ class PresetManager: ObservableObject {
     return currentPreset
   }
 
-  private var cancellables = Set<AnyCancellable>()
-  private var isInitialLoad = true
+  /// Watches AudioManager's (now `@Observable`) sounds array for add/remove so a
+  /// freshly imported or deleted sound re-checks preset divergence. Per-sound
+  /// selection/volume changes arrive via `AudioManager.soundDidChange()`.
+  @ObservationIgnored private var soundsObservation: Task<Void, Never>?
+  @ObservationIgnored private var isInitialLoad = true
 
   /// Set by applySoundStates; until then the mixer may not match the preset.
-  var presetStatesApplied = false
+  @ObservationIgnored var presetStatesApplied = false
 
   // In-flight prefetch for nearby preset animated artwork; cancelled when the
   // current preset changes so stale prefetches don't compete with the new one.
-  private var nearbyArtworkPrefetchTask: Task<Void, Never>?
+  @ObservationIgnored private var nearbyArtworkPrefetchTask: Task<Void, Never>?
 
   private init() {
     Logger.presets.debug("PresetManager: --- Begin Initialization ---")
 
-    // Set up a single observer for state changes
-    AudioManager.shared.$sounds
-      .debounce(for: .milliseconds(800), scheduler: RunLoop.main)
-      .sink { [weak self] _ in
-        Task { @MainActor in
-          self?.updateCurrentPresetState()
-        }
+    // Re-evaluate preset divergence when the sound set changes (custom sound
+    // imported or deleted). `sounds.count` only emits on add/remove, not on the
+    // per-sound mutations already covered by AudioManager.soundDidChange().
+    soundsObservation = Task { @MainActor [weak self] in
+      for await _ in Observations({ AudioManager.shared.sounds.count }) {
+        self?.updateCurrentPresetState()
       }
-      .store(in: &cancellables)
+    }
 
     // Don't load presets immediately - wait for custom sounds to be loaded
     // This will be triggered by initializePresetManager() after AudioManager setup
@@ -127,7 +130,7 @@ class PresetManager: ObservableObject {
   }
 
   deinit {
-    cancellables.forEach { $0.cancel() }
+    soundsObservation?.cancel()
     Logger.presets.debug("PresetManager: Cleaned up")
   }
 }
@@ -176,6 +179,12 @@ extension PresetManager {
     }
 
     cleanupAnimatedArtworkFiles(for: preset)
+
+    // Delete the preset's stored artwork rows too — cleanupAnimatedArtworkFiles
+    // only removes the on-disk .mov/preview files, leaving the full-resolution
+    // PresetArtwork image blobs to accumulate in SwiftData forever otherwise.
+    let deletedPresetID = preset.id
+    Task { try? await PresetArtworkManager.shared.deleteArtwork(for: deletedPresetID) }
 
     let wasCurrentPreset = (currentPreset?.id == preset.id)
 
@@ -231,6 +240,88 @@ extension PresetManager {
     savePresets()
     Logger.presets.debug("PresetManager: --- End Delete Preset ---")
   }
+
+  /// Custom sounds that deleting `preset` would leave orphaned: members of it,
+  /// in no *other* custom preset, and not currently selected. The default preset
+  /// always contains every sound, so it never counts as "another preset" here —
+  /// it only matters through the live-selection check. Built-ins are excluded
+  /// since they can't be deleted.
+  @MainActor
+  func orphanedCustomSounds(ifDeleting preset: Preset) -> [Sound] {
+    guard !preset.isDefault else { return [] }
+    let audio = AudioManager.shared
+    let presetMembers = Set(preset.soundStates.map(\.fileName))
+    let otherCustomMembers = Set(
+      presets
+        .filter { !$0.isDefault && $0.id != preset.id }
+        .flatMap { $0.soundStates.map(\.fileName) })
+    // "Selected/playing on the default preset" — the live selection when the
+    // default is the active context, otherwise the default's saved selection.
+    // Deliberately NOT the live selection of the custom preset being deleted:
+    // its own playing sounds would otherwise be spared and undercounted.
+    let defaultIsActive = currentPreset == nil || (currentPreset?.isDefault ?? false)
+    let selectedOnDefault: Set<String>
+    if defaultIsActive {
+      selectedOnDefault = Set(audio.sounds.filter(\.isSelected).map(\.fileName))
+    } else {
+      selectedOnDefault = Set(
+        presets.first { $0.isDefault }?.soundStates.filter(\.isSelected).map(\.fileName) ?? [])
+    }
+    return audio.sounds.filter { sound in
+      sound.isCustom
+        && presetMembers.contains(sound.fileName)
+        && !otherCustomMembers.contains(sound.fileName)
+        && !selectedOnDefault.contains(sound.fileName)
+        && audio.soloModeSound?.id != sound.id
+        && audio.previewModeSound?.id != sound.id
+    }
+  }
+
+  /// Deletes `preset`, and when asked, every custom sound it leaves orphaned.
+  /// Orphans are captured before the preset is removed so the membership basis
+  /// is still intact, then deleted through the normal custom-sound path.
+  @MainActor
+  func deletePreset(_ preset: Preset, alsoDeleteOrphanedSounds: Bool) {
+    let orphans = alsoDeleteOrphanedSounds ? orphanedCustomSounds(ifDeleting: preset) : []
+    deletePreset(preset)
+    for sound in orphans {
+      guard let id = sound.customSoundDataID,
+        let data = CustomSoundManager.shared.getCustomSound(by: id)
+      else { continue }
+      _ = CustomSoundManager.shared.deleteCustomSound(data)
+    }
+  }
+
+  /// Adds or removes `fileName` from a custom preset, live. Removing it from the
+  /// active preset stops the sound if it's currently playing (matching the Edit
+  /// Preset screen). No-op for the default preset, which always holds everything.
+  @MainActor
+  func setSound(_ fileName: String, member: Bool, ofPreset presetID: UUID, volume: Float) {
+    guard let index = presets.firstIndex(where: { $0.id == presetID }), !presets[index].isDefault
+    else { return }
+    var preset = presets[index]
+    let alreadyMember = preset.soundStates.contains { $0.fileName == fileName }
+    if member, !alreadyMember {
+      preset.soundStates.append(PresetState(fileName: fileName, isSelected: false, volume: volume))
+    } else if !member, alreadyMember {
+      preset.soundStates.removeAll { $0.fileName == fileName }
+      if currentPreset?.id == presetID,
+        let sound = AudioManager.shared.sounds.first(where: { $0.fileName == fileName }),
+        sound.isSelected
+      {
+        sound.isSelected = false
+      }
+    } else {
+      return
+    }
+    preset.lastModifiedVersion =
+      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    presets[index] = preset
+    if currentPreset?.id == presetID {
+      currentPreset = preset
+    }
+    savePresets()
+  }
 }
 
 // MARK: - Preset State Management
@@ -245,8 +336,14 @@ extension PresetManager {
   func updateCurrentPresetState() {
     if isInitializing { return }
 
-    // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
-    if AudioManager.shared.soloModeSound != nil || !presetStatesApplied { return }
+    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // applied yet). Preview forces the previewed sound to volume 1.0, which must
+    // not bleed into the saved preset.
+    if AudioManager.shared.soloModeSound != nil || AudioManager.shared.previewModeSound != nil
+      || !presetStatesApplied
+    {
+      return
+    }
 
     guard let preset = currentPreset else { return }
 
@@ -262,17 +359,30 @@ extension PresetManager {
   }
 
   private func generateUpdatedPresetData(for preset: Preset) -> ([PresetState], [String]) {
-    let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
-
-    let newStates = AudioManager.shared.sounds
-      .filter { presetSoundFileNames.contains($0.fileName) }
-      .map { sound in
+    let newStates: [PresetState]
+    if preset.isDefault {
+      // The default preset tracks every available sound (matching
+      // updateCurrentPresetBeforeSave), so a freshly imported sound the user
+      // selects on the default grid is recorded and survives relaunch.
+      newStates = AudioManager.shared.sounds.map { sound in
         PresetState(
           fileName: sound.fileName,
           isSelected: sound.isSelected,
           volume: sound.volume
         )
       }
+    } else {
+      let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
+      newStates = AudioManager.shared.sounds
+        .filter { presetSoundFileNames.contains($0.fileName) }
+        .map { sound in
+          PresetState(
+            fileName: sound.fileName,
+            isSelected: sound.isSelected,
+            volume: sound.volume
+          )
+        }
+    }
 
     // Preserve the preset's existing sound order, not the global customOrder
     let currentSoundOrder = preset.soundOrder ?? preset.soundStates.map(\.fileName)
@@ -326,20 +436,63 @@ extension PresetManager {
 
   }
 
+  /// Outcome of deciding which custom-sound states to keep. Pure and `Equatable`
+  /// so the data-loss-critical guard can be unit tested without the singletons.
+  enum CustomSoundCleanupDecision: Equatable {
+    /// No custom rows visible yet presets still reference customs — almost
+    /// certainly a transient load failure this launch, so keep everything.
+    case skipTransient
+    /// The per-preset filtered states, in the same order as the input.
+    case filtered([[PresetState]])
+  }
+
+  /// Pure decision core for `cleanupDeletedCustomSounds`: the transient-failure
+  /// guard and the "loaded UNION rows" valid-set, isolated from the singletons
+  /// so the irreversible-data-loss edges are testable.
+  static func customSoundCleanupDecision(
+    presetStates: [[PresetState]],
+    loadedSoundFileNames: Set<String>,
+    customRowFileNames: Set<String>
+  ) -> CustomSoundCleanupDecision {
+    // getAllCustomSounds() returns [] both for genuinely-empty and for a
+    // transient fetch/container failure. If no customs are visible yet presets
+    // still reference some, that's almost certainly a load failure, not a
+    // deletion — bail rather than strip every custom state irreversibly.
+    let presetsReferenceCustoms = presetStates.contains { states in
+      states.contains { !loadedSoundFileNames.contains($0.fileName) }
+    }
+    if customRowFileNames.isEmpty && presetsReferenceCustoms {
+      return .skipTransient
+    }
+
+    // Valid = loaded sounds UNION the SwiftData rows, so a row that exists but
+    // failed to load as a Sound this launch is still kept.
+    let valid = loadedSoundFileNames.union(customRowFileNames)
+    return .filtered(presetStates.map { states in states.filter { valid.contains($0.fileName) } })
+  }
+
   /// Remove deleted custom sounds from all presets
   @MainActor
   func cleanupDeletedCustomSounds() {
     Logger.presets.debug("PresetManager: Cleaning up deleted custom sounds from presets")
 
-    // Get current valid sound file names
-    let validSoundFileNames = Set(AudioManager.shared.sounds.map(\.fileName))
+    let customRows = CustomSoundManager.shared.getAllCustomSounds()
+    let decision = Self.customSoundCleanupDecision(
+      presetStates: presets.map(\.soundStates),
+      loadedSoundFileNames: Set(AudioManager.shared.sounds.map(\.fileName)),
+      customRowFileNames: Set(customRows.map(\.fileName))
+    )
+    guard case .filtered(let filteredStates) = decision else {
+      Logger.presets.debug(
+        "PresetManager: Skipping cleanup - no custom sounds available but presets reference customs (likely a transient load failure)"
+      )
+      return
+    }
 
     // Update each preset to remove invalid sound states
     var didChange = false
-    for (index, preset) in presets.enumerated() {
-      let validSoundStates = preset.soundStates.filter { soundState in
-        validSoundFileNames.contains(soundState.fileName)
-      }
+    for (index, validSoundStates) in filteredStates.enumerated() {
+      let preset = presets[index]
 
       // Only update if there were changes
       if validSoundStates.count != preset.soundStates.count {
@@ -433,9 +586,6 @@ extension PresetManager {
       currentPreset = updatedPreset
       savePresets()
 
-      // Force UI update
-      objectWillChange.send()
-
       Logger.presets.debug("PresetManager: Successfully updated sound order")
 
       // Verify the update
@@ -467,6 +617,11 @@ extension PresetManager {
 
   @MainActor func preparePresetApplication(_ preset: Preset) {
     currentPreset = preset
+    // The mixer no longer matches the (now-current) preset until executePreset-
+    // Application's async applySoundStates runs. Clear the flag so a debounced
+    // updateCurrentPresetState / pre-save landing in that window can't write the
+    // OLD preset's mixer state into the new one. applySoundStates sets it back.
+    presetStatesApplied = false
     PresetStorage.saveLastActivePresetID(preset.id)
 
     // Pre-cache artwork for instant display
@@ -596,7 +751,7 @@ extension PresetManager {
       // Cancel any stale prefetch from the previous current-preset.
       nearbyArtworkPrefetchTask?.cancel()
       nearbyArtworkPrefetchTask = Task {
-        await OnDemandResourceManager.shared.preloadResources(odrIds)
+        await BackgroundResourceManager.shared.preload(odrIds)
       }
     #endif
   }
@@ -669,6 +824,11 @@ extension PresetManager {
 
   @MainActor
   func applySoundStates(_ targetStates: [PresetState]) {
+    // Suppress music-exclusivity enforcement while the preset restores its own
+    // selection set; we sanitize once at the end instead.
+    AudioManager.shared.isApplyingPresetStates = true
+    defer { AudioManager.shared.isApplyingPresetStates = false }
+
     let presetSoundFileNames = Set(targetStates.map(\.fileName))
 
     // Leaving solo mode: a solo sound that's in the preset keeps playing
@@ -710,6 +870,19 @@ extension PresetManager {
       }
     }
 
+    // Enforce one music sound for legacy/imported presets that may carry more
+    // than one selected music sound. Keep the last one in the preset's order.
+    let selectedMusic = AudioManager.shared.sounds.filter { $0.isSelected && $0.isMusic }
+    if selectedMusic.count > 1 {
+      let keep = targetStates.last { state in
+        selectedMusic.contains { $0.fileName == state.fileName }
+      }?.fileName
+      for sound in selectedMusic where sound.fileName != keep {
+        Logger.presets.debug("  - Dropping extra music '\(sound.fileName)' (one music per preset)")
+        sound.isSelected = false
+      }
+    }
+
     presetStatesApplied = true
   }
 }
@@ -747,9 +920,6 @@ extension PresetManager {
 
       // Migrate any presets that contain old sound names with file extensions
       migratePresetSoundNames()
-
-      // Migrate legacy blur radii to the on/off model
-      migratePresetBlurValues()
 
       // Ensure all custom presets have order values
       ensurePresetOrder()
@@ -805,8 +975,11 @@ extension PresetManager {
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {
-    // Skip while the mixer doesn't reflect the preset (solo, or none applied yet).
-    guard AudioManager.shared.soloModeSound == nil, presetStatesApplied else { return }
+    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // applied yet). Preview forces the previewed sound to volume 1.0.
+    guard AudioManager.shared.soloModeSound == nil, AudioManager.shared.previewModeSound == nil,
+      presetStatesApplied
+    else { return }
 
     // Update current preset's state before saving
     if let currentPreset = currentPreset,
@@ -857,13 +1030,13 @@ extension PresetManager {
     let defaultPreset = presets.first { $0.isDefault }
     let customPresets = presets.filter { !$0.isDefault }
 
-    // Move file I/O to background queue to prevent UI blocking
-    Task.detached {
-      if let defaultPreset = defaultPreset {
-        PresetStorage.saveDefaultPreset(defaultPreset)
-      }
-      PresetStorage.saveCustomPresets(customPresets)
+    // Write synchronously on the main actor. Encoding a handful of presets into
+    // UserDefaults is cheap, and the previous Task.detached produced unordered
+    // writes where two rapid saves could land the older snapshot last.
+    if let defaultPreset = defaultPreset {
+      PresetStorage.saveDefaultPreset(defaultPreset)
     }
+    PresetStorage.saveCustomPresets(customPresets)
 
     // Cache thumbnails for quick access
     Task {
@@ -924,41 +1097,6 @@ extension PresetManager {
         PresetStorage.saveDefaultPreset(defaultPreset)
       }
       PresetStorage.saveCustomPresets(customPresets)
-    }
-  }
-
-  /// Migrates per-preset blur overrides from the old radius choices (e.g.
-  /// "High" 15) to the on/off model: any radius > 0 becomes the single
-  /// `defaultBackgroundBlurRadius`, 0 stays off, nil keeps following the app
-  /// setting.
-  private func migratePresetBlurValues() {
-    var migratedPresets = [Preset]()
-    var hasMigrations = false
-
-    for preset in presets {
-      if let radius = preset.backgroundBlurRadius,
-        radius != 0, radius != defaultBackgroundBlurRadius
-      {
-        var migratedPreset = preset
-        migratedPreset.backgroundBlurRadius = defaultBackgroundBlurRadius
-        migratedPresets.append(migratedPreset)
-        hasMigrations = true
-        Logger.presets.debug(
-          "PresetManager: Migrating blur in preset '\(preset.name)': \(radius) -> \(defaultBackgroundBlurRadius)"
-        )
-      } else {
-        migratedPresets.append(preset)
-      }
-    }
-
-    if hasMigrations {
-      setPresets(migratedPresets)
-      Logger.presets.debug("PresetManager: Blur migration completed, saving updated presets")
-
-      if let defaultPreset = migratedPresets.first(where: { $0.isDefault }) {
-        PresetStorage.saveDefaultPreset(defaultPreset)
-      }
-      PresetStorage.saveCustomPresets(migratedPresets.filter { !$0.isDefault })
     }
   }
 

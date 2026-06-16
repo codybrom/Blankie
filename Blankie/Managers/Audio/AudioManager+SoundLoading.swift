@@ -107,6 +107,7 @@ extension AudioManager {
       normalizationFactor: normalizationFactor,
       truePeakdBTP: cachedProfile?.truePeakdBTP ?? soundData.truePeakdBTP,
       needsLimiter: cachedProfile?.needsLimiter ?? soundData.needsLimiter ?? false,
+      isMusic: soundData.isMusic ?? false,
       duration: soundData.duration
     )
   }
@@ -141,7 +142,15 @@ extension AudioManager {
     let allCustomSounds = CustomSoundManager.shared.getAllCustomSounds()
     let customSoundData = allCustomSounds.filter { ids.contains($0.id) }
 
-    // Remove any existing custom sounds with these IDs to avoid duplicates
+    // Remove any existing custom sounds with these IDs to avoid duplicates.
+    // Tear them down first (the same recipe as stopAndRemoveCustomSounds): a
+    // removed-but-still-playing instance is no longer in `sounds`, so nothing
+    // could ever stop it, and its player would stay retained in the engine.
+    for sound in sounds
+    where sound.isCustom && (sound.customSoundDataID.map { ids.contains($0) } ?? false) {
+      sound.unload()
+      sound.isSelected = false
+    }
     sounds.removeAll { sound in
       guard sound.isCustom, let customId = sound.customSoundDataID else { return false }
       return ids.contains(customId)
@@ -168,7 +177,7 @@ extension AudioManager {
     }
 
     // Re-setup observers for the new sounds
-    setupSoundObservers()
+    refreshSoundDerivedState()
   }
 
   @MainActor
@@ -224,7 +233,7 @@ extension AudioManager {
     }
 
     // Re-setup observers for the new sounds
-    setupSoundObservers()
+    refreshSoundDerivedState()
 
     // Deferred so preset cleanup can't starve the preset-apply task.
     Task(priority: .background) { @MainActor in
@@ -305,10 +314,10 @@ extension AudioManager {
       // Create customization for the custom sound using individual setters
       let manager = SoundCustomizationManager.shared
 
-      // Only set values that differ from defaults to avoid creating unnecessary customizations
-      if data.title != data.fileName {
-        manager.setCustomTitle(data.title, for: data.fileName)
-      }
+      // Only set values that differ from defaults to avoid creating unnecessary
+      // customizations. Title is omitted on purpose: Sound.title already falls back to
+      // originalTitle (== data.title), so mirroring it here only created a redundant
+      // customTitle that could mask a real one (e.g. a renamed sound from an import).
       if data.systemIconName != "waveform.circle" {
         manager.setCustomIcon(data.systemIconName, for: data.fileName)
       }

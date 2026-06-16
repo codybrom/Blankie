@@ -7,17 +7,18 @@
 
 import AVFoundation
 import Accelerate
-import XCTest
+import Testing
 
 @testable import Blankie
 
 /// Verifies that looping across a wrap introduces neither a click nor a silent
-/// gap at the seam. Thresholds are self-referential (derived from the file's
-/// own statistics) to avoid magic numbers.
-final class EngineLoopSeamTests: XCTestCase {
+/// gap at the seam. Thresholds are self-referential (derived from the file's own
+/// statistics) to avoid magic numbers. Serialized: each test renders audio
+/// offline, so running them concurrently would multiply peak memory.
+@Suite(.serialized) struct EngineLoopSeamTests {
 
   private func bundledSoundURL(_ name: String) throws -> URL {
-    try XCTUnwrap(
+    try #require(
       Bundle.main.url(forResource: name, withExtension: "m4a"),
       "Missing bundled sound \(name).m4a")
   }
@@ -27,20 +28,7 @@ final class EngineLoopSeamTests: XCTestCase {
     return Array(UnsafeBufferPointer(start: data[0], count: Int(buffer.frameLength)))
   }
 
-  /// Median absolute sample-to-sample delta — the file's "normal" step size.
-  private func medianAbsDelta(_ samples: [Float]) -> Float {
-    guard samples.count > 1 else { return 0 }
-    var deltas = [Float]()
-    deltas.reserveCapacity(samples.count - 1)
-    for index in 1..<samples.count {
-      deltas.append(abs(samples[index] - samples[index - 1]))
-    }
-    deltas.sort()
-    let mid = deltas.count / 2
-    return deltas.count % 2 == 1 ? deltas[mid] : (deltas[mid - 1] + deltas[mid]) / 2
-  }
-
-  func testFireplaceLoopSeamContinuity() async throws {
+  @Test func fireplaceLoopSeamContinuity() async throws {
     let url = try bundledSoundURL("fireplace")
     let file = try AVAudioFile(forReading: url)
     let sampleRate = file.processingFormat.sampleRate
@@ -54,7 +42,7 @@ final class EngineLoopSeamTests: XCTestCase {
 
     let samples = channelZero(buffer)
     let seam = fileFrames
-    XCTAssertLessThan(seam, samples.count, "Render did not reach the seam frame")
+    #expect(seam < samples.count, "Render did not reach the seam frame")
 
     let windowFrames = Int(0.010 * sampleRate)
     let start = max(1, seam - windowFrames)
@@ -71,8 +59,8 @@ final class EngineLoopSeamTests: XCTestCase {
     for index in 1..<samples.count where index < start || index >= end {
       maxContentJump = max(maxContentJump, abs(samples[index] - samples[index - 1]))
     }
-    XCTAssertLessThan(
-      maxJump, maxContentJump,
+    #expect(
+      maxJump < maxContentJump,
       "Seam discontinuity \(maxJump) exceeds the file's own max content step \(maxContentJump)")
 
     // Gap detection: no >5ms run of pure silence straddling the seam.
@@ -88,12 +76,12 @@ final class EngineLoopSeamTests: XCTestCase {
         currentRun = 0
       }
     }
-    XCTAssertLessThan(
-      longestSilentRun, gapFrames,
+    #expect(
+      longestSilentRun < gapFrames,
       "Found \(longestSilentRun) frames (>5ms) of silence at the seam — a loop gap")
   }
 
-  func testRainLoopSeamRMSContinuity() async throws {
+  @Test func rainLoopSeamRMSContinuity() async throws {
     let url = try bundledSoundURL("rain")
     let file = try AVAudioFile(forReading: url)
     let sampleRate = file.processingFormat.sampleRate
@@ -107,8 +95,8 @@ final class EngineLoopSeamTests: XCTestCase {
     let samples = channelZero(buffer)
     let seam = fileFrames
     let window = Int(0.030 * sampleRate)
-    XCTAssertGreaterThan(seam - window, 0)
-    XCTAssertLessThan(seam + window, samples.count)
+    #expect(seam - window > 0)
+    #expect(seam + window < samples.count)
 
     func rmsDB(_ slice: ArraySlice<Float>) -> Float {
       let arr = Array(slice)
@@ -119,8 +107,8 @@ final class EngineLoopSeamTests: XCTestCase {
 
     let before = rmsDB(samples[(seam - window)..<seam])
     let after = rmsDB(samples[seam..<(seam + window)])
-    XCTAssertLessThanOrEqual(
-      abs(before - after), 6.0,
+    #expect(
+      abs(before - after) <= 6.0,
       "Rain loop seam RMS jumped \(abs(before - after)) dB (before \(before), after \(after))")
   }
 }

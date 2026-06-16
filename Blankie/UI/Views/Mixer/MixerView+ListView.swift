@@ -11,10 +11,10 @@ import os
 #if os(iOS) || os(visionOS)
   // Separate view struct to properly observe Sound changes
   struct SoundRowView: View {
-    @ObservedObject var sound: Sound
-    @ObservedObject var globalSettings: GlobalSettings
-    @ObservedObject var audioManager: AudioManager
-    @ObservedObject var presetManager = PresetManager.shared
+    let sound: Sound
+    var globalSettings: GlobalSettings
+    let audioManager: AudioManager
+    let presetManager = PresetManager.shared
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -110,6 +110,12 @@ import os
               // The row already exposes the title as its accessibility label so we hide the visible copy to prevent VoiceOver reading it twice
               .accessibilityHidden(true)
 
+            if sound.isMusic {
+              MusicTagBadge(
+                isActive: sound.isSelected && audioManager.isGloballyPlaying,
+                accentColor: accentColor)
+            }
+
             Spacer()
 
             Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
@@ -151,9 +157,7 @@ import os
       List {
         ForEach(filteredSounds) { sound in
           soundRow(for: sound)
-            .id(
-              "\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)-\(soundsUpdateTrigger)"
-            )
+            .id("\(sound.id)-\(sound.isSelected)-\(audioManager.isGloballyPlaying)")
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -162,8 +166,11 @@ import os
       }
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
+      // The Now Playing mini player floats over the bottom edge and its
+      // safe-area-bar inset doesn't reach this nested List
+      .contentMargins(.bottom, 72, for: .scrollContent)
       .transition(.opacity)
-      .id("\(globalSettings.showSoundNames)-\(soundsUpdateTrigger)")
+      .id("\(globalSettings.showSoundNames)")
     }
 
     // Reorder handler shared by the list and grid views in `mainContentView`.
@@ -204,12 +211,9 @@ import os
 
         Logger.ui.debug("ListView: Complete order being sent: \(completeOrder)")
 
-        // Update the preset with the new order
+        // Update the preset with the new order. The grid re-sorts from the
+        // persisted order automatically (@Observable preset/sounds reads).
         presetManager.updateCurrentPresetWithOrder(completeOrder)
-
-        // Force UI refresh
-        soundsUpdateTrigger += 1
-        Logger.ui.debug("ListView: UI refresh triggered")
       } else {
         // We're reordering the main sound grid (default preset or no preset)
         Logger.ui.debug("ListView: Moving sounds in default view")
@@ -244,14 +248,12 @@ import os
 
         Logger.ui.debug("ListView: Complete default order being saved: \(completeOrder)")
 
-        // Update the default order
+        // Update the default order. Assigning the @Observable array re-sorts
+        // the grid automatically; no manual refresh needed.
         audioManager.defaultSoundOrder = completeOrder
-        UserDefaults.standard.set(completeOrder, forKey: "defaultSoundOrder")
-        audioManager.objectWillChange.send()
-
-        // Force UI refresh
-        soundsUpdateTrigger += 1
-        Logger.ui.debug("ListView: UI refresh triggered for default view")
+        // Must match the suite the order is read back from at launch
+        // (UserDefaults.shared / app group); .standard silently reverts.
+        UserDefaults.shared.set(completeOrder, forKey: "defaultSoundOrder")
       }
     }
 

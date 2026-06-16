@@ -17,6 +17,13 @@ import os
   struct AnimatedArtworkPicker: View {
     @Binding var artwork: AnimatedArtworkRef?
     @Binding var staticArtworkPath: String?
+    /// Row label. Defaults to the per-preset wording; the app-wide default in
+    /// Settings passes "Default Animation" instead.
+    let label: LocalizedStringKey
+    /// Accent used by the gallery (pills, selection, Choose button). Passed in
+    /// by the call site so Settings uses the app-wide accent and Edit Preset
+    /// uses the edited preset's accent — never the unrelated playing preset's.
+    let accent: Color
     let onChange: () -> Void
 
     @State private var showingGallery = false
@@ -27,10 +34,14 @@ import os
     init(
       artwork: Binding<AnimatedArtworkRef?>,
       staticArtworkPath: Binding<String?>,
+      label: LocalizedStringKey = "Lock Screen Animation",
+      accent: Color = GlobalSettings.shared.customAccentColor ?? .accentColor,
       onChange: @escaping () -> Void
     ) {
       _artwork = artwork
       _staticArtworkPath = staticArtworkPath
+      self.label = label
+      self.accent = accent
       self.onChange = onChange
       _selectedBundledIdentifier = State(initialValue: artwork.wrappedValue?.bundledIdentifier)
     }
@@ -40,7 +51,7 @@ import os
         showingGallery = true
       } label: {
         HStack {
-          Text("Lock Screen Animation")
+          Text(label)
           Spacer()
           if let identifier = selectedBundledIdentifier,
             let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == identifier })
@@ -61,6 +72,7 @@ import os
       .sheet(isPresented: $showingGallery) {
         AnimatedArtworkGallery(
           selectedIdentifier: $selectedBundledIdentifier,
+          accent: accent,
           onSelect: { asset in
             Task {
               await applyBundledAsset(asset)
@@ -102,8 +114,8 @@ import os
       defer { isProcessing = false }
 
       do {
-        // Request the video file from ODR (downloads if needed)
-        let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
+        // Ensure the video's Background Assets pack is downloaded.
+        _ = try await BackgroundResourceManager.shared.resourceURL(for: asset.id)
 
         // Preview images remain bundled for fast gallery display
         guard
@@ -134,11 +146,9 @@ import os
           AnimatedArtworkFileStore.removeItemIfExists(relativePath: oldSquarePreview)
         }
 
-        // Copy new files
+        // Copy only the small preview images into Documents (used as the static
+        // artwork fallback). The video stays in its Background Assets pack.
         let assetId = UUID()
-        let loopRel = AnimatedArtworkFileStore.makeRelativeLoopPath(
-          for: assetId, fileExtension: videoURL.pathExtension
-        )
         let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
           for: assetId, fileExtension: previewURL.pathExtension
         )
@@ -146,14 +156,13 @@ import os
           for: assetId, fileExtension: squarePreviewURL.pathExtension, suffix: "Square"
         )
 
-        _ = try AnimatedArtworkFileStore.copyItem(at: videoURL, to: loopRel)
         _ = try AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
         _ = try AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
 
         await MainActor.run {
           artwork = AnimatedArtworkRef(
             source: .bundled,
-            loopPath: loopRel,
+            loopPath: nil,
             previewPath: previewRel,
             squarePreviewPath: squarePreviewRel,
             preferredAspect: "3x4",
@@ -174,6 +183,7 @@ import os
 
   private struct AnimatedArtworkGallery: View {
     @Binding var selectedIdentifier: String?
+    let accent: Color
     let onSelect: (BundledAnimatedLoop) -> Void
     let onClear: () -> Void
 
@@ -242,6 +252,7 @@ import os
               GalleryCard(
                 asset: asset,
                 isSelected: selectedIdentifier == asset.id,
+                accent: accent,
                 onTap: {
                   previewingAsset = asset
                 },
@@ -262,6 +273,7 @@ import os
                   label: "All",
                   icon: "square.grid.2x2",
                   isSelected: selectedCategory == nil,
+                  accent: accent,
                   onTap: { selectedCategory = nil }
                 )
                 ForEach(categories, id: \.id) { category in
@@ -269,6 +281,7 @@ import os
                     label: category.displayName,
                     icon: category.icon,
                     isSelected: selectedCategory == category.id,
+                    accent: accent,
                     onTap: { selectedCategory = category.id }
                   )
                 }
@@ -296,6 +309,7 @@ import os
         .sheet(item: $previewingAsset) { asset in
           FullScreenPreview(
             asset: asset,
+            accent: accent,
             onSelect: {
               onSelect(asset)
             },
@@ -320,6 +334,7 @@ import os
     let label: String
     let icon: String
     let isSelected: Bool
+    let accent: Color
     let onTap: () -> Void
 
     var body: some View {
@@ -329,9 +344,7 @@ import os
       }
       if isSelected {
         // Prominent glass fills with the accent and picks a legible label automatically.
-        pill.buttonStyle(.glassProminent).tint(
-          PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared.customAccentColor
-            ?? .accentColor)
+        pill.buttonStyle(.glassProminent).tint(accent)
       } else {
         pill.buttonStyle(.glass)
       }
@@ -343,21 +356,20 @@ import os
   private struct GalleryCard: View {
     let asset: BundledAnimatedLoop
     let isSelected: Bool
+    let accent: Color
     let onTap: () -> Void
     let onUncache: () -> Void
 
-    @StateObject private var odrManager = OnDemandResourceManager.shared
+    @StateObject private var resourceManager = BackgroundResourceManager.shared
     @State private var showingUncacheConfirmation = false
 
-    var resourceState: ResourceState {
-      // Return the actual ODR state - this accurately reflects whether
-      // the video needs to be downloaded from Apple's servers
-      return odrManager.getResourceState(asset.id)
+    var resourceState: BackgroundResourceState {
+      // Reflects whether the video's asset pack is on the device.
+      return resourceManager.state(for: asset.id)
     }
 
     var isCached: Bool {
-      // Can only uncache if the resource is actually in ODR storage
-      // (not just selected/copied to Documents)
+      // Can only remove if the asset pack is actually downloaded.
       if case .available = resourceState {
         return true
       }
@@ -379,7 +391,7 @@ import os
               .cornerRadius(12)
               .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                  .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
+                  .strokeBorder(isSelected ? accent : Color.clear, lineWidth: 3)
               )
           }
 
@@ -422,7 +434,7 @@ import os
               HStack {
                 Spacer()
                 Image(systemName: "checkmark.circle.fill")
-                  .foregroundColor(.accentColor)
+                  .foregroundColor(accent)
                   .font(.title2)
                   .padding(8)
                   .background(Color.black.opacity(0.5))
@@ -449,7 +461,7 @@ import os
       }
       .alert("Remove Downloaded Video?", isPresented: $showingUncacheConfirmation) {
         Button("Remove Download", role: .destructive) {
-          odrManager.releaseResource(asset.id)
+          Task { await resourceManager.removeResource(asset.id) }
           onUncache()
         }
         Button("Cancel", role: .cancel) {}
@@ -537,6 +549,7 @@ import os
 
   private struct FullScreenPreview: View {
     let asset: BundledAnimatedLoop
+    let accent: Color
     let onSelect: () -> Void
     let onDismiss: () -> Void
     let onDelete: () -> Void
@@ -544,14 +557,13 @@ import os
     @State private var player: AVPlayer?
     @State private var showInfo = false
     @State private var isLoading = true
-    @State private var loadError: String?
     @State private var showingDeleteConfirmation = false
     @State private var setupTask: Task<Void, Never>?
     @State private var loopObserver: NSObjectProtocol?
-    @StateObject private var odrManager = OnDemandResourceManager.shared
+    @StateObject private var resourceManager = BackgroundResourceManager.shared
 
-    var resourceState: ResourceState {
-      odrManager.getResourceState(asset.id)
+    var resourceState: BackgroundResourceState {
+      resourceManager.state(for: asset.id)
     }
 
     var isCached: Bool {
@@ -561,10 +573,7 @@ import os
       return false
     }
 
-    private var accentColor: Color {
-      PresetManager.shared.currentPreset?.accentColor ?? GlobalSettings.shared.customAccentColor
-        ?? .accentColor
-    }
+    private var accentColor: Color { accent }
 
     var body: some View {
       NavigationStack {
@@ -624,18 +633,15 @@ import os
                   .font(.subheadline)
 
               case .failed(let error):
+                let isOffline = (error as? BackgroundResourceError)?.isOffline ?? false
                 VStack(spacing: 12) {
-                  Image(systemName: "exclamationmark.triangle.fill")
+                  Image(systemName: isOffline ? "wifi.slash" : "exclamationmark.triangle.fill")
                     .font(.largeTitle)
-                    .foregroundColor(.red)
-
-                  Text("Failed to load video")
-                    .foregroundColor(.white)
-                    .font(.headline)
+                    .foregroundColor(isOffline ? .white : .red)
 
                   Text(error.localizedDescription)
-                    .foregroundColor(.secondary)
-                    .font(.caption)
+                    .foregroundColor(.white)
+                    .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                 }
@@ -751,7 +757,7 @@ import os
         }
         .alert("Remove Downloaded Video?", isPresented: $showingDeleteConfirmation) {
           Button("Remove Download", role: .destructive) {
-            odrManager.releaseResource(asset.id)
+            Task { await resourceManager.removeResource(asset.id) }
             onDelete()
             onDismiss()
           }
@@ -766,8 +772,8 @@ import os
       setupTask?.cancel()
       setupTask = Task {
         do {
-          // Request the video file from ODR (downloads if needed)
-          let videoURL = try await OnDemandResourceManager.shared.requestVideoResource(asset.id)
+          // Ensure the video's Background Assets pack is downloaded, then play it.
+          let videoURL = try await BackgroundResourceManager.shared.resourceURL(for: asset.id)
           // If the sheet dismissed during the download, stop here.
           if Task.isCancelled { return }
 
@@ -800,11 +806,9 @@ import os
         } catch is CancellationError {
           // Sheet dismissed before download finished; nothing to do.
         } catch {
-          // Handle download failure - show error UI
-          await MainActor.run {
-            self.loadError = error.localizedDescription
-            self.isLoading = false
-          }
+          // Keep `isLoading` true so the overlay's `.failed` branch (driven by
+          // resourceState) stays on screen. Setting it false here collapsed the
+          // view to a black background instead of showing the error.
           Logger.ui.error("Failed to load video for preview: \(error, privacy: .public)")
         }
       }
@@ -817,7 +821,7 @@ import os
     var errorDescription: String? {
       switch self {
       case .missingBundledAsset(let name):
-        return "Missing bundled asset: \(name)"
+        return String(localized: "Missing bundled asset: \(name)")
       }
     }
   }
@@ -835,9 +839,8 @@ import os
       let license: String
     }
 
-    // Files are copied flat to bundle root with unique names
-    var videoResourceName: String { id }
-    var videoExtension: String { "mov" }
+    // Preview images + metadata are bundled and resolved by name; the video is
+    // delivered separately as a Background Assets pack (id == asset-pack id).
     var previewResourceName: String { id }
     var previewExtension: String { "jpg" }
     var squarePreviewResourceName: String { "\(id)Square" }

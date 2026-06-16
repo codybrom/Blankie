@@ -1,6 +1,6 @@
 {
   "fill" : {
-    "automatic-gradient" : "display-p3:0.00295,0.01355,0.19128,1.00000"
+    "automatic-gradient" : "display-p3:0.00490,0.02248,0.24917,1.00000"
   },
   "groups" : [
     {
@@ -11,7 +11,6 @@
         }
       ],
       "blur-material" : 0.5,
-      "hidden" : false,
       "layers" : [
         {
           "blend-mode-specializations" : [
@@ -23,24 +22,9 @@
               "value" : "plus-lighter"
             }
           ],
-          "fill-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : "none"
-            },
-            {
-              "appearance" : "tinted",
-              "value" : "automatic"
-            }
-          ],
-          "glass" : true,
-          "image-name" : "Ellipse 3.svg",
-          "name" : "Ellipse 3",
+          "image-name" : "circle.svg",
+          "name" : "Circle",
           "opacity-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : 0.5
-            },
             {
               "appearance" : "tinted",
               "value" : 1
@@ -55,7 +39,7 @@
           }
         }
       ],
-      "lighting" : "individual",
+      "lighting" : "combined",
       "position" : {
         "scale" : 0.81,
         "translation-in-points" : [
@@ -69,15 +53,12 @@
       },
       "specular" : true,
       "translucency" : {
-        "enabled" : false,
+        "enabled" : true,
         "value" : 0.5
       }
     },
     {
       "blend-mode-specializations" : [
-        {
-          "value" : "normal"
-        },
         {
           "appearance" : "dark",
           "value" : "screen"
@@ -90,25 +71,20 @@
             {
               "value" : {
                 "linear-gradient" : [
-                  "srgb:0.99942,0.98555,0.00000,1.00000",
-                  "srgb:0.99942,0.98555,0.00000,0.50000"
+                  "display-p3:1.00000,0.82745,0.00000,1.00000",
+                  "display-p3:0.27549,0.32269,0.96420,1.00000"
                 ]
               }
             },
             {
               "appearance" : "dark",
               "value" : {
-                "automatic-gradient" : "srgb:0.99942,0.98555,0.00000,1.00000"
+                "automatic-gradient" : "srgb:1.00000,0.82745,0.00000,1.00000"
               }
-            },
-            {
-              "appearance" : "tinted",
-              "value" : "none"
             }
           ],
-          "glass" : true,
-          "image-name" : "Path-1.svg",
-          "name" : "Path-1",
+          "image-name" : "letter-b.svg",
+          "name" : "Letter B",
           "opacity-specializations" : [
             {
               "appearance" : "dark",
@@ -124,7 +100,7 @@
           }
         }
       ],
-      "lighting" : "combined",
+      "lighting" : "individual",
       "position" : {
         "scale" : 0.81,
         "translation-in-points" : [
@@ -136,7 +112,15 @@
         "kind" : "neutral",
         "opacity" : 0.5
       },
-      "specular" : true,
+      "specular-specializations" : [
+        {
+          "value" : false
+        },
+        {
+          "appearance" : "dark",
+          "value" : true
+        }
+      ],
       "translucency" : {
         "enabled" : true,
         "value" : 0.5

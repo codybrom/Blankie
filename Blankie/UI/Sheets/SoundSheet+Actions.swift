@@ -41,13 +41,15 @@ extension SoundSheet {
     let title = soundName.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
     let icon = selectedIcon
     let randomize = randomizeStartPosition
+    let convert = convertToAACOnImport
 
     Task {
       let result = await CustomSoundManager.shared.importSound(
         from: file,
         title: title,
         iconName: icon,
-        randomizeStartPosition: randomize
+        randomizeStartPosition: randomize,
+        convertToAAC: convert
       )
 
       isProcessing = false
@@ -65,6 +67,9 @@ extension SoundSheet {
         }
         if isPresetUseOnly != false {
           manager.setPresetUseOnly(isPresetUseOnly, for: customSound.fileName)
+        }
+        if isMusic != false {
+          manager.setMusic(isMusic, for: customSound.fileName)
         }
 
         // Add the new sound to the chosen presets (and/or a fresh
@@ -107,10 +112,11 @@ extension SoundSheet {
     let hasCustomLoop = loopSound != true  // Default is true
     let hasCustomFade = fadeSound != true  // Default is true
     let hasCustomPresetOnly = isPresetUseOnly != false  // Default is false
+    let hasCustomMusic = isMusic != sound.isMusicDefault  // Default varies per sound
 
     return hasCustomName || hasCustomIcon || hasCustomRandomization
       || hasCustomNormalization || hasCustomVolume || hasCustomLoop || hasCustomFade
-      || hasCustomPresetOnly
+      || hasCustomPresetOnly || hasCustomMusic
   }
 
   private func applyCustomizations(_ sound: Sound) {
@@ -164,6 +170,16 @@ extension SoundSheet {
       for: sound.fileName
     )
 
+    // Music tag is user-editable only for custom sounds; built-ins keep their
+    // sounds.json default, so never write an override for them. (The default
+    // varies per sound, so diff against the sound's own default.)
+    if sound.isCustom {
+      manager.setMusic(
+        isMusic != sound.isMusicDefault ? isMusic : nil,
+        for: sound.fileName
+      )
+    }
+
     // Going preset-only (directly or via loop-off) hides the tile from the
     // default grid; if the sound is selected there it would keep playing with
     // no control to stop it. Deselect (fades out) — unless a custom preset is
@@ -177,6 +193,12 @@ extension SoundSheet {
 
     // Force save all customizations
     manager.saveCustomizations()
+
+    // The loop flag is baked into the player at load time, so a live edit to
+    // the loop toggle needs the player rebuilt to take effect (runs after the
+    // deselect above so a default-preset sound that loop-off just removed isn't
+    // revived).
+    sound.reloadForLoopChange()
   }
 
   // MARK: - Preset Integration
@@ -277,8 +299,6 @@ extension SoundSheet {
 
     switch result {
     case .success:
-      // Remove any customizations for this sound
-      SoundCustomizationManager.shared.removeCustomization(for: customSound.fileName)
 
       // Reload custom sounds in AudioManager
       AudioManager.shared.loadCustomSounds()

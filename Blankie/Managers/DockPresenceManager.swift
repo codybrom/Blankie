@@ -8,6 +8,7 @@
 #if os(macOS)
   import AppKit
   import Combine
+  import Observation
 
   /// Hides/shows the Dock icon by switching `NSApplication`'s activation policy
   /// (`.accessory` hides it, `.regular` shows it) from the menu bar settings and
@@ -18,33 +19,47 @@
     static let shared = DockPresenceManager()
 
     private var cancellables = Set<AnyCancellable>()
+    private var settingsObservation: Task<Void, Never>?
+    private var audioObservation: Task<Void, Never>?
 
     /// Begin observing the settings + window state. Call once after launch.
     func start() {
-      let settings = GlobalSettings.shared
-      Publishers.CombineLatest4(
-        settings.$showMenuBarIcon,
-        settings.$menuBarOnlyMode,
-        settings.$hideDockWhenWindowClosed,
-        WindowObserver.shared.$hasVisibleWindow
-      )
-      // Switching policy must happen on the main thread; coalesce bursts.
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in self?.apply() }
-      .store(in: &cancellables)
+      // GlobalSettings is @Observable: observe the dock-relevant settings in one
+      // Observations loop. Both handlers are idempotent (apply() early-returns
+      // when the policy is unchanged), so any change runs both. @MainActor so the
+      // policy/badge work stays on the main thread.
+      settingsObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({
+          let s = GlobalSettings.shared
+          return (
+            s.showMenuBarIcon, s.menuBarOnlyMode, s.hideDockWhenWindowClosed,
+            s.showDockBadgeWhenPaused
+          )
+        }) {
+          self?.apply()
+          self?.updateDockBadge()
+        }
+      }
 
-      // Keep the Dock pause badge correct even when the main window is closed:
-      // its in-window owner (ContentView) is gone, but the menu bar popover can
-      // still drive playback. This observer is always alive.
-      let audio = AudioManager.shared
-      Publishers.CombineLatest3(
-        audio.$isGloballyPlaying,
-        audio.$hasSelectedSounds,
-        settings.$showDockBadgeWhenPaused
-      )
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in self?.updateDockBadge() }
-      .store(in: &cancellables)
+      // WindowObserver is still ObservableObject (migrated in a later stage);
+      // keep its Combine subscription for now. The Dock pause badge must stay
+      // correct even with the main window closed — its in-window owner
+      // (ContentView) is gone, but the menu bar popover can still play.
+      WindowObserver.shared.$hasVisibleWindow
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in self?.apply() }
+        .store(in: &cancellables)
+
+      // AudioManager is @Observable: refresh the Dock pause badge whenever
+      // playback or the selection emptiness changes.
+      audioObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({
+          let audio = AudioManager.shared
+          return (audio.isGloballyPlaying, audio.hasSelectedSounds)
+        }) {
+          self?.updateDockBadge()
+        }
+      }
     }
 
     /// Badge the Dock icon whenever the app is silent — paused, or "playing"

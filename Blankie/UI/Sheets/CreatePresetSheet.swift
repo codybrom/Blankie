@@ -13,9 +13,12 @@ struct CreatePresetSheet: View {
   /// Sound file names to pre-select ("create from playing sounds" while on
   /// the default preset). Empty = start with nothing selected.
   var initialSelectedSounds: Set<String> = []
-  @ObservedObject private var presetManager = PresetManager.shared
-  @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  /// Fired after the new preset is created and applied so the owner can
+  /// navigate to it (iPhone Library pushes the mixer); nil at the mixer.
+  var onCreated: (() -> Void)?
+  private let presetManager = PresetManager.shared
+  private let audioManager = AudioManager.shared
+  private let globalSettings = GlobalSettings.shared
   @State private var presetName = ""
   @State private var creatorName = ""
   @State private var error: String?
@@ -32,8 +35,6 @@ struct CreatePresetSheet: View {
   @State private var accentColor: Color?
   @State private var useCustomViewMode = false
   @State private var viewModeOverride: PresetViewMode?
-  @State private var useCustomBlur = false
-  @State private var blurOverride: Double = defaultBackgroundBlurRadius
   @State private var didCreatePreset = false
   #if os(iOS) || os(visionOS)
     @State private var selectedImage: UIImage?
@@ -77,9 +78,7 @@ struct CreatePresetSheet: View {
           useCustomViewMode: $useCustomViewMode,
           viewModeOverride: $viewModeOverride,
           useCustomTheme: $useCustomTheme,
-          accentColor: $accentColor,
-          useCustomBlur: $useCustomBlur,
-          blurOverride: $blurOverride
+          accentColor: $accentColor
         )
       }
       .navigationTitle("New Preset")
@@ -265,11 +264,20 @@ extension CreatePresetSheet {
           await presetManager.cacheThumbnail(for: newPreset)
         }
 
+        // Leave solo/Quick Mix first, like a Library row tap, so the prior
+        // mix doesn't linger as the current selection.
+        if audioManager.soloModeSound != nil {
+          audioManager.exitSoloModeWithoutResuming()
+        }
+        if audioManager.isQuickMix {
+          audioManager.exitQuickMix()
+        }
         try presetManager.applyPreset(newPreset)
         await MainActor.run {
           didCreatePreset = true
         }
         isPresented = false
+        onCreated?()
       } catch {
         await MainActor.run {
           self.error = "Failed to create preset"
@@ -317,7 +325,7 @@ extension CreatePresetSheet {
     // (toggled off = nil = follow the app-wide setting).
     newPreset.accentColorName = useCustomTheme ? accentColor?.toString : nil
     newPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
-    newPreset.backgroundBlurRadius = useCustomBlur ? blurOverride : nil
+    // Background blur is now a global Display setting, not a per-preset override.
 
     Logger.ui.debug(
       "CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "set" : "none")"

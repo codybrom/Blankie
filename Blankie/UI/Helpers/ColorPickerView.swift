@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Accent color picker shown from the macOS bottom bar's palette popover
 struct ColorPickerView: View {
-  @ObservedObject var globalSettings = GlobalSettings.shared
+  let globalSettings = GlobalSettings.shared
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {

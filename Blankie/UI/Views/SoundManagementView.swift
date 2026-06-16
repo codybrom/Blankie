@@ -13,8 +13,8 @@ struct SoundManagementView: View {
   @Environment(\.modelContext) private var modelContext
   @Environment(\.dismiss) private var dismiss
   @Query private var customSoundData: [CustomSoundData]
-  @ObservedObject private var audioManager = AudioManager.shared
-  @ObservedObject private var globalSettings = GlobalSettings.shared
+  private let audioManager = AudioManager.shared
+  private let globalSettings = GlobalSettings.shared
 
   @State private var showingFilePicker = false
   @State private var showingImportSheet = false
@@ -40,7 +40,7 @@ struct SoundManagementView: View {
         .navigationBarTitleDisplayMode(.inline)
       #endif
       .toolbar {
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItem(placement: .automatic) {
           Button {
             showingFilePicker = true
           } label: {
@@ -80,7 +80,7 @@ struct SoundManagementView: View {
         }
       } message: {
         Text(
-          "Are you sure you want to delete '\(selectedSound?.title ?? "this sound")'? This action cannot be undone."
+          "Are you sure you want to delete '\(selectedSound?.title ?? String(localized: "this sound"))'? This action cannot be undone."
         )
       }
   }
