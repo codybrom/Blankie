@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AAAA0000000000000000AA02 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA0000000000000000AA03 /* ZIPFoundation */; };
 		F95914D92FDF1D2300808460 /* BlankieAssetDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F9C0AF062E0DAF7A00E4530D /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F9C0AA3E2E0DADF300E4530D /* ZIPFoundation */; };
 /* End PBXBuildFile section */
@@ -127,6 +128,12 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		AAAA0000000000000000AA01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				AAAA0000000000000000AA02 /* ZIPFoundation in Frameworks */,
+			);
+		};
 		F95914CD2FDF1D2300808460 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -233,6 +240,7 @@
 			buildConfigurationList = F9ED6BB02D321D3300240F13 /* Build configuration list for PBXNativeTarget "BlankieTests" */;
 			buildPhases = (
 				F9ED6BA62D321D3300240F13 /* Sources */,
+				AAAA0000000000000000AA01 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -243,6 +251,9 @@
 				F9ED6DAB2D321F5D00240F13 /* BlankieTests */,
 			);
 			name = BlankieTests;
+			packageProductDependencies = (
+				AAAA0000000000000000AA03 /* ZIPFoundation */,
+			);
 			productName = BlankieTests;
 			productReference = F9ED6BAA2D321D3300240F13 /* BlankieTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -1409,6 +1420,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		AAAA0000000000000000AA03 /* ZIPFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F9C0AA3D2E0DADF300E4530D /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
+			productName = ZIPFoundation;
+		};
 		F9C0AA3E2E0DADF300E4530D /* ZIPFoundation */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F9C0AA3D2E0DADF300E4530D /* XCRemoteSwiftPackageReference "ZIPFoundation" */;
