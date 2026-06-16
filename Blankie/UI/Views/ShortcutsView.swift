@@ -89,6 +89,7 @@ extension AppShortcut {
   static let toggleSidebar = AppShortcut("Show/Hide Sidebar", key: "s", modifiers: .command)
   static let manageSounds = AppShortcut("Manage Sounds", key: "o", modifiers: .command)
   static let importFile = AppShortcut("Import", key: "i", modifiers: .command)
+  static let exportPreset = AppShortcut("Export Preset", key: "e", modifiers: .command)
   static let newWindow = AppShortcut("New Window", key: "n", modifiers: .command)
   static let keyboardShortcuts = AppShortcut(
     "Keyboard Shortcuts", key: "?", modifiers: [.command, .shift])
@@ -117,6 +118,7 @@ struct ShortcutsView: View {
     .toggleSidebar,
     .manageSounds,
     .importFile,
+    .exportPreset,
     .newWindow,
     .closeWindow,
     .settings,
