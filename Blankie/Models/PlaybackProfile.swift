@@ -58,10 +58,16 @@ struct PlaybackProfile: Codable, Equatable {
       return nil
     }
 
-    // Calculate gain needed to reach target LUFS, capped like the analyzer
-    // (an uncapped profile would override the capped factor at load time)
+    // Calculate gain to reach target LUFS, matching the analyzer EXACTLY:
+    // cap the boost (maxGainDB) AND floor at minimumLUFS. Without the floor a
+    // near-silent import (hiss/noise below minimumLUFS) gets the full +18 dB
+    // here, and because this cached profile overrides the analyzer's floored
+    // factor at load time, the user gets amplified hiss slammed at them.
     let targetLUFS = AudioAnalyzer.targetLUFS
-    let gainDB = min(targetLUFS - lufs, AudioAnalyzer.maxGainDB)
+    let gainDB =
+      lufs > AudioAnalyzer.minimumLUFS
+      ? min(targetLUFS - lufs, AudioAnalyzer.maxGainDB)
+      : 0
 
     // Check if applying gain would exceed true peak limit
     let predictedTruePeak = truePeak + gainDB

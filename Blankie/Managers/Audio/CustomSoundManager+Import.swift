@@ -159,7 +159,11 @@ extension CustomSoundManager {
       filename: fileName,
       integratedLUFS: lufs,
       truePeakdBTP: estimatedTruePeak,
-      gainDB: min(AudioAnalyzer.targetLUFS - lufs, AudioAnalyzer.maxGainDB),
+      // Floor at minimumLUFS like the analyzer, so a near-silent import is left
+      // at unity instead of being boosted by the full +18 dB.
+      gainDB: lufs > AudioAnalyzer.minimumLUFS
+        ? min(AudioAnalyzer.targetLUFS - lufs, AudioAnalyzer.maxGainDB)
+        : 0,
       needsLimiter: lufs < -30.0  // Need limiter for very quiet sounds
     )
     PlaybackProfileStore.shared.store(profile)
