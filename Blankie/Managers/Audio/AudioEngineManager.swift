@@ -110,9 +110,16 @@ final class AudioEngineManager {
   /// Idempotent.
   func attach(_ player: SoundPlayer) {
     let key = ObjectIdentifier(player)
-    guard registered[key] == nil else { return }
+    // Trust the registry only while the node is still attached. A teardown can
+    // leave a node detached (engine == nil) with a stale registry entry, and
+    // playing a detached node crashes — so re-wire it instead of no-op'ing.
+    if registered[key] != nil, player.node.engine != nil {
+      return
+    }
 
-    engine.attach(player.node)
+    if player.node.engine == nil {
+      engine.attach(player.node)
+    }
     connectPlayerChain(player)
 
     registered[key] = player
