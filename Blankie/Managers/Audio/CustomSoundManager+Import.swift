@@ -135,6 +135,10 @@ extension CustomSoundManager {
 
     // CRITICAL: Preserve the original ID so preset references work
     customSound.id = metadata.id
+    // Carry the archive's integrity hash through (the file is copied byte-for-byte
+    // here, so it stays valid); matches PresetImporter's direct-creation path,
+    // which previously was the only place that set it.
+    customSound.sha256Hash = metadata.sha256Hash
 
     return customSound
   }

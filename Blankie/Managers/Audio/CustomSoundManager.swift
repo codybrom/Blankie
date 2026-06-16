@@ -179,8 +179,10 @@ class CustomSoundManager {
     return copiedURL
   }
 
+  /// Builds the `CustomSoundData` record for a freshly imported file (analysis,
+  /// hash, ID3, credits). Not private so the sha256/profile wiring is unit tested.
   @MainActor
-  private func createCustomSoundRecord(from importData: SoundImportData) async throws
+  func createCustomSoundRecord(from importData: SoundImportData) async throws
     -> CustomSoundData
   {
     let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: importData.copiedURL)
@@ -208,6 +210,11 @@ class CustomSoundManager {
       detectedLUFS: lufsResult?.lufs, normalizationFactor: lufsResult?.normalizationFactor,
       duration: analysis.duration
     )
+
+    // Hash the stored file so re-importing the same audio is deduped and the
+    // durable mirror persists a real integrity hash (was previously only set on
+    // the preset-import path, so picker imports persisted a nil hash).
+    customSound.sha256Hash = try? FileHashUtility.sha256Hash(for: importData.copiedURL)
 
     // Store ID3 metadata
     customSound.id3Title = metadata.title
