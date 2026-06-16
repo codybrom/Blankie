@@ -575,7 +575,6 @@ struct PresetOnboardingSheet: View {
         try PresetManager.shared.applyPreset(newPreset)
 
         // Mark onboarding as complete
-        onboardingManager.markPresetCreated()
         onboardingManager.completeOnboarding()
 
         // Land the user on their new preset (the roots navigate and reset

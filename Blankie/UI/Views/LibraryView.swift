@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import TipKit
 import UniformTypeIdentifiers
 import os
 
@@ -303,7 +302,6 @@ struct PresetPickerRow: View {
           audioManager.exitQuickMix()
         }
         try presetManager.applyPreset(preset, forceReapply: wasSolo)
-        OnboardingManager.shared.markPresetSwitched()
         if dismissOnSelect { dismiss() }
         onSelection?()
       } catch {
@@ -514,10 +512,6 @@ struct LibraryView: View {
   @State private var soundToDelete: Sound?
   @Environment(\.dismiss) private var dismiss
   @Environment(\.colorScheme) private var systemColorScheme
-
-  // TipKit tips
-  private let createFirstPresetTip = CreateFirstPresetTip()
-  private let switchPresetsTip = SwitchPresetsTip()
 
   private var sortedCustomPresets: [Preset] {
     presetManager.presets
@@ -788,7 +782,6 @@ struct LibraryView: View {
         }
         if !audioManager.isQuickMix {
           audioManager.enterQuickMix()
-          OnboardingManager.shared.markQuickMixUsed()
         }
         onSelect?()
       }
@@ -876,19 +869,6 @@ struct LibraryView: View {
   @ViewBuilder
   private var libraryList: some View {
     List {
-      if !presetManager.hasCustomPresets {
-        TipView(createFirstPresetTip, arrowEdge: .top) { action in
-          if action.id == "create" {
-            showingNewPresetSheet = true
-          } else if action.id == "dismiss" {
-            // TipKit actions don't auto-dismiss; invalidate explicitly.
-            createFirstPresetTip.invalidate(reason: .actionPerformed)
-          }
-        }
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
-      }
-
       if presetManager.isLoading {
         HStack {
           Spacer()

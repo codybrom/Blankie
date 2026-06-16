@@ -134,7 +134,7 @@ class GlobalSettings {
     iconSize = .medium
     language = .system
     showingListView = false
-    showProgressBorder = false
+    showProgressBorder = true
     lockPortraitOrientationiOS = false
     quickMixSoundFileNames = [
       "rain", "waves", "fireplace", "white-noise",

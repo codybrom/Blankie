@@ -57,9 +57,9 @@ extension GlobalSettings {
     // Show list view preference (default to false - grid view)
     showingListView = UserDefaults.shared.bool(forKey: UserDefaultsKeys.showingListView)
 
-    // Show progress border preference (default to false)
+    // Show progress border preference (default to true)
     showProgressBorder =
-      UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? false
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? true
 
     // Lock portrait orientation on iOS preference (default to false)
     lockPortraitOrientationiOS =

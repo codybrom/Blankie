@@ -8,7 +8,6 @@
 import Foundation
 import SwiftData
 import SwiftUI
-import TipKit
 import os
 
 /// Shared SwiftData container management to ensure single container per process
@@ -266,25 +265,5 @@ struct AppSetup {
     Task { @MainActor in
       await AudioManager.shared.loadCustomSoundsWhenReady()
     }
-
-    // Configure TipKit for preset onboarding
-    configureTipKit()
-  }
-
-  /// Configure TipKit for the app
-  @MainActor
-  private func configureTipKit() {
-    #if DEBUG
-      // Reset tips in debug builds for testing
-      try? Tips.resetDatastore()
-    #endif
-
-    // Configure TipKit
-    try? Tips.configure([
-      .displayFrequency(.immediate),
-      .datastoreLocation(.applicationDefault),
-    ])
-
-    Logger.app.debug("AppSetup: TipKit configured for preset onboarding")
   }
 }

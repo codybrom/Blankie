@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import TipKit
 import os
 
 // Animation trigger struct to consolidate multiple animation values
