@@ -123,8 +123,18 @@ import SwiftUI
       }
       .ignoresSafeArea()
       .sheet(isPresented: $showingTimer) {
-        TimerSheetView()
-          .presentationDetents([.medium, .large])
+        // Detents and presentationSizing don't compose — when both are set the
+        // detents win and presentationSizing is ignored, leaving iPad stuck at
+        // the short `.medium` height that clips the picker. So size by idiom:
+        // iPad gets a standard `.form` sheet (tall enough, no detents); iPhone
+        // keeps its draggable medium/large detents.
+        if isPad {
+          TimerSheetView()
+            .presentationSizing(.form)
+        } else {
+          TimerSheetView()
+            .presentationDetents([.medium, .large])
+        }
       }
     }
 

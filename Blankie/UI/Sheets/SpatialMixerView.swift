@@ -174,6 +174,9 @@ import SwiftUI
             }
         }
         .presentationDetents([.large])
+        // Give the square spatial canvas a full-height page on iPad instead of a
+        // small centered form sheet that wastes the screen and crowds the map.
+        .presentationSizing(.page)
         .presentationDragIndicator(.visible)
         .presentationBackground {
           // More translucent than a stock material: let the mixer glow through.

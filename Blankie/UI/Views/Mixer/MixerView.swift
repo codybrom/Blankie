@@ -79,6 +79,10 @@ private enum IPhonePage: Hashable {
           backgroundImage: backgroundImage
         )
         .presentationDetents([.large])
+        // On iPad a sheet with detents would otherwise render as a small
+        // centered form sheet, clipping the bottom controls. `.page` gives it a
+        // proper full-height presentation; on iPhone this is a no-op.
+        .presentationSizing(.page)
         .presentationDragIndicator(.hidden)
         .navigationTransition(.zoom(sourceID: "nowPlaying", in: nowPlayingNamespace))
       }
@@ -141,15 +145,20 @@ private enum IPhonePage: Hashable {
               }
             }
         }
+        .presentationSizing(.page)
         .onDisappear {
           Logger.ui.debug("MixerView: SoundManagementView closed")
         }
       }
       .sheet(isPresented: $showingSettings) {
         SettingsView()
+          // A full settings screen, not a dialog — give it a page on iPad
+          // instead of the default small centered form sheet.
+          .presentationSizing(.page)
       }
       .sheet(isPresented: $showingQuickMixEditor) {
         QuickMixEditorSheet()
+          .presentationSizing(.page)
       }
       .sheet(isPresented: $showingSpatialMixer) {
         SpatialMixerView()

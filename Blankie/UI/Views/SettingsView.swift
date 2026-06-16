@@ -343,6 +343,9 @@ struct SettingsView: View {
               AppIconPickerView()
             }
             .presentationDetents([.large])
+            // Page-sized on iPad so the icon grid gets room instead of a small
+            // centered form sheet.
+            .presentationSizing(.page)
           }
         #endif
 

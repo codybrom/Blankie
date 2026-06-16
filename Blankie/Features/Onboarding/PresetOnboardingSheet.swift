@@ -102,6 +102,10 @@ struct PresetOnboardingSheet: View {
     .interactiveDismissDisabled()
     #if os(macOS)
       .frame(width: 500, height: 640)
+    #else
+      // Page-sized on iPad so the paged flow fills the canvas instead of
+      // squeezing into a small centered form sheet (no-op on iPhone).
+      .presentationSizing(.page)
     #endif
   }
 

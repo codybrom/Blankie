@@ -226,6 +226,11 @@ struct EditPresetSheet: View {
         Text("\(count) custom sounds are used only by \"\(preset.name)\". Delete them too?")
       }
     }
+    #if os(iOS) || os(visionOS)
+      // A full preset editor, not a quick dialog — page-sized on iPad instead
+      // of the default small centered form sheet (no-op on iPhone).
+      .presentationSizing(.page)
+    #endif
   }
 
   @ViewBuilder
