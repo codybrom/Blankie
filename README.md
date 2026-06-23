@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/src/assets/icon.png" alt="Blankie logo" width="153" height="128"/>
+  <img src="docs/src/assets/blankie-icon-v2.png" alt="Blankie app icon" width="128" height="128"/>
   
 # Blankie
 
@@ -14,10 +14,10 @@
     <a href="https://formulae.brew.sh/cask/blankie"><img src="https://img.shields.io/badge/Homebrew-Available-FBB040?style=flat&logo=homebrew&logoColor=white" alt="Homebrew"></a>
   </p>
   <p align="center">
-    <a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/download-on-mac-app-store.svg" alt="Download on the Mac App Store" width="202"></a>
+    <a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/app-store-badge.svg" alt="Download on the App Store" width="202"></a>
   </p>
   <p align="center">
-    <img src="docs/src/assets/en-dark.png" alt="Screenshot of Blankie" style="max-width: 100%; height: auto;">
+    <img src="docs/src/assets/products.png" alt="Blankie on Mac, iPhone and iPad" style="max-width: 100%; height: auto;">
   </p>
 </div>
 
@@ -32,7 +32,7 @@
 
 ## About
 
-Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 23 high-quality sounds to create your ideal environment for work, study, or rest.
+Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 24 high-quality sounds to create your ideal environment for work, study, or rest.
 
 **Why choose Blankie?**
 
@@ -44,7 +44,7 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 ## Features
 
 - **Universal app** for Mac, iPad, and iPhone with CarPlay support
-- **23 high-quality ambient sounds** including rain, waves, fireplace, and more
+- **24 high-quality ambient sounds** including rain, waves, fireplace, and more
 - **Import your own sounds** with automatic loudness matching
 - **Mix multiple sounds** with individual volume controls
 - **Customizable presets** with colors, artwork and layouts that you can export and share with friends
@@ -55,25 +55,23 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 
 ## Installation
 
-### Mac App Store (Recommended)
+### App Store (Recommended)
 
-<a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/download-on-mac-app-store.svg" alt="Download on the Mac App Store" width="165"></a>
+<a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/app-store-badge.svg" alt="Download on the App Store" width="165"></a>
 
-Get automatic updates through the Mac App Store.
+Free for iPhone, iPad, and Mac, with automatic updates.
 
-### Homebrew
+### Homebrew (Mac)
 
 ```bash
 brew install --cask blankie
 ```
 
-### Direct Download
+Future updates can be managed with `brew upgrade`. See the [Blankie cask page on brew.sh](https://formulae.brew.sh/cask/blankie) for more.
 
-Download the latest notarized release from [GitHub Releases](https://github.com/codybrom/blankie/releases/latest).
+### Direct Download (Mac)
 
-### Beta Testing
-
-Blankie for iPad and iPhone (with CarPlay) is testing now on [TestFlight](https://testflight.apple.com/join/XgpBpWv8) and coming very soon to the App Store.
+Download the latest notarized release from [GitHub Releases](https://github.com/codybrom/blankie/releases/latest). Direct downloads do not update automatically.
 
 ## Development
 
@@ -101,7 +99,7 @@ See our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF
 © 2026 Cody Bromley and contributors. All rights reserved.
 
 - **Source code**: [MIT License](LICENSE)
-- **Logo/Icon**: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- **Name, logo, and app icons**: © Cody Bromley, all rights reserved. These are trademarks, are not covered by the MIT License, and may not be reused without permission (see [credits](https://blankie.rest/credits)).
 - **Sounds**: Various open licenses (see [credits](https://blankie.rest/credits))
 
 ## Support
