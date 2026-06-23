@@ -7,7 +7,7 @@
 #   docker build -t blankie-docs .
 #   docker run -p 4321:4321 -v $(pwd)/..:/parent:ro blankie-docs
 
-FROM node:22-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 

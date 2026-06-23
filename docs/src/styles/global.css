@@ -13,6 +13,62 @@
   --color-mid-gray: #a0a0a0;
   --color-light-gray: #f0f0f0;
   --color-base: #e0e0e0;
+
+  /* Blankie 2.0 "B + Moon" identity — midnight navy + yellow→blue gradient.
+     Values lifted from the design system's colors_and_type.css / home.css. */
+  --color-navy-deep: #050929;
+  --color-midnight: #01062b;
+  --color-lift: #0b1138;
+  --color-b-yellow: #ffd300;
+  --color-b-blue: #4452f6;
+  --color-moon: #ece7d6;
+  --color-accent-ink: #bcd4ff;
+  --color-accent-blue: #4c8dff;
+  --color-fg-1: #f4f5fa;
+  --color-fg-2: #aeb2cc;
+  --color-fg-3: #8b90b3;
+  --color-warm: #e7b24a;
+
+  /* Translucent surface + hairline tokens — first-class so the pages can use
+     bg-glass / bg-glass-2 / border-hair / border-hair-soft utilities. */
+  --color-glass: rgba(255, 255, 255, 0.045);
+  --color-glass-2: rgba(255, 255, 255, 0.07);
+  --color-hair: rgba(255, 255, 255, 0.09);
+  --color-hair-soft: rgba(255, 255, 255, 0.055);
+}
+
+/* Brand gradient text — yellow→blue clip used on hero display words. */
+.grad-text {
+  background: linear-gradient(
+    176deg,
+    var(--color-b-yellow) 2%,
+    #ffc53d 26%,
+    #8e7bf0 64%,
+    var(--color-b-blue) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Liquid-glass surface — frosted background for the homepage cards, chips and
+   store buttons. A shared class (used many times, like .review-quote) rather
+   than a repeated 10-utility run. */
+.glass {
+  @apply border-hair bg-glass border shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.05)];
+  transition:
+    transform 0.25s var(--ease),
+    border-color 0.25s,
+    background 0.25s;
+}
+.glass:hover {
+  @apply -translate-y-0.75 border-white/16 bg-white/6;
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass {
+    transition: none;
+  }
 }
 
 /* Focus and selection states */
@@ -32,9 +88,20 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-size-adjust: 100%;
+  /* Decorative hero glows and hover highlights bleed wider than a phone
+     viewport. Clip the sideways overflow site-wide on the document scroller
+     (clip, not hidden, so it doesn't break sticky/anchor scrolling). */
+  overflow-x: clip;
 
   & [id] {
     scroll-margin-top: 100px;
+  }
+}
+
+/* Respect the OS "reduce motion" setting: no animated page scrolling. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 
@@ -96,56 +163,6 @@ body {
   }
 }
 
-/* FAQ Styles */
-.faq-details {
-  & a {
-    color: var(--color-yellow-500);
-    text-decoration: none;
-    transition: color 0.2s;
-
-    &:hover {
-      color: var(--color-yellow-700);
-    }
-  }
-
-  & ul,
-  & ol {
-    list-style-position: outside;
-    padding-left: 1.5rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  & ul {
-    list-style-type: disc;
-  }
-
-  & ol {
-    list-style-type: decimal;
-  }
-
-  & li {
-    margin-bottom: 0.5rem;
-    display: list-item;
-  }
-
-  & p {
-    margin-bottom: 1rem;
-  }
-
-  & strong {
-    font-weight: 600;
-  }
-
-  & summary {
-    list-style: none;
-
-    &::-webkit-details-marker {
-      display: none;
-    }
-  }
-}
-
 /* Mobile menu management */
 .mobile-menu-open {
   overflow: hidden;
@@ -161,19 +178,123 @@ body {
   }
 }
 
-/* GitHub-style markdown alerts (marked-alert), matched to site styling */
+/* GitHub-style markdown alerts (marked-alert). A soft inset panel: padded and
+   indented on a faint fill, no border, with a small accent-colored label. Sits
+   apart from the prose without the boxed-callout look. */
 .markdown-alert {
-  @apply my-6 p-4 rounded-lg border-l-4 bg-yellow-500/10 border-yellow-500;
+  @apply my-6 ml-2 rounded-xl bg-yellow-500/10 px-5 py-4;
 }
 
 .markdown-alert-title {
-  @apply mt-0 mb-2 font-semibold text-lg;
+  @apply mt-0 mb-1 text-xs font-semibold tracking-wide text-yellow-500/90;
 }
 
-/* FAQ answer text matches the live site's prose-lg body size (18px) */
-.faq-details {
-  font-size: 1.125rem;
-  line-height: 1.7;
+/* Set the body apart from surrounding prose with a slightly smaller size; the
+   fill and label do the rest, so it keeps full text contrast. */
+.prose .markdown-alert {
+  @apply text-[0.95em];
+}
+
+/* Tighten the body so it sits right under the label and adds no trailing gap,
+   while leaving normal spacing between stacked paragraphs. */
+.prose .markdown-alert-title + * {
+  @apply mt-0;
+}
+
+.prose .markdown-alert > :last-child {
+  @apply mb-0;
+}
+
+/* Inline UI glyphs in guide instructions ({{icon:...}} in markdown), styled
+   like the button glyphs in Apple's support guides. Lucide SVGs on a shared
+   24px viewBox, inlined so they track the text color via currentColor. */
+.inline-icon,
+.prose .inline-icon {
+  display: inline-block;
+  height: 1.05em;
+  width: 1.05em;
+  margin: 0 0.05em;
+  vertical-align: -0.18em;
+}
+
+/* Keyboard shortcut keycaps ({{kbd:...}} in markdown). Each space-separated key
+   becomes a small physical-looking keycap so shortcuts stand out from the body
+   text; a multi-key combo lays its caps in a row. Tuned for the always-dark
+   theme to read like keys on a Mac keyboard. */
+.kbd-combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.kbd-combo kbd,
+.prose .kbd-combo kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.9em;
+  height: 1.9em;
+  padding: 0 0.5em;
+  font-family: var(--font-sans);
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-base);
+  background: linear-gradient(180deg, #3a3a3f, #242428);
+  border: 1px solid #0d0d0f;
+  border-radius: 0.4em;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
+    0 1.5px 0 0 #0d0d0f,
+    0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Verbatim App Store review quotes ({{review:id}} in markdown and the
+   Testimonial component). A card-styled figure; inside .prose it cancels the
+   typography plugin's blockquote decoration, since the markup carries its own
+   quote marks. */
+.review-quote {
+  @apply bg-card ring-foreground/10 flex flex-col gap-3 rounded-xl p-6 ring-1;
+}
+
+/* Vertical rhythm in article flow only; grid layouts space cards themselves. */
+.prose .review-quote {
+  @apply my-8;
+}
+
+.review-quote-stars {
+  @apply flex items-center gap-1 text-yellow-500;
+}
+
+.review-quote-stars svg {
+  @apply size-4;
+}
+
+.review-quote-stars .review-quote-star-empty {
+  @apply text-zinc-700;
+}
+
+.review-quote blockquote,
+.prose .review-quote blockquote {
+  @apply m-0 border-0 p-0 text-base font-normal not-italic;
+}
+
+.review-quote blockquote p,
+.prose .review-quote blockquote p {
+  @apply my-0;
+}
+
+.review-quote blockquote p::before,
+.review-quote blockquote p::after {
+  content: none;
+}
+
+.review-quote figcaption,
+.prose .review-quote figcaption {
+  /* mt-auto pins the byline to the card bottom in equal-height grid rows */
+  @apply mt-auto text-left text-xs text-gray-500;
 }
 
 /* Base UI Accordion wraps each trigger in an <h3>; cancel the .prose h3 margins
@@ -183,15 +304,97 @@ body {
   margin-bottom: 0;
 }
 
-/* Inline code chips (prose + FAQ answers); strip prose's literal backticks */
-.prose :not(pre) > code,
-.faq-details :not(pre) > code {
+/* Inline code chips (privacy prose); strip prose's literal backticks */
+.prose :not(pre) > code {
   @apply rounded bg-white/10 px-1.5 py-0.5 font-medium;
 }
 
 .prose :not(pre) > code::before,
 .prose :not(pre) > code::after {
   content: "";
+}
+
+/* ============================================================================
+   Blankie prose theme — the @tailwindcss/typography `.prose` plugin tinted with
+   our tokens. Used by guide articles + FAQ answers (which also pick up the
+   shared .prose inline-icon / kbd / review-quote rules above). Replaces the
+   old hand-written .guide-prose block.
+   ============================================================================ */
+.prose-blankie {
+  --tw-prose-body: #d7daec;
+  --tw-prose-headings: var(--fg-1);
+  --tw-prose-lead: var(--fg-1);
+  --tw-prose-links: var(--accent-ink);
+  --tw-prose-bold: #fff;
+  --tw-prose-counters: var(--accent-ink);
+  --tw-prose-bullets: var(--accent);
+  --tw-prose-hr: var(--hair-soft);
+  --tw-prose-quotes: #fff;
+  --tw-prose-quote-borders: var(--accent);
+  --tw-prose-captions: var(--fg-3);
+  --tw-prose-code: #fff;
+  --tw-prose-pre-code: var(--fg-1);
+  --tw-prose-pre-bg: rgba(0, 0, 0, 0.35);
+  --tw-prose-th-borders: var(--hair);
+  --tw-prose-td-borders: var(--hair-soft);
+}
+/* Links: accent-ink with a faint underline that solidifies on hover. The color
+   override beats the privacy page's `.prose a` gold links. */
+.prose-blankie a {
+  color: var(--accent-ink);
+  text-decoration: none;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--accent-ink) 35%, transparent);
+  transition: border-color 0.2s;
+}
+.prose-blankie a:hover {
+  color: var(--accent-ink);
+  border-bottom-color: var(--accent-ink);
+}
+/* Inline `code` marks UI labels (button/menu names) — bold UI terms, not a chip. */
+.prose-blankie :not(pre) > code {
+  background: transparent;
+  padding: 0;
+  font-weight: 600;
+}
+.prose-blankie :not(pre) > code::before,
+.prose-blankie :not(pre) > code::after {
+  content: none;
+}
+/* Lead-in paragraph on full articles (prose-lg only). */
+.prose-lg.prose-blankie > p:first-of-type {
+  font-size: 1.15em;
+  line-height: 1.6;
+  color: var(--fg-1);
+}
+/* GitHub-style alerts ([!NOTE], [!TIP] …) as accent callouts. */
+.prose-blankie .markdown-alert {
+  margin: 1.6em 0;
+  padding: 1em 1.25em;
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.prose-blankie .markdown-alert-title {
+  margin: 0 0 0.4em;
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+.prose-blankie .markdown-alert > :last-child {
+  margin-bottom: 0;
+}
+
+/* Editorial inline links on mixed/`set:html` blocks (FAQ dek, credits "About"
+   and asset values): accent-ink with a faint underline that solidifies on hover.
+   DRYs the repeated [&_a]:… utility cluster these blocks shared. */
+.editorial-links a {
+  @apply border-accent-ink/35 text-accent-ink border-b no-underline;
+}
+.editorial-links a:hover {
+  @apply border-accent-ink;
 }
 
 /* Apply Tailwind plugins */
@@ -250,8 +453,29 @@ body {
  */
 :root,
 .dark {
-  --background: #000000;
+  --background: var(--color-navy-deep); /* Blankie 2.0 midnight navy */
   --foreground: var(--color-base);
+
+  /* Blankie 2.0 design tokens — aliases of the @theme palette (single source of
+     truth). The hand-written page CSS consumes these bare names; the @theme
+     `--color-*` set backs the Tailwind utilities. Same value, one definition. */
+  --page: var(--color-navy-deep);
+  --page-deep: var(--color-midnight);
+  --lift: var(--color-lift);
+  --fg-1: var(--color-fg-1);
+  --fg-2: var(--color-fg-2);
+  --fg-3: var(--color-fg-3);
+  --hair: var(--color-hair);
+  --hair-soft: var(--color-hair-soft);
+  --glass: var(--color-glass);
+  --glass-2: var(--color-glass-2);
+  --accent: var(--color-accent-blue);
+  --accent-ink: var(--color-accent-ink);
+  --b-yellow: var(--color-b-yellow);
+  --b-blue: var(--color-b-blue);
+  --moon: var(--color-moon);
+  --warm: var(--color-warm);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* translucent frosted card — matches the site's existing bg-card look */
   --card: #ffffff1a;
@@ -270,7 +494,7 @@ body {
   --muted: var(--color-dark-gray);
   --muted-foreground: var(--color-mid-gray);
 
-  --accent: #2a2a2e;
+  /* --accent is the brand blue, defined above with the design tokens. */
   --accent-foreground: var(--color-base);
 
   --destructive: #e5484d;

@@ -1,0 +1,25 @@
+---
+// A definition-list row: a small uppercase term beside its value, separated by
+// a hairline, collapsing to one column on narrow widths. Shared by the press
+// fact sheet and the credits assets/dependencies list. The parent <dl> sets the
+// <dd> text style via [&_dd]:… (it differs per page); pass `class` to tune the
+// row's vertical padding.
+import { cn } from "@/lib/utils";
+
+interface Props {
+  term: string;
+  class?: string;
+}
+
+const { term, class: className } = Astro.props;
+---
+
+<div
+  class={cn(
+    "grid grid-cols-1 items-baseline gap-1 border-t border-hair-soft py-4 first:border-t-0 sm:grid-cols-[200px_1fr] sm:gap-7",
+    className,
+  )}
+>
+  <dt class="text-xs font-semibold tracking-wide text-fg-3 uppercase">{term}</dt>
+  <dd class="m-0"><slot /></dd>
+</div>

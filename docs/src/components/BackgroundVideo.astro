@@ -27,6 +27,10 @@ const { videoSrc, posterSrc } = Astro.props;
   document.addEventListener("DOMContentLoaded", () => {
     const video = document.getElementById("background-video");
 
+    // Respect reduced-motion: leave the poster image in place and never load or
+    // play the looping video for anyone who asked the OS to reduce motion.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     // Create an Intersection Observer
     const observer = new IntersectionObserver(
       (entries) => {

@@ -553,7 +553,7 @@
       "truePeakdBTP": -4.139728
     },
     {
-      "author": "Cody Bromley",
+      "author": "Cody Bromley (for Blankie)",
       "authorUrl": "https://blankie.rest",
       "defaultOrder": 23,
       "description": "An original piano berceuse composed for Blankie.",
@@ -568,8 +568,8 @@
       ],
       "needsLimiter": false,
       "normalizationFactor": 1.2054272,
-      "soundName": "Blankie Berceuse",
-      "soundUrl": "https://blankie.rest/credits",
+      "soundName": "Sleepy Upright Piano Seamless Loop",
+      "soundUrl": "https://freesound.org/people/blankie.rest/sounds/859607/",
       "systemIconName": "pianokeys",
       "title": "Warm Piano",
       "truePeakdBTP": -11.317333

@@ -15,7 +15,10 @@ const tailwindRules = {
   "better-tailwindcss/no-unknown-classes": "off",
   "better-tailwindcss/enforce-consistent-line-wrapping": "off",
   "better-tailwindcss/enforce-consistent-class-order": "off",
-  "better-tailwindcss/enforce-canonical-classes": ["warn", { rootFontSize: 16 }],
+  "better-tailwindcss/enforce-canonical-classes": [
+    "warn",
+    { rootFontSize: 16 },
+  ],
 };
 
 const tailwindSettings = {
@@ -29,6 +32,7 @@ export default defineConfig([
     "**/dist/**",
     "**/node_modules/**",
     ".astro/**",
+    ".vercel/**",
     "public/**",
     "*.min.js",
   ]),
@@ -52,7 +56,11 @@ export default defineConfig([
     rules: {
       "@typescript-eslint/no-unused-vars": [
         "warn",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/consistent-type-imports": [
@@ -64,7 +72,10 @@ export default defineConfig([
 
   {
     files: ["**/*.{jsx,tsx}"],
-    extends: [react.configs.flat.recommended, react.configs.flat["jsx-runtime"]],
+    extends: [
+      react.configs.flat.recommended,
+      react.configs.flat["jsx-runtime"],
+    ],
     settings: { react: { version: "detect" } },
   },
   {

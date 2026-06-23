@@ -1,0 +1,106 @@
+---
+// Renders a localizable string with its printf / iOS format specifiers
+// (%@, %lld, %1$@, %.2f …) shown as plain-language chips — "text", "number",
+// "decimal" — so translators can tell what each placeholder stands for. The raw
+// specifier is preserved in each chip's tooltip, and positional args (%1$, %2$)
+// carry a small index so their order is clear.
+interface Props {
+  text: string;
+  maxLength?: number;
+}
+
+const { text, maxLength = 100 } = Astro.props;
+
+// Normalize newlines and truncate for compact, single-line display.
+let formatted = (text ?? "").replace(/\n/g, " ");
+if (formatted.length > maxLength) {
+  formatted = formatted.slice(0, maxLength) + "...";
+}
+
+// %[argpos$][flags][width][.precision][length]conversion  (plus the %% literal)
+const PLACEHOLDER_RE =
+  /%(?:(\d+)\$)?[-+ 0#]?\d*(?:\.\d+)?(?:hh|h|ll|l|q|L|z|j|t)?([@diouxXeEfFgGaAcspn%])/g;
+
+// Map a printf conversion character to a plain-language description.
+function describe(conversion: string): string {
+  switch (conversion) {
+    case "@":
+    case "s":
+    case "S":
+      return "text";
+    case "d":
+    case "i":
+    case "u":
+    case "U":
+    case "x":
+    case "X":
+    case "o":
+      return "number";
+    case "f":
+    case "F":
+    case "e":
+    case "E":
+    case "g":
+    case "G":
+    case "a":
+    case "A":
+      return "decimal";
+    case "c":
+      return "character";
+    default:
+      return "value";
+  }
+}
+
+type Segment = {
+  text: string;
+  placeholder: boolean;
+  raw?: string;
+  label?: string;
+};
+
+const segments: Segment[] = [];
+let lastIndex = 0;
+for (const match of formatted.matchAll(PLACEHOLDER_RE)) {
+  const index = match.index ?? 0;
+  if (index > lastIndex) {
+    segments.push({
+      text: formatted.slice(lastIndex, index),
+      placeholder: false,
+    });
+  }
+  const [raw, position, conversion] = match;
+  if (conversion === "%") {
+    // "%%" is an escaped literal percent sign, not a placeholder.
+    segments.push({ text: "%", placeholder: false });
+  } else {
+    const friendly = describe(conversion);
+    segments.push({
+      text: raw,
+      placeholder: true,
+      raw,
+      // Positional args (%1$, %2$) keep their index so order stays clear.
+      label: position ? `${friendly}(${position})` : friendly,
+    });
+  }
+  lastIndex = index + raw.length;
+}
+if (lastIndex < formatted.length) {
+  segments.push({ text: formatted.slice(lastIndex), placeholder: false });
+}
+---
+
+{
+  segments.map((segment) =>
+    segment.placeholder ? (
+      <code
+        class="mx-px rounded-sm bg-accent/15 px-1.5 align-baseline text-[0.8em] font-semibold tracking-wide text-accent-ink"
+        title={segment.raw}
+      >
+        {segment.label}
+      </code>
+    ) : (
+      segment.text
+    ),
+  )
+}

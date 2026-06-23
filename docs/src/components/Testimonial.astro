@@ -1,0 +1,13 @@
+---
+// One verbatim App Store review, rendered through the shared HTML renderer so
+// quote cards match between .astro pages and {{review:id}} in markdown.
+import { getTestimonial, renderTestimonial } from "../utils/testimonials";
+
+interface Props {
+  id: string;
+}
+
+const html = renderTestimonial(getTestimonial(Astro.props.id));
+---
+
+<Fragment set:html={html} />

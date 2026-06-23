@@ -207,6 +207,14 @@ If you're unsure about the licensability of content you wish to contribute, plea
 
 As part of the open source community, we take licensing and attribution seriously. Proper licensing ensures that Blankie remains free and open while respecting the work of others.
 
+### Use of Blankie's Name and Branding
+
+The MIT License covers Blankie's source code, but not its name or visual identity. "Blankie," the Blankie logo, and Blankie's app icons (except where noted) are trademarks of Cody Bromley and are not part of the open source license. This is the same approach open-source projects like Firefox, WordPress and Docker take.
+
+If you're contributing to Blankie itself, there's nothing extra to worry about here.
+
+If you're building your own app from Blankie's source code, you're welcome to — but please give your version a different name and icon so people aren't confused about which app is the official Blankie. You can always refer to Blankie by name to describe your project's relationship to it (for example, "based on Blankie").
+
 ## Questions about Contributing
 
 If you have any questions or need clarification, open a [new issue](https://github.com/codybrom/blankie/issues/new).

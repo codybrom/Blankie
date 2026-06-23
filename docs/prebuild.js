@@ -8,6 +8,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { globSync } from "glob";
+import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -390,4 +391,52 @@ function escapeCSVField(field) {
   }
 
   return `"${field}"`; // Always wrap in quotes for consistency
+}
+
+// ---- Press kit "Download all" zip ----
+// Bundles the press assets into public/blankie-press-kit.zip (public/ is
+// gitignored build output, so the zip is regenerated each build, never committed).
+try {
+  const assetsDir = path.join(__dirname, "src", "assets");
+  const publicDir = path.join(__dirname, "public");
+  const pressFiles = [
+    "icon.png",
+    "promo.png",
+    "blankie-devices.png",
+    "mac-mockup.png",
+    "ipad-mockup.png",
+    "iphone-mockup-1.png",
+    "iphone-mockup-2.png",
+    "mac-store-1.png",
+    "mac-store-2.png",
+    "mac-store-3.png",
+    "mac-store-4.png",
+    "iphone-store-1.png",
+    "iphone-store-2.png",
+    "iphone-store-3.png",
+    "iphone-store-4.png",
+    "iphone-store-5.png",
+    "ipad-store-1.png",
+    "ipad-store-2.png",
+    "ipad-store-3.png",
+    "ipad-store-4.png",
+  ];
+  const present = pressFiles.filter((f) =>
+    fs.existsSync(path.join(assetsDir, f)),
+  );
+  if (present.length) {
+    fs.mkdirSync(publicDir, { recursive: true });
+    const zipPath = path.join(publicDir, "blankie-press-kit.zip");
+    fs.rmSync(zipPath, { force: true });
+    const args = present
+      .map((f) => `"${path.join(assetsDir, f)}"`)
+      .join(" ");
+    // -j flattens paths so the archive holds bare filenames, -q is quiet.
+    execSync(`zip -j -q "${zipPath}" ${args}`);
+    console.log(
+      `\n✨ Prebuild: Wrote press kit zip (${present.length} files) -> public/blankie-press-kit.zip`,
+    );
+  }
+} catch (err) {
+  console.warn(`⚠️  Prebuild: Skipped press kit zip (${err.message})`);
 }

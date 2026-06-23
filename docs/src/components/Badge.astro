@@ -1,0 +1,31 @@
+---
+// Small label/pill. shadcn-style cva variants matched to the site's existing
+// chips: `pill` (accent-ink category chip with icon), `license` (hairline tag),
+// `chip` (frosted contributor pill), `pdf` (tiny file-type marker).
+// Renders an <a> when `href` is set, otherwise a <span>.
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+
+const badge = cva(
+  "inline-flex items-center font-semibold whitespace-nowrap no-underline",
+  {
+    variants: {
+      variant: {
+        pill: "gap-1.5 self-start rounded-full bg-[color-mix(in_srgb,var(--accent)_14%,transparent)] px-2.5 py-1 text-[11px] tracking-wide text-accent-ink uppercase",
+        license:
+          "rounded-md border border-hair px-2 py-1 text-[11px] text-fg-2 transition hover:border-white/20 hover:text-white",
+        chip: "rounded-full border border-hair bg-glass px-3.5 py-2 text-sm font-normal text-fg-2",
+        pdf: "ml-1 rounded-sm border border-hair px-1.5 py-px text-[10px] font-normal text-fg-3",
+      },
+    },
+    defaultVariants: { variant: "chip" },
+  },
+);
+
+const { href, variant, class: className, ...rest } = Astro.props;
+const Tag = href ? "a" : "span";
+---
+
+<Tag href={href} class={cn(badge({ variant }), className)} {...rest}>
+  <slot />
+</Tag>

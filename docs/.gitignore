@@ -3,8 +3,10 @@ dist/
 # generated types
 .astro/
 
-# generated outputs
-public
+# generated outputs (but public/images is real, committed content —
+# prebuild.js only generates public/i18n and never cleans the dir)
+public/*
+!public/images/
 
 # dependencies
 node_modules/
@@ -22,3 +24,4 @@ pnpm-debug.log*
 # github pages
 .jekyll-cache/
 _site/
+.vercel
