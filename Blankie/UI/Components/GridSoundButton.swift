@@ -48,14 +48,7 @@ import SwiftUI
     ) {
       self.sound = sound
       self.isActiveOverride = isActive
-      self.onTap =
-        onTap ?? {
-          if !AudioManager.shared.isGloballyPlaying && sound.isSelected {
-            AudioManager.shared.setGlobalPlaybackState(true)
-          } else {
-            sound.toggle()
-          }
-        }
+      self.onTap = onTap ?? { AudioManager.shared.toggleOrResume(sound) }
     }
 
     // Prefer the theming preset's accent so tiles match the preset theme; fall

@@ -26,11 +26,7 @@ import os
       .padding(.vertical, 12)
       .contentShape(.rect(cornerRadius: 12))
       .onTapGesture {
-        if !audioManager.isGloballyPlaying && sound.isSelected {
-          audioManager.setGlobalPlaybackState(true)
-        } else {
-          sound.toggle()
-        }
+        audioManager.toggleOrResume(sound)
       }
       .glassEffect(.regular, in: .rect(cornerRadius: 12))
       // Match the grid: fire on the user's own selection toggle, not on global
@@ -86,11 +82,7 @@ import os
       .accessibilityAddTraits(.isButton)
       .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
       .accessibilityAction {
-        if !audioManager.isGloballyPlaying && sound.isSelected {
-          audioManager.setGlobalPlaybackState(true)
-        } else {
-          sound.toggle()
-        }
+        audioManager.toggleOrResume(sound)
       }
     }
 
