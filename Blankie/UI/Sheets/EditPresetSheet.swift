@@ -66,6 +66,9 @@ struct EditPresetSheet: View {
     @State var soundEditMode: EditMode = .inactive
   #endif
   @State var navPath = NavigationPath()
+  // Edit has no auto-suggest, so its AI-naming flag is purely local (drives the
+  // sparkles button's spinner / disabled state in PresetDetailsSection).
+  @State var isGeneratingName = false
   @Environment(\.dismiss) private var dismiss
 
   init(preset: Preset, isPresented: Binding<Preset?>) {

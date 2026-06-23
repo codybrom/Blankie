@@ -36,6 +36,7 @@ struct CreatePresetSheet: View {
   @State private var useCustomViewMode = false
   @State private var viewModeOverride: PresetViewMode?
   @State private var didCreatePreset = false
+  @State private var isGeneratingName = false
   #if os(iOS) || os(visionOS)
     @State private var selectedImage: UIImage?
   #endif
@@ -71,7 +72,8 @@ struct CreatePresetSheet: View {
           starToken: nil,
           accent: activeAccentColor,
           aiSoundTitles: selectedSoundTitles,
-          sparklesOnlyWhenEmpty: false
+          sparklesOnlyWhenEmpty: false,
+          isGeneratingName: $isGeneratingName
         )
         soundsSection
         PresetThemeSection(
@@ -229,17 +231,21 @@ extension CreatePresetSheet {
 
   /// Fills the name on open when seeded from playing sounds; taps on the
   /// details card's sparkles button regenerate from there.
+  @MainActor
   private func generateInitialNameSuggestion() async {
-    guard AIPresetNameGenerator.isAvailable, presetName.isEmpty else { return }
+    guard !isGeneratingName, AIPresetNameGenerator.isAvailable, presetName.isEmpty else { return }
     let titles = selectedSoundTitles
     guard !titles.isEmpty else { return }
 
+    // Shared flag drives the details card's spinner and blocks a second tap
+    // on the sparkles button while this initial suggestion is in flight.
+    isGeneratingName = true
+    defer { isGeneratingName = false }
+
     let suggestion = await AIPresetNameGenerator.generateName(from: titles, allowVariation: false)
-    await MainActor.run {
-      // Don't clobber anything typed while generating (or a failed "" result).
-      if presetName.isEmpty, !suggestion.isEmpty {
-        presetName = suggestion
-      }
+    // Don't clobber anything typed while generating (or a failed "" result).
+    if presetName.isEmpty, !suggestion.isEmpty {
+      presetName = suggestion
     }
   }
 
