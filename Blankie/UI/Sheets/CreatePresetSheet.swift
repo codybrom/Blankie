@@ -287,6 +287,20 @@ extension CreatePresetSheet {
         try presetManager.applyPreset(newPreset)
         await MainActor.run {
           didCreatePreset = true
+          // Re-arm the remote command handlers and refresh Now Playing for the
+          // freshly created preset. Browsing the animated-artwork gallery while
+          // creating can make iOS disconnect the handlers, which otherwise
+          // leaves the new preset's lock-screen / Control Center transport dead
+          // (existing presets are fine because nothing tore their handlers
+          // down). Mirrors EditPresetSheet and the artwork picker's restore.
+          audioManager.setupMediaControls()
+          audioManager.nowPlayingManager.updateInfo(
+            preset: newPreset,
+            presetName: newPreset.name,
+            creatorName: newPreset.creatorName,
+            artworkId: newPreset.artworkId,
+            isPlaying: audioManager.isGloballyPlaying
+          )
         }
         isPresented = false
         onCreated?()
