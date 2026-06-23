@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.1] - Planned June 2026
+## [2.0.1] - 2026-06-23
 
 A quick follow-up to 2.0 with two small additions and a handful of fixes.
 
@@ -18,7 +18,7 @@ A quick follow-up to 2.0 with two small additions and a handful of fixes.
 
 ### Changed
 
-- **Import sounds of any length** - The two-hour cap on custom sounds is gone.
+- **Import sounds of any length**: Removed unnecessary two-hour cap on custom sounds.
 
 ### Fixed
 
@@ -29,7 +29,7 @@ A quick follow-up to 2.0 with two small additions and a handful of fixes.
 - The Apple Intelligence preset name suggestion wasn't showing its spinner while it was generating.
 - Improved localizations for some languages.
 
-## [2.0.0] - Planned June 2026
+## [2.0.0] - 2026-06-23
 
 Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac app around a Library sidebar with Liquid Glass throughout.
 
