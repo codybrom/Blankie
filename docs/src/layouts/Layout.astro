@@ -8,7 +8,7 @@ import favicon from "../assets/favicon.ico";
 import favicon16 from "../assets/favicon-16.png";
 import favicon32 from "../assets/favicon-32.png";
 import favicon48 from "../assets/favicon-48.png";
-import socialImage from "../assets/social.jpg";
+import socialImage from "../assets/promo.png";
 
 interface Props {
   title: string;
@@ -62,7 +62,7 @@ const socialAlt = customImageAlt || "Blankie Social Preview";
         },
         image: {
           alt: socialAlt,
-          ...(customImage ? {} : { width: 1280, height: 640 }),
+          ...(customImage ? {} : { width: 2560, height: 1600 }),
           type: "image/png",
         },
         optional: {
