@@ -13,16 +13,17 @@ A quick follow-up to 2.0 with two small additions and a handful of fixes.
 
 ### Added
 
-- **Quick Look preview for shared presets** - Tap a `.blankie` file in Messages or Files and you'll see the preset's name, artwork, and sound count, plus how to add it to Blankie.
-- **Collapsible Library sections** - Collapse the Sounds and Presets lists in your Library. Blankie remembers what you left open.
+- **Quick Look preview for shared presets (iOS)** - Tap a `.blankie` file in Messages or Files and you'll see the preset's name, artwork, and sound count, plus how to add it to Blankie.
+- **Collapsible Library sections** - Collapse the Sounds and Presets lists in your Library. Blankie will remembers what you left open.
 
 ### Fixed
 
-- White Noise had an audible click where its loop repeated. It's re-cut to loop cleanly.
-- A preset made from your currently playing sounds didn't get working lock screen and Control Center controls. It does now.
-- On iPad, the Now Playing screen and some sheets opened as small floating cards instead of filling the screen.
-- Tapping a sound while everything was paused only selected it. Now it starts playing too.
-- The Apple Intelligence preset name suggestion shows its spinner while it works, and you can't start two at once.
+- White Noise had an audible seam where its loop repeated. It's been re-cut to loop cleanly.
+- A preset made from your currently playing sounds might not have working lock screen and Control Center controls until you changed presets.
+- On iPad, the Now Playing screen and some sheets opened as floating cards instead of filling the screen.
+- Tapping a sound while everything was paused only selected it without starting playback
+- The Apple Intelligence preset name suggestion wasn't showing its spinner while it was generating.
+- Improved localizations for some languages.
 
 ## [2.0.0] - Planned June 2026
 
