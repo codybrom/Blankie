@@ -40,7 +40,7 @@ The development server will be available at `http://localhost:4321`. The contain
 
 ### Local Development
 
-- Note: Node.js 22 or later is required to run the development server.
+- Note: Node.js 24 or later is required to run the development server.
 
 If you prefer developing without Docker, open a terminal inside the `docs` directory, then run the following commands:
 

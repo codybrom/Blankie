@@ -1,0 +1,139 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { ArrowLeft, Download } from "@lucide/astro";
+import Glow from "@/components/Glow.astro";
+
+const title = "Blankie 2.0, now on iPhone and iPad";
+const description =
+  "Blankie 2.0 is here: a major update to the free, open-source ambient sound mixer, now on iPhone and iPad, with CarPlay, custom sounds, a sleep timer and a new Liquid Glass design. 100% free. No ads, no subscriptions, no accounts, no tracking.";
+---
+
+<Layout title={title} description={description}>
+  <article>
+    <header class="relative pt-33">
+      <Glow
+        class="-top-30 left-1/2 h-120 w-190 -translate-x-1/2"
+        color="var(--color-b-yellow)"
+        pct={7}
+        fade={62}
+      />
+      <div class="relative z-10 mx-auto max-w-3xl px-5">
+        <a
+          class="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-[0.01em] text-fg-3 no-underline transition-colors hover:text-accent-ink"
+          href="/press/"
+        >
+          <ArrowLeft size={14} stroke-width={2} /> Press kit
+        </a>
+        <div class="mt-7 text-xs font-bold tracking-[0.18em] text-warm uppercase">
+          Press release · June 23, 2026
+        </div>
+        <h1 class="mt-3.5 text-[clamp(34px,5vw,56px)] leading-[1.04] font-semibold tracking-tighter text-balance text-fg-1">
+          Blankie 2.0 comes to iPhone and iPad
+        </h1>
+        <p class="mt-5 max-w-[60ch] text-[clamp(18px,2.2vw,22px)] leading-normal text-fg-2">
+          A major update to the free, open-source ambient sound mixer is now available on
+          iPhone and iPad, with CarPlay support, custom sound imports, a sleep timer and a new Liquid Glass design.
+        </p>
+        <div class="mt-6 border-t border-hair-soft pt-5.5 text-[11.5px] font-semibold tracking-[0.08em] text-fg-3 uppercase">
+          For immediate release
+        </div>
+      </div>
+    </header>
+
+    <div
+      class="mx-auto max-w-3xl px-5 pt-9.5 pb-10 [&>p]:mb-5.5 [&>p]:text-[17.5px] [&>p]:leading-[1.74] [&>p]:text-[#d4d7ea] [&>p:first-of-type]:text-[19px] [&>p:first-of-type]:text-[#e6e8f2] [&_strong]:font-semibold [&_strong]:text-fg-1"
+    >
+      <p>
+        <span class="font-semibold text-fg-3">TULSA, Okla. — June 23, 2026 —</span> Blankie
+        2.0 is here. The open source ambient sound mixer is making its debut on iPhone, iPad and CarPlay alongside a revamped macOS app rebuilt for Liquid Glass. Best of all, Blankie is
+        still free.
+      </p>
+
+      <p>
+        Blankie 2.0 adds 10 new high-quality sounds (a total of 24) that users can layer and adjust to build their perfect soundscapes. Blankie listeners can now also extend their ambient sound library with custom sound imports from Files or
+        Voice Memos. Blankie analyzes and automatically adjusts imports to ensure their volumes blend seamlessly with existing sounds.
+      </p>
+
+      <p>
+        Another big feature is support for  <strong>Apple CarPlay</strong>. When the Blankie app is connected to CarPlay, users can access their saved presets and
+        sounds in the car, and even use a feature called Quick Mix and simple now playing controls. Blankie is the first ambient sound app with CarPlay support and is perfect for parents and passengers who need to keep the peace on the road.
+      </p>
+
+      <p>
+        Even with the big 2.0 update and new platforms, everything in Blankie is staying 100% free. There's no ads, no in-app purchases, no subscriptions, no accounts and no
+        tracking.
+      </p>
+
+      <blockquote class="my-7.5 border-l-[3px] border-warm py-0.5 pl-6">
+        <p class="mb-3.5 text-[20px] leading-[1.52] font-medium tracking-[-0.01em] text-white">
+          "I made Blankie for myself, because I wanted a simple way to loop the kinds of sounds that help me focus. Almost everything I found for Mac was either browser-based, full of ads and
+          trackers or behind a subscription. After Blankie launched on the Mac, everyone asked when it was coming to iOS, so I spent the last year rebuilding it from the ground up for iPhone and iPad. I'm so excited to finally share it with everyone, and I can't wait to see how people use the new CarPlay features."
+        </p>
+        <cite class="text-sm font-semibold text-fg-3 not-italic">Cody Bromley, developer of Blankie</cite>
+      </blockquote>
+
+      <p>
+        Blankie was first released on the Mac in early 2025 as a love letter to Blanket,
+        the Linux app that inspired it. Blankie has been featured by Apple in "Best New Apps and
+        Updates," it ranked as the #4 Health & Fitness Product of the Month on Product Hunt in May 2025, and the German magazine <i>Mac & i</i> placed it #1 on its list of "21 Freeware-Perlen für den Mac." Since launch, contributors around the world have translated Blankie into 12 languages. Today it has a global average 4.8 star App Store rating and has been downloaded more than 10,000 times across the App Store, GitHub and Homebrew.
+      </p>
+
+      <p>
+        Blankie is available now on the App Store for iPhone, iPad and Mac. The latest version of Blankie requires at least iOS/iPadOS 26 or macOS 26.
+      </p>
+
+      <div class="mt-8.5 flex flex-wrap gap-3">
+        <a
+          class="inline-flex items-center gap-2.5 rounded-xl bg-moon px-5 py-3 text-sm font-semibold text-midnight no-underline transition hover:-translate-y-0.5"
+          href="https://apps.apple.com/app/blankie/id6740096581"
+        >
+          <Download size={17} stroke-width={1.75} /> Download on the App Store
+        </a>
+      </div>
+
+      <div
+        class="mt-11 grid grid-cols-1 items-start gap-12 border-t border-hair-soft pt-8.5 sm:grid-cols-[1fr_280px]"
+      >
+        <div>
+          <h3 class="mb-3 text-xs font-bold tracking-widest text-warm uppercase">
+            About Blankie
+          </h3>
+          <p class="text-[15.5px] leading-[1.68] text-fg-2">
+            Blankie is a free, open-source ambient sound mixer for iPhone, iPad
+            and Mac, with CarPlay support. It's built by independent developer
+            Cody Bromley in Tulsa, Oklahoma, with contributors and translators
+            around the world. Blankie includes 24 high-quality sounds, with the
+            ability to import more from your files and voice notes, can be
+            listened to 100% offline, is localized in 12 languages and has no
+            ads, no subscriptions and no tracking.
+          </p>
+        </div>
+
+        <div
+          class="text-sm text-fg-2 [&_a]:border-b [&_a]:border-accent-ink/30 [&_a]:text-accent-ink [&_a]:no-underline [&_a:hover]:border-accent-ink"
+        >
+          <div class="text-[11px] font-bold tracking-[0.14em] text-warm uppercase">
+            Media contact
+          </div>
+          <p class="mt-2 mb-4 text-[16px] font-semibold text-fg-1">Cody Bromley</p>
+          <div class="grid gap-2.25">
+            <div>
+              <span class="inline-block min-w-23 text-[11px] font-semibold tracking-[0.08em] text-fg-3 uppercase">
+                Email
+              </span>
+              <a href="mailto:press@blankie.rest">press@blankie.rest</a>
+            </div>
+            <div>
+              <span class="inline-block min-w-23 text-[11px] font-semibold tracking-[0.08em] text-fg-3 uppercase">
+                Press kit
+              </span>
+              <a href="/press/">blankie.rest/press</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-11 mb-2 text-center font-bold tracking-[0.5em] text-fg-3">###</div>
+    </div>
+  </article>
+</Layout>

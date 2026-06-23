@@ -1,0 +1,25 @@
+---
+// Decorative radial-gradient hero glow. Positioning + size come from `class`
+// (Tailwind utilities); the gradient itself is an inline style because a
+// color-mix radial-gradient has no clean utility form. Replaces the per-page
+// inline-style glow divs.
+interface Props {
+  class?: string;
+  color?: string;
+  pct?: number;
+  fade?: number;
+}
+
+const {
+  class: className,
+  color = "var(--color-accent-blue)",
+  pct = 22,
+  fade = 64,
+} = Astro.props;
+---
+
+<div
+  class:list={["pointer-events-none absolute z-0", className]}
+  style={`background:radial-gradient(ellipse at center,color-mix(in srgb,${color} ${pct}%,transparent),transparent ${fade}%)`}
+>
+</div>

@@ -1,0 +1,14 @@
+---
+// Markdown-rendered body (guide articles + FAQ answers) styled with the
+// @tailwindcss/typography plugin, themed via .prose-blankie (global.css).
+// Pass `prose-lg` in `class` for full-article sizing; omit it for compact FAQ
+// answers. Reuses the shared .prose inline-icon / kbd / review-quote rules.
+interface Props {
+  html: string;
+  class?: string;
+}
+
+const { html, class: className } = Astro.props;
+---
+
+<div class:list={["prose prose-blankie", className]} set:html={html} />

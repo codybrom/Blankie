@@ -13,13 +13,25 @@ import socialImage from "../assets/social.jpg";
 interface Props {
   title: string;
   description?: string;
+  /** Site-absolute path (/images/...) for a page-specific social image. */
+  image?: string;
+  imageAlt?: string;
 }
 
-const { title, description: customDescription } = Astro.props;
+const {
+  title,
+  description: customDescription,
+  image: customImage,
+  imageAlt: customImageAlt,
+} = Astro.props;
 const siteUrl = "https://blankie.rest";
 const description =
   customDescription ||
-  "Free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay. Focus, work, and relax with customizable soundscapes.";
+  "Free, open-source ambient sound mixer for Mac, iPhone, iPad and CarPlay. Mix sounds like rain, waves or white noise to sleep, focus or relax.";
+// og:image must be an absolute URL for page-specific images; the default
+// social card keeps its existing hashed-asset path.
+const socialSrc = customImage ? `${siteUrl}${customImage}` : socialImage.src;
+const socialAlt = customImageAlt || "Blankie Social Preview";
 ---
 
 <!doctype html>
@@ -45,29 +57,31 @@ const description =
         basic: {
           title: `Blankie - ${title}`,
           type: "website",
-          image: socialImage.src,
+          image: socialSrc,
           url: `${siteUrl}${Astro.url.pathname}`,
         },
         image: {
-          alt: "Blankie Social Preview",
-          width: 1280,
-          height: 640,
+          alt: socialAlt,
+          ...(customImage ? {} : { width: 1280, height: 640 }),
           type: "image/png",
         },
         optional: {
           siteName: "Blankie",
           locale: "en_US",
+          description,
         },
       }}
       twitter={{
         card: "summary_large_image",
         site: "@blankie",
         title: `Blankie - ${title}`,
-        image: socialImage.src,
+        description,
+        image: socialSrc,
+        imageAlt: socialAlt,
       }}
     />
   </head>
-  <body class="overflow-x-hidden bg-black text-base">
+  <body class="bg-navy-deep overflow-x-hidden text-base">
     <Nav />
     <slot />
     <Footer />

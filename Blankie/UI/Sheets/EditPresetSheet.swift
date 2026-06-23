@@ -219,11 +219,11 @@ struct EditPresetSheet: View {
     } message: { preset in
       let count = presetManager.orphanedCustomSounds(ifDeleting: preset).count
       if count == 0 {
-        Text("Are you sure you want to delete \"\(preset.name)\"? This action cannot be undone.")
+        Text("Are you sure you want to delete '\(preset.name)'? This action cannot be undone.")
       } else if count == 1 {
-        Text("1 custom sound is used only by \"\(preset.name)\". Delete it too?")
+        Text("1 custom sound is used only by '\(preset.name)'. Delete it too?")
       } else {
-        Text("\(count) custom sounds are used only by \"\(preset.name)\". Delete them too?")
+        Text("\(count) custom sounds are used only by '\(preset.name)'. Delete them too?")
       }
     }
     #if os(iOS) || os(visionOS)

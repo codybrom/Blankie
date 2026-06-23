@@ -6,8 +6,9 @@ import {
   getNativeLanguageName,
   getTranslatorCredits,
 } from "../../utils/i18n-helpers";
-import macAppStoreBadge from "../../assets/download-on-mac-app-store.svg";
-import { Heart } from "lucide-react";
+import appStoreBadge from "../../assets/app-store-badge.svg";
+import FormatString from "../../components/FormatString.astro";
+import { Heart } from "@lucide/astro";
 
 // Define types for the language data
 interface StringItem {
@@ -104,44 +105,15 @@ if (langData?.strings) {
     }
   });
 
-  // Sort each group by comment, strings with comments first
-  const sortByComment = (a: [string, StringItem], b: [string, StringItem]) => {
-    // If both have comments or both don't have comments
-    if (!!a[1].comment === !!b[1].comment) {
-      // If both have comments, sort by comment
-      if (a[1].comment && b[1].comment) {
-        return a[1].comment.localeCompare(b[1].comment);
-      }
-      // If neither have comments, sort by key
-      return a[0].localeCompare(b[0]);
-    }
-    // Put strings with comments first
-    return a[1].comment ? -1 : 1;
-  };
+  // Sort each group alphabetically by the English source string
+  const sortBySource = (a: [string, StringItem], b: [string, StringItem]) =>
+    a[1].source.localeCompare(b[1].source);
 
-  groupedStrings.translated.sort(sortByComment);
-  groupedStrings.needsReview.sort(sortByComment);
-  groupedStrings.needsTranslation.sort(sortByComment);
+  groupedStrings.translated.sort(sortBySource);
+  groupedStrings.needsReview.sort(sortBySource);
+  groupedStrings.needsTranslation.sort(sortBySource);
 }
 
-function shouldShowSource(key: string, source: string): boolean {
-  return key !== source;
-}
-
-// Helper function to format a string for display (limit length, handle multiline)
-function formatStringForDisplay(str: string, maxLength: number = 100): string {
-  if (!str) return "";
-
-  // Replace newlines with spaces
-  let formatted = str.replace(/\n/g, " ");
-
-  // Truncate if too long
-  if (formatted.length > maxLength) {
-    formatted = formatted.substring(0, maxLength) + "...";
-  }
-
-  return formatted;
-}
 ---
 
 <Layout
@@ -152,7 +124,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
     <div class="mb-6">
       <a
         href="/i18n/"
-        class="mb-2 inline-block text-yellow-500 transition-colors hover:text-yellow-400"
+        class="mb-2 inline-block text-accent-ink transition-colors hover:text-white"
       >
         ← All Languages
       </a>
@@ -160,8 +132,8 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
         <h1 class="text-4xl font-semibold">
           {getNativeLanguageName(lang || "")}
         </h1>
-        <p class="mt-1 text-lg text-gray-400">
-          {langName} • <code class="text-yellow-500">{lang}</code>
+        <p class="mt-1 text-lg text-fg-3">
+          {langName} • <code class="text-accent-ink">{lang}</code>
         </p>
       </div>
     </div>
@@ -169,46 +141,37 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
     {/* Alert Bar */}
     <div class="mx-auto mb-8 max-w-xl">
       <div
-        class="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-dashed border-zinc-800/50 bg-zinc-900/20 px-4 py-2"
+        class="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-dashed border-hair-soft bg-white/2 px-4 py-2"
       >
         <div class="flex items-center gap-2 text-lg italic">
           Blankie
           <Heart
-            className="inline size-4 text-red-500"
+            class="inline size-4 text-red-500"
             fill="currentColor"
-            strokeWidth={0}
+            stroke-width={0}
           />
           <span class="sr-only">loves</span>
           {getNativeLanguageName(lang || "")}
         </div>
-        <div class="flex gap-3">
-          <a
-            href="https://apps.apple.com/app/blankie/id6740096581"
-            target="_blank"
-            class="transition-opacity hover:opacity-90"
-          >
-            <Image
-              src={macAppStoreBadge}
-              alt="Download on the Mac App Store"
-              width="140"
-              height="30"
-              class="inline-block select-none"
-              style="user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;"
-            />
-          </a>
-          <a
-            href="/#download"
-            class="inline-flex items-center rounded-md border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-gray-300 no-underline transition-colors hover:bg-zinc-700 hover:text-white"
-          >
-            More Options
-          </a>
-        </div>
+        <a
+          href="https://apps.apple.com/app/blankie/id6740096581"
+          target="_blank"
+          aria-label="Download Blankie on the App Store"
+          class="transition-opacity hover:opacity-90"
+        >
+          <Image
+            src={appStoreBadge}
+            alt="Download on the App Store"
+            class="inline-block h-10 w-auto select-none"
+            style="user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;"
+          />
+        </a>
       </div>
     </div>
 
     {
       !langData && (
-        <div class="mb-8 rounded-lg border border-red-500 bg-red-500/30 p-6">
+        <div class="mb-8 rounded-lg border border-red-500/40 bg-red-500/10 p-6">
           <h2 class="mb-2 text-xl font-semibold">
             Error Loading Translation Data
           </h2>
@@ -217,7 +180,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
             again later or
             <a
               href={`/i18n/${lang}.json`}
-              class="text-yellow-500 underline hover:text-yellow-400"
+              class="text-accent-ink underline hover:text-white"
               target="_blank"
             >
               view the raw JSON file
@@ -232,21 +195,21 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
       langData && (
         <>
           {/* Statistics Card */}
-          <div class="overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800 shadow-lg">
+          <div class="overflow-hidden rounded-lg border border-hair bg-lift shadow-lg">
             {/* Header */}
-            <div class="border-b border-zinc-700 bg-zinc-900 p-5">
+            <div class="border-b border-hair bg-midnight p-5">
               <div class="flex items-center justify-between">
                 {getTranslatorCredits(lang || "").length > 0 ? (
-                  <p class="text-sm text-gray-400">
+                  <p class="text-sm text-fg-3">
                     Translated by{" "}
-                    <span class="font-medium text-gray-200">
+                    <span class="font-medium text-fg-1">
                       {getTranslatorCredits(lang || "").join(", ")}
                     </span>
                   </p>
                 ) : (
                   <div />
                 )}
-                <p class="text-sm text-gray-400">
+                <p class="text-sm text-fg-3">
                   Last updated:{" "}
                   <span
                     id="localTime"
@@ -262,43 +225,43 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
             <div class="p-6">
               {/* Statistics Grid */}
               <div class="mb-6 grid grid-cols-1 gap-5 md:grid-cols-3">
-                <div class="rounded-lg border border-zinc-700/50 bg-zinc-900/70 p-4 shadow-inner">
+                <div class="rounded-lg border border-hair-soft bg-black/20 p-4 shadow-inner">
                   <div class="mb-2 flex items-center">
-                    <div class="mr-2 size-3 rounded-full bg-green-500" />
-                    <h3 class="font-medium text-gray-300">Finalized</h3>
+                    <div class="mr-2 size-3 rounded-full bg-accent" />
+                    <h3 class="font-medium text-fg-2">Finalized</h3>
                   </div>
                   <div class="mb-1 text-3xl font-bold text-white">
                     {langData.statistics.translationPercentage}%
                   </div>
-                  <div class="text-sm text-gray-400">
+                  <div class="text-sm text-fg-3">
                     {langData.statistics.translatedStrings} of{" "}
                     {langData.statistics.totalStrings} strings
                   </div>
                 </div>
 
-                <div class="rounded-lg border border-zinc-700/50 bg-zinc-900/70 p-4 shadow-inner">
+                <div class="rounded-lg border border-hair-soft bg-black/20 p-4 shadow-inner">
                   <div class="mb-2 flex items-center">
-                    <div class="mr-2 size-3 rounded-full bg-orange-500" />
-                    <h3 class="font-medium text-gray-300">Needs Review</h3>
+                    <div class="mr-2 size-3 rounded-full bg-warm" />
+                    <h3 class="font-medium text-fg-2">Needs Review</h3>
                   </div>
                   <div class="mb-1 text-3xl font-bold text-white">
                     {langData.statistics.needsReviewPercentage}%
                   </div>
-                  <div class="text-sm text-gray-400">
+                  <div class="text-sm text-fg-3">
                     {langData.statistics.needsReviewStrings} of{" "}
                     {langData.statistics.totalStrings} strings
                   </div>
                 </div>
 
-                <div class="rounded-lg border border-zinc-700/50 bg-zinc-900/70 p-4 shadow-inner">
+                <div class="rounded-lg border border-hair-soft bg-black/20 p-4 shadow-inner">
                   <div class="mb-2 flex items-center">
-                    <div class="mr-2 size-3 rounded-full bg-blue-500" />
-                    <h3 class="font-medium text-gray-300">Overall Progress</h3>
+                    <div class="mr-2 size-3 rounded-full bg-accent-ink" />
+                    <h3 class="font-medium text-fg-2">Overall Progress</h3>
                   </div>
                   <div class="mb-1 text-3xl font-bold text-white">
                     {getCombinedProgress(langData.statistics)}%
                   </div>
-                  <div class="text-sm text-gray-400">
+                  <div class="text-sm text-fg-3">
                     {langData.statistics.totalStrings} total strings
                   </div>
                 </div>
@@ -306,32 +269,32 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
 
               {/* Progress Bar */}
               <div class="mb-6">
-                <div class="mb-2 text-sm font-medium text-gray-300">
+                <div class="mb-2 text-sm font-medium text-fg-2">
                   Translation Progress
                 </div>
-                <div class="h-6 w-full overflow-hidden rounded-full bg-zinc-950 shadow-inner">
+                <div class="h-6 w-full overflow-hidden rounded-full bg-black/40 shadow-inner">
                   <div class="flex h-full">
                     <div
-                      class="h-full bg-linear-to-r from-green-600 to-green-500 transition-all duration-500"
+                      class="h-full bg-accent transition-all duration-500"
                       style={`width: ${langData.statistics.translationPercentage}%`}
                     />
                     <div
-                      class="h-full bg-linear-to-r from-orange-600 to-orange-500 transition-all duration-500"
+                      class="h-full bg-warm transition-all duration-500"
                       style={`width: ${langData.statistics.needsReviewPercentage}%`}
                     />
                   </div>
                 </div>
-                <div class="mt-2 flex justify-between text-xs text-gray-400">
+                <div class="mt-2 flex justify-between text-xs text-fg-3">
                   <div class="flex items-center">
-                    <span class="mr-1 inline-block size-2 rounded-full bg-green-500" />
+                    <span class="mr-1 inline-block size-2 rounded-full bg-accent" />
                     <span>Finalized</span>
                   </div>
                   <div class="flex items-center">
-                    <span class="mr-1 inline-block size-2 rounded-full bg-orange-500" />
+                    <span class="mr-1 inline-block size-2 rounded-full bg-warm" />
                     <span>Needs Review</span>
                   </div>
                   <div class="flex items-center">
-                    <span class="mr-1 inline-block size-2 rounded-full bg-red-500" />
+                    <span class="mr-1 inline-block size-2 rounded-full bg-fg-3/50" />
                     <span>Not Translated</span>
                   </div>
                 </div>
@@ -339,12 +302,12 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
             </div>
 
             {/* Footer with Actions */}
-            <div class="flex flex-col items-center justify-between gap-4 border-t border-zinc-700 bg-zinc-900/50 p-4 sm:flex-row">
+            <div class="flex flex-col items-center justify-between gap-4 border-t border-hair bg-black/20 p-4 sm:flex-row">
               <div class="flex flex-wrap gap-3">
                 <a
                   href={`/i18n/${lang}.json`}
                   target="_blank"
-                  class="inline-flex items-center rounded-md border border-zinc-600 bg-zinc-800 px-4 py-2 text-sm text-yellow-500 transition-colors hover:bg-zinc-700 hover:text-yellow-400"
+                  class="inline-flex items-center rounded-md border border-hair bg-lift px-4 py-2 text-sm text-accent-ink transition-colors hover:bg-white/10 hover:text-white"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -367,7 +330,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
                 <a
                   href={`/i18n/${lang}.csv`}
                   download
-                  class="inline-flex items-center rounded-md border border-zinc-600 bg-zinc-800 px-4 py-2 text-sm text-yellow-500 transition-colors hover:bg-zinc-700 hover:text-yellow-400"
+                  class="inline-flex items-center rounded-md border border-hair bg-lift px-4 py-2 text-sm text-accent-ink transition-colors hover:bg-white/10 hover:text-white"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -389,7 +352,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
 
               <a
                 href="/contributing/"
-                class="bg-primary-blue inline-flex items-center rounded-md px-5 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-blue-700"
+                class="bg-primary-blue inline-flex items-center rounded-md px-5 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-deep-blue"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -412,7 +375,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
 
           {/* Tabs for different string categories */}
           <div class="mb-8">
-            <div class="border-b border-zinc-700">
+            <div class="border-b border-hair">
               <ul class="-mb-px flex flex-wrap" id="tabs" role="tablist">
                 {/* Order tabs by count, largest first */}
                 {[
@@ -441,8 +404,8 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
                       <button
                         class={`inline-block rounded-t-lg border-b-2 p-4 ${
                           tab.count > 0
-                            ? "border-transparent hover:border-gray-300 hover:text-gray-300"
-                            : "cursor-not-allowed border-transparent text-gray-500 opacity-50"
+                            ? "border-transparent hover:border-fg-2 hover:text-fg-2"
+                            : "cursor-not-allowed border-transparent text-fg-3 opacity-50"
                         }`}
                         id={`${tab.id}-tab`}
                         data-tabs-target={tab.target}
@@ -453,7 +416,7 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
                         disabled={tab.count === 0}
                       >
                         {tab.label}
-                        <span class="ml-1 rounded-full bg-zinc-700 px-2 py-0.5 text-xs">
+                        <span class="ml-1 rounded-full bg-white/10 px-2 py-0.5 text-xs">
                           {tab.count}
                         </span>
                       </button>
@@ -465,17 +428,17 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
             <div id="tab-content">
               {/* Needs Review Tab */}
               <div
-                class="mt-4 block rounded-lg bg-zinc-800 p-4"
+                class="mt-4 block rounded-lg bg-lift p-4"
                 id="needs-review"
                 role="tabpanel"
                 aria-labelledby="needs-review-tab"
               >
                 {groupedStrings.needsReview.length === 0 ? (
-                  <p class="text-gray-400 italic">No strings need review.</p>
+                  <p class="text-fg-3 italic">No strings need review.</p>
                 ) : (
                   <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                      <thead class="bg-zinc-900 text-xs uppercase">
+                      <thead class="bg-midnight text-xs uppercase">
                         <tr>
                           <th scope="col" class="w-1/2 px-4 py-3">
                             Source
@@ -486,18 +449,20 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
                         </tr>
                       </thead>
                       <tbody>
-                        {groupedStrings.needsReview.map(([key, item]) => (
-                          <tr class="border-b border-zinc-700">
+                        {groupedStrings.needsReview.map(([, item]) => (
+                          <tr class="border-b border-hair">
                             <td class="px-4 py-3 align-top">
-                              <div class="font-mono text-yellow-500">{key}</div>
+                              <div class="text-fg-1">
+                                <FormatString text={item.source} />
+                              </div>
                               {item.comment && (
-                                <div class="mt-1 text-xs text-gray-400 italic">
+                                <div class="mt-1 text-xs text-fg-3 italic">
                                   {item.comment}
                                 </div>
                               )}
                             </td>
-                            <td class="px-4 py-3 align-top font-medium text-orange-300">
-                              {formatStringForDisplay(item.target)}
+                            <td class="px-4 py-3 align-top font-medium text-warm">
+                              <FormatString text={item.target} />
                             </td>
                           </tr>
                         ))}
@@ -509,19 +474,19 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
 
               {/* Needs Translation Tab */}
               <div
-                class="mt-4 hidden rounded-lg bg-zinc-800 p-4"
+                class="mt-4 hidden rounded-lg bg-lift p-4"
                 id="needs-translation"
                 role="tabpanel"
                 aria-labelledby="needs-translation-tab"
               >
                 {groupedStrings.needsTranslation.length === 0 ? (
-                  <p class="text-gray-400 italic">
+                  <p class="text-fg-3 italic">
                     All strings have translations.
                   </p>
                 ) : (
                   <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                      <thead class="bg-zinc-900 text-xs uppercase">
+                      <thead class="bg-midnight text-xs uppercase">
                         <tr>
                           <th scope="col" class="w-1/2 px-4 py-3">
                             Source
@@ -532,20 +497,20 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
                         </tr>
                       </thead>
                       <tbody>
-                        {groupedStrings.needsTranslation.map(([key, item]) => (
-                          <tr class="border-b border-zinc-700">
+                        {groupedStrings.needsTranslation.map(([, item]) => (
+                          <tr class="border-b border-hair">
                             <td class="px-4 py-3 align-top">
-                              <div class="font-mono text-yellow-500">{key}</div>
+                              <div class="text-fg-1">
+                                <FormatString text={item.source} />
+                              </div>
                               {item.comment && (
-                                <div class="mt-1 text-xs text-gray-400 italic">
+                                <div class="mt-1 text-xs text-fg-3 italic">
                                   {item.comment}
                                 </div>
                               )}
                             </td>
-                            <td class="px-4 py-3 align-top">
-                              {shouldShowSource(key, item.source)
-                                ? formatStringForDisplay(item.source)
-                                : null}
+                            <td class="px-4 py-3 align-top text-fg-3 italic">
+                              {item.target ? <FormatString text={item.target} /> : "—"}
                             </td>
                           </tr>
                         ))}
@@ -557,19 +522,19 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
 
               {/* Translated Tab */}
               <div
-                class="mt-4 hidden rounded-lg bg-zinc-800 p-4"
+                class="mt-4 hidden rounded-lg bg-lift p-4"
                 id="translated"
                 role="tabpanel"
                 aria-labelledby="translated-tab"
               >
                 {groupedStrings.translated.length === 0 ? (
-                  <p class="text-gray-400 italic">
+                  <p class="text-fg-3 italic">
                     No strings have been finalized yet.
                   </p>
                 ) : (
                   <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                      <thead class="bg-zinc-900 text-xs uppercase">
+                      <thead class="bg-midnight text-xs uppercase">
                         <tr>
                           <th scope="col" class="w-1/2 px-4 py-3">
                             Source
@@ -580,18 +545,20 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
                         </tr>
                       </thead>
                       <tbody>
-                        {groupedStrings.translated.map(([key, item]) => (
-                          <tr class="border-b border-zinc-700">
+                        {groupedStrings.translated.map(([, item]) => (
+                          <tr class="border-b border-hair">
                             <td class="px-4 py-3 align-top">
-                              <div class="font-mono text-yellow-500">{key}</div>
+                              <div class="text-fg-1">
+                                <FormatString text={item.source} />
+                              </div>
                               {item.comment && (
-                                <div class="mt-1 text-xs text-gray-400 italic">
+                                <div class="mt-1 text-xs text-fg-3 italic">
                                   {item.comment}
                                 </div>
                               )}
                             </td>
-                            <td class="px-4 py-3 align-top text-green-300">
-                              {formatStringForDisplay(item.target)}
+                            <td class="px-4 py-3 align-top text-fg-1">
+                              <FormatString text={item.target} />
                             </td>
                           </tr>
                         ))}
@@ -656,19 +623,19 @@ function formatStringForDisplay(str: string, maxLength: number = 100): string {
         button.getAttribute("data-tabs-target") === `#${tabId}` &&
         !button.disabled
       ) {
-        button.classList.add("border-yellow-500", "text-yellow-500");
+        button.classList.add("border-accent", "text-accent-ink");
         button.classList.remove(
           "border-transparent",
-          "hover:text-gray-300",
-          "hover:border-gray-300",
+          "hover:text-fg-2",
+          "hover:border-fg-2",
         );
         button.setAttribute("aria-selected", "true");
       } else if (!button.disabled) {
-        button.classList.remove("border-yellow-500", "text-yellow-500");
+        button.classList.remove("border-accent", "text-accent-ink");
         button.classList.add(
           "border-transparent",
-          "hover:text-gray-300",
-          "hover:border-gray-300",
+          "hover:text-fg-2",
+          "hover:border-fg-2",
         );
         button.setAttribute("aria-selected", "false");
       }

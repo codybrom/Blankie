@@ -1,0 +1,60 @@
+---
+// Closing "download Blankie" card shared by the FAQ and guide-article pages.
+// A caller customizes the blurb (and optionally the title).
+import { Image } from "astro:assets";
+import icon from "../assets/blankie-icon-v2.png";
+
+interface Props {
+  title?: string;
+  blurb: string;
+}
+
+const { title = "Blankie is free, forever.", blurb } = Astro.props;
+
+const appStore =
+  "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+---
+
+<section class="mx-auto mt-20 max-w-190 px-5 pb-24">
+  <div
+    class="relative flex items-center gap-7 overflow-hidden rounded-[22px] border border-hair px-8.5 py-7.5 shadow-[0_18px_44px_rgba(0,0,0,0.34),inset_0_0_0_0.5px_rgba(255,255,255,0.05)] max-[560px]:flex-col-reverse max-[560px]:items-start max-[560px]:gap-5 max-[560px]:p-6.5"
+    style="background:radial-gradient(130% 150% at 100% 0%,color-mix(in srgb,var(--color-accent-blue) 16%,transparent),transparent 58%),var(--color-lift)"
+  >
+    <div class="min-w-0 flex-1">
+      <h2 class="text-2xl/tight font-semibold tracking-tight text-fg-1">
+        {title}
+      </h2>
+      <p class="mt-2 max-w-[54ch] text-sm/relaxed text-fg-2">{blurb}</p>
+      <a
+        class="mt-5 inline-flex items-center gap-2.5 rounded-full bg-[#f4f2ec] py-2.75 pr-5 pl-4.25 text-[15px] font-semibold tracking-tight text-[#0b0b0d] no-underline shadow-[0_8px_20px_rgba(0,0,0,0.3)] transition hover:-translate-y-px hover:bg-white"
+        href={appStore}
+        aria-label="Download Blankie on the App Store"
+      >
+        <svg
+          class="-mt-0.5 h-4 w-auto fill-current"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 13 16"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            fill="currentColor"
+            d="M 10.989 8.377 C 10.996 7.802 11.149 7.238 11.433 6.738 C 11.716 6.238 12.122 5.818 12.612 5.517 C 12.301 5.073 11.89 4.707 11.413 4.449 C 10.936 4.191 10.405 4.048 9.863 4.031 C 8.706 3.909 7.585 4.723 6.995 4.723 C 6.394 4.723 5.487 4.043 4.51 4.063 C 3.877 4.083 3.261 4.267 2.721 4.596 C 2.181 4.926 1.736 5.389 1.429 5.942 C 0.096 8.248 1.09 11.638 2.366 13.502 C 3.005 14.415 3.751 15.435 4.727 15.399 C 5.683 15.359 6.039 14.79 7.193 14.79 C 8.335 14.79 8.67 15.399 9.666 15.376 C 10.692 15.359 11.338 14.459 11.954 13.537 C 12.412 12.887 12.765 12.168 13 11.407 C 12.404 11.155 11.896 10.734 11.538 10.195 C 11.18 9.656 10.989 9.024 10.989 8.377 Z"
+          ></path>
+          <path
+            fill="currentColor"
+            d="M 9.107 2.804 C 9.666 2.133 9.941 1.271 9.875 0.4 C 9.021 0.49 8.232 0.898 7.665 1.543 C 7.388 1.859 7.176 2.225 7.041 2.623 C 6.906 3.02 6.85 3.44 6.877 3.859 C 7.304 3.863 7.727 3.77 8.113 3.588 C 8.5 3.405 8.839 3.137 9.107 2.804 Z"
+          ></path>
+        </svg>
+        <span>Download</span>
+      </a>
+    </div>
+    <Image
+      src={icon}
+      alt=""
+      class="size-22 flex-none rounded-[22px] shadow-[0_12px_30px_rgba(0,0,0,0.45)] max-[560px]:size-18"
+      width={92}
+      height={92}
+    />
+  </div>
+</section>

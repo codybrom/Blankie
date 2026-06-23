@@ -2,8 +2,8 @@
 // (The mobile/tablet menu is now the shadcn Sheet in MobileNav.tsx.)
 class SiteNavigation {
   private logoLink: HTMLElement | null;
-  private readonly HEADER_HEIGHT = 80;
-  private readonly ADDITIONAL_OFFSET = 200;
+  // Fixed header (80px) plus a little breathing room.
+  private readonly SCROLL_OFFSET = 88;
 
   constructor() {
     this.logoLink = document.getElementById("logo-link");
@@ -23,18 +23,22 @@ class SiteNavigation {
     );
   }
 
+  private prefersReducedMotion(): boolean {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
   private setupDownloadLinks(): void {
+    // Catch the nav "Download" (/#download) plus any legacy section=download links.
     document
-      .querySelectorAll('a[href*="section=download"]')
+      .querySelectorAll<HTMLAnchorElement>(
+        'a[href$="#download"], a[href*="section=download"]',
+      )
       .forEach((anchor) => {
         anchor.addEventListener("click", (e: Event) => {
-          const link = e.currentTarget as HTMLAnchorElement;
-          const href = link.getAttribute("href");
-
-          if (this.isIndexPage() && href) {
+          if (this.isIndexPage()) {
             e.preventDefault();
-            this.scrollToDownload();
-            history.pushState(null, "", href);
+            this.scrollToDownload(true);
+            history.pushState(null, "", "/#download");
           }
         });
       });
@@ -50,38 +54,39 @@ class SiteNavigation {
     });
   }
 
-  private scrollToElement(element: Element, offset = 0): void {
-    requestAnimationFrame(() => {
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.scrollY - offset;
+  // Scroll to #download, then re-snap once lazy images above it have settled
+  // (otherwise the smooth scroll drifts as the page grows mid-animation).
+  private scrollToDownload(smooth: boolean): void {
+    const target = document.getElementById("download");
+    if (!target) return;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-    });
-  }
+    const go = (behavior: ScrollBehavior) => {
+      const top =
+        target.getBoundingClientRect().top +
+        window.scrollY -
+        this.SCROLL_OFFSET;
+      window.scrollTo({ top, behavior });
+    };
 
-  private scrollToDownload(): void {
-    const target = document.querySelector("#download");
-    if (target) {
-      const totalOffset = this.HEADER_HEIGHT + this.ADDITIONAL_OFFSET;
-      this.scrollToElement(target, totalOffset);
-    }
+    go(smooth && !this.prefersReducedMotion() ? "smooth" : "auto");
+    window.setTimeout(() => go("auto"), 700);
   }
 
   private scrollToTop(): void {
     window.scrollTo({
       top: 0,
-      behavior: "smooth",
+      behavior: this.prefersReducedMotion() ? "auto" : "smooth",
     });
   }
 
   private handleInitialLoad(): void {
     window.addEventListener("load", () => {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("section") === "download") {
-        this.scrollToDownload();
+      if (
+        params.get("section") === "download" ||
+        window.location.hash === "#download"
+      ) {
+        this.scrollToDownload(false);
       }
     });
   }

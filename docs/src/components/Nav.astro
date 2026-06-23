@@ -1,22 +1,19 @@
 ---
 import { Image } from "astro:assets";
-import icon from "../assets/icon.png";
-import GithubStars from "./GithubStars.astro";
+import icon from "../assets/blankie-icon-v2.png";
 import { MobileNav, type NavLink } from "./MobileNav";
 const currentPath = Astro.url.pathname;
 
 const navLinks: NavLink[] = [
-  { href: "/features/", label: "Features" },
   { href: "/faq/", label: "FAQ" },
-  { href: "/i18n/", label: "Translations" },
-  { href: "/contributing/", label: "Contribute" },
-  { href: "/privacy/", label: "Privacy" },
+  { href: "/guides/", label: "Guides" },
+  { href: "/press/", label: "Press" },
   { href: "/credits/", label: "Credits" },
 ];
 ---
 
 <header
-  class="fixed top-0 z-50 w-full border-b border-white/10 bg-black/80 backdrop-blur-md"
+  class="bg-navy-deep/80 fixed top-0 z-50 w-full border-b border-white/10 backdrop-blur-md"
 >
   <div class="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
     <nav class="flex items-center justify-between">
@@ -27,39 +24,35 @@ const navLinks: NavLink[] = [
       >
         <Image
           src={icon}
-          alt="The Blankie app icon, which looks like a folded yellow blanket with one corner flipped over"
+          alt="The Blankie app icon, a yellow-to-blue gradient B with a cream moon on midnight navy"
           width={40}
-          height={33}
+          height={40}
           loading="eager"
-          class="size-10 object-contain"
-          style={{ aspectRatio: "802/666" }}
+          class="size-10 rounded-[22%] object-contain"
         />
-        <div class="flex items-baseline">
-          <span class="text-2xl font-semibold tracking-tight">Blankie</span>
-          <span class="ml-3 text-sm tracking-tight">for macOS</span>
-        </div>
+        <span class="text-2xl font-semibold tracking-tight">Blankie</span>
       </a>
 
       <!-- Desktop Navigation (lg+) -->
-      <div class="hidden items-center gap-x-4 lg:flex">
+      <div class="hidden items-center gap-x-1 lg:flex">
         {
           navLinks.map((link) => (
             <a
               href={link.href}
               class:list={[
-                "text-sm text-white transition-colors duration-200 hover:text-yellow-500",
-                { "text-yellow-500": currentPath === link.href },
+                "rounded-full px-3.5 py-2 text-sm font-medium no-underline transition-colors duration-200",
+                currentPath === link.href
+                  ? "bg-white/10 text-white"
+                  : "text-white/65 hover:bg-white/5 hover:text-white",
               ]}
             >
               {link.label}
             </a>
           ))
         }
-        <span class="text-gray-400">•</span>
-        <GithubStars />
         <a
-          href="/?section=download"
-          class="bg-primary-blue hover:bg-deep-blue rounded-full px-6 py-2 text-sm font-normal text-white no-underline transition-all duration-300"
+          href="/#download"
+          class="bg-primary-blue hover:bg-deep-blue ml-2 rounded-full px-6 py-2 text-sm font-medium text-white no-underline transition-all duration-300"
         >
           Download
         </a>
