@@ -13,6 +13,8 @@
 		F94CB7B02FEA47A80077688E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F94CB7AF2FEA47A80077688E /* ZIPFoundation */; };
 		F95914D92FDF1D2300808460 /* BlankieAssetDownloader.appex in Embed ExtensionKit Extensions */ = {isa = PBXBuildFile; fileRef = F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F9C0AF062E0DAF7A00E4530D /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F9C0AA3E2E0DADF300E4530D /* ZIPFoundation */; };
+		FADE000000000000005A0002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0001 /* Assets.xcassets */; };
+		FADE000000000000005A0003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0001 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +70,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		FADE000000000000005A0001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = SharedAssets/Assets.xcassets; sourceTree = "<group>"; };
 		F913505F2D233A43003C85BE /* Blankie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blankie.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F921ED992D272AE300D4F3D3 /* Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		F93A3B112D26E93600EFC1C9 /* Blankie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Blankie.entitlements; sourceTree = "<group>"; };
@@ -199,6 +202,7 @@
 				F9BC93262D41457D00E450FC /* Blankie */,
 				F95914D12FDF1D2300808460 /* BlankieAssets */,
 				F94CB79C2FEA47920077688E /* BlankiePresetPreview */,
+				FADE000000000000005A0001 /* Assets.xcassets */,
 				F9ED6DAB2D321F5D00240F13 /* BlankieTests */,
 				F9ED70DF2D3229AD00240F13 /* BlankieUITests */,
 				F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */,
@@ -424,11 +428,13 @@
 		F913505D2D233A43003C85BE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				FADE000000000000005A0002 /* Assets.xcassets in Resources */,
 			);
 		};
 		F94CB7972FEA47920077688E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				FADE000000000000005A0003 /* Assets.xcassets in Resources */,
 			);
 		};
 		F95914CE2FDF1D2300808460 /* Resources */ = {

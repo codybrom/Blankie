@@ -123,10 +123,11 @@ struct PresetPreviewView: View {
     }
   }
 
-  /// The actual Blankie app icon (bundled into the extension). The display
-  /// asset already carries its shape, so it renders as-is.
+  /// The actual Blankie app icon, from the SharedAssets catalog that both the
+  /// app and this extension build. The display asset already carries its shape,
+  /// so it renders as-is.
   private var appMark: some View {
-    Image("BlankieIcon")
+    Image("BlankieAppIconDisplay")
       .resizable()
       .scaledToFit()
   }
