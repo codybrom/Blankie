@@ -14,7 +14,16 @@ import UIKit
 
 class PreviewViewController: UIViewController, QLPreviewingController {
   func preparePreviewOfFile(at url: URL) async throws {
-    // Decode off the main actor; the zip read + image decode shouldn't block UI.
+    // Tear down any host from a prior preview so a reused controller doesn't
+    // stack views and duplicate constraints.
+    for child in children {
+      child.willMove(toParent: nil)
+      child.view.removeFromSuperview()
+      child.removeFromParent()
+    }
+
+    // Read off the main actor; the zip read shouldn't block UI. `PresetInfo` is
+    // a plain Sendable value (artwork stays as Data) so it crosses back safely.
     let info = try await Task.detached(priority: .userInitiated) {
       try PresetPreviewReader.read(from: url)
     }.value

@@ -10,16 +10,24 @@
 //
 
 import Foundation
-import UIKit
 import ZIPFoundation
 
 enum PresetPreviewReader {
+  /// Plain, `Sendable` value so it can cross out of the detached read task. The
+  /// artwork stays as raw `Data` here and is decoded to a `UIImage` on the main
+  /// actor in the view, mirroring how the app avoids returning `UIImage` from
+  /// detached work.
   struct PresetInfo {
     let name: String
     let creator: String?
     let soundCount: Int
-    let artwork: UIImage?
+    let artworkData: Data?
   }
+
+  /// Cap on a single decompressed entry. `.blankie` files are untrusted shared
+  /// input, so refuse to balloon memory on a crafted (zip-bomb) archive — the
+  /// real payloads here are a tiny JSON and a small preview image.
+  private static let maxEntryBytes = 32 * 1024 * 1024
 
   enum ReadError: Error {
     case unreadableArchive
@@ -44,10 +52,10 @@ enum PresetPreviewReader {
     }
     let preset = try JSONDecoder().decode(ArchivedPreset.self, from: presetData)
 
-    var artwork: UIImage?
+    var artworkData: Data?
     for name in ["animatedPreview.jpg", "artwork.jpg"] {
-      if let data = entryData(in: archive, path: name), let image = UIImage(data: data) {
-        artwork = image
+      if let data = entryData(in: archive, path: name) {
+        artworkData = data
         break
       }
     }
@@ -57,16 +65,20 @@ enum PresetPreviewReader {
       name: preset.name,
       creator: (creator?.isEmpty == false) ? creator : nil,
       soundCount: preset.soundStates.filter(\.isSelected).count,
-      artwork: artwork
+      artworkData: artworkData
     )
   }
 
-  /// Extract a single archive entry into memory without unpacking the whole zip.
+  /// Extract a single archive entry into memory without unpacking the whole zip,
+  /// aborting if the decompressed size exceeds `maxEntryBytes`.
   private static func entryData(in archive: Archive, path: String) -> Data? {
     guard let entry = archive[path] else { return nil }
     var data = Data()
     do {
-      _ = try archive.extract(entry) { data.append($0) }
+      _ = try archive.extract(entry) { chunk in
+        data.append(chunk)
+        if data.count > maxEntryBytes { throw ReadError.unreadableArchive }
+      }
     } catch {
       return nil
     }

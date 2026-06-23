@@ -11,6 +11,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct PresetPreviewView: View {
   let preset: PresetPreviewReader.PresetInfo
@@ -45,6 +46,7 @@ struct PresetPreviewView: View {
       VStack(spacing: 5) {
         HStack(spacing: 5) {
           Image(systemName: "moon.stars.fill").font(.caption2)
+            .accessibilityHidden(true)  // Decorative; the adjacent label carries the meaning.
           Text("Blankie Preset").font(.caption.weight(.semibold))
         }
         .foregroundStyle(.white.opacity(0.7))
@@ -65,7 +67,7 @@ struct PresetPreviewView: View {
   @ViewBuilder private var artwork: some View {
     let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
     Group {
-      if let image = preset.artwork {
+      if let data = preset.artworkData, let image = UIImage(data: data) {
         Image(uiImage: image).resizable().aspectRatio(contentMode: .fill)
       } else {
         ZStack {
@@ -129,12 +131,12 @@ struct PresetPreviewView: View {
       .scaledToFit()
   }
 
-  private var soundCountText: String {
+  private var soundCountText: LocalizedStringKey {
     preset.soundCount == 1 ? "1 sound" : "\(preset.soundCount) sounds"
   }
 }
 
 #Preview {
   PresetPreviewView(
-    preset: .init(name: "Coquí Calling", creator: "Cody", soundCount: 1, artwork: nil))
+    preset: .init(name: "Coquí Calling", creator: "Cody", soundCount: 1, artworkData: nil))
 }
