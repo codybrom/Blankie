@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - Planned June 2026
+
+A quick follow-up to 2.0 with two small additions and a handful of fixes.
+
+### Added
+
+- **Quick Look preview for shared presets** - Tap a `.blankie` file in Messages or Files and you'll see the preset's name, artwork, and sound count, plus how to add it to Blankie.
+- **Collapsible Library sections** - Collapse the Sounds and Presets lists in your Library. Blankie remembers what you left open.
+
+### Fixed
+
+- White Noise had an audible click where its loop repeated. It's re-cut to loop cleanly.
+- A preset made from your currently playing sounds didn't get working lock screen and Control Center controls. It does now.
+- On iPad, the Now Playing screen and some sheets opened as small floating cards instead of filling the screen.
+- Tapping a sound while everything was paused only selected it. Now it starts playing too.
+- The Apple Intelligence preset name suggestion shows its spinner while it works, and you can't start two at once.
+
 ## [2.0.0] - Planned June 2026
 
 Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac app around a Library sidebar with Liquid Glass throughout.
