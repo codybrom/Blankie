@@ -44,12 +44,9 @@ struct PresetPreviewView: View {
     VStack(spacing: 14) {
       artwork
       VStack(spacing: 5) {
-        HStack(spacing: 5) {
-          Image(systemName: "moon.stars.fill").font(.caption2)
-            .accessibilityHidden(true)  // Decorative; the adjacent label carries the meaning.
-          Text("Blankie Preset").font(.caption.weight(.semibold))
-        }
-        .foregroundStyle(.white.opacity(0.7))
+        Text("Blankie Preset")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(.white.opacity(0.7))
 
         Text(preset.name)
           .font(.title.weight(.bold))
