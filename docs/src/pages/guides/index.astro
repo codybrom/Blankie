@@ -1,0 +1,165 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import { Compass, Import, Search, Palette } from "@lucide/astro";
+import Glow from "@/components/Glow.astro";
+
+type Guide = CollectionEntry<"guides">;
+
+const title = "Guides";
+const description =
+  "How-to guides for Blankie, the free ambient sound mixer. Import your own sounds, build and share presets and get more from every feature.";
+
+const CATEGORIES: { id: Guide["data"]["category"]; title: string }[] = [
+  { id: "basics", title: "Blankie Basics" },
+  { id: "import", title: "Add Your Own Sounds" },
+  { id: "find", title: "Find New Sounds" },
+  { id: "presets", title: "Presets & Theming" },
+];
+
+// Same per-category glyphs as the article pages ([slug].astro CAT_ICONS).
+const CAT_ICONS: Record<Guide["data"]["category"], typeof Compass> = {
+  basics: Compass,
+  import: Import,
+  find: Search,
+  presets: Palette,
+};
+
+// Rough read time from the markdown body (~200 wpm).
+function readTime(body: string): string {
+  const words = (body || "").trim().split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.round(words / 200))} minute read`;
+}
+
+const guides = (await getCollection("guides")).sort(
+  (a: Guide, b: Guide) => a.data.order - b.data.order,
+);
+const sections = CATEGORIES.map((category) => ({
+  ...category,
+  guides: guides.filter((guide: Guide) => guide.data.category === category.id),
+})).filter((section) => section.guides.length > 0);
+---
+
+<Layout title={title} description={description}>
+  <!-- intro -->
+  <section class="relative pt-33 pb-6.5">
+    <Glow
+      class="-top-45 -right-40 size-170"
+      color="var(--color-accent-blue)"
+      pct={28}
+      fade={68}
+    />
+    <div class="relative z-10 mx-auto max-w-5xl px-5">
+      <h1 class="mt-3.5 text-[clamp(36px,5.4vw,64px)] leading-[1.02] font-semibold tracking-tighter text-balance">
+        Make Blankie yours.
+      </h1>
+      <p class="mt-4.5 max-w-[56ch] text-lg/relaxed text-fg-2">
+        Ready to get more out of Blankie? Check out these practical guides to Blankie's more advanced features, such as importing your own sounds and building and sharing presets.
+      </p>
+    </div>
+  </section>
+
+  <!-- editorial index -->
+  <section class="pt-9 pb-28">
+    <div class="mx-auto max-w-5xl px-5">
+      <nav
+        class="mb-11 flex flex-wrap items-baseline gap-x-4.5 gap-y-1.5"
+        id="gxnav"
+      >
+        {
+          sections.map((section, i) => {
+            const Icon = CAT_ICONS[section.id];
+            return (
+              <a
+                class:list={[
+                  "group relative flex items-center gap-1.75 pt-0.5 pb-2 text-sm text-fg-2 no-underline transition-colors hover:text-fg-1 [&.on]:text-white",
+                  { on: i === 0 },
+                ]}
+                href={`#cat-${section.id}`}
+                data-cat={section.id}
+              >
+                <Icon size={15} />
+                {section.title}
+                <span class="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 rounded-sm bg-warm transition-transform duration-200 group-hover:scale-x-100 group-[.on]:scale-x-100" />
+              </a>
+            );
+          })
+        }
+      </nav>
+
+      <div id="gxlist">
+        {
+          sections.map((section, i) => {
+            const Icon = CAT_ICONS[section.id];
+            return (
+              <div class="[&+&]:mt-12" id={`cat-${section.id}`} data-cat={section.id}>
+                <div
+                  class:list={[
+                    "mb-1.5 flex items-baseline gap-4",
+                    i === 0 ? "" : "mt-11.5",
+                  ]}
+                >
+                  <span class="inline-flex items-center gap-2.25 text-fg-2">
+                    <Icon size={16} />
+                    <h2 class="text-[15px] font-semibold tracking-wide text-fg-2 uppercase">
+                      {section.title}
+                    </h2>
+                  </span>
+                  <span class="h-px flex-1 bg-hair" />
+                </div>
+                {section.guides.map((guide: Guide, j: number) => (
+                  <a
+                    class:list={[
+                      "group relative grid grid-cols-[1fr_auto] items-baseline gap-6 py-3.75 no-underline before:absolute before:inset-y-px before:-inset-x-4.5 before:-z-10 before:rounded-xl before:transition-colors hover:before:bg-white/3 max-[620px]:gap-3.5",
+                      j === 0 ? "" : "border-t border-hair-soft",
+                    ]}
+                    href={`/guides/${guide.id}/`}
+                  >
+                    <div class="min-w-0">
+                      <span class="bg-[linear-gradient(var(--color-warm),var(--color-warm))] bg-size-[0%_1.5px] bg-position-[0_100%] bg-no-repeat text-[clamp(18px,2vw,23px)] leading-[1.18] font-semibold tracking-tighter text-fg-1 transition-[background-size,color] duration-300 group-hover:bg-size-[100%_1.5px] group-hover:text-white">
+                        {guide.data.title}
+                      </span>
+                    </div>
+                    <div class="flex items-baseline gap-4 whitespace-nowrap">
+                      <span class="text-[11px] tracking-wide text-fg-3">
+                        {readTime(guide.body ?? "")}
+                      </span>
+                      <span class="-translate-x-1 leading-none text-warm opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100">
+                        ↗
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Category bar = jump links. Highlight the section currently in view.
+    document.addEventListener("DOMContentLoaded", () => {
+      const links = document.querySelectorAll<HTMLAnchorElement>("#gxnav a");
+      const byCat = new Map<string, HTMLAnchorElement>();
+      links.forEach((l) => byCat.set(l.dataset.cat || "", l));
+      const groups = document.querySelectorAll<HTMLElement>("#gxlist [data-cat]");
+      if (!groups.length) return;
+      const spy = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              links.forEach((l) => l.classList.remove("on"));
+              byCat
+                .get((e.target as HTMLElement).dataset.cat || "")
+                ?.classList.add("on");
+            }
+          });
+        },
+        { rootMargin: "-25% 0px -65% 0px" },
+      );
+      groups.forEach((g) => spy.observe(g));
+    });
+  </script>
+</Layout>

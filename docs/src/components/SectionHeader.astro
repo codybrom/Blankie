@@ -1,0 +1,42 @@
+---
+// Section header used across the site in two forms:
+//  - default: an optional eyebrow + a large balanced heading (homepage sections)
+//  - rule: a smaller heading followed by a hairline that fills the row
+//    (editorial section headers on press / credits / guides)
+// `class` is applied to the outer element so callers control spacing/width.
+interface Props {
+  eyebrow?: string;
+  heading: string;
+  rule?: boolean;
+  class?: string;
+}
+
+const { eyebrow, heading, rule = false, class: className } = Astro.props;
+---
+
+{
+  rule ? (
+    <div class:list={["flex items-baseline gap-4", className]}>
+      <h2 class="text-2xl font-semibold tracking-tight whitespace-nowrap text-fg-1">
+        {heading}
+      </h2>
+      <span class="h-px flex-1 bg-hair" />
+    </div>
+  ) : (
+    <Fragment>
+      {eyebrow && (
+        <p class="text-accent-ink mb-3 text-sm font-semibold tracking-wide uppercase">
+          {eyebrow}
+        </p>
+      )}
+      <h2
+        class:list={[
+          "text-3xl font-semibold tracking-tight text-balance sm:text-4xl",
+          className,
+        ]}
+      >
+        {heading}
+      </h2>
+    </Fragment>
+  )
+}

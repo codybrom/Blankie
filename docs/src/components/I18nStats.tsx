@@ -16,7 +16,7 @@ export interface LanguageRow {
   subtitle: string;
   status: string;
   statusVariant: "default" | "secondary" | "outline" | "destructive";
-  /** Tailwind border-color class for the mobile card accent, e.g. "border-green-500". */
+  /** Tailwind border-color class for the mobile card accent, e.g. "border-accent". */
   accentClass: string;
   finalizedPct: number;
   reviewPct: number;
@@ -27,9 +27,9 @@ export interface LanguageRow {
 }
 
 /**
- * A single segmented progress bar: finalized (green) + in-review (orange)
- * stacked on a contrasted track, with the remainder (needs-translation) left
- * as track. Static — widths are baked in at build time.
+ * A single segmented progress bar: finalized (accent blue) + in-review (warm
+ * gold) stacked on a contrasted track, with the remainder (needs-translation)
+ * left as track. Static — widths are baked in at build time.
  */
 function StackedBar({
   finalizedPct,
@@ -38,17 +38,17 @@ function StackedBar({
   finalizedPct: number;
   reviewPct: number;
 }) {
-  // Finalized (green) + in-review (amber). Amber rather than orange so the two
-  // segments differ in luminance, which avoids the edge-vibration optical
-  // illusion that bright green + bright orange create at their boundary.
+  // Finalized (accent blue) + in-review (warm gold) — the site's two signature
+  // accent hues, which differ in luminance so the two segments read distinctly
+  // at their boundary without the edge-vibration of bright clashing colors.
   return (
     <div className="flex h-2 w-full overflow-hidden rounded-full bg-black/40">
       <div
-        className="h-full shrink-0 bg-green-500"
+        className="h-full shrink-0 bg-accent"
         style={{ width: `${finalizedPct}%` }}
       />
       <div
-        className="h-full shrink-0 bg-amber-400"
+        className="h-full shrink-0 bg-warm"
         style={{ width: `${reviewPct}%` }}
       />
     </div>
@@ -71,12 +71,12 @@ function ProgressLegend({
       className={cn("flex flex-wrap gap-x-3 gap-y-0.5 tabular-nums", className)}
     >
       <span className="inline-flex items-center gap-1.5">
-        <span className="size-2 rounded-full bg-green-500" />
+        <span className="size-2 rounded-full bg-accent" />
         {finalizedPct}% finalized
       </span>
       {needsReview > 0 && (
         <span className="text-muted-foreground inline-flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-amber-400" />
+          <span className="size-2 rounded-full bg-warm" />
           {reviewPct}% in review
         </span>
       )}
@@ -142,7 +142,7 @@ export function I18nStats({ rows }: { rows: LanguageRow[] }) {
                   <div className="font-medium">{r.title}</div>
                   <div className="text-muted-foreground mt-0.5 text-xs">
                     {r.subtitle} ·{" "}
-                    <code className="text-yellow-500">{r.langCode}</code>
+                    <code className="text-accent-ink">{r.langCode}</code>
                   </div>
                 </TableCell>
                 <TableCell className="py-4 align-top">
@@ -194,7 +194,7 @@ export function I18nStats({ rows }: { rows: LanguageRow[] }) {
                 <div className="text-lg font-semibold">{r.title}</div>
                 <div className="text-muted-foreground mt-0.5 text-sm">
                   {r.subtitle} ·{" "}
-                  <code className="text-yellow-500">{r.langCode}</code>
+                  <code className="text-accent-ink">{r.langCode}</code>
                 </div>
               </div>
               <Badge variant={r.statusVariant}>{r.status}</Badge>

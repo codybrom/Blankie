@@ -1,299 +1,506 @@
 ---
-import Layout from "../layouts/Layout.astro";
 import type { ImageMetadata } from "astro";
 import { Image } from "astro:assets";
-import { Card } from "@/components/ui/card";
-import {
-  Download,
-  Mail,
-  Newspaper,
-  Check,
-  FileText,
-  Quote,
-} from "lucide-react";
+import Layout from "../layouts/Layout.astro";
+import { Mail, Download, Check, ArrowUpRight, FileText } from "@lucide/astro";
+import Testimonial from "../components/Testimonial.astro";
+import SectionHeader from "@/components/SectionHeader.astro";
+import Glow from "@/components/Glow.astro";
+import Button from "@/components/Button.astro";
+import DefRow from "@/components/DefRow.astro";
+import heroIcon from "../assets/blankie-icon-v2.png";
 import icon from "../assets/icon.png";
-import screenshot from "../assets/screenshot.png";
 import promo from "../assets/promo.png";
-import appStore1 from "../assets/app-store-1.png";
-import appStore2 from "../assets/app-store-2.png";
-import appStore3 from "../assets/app-store-3.png";
-import bg4 from "../assets/bg-4.png";
+// In-app product shots used across the site.
+import devicesShot from "../assets/blankie-devices.png";
+import macShot from "../assets/mac-mockup.png";
+import ipadMockup from "../assets/ipad-mockup.png";
+import iphoneApp1 from "../assets/iphone-mockup-1.png";
+import iphoneApp2 from "../assets/iphone-mockup-2.png";
+// Live App Store store images (pulled via the asc CLI).
+import mac1 from "../assets/mac-store-1.png";
+import mac2 from "../assets/mac-store-2.png";
+import mac3 from "../assets/mac-store-3.png";
+import mac4 from "../assets/mac-store-4.png";
+import iphone1 from "../assets/iphone-store-1.png";
+import iphone2 from "../assets/iphone-store-2.png";
+import iphone3 from "../assets/iphone-store-3.png";
+import iphone4 from "../assets/iphone-store-4.png";
+import iphone5 from "../assets/iphone-store-5.png";
+import ipad1 from "../assets/ipad-store-1.png";
+import ipad2 from "../assets/ipad-store-2.png";
+import ipad3 from "../assets/ipad-store-3.png";
+import ipad4 from "../assets/ipad-store-4.png";
 
 const title = "Press Kit";
 const description =
   "Press kit for Blankie, the free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay support. Facts, screenshots, logos, and contact information.";
 
-// Stable, original-file download links (GitHub raw preserves filenames)
+
+// Stable, original-file download links (GitHub raw preserves filenames).
 const raw =
   "https://raw.githubusercontent.com/codybrom/Blankie/main/docs/src/assets";
 
-const facts: [string, string][] = [
-  ["App name", "Blankie"],
-  ["Version", "2.0.0"],
-  ["Developer", "Cody Bromley (independent developer)"],
-  ["Price", "Free. No ads, in-app purchases, subscriptions or accounts"],
-  ["Platforms", "iPhone, iPad, Mac (CarPlay supported)"],
-  ["Requires", "iOS 26 or later · macOS 26 or later"],
-  [
-    "First released",
-    "April 2025 on the Mac App Store · iPad and iPhone (with CarPlay) coming Summer 2026",
-  ],
-  [
-    "Languages",
-    "English, German, Spanish, French, Hungarian, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Simplified Chinese",
-  ],
-  ["Downloads", "10,000+ all-time across the App Store, GitHub, and Homebrew"],
-  ["License", "Open source under MIT (code) · openly licensed sounds"],
-  [
-    "Privacy",
-    "No data collection, no tracking, no analytics. Listen 100% offline",
-  ],
+const quick: [string, string][] = [
+  ["24", "Ambient sounds"],
+  ["10,000+", "All-time downloads"],
+  ["12", "Languages"],
+  ["100% Free", "Price"],
+];
+
+// Fact rows: a bright primary value plus an optional muted continuation.
+const facts: { t: string; d?: string; m?: string }[] = [
+  { t: "App name", d: "Blankie" },
+  { t: "Version", d: "2.0.0" },
+  { t: "Developer", d: "Cody Bromley", m: "(independent developer)" },
+  {
+    t: "Price",
+    d: "Free.",
+    m: "No ads, in-app purchases, subscriptions or accounts.",
+  },
+  { t: "Platforms", d: "iPhone, iPad, Mac", m: "(CarPlay supported)" },
+  { t: "Requires", d: "iOS 26 or later · macOS 26 or later" },
+  {
+    t: "First released",
+    d: "April 2025 on the Mac App Store",
+    m: "· iPad and iPhone (with CarPlay) on June 23, 2026",
+  },
+  {
+    t: "Languages",
+    m: "English, German, Spanish, French, Hungarian, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Simplified Chinese",
+  },
+  {
+    t: "Downloads",
+    d: "10,000+ all-time",
+    m: "across the App Store, GitHub, and Homebrew",
+  },
+  { t: "License", d: "Open source under MIT", m: "(code) · openly licensed sounds" },
+  {
+    t: "Privacy",
+    d: "No data collection, no tracking, no analytics.",
+    m: "Listen 100% offline.",
+  },
 ];
 
 const links: [string, string][] = [
   ["Website", "https://blankie.rest"],
   ["App Store", "https://apps.apple.com/app/blankie/id6740096581"],
-  ["TestFlight beta", "https://testflight.apple.com/join/XgpBpWv8"],
-  ["Source code (GitHub)", "https://github.com/codybrom/blankie"],
-  ["Homebrew", "https://formulae.brew.sh/cask/blankie"],
+  ["GitHub", "https://github.com/codybrom/blankie"],
+  ["Instagram", "https://instagram.com/blankie.rest"],
+  ["Threads", "https://threads.com/@blankie.rest"],
+  ["Facebook", "https://facebook.com/blankie.rest"],
+  ["Product Hunt", "https://producthunt.com/products/blankie"],
 ];
 
 const highlights = [
-  "Only ambient sound app with CarPlay",
-  "Includes a mix of 23 different ambient sounds, static noises and music loops",
-  "Customize with artwork, colors and your own sounds, then export and share with friends",
-  "Built natively for iOS 26 with Liquid Glass",
-  "All features and sounds free forever, with no ads or subscriptions or trackers of any kind",
-  "Listen 100% offline and even import your sounds from voice memos and your files",
-  "Sleep timer with animated lock-screen artwork to drift off to",
-  "Fully accessible with VoiceOver and Dynamic Type support",
-  "Open source and actively maintained with community contributors and translators around the world",
+  "The first ambient sound app with CarPlay support.",
+  "24 ambient sounds, static noises and music loops.",
+  "Customize presets with artwork, colors and your own sounds, then export and share.",
+  "Built natively for iOS 26 with Liquid Glass.",
+  "Every feature and sound free forever, with no ads, subscriptions or trackers.",
+  "Works 100% offline",
+  "Built in sleep timer",
+  "Fully accessible with VoiceOver and Dynamic Type.",
+  "Open source and actively maintained with contributors worldwide.",
 ];
 
-const coverage: [string, string, string][] = [
-  ["ZDNET", "“…just fantastic.”", "June 2025"],
-  ["Mac & i (heise)", "#1 of “21 Freeware-Perlen für den Mac”", "Issue 1/2026"],
-  ["Mac App Store", "Featured in “Best New Apps and Updates”", "May 2025"],
-  ["Product Hunt", "#4 Product of the Month, Health & Fitness", "May 2025"],
-  [
-    "iFun.de",
-    "“Freie Mac-App mischt individuelle Klanglandschaften”",
-    "April 2025",
-  ],
-  ["MacGadget", "Repeat coverage of releases and the iOS beta", "2025 to 2026"],
-  ["AAPL Ch.", "Mac release coverage (Japan)", "May 2025"],
+const coverage: { out: string; note: string; when: string; url?: string }[] = [
+  {
+    out: "ZDNET",
+    note: "“…just fantastic.”",
+    when: "Jun 2025",
+    url: "https://www.zdnet.com/article/need-to-relax-these-sound-apps-do-the-trick-for-me-heres-how/",
+  },
+  {
+    out: "Mac App Store",
+    note: "Featured in “Best New Apps and Updates”",
+    when: "May 2025",
+  },
+  {
+    out: "Product Hunt",
+    note: "#4 Product of the Month, Health & Fitness",
+    when: "May 2025",
+    url: "https://www.producthunt.com/products/blankie",
+  },
+  {
+    out: "Mac & i (heise)",
+    note: "#1 of “21 Freeware-Perlen für den Mac”",
+    when: "Issue 1/2026",
+    url: "https://www.heise.de/ratgeber/Voellig-kostenlos-21-Freeware-Perlen-fuer-den-Mac-11215455.html",
+  },
+  {
+    out: "iFun.de",
+    note: "“Freie Mac-App mischt individuelle Klanglandschaften”",
+    when: "Apr 2025",
+    url: "https://www.ifun.de/blankie-freie-mac-app-mischt-individuelle-klanglandschaften-252622/",
+  },
+  {
+    out: "MacGadget",
+    note: "“Kostenlose Mac-Software spielt Umgebungsgeräusche zum Entspannen ab”",
+    when: "Jan 2026",
+    url: "https://www.macgadget.de/News/2026/01/22/Blankie-Kostenlose-Mac-Software-spielt-Umgebungsgeraeusche-zum-Entspannen-ab",
+  },
+  {
+    out: "AAPL Ch.",
+    note: "Mac release coverage (Japan)",
+    when: "May 2025",
+    url: "https://applech2.com/archives/20250516-blankie-for-mac-ambient-sound.html",
+  },
 ];
 
-const assets: { img: ImageMetadata; file: string; label: string }[] = [
-  { img: icon, file: "icon.png", label: "App icon (1024px)" },
-  { img: screenshot, file: "screenshot.png", label: "Mac app (dark)" },
-  { img: promo, file: "promo.png", label: "Promotional banner" },
-  { img: appStore1, file: "app-store-1.png", label: "Store screenshot 1" },
-  { img: appStore2, file: "app-store-2.png", label: "Store screenshot 2" },
-  { img: appStore3, file: "app-store-3.png", label: "Store screenshot 3" },
+// A handful of verbatim App Store reviews for the press kit (see testimonials.ts).
+// Ordered to interleave long and short quotes so the masonry columns balance.
+const reviewIds = [
+  "best-tool",
+  "very-apple",
+  "coworking",
+  "straightforward",
+  "macht-genau",
+  "youtube-tabs",
+  "free-quality",
+  "blanket-linux",
+  "simple-efficace"
+];
+
+type Asset = {
+  img: ImageMetadata;
+  file: string;
+  label: string;
+  pad?: boolean;
+  tall?: boolean;
+};
+const assetGroups: { title: string; items: Asset[] }[] = [
+  {
+    title: "Brand",
+    items: [
+      { img: icon, file: "icon.png", label: "App icon (1024px)", pad: true },
+      { img: promo, file: "promo.png", label: "Promotional banner" },
+      {
+        img: devicesShot,
+        file: "blankie-devices.png",
+        label: "All devices",
+      },
+    ],
+  },
+  {
+    title: "Mac",
+    items: [
+      { img: macShot, file: "mac-mockup.png", label: "App window" },
+      { img: mac1, file: "mac-store-1.png", label: "App Store 1" },
+      { img: mac2, file: "mac-store-2.png", label: "App Store 2" },
+      { img: mac3, file: "mac-store-3.png", label: "App Store 3" },
+      { img: mac4, file: "mac-store-4.png", label: "App Store 4" },
+    ],
+  },
+  {
+    title: "iPhone",
+    items: [
+      { img: iphoneApp1, file: "iphone-mockup-1.png", label: "Sounds", tall: true },
+      { img: iphoneApp2, file: "iphone-mockup-2.png", label: "Presets", tall: true },
+      { img: iphone1, file: "iphone-store-1.png", label: "App Store 1", tall: true },
+      { img: iphone2, file: "iphone-store-2.png", label: "App Store 2", tall: true },
+      { img: iphone3, file: "iphone-store-3.png", label: "App Store 3", tall: true },
+      { img: iphone4, file: "iphone-store-4.png", label: "App Store 4", tall: true },
+      { img: iphone5, file: "iphone-store-5.png", label: "App Store 5", tall: true },
+    ],
+  },
+  {
+    title: "iPad",
+    items: [
+      { img: ipadMockup, file: "ipad-mockup.png", label: "App window" },
+      { img: ipad1, file: "ipad-store-1.png", label: "App Store 1", tall: true },
+      { img: ipad2, file: "ipad-store-2.png", label: "App Store 2", tall: true },
+      { img: ipad3, file: "ipad-store-3.png", label: "App Store 3", tall: true },
+      { img: ipad4, file: "ipad-store-4.png", label: "App Store 4", tall: true },
+    ],
+  },
 ];
 ---
 
 <Layout title={title} description={description}>
-  <section class="relative overflow-hidden">
-    <div class="absolute inset-0">
-      <Image src={bg4} alt="" class="size-full object-cover" />
-      <div class="absolute inset-0 bg-black/75"></div>
-    </div>
-
-    <!-- Hero -->
-    <div class="relative mx-auto mt-16 max-w-5xl px-5 py-20 text-center">
-      <Image
-        src={icon}
-        alt="Blankie app icon"
-        width={112}
-        height={112}
-        class="mx-auto mb-6 rounded-[22%] shadow-lg"
-        quality={90}
+  <div>
+    <!-- hero -->
+    <section class="relative pt-34 pb-14 text-center">
+      <Glow
+        class="-top-37.5 left-1/2 h-140 w-210 -translate-x-1/2"
+        color="var(--color-b-yellow)"
+        pct={9}
+        fade={60}
       />
-      <h1 class="text-4xl/tight font-semibold tracking-tighter md:text-5xl">
-        Blankie Press Kit
-      </h1>
-      <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-200">
-        Everything you need to write about Blankie, the free, open-source
-        ambient sound mixer for Mac, iPad and iPhone with CarPlay.
-      </p>
-      <p class="mt-6">
-        <a
-          href="mailto:press@blankie.rest"
-          class="bg-secondary text-foreground ring-border hover:bg-secondary/80 inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-medium ring-1 transition-colors duration-200"
+      <Glow class="-right-40 -bottom-50 size-170" pct={22} fade={64} />
+      <div class="relative z-10 mx-auto max-w-5xl px-5">
+        <Image
+          src={heroIcon}
+          alt="Blankie app icon"
+          class="mx-auto mb-6 size-26 rounded-4xl shadow-[0_24px_56px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]"
+          width={104}
+          height={104}
+          quality={90}
+        />
+        <h1
+          class="mt-3.5 text-[clamp(38px,5.6vw,66px)] leading-[1.02] font-semibold tracking-tighter"
         >
-          <Mail className="size-4" strokeWidth={1.75} />
-          press@blankie.rest
-        </a>
-      </p>
-    </div>
-
-    <!-- Boilerplate -->
-    <div class="relative mx-auto max-w-4xl px-5 pb-12">
-      <h2 class="mb-6 flex items-center gap-3 text-3xl font-semibold">
-        <Quote className="text-primary size-7" strokeWidth={1.75} />
-        Boilerplate
-      </h2>
-      <Card className="mb-4 gap-0 p-8">
-        <p class="mb-2 text-sm tracking-wide text-gray-400 uppercase">
-          One-liner
+          Blankie Press Kit
+        </h1>
+        <p class="mx-auto mt-4.5 max-w-[52ch] text-lg/relaxed text-fg-2">
+          Everything you need to write about Blankie, the free and open-source
+          ambient sound mixer for iPhone, iPad, Mac and CarPlay.
         </p>
-        <p class="text-lg text-gray-100">
-          Blankie is a free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay. No ads, no subscriptions, no accounts, and it works fully offline.
-        </p>
-      </Card>
-      <Card className="gap-0 p-8">
-        <p class="mb-2 text-sm tracking-wide text-gray-400 uppercase">
-          Short description
-        </p>
-        <p class="text-gray-100">
-          Blankie helps people focus, relax, and sleep by mixing high-quality
-          ambient sounds (rain, waves, fireplaces, coffee shops, and more)
-          into custom soundscapes. Listeners can import their own audio, which
-          Blankie loudness-matches automatically, set a sleep timer with
-          animated lock-screen artwork, and take their mixes on the road with
-          CarPlay. Inspired by Blanket for Linux and built natively for Apple
-          platforms by independent developer Cody Bromley, Blankie is
-          MIT-licensed, localized in 12 languages, fully accessible with
-          VoiceOver, and free forever.
-        </p>
-      </Card>
-    </div>
-  </section>
-
-  <!-- Fact Sheet -->
-  <section class="relative mx-auto max-w-4xl px-5 py-12">
-    <h2 class="mb-6 flex items-center gap-3 text-3xl font-semibold">
-      <FileText className="text-primary size-7" strokeWidth={1.75} />
-      Fact Sheet
-    </h2>
-    <Card className="gap-0 p-8">
-      <dl class="divide-foreground/10 divide-y">
-        {
-          facts.map(([label, value]) => (
-            <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3">
-              <dt class="font-medium text-gray-400">{label}</dt>
-              <dd class="text-gray-100 sm:col-span-2">{value}</dd>
-            </div>
-          ))
-        }
-        <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3">
-          <dt class="font-medium text-gray-400">Links</dt>
-          <dd class="space-y-1 sm:col-span-2">
-            {
-              links.map(([label, href]) => (
-                <p>
-                  <a
-                    href={href}
-                    class="text-yellow-400 underline transition-colors hover:text-yellow-300"
-                  >
-                    {label}
-                  </a>
-                </p>
-              ))
-            }
-          </dd>
+        <div class="mt-7 flex flex-wrap justify-center gap-3">
+          <Button variant="moon" href="mailto:press@blankie.rest">
+            <Mail size={17} stroke-width={1.75} /> press@blankie.rest
+          </Button>
+          <Button href="#assets">
+            <Download size={17} stroke-width={1.75} /> Download assets
+          </Button>
+          <Button href="/press/blankie-2-0/">
+            <FileText size={17} stroke-width={1.75} /> Read the launch release
+          </Button>
         </div>
-      </dl>
-    </Card>
-
-    <h3 class="mt-10 mb-4 text-xl font-semibold">Why it's a story</h3>
-    <ul class="space-y-3 text-gray-200">
-      {
-        highlights.map((h) => (
-          <li class="flex items-start gap-3">
-            <Check
-              className="size-5 shrink-0 text-primary mt-0.5"
-              strokeWidth={2}
-            />
-            {h}
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <!-- Coverage -->
-  <section class="relative mx-auto max-w-4xl px-5 py-12">
-    <h2 class="mb-6 flex items-center gap-3 text-3xl font-semibold">
-      <Newspaper className="text-primary size-7" strokeWidth={1.75} />
-      Recognition &amp; Coverage
-    </h2>
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {
-        coverage.map(([outlet, note, date]) => (
-          <Card className="p-6 gap-0">
-            <p class="font-semibold">{outlet}</p>
-            <p class="mt-1 text-sm text-gray-300">{note}</p>
-            <p class="mt-2 text-xs text-gray-500">{date}</p>
-          </Card>
-        ))
-      }
-    </div>
-  </section>
-
-  <!-- Assets -->
-  <section class="relative mx-auto max-w-5xl px-5 py-12">
-    <h2 class="mb-2 flex items-center gap-3 text-3xl font-semibold">
-      <Download className="text-primary size-7" strokeWidth={1.75} />
-      Images &amp; Assets
-    </h2>
-    <p class="mb-8 text-gray-300">
-      Free to use in coverage of Blankie. Need something specific? Localized
-      screenshots and videos available on request.
-    </p>
-    <div class="grid grid-cols-2 gap-6 md:grid-cols-3">
-      {
-        assets.map(({ img, file, label }) => (
-          <div class="bg-card ring-foreground/10 flex flex-col rounded-xl p-4 ring-1">
-            <Image
-              src={img}
-              alt={label}
-              class="h-40 w-full rounded-lg bg-black/30 object-contain"
-              quality={80}
-            />
-            <p class="mt-3 text-sm text-gray-200">{label}</p>
-            <a
-              href={`${raw}/${file}`}
-              class="mt-1 text-xs text-yellow-400 underline transition-colors hover:text-yellow-300"
-              download
-            >
-              Download original
-            </a>
-          </div>
-        ))
-      }
-    </div>
-  </section>
-
-  <!-- About the developer -->
-  <section class="relative mx-auto max-w-4xl px-5 py-12 pb-20">
-    <h2 class="mb-6 text-3xl font-semibold">About the Developer</h2>
-    <Card className="gap-0 p-8">
-      <p class="text-gray-100">
-        Cody Bromley is an independent developer who built Blankie as a love
-        letter to Blanket for Linux, and to the idea that calm shouldn't have a
-        paywall. He develops Blankie in the open with community contributors and
-        translators around the world. He's happy to talk about indie
-        development, open source on the App Store, audio engineering, or why the
-        app is free forever.
-      </p>
-      <p class="mt-4">
-        <a
-          href="mailto:press@blankie.rest"
-          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
+        <div
+          class="mt-12 flex flex-wrap justify-center border-y border-hair-soft"
         >
-          press@blankie.rest
-        </a>
-        <span class="text-gray-500"> · </span>
-        <a
-          href="https://github.com/codybrom"
-          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
+          {
+            quick.map(([n, label]) => (
+              <div class="flex flex-col gap-0.5 border-l border-hair-soft px-7 py-4.5 first:border-l-0">
+                <b class="text-xl font-semibold tracking-tight">{n}</b>
+                <span class="text-[10.5px] font-semibold tracking-wider text-fg-3 uppercase">
+                  {label}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- summary -->
+    <section class="pt-14">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Summary" class="mb-6" />
+        <div class="text-[11px] font-semibold tracking-widest text-fg-3 uppercase">
+          One-liner
+        </div>
+        <p
+          class="mt-2.5 mb-10 text-[clamp(24px,3.4vw,34px)] leading-tight font-medium tracking-tight text-balance text-white"
         >
-          github.com/codybrom
-        </a>
-      </p>
-    </Card>
-  </section>
+          Blankie is a <span class="text-warm">free and open-source</span> ambient
+          sound mixer for iPhone, iPad, Mac and CarPlay with no ugly ads, no sneaky
+          business model and no compromises for your privacy.
+        </p>
+        <div class="text-[11px] font-semibold tracking-widest text-fg-3 uppercase">
+          Short description
+        </div>
+        <p class="mt-2.5 max-w-[76ch] leading-relaxed text-[#d4d7ea]">
+          Blankie helps people all over the world focus, relax and sleep with
+          high-quality ambient sounds (rain, waves, fireplaces, coffee shops, and
+          more) mixed into custom soundscapes. In Blankie 2.0, listeners can now
+          import their own audio, set sleep timers, set animated lock-screen artwork
+          and take their mixes on the road with CarPlay. Blankie is open source,
+          localized in 12 languages, fully accessible with VoiceOver and free forever.
+        </p>
+      </div>
+    </section>
+
+    <!-- fact sheet -->
+    <section class="pt-14">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Fact Sheet" class="mb-6" />
+        <dl class="grid [&_dd]:leading-normal [&_dd]:text-fg-1">
+          {
+            facts.map((f) => (
+              <DefRow term={f.t}>
+                {f.d}
+                {f.d && f.m ? " " : ""}
+                {f.m && <span class="text-fg-2">{f.m}</span>}
+              </DefRow>
+            ))
+          }
+          <DefRow term="Links">
+            <div class="flex flex-wrap gap-x-5 gap-y-2">
+              {
+                links.map(([label, href]) => (
+                  <a
+                    class="inline-flex items-center gap-1.5 border-b border-transparent text-sm text-accent-ink no-underline transition-[border-color] hover:border-accent-ink"
+                    href={href}
+                  >
+                    {label} <ArrowUpRight size={13} />
+                  </a>
+                ))
+              }
+            </div>
+          </DefRow>
+        </dl>
+      </div>
+    </section>
+
+    <!-- why it's a story -->
+    <section class="pt-14">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Why Blankie?" class="mb-6" />
+        <ul class="grid grid-cols-1 gap-x-10 md:grid-cols-2">
+          {
+            highlights.map((h) => (
+              <li class="flex items-start gap-3 border-t border-hair-soft py-3 text-sm/normal text-[#d4d7ea] nth-[-n+2]:border-t-0 max-md:nth-2:border-t">
+                <Check class="mt-0.5 shrink-0 text-warm" size={17} stroke-width={2} />
+                {h}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- coverage -->
+    <section class="pt-14">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Recognition & Coverage" class="mb-6" />
+        <div class="grid">
+          {
+            coverage.map(({ out, note, when, url }) => (
+              <div class="grid grid-cols-1 items-baseline gap-1 border-t border-hair-soft py-4 first:border-t-0 sm:grid-cols-[190px_1fr_auto] sm:gap-6">
+                {url ? (
+                  <a
+                    class="group inline-flex items-center gap-1.5 font-semibold tracking-tight text-fg-1 no-underline transition-colors hover:text-accent-ink"
+                    href={url}
+                  >
+                    {out}{" "}
+                    <ArrowUpRight
+                      class="text-fg-3 transition-colors group-hover:text-accent-ink"
+                      size={13}
+                    />
+                  </a>
+                ) : (
+                  <span class="font-semibold tracking-tight text-fg-1">
+                    {out}
+                  </span>
+                )}
+                <span class="text-sm/snug text-fg-2">{note}</span>
+                <span class="text-[11px] tracking-wide whitespace-nowrap text-fg-3 sm:text-right">
+                  {when}
+                </span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- reviews -->
+    <section class="pt-14">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Reviews" class="mb-6" />
+        <div class="columns-1 gap-4 min-[600px]:columns-2 min-[900px]:columns-3">
+          {
+            reviewIds.map((id) => (
+              <div class="mb-4 break-inside-avoid">
+                <Testimonial id={id} />
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- assets -->
+    <section class="pt-14" id="assets">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Images & Assets" class="mb-6" />
+        <div class="mb-7 flex flex-wrap items-center justify-between gap-4">
+          <p class="max-w-[60ch] text-sm text-fg-3">
+            Free to use in coverage of Blankie. Need something specific? Localized
+            screenshots and videos available on request.
+          </p>
+          <Button size="sm" href="/blankie-press-kit.zip" download class="shrink-0">
+            <Download size={15} stroke-width={1.75} /> Download all
+          </Button>
+        </div>
+        {
+          assetGroups.map((group) => {
+            // A group whose tiles mix orientations (e.g. iPad: a landscape
+            // window shot plus portrait store images) packs cleaner as masonry;
+            // single-orientation groups lay out as an even grid.
+            const mixed =
+              group.items.some((i) => i.tall) &&
+              group.items.some((i) => !i.tall);
+            return (
+              <div class="[&+&]:mt-9">
+                <h3 class="mb-3.5 text-xs font-semibold tracking-wide text-fg-3 uppercase">
+                  {group.title}
+                </h3>
+                <div
+                  class:list={[
+                    mixed
+                      ? "columns-1 gap-4 min-[520px]:columns-2 min-[820px]:columns-3"
+                      : "grid grid-cols-1 items-start gap-4 min-[520px]:grid-cols-2 min-[820px]:grid-cols-3",
+                  ]}
+                >
+                  {group.items.map(({ img, file, label, pad, tall }) => (
+                    <div
+                      class:list={[
+                        "overflow-hidden rounded-xl border border-hair bg-glass transition hover:-translate-y-0.5 hover:border-white/20",
+                        { "mb-4 break-inside-avoid": mixed },
+                      ]}
+                    >
+                      <div
+                        class:list={[
+                          "grid place-items-center overflow-hidden bg-[linear-gradient(160deg,#0c1130,#06091f)] p-4",
+                          tall ? "aspect-3/4" : "aspect-16/10",
+                        ]}
+                      >
+                        <Image
+                          src={img}
+                          alt={`${group.title} — ${label}`}
+                          quality={82}
+                          class:list={[
+                            "max-h-full max-w-full object-contain",
+                            pad ? "max-h-21 rounded-[22%]" : "rounded-md",
+                          ]}
+                        />
+                      </div>
+                      <div class="flex items-center justify-between gap-2.5 border-t border-hair-soft px-4 py-3">
+                        <span class="text-sm font-medium text-fg-1">{label}</span>
+                        <a
+                          class="inline-flex items-center gap-1.5 text-[11px] font-semibold whitespace-nowrap text-accent-ink no-underline"
+                          href={`${raw}/${file}`}
+                          download
+                        >
+                          <Download size={12} /> PNG
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        }
+      </div>
+    </section>
+
+    <!-- about the developer -->
+    <section class="pt-14 pb-6">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="About the Developer" class="mb-6" />
+        <p class="max-w-[76ch] leading-relaxed text-[#d4d7ea]">
+          Cody Bromley is an independent developer from Tulsa, Oklahoma. He built
+          Blankie in the great tradition of free Mac and iPhone apps that solve a
+          problem elegantly. Blankie stays free forever with help from contributors
+          and translators around the world. He's available for interviews and
+          podcasts to talk about Blankie, indie development and why building free and
+          open source apps for the App Store matters.
+        </p>
+        <p class="mt-5 text-sm text-fg-3">
+          <a
+            class="text-accent-ink no-underline hover:underline"
+            href="mailto:press@blankie.rest">press@blankie.rest</a
+          > ·
+          <a
+            class="text-accent-ink no-underline hover:underline"
+            href="https://github.com/codybrom">github.com/codybrom</a
+          >
+        </p>
+      </div>
+    </section>
+  </div>
 </Layout>

@@ -1,0 +1,27 @@
+---
+// Surface primitive. shadcn-style cva variants matched to the site's existing
+// cards: `outline` (transparent, hairline border, accent-tinted hover — used by
+// the guide "keep reading" cards) and `glass` (frosted, used by asset tiles).
+// Renders an <a> when `href` is set, otherwise a <div>.
+import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+
+const card = cva("transition", {
+  variants: {
+    variant: {
+      outline:
+        "rounded-xl border border-hair-soft bg-transparent hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_38%,var(--hair))] hover:bg-[color-mix(in_srgb,var(--accent)_6%,transparent)]",
+      glass:
+        "overflow-hidden rounded-xl border border-hair bg-glass hover:-translate-y-0.5 hover:border-white/20",
+    },
+  },
+  defaultVariants: { variant: "glass" },
+});
+
+const { href, variant, class: className, ...rest } = Astro.props;
+const Tag = href ? "a" : "div";
+---
+
+<Tag href={href} class={cn(card({ variant }), className)} {...rest}>
+  <slot />
+</Tag>

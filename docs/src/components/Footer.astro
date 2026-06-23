@@ -1,46 +1,126 @@
 ---
+import { Image } from "astro:assets";
+import icon from "../assets/blankie-icon-v2.png";
+import ghSVG from "../assets/github.svg";
+import igSVG from "../assets/instagram.svg";
+import fbSVG from "../assets/facebook.svg";
+import thSVG from "../assets/threads.svg";
+import phSVG from "../assets/producthunt.svg";
 
+const socials = [
+  { label: "GitHub", href: "https://github.com/codybrom/blankie", src: ghSVG.src },
+  {
+    label: "Instagram",
+    href: "https://instagram.com/blankie.rest",
+    src: igSVG.src,
+  },
+  { label: "Facebook", href: "https://facebook.com/blankie.rest", src: fbSVG.src },
+  { label: "Threads", href: "https://threads.com/@blankie.rest", src: thSVG.src },
+  {
+    label: "Product Hunt",
+    href: "https://producthunt.com/products/blankie",
+    src: phSVG.src,
+  },
+];
+
+const columns = [
+  {
+    title: "Open Source",
+    links: [
+      { label: "GitHub Repo", href: "https://github.com/codybrom/Blankie" },
+      { label: "Contributing to Blankie", href: "/contributing/" },
+      { href: "/i18n/", label: "Translations" },
+    ],
+  },
+  {
+    title: "Sponsor the Project",
+    links: [
+      { label: "GitHub Sponsors", href: "https://github.com/sponsors/codybrom" },
+      { label: "Buy Me a Coffee", href: "https://buymeacoffee.com/codybrom" },
+      { label: "Ko-fi", href: "https://ko-fi.com/codybrom" },
+    ],
+  },
+];
 ---
 
-<footer class="bg-gray-900 px-2 py-10 text-center text-gray-300">
-  <div class="mb-5 flex flex-col justify-center gap-x-5 gap-y-2 sm:flex-row">
-    <p class="order-first sm:order-last">
-      Created by
-      <a
-        href="https://github.com/codybrom"
-        class="font-bold underline transition-colors duration-300 hover:text-yellow-500"
-        >Cody Bromley</a
-      >
-    </p>
-    <p class="hidden sm:inline">•</p>
-    <p class="order-last sm:order-first">
-      Inspired by
-      <a
-        href="https://apps.gnome.org/Blanket/"
-        class="font-bold underline transition-colors duration-300 hover:text-yellow-500"
-        >Blanket</a
-      >
-      for Linux
-    </p>
+<footer class="border-t border-white/10 px-5 py-14 text-sm">
+  <div class="mx-auto flex max-w-6xl flex-col justify-between gap-10 sm:flex-row">
+    <div class="max-w-xs">
+      <a href="/" class="flex items-center gap-3 text-white no-underline">
+        <Image
+          src={icon}
+          alt="Blankie"
+          width={34}
+          height={34}
+          class="size-8 rounded-[22%]"
+        />
+        <span class="text-lg font-semibold tracking-tight">Blankie</span>
+      </a>
+      <p class="mt-3 text-gray-400">
+        Free and open source ambient sound mixer for macOS, iPhone, iPad and CarPlay.
+      </p>
+      <div class="mt-5 flex items-center gap-4">
+        {
+          socials.map((s) => (
+            <a
+              class="group"
+              href={s.href}
+              aria-label={s.label}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src={s.src}
+                alt={s.label}
+                width="20"
+                height="20"
+                loading="lazy"
+                class="size-5 filter-[brightness(0)_invert(0.55)] transition-[filter] group-hover:filter-[brightness(0)_invert(0.95)]"
+              />
+            </a>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-8">
+      {
+        columns.map((col) => (
+          <div>
+            <h4 class="mb-3 text-xs font-semibold tracking-wide text-gray-400 uppercase">
+              {col.title}
+            </h4>
+            {col.links.map((link) => (
+              <a
+                href={link.href}
+                class="block py-1 text-gray-400 no-underline transition-colors hover:text-white"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        ))
+      }
+    </div>
   </div>
-  <p class="mb-4">
-    <a
-      href="https://github.com/codybrom/blankie"
-      class="underline transition-colors duration-300 hover:text-yellow-500"
-      >Open Source on GitHub</a
-    >
-    <span class="mx-2">•</span>
-    <a
-      href="/press/"
-      class="underline transition-colors duration-300 hover:text-yellow-500"
-      >Press Kit</a
-    >
-  </p>
-  <p>
-    © 2026 Cody Bromley and contributors. All rights reserved.
-    <a
-      class="underline transition-colors duration-300 hover:text-yellow-500"
-      href="https://opensource.org/license/mit">MIT License</a
-    >.
-  </p>
+
+  <div class="mx-auto mt-12 max-w-6xl border-t border-white/10 pt-8 text-gray-400">
+    <div class="flex flex-col justify-between gap-2 sm:flex-row">
+      <span>
+        © 2026 Cody Bromley and contributors 
+·
+        <a
+          href="/privacy/"
+          class="underline transition-colors hover:text-white">Privacy Policy</a
+        >
+      </span>
+      <span>
+        Inspired by
+        <a
+          href="https://apps.gnome.org/Blanket/"
+          class="underline transition-colors hover:text-white">Blanket</a
+        > for Linux
+      </span>
+    </div>
+  </div>
 </footer>

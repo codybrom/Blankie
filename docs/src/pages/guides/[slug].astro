@@ -1,0 +1,214 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import { renderMarkdown } from "@/utils/markdown";
+import { imageExists } from "@/utils/imageExists";
+import { articleLd, breadcrumbLd, displayMonth, ldGraph } from "@/utils/schema";
+import {
+  ArrowRight,
+  BookOpen,
+  RefreshCw,
+  MonitorSmartphone,
+  Compass,
+  Import,
+  Search,
+  Palette,
+} from "@lucide/astro";
+import DownloadCTA from "@/components/DownloadCTA.astro";
+import Prose from "@/components/Prose.astro";
+import Glow from "@/components/Glow.astro";
+import Card from "@/components/Card.astro";
+import Badge from "@/components/Badge.astro";
+
+type Guide = CollectionEntry<"guides">;
+
+export async function getStaticPaths() {
+  const guides = await getCollection("guides");
+  return guides.map((guide: Guide) => ({
+    params: { slug: guide.id },
+    props: { guide },
+  }));
+}
+
+interface Props {
+  guide: Guide;
+}
+
+const CAT_LABELS: Record<Guide["data"]["category"], string> = {
+  basics: "Blankie Basics",
+  import: "Add Your Own Sounds",
+  find: "Find New Sounds",
+  presets: "Presets & Theming",
+};
+
+// A Lucide glyph per category, used in the article eyebrow and the
+// "Keep reading" cards (mirrors the hub's section icons).
+const CAT_ICONS: Record<Guide["data"]["category"], typeof Compass> = {
+  basics: Compass,
+  import: Import,
+  find: Search,
+  presets: Palette,
+};
+
+const { guide } = Astro.props;
+const { title, description, category, updated, platforms } = guide.data;
+
+const EyebrowIcon = CAT_ICONS[category];
+
+// A trailing "## Related guides" markdown list becomes "Keep reading" cards
+// (like the hub) instead of inline bullet links. Split it off the body so the
+// prose renders without it, then resolve each /guides/<slug>/ link to its entry.
+const allGuides = await getCollection("guides");
+const [mainBody, relatedBlock = ""] = (guide.body ?? "").split(
+  /^##\s+Related guides\s*$/m,
+);
+const relatedGuides = [
+  ...relatedBlock.matchAll(/\/guides\/([a-z0-9-]+)\/?/g),
+]
+  .map((m) => allGuides.find((g: Guide) => g.id === m[1]))
+  .filter((g): g is Guide => Boolean(g) && g!.id !== guide.id);
+
+// Inline screenshots are referenced ahead of capture. Until the file lands in
+// public/images, drop the <img> entirely (no placeholder) so the article reads
+// as text-only, then picks the shot up automatically once it exists. Handles
+// both the <figure><img><figcaption> and bare <img> markup the renderer emits.
+function dropMissingImages(html: string): string {
+  const isMissing = (img: string) => {
+    const src = (img.match(/\bsrc="([^"]*)"/) || [])[1];
+    return Boolean(src && src.startsWith("/images") && !imageExists(src));
+  };
+
+  return html
+    .replace(
+      /<figure><img\b[^>]*><figcaption>[\s\S]*?<\/figcaption><\/figure>/g,
+      (full) => {
+        const img = (full.match(/<img\b[^>]*>/) || [""])[0];
+        return isMissing(img) ? "" : full;
+      },
+    )
+    .replace(/<img\b[^>]*>/g, (img) => (isMissing(img) ? "" : img));
+}
+
+const content = dropMissingImages(renderMarkdown(mainBody));
+
+function readTime(body: string): string {
+  const words = (body || "").trim().split(/\s+/).filter(Boolean).length;
+  return `${Math.max(1, Math.round(words / 200))} min read`;
+}
+const read = readTime(guide.body ?? "");
+
+const path = `/guides/${guide.id}/`;
+const jsonLd = ldGraph(
+  articleLd({
+    type: "TechArticle",
+    title,
+    description,
+    path,
+    updated,
+  }),
+  breadcrumbLd([
+    { name: "Blankie", path: "/" },
+    { name: "Guides", path: "/guides/" },
+    { name: title, path },
+  ]),
+);
+---
+
+<Layout title={title} description={description}>
+  <article>
+    <section class="relative pt-31 text-center">
+      <Glow
+        class="-top-30 left-1/2 h-140 w-215 -translate-x-1/2"
+        color="var(--color-accent-blue)"
+        pct={30}
+        fade={70}
+      />
+      <div class="relative z-10 mx-auto max-w-195 px-5">
+        <a
+          class="inline-flex items-center gap-2 text-[12.5px] font-semibold tracking-wide text-accent-ink uppercase no-underline"
+          href="/guides/"
+        >
+          <EyebrowIcon size={15} />
+          {CAT_LABELS[category]}
+        </a>
+        <h1 class="mt-4 text-[clamp(34px,5vw,56px)] leading-[1.04] font-semibold tracking-tighter text-balance">
+          {title}
+        </h1>
+        <p class="mx-auto mt-4.5 max-w-[54ch] text-lg/relaxed text-fg-2">
+          {description}
+        </p>
+        <div class="mt-6 flex flex-wrap items-center justify-center text-[13px] text-fg-3 [&>span+span]:border-l [&>span+span]:border-hair-soft">
+          <span class="inline-flex items-center gap-1.5 px-3.5">
+            <BookOpen size={14} /> {read}
+          </span>
+          {
+            updated && (
+              <span class="inline-flex items-center gap-1.5 px-3.5">
+                <RefreshCw size={14} /> Updated {displayMonth(updated)}
+              </span>
+            )
+          }
+          {
+            platforms && (
+              <span class="inline-flex items-center gap-1.5 px-3.5">
+                <MonitorSmartphone size={14} /> {platforms}
+              </span>
+            )
+          }
+        </div>
+      </div>
+    </section>
+
+    <Prose html={content} class="prose-lg mx-auto max-w-3xl px-5 pt-14" />
+
+    {
+      relatedGuides.length > 0 && (
+        <section class="mx-auto mt-14 max-w-5xl px-5">
+          <h2 class="mb-5 text-2xl font-semibold tracking-tight text-fg-1">
+            Keep reading
+          </h2>
+          <div class="grid grid-cols-1 gap-4.5 min-[600px]:grid-cols-2 min-[900px]:grid-cols-3">
+            {relatedGuides.map((g) => {
+              const ChipIcon = CAT_ICONS[g.data.category];
+              return (
+                <Card
+                  variant="outline"
+                  href={`/guides/${g.id}/`}
+                  class="group flex min-h-37.5 flex-col p-4.5 pb-4 no-underline"
+                >
+                  <Badge variant="pill" class="mb-3">
+                    <ChipIcon size={13} />
+                    {CAT_LABELS[g.data.category]}
+                  </Badge>
+                  <h3 class="text-[16.5px] leading-[1.22] font-semibold tracking-tight text-fg-1">
+                    {g.data.title}
+                  </h3>
+                  <p class="mt-1.75 line-clamp-2 text-[13px] leading-normal text-fg-2">
+                    {g.data.description}
+                  </p>
+                  <span class="mt-auto flex items-center gap-1.75 pt-4 text-sm font-semibold text-accent-ink">
+                    Read the guide{" "}
+                    <ArrowRight
+                      size={15}
+                      class="transition-transform group-hover:translate-x-0.5"
+                    />
+                  </span>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )
+    }
+
+    <DownloadCTA
+      blurb="No ads, no paywalls and no privacy tradeoffs. Mix your own ambient soundscapes for focus, rest, and sleep on iPhone, iPad, CarPlay and Mac."
+    />
+  </article>
+
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(jsonLd)}
+  />
+</Layout>

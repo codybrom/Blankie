@@ -1,545 +1,755 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
-import { Card } from "@/components/ui/card";
 import BackgroundVideo from "../components/BackgroundVideo.astro";
-import screenshot from "../assets/en-dark.png";
-import macAppStoreBadge from "../assets/download-on-mac-app-store.svg";
+import SectionHeader from "@/components/SectionHeader.astro";
+import icon from "../assets/blankie-icon-v2.png";
 import wavesVideo from "../assets/waves.mp4";
 import wavesPoster from "../assets/waves-poster.jpg";
-import ghSVG from "../assets/github.svg";
-import bmcSVG from "../assets/bmc.svg";
-import kfSVG from "../assets/kofi.svg";
 import laurelLeft from "../assets/laurel-left.svg";
 import laurelRight from "../assets/laurel-right.svg";
+import appStoreBadge from "../assets/app-store-badge.svg";
+// Real 2.0 navy product shots.
+import products from "../assets/products.png";
+import macWindow from "../assets/mac-window-v2.png";
+import ipadShot from "../assets/ipad-landscape.png";
+import ipadPreset from "../assets/ipad-preset.png";
+import iphoneTimer from "../assets/iphone-timer.png";
+import iphoneLock from "../assets/iphone-animatedlock.png";
+import macCustomize from "../assets/mac-customize.png";
+import macMenubar from "../assets/mac-menubar.png";
+import carplayShot from "../assets/carplay-mockup.jpg";
+import bg1 from "../assets/bg-1.png";
+import bg2 from "../assets/bg-2.png";
+import bg3 from "../assets/bg-3.png";
+import bg4 from "../assets/bg-4.png";
 import {
-  Globe,
-  ChevronRight,
-  SlidersHorizontal,
-  Bookmark,
-  Languages,
-  Infinity as InfinityIcon,
+  Smartphone,
+  Monitor,
+  Tablet,
+  AudioLines,
   FolderPlus,
-  FlaskConical,
+  CloudRain,
+  Waves,
+  Flame,
+  Image as ImageIcon,
+  Car,
+  Sparkles,
+  Palette,
+  Orbit,
+  Radio,
+  GitBranch,
+  Check,
+  Star,
+  Lock,
+  Languages,
 } from "lucide-react";
+import { softwareAppLd, ldGraph } from "@/utils/schema";
 
-const title = "Ambient sound mixer for macOS";
+const title = "Ambient sounds for your flow state";
+const appStore =
+  "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+
+// Structured data: the launched, free, multi-platform app and its App Store rating.
+const appJsonLd = ldGraph(softwareAppLd({ withRating: true }));
+
+// Award row, each stat flanked by laurel branches. Middle is the marquee.
+const awards = [
+  { title: "4.8 out of 5.0", sub: "Global App Store rating", large: false },
+  { title: 'Best New Apps & Updates', sub: "App Store · May 2025", large: true },
+  {
+    title: "#4 Product of the Month",
+    sub: "Product Hunt • Health & Fitness • May 2025",
+    large: false,
+  },
+];
+
+
+// Alternating feature sections (kept from the current homepage), restyled navy.
+const features = [
+  {
+    eyebrow: "Mix",
+    heading: "Layer as many sounds as you like.",
+    blurb:
+      "Blankie comes with 24 built-in sounds. Start with one, add another, and keep building your soundscape until the mix feels right.",
+    screen: macWindow,
+    screenAlt: "Blankie on Mac with several ambient sounds playing at once",
+    portrait: false,
+    bg: bg1,
+    points: [
+      {
+        icon: AudioLines,
+        title: "Simple controls for each sound",
+        sub: "Dial each one in until the mix feels right.",
+      },
+      {
+        icon: FolderPlus,
+        title: "Bring your own sounds",
+        sub: "Mix and match until your soundscape is perfect.",
+      },
+    ],
+  },
+  {
+    eyebrow: "Presets",
+    heading: "Save your perfect mixes.",
+    blurb:
+      "Make and save multiple mixes to revisit later. Star the ones you use most to keep them at the top.",
+    screen: ipadPreset,
+    screenAlt: "Blankie on iPad with a saved preset and its mix",
+    portrait: false,
+    bg: bg1,
+    points: [
+      { icon: CloudRain, title: "Rainy Day Focus", sub: "Green Noise + Rain + Lo-Fi Beats" },
+      { icon: Waves, title: "Out on the Water", sub: "Waves + Wind + Boat" },
+      { icon: Flame, title: "Cozy Night In", sub: "Warm Piano + Fireplace + Wind" },
+    ],
+  },
+  {
+    eyebrow: "Sleep timer",
+    heading: "Rest all night without playing all night.",
+    blurb:
+      "Set how long you want Blankie to play and your sounds will fade down on their own.",
+    screen: iphoneTimer,
+    screenAlt: "Blankie's sleep timer on iPhone over warm artwork",
+    portrait: true,
+    bg: bg2,
+  },
+  {
+    eyebrow: "Customize",
+    heading: "Make it unmistakably yours.",
+    blurb:
+      "",
+    screen: macCustomize,
+    screenAlt: "Blankie's preset editor with a free-form accent color picker",
+    portrait: false,
+    bg: bg2,
+    points: [
+      {
+        icon: Palette,
+        title: "Customize colors",
+        sub: "Set a unique accent color for each preset",
+      },
+      {
+        icon: ImageIcon,
+        title: "Customize artwork",
+        sub: "Set album/background artwork for each preset.",
+      },
+    ],
+  },
+];
+
+// "One Blankie, every screen" — a device card per surface, with a real shot.
+const devices = [
+  {
+    icon: Monitor,
+    name: "Mac",
+    heading: "Mix from your menu bar",
+    sub: "Start, stop and adjust your mixes right from your Mac's menu bar. You can also hide the dock icon and run Blankie completely in the background.",
+    img: macMenubar,
+    alt: "Blankie's menu-bar mixer popover on Mac",
+  },
+  {
+    icon: Smartphone,
+    name: "iPhone",
+    heading: "Animate your lock screen",
+    sub: "Give any preset its own looping lockscreen artwork for a little extra peace to settle into while you listen and relax.",
+    img: iphoneLock,
+    alt: "Blankie playing on iPhone's Lock Screen over animated rain artwork",
+    portrait: true,
+  },
+  {
+    icon: Tablet,
+    name: "iPad",
+    heading: "Sidebar and mixer, side by side",
+    sub: "Your favorites and Quick Mix on the left, the full grid on the right.",
+    img: ipadShot,
+    alt: "Blankie on iPad",
+  },
+  {
+    icon: Car,
+    name: "CarPlay",
+    heading: "Take your peace on the road",
+    sub: "Access your favorite presets and sounds in the car, with simple now playing controls and Quick Mix.",
+    img: carplayShot,
+    alt: "Blankie on CarPlay in a car dashboard",
+  },
+];
+
+// The full 2.0 feature set, as a card grid.
+const moreFeatures = [
+  {
+    icon: Languages,
+    title: "Localized in 12 languages",
+    sub: "Blankie is available in 12 languages, with more added all the time by community translators.",
+  },  
+    {
+    icon: Radio,
+    title: "Control it everywhere",
+    sub: "Play or pause from Control Center, headphones or media keys",
+  },
+    {
+    icon: Lock,
+    title: "Offline & private by design",
+    sub: "Works fully offline and collects nothing about you. No ads, no subscriptions, no accounts, no tracking.",
+  },
+{
+    icon: Sparkles,
+    title: "Apple Intelligence",
+    tag: "Where available",
+    sub: "Blankie can suggest names and icons using the on-device AI model.",
+  },
+  {
+    icon: Orbit,
+    title: "Spatial Audio",
+    tag: "Experimental",
+    sub: "Place a preset's sounds around you on a draggable map, rendered binaurally on any headphones.",
+  },
+  {
+    icon: GitBranch,
+    title: "Open Source",
+    sub: "Blankie is developed openly on GitHub and welcomes contributions from the community.",
+  },
+];
+
+const reviews = [
+  {
+    quote:
+      "I want rain sounds, it makes rain sounds. I don't want anything else, I don't have to have anything else. I wish more software was this straightforward.",
+    name: "App Store user",
+  },
+  {
+    quote:
+      "Perfect lightweight solution compared to having several YouTube tabs open.",
+    name: "Lily Caba",
+  },
+  {
+    quote:
+      "It does exactly what it is meant to do in a simple, intuitive and effective way. Easy 5 stars.",
+    name: "Jeyxero",
+  },
+  {
+    quote: "So happy to have found this app, as I also use Blanket on Linux.",
+    name: "itscodyh",
+  },
+];
+
+const pills = [
+  "No ads",
+  "No upsells",
+  "No sneaky business model",
+];
 ---
 
 <Layout title={title}>
-  <!-- Hero Section -->
-  <section
-    class="relative flex min-h-screen items-center justify-center overflow-hidden bg-black text-white"
-  >
+  <!-- Hero -->
+  <section class="relative overflow-hidden text-center">
     <BackgroundVideo videoSrc={wavesVideo} posterSrc={wavesPoster.src} />
-    <div class="relative z-10 mx-auto mt-8 max-w-4xl px-5 py-16 text-center">
-      <a
-        href="/i18n/"
-        class="group bg-card ring-foreground/10 hover:ring-foreground/25 mt-6 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium tracking-wide text-gray-200 no-underline ring-1 transition-colors"
-      >
-        <Globe className="text-primary size-4 shrink-0" strokeWidth={1.75} />
-        Now available in Deutsch, Español, Français, Italiano, Magyar, Polski, 日本語,
-        한국어, Português, Türkçe and 简体中文!
-        <span
-          class="shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5"
-          aria-hidden="true">→</span
-        >
-      </a>
-
-      <h1
-        class="my-4 text-5xl/tight font-semibold tracking-tighter md:text-6xl"
-      >
-        Ambient sounds&nbsp;for your&nbsp;flow&nbsp;state.
+    <div
+      class="from-navy-deep/80 via-navy-deep/70 to-navy-deep absolute inset-0 bg-linear-to-b"
+    >
+    </div>
+    <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-44 pb-20">
+      <h1 class="mx-auto max-w-[14ch] text-4xl/[1.02] font-semibold tracking-tighter text-balance sm:text-6xl lg:text-7xl">
+        Ambient sounds for your <span class="grad-text">flow state.</span>
       </h1>
-      <h2 class="mb-6 text-2xl/normal font-normal tracking-tight md:text-3xl">
-        <div class="flex flex-row justify-center space-x-2">
-          <span class="hidden sm:inline">Focus better.</span>
-          <span class="hidden sm:inline">Work smarter.</span>
-          <span class="hidden sm:inline">Rest deeper.</span>
 
-          <span class="sm:hidden">Rest.</span>
-          <span class="sm:hidden">Focus.</span>
-          <span class="sm:hidden">Flow.</span>
-        </div>
-      </h2>
+      <p class="text-fg-2 mt-6 text-xl font-medium tracking-tight">
+        Focus better. Work smarter. Rest deeper.
+      </p>
 
-      <a href="/features/" class="block">
+      <!-- Real device family: Mac, iPhone and iPad -->
+      <div class="mx-auto mt-12 w-full max-w-4xl">
         <Image
-          src={screenshot}
-          alt="Screenshot of the Blankie app"
-          widths={[375, 750, 800, 1600]}
-          sizes="(max-width: 768px) 100vw, 800px"
-          width={800}
-          height={454}
-          loading="eager"
-          class="mx-auto my-12 block w-full max-w-full cursor-pointer rounded-lg ring-1 ring-white/10 transition duration-300 hover:scale-[1.02] hover:ring-white/20 md:w-200"
+          src={products}
+          alt="Blankie on Mac, iPhone and iPad"
+          class="w-full"
           quality={90}
+          loading="eager"
         />
-      </a>
-
-      <!-- Social Proof Section -->
-      <div class="mb-8 flex flex-col items-center gap-4">
-        <!-- Featured Badges Row -->
-        <div class="flex flex-wrap justify-center gap-4">
-          <!-- Mac App Store Featured Badge -->
-          <a
-            href="https://apps.apple.com/app/blankie/id6740096581"
-            target="_blank"
-            class="bg-card ring-foreground/10 hover:ring-foreground/25 relative inline-flex items-center gap-2 rounded-full px-6 py-3 ring-1 transition-colors duration-200"
-          >
-            <!-- Left Laurel -->
-            <img
-              src={laurelLeft.src}
-              alt=""
-              width="25"
-              height="50"
-              class="inline-block"
-              style="filter: invert(84%) sepia(28%) saturate(668%) hue-rotate(345deg) brightness(91%) contrast(88%); opacity: 0.7;"
-            />
-            <div class="px-2 text-center">
-              <div
-                class="text-xs font-bold tracking-wider text-yellow-500 uppercase"
-              >
-                Mac App Store
-              </div>
-              <div class="text-sm font-semibold text-gray-200 italic">
-                Best New Apps and Updates
-              </div>
-              <div class="text-xs text-gray-400">United States • May 2025</div>
-            </div>
-            <!-- Right Laurel -->
-            <img
-              src={laurelRight.src}
-              alt=""
-              width="25"
-              height="50"
-              class="inline-block"
-              style="filter: invert(84%) sepia(28%) saturate(668%) hue-rotate(345deg) brightness(91%) contrast(88%); opacity: 0.7;"
-            />
-          </a>
-
-          <!-- Product Hunt Featured Badge -->
-          <a
-            href="https://www.producthunt.com/products/blankie?embed=true&utm_source=badge-top-post-topic-badge&utm_medium=badge&utm_source=badge-blankie"
-            target="_blank"
-            class="bg-card ring-foreground/10 hover:ring-foreground/25 inline-flex items-center rounded-full px-6 py-3 ring-1 transition-colors duration-200"
-          >
-            <div class="text-center">
-              <div
-                class="text-xs font-bold tracking-wider text-orange-500 uppercase"
-              >
-                Product Hunt
-              </div>
-              <div class="text-sm font-semibold text-gray-200 italic">
-                #4 Product of the Month
-              </div>
-              <div class="text-xs text-gray-400">
-                Health and Fitness • May 2025
-              </div>
-            </div>
-          </a>
-        </div>
-
-        <!-- Stats Row -->
-        <div class="flex flex-wrap justify-center gap-4">
-          <!-- Combined Stats Box -->
-          <div
-            class="bg-card ring-foreground/10 inline-flex items-center gap-6 rounded-full px-8 py-3 ring-1"
-          >
-            <!-- Rating -->
-            <div class="flex items-center gap-2">
-              <svg
-                class="size-5 text-yellow-500"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                aria-hidden="true"
-              >
-                <path
-                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                ></path>
-              </svg>
-              <span class="font-semibold text-gray-100">4.8</span>
-              <span class="text-gray-400">Mac App Store rating</span>
-            </div>
-            <!-- Divider -->
-            <div class="h-6 w-px bg-zinc-700"></div>
-            <!-- Downloads -->
-            <div class="flex items-center gap-2">
-              <svg
-                class="text-primary-blue size-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                ></path>
-              </svg>
-              <span class="font-semibold text-gray-100">10,000+</span>
-              <span class="text-gray-400">Downloads</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div
-        id="download"
-        class="mx-auto mt-4 flex max-w-fit flex-col items-center gap-y-4"
-      >
-        <!-- Primary Download -->
-        <div class="flex flex-col items-center">
-          <a
-            href="https://apps.apple.com/app/blankie/id6740096581"
-            class="transition-all duration-300 hover:opacity-90"
-          >
-            <img
-              src={macAppStoreBadge.src}
-              alt="Download on the Mac App Store"
-              width="240"
-              height="80"
-              loading="lazy"
-              class="select-none"
-              style="user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;"
-            />
-          </a>
-          <span class="mt-2 text-xs font-bold text-gray-200"
-            >Recommended Method • Automatic Updates</span
-          >
-        </div>
-
-        <!-- Alternative Options -->
-        <div class="flex flex-col items-center gap-2 text-sm">
-          <div class="flex flex-col items-center gap-1 sm:flex-row sm:gap-3">
-            <a
-              href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
-              class="text-yellow-300 underline transition-colors hover:text-yellow-200"
-            >
-              Direct Download
-            </a>
-            <span class="hidden text-gray-400 sm:inline">•</span>
-            <a
-              href="#brew"
-              class="text-yellow-300 underline transition-colors hover:text-yellow-200"
-            >
-              Install via Homebrew
-            </a>
-          </div>
-          <span class="text-center text-xs text-gray-400">
-            Verified by Apple • Manual Updates Only</span
-          >
-        </div>
-      </div>
-      <p
-        class="mt-12 flex flex-col items-center justify-center gap-2 text-lg text-gray-100 sm:flex-row sm:gap-2"
-      >
-        <span>macOS 26+</span>
-        <span class="hidden text-gray-400 sm:inline">•</span>
-        <span class="sm:ml-2">No Ads or Subscriptions</span>
-        <span class="hidden text-gray-400 sm:inline">•</span>
-        <span class="sm:ml-2">Offline & Private</span>
-        <span class="hidden text-gray-400 sm:inline">•</span>
-        <a
-          href="/contributing/"
-          class="transition-colors duration-300 hover:text-yellow-500 sm:ml-2"
-        >
-          Open Source
+      <div class="mt-10 flex justify-center">
+        <a href={appStore} aria-label="Download Blankie on the App Store">
+          <Image
+            src={appStoreBadge}
+            alt="Download on the App Store"
+            class="h-14 w-auto"
+            loading="eager"
+          />
         </a>
-      </p>
-    </div>
-  </section>
+      </div>
 
-  <!-- Features Section -->
-  <section class="mx-auto max-w-5xl px-5 py-10" id="features">
-    <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-      <a
-        href="/features/#high-quality-audio"
-        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
-      >
-        <SlidersHorizontal className="text-primary size-7" strokeWidth={1.75} />
-        <h3
-          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
-        >
-          High-Quality Audio
-          <ChevronRight
-            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
-            strokeWidth={2}
-          />
-        </h3>
-        <p class="text-mid-gray">
-          23 built-in ambient sounds for mixing custom soundscapes.
-        </p>
-        <p
-          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          Learn more about audio features →
-        </p>
-      </a>
+      <div class="mt-5 flex justify-center">
+        <span class="bg-primary-blue inline-flex flex-wrap items-center justify-center gap-x-2.5 rounded-full px-6 py-3 text-center text-sm font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] sm:text-base">
+          <span>All features 100% free.</span>
+          <span>No ads or subscriptions.</span>
+        </span>
+      </div>
 
-      <a
-        href="/features/#preset-perfection"
-        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
-      >
-        <Bookmark className="text-primary size-7" strokeWidth={1.75} />
-        <h3
-          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
-        >
-          Preset Perfection
-          <ChevronRight
-            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
-            strokeWidth={2}
-          />
-        </h3>
-        <p class="text-mid-gray">
-          Save and switch between your favorite ambient mixes.
-        </p>
-        <p
-          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          Learn more about presets →
-        </p>
-      </a>
-
-      <a
-        href="/i18n/"
-        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
-      >
-        <Languages className="text-primary size-7" strokeWidth={1.75} />
-        <h3
-          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
-        >
-          Multiple Languages
-          <ChevronRight
-            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
-            strokeWidth={2}
-          />
-        </h3>
-        <p class="text-mid-gray">
-          Available in 12 languages with ongoing community contributions.
-        </p>
-        <p
-          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          View translations page →
-        </p>
-      </a>
-
-      <a
-        href="/features/#made-for-macos"
-        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
-      >
-        <span
-          class="text-primary block text-3xl leading-none"
-          aria-hidden="true"></span
-        >
-        <h3
-          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
-        >
-          Made for macOS
-          <ChevronRight
-            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
-            strokeWidth={2}
-          />
-        </h3>
-        <p class="text-mid-gray">
-          <i class="font-semibold">It just works</i> with media keys, Control Center
-          & AirPod controls.
-        </p>
-        <p
-          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          Learn more about features →
-        </p>
-      </a>
-      <a
-        href="/privacy/"
-        class="group bg-card ring-foreground/10 hover:ring-foreground/25 block rounded-xl p-8 ring-1 transition duration-200"
-      >
-        <InfinityIcon className="text-primary size-7" strokeWidth={1.75} />
-        <h3
-          class="mt-5 mb-2 flex items-center gap-2 text-xl font-semibold transition-colors group-hover:text-yellow-300"
-        >
-          Actually Free
-          <ChevronRight
-            className="size-4 opacity-60 transition-opacity group-hover:opacity-100"
-            strokeWidth={2}
-          />
-        </h3>
-        <p class="text-mid-gray">
-          No accounts, subscriptions, or additional purchases. Ever.
-        </p>
-        <p
-          class="mt-2 text-xs text-yellow-300 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          View privacy policy →
-        </p>
-      </a>
-
-      <div class="bg-card ring-foreground/10 rounded-xl p-8 ring-1">
-        <FolderPlus className="text-primary size-7" strokeWidth={1.75} />
-        <h3 class="mt-5 mb-2 text-xl font-semibold">Custom Sounds</h3>
-        <p class="text-mid-gray">
-          Bring your own audio into the mix. Record the fan you already
-          sleep to or the rain outside your window, and layer it with the
-          built-in sounds.
-        </p>
+      <!-- Award row: a 3-col grid so the middle stat stays page-centered -->
+      <div class="mt-12 grid grid-cols-1 items-center justify-items-center gap-x-6 gap-y-8 sm:grid-cols-[1fr_auto_1fr]">
+        {
+          awards.map((award) => (
+            <div class="flex items-center gap-3.5">
+              <img
+                src={laurelLeft.src}
+                alt=""
+                loading="lazy"
+                width="18"
+                height="44"
+                class:list={["w-auto", award.large ? "h-16" : "h-12"]}
+                style="filter: brightness(0) invert(0.72); opacity: 0.9;"
+              />
+              <div class="text-center">
+                <div
+                  class:list={[
+                    "font-semibold text-gray-100",
+                    award.large ? "text-xl sm:text-2xl" : "text-base",
+                  ]}
+                >
+                  {award.title}
+                </div>
+                <div
+                  class:list={["text-gray-400", award.large ? "text-sm" : "text-xs"]}
+                >
+                  {award.sub}
+                </div>
+              </div>
+              <img
+                src={laurelRight.src}
+                alt=""
+                loading="lazy"
+                width="18"
+                height="44"
+                class:list={["w-auto", award.large ? "h-16" : "h-12"]}
+                style="filter: brightness(0) invert(0.72); opacity: 0.9;"
+              />
+            </div>
+          ))
+        }
       </div>
     </div>
   </section>
 
-  <!-- Homebrew Installation Section -->
-  <section class="mx-auto max-w-3xl px-5 py-4 text-center" id="brew">
-    <h2 class="mb-6 text-3xl font-semibold">Install with Homebrew</h2>
-    <Card className="mb-6 gap-0 p-8">
-      <p class="mb-4">
-        You can install Blankie via Homebrew by running this in your Terminal:
-      </p>
+  <!-- A Blankie for every screen -->
+  <section class="relative overflow-hidden border-b border-white/5" id="devices">
+    <div class="absolute inset-0">
+      <Image src={bg4} alt="" class="size-full object-cover opacity-50" />
+      <div class="bg-navy-deep/85 absolute inset-0"></div>
+    </div>
+    <div class="relative mx-auto max-w-6xl px-5 py-24">
+      <div class="mb-12 max-w-2xl">
+        <SectionHeader eyebrow="New in 2.0" heading="A Blankie for every screen." />
+      </div>
+      <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+        {
+          devices.map((d) => (
+            <div class="glass flex flex-col overflow-hidden rounded-2xl p-7">
+              <div class="text-accent-ink flex items-center gap-2 text-sm font-semibold">
+                <d.icon className="size-4" strokeWidth={1.75} />
+                {d.name}
+              </div>
+              <h3 class="mt-2 text-xl font-semibold tracking-tight text-gray-100">
+                {d.heading}
+              </h3>
+              <p class="text-fg-2 mt-2 text-sm">{d.sub}</p>
+              <div
+                class:list={[
+                  "mt-6 flex grow justify-center",
+                  d.portrait ? "-mb-7 items-end" : "items-end",
+                ]}
+              >
+                <Image
+                  src={d.img}
+                  alt={d.alt}
+                  class:list={[
+                    d.portrait
+                      ? "mx-auto w-auto max-w-64 translate-y-10"
+                      : "w-full rounded-lg",
+                  ]}
+                  quality={85}
+                />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Alternating feature sections (kept) -->
+  {
+    [features.slice(0, 2), features.slice(2)].map((row, rowIndex) => (
+      <section
+        id={rowIndex === 0 ? "features" : undefined}
+        class="relative overflow-hidden border-b border-white/5"
+      >
+        <div class="absolute inset-0">
+          <Image src={row[0].bg} alt="" class="size-full object-cover opacity-60" />
+          <div class="bg-navy-deep/85 absolute inset-0" />
+        </div>
+        <div class="relative mx-auto max-w-6xl space-y-20 px-5 py-20 lg:space-y-28 lg:py-24">
+          {row.map((feature, j) => {
+            const i = rowIndex * 2 + j;
+            return (
+              <div class="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+                <div class={i % 2 === 1 ? "lg:order-2" : ""}>
+                  <SectionHeader
+                    eyebrow={feature.eyebrow}
+                    heading={feature.heading}
+                  />
+                  <p class="text-fg-2 mt-4 text-lg">{feature.blurb}</p>
+                  {feature.points && (
+                    <ul class="mt-7 space-y-4">
+                      {feature.points.map((point) => (
+                        <li class="flex items-start gap-3">
+                          <point.icon
+                            className="text-accent-ink mt-0.5 size-5 shrink-0"
+                            strokeWidth={1.75}
+                          />
+                          <div>
+                            <div class="font-semibold text-gray-100">{point.title}</div>
+                            <div class="text-fg-2 text-sm">{point.sub}</div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div class={i % 2 === 1 ? "lg:order-1" : ""}>
+                  <div class={feature.portrait ? "flex justify-center" : ""}>
+                    <Image
+                      src={feature.screen}
+                      alt={feature.screenAlt}
+                      class:list={[feature.portrait ? "w-auto max-w-72" : "w-full"]}
+                      quality={90}
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    ))
+  }
+
+  <!-- More features grid -->
+  <section class="relative overflow-hidden border-b border-white/5">
+    <div class="absolute inset-0">
+      <Image src={bg3} alt="" class="size-full object-cover opacity-50" />
+      <div class="bg-navy-deep/85 absolute inset-0"></div>
+    </div>
+    <div class="relative mx-auto max-w-5xl px-5 py-24">
+      <div class="mb-12 max-w-2xl">
+        <SectionHeader heading="And everything else you need to settle in." />
+      </div>
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {
+          moreFeatures.map((f) => (
+            <div class="glass rounded-2xl p-6">
+              <div class="mb-4 grid size-10.5 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent-blue)_20%,transparent)]">
+                <f.icon className="text-accent-ink size-5" strokeWidth={1.75} />
+              </div>
+              <h3 class="text-lg font-semibold tracking-tight">
+                {f.title}
+                {f.tag && (
+                  <span class="border-accent-ink/30 text-accent-ink ml-1.5 inline-block rounded-full border px-1.5 py-px align-middle text-[9px] font-semibold tracking-wide whitespace-nowrap uppercase">
+                    {f.tag}
+                  </span>
+                )}
+              </h3>
+              <p class="text-fg-2 mt-2 text-sm">{f.sub}</p>
+            </div>
+          ))
+        }
+      </div>
+
+      <div id="reviews" class="mt-24">
+        <SectionHeader
+          heading="What Blankie users are saying"
+          class="mb-12 max-w-2xl"
+        />
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {
+        reviews.map((review) => (
+          <figure class="glass relative overflow-hidden rounded-2xl p-7">
+            <span class="pointer-events-none absolute -top-4.5 right-3.5 z-0 font-serif text-[140px] leading-none font-bold text-accent-ink opacity-10" aria-hidden="true">
+              “
+            </span>
+            <div
+              class="relative z-10 mb-4 flex gap-0.5"
+              aria-label="5 out of 5 stars"
+            >
+              {Array.from({ length: 5 }).map(() => (
+                <Star
+                  className="size-4 text-yellow-400"
+                  fill="currentColor"
+                  strokeWidth={0}
+                />
+              ))}
+            </div>
+            <blockquote class="relative z-10 text-lg/relaxed text-pretty text-gray-100">
+              {review.quote}
+            </blockquote>
+            <figcaption class="relative z-10 mt-6 leading-tight">
+              <span class="block font-semibold text-gray-100">
+                {review.name}
+              </span>
+              <span class="text-fg-3 block text-xs">App Store</span>
+            </figcaption>
+          </figure>
+        ))
+      }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Get Blankie: free pitch + download, merged -->
+  <section class="relative overflow-hidden" id="download">
+    <div
+      class="pointer-events-none absolute inset-x-0 top-auto bottom-[-40%] z-0 h-150"
+      style="background:radial-gradient(ellipse at 50% 100%,rgba(68,82,246,0.22),transparent 60%)"
+      aria-hidden="true"
+    >
+    </div>
+    <div class="relative z-10 mx-auto max-w-3xl px-5 py-24 text-center">
+      <Image
+        src={icon}
+        alt=""
+        width={104}
+        height={104}
+        class="mx-auto mb-6 rounded-[22%] shadow-2xl"
+        quality={90}
+      />
+      <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
+          Blankie is 100% free, forever.
+      </h2>
+      <p class="text-fg-2 mx-auto mt-5 max-w-xl text-lg">
+       Don't rent your relaxation. While other apps charge for features, everything in Blankie is 100% free with no upsell and no data collection.</p>
+      <div class="mt-8 flex flex-wrap justify-center gap-2.5">
+        {
+          pills.map((pill) => (
+            <span class="glass text-fg-2 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm">
+              <Check className="size-4 text-green-400" strokeWidth={2} />
+              {pill}
+            </span>
+          ))
+        }
+      </div>
+
+      <div class="mt-10 flex justify-center">
+        <a href={appStore} aria-label="Download Blankie on the App Store">
+          <Image
+            src={appStoreBadge}
+            alt="Download on the App Store"
+            class="h-14 w-auto"
+            loading="lazy"
+          />
+        </a>
+      </div>
+
+      <div class="text-fg-3 mt-6 flex flex-col items-center gap-1 text-sm sm:flex-row sm:justify-center sm:gap-3">
+        <span>Prefer to install on Mac yourself?</span>
+        <a
+          href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
+          class="text-yellow-300 underline transition-colors hover:text-yellow-200"
+        >
+          Direct Download
+        </a>
+        <span class="hidden text-gray-600 sm:inline" aria-hidden="true">·</span>
+        <button
+          type="button"
+          id="brew-open"
+          class="text-yellow-300 underline transition-colors hover:text-yellow-200"
+        >
+          Homebrew
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Homebrew modal -->
+  <dialog
+    id="brew-modal"
+    class="m-auto border-0 bg-transparent p-0 text-foreground backdrop:bg-[rgba(1,6,43,0.6)] backdrop:backdrop-blur-sm"
+    aria-labelledby="brew-title"
+  >
+    <div class="w-110 max-w-[92vw] rounded-[18px] border border-white/10 bg-lift p-7 text-center shadow-[0_30px_70px_rgba(0,0,0,0.5)]">
+      <h3 id="brew-title" class="text-lg font-semibold">Install with Homebrew</h3>
+      <p class="text-fg-2 mt-2 text-sm">Run this in Terminal:</p>
       <div
-        class="group relative cursor-pointer overflow-x-auto rounded-md bg-black px-4 py-3 text-center text-white transition-colors duration-200 hover:bg-neutral-900"
         id="brew-command-container"
+        class="mt-4 flex items-center gap-3 rounded-md bg-black py-3 pr-2 pl-4 text-white"
       >
-        <pre
-          class="m-0"><code class="inline-block">brew install --cask blankie</code></pre>
-
-        <!-- Hover overlay -->
-        <div
-          class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-black/70 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        <code class="flex-1 overflow-x-auto whitespace-nowrap">brew install --cask blankie</code>
+        <button
+          type="button"
+          id="brew-copy-button"
+          class="text-fg-3 shrink-0 rounded-md p-2 transition-colors hover:bg-neutral-800 hover:text-white"
+          aria-label="Copy install command to clipboard"
         >
-          <span class="text-sm text-white">Click to copy to clipboard</span>
-        </div>
-
-        <!-- Success message -->
-        <div
-          id="copy-success-message"
-          class="pointer-events-none absolute inset-0 flex items-center justify-center rounded-md bg-black/80 opacity-0 transition-opacity duration-300"
-        >
-          <span class="text-sm text-white">Copied to clipboard!</span>
-        </div>
+          <svg
+            id="brew-copy-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+          </svg>
+          <svg
+            id="brew-check-icon"
+            class="hidden text-green-400"
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </button>
       </div>
-      <p class="text-mid-gray mt-4">
-        Requires Homebrew to be installed on your Mac. Visit <a
+      <p class="text-fg-3 mt-4 text-sm">
+        Requires Homebrew. Visit <a
           href="https://formulae.brew.sh/cask/blankie"
           class="text-yellow-400 underline transition-colors hover:text-yellow-300"
           >brew.sh</a
         > for more information.
       </p>
-    </Card>
-  </section>
-
-  <!-- Coming Soon Section -->
-  <section class="mx-auto max-w-3xl px-5 py-4 text-center">
-    <div class="bg-card ring-foreground/10 mb-6 rounded-xl p-8 ring-1">
-      <div class="mb-4 flex items-center justify-center">
-        <h2 class="text-2xl font-semibold">
-          Wish you could use Blankie on other devices?
-        </h2>
-      </div>
-      <p class="mb-6">
-        Blankie is coming to iPhone and iPad this summer, with CarPlay for the
-        drive. Want it early? If you don't mind things being a little rough
-        around the edges, join the TestFlight beta and help me test it.
-      </p>
-      <a
-        href="https://testflight.apple.com/join/XgpBpWv8"
-        class="bg-secondary text-foreground ring-border hover:bg-secondary/80 inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-medium ring-1 transition-colors duration-200"
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        id="brew-close"
+        class="mt-6 cursor-pointer rounded-full border border-white/10 bg-white/8 px-5 py-2 text-sm text-foreground transition-colors hover:bg-white/12"
+        >Close</button
       >
-        <FlaskConical className="size-4" strokeWidth={1.75} />
-        Join the TestFlight Beta
-      </a>
-      <p class="mt-4 text-xs text-white">
-        Requires TestFlight to be installed on your device.
+    </div>
+  </dialog>
+
+  <!-- Floating section nav (Flighty-style pill) -->
+  <nav
+    class="section-pill fixed bottom-10 left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/10 bg-[color-mix(in_srgb,var(--color-midnight)_72%,transparent)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.4)] backdrop-blur-[22px] backdrop-saturate-150 transition-[opacity,transform] duration-350 [&.is-hidden]:pointer-events-none [&.is-hidden]:translate-y-5 [&.is-hidden]:opacity-0"
+    aria-label="Page sections"
+  >
+    {
+      [
+        ["devices", "Devices"],
+        ["features", "Features"],
+        ["reviews", "Reviews"],
+      ].map(([id, label]) => (
         <a
-          href="https://developer.apple.com/testflight/"
-          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
-          >Learn more about TestFlight</a
+          href={`#${id}`}
+          data-section={id}
+          class="rounded-full px-4 py-2 text-sm font-medium text-fg-2 no-underline transition-colors hover:text-white [&.active]:bg-white/8 [&.active]:text-white max-[480px]:px-3 max-[480px]:text-xs"
         >
-      </p>
-    </div>
-  </section>
-
-  <!-- Support Section -->
-  <section class="mx-auto my-4 max-w-3xl px-5 py-10 text-center">
-    <h2 class="mb-2 text-xl font-semibold">
-      Blankie is made with love and caffeine
-    </h2>
-    <p class="mb-6 text-sm text-gray-100">
-      If you enjoy using it and want to support its creator and development, you
-      can use the links below:
-    </p>
-    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
-      <a
-        href="https://github.com/sponsors/codybrom"
-        class="text-foreground bg-secondary ring-border hover:bg-secondary/80 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ring-1 transition-colors duration-200"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <img
-          class="mr-2 inline-block h-3.75"
-          src={ghSVG.src}
-          alt=""
-          width="15"
-          height="15"
-        />
-        GitHub Sponsors
-      </a>
-      <a
-        href="https://buymeacoffee.com/codybrom"
-        class="text-foreground bg-secondary ring-border hover:bg-secondary/80 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ring-1 transition-colors duration-200"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <img
-          class="mr-2 inline-block h-3.75"
-          src={bmcSVG.src}
-          alt=""
-          width="15"
-          height="15"
-        />
-        Buy Me a Coffee
-      </a>
-      <a
-        href="https://ko-fi.com/codybrom"
-        class="text-foreground bg-secondary ring-border hover:bg-secondary/80 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium ring-1 transition-colors duration-200"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <img
-          class="mr-2 inline-block h-3.75"
-          src={kfSVG.src}
-          alt=""
-          width="15"
-          height="15"
-        />
-        Ko-fi
-      </a>
-    </div>
-  </section>
+          {label}
+        </a>
+      ))
+    }
+    <span class="mx-0.5 h-5 w-px bg-white/12" aria-hidden="true"></span>
+    <a
+      href="#download"
+      data-section="download"
+      class="rounded-full px-4 py-2 text-sm font-semibold text-white no-underline transition-colors [&.active]:bg-white/8 max-[480px]:px-3 max-[480px]:text-xs"
+    >
+      Download
+    </a>
+  </nav>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const brewCommandContainer = document.getElementById(
-        "brew-command-container",
-      );
-      const successMessage = document.getElementById("copy-success-message");
-
-      if (brewCommandContainer && successMessage) {
-        brewCommandContainer.addEventListener("click", () => {
+      // Brew copy-to-clipboard
+      const brew = document.getElementById("brew-copy-button");
+      const copyIcon = document.getElementById("brew-copy-icon");
+      const checkIcon = document.getElementById("brew-check-icon");
+      if (brew && copyIcon && checkIcon) {
+        let resetTimer: ReturnType<typeof setTimeout> | undefined;
+        brew.addEventListener("click", () => {
           navigator.clipboard.writeText("brew install --cask blankie");
-
-          // Show the success message
-          successMessage.style.opacity = "1";
-
-          // Hide it after a delay
-          setTimeout(() => {
-            successMessage.style.opacity = "0";
+          copyIcon.classList.add("hidden");
+          checkIcon.classList.remove("hidden");
+          clearTimeout(resetTimer);
+          resetTimer = setTimeout(() => {
+            checkIcon.classList.add("hidden");
+            copyIcon.classList.remove("hidden");
           }, 1500);
         });
       }
+
+      // Homebrew modal
+      const brewModal = document.getElementById("brew-modal");
+      if (brewModal instanceof HTMLDialogElement) {
+        document
+          .getElementById("brew-open")
+          ?.addEventListener("click", () => brewModal.showModal());
+        document
+          .getElementById("brew-close")
+          ?.addEventListener("click", () => brewModal.close());
+        brewModal.addEventListener("click", (e) => {
+          if (e.target === brewModal) brewModal.close();
+        });
+      }
+
+      // Floating section nav — highlight the link for the section in view
+      const links = document.querySelectorAll<HTMLAnchorElement>(".section-pill a[data-section]");
+      const byId = new Map<string, HTMLAnchorElement>();
+      links.forEach((l) => byId.set(l.dataset.section || "", l));
+      const spy = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              links.forEach((l) => l.classList.remove("active"));
+              byId.get(e.target.id)?.classList.add("active");
+            }
+          });
+        },
+        { rootMargin: "-45% 0px -45% 0px" },
+      );
+      ["devices", "features", "reviews", "download"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) spy.observe(el);
+      });
+
+      // Fade the floating nav out once the download section is reached, and
+      // keep it hidden all the way down (it returns if you scroll back up).
+      const pill = document.querySelector<HTMLElement>(".section-pill");
+      const downloadEl = document.getElementById("download");
+      if (pill && downloadEl) {
+        let queued = false;
+        const update = () => {
+          queued = false;
+          const top = downloadEl.getBoundingClientRect().top;
+          pill.classList.toggle("is-hidden", top < window.innerHeight * 0.85);
+        };
+        const onScroll = () => {
+          if (!queued) {
+            queued = true;
+            requestAnimationFrame(update);
+          }
+        };
+        update();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll, { passive: true });
+      }
+
     });
   </script>
+
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(appJsonLd)}
+  />
 </Layout>
