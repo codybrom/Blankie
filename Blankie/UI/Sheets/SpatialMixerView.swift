@@ -173,9 +173,9 @@ import SwiftUI
               }
             }
         }
-        .presentationDetents([.large])
         // Give the square spatial canvas a full-height page on iPad instead of a
         // small centered form sheet that wastes the screen and crowds the map.
+        // A `.large` detent would override `.page` and reinstate the small card.
         .presentationSizing(.page)
         .presentationDragIndicator(.visible)
         .presentationBackground {

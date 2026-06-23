@@ -145,6 +145,12 @@ struct CreatePresetSheet: View {
     // Live preview of the chosen accent across the whole sheet (mirrors
     // Edit Preset's root tint).
     .tint(activeAccentColor)
+    #if os(iOS) || os(visionOS)
+      // A full preset editor, not a quick dialog — page-sized on iPad instead
+      // of the default small centered form sheet (no-op on iPhone). Matches
+      // EditPresetSheet so both editors present identically.
+      .presentationSizing(.page)
+    #endif
     .onDisappear {
       cleanupAnimatedArtworkIfNeeded()
     }

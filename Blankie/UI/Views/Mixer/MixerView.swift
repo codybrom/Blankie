@@ -71,17 +71,16 @@ private enum IPhonePage: Hashable {
         }
       }
       // A sheet (not a fullScreenCover) so the player has the system's
-      // grab-anywhere interactive pull-to-dismiss; the large detent keeps it
-      // full-height. The player draws its own drag handle, so hide the system one.
+      // grab-anywhere interactive pull-to-dismiss. The player draws its own
+      // drag handle, so hide the system one.
       .sheet(isPresented: $showingNowPlaying) {
         NowPlayingSheet(
           onDismiss: { showingNowPlaying = false },
           backgroundImage: backgroundImage
         )
-        .presentationDetents([.large])
-        // On iPad a sheet with detents would otherwise render as a small
-        // centered form sheet, clipping the bottom controls. `.page` gives it a
-        // proper full-height presentation; on iPhone this is a no-op.
+        // `.page` gives a full-height presentation on both idioms. Note: a
+        // `.large` detent here would WIN over `.presentationSizing` and make
+        // iPad fall back to a small centered card — so don't add one back.
         .presentationSizing(.page)
         .presentationDragIndicator(.hidden)
         .navigationTransition(.zoom(sourceID: "nowPlaying", in: nowPlayingNamespace))
