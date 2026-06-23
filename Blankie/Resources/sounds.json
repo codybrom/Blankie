@@ -343,21 +343,21 @@
       "authorUrl": "https://blankie.rest",
       "defaultOrder": 13,
       "description": "20 seconds of pure white noise generated in Python using numpy",
-      "duration": 20.0,
+      "duration": 19.75,
       "fileName": "white-noise",
       "license": "cc0",
-      "lufs": -27.295544,
+      "lufs": -27.459412,
       "moods": [
         "focus",
         "sleep"
       ],
       "needsLimiter": false,
-      "normalizationFactor": 1.0346112,
+      "normalizationFactor": 1.0543154,
       "soundName": "White Noise (Stereo)",
       "soundUrl": "https://blankie.rest/credits",
       "systemIconName": "waveform",
       "title": "White Noise",
-      "truePeakdBTP": -22.538137
+      "truePeakdBTP": -22.625587
     },
     {
       "author": "Blankie",
