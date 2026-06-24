@@ -90,7 +90,7 @@ Each clip has two packs because iPhone and iPad lock screens advertise different
 - `state(for:)` and `states` drive the gallery's download UI; progress comes from `statusUpdates(forAssetPackWithID:)`.
 - `removeResource(_:)` deletes the pack and frees every byte. The video plays straight from the pack and is never copied into Documents, so "Remove Download" actually reclaims the space.
 
-Videos stay out of the app bundle and out of git. Preview images and metadata stay bundled so the gallery loads instantly. Custom (user-imported) artwork is untouched, still in `Documents/Artwork`.
+Videos stay out of the app bundle and out of git. The source `.mov` live in `ArtworkSources/<Name>/` at the repo root — deliberately **outside** the app's synced folder (`Blankie/`), so they can never be picked up as bundle resources. That's why there's no per-file exclusion list: a video physically isn't a member of the target. Only `scripts/package_animated_artwork.sh` reads that directory (to build the asset packs); the Xcode build never touches it. Preview images and metadata stay under `Blankie/Resources/AnimatedArtwork/<Name>/` so they bundle and the gallery loads instantly. Custom (user-imported) artwork is untouched, still in `Documents/Artwork`.
 
 ### Deployment target
 

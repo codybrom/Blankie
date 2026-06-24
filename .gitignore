@@ -97,9 +97,10 @@ scheduled_tasks.lock
 # blankifi compiled binary cache
 scripts/.build/
 
-# Animated-artwork videos are fetched from a GitHub Release, not stored in git.
-# Run scripts/fetch_animated_artwork.sh to populate these.
-# Previews/metadata are still tracked in git.
-Blankie/Resources/AnimatedArtwork/**/*.mov
+# Animated-artwork source videos are fetched from a GitHub Release, not stored
+# in git, and live outside the app's synced folder so they can never land in the
+# bundle. Run scripts/package_animated_artwork.sh to populate these.
+# Previews/metadata stay tracked in git under Blankie/Resources/AnimatedArtwork.
+ArtworkSources/**/*.mov
 # In-progress download temp files from the fetch script.
-Blankie/Resources/AnimatedArtwork/**/*.mov.download
+ArtworkSources/**/*.mov.download

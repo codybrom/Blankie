@@ -103,48 +103,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Managers/Audio/README.md,
-				Resources/AnimatedArtwork/Abstract1/Abstract1.mov,
-				Resources/AnimatedArtwork/Abstract1/Abstract1Square.mov,
-				Resources/AnimatedArtwork/Abstract2/Abstract2.mov,
-				Resources/AnimatedArtwork/Abstract2/Abstract2Square.mov,
-				Resources/AnimatedArtwork/Abstract3/Abstract3.mov,
-				Resources/AnimatedArtwork/Abstract3/Abstract3Square.mov,
-				Resources/AnimatedArtwork/Abstract4/Abstract4.mov,
-				Resources/AnimatedArtwork/Abstract4/Abstract4Square.mov,
-				Resources/AnimatedArtwork/Beach/Beach.mov,
-				Resources/AnimatedArtwork/Beach/BeachSquare.mov,
-				Resources/AnimatedArtwork/Bokeh/Bokeh.mov,
-				Resources/AnimatedArtwork/Bokeh/BokehSquare.mov,
-				Resources/AnimatedArtwork/CityLoop/CityLoop.mov,
-				Resources/AnimatedArtwork/CityLoop/CityLoopSquare.mov,
-				Resources/AnimatedArtwork/GoldenWaves/GoldenWaves.mov,
-				Resources/AnimatedArtwork/GoldenWaves/GoldenWavesSquare.mov,
-				Resources/AnimatedArtwork/GrassWaves/GrassWaves.mov,
-				Resources/AnimatedArtwork/GrassWaves/GrassWavesSquare.mov,
-				Resources/AnimatedArtwork/LavaLamp/LavaLamp.mov,
-				Resources/AnimatedArtwork/LavaLamp/LavaLampSquare.mov,
-				Resources/AnimatedArtwork/LinenDark/LinenDark.mov,
-				Resources/AnimatedArtwork/LinenDark/LinenDarkSquare.mov,
-				Resources/AnimatedArtwork/LinenLight/LinenLight.mov,
-				Resources/AnimatedArtwork/LinenLight/LinenLightSquare.mov,
-				Resources/AnimatedArtwork/NeonDrive/NeonDrive.mov,
-				Resources/AnimatedArtwork/NeonDrive/NeonDriveSquare.mov,
-				Resources/AnimatedArtwork/OceanWaves/OceanWaves.mov,
-				Resources/AnimatedArtwork/OceanWaves/OceanWavesSquare.mov,
-				Resources/AnimatedArtwork/PaperPentagons/PaperPentagons.mov,
-				Resources/AnimatedArtwork/PaperPentagons/PaperPentagonsSquare.mov,
-				Resources/AnimatedArtwork/Pillows/Pillows.mov,
-				Resources/AnimatedArtwork/Pillows/PillowsSquare.mov,
-				Resources/AnimatedArtwork/RainLoop/RainLoop.mov,
-				Resources/AnimatedArtwork/RainLoop/RainLoopSquare.mov,
-				Resources/AnimatedArtwork/RecordPlayer/RecordPlayer.mov,
-				Resources/AnimatedArtwork/RecordPlayer/RecordPlayerSquare.mov,
-				Resources/AnimatedArtwork/Squares/Squares.mov,
-				Resources/AnimatedArtwork/Squares/SquaresSquare.mov,
-				Resources/AnimatedArtwork/StreamLoop/StreamLoop.mov,
-				Resources/AnimatedArtwork/StreamLoop/StreamLoopSquare.mov,
-				Resources/AnimatedArtwork/Swirl/Swirl.mov,
-				Resources/AnimatedArtwork/Swirl/SwirlSquare.mov,
 			);
 			target = F913505E2D233A43003C85BE /* Blankie */;
 		};
@@ -716,7 +674,6 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
-				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
@@ -778,7 +735,6 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
-				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
@@ -1203,7 +1159,6 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
-				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-CarPlay.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
@@ -1388,7 +1343,6 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
-				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "*.mov";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Blankie-CarPlay.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Blankie;
