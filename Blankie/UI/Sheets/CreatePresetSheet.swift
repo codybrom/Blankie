@@ -37,6 +37,9 @@ struct CreatePresetSheet: View {
   @State private var viewModeOverride: PresetViewMode?
   @State private var didCreatePreset = false
   @State private var isGeneratingName = false
+  /// The in-flight auto-name suggestion, kept so typing in the name field can
+  /// cancel it before it replaces what the user wrote.
+  @State private var nameSuggestionTask: Task<Void, Never>?
   #if os(iOS) || os(visionOS)
     @State private var selectedImage: UIImage?
   #endif
@@ -109,6 +112,17 @@ struct CreatePresetSheet: View {
         }
       #endif
       .onAppear(perform: setupDefaultSelection)
+      .onChange(of: presetName) { _, _ in
+        // The user touched the name field: abandon the auto-suggestion so it
+        // can't replace what they typed, and drop the spinner right away. The
+        // suggestion's own write nils the task first (in its defer), so this
+        // only fires for real edits, not the AI filling the name in.
+        if let task = nameSuggestionTask {
+          task.cancel()
+          nameSuggestionTask = nil
+          isGeneratingName = false
+        }
+      }
       #if os(iOS) || os(visionOS)
         .sheet(isPresented: $showingSoundSelection) {
           NavigationStack {
@@ -223,8 +237,9 @@ extension CreatePresetSheet {
     // selected - user can add sounds as needed
     if !initialSelectedSounds.isEmpty {
       selectedSounds = initialSelectedSounds
-      // Offer an Apple Intelligence name for the seeded mix up front.
-      Task {
+      // Offer an Apple Intelligence name for the seeded mix up front. Held in a
+      // handle so the first keystroke in the name field can cancel it.
+      nameSuggestionTask = Task {
         await generateInitialNameSuggestion()
       }
     }
@@ -246,10 +261,15 @@ extension CreatePresetSheet {
     // Shared flag drives the details card's spinner and blocks a second tap
     // on the sparkles button while this initial suggestion is in flight.
     isGeneratingName = true
-    defer { isGeneratingName = false }
+    defer {
+      isGeneratingName = false
+      nameSuggestionTask = nil
+    }
 
     let suggestion = await AIPresetNameGenerator.generateName(from: titles, allowVariation: false)
-    // Don't clobber anything typed while generating (or a failed "" result).
+    // Cancelled by a keystroke, or something was typed (or a failed "" result):
+    // leave the user's text alone.
+    guard !Task.isCancelled else { return }
     if presetName.isEmpty, !suggestion.isEmpty {
       presetName = suggestion
     }
