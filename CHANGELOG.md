@@ -281,6 +281,8 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - TestFlight availability
 
 [Unreleased]: https://github.com/codybrom/blankie/compare/v2.0.0...HEAD
+[2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/codybrom/blankie/compare/v1.0.13...v2.0.0
 [1.0.13]: https://github.com/codybrom/blankie/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/codybrom/blankie/compare/v1.0.11...v1.0.12
