@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.1] - 2026-06-23
+## [2.0.1] - 2026-06-24
 
 A quick follow-up to 2.0 with two small additions and a handful of fixes.
 
@@ -47,7 +47,7 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - **Music Loops** - some loops are now tagged as music, which tells a preset to only play one music loop at a time. Start another music loop and it will replace the playing one. Ambient Synth, Gentle Guitar, and Lo-Fi Beats come tagged, and you can tag your own imports too.
 - **Favorites** - star presets or individual sounds to promote them in the iPad sidebar and CarPlay and step through them with system-wide Now Playing next/previous controls
 - **Single sound playback** - play and favorite any sound on its own without making a preset
-- **Lock screen animations** (iPhone and iPad) - choose from multiple video backgrounds that play on your lock screen while Blankie plays
+- **Lock screen animations** (iPhone) - choose from multiple video backgrounds that play on your lock screen while Blankie plays
 - **Spatial Audio, experimental** - opt in via Settings to place a preset's sounds around you on a draggable map, rendered binaurally on any headphones with optional head tracking on supported AirPods
 - **Apple Intelligence name and icon suggestions** - Where enabled/available, Blankie will use the on-device Apple Intelligence model to suggest a display name and icon when importing a sound (based on the file name), or a preset name based on the attached sounds. There is also one-tap re-roll and undo for each. The feature is available when importing/creating or editing sounds and presets.
 - **Quick Mix** (iPhone and iPad) - a lightweight soundboard for starting sounds quickly without saving a preset
