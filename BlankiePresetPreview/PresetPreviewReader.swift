@@ -17,17 +17,21 @@ enum PresetPreviewReader {
   /// artwork stays as raw `Data` here and is decoded to a `UIImage` on the main
   /// actor in the view, mirroring how the app avoids returning `UIImage` from
   /// detached work.
-  struct PresetInfo {
+  struct PresetInfo: Sendable {
     let name: String
     let creator: String?
     let soundCount: Int
     let artworkData: Data?
   }
 
-  /// Cap on a single decompressed entry. `.blankie` files are untrusted shared
-  /// input, so refuse to balloon memory on a crafted (zip-bomb) archive — the
-  /// real payloads here are a tiny JSON and a small preview image.
-  private static let maxEntryBytes = 32 * 1024 * 1024
+  /// Cap on a single decompressed *entry* — not the whole archive. The preview
+  /// only ever extracts `preset.json` (kilobytes) and one preview image (well
+  /// under a megabyte), so 8 MB clears every legitimate payload with room to
+  /// spare while refusing to balloon memory on a crafted (zip-bomb) entry. A
+  /// large `.blankie` is fine: its bulk is custom-sound audio, which the preview
+  /// never reads. The cap is kept low because this Quick Look extension runs in
+  /// a tight memory sandbox.
+  private static let maxEntryBytes = 8 * 1024 * 1024
 
   enum ReadError: Error {
     case unreadableArchive
