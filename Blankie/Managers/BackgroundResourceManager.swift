@@ -96,6 +96,21 @@ final class BackgroundResourceManager: ObservableObject {
     return "\(id)/\(id).mov"
   }
 
+  /// Resolves a clip's base bundled id to the asset-pack id this device should
+  /// fetch: `<id>Square` on iPad (its lock screen takes only the 1x1 key), `<id>`
+  /// on iPhone, and the base id unchanged where animated artwork isn't a feature.
+  /// Routing every caller (gallery, prefetch, import, lock-screen publish)
+  /// through this keeps a device downloading exactly one variant per clip.
+  /// `nonisolated` so the synchronous prefetch mapping can call it off the main
+  /// actor; it reads only a device capability, no instance state.
+  nonisolated static func preferredPackID(for bundledID: String) -> String {
+    #if os(iOS)
+      return AnimatedArtworkKey.preferredForDevice == .square ? "\(bundledID)Square" : bundledID
+    #else
+      return bundledID
+    #endif
+  }
+
   // MARK: - Public API
 
   /// Ensures the artwork's asset pack is available locally and returns a
