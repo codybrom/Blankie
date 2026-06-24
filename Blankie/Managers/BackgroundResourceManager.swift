@@ -83,7 +83,18 @@ final class BackgroundResourceManager: ObservableObject {
   /// Relative path of an artwork's video inside the asset-pack namespace.
   /// Must match the `fileSelectors` path used when packaging (see
   /// scripts/package_animated_artwork.sh).
-  private func relativeVideoPath(for id: String) -> String { "\(id)/\(id).mov" }
+  ///
+  /// Both variants of a clip live in the same folder, named after the base clip:
+  /// the 3:4 portrait master is `<id>/<id>.mov`, and the 1:1 square crop (pack id
+  /// `<id>Square`, used for iPad's lock screen) is `<id>/<id>Square.mov`. So a
+  /// "…Square" pack maps back to its base folder rather than a folder of its own.
+  private func relativeVideoPath(for id: String) -> String {
+    if id.hasSuffix("Square") {
+      let base = String(id.dropLast("Square".count))
+      return "\(base)/\(id).mov"
+    }
+    return "\(id)/\(id).mov"
+  }
 
   // MARK: - Public API
 

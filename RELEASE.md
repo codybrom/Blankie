@@ -31,28 +31,30 @@ Pick the scheme by what you're archiving:
 - **Mac** (App Store/TestFlight, GitHub, Homebrew): archive from **`Blankie (Universal)`** with the **Any Mac** destination. This uses the standard entitlements (no CarPlay).
 - **iOS** (App Store/TestFlight): archive from **`Blankie (Universal with CarPlay)`** with the **Any iOS Device** destination, so the CarPlay entitlement is included. This requires the `com.apple.developer.carplay-audio` entitlement on the release bundle ID (see [CARPLAY.md](CARPLAY.md)).
 
-On iOS the app ships animated artwork as **Apple-hosted [Background Assets](https://developer.apple.com/documentation/backgroundassets) asset packs** (~385 MB total, one pack per artwork, downloaded on demand). The videos are not bundled in the build and not stored in git. They are packaged into `.aar` archives and uploaded to App Store Connect separately from the app, so plan for an extra upload and review step. The source `.mov` files live on the [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1) GitHub Release. The architecture and one-time project setup (downloader extension, App Group, plist keys) are in [DEVELOPMENT.md](DEVELOPMENT.md#animated-artwork-background-assets).
+On iOS the app ships animated artwork as **Apple-hosted [Background Assets](https://developer.apple.com/documentation/backgroundassets) asset packs** (one pack per variant, downloaded on demand). The videos are not bundled in the build and not stored in git. They are packaged into `.aar` archives and uploaded to App Store Connect separately from the app, so plan for an extra upload and review step. The architecture and one-time project setup (downloader extension, App Group, plist keys) are in [DEVELOPMENT.md](DEVELOPMENT.md#animated-artwork-background-assets).
+
+Each clip ships two variants because iPhone and iPad lock screens advertise different artwork keys: a **3:4 portrait** master (`<Name>`, for iPhone's 3x4 key) and a **1:1 square** crop (`<Name>Square`, for iPad's 1x1 key). Both files live in the same `Blankie/Resources/AnimatedArtwork/<Name>/` folder, and every source `.mov` (both variants, all listed in `scripts/animated-artwork.manifest`) lives together on a single GitHub Release: [`artwork-assets-v2`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v2).
 
 Each release, build and upload the asset packs:
 
 ```bash
-scripts/package_animated_artwork.sh        # → build/AssetPacks/<Name>.aar (21 packs)
+scripts/package_animated_artwork.sh        # → build/AssetPacks/<Name>.aar (42 packs: 21 portrait + 21 square)
 ```
 
 Then upload the `.aar` files to App Store Connect (Transporter app, `xcrun altool`, or the App Store Connect API) and submit them for review alongside the build. Apple hosts up to 200 GB of asset packs; ours are well under that.
 
-> **Updating animated artwork:** Changes to any `.mov` require publishing a fresh asset release for the source videos. Anchor it to an empty orphan commit so it stays out of code history:
+> **Updating animated artwork:** Changes to any `.mov` require publishing a fresh, complete asset release (replace the whole set — don't split it across tags). Regenerate the square crops with `scripts/prepare_loop.sh --square`, or for an entirely new clip run `prepare_loop.sh <source> --square` to emit the portrait master, both previews, and the square loop at once. Anchor the release to an empty orphan commit so it stays out of code history:
 >
 > ```bash
 > EMPTY_TREE=$(git hash-object -t tree /dev/null)
 > ANCHOR=$(git commit-tree "$EMPTY_TREE" -m "Animated artwork binary assets (release anchor)")
-> git tag artwork-assets-v2 "$ANCHOR" && git push origin artwork-assets-v2
-> gh release create artwork-assets-v2 --title "Animated Artwork Assets v2" \
+> git tag artwork-assets-vN "$ANCHOR" && git push origin artwork-assets-vN
+> gh release create artwork-assets-vN --title "Animated Artwork Assets vN" \
 >   --notes "Binary .mov assets fetched by scripts/package_animated_artwork.sh." \
 >   Blankie/Resources/AnimatedArtwork/*/*.mov
 > ```
 >
-> Then regenerate `scripts/animated-artwork.manifest`, bump the default tag in `scripts/package_animated_artwork.sh`, re-run `scripts/package_animated_artwork.sh` and upload a new asset-pack version to App Store Connect.
+> Then regenerate `scripts/animated-artwork.manifest`, bump the default `TAG` in `scripts/package_animated_artwork.sh`, re-run `scripts/package_animated_artwork.sh`, and upload the new asset-pack versions to App Store Connect.
 
 ## Creating a Release
 
