@@ -42,7 +42,7 @@ TAG="${TAG:-artwork-assets-v1}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 MANIFEST="$SCRIPT_DIR/animated-artwork.manifest"
-ARTWORK_DIR="$ROOT_DIR/Blankie/Resources/AnimatedArtwork"
+ARTWORK_DIR="$ROOT_DIR/ArtworkSources"
 OUT_DIR="$ROOT_DIR/build/AssetPacks"
 BASE_URL="https://github.com/$REPO/releases/download/$TAG"
 

@@ -1,7 +1,7 @@
 # Animated artwork binary assets fetched by scripts/package_animated_artwork.sh
 # Format: <name> <sha256> <bytes>
-#   <Name>        -> AnimatedArtwork/<Name>/<Name>.mov        (3:4 portrait, iPhone)
-#   <Name>Square  -> AnimatedArtwork/<Name>/<Name>Square.mov  (1:1 square, iPad)
+#   <Name>        -> ArtworkSources/<Name>/<Name>.mov        (3:4 portrait, iPhone)
+#   <Name>Square  -> ArtworkSources/<Name>/<Name>Square.mov  (1:1 square, iPad)
 Abstract1 2f70a96ce6db809db1d15fa87fe0653d0e62918d3574080f0bd08cb76dbb1d5e 1244022
 Abstract1Square 2e6375315b5b52d246b1f5470119f0f3c26921fbd04d818202b298e80d2f8baa 1021461
 Abstract2 9252027c3030946531d9861876819a84771dba10a585f64f51b9f784284c2226 1801609
