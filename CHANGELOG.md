@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-06-24
+
+### Fixed
+
+- On iPad, lock screen animations played as a static image. Each animation will now properly show a version for the iPad lock screen.
+
 ## [2.0.1] - 2026-06-24
 
 A quick follow-up to 2.0 with two small additions and a handful of fixes.
