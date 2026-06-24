@@ -274,13 +274,9 @@ struct SoundIcon: View {
     }
   }
 
-  /// The tile's primary action, shared by the mouse tap, the keyboard (Return/Space), and the VoiceOver action: toggle the sound in/out of the mix, or — when global playback is paused and this sound is already selected — resume playback instead of deselecting it.
+  /// The tile's primary action, shared by the mouse tap, the keyboard (Return/Space), and the VoiceOver action: toggle the sound in/out of the mix, or — when global playback is paused — select this sound (if it isn't already) and start playing instead of deselecting it.
   private func activateTile() {
-    if !audioManager.isGloballyPlaying && sound.isSelected {
-      audioManager.setGlobalPlaybackState(true)
-    } else {
-      sound.toggle()
-    }
+    audioManager.toggleOrResume(sound)
   }
 
   #if os(macOS)

@@ -184,6 +184,13 @@ struct SoundSheet: View {
       // editing is app-global so use the app accent; pushed inside Edit Preset
       // (embedInNavigation false) inherit that stack's preset accent instead.
       .tint(embedInNavigation ? (GlobalSettings.shared.customAccentColor ?? .accentColor) : nil)
+      #if os(iOS) || os(visionOS)
+        // Page-sized on iPad so the full sound editor gets room instead of the
+        // default small centered form sheet (no-op on iPhone). When pushed
+        // inside another navigation stack this is harmless. Matches the preset
+        // editors.
+        .presentationSizing(.page)
+      #endif
   }
 
   private var baseContent: some View {

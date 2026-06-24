@@ -41,7 +41,8 @@ extension EditPresetSheet {
       // A typed name is settled; sparkles only fills an empty one here.
       sparklesOnlyWhenEmpty: true,
       onEdited: { applyChangesInstantly() },
-      onRemoveArtwork: { artworkId = nil }
+      onRemoveArtwork: { artworkId = nil },
+      isGeneratingName: $isGeneratingName
     )
   }
 

@@ -135,7 +135,7 @@ import SwiftUI
           (error as? PresetExporter.ExportError)?.errorDescription
           ?? String(
             localized: "Couldn't export this preset. Please try again.",
-            comment: "Alert shown when exporting a preset fails for an unexpected reason.")
+            comment: "Alert message shown when exporting a preset fails for an unexpected reason.")
         alert.runModal()
       }
     }

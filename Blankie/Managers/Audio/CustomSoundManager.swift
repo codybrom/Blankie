@@ -525,7 +525,6 @@ enum CustomSoundError: Error, LocalizedError, Sendable {
   case unsupportedFormat
   case fileCopyFailed
   case fileTooLarge
-  case durationTooLong
   case invalidAudioFile(Error)
   case databaseError
 
@@ -540,8 +539,6 @@ enum CustomSoundError: Error, LocalizedError, Sendable {
       return String(localized: "Failed to copy the audio file.")
     case .fileTooLarge:
       return String(localized: "Audio file is too large. Maximum size is 150MB.")
-    case .durationTooLong:
-      return String(localized: "Audio file is too long. Maximum duration is 120 minutes.")
     case .invalidAudioFile(let error):
       return String(localized: "Invalid audio file: \(error.localizedDescription)")
     case .databaseError:

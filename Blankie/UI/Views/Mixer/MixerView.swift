@@ -70,22 +70,21 @@ private enum IPhonePage: Hashable {
           iPhoneLayout
         }
       }
-      // A sheet (not a fullScreenCover) so the player has the system's
-      // grab-anywhere interactive pull-to-dismiss; the large detent keeps it
-      // full-height. The player draws its own drag handle, so hide the system one.
-      .sheet(isPresented: $showingNowPlaying) {
-        NowPlayingSheet(
-          onDismiss: { showingNowPlaying = false },
-          backgroundImage: backgroundImage
-        )
-        .presentationDetents([.large])
-        // On iPad a sheet with detents would otherwise render as a small
-        // centered form sheet, clipping the bottom controls. `.page` gives it a
-        // proper full-height presentation; on iPhone this is a no-op.
-        .presentationSizing(.page)
-        .presentationDragIndicator(.hidden)
-        .navigationTransition(.zoom(sourceID: "nowPlaying", in: nowPlayingNamespace))
-      }
+      // iPad covers the content with a fullScreenCover; even a page-sized sheet
+      // stays an inset floating card there. iPhone keeps a sheet for the
+      // system's grab-anywhere pull-to-dismiss. Both zoom from the mini player.
+      .modifier(
+        NowPlayingPresentation(
+          isPresented: $showingNowPlaying,
+          coversFullScreen: isLargeDevice,
+          namespace: nowPlayingNamespace
+        ) {
+          NowPlayingSheet(
+            onDismiss: { showingNowPlaying = false },
+            backgroundImage: backgroundImage
+          )
+        }
+      )
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()  // Prevent accidental dismissal
@@ -465,6 +464,36 @@ private enum IPhonePage: Hashable {
     @ViewBuilder
     private func soundRow(for sound: Sound) -> some View {
       SoundRowView(sound: sound, globalSettings: globalSettings, audioManager: audioManager)
+    }
+  }
+#endif
+
+#if os(iOS) || os(visionOS)
+  /// Presents Now Playing to fill the screen on iPad via `fullScreenCover` (a
+  /// sheet, even page-sized, stays an inset floating card there) and as a
+  /// page-sized sheet on iPhone (for the system's grab-anywhere
+  /// pull-to-dismiss). The player draws its own drag handle and chevron-down
+  /// dismiss, so both paths hide the system indicator and rely on `onDismiss`.
+  private struct NowPlayingPresentation<SheetBody: View>: ViewModifier {
+    @Binding var isPresented: Bool
+    let coversFullScreen: Bool
+    let namespace: Namespace.ID
+    @ViewBuilder var sheetBody: () -> SheetBody
+
+    func body(content: Content) -> some View {
+      if coversFullScreen {
+        content.fullScreenCover(isPresented: $isPresented) {
+          sheetBody()
+            .navigationTransition(.zoom(sourceID: "nowPlaying", in: namespace))
+        }
+      } else {
+        content.sheet(isPresented: $isPresented) {
+          sheetBody()
+            .presentationSizing(.page)
+            .presentationDragIndicator(.hidden)
+            .navigationTransition(.zoom(sourceID: "nowPlaying", in: namespace))
+        }
+      }
     }
   }
 #endif

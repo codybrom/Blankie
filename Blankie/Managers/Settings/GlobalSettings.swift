@@ -52,6 +52,8 @@ enum UserDefaultsKeys {
   static let showMenuBarIcon = "showMenuBarIcon"
   static let menuBarOnlyMode = "menuBarOnlyMode"
   static let hideDockWhenWindowClosed = "hideDockWhenWindowClosed"
+  static let librarySoundsExpanded = "librarySoundsExpanded"
+  static let libraryPresetsExpanded = "libraryPresetsExpanded"
 }
 
 /// Blur (in points) applied to a preset's background artwork behind the mixer
@@ -115,6 +117,10 @@ class GlobalSettings {
   /// macOS only: hide the Dock icon while the main window is closed. Off by
   /// default.
   var hideDockWhenWindowClosed: Bool
+  /// Library: whether the Sounds / Presets sections are expanded. Persisted so
+  /// the collapse state survives launches. Both default to expanded.
+  var librarySoundsExpanded: Bool
+  var libraryPresetsExpanded: Bool
 
   // Platform-specific settings
   /// Availability gate for the experimental spatial feature: shows the
@@ -148,6 +154,8 @@ class GlobalSettings {
     showMenuBarIcon = true
     menuBarOnlyMode = false
     hideDockWhenWindowClosed = false
+    librarySoundsExpanded = true
+    libraryPresetsExpanded = true
 
     // Then load actual values from UserDefaults
     loadBasicSettings()

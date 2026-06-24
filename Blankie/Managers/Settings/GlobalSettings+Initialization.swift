@@ -98,6 +98,12 @@ extension GlobalSettings {
       UserDefaults.shared.object(forKey: UserDefaultsKeys.hideDockWhenWindowClosed) as? Bool
       ?? false
 
+    // Library section collapse state (default expanded).
+    librarySoundsExpanded =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.librarySoundsExpanded) as? Bool ?? true
+    libraryPresetsExpanded =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.libraryPresetsExpanded) as? Bool ?? true
+
     // App-wide default lock screen animation (used when a preset has none).
     if let data = UserDefaults.shared.data(forKey: UserDefaultsKeys.defaultLockScreenArtwork),
       let ref = try? JSONDecoder().decode(AnimatedArtworkRef.self, from: data)

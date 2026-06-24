@@ -58,6 +58,18 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setLibrarySoundsExpanded(_ value: Bool) {
+    librarySoundsExpanded = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.librarySoundsExpanded)
+  }
+
+  @MainActor
+  func setLibraryPresetsExpanded(_ value: Bool) {
+    libraryPresetsExpanded = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.libraryPresetsExpanded)
+  }
+
+  @MainActor
   func setShowDockBadgeWhenPaused(_ value: Bool) {
     showDockBadgeWhenPaused = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showDockBadgeWhenPaused)

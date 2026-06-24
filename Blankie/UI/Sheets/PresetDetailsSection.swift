@@ -31,8 +31,10 @@ struct PresetDetailsSection: View {
   var onEdited: (() -> Void)?
   /// Extra cleanup when artwork is removed (Edit also clears its artwork ID).
   var onRemoveArtwork: (() -> Void)?
+  /// In-flight flag for AI naming, owned by the parent so the auto-suggest on
+  /// open and the sparkles button share one guard (spinner + no double-fire).
+  @Binding var isGeneratingName: Bool
 
-  @State private var isGeneratingName = false
   @State private var aiAvailable = false
   private let globalSettings = GlobalSettings.shared
 

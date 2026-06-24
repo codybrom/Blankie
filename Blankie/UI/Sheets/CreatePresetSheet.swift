@@ -36,6 +36,10 @@ struct CreatePresetSheet: View {
   @State private var useCustomViewMode = false
   @State private var viewModeOverride: PresetViewMode?
   @State private var didCreatePreset = false
+  @State private var isGeneratingName = false
+  /// The in-flight auto-name suggestion, kept so typing in the name field can
+  /// cancel it before it replaces what the user wrote.
+  @State private var nameSuggestionTask: Task<Void, Never>?
   #if os(iOS) || os(visionOS)
     @State private var selectedImage: UIImage?
   #endif
@@ -71,7 +75,8 @@ struct CreatePresetSheet: View {
           starToken: nil,
           accent: activeAccentColor,
           aiSoundTitles: selectedSoundTitles,
-          sparklesOnlyWhenEmpty: false
+          sparklesOnlyWhenEmpty: false,
+          isGeneratingName: $isGeneratingName
         )
         soundsSection
         PresetThemeSection(
@@ -107,6 +112,17 @@ struct CreatePresetSheet: View {
         }
       #endif
       .onAppear(perform: setupDefaultSelection)
+      .onChange(of: presetName) { _, _ in
+        // The user touched the name field: abandon the auto-suggestion so it
+        // can't replace what they typed, and drop the spinner right away. The
+        // suggestion's own write nils the task first (in its defer), so this
+        // only fires for real edits, not the AI filling the name in.
+        if let task = nameSuggestionTask {
+          task.cancel()
+          nameSuggestionTask = nil
+          isGeneratingName = false
+        }
+      }
       #if os(iOS) || os(visionOS)
         .sheet(isPresented: $showingSoundSelection) {
           NavigationStack {
@@ -143,6 +159,12 @@ struct CreatePresetSheet: View {
     // Live preview of the chosen accent across the whole sheet (mirrors
     // Edit Preset's root tint).
     .tint(activeAccentColor)
+    #if os(iOS) || os(visionOS)
+      // A full preset editor, not a quick dialog — page-sized on iPad instead
+      // of the default small centered form sheet (no-op on iPhone). Matches
+      // EditPresetSheet so both editors present identically.
+      .presentationSizing(.page)
+    #endif
     .onDisappear {
       cleanupAnimatedArtworkIfNeeded()
     }
@@ -215,8 +237,9 @@ extension CreatePresetSheet {
     // selected - user can add sounds as needed
     if !initialSelectedSounds.isEmpty {
       selectedSounds = initialSelectedSounds
-      // Offer an Apple Intelligence name for the seeded mix up front.
-      Task {
+      // Offer an Apple Intelligence name for the seeded mix up front. Held in a
+      // handle so the first keystroke in the name field can cancel it.
+      nameSuggestionTask = Task {
         await generateInitialNameSuggestion()
       }
     }
@@ -229,17 +252,26 @@ extension CreatePresetSheet {
 
   /// Fills the name on open when seeded from playing sounds; taps on the
   /// details card's sparkles button regenerate from there.
+  @MainActor
   private func generateInitialNameSuggestion() async {
-    guard AIPresetNameGenerator.isAvailable, presetName.isEmpty else { return }
+    guard !isGeneratingName, AIPresetNameGenerator.isAvailable, presetName.isEmpty else { return }
     let titles = selectedSoundTitles
     guard !titles.isEmpty else { return }
 
+    // Shared flag drives the details card's spinner and blocks a second tap
+    // on the sparkles button while this initial suggestion is in flight.
+    isGeneratingName = true
+    defer {
+      isGeneratingName = false
+      nameSuggestionTask = nil
+    }
+
     let suggestion = await AIPresetNameGenerator.generateName(from: titles, allowVariation: false)
-    await MainActor.run {
-      // Don't clobber anything typed while generating (or a failed "" result).
-      if presetName.isEmpty, !suggestion.isEmpty {
-        presetName = suggestion
-      }
+    // Cancelled by a keystroke, or something was typed (or a failed "" result):
+    // leave the user's text alone.
+    guard !Task.isCancelled else { return }
+    if presetName.isEmpty, !suggestion.isEmpty {
+      presetName = suggestion
     }
   }
 
@@ -275,6 +307,20 @@ extension CreatePresetSheet {
         try presetManager.applyPreset(newPreset)
         await MainActor.run {
           didCreatePreset = true
+          // Re-arm the remote command handlers and refresh Now Playing for the
+          // freshly created preset. Browsing the animated-artwork gallery while
+          // creating can make iOS disconnect the handlers, which otherwise
+          // leaves the new preset's lock-screen / Control Center transport dead
+          // (existing presets are fine because nothing tore their handlers
+          // down). Mirrors EditPresetSheet and the artwork picker's restore.
+          audioManager.setupMediaControls()
+          audioManager.nowPlayingManager.updateInfo(
+            preset: newPreset,
+            presetName: newPreset.name,
+            creatorName: newPreset.creatorName,
+            artworkId: newPreset.artworkId,
+            isPlaying: audioManager.isGloballyPlaying
+          )
         }
         isPresented = false
         onCreated?()

@@ -104,7 +104,7 @@ extension CustomSoundManager {
         return .failure(CustomSoundError.unsupportedFormat)
       }
 
-      // Check duration (max 120 minutes)
+      // Validate the duration is a real, positive length (no upper cap).
       let duration = try await asset.load(.duration)
       let durationInSeconds = CMTimeGetSeconds(duration)
 
@@ -116,12 +116,6 @@ extension CustomSoundManager {
             NSError(
               domain: "CustomSoundManager", code: -1,
               userInfo: [NSLocalizedDescriptionKey: "Invalid audio duration"])))
-      }
-
-      let maxDuration: Double = 120 * 60  // 120 minutes
-      if durationInSeconds > maxDuration {
-        Logger.sounds.debug("CustomSoundManager: Duration too long: \(durationInSeconds) seconds")
-        return .failure(CustomSoundError.durationTooLong)
       }
 
       Logger.sounds.debug("CustomSoundManager: Audio file validated successfully")

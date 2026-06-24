@@ -304,14 +304,11 @@
     let isGloballyPlaying: Bool
     let showSoundNames: Bool
 
-    /// Toggle the sound, or — when paused and this sound is already selected —
-    /// resume playback instead of deselecting it (matching the grid tile).
+    /// Toggle the sound, or — when paused — select this sound (if it isn't
+    /// already) and start playing instead of deselecting it (matching the grid
+    /// tile).
     private func activate() {
-      if !AudioManager.shared.isGloballyPlaying && sound.isSelected {
-        AudioManager.shared.setGlobalPlaybackState(true)
-      } else {
-        sound.toggle()
-      }
+      AudioManager.shared.toggleOrResume(sound)
     }
 
     var body: some View {

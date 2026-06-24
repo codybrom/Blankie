@@ -866,6 +866,21 @@ struct LibraryView: View {
     .tint(globalSettings.customAccentColor ?? .accentColor)
   }
 
+  // Persisted collapse state for the Library's Presets / Sounds sections.
+  private var presetsExpandedBinding: Binding<Bool> {
+    Binding(
+      get: { globalSettings.libraryPresetsExpanded },
+      set: { globalSettings.setLibraryPresetsExpanded($0) }
+    )
+  }
+
+  private var soundsExpandedBinding: Binding<Bool> {
+    Binding(
+      get: { globalSettings.librarySoundsExpanded },
+      set: { globalSettings.setLibrarySoundsExpanded($0) }
+    )
+  }
+
   @ViewBuilder
   private var libraryList: some View {
     List {
@@ -928,7 +943,8 @@ struct LibraryView: View {
 
         // ALL PRESETS — Quick Mix and All Blankie Sounds are fixed rows at the
         // top; only the custom presets below are reorderable in Edit.
-        Section {
+        // Collapsible; expanded state persists across launches.
+        Section(isExpanded: presetsExpandedBinding) {
           // Quick Mix — not favoritable (its own thing); iOS/iPadOS only.
           #if !os(macOS)
             quickMixRow
@@ -950,7 +966,8 @@ struct LibraryView: View {
         // SOUNDS — solo a single sound. Listed alphabetically and fixed
         // (not reorderable); tap the star to favorite a sound. Custom sounds
         // delete via the edit-mode − or a swipe; built-ins gate that off.
-        Section {
+        // Collapsible; expanded state persists across launches.
+        Section(isExpanded: soundsExpandedBinding) {
           ForEach(soloSounds, id: \.id) { sound in
             soloRow(sound)
               .deleteDisabled(!sound.isCustom)

@@ -10,7 +10,7 @@ import Button from "@/components/Button.astro";
 import DefRow from "@/components/DefRow.astro";
 import heroIcon from "../assets/blankie-icon-v2.png";
 import icon from "../assets/icon.png";
-import promo from "../assets/promo.png";
+import promo from "../assets/promo.jpg";
 // In-app product shots used across the site.
 import devicesShot from "../assets/blankie-devices.png";
 import macShot from "../assets/mac-mockup.png";
@@ -51,7 +51,7 @@ const quick: [string, string][] = [
 // Fact rows: a bright primary value plus an optional muted continuation.
 const facts: { t: string; d?: string; m?: string }[] = [
   { t: "App name", d: "Blankie" },
-  { t: "Version", d: "2.0.0" },
+  { t: "Version", d: "2.0.1" },
   { t: "Developer", d: "Cody Bromley", m: "(independent developer)" },
   {
     t: "Price",
@@ -174,7 +174,7 @@ const assetGroups: { title: string; items: Asset[] }[] = [
     title: "Brand",
     items: [
       { img: icon, file: "icon.png", label: "App icon (1024px)", pad: true },
-      { img: promo, file: "promo.png", label: "Promotional banner" },
+      { img: promo, file: "promo.jpg", label: "Promotional banner" },
       {
         img: devicesShot,
         file: "blankie-devices.png",

@@ -17,6 +17,25 @@ extension AudioManager {
     setGlobalPlaybackState(!isGloballyPlaying, pauseFadeDuration: pauseFadeDuration)
   }
 
+  /// The shared behavior for tapping a sound tile/row (grid, list, menu bar):
+  /// while playing, toggle the sound in/out of the mix; while paused, select it
+  /// (if it isn't already) and resume — so a tap always gets audio going rather
+  /// than selecting silently or deselecting an already-on tile. The
+  /// `updateHasSelectedSounds()` call reflects a brand-new selection
+  /// synchronously, otherwise `setGlobalPlaybackState(true)` would see the
+  /// still-empty (coalesced) selection and coerce right back to paused.
+  @MainActor func toggleOrResume(_ sound: Sound) {
+    if !isGloballyPlaying {
+      if !sound.isSelected {
+        sound.isSelected = true
+        updateHasSelectedSounds()
+      }
+      setGlobalPlaybackState(true)
+    } else {
+      sound.toggle()
+    }
+  }
+
   @MainActor
   func resetSounds() {
     Logger.audio.debug("AudioManager: Resetting all sounds")
