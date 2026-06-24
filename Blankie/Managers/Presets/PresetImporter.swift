@@ -628,9 +628,11 @@ extension PresetImporter {
       }
 
       // Best-effort: pull the video's asset pack so it's ready for playback (iOS).
+      // Fetch the variant this device uses (square on iPad), not the base id.
+      let packID = BackgroundResourceManager.preferredPackID(for: bundledId)
       do {
-        _ = try await BackgroundResourceManager.shared.resourceURL(for: bundledId)
-        Logger.presets.debug("Import: Downloaded artwork pack '\(bundledId)'")
+        _ = try await BackgroundResourceManager.shared.resourceURL(for: packID)
+        Logger.presets.debug("Import: Downloaded artwork pack '\(packID)'")
       } catch {
         Logger.presets.error(
           "Import: Failed to download artwork pack '\(bundledId, privacy: .public)': \(error, privacy: .public)"

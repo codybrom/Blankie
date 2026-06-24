@@ -115,7 +115,7 @@ import os
 
       do {
         // Ensure the video's Background Assets pack is downloaded.
-        _ = try await BackgroundResourceManager.shared.resourceURL(for: asset.id)
+        _ = try await BackgroundResourceManager.shared.resourceURL(for: asset.preferredPackID)
 
         // Preview images remain bundled for fast gallery display
         guard
@@ -365,7 +365,7 @@ import os
 
     var resourceState: BackgroundResourceState {
       // Reflects whether the video's asset pack is on the device.
-      return resourceManager.state(for: asset.id)
+      return resourceManager.state(for: asset.preferredPackID)
     }
 
     var isCached: Bool {
@@ -380,7 +380,7 @@ import os
       Button(action: onTap) {
         ZStack(alignment: .bottomLeading) {
           if let previewURL = Bundle.main.url(
-            forResource: asset.previewResourceName, withExtension: asset.previewExtension),
+            forResource: asset.preferredPreviewResourceName, withExtension: asset.previewExtension),
             let uiImage = UIImage(contentsOfFile: previewURL.path)
           {
             Image(uiImage: uiImage)
@@ -461,7 +461,7 @@ import os
       }
       .alert("Remove Downloaded Video?", isPresented: $showingUncacheConfirmation) {
         Button("Remove Download", role: .destructive) {
-          Task { await resourceManager.removeResource(asset.id) }
+          Task { await resourceManager.removeResource(asset.preferredPackID) }
           onUncache()
         }
         Button("Cancel", role: .cancel) {}
@@ -563,7 +563,7 @@ import os
     @StateObject private var resourceManager = BackgroundResourceManager.shared
 
     var resourceState: BackgroundResourceState {
-      resourceManager.state(for: asset.id)
+      resourceManager.state(for: asset.preferredPackID)
     }
 
     var isCached: Bool {
@@ -757,7 +757,7 @@ import os
         }
         .alert("Remove Downloaded Video?", isPresented: $showingDeleteConfirmation) {
           Button("Remove Download", role: .destructive) {
-            Task { await resourceManager.removeResource(asset.id) }
+            Task { await resourceManager.removeResource(asset.preferredPackID) }
             onDelete()
             onDismiss()
           }
@@ -773,7 +773,7 @@ import os
       setupTask = Task {
         do {
           // Ensure the video's Background Assets pack is downloaded, then play it.
-          let videoURL = try await BackgroundResourceManager.shared.resourceURL(for: asset.id)
+          let videoURL = try await BackgroundResourceManager.shared.resourceURL(for: asset.preferredPackID)
           // If the sheet dismissed during the download, stop here.
           if Task.isCancelled { return }
 
@@ -845,6 +845,17 @@ import os
     var previewExtension: String { "jpg" }
     var squarePreviewResourceName: String { "\(id)Square" }
     var squarePreviewExtension: String { "jpg" }
+
+    /// Asset-pack id for this device's variant (square on iPad, portrait on
+    /// iPhone), matching what the lock screen serves. The gallery downloads,
+    /// plays, and removes this pack so a device only ever fetches one variant.
+    var preferredPackID: String {
+      BackgroundResourceManager.preferredPackID(for: id)
+    }
+    /// Bundled preview image name for this device's variant.
+    var preferredPreviewResourceName: String {
+      AnimatedArtworkKey.preferredForDevice == .square ? squarePreviewResourceName : previewResourceName
+    }
 
     static var allCases: [BundledAnimatedLoop] {
       // Files are copied flat to bundle root, not in AnimatedArtwork subfolder
