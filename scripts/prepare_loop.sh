@@ -106,8 +106,12 @@ if [[ -z "$INPUT" ]]; then
       continue
     fi
 
-    # Check if all three outputs exist
-    if [[ ! -f "$ARTWORK_DIR/$name.mov" ]] || [[ ! -f "$ARTWORK_DIR/$name.jpg" ]] || [[ ! -f "$ARTWORK_DIR/${name}Square.jpg" ]]; then
+    # Reprocess if any expected output is missing. With --square that includes
+    # the square loop, so a source that already has the other three outputs
+    # still gets picked up to generate <name>Square.mov.
+    if [[ ! -f "$ARTWORK_DIR/$name.mov" ]] || [[ ! -f "$ARTWORK_DIR/$name.jpg" ]] \
+      || [[ ! -f "$ARTWORK_DIR/${name}Square.jpg" ]] \
+      || { [[ "$SQUARE_VIDEO" -eq 1 ]] && [[ ! -f "$ARTWORK_DIR/${name}Square.mov" ]]; }; then
       FILES_TO_PROCESS+=("$file")
     fi
   done < <(find "$ARTWORK_DIR" -type f \( -name "*.mp4" -o -name "*.avi" -o -name "*.mkv" \) ! -name ".*" -print0 | sort -z)

@@ -63,7 +63,7 @@ This guide will help you set up your development environment for contributing to
 
    The animated artwork videos are not stored in git or bundled into the app. On iOS they ship as Apple-hosted [Background Assets](https://developer.apple.com/documentation/backgroundassets) asset packs. The source `.mov` files (both the 3:4 portrait and 1:1 square variant of each clip) live as assets on the [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1) GitHub Release so cloning the repository stays light.
 
-   You do not need the videos to build and run the app, only to package the asset packs. To fetch the videos and/or builds the packs, run:
+   You do not need the videos to build and run the app, only to package the asset packs. To fetch the videos and/or build the packs, run:
 
    ```bash
    scripts/package_animated_artwork.sh
