@@ -37,7 +37,7 @@
 set -euo pipefail
 
 REPO="${REPO:-codybrom/blankie}"
-TAG="${TAG:-artwork-assets-v2}"
+TAG="${TAG:-artwork-assets-v1}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
