@@ -61,7 +61,7 @@ This guide will help you set up your development environment for contributing to
 
 5. **Animated artwork assets**
 
-   The animated artwork videos are not stored in git or bundled into the app. On iOS they ship as Apple-hosted [Background Assets](https://developer.apple.com/documentation/backgroundassets) asset packs. The source `.mov` files live as assets on the [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1) GitHub Release so cloning the repository stays light.
+   The animated artwork videos are not stored in git or bundled into the app. On iOS they ship as Apple-hosted [Background Assets](https://developer.apple.com/documentation/backgroundassets) asset packs. The source `.mov` files (both the 3:4 portrait and 1:1 square variant of each clip) live as assets on the [`artwork-assets-v2`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v2) GitHub Release so cloning the repository stays light.
 
    You do not need the videos to build and run the app, only to package the asset packs. To fetch the videos and/or builds the packs, run:
 
@@ -69,7 +69,7 @@ This guide will help you set up your development environment for contributing to
    scripts/package_animated_artwork.sh
    ```
 
-   This script downloads any missing files, then idempotently writes one `build/AssetPacks/<Name>.aar` per artwork item. Pass `--force` to re-download, or artwork ids (e.g. `RainLoop Beach`) to limit it. Preview images and metadata are bundled in the app for instant gallery display. See [RELEASE.md](RELEASE.md) for uploading the packs to App Store Connect.
+   This script downloads any missing files, then idempotently writes one `build/AssetPacks/<Name>.aar` per variant (a portrait `<Name>` and a square `<Name>Square` for each clip). Pass `--force` to re-download, or artwork ids (e.g. `RainLoop Beach RainLoopSquare`) to limit it. Preview images and metadata are bundled in the app for instant gallery display. See [RELEASE.md](RELEASE.md) for uploading the packs to App Store Connect.
 
 6. **Open and build the project**
 
@@ -81,9 +81,9 @@ This guide will help you set up your development environment for contributing to
 
 ## Animated artwork (Background Assets)
 
-On iOS the animated lock-screen artwork ships as Apple-hosted [Managed Background Assets](https://developer.apple.com/documentation/backgroundassets). Each artwork is one asset pack, downloaded on demand.
+On iOS the animated lock-screen artwork ships as Apple-hosted [Managed Background Assets](https://developer.apple.com/documentation/backgroundassets), downloaded on demand.
 
-A pack's ID is the artwork id (`RainLoop`), and it holds a single file at `<id>/<id>.mov`. `BackgroundResourceManager` (`Blankie/Managers/BackgroundResourceManager.swift`) wraps `AssetPackManager.shared`:
+Each clip has two packs because iPhone and iPad lock screens advertise different artwork keys (`MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys`): a 3:4 portrait pack `<id>` holding `<id>/<id>.mov` (iPhone's 3x4 key) and a 1:1 square pack `<id>Square` holding `<id>/<id>Square.mov` (iPad's 1x1 key). Both files live in the same `<id>/` folder, so `relativeVideoPath(for:)` maps a `…Square` pack back to the base folder. `NowPlayingManager+AnimatedArtwork.swift` picks the variant from the device's supported key when it publishes. `BackgroundResourceManager` (`Blankie/Managers/BackgroundResourceManager.swift`) wraps `AssetPackManager.shared`:
 
 - `resourceURL(for:)` downloads the pack if needed and returns a playable URL.
 - `availableURL(for:)` returns a URL synchronously for a pack that's already on the device (the Now Playing path uses this).
