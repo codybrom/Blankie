@@ -33,7 +33,7 @@ Pick the scheme by what you're archiving:
 
 On iOS the app ships animated artwork as **Apple-hosted [Background Assets](https://developer.apple.com/documentation/backgroundassets) asset packs** (one pack per variant, downloaded on demand). The videos are not bundled in the build and not stored in git. They are packaged into `.aar` archives and uploaded to App Store Connect separately from the app, so plan for an extra upload and review step. The architecture and one-time project setup (downloader extension, App Group, plist keys) are in [DEVELOPMENT.md](DEVELOPMENT.md#animated-artwork-background-assets).
 
-Each clip ships two variants because iPhone and iPad lock screens advertise different artwork keys: a **3:4 portrait** master (`<Name>`, for iPhone's 3x4 key) and a **1:1 square** crop (`<Name>Square`, for iPad's 1x1 key). Both files live in the same `Blankie/Resources/AnimatedArtwork/<Name>/` folder, and every source `.mov` (both variants, all listed in `scripts/animated-artwork.manifest`) lives together on a single GitHub Release: [`artwork-assets-v2`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v2).
+Each clip ships two variants because iPhone and iPad lock screens advertise different artwork keys: a **3:4 portrait** master (`<Name>`, for iPhone's 3x4 key) and a **1:1 square** crop (`<Name>Square`, for iPad's 1x1 key). Both files live in the same `Blankie/Resources/AnimatedArtwork/<Name>/` folder, and every source `.mov` (both variants, all listed in `scripts/animated-artwork.manifest`) lives together on a single GitHub Release: [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1).
 
 Each release, build and upload the asset packs:
 
@@ -43,18 +43,10 @@ scripts/package_animated_artwork.sh        # → build/AssetPacks/<Name>.aar (42
 
 Then upload the `.aar` files to App Store Connect (Transporter app, `xcrun altool`, or the App Store Connect API) and submit them for review alongside the build. Apple hosts up to 200 GB of asset packs; ours are well under that.
 
-> **Updating animated artwork:** Changes to any `.mov` require publishing a fresh, complete asset release (replace the whole set — don't split it across tags). Regenerate the square crops with `scripts/prepare_loop.sh --square`, or for an entirely new clip run `prepare_loop.sh <source> --square` to emit the portrait master, both previews, and the square loop at once. Anchor the release to an empty orphan commit so it stays out of code history:
+> **How `artwork-assets-vN` releases work:** the source `.mov` live as GitHub Release assets, addressed by filename and pinned by checksum in `scripts/animated-artwork.manifest`. A tag is one immutable version of that set (published bytes are never overwritten) and its number tracks the asset-pack version on App Store Connect (tag `vN` ↔ pack version `N`), keeping the source release and the Apple-hosted packs in lockstep. Everything currently lives on `artwork-assets-v1`.
 >
-> ```bash
-> EMPTY_TREE=$(git hash-object -t tree /dev/null)
-> ANCHOR=$(git commit-tree "$EMPTY_TREE" -m "Animated artwork binary assets (release anchor)")
-> git tag artwork-assets-vN "$ANCHOR" && git push origin artwork-assets-vN
-> gh release create artwork-assets-vN --title "Animated Artwork Assets vN" \
->   --notes "Binary .mov assets fetched by scripts/package_animated_artwork.sh." \
->   Blankie/Resources/AnimatedArtwork/*/*.mov
-> ```
->
-> Then regenerate `scripts/animated-artwork.manifest`, bump the default `TAG` in `scripts/package_animated_artwork.sh`, re-run `scripts/package_animated_artwork.sh`, and upload the new asset-pack versions to App Store Connect.
+> - **Adding a clip or variant** is a new filename, so it just appends to the current release.
+> - **Changing an existing video's content** needs the next tag: a published asset can't be overwritten, so the new bytes go on a fresh release (anchored to an empty orphan commit, keeping binaries out of code history) while the old ones stay put. Splitting the set across tags is optional — name-addressing lets a renamed file sit alongside the rest on one release — and the packaging script pulls every entry from a single default `TAG`, so you only add a per-entry tag column to the manifest if entries truly span releases.
 
 ## Creating a Release
 
