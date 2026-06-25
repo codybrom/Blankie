@@ -120,7 +120,7 @@ if (langData?.strings) {
   title={title}
   description={`Blankie is available in ${langName}! Download the ambient sound app for macOS with full ${langName} support. Create perfect soundscapes for focus, relaxation, and sleep.`}
 >
-  <main class="mx-auto max-w-6xl px-5 pt-28 pb-10">
+  <div class="mx-auto max-w-6xl px-5 pt-28 pb-10">
     <div class="mb-6">
       <a
         href="/i18n/"
@@ -228,7 +228,7 @@ if (langData?.strings) {
                 <div class="rounded-lg border border-hair-soft bg-black/20 p-4 shadow-inner">
                   <div class="mb-2 flex items-center">
                     <div class="mr-2 size-3 rounded-full bg-accent" />
-                    <h3 class="font-medium text-fg-2">Finalized</h3>
+                    <h2 class="font-medium text-fg-2">Finalized</h2>
                   </div>
                   <div class="mb-1 text-3xl font-bold text-white">
                     {langData.statistics.translationPercentage}%
@@ -242,7 +242,7 @@ if (langData?.strings) {
                 <div class="rounded-lg border border-hair-soft bg-black/20 p-4 shadow-inner">
                   <div class="mb-2 flex items-center">
                     <div class="mr-2 size-3 rounded-full bg-warm" />
-                    <h3 class="font-medium text-fg-2">Needs Review</h3>
+                    <h2 class="font-medium text-fg-2">Needs Review</h2>
                   </div>
                   <div class="mb-1 text-3xl font-bold text-white">
                     {langData.statistics.needsReviewPercentage}%
@@ -256,7 +256,7 @@ if (langData?.strings) {
                 <div class="rounded-lg border border-hair-soft bg-black/20 p-4 shadow-inner">
                   <div class="mb-2 flex items-center">
                     <div class="mr-2 size-3 rounded-full bg-accent-ink" />
-                    <h3 class="font-medium text-fg-2">Overall Progress</h3>
+                    <h2 class="font-medium text-fg-2">Overall Progress</h2>
                   </div>
                   <div class="mb-1 text-3xl font-bold text-white">
                     {getCombinedProgress(langData.statistics)}%
@@ -572,7 +572,7 @@ if (langData?.strings) {
         </>
       )
     }
-  </main>
+  </div>
 </Layout>
 
 <script>
