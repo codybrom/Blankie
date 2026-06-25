@@ -5,6 +5,7 @@ import BackgroundVideo from "../components/BackgroundVideo.astro";
 import SectionHeader from "@/components/SectionHeader.astro";
 import icon from "../assets/blankie-icon-v2.png";
 import wavesVideo from "../assets/waves.mp4";
+import wavesVideoMobile from "../assets/waves-mobile.mp4";
 import wavesPoster from "../assets/waves-poster.jpg";
 import laurelLeft from "../assets/laurel-left.svg";
 import laurelRight from "../assets/laurel-right.svg";
@@ -243,7 +244,11 @@ const pills = [
 <Layout title={title}>
   <!-- Hero -->
   <section class="relative overflow-hidden text-center">
-    <BackgroundVideo videoSrc={wavesVideo} posterSrc={wavesPoster.src} />
+    <BackgroundVideo
+      videoSrc={wavesVideo}
+      mobileVideoSrc={wavesVideoMobile}
+      posterSrc={wavesPoster.src}
+    />
     <div
       class="from-navy-deep/80 via-navy-deep/70 to-navy-deep absolute inset-0 bg-linear-to-b"
     >
@@ -263,8 +268,11 @@ const pills = [
           src={products}
           alt="Blankie on Mac, iPhone and iPad"
           class="w-full"
+          widths={[640, 896, 1792]}
+          sizes="(min-width: 896px) 896px, 100vw"
           quality={90}
           loading="eager"
+          fetchpriority="high"
         />
       </div>
 
@@ -367,6 +375,12 @@ const pills = [
                       ? "mx-auto w-auto max-w-64 translate-y-10"
                       : "w-full rounded-lg",
                   ]}
+                  widths={d.portrait ? [256, 512] : [320, 540, 1080]}
+                  sizes={
+                    d.portrait
+                      ? "256px"
+                      : "(min-width: 1024px) 540px, (min-width: 640px) 90vw, 100vw"
+                  }
                   quality={85}
                 />
               </div>
@@ -479,6 +493,7 @@ const pills = [
             </span>
             <div
               class="relative z-10 mb-4 flex gap-0.5"
+              role="img"
               aria-label="5 out of 5 stars"
             >
               {Array.from({ length: 5 }).map(() => (

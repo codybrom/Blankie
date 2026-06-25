@@ -1,20 +1,35 @@
 ---
 interface Props {
   videoSrc: string;
+  mobileVideoSrc?: string;
   posterSrc?: string;
 }
 
-const { videoSrc, posterSrc } = Astro.props;
+const { videoSrc, mobileVideoSrc, posterSrc } = Astro.props;
 ---
 
 <div class="absolute inset-0 bg-black opacity-80">
+  <!--
+    Real <img> poster layer. It paints at first contentful paint and, being the
+    largest element, owns LCP — a later same-size video frame can't override it
+    because it isn't larger. This is what keeps the hero's LCP fast instead of
+    waiting on the video to download and render its first frame.
+  -->
+  <img
+    id="background-poster"
+    src={posterSrc}
+    alt=""
+    aria-hidden="true"
+    fetchpriority="high"
+    decoding="async"
+    class="absolute top-1/2 left-1/2 min-h-full min-w-full -translate-1/2 object-cover opacity-40 transition-opacity duration-700"
+  />
   <video
     id="background-video"
     muted
     playsinline
     aria-hidden="true"
-    class="absolute top-1/2 left-1/2 min-h-full min-w-full -translate-1/2 object-cover opacity-40"
-    poster={posterSrc}
+    class="absolute top-1/2 left-1/2 min-h-full min-w-full -translate-1/2 object-cover opacity-0 transition-opacity duration-700"
   >
   </video>
   <span class="sr-only">
@@ -23,23 +38,40 @@ const { videoSrc, posterSrc } = Astro.props;
   </span>
 </div>
 
-<script is:inline define:vars={{ videoSrc }}>
-  document.addEventListener("DOMContentLoaded", () => {
+<script is:inline define:vars={{ videoSrc, mobileVideoSrc }}>
+  // Hold the video until the page has loaded and the main thread is idle. The
+  // poster <img> carries the hero (and owns LCP) until the video fades in.
+  const startVideo = () => {
     const video = document.getElementById("background-video");
+    const poster = document.getElementById("background-poster");
+    if (!video) return;
 
     // Respect reduced-motion: leave the poster image in place and never load or
     // play the looping video for anyone who asked the OS to reduce motion.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Create an Intersection Observer
+    const src =
+      mobileVideoSrc && window.matchMedia("(max-width: 768px)").matches
+        ? mobileVideoSrc
+        : videoSrc;
+
+    // Cross-fade the poster out once the video is actually rendering frames.
+    video.addEventListener(
+      "playing",
+      () => {
+        video.classList.replace("opacity-0", "opacity-40");
+        if (poster) poster.classList.replace("opacity-40", "opacity-0");
+      },
+      { once: true },
+    );
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Add source and load video when it comes into view
             if (!video.querySelector("source")) {
               const source = document.createElement("source");
-              source.src = videoSrc;
+              source.src = src;
               source.type = "video/mp4";
               video.appendChild(source);
               video.load();
@@ -58,7 +90,20 @@ const { videoSrc, posterSrc } = Astro.props;
       },
     );
 
-    // Start observing the video
     observer.observe(video);
-  });
+  };
+
+  const scheduleVideo = () => {
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(startVideo, { timeout: 2000 });
+    } else {
+      setTimeout(startVideo, 200);
+    }
+  };
+
+  if (document.readyState === "complete") {
+    scheduleVideo();
+  } else {
+    window.addEventListener("load", scheduleVideo, { once: true });
+  }
 </script>

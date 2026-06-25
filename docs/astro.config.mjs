@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
-import playformCompress from "@playform/compress";
 import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
 
@@ -18,7 +17,6 @@ export default defineConfig({
         return item;
       },
     }),
-    playformCompress(),
     react(),
   ],
   site: "https://blankie.rest",

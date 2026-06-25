@@ -83,7 +83,9 @@ const socialAlt = customImageAlt || "Blankie Social Preview";
   </head>
   <body class="bg-navy-deep overflow-x-hidden text-base">
     <Nav />
-    <slot />
+    <main>
+      <slot />
+    </main>
     <Footer />
     <script src="../scripts/nav.ts"></script>
   </body>

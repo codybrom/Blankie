@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Certain social media sites are whitelisted to allow crawlers to access page markup when links to /assets are shared. 
+# Certain social media sites are whitelisted to allow crawlers to access page markup when links to /assets are shared.
 User-agent: Twitterbot
 Allow: /assets
 Allow: /_astro
@@ -18,3 +18,5 @@ Allow: /_astro
 User-agent: WhatsApp
 Allow: /assets
 Allow: /_astro
+
+Sitemap: https://blankie.rest/sitemap-index.xml

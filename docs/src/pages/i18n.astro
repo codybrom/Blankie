@@ -114,7 +114,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 ---
 
 <Layout title={title}>
-  <main class="mx-auto max-w-5xl px-5 pt-28 pb-10">
+  <div class="mx-auto max-w-5xl px-5 pt-28 pb-10">
     <h1 class="mb-6 text-4xl font-semibold tracking-tight">Translation Status</h1>
 
     <Card className="mb-8 gap-0 overflow-visible p-6">
@@ -242,7 +242,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
         Blankie into your language, please check the
         <a
           href="/contributing/#translation-contributions"
-          class="text-accent-ink transition-colors hover:text-white"
+          class="text-accent-ink underline transition-colors hover:text-white"
         >
           contribution guidelines
         </a>.
@@ -255,7 +255,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
         <li>
           Download the <a
             href="/i18n/"
-            class="text-accent-ink transition-colors hover:text-white"
+            class="text-accent-ink underline transition-colors hover:text-white"
             >English template</a
           > to use as your starting point
         </li>
@@ -269,14 +269,14 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
             <li>
               Through a GitHub issue using the <a
                 href="https://github.com/codybrom/blankie/issues/new?assignees=&labels=translation-contribution&projects=&template=translation_contribution.yml&title=%5BTranslation%5D%3A+"
-                class="text-accent-ink transition-colors hover:text-white"
+                class="text-accent-ink underline transition-colors hover:text-white"
                 >Translation contribution</a
               > template
             </li>
             <li>
               Or by emailing them to <a
                 href="mailto:i18n@blankie.rest"
-                class="text-accent-ink transition-colors hover:text-white"
+                class="text-accent-ink underline transition-colors hover:text-white"
                 >i18n@blankie.rest</a
               >
             </li>
@@ -329,6 +329,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
         you're comfortable using Xcode, you can also fork the repository, import
         changes from a CSV or JSON file <a
           href="/contributing/#translation-contributions"
+          class="text-accent-ink underline transition-colors hover:text-white"
           >using our import script</a
         >, then test locally and create a pull request with your changes.
       </p>
@@ -338,12 +339,12 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
       <p class="mt-6 mb-4">
         Find an issue with existing translations or have general feedback? Email <a
           href="mailto:i18n@blankie.rest"
-          class="text-accent-ink transition-colors hover:text-white"
+          class="text-accent-ink underline transition-colors hover:text-white"
           >i18n@blankie.rest</a
         >.
       </p>
     </Card>
-  </main>
+  </div>
 </Layout>
 
 <script>
