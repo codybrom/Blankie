@@ -77,10 +77,9 @@
     }
   },
   "allowScripts": {
-    "esbuild@0.27.7": true,
-    "esbuild@0.28.0": true,
     "fsevents@2.3.3": true,
     "msw@2.14.6": true,
-    "sharp@0.34.5": true
+    "sharp@0.34.5": true,
+    "esbuild@0.28.1": true
   }
 }
