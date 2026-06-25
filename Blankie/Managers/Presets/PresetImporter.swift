@@ -131,13 +131,11 @@ private enum SoundCustomizationImporter {
           continue
         }
 
-        // Apply each customization property if it's not nil
-        if let title = customization.customTitle {
-          customizationManager.setCustomTitle(title, for: customization.fileName)
-        }
-        if let iconName = customization.customIconName {
-          customizationManager.setCustomIcon(iconName, for: customization.fileName)
-        }
+        // Deliberately ignore a built-in sound's name and icon: those are the
+        // exporter's personal cosmetic overrides and must not replace this
+        // device's default (localized) built-in name/icon. Older archives may
+        // still carry them, so this guard — not just the export-side strip — is
+        // what guarantees they never apply. Behavioral settings below do apply.
         if let randomizeStart = customization.randomizeStartPosition {
           customizationManager.setRandomizeStartPosition(
             randomizeStart, for: customization.fileName
