@@ -7,6 +7,7 @@ dist/
 # prebuild.js only generates public/i18n and never cleans the dir)
 public/*
 !public/images/
+!public/robots.txt
 
 # dependencies
 node_modules/
