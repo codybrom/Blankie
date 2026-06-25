@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "node prebuild.js && astro dev",
+    "dev:bg": "node prebuild.js && astro dev --background",
     "build": "node prebuild.js && astro build",
     "preview": "astro preview",
     "astro": "astro",
