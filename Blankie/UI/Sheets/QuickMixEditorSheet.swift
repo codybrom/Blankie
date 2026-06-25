@@ -51,7 +51,7 @@ import SwiftUI
                       .foregroundColor(.accentColor)
                       .frame(width: 20)
                       .accessibilityHidden(true)
-                    Text(sound.title)
+                    Text(LocalizedStringKey(sound.title))
                   }
                   .accessibilityElement(children: .combine)
                   .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
@@ -133,7 +133,7 @@ import SwiftUI
                 .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                 .frame(width: 20)
                 .accessibilityHidden(true)
-              Text(sound.title)
+              Text(LocalizedStringKey(sound.title))
                 .foregroundColor(.primary)
               Spacer()
               if isSelected {

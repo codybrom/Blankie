@@ -394,7 +394,7 @@ struct SoloPickerRow: View {
         )
         .accessibilityHidden(true)
 
-        Text(sound.title)
+        Text(LocalizedStringKey(sound.title))
           .foregroundColor(
             LibraryRowStyle.titleColor(
               isCurrent: isCurrent, accent: accent, presentation: presentation))
@@ -413,7 +413,7 @@ struct SoloPickerRow: View {
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
       .accessibilityElement(children: .combine)
-      .accessibilityLabel(Text(sound.title))
+      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
       .accessibilityAddTraits(.isButton)
       .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
       // macOS doesn't expose .onTapGesture as a VoiceOver activation, so the
@@ -421,7 +421,7 @@ struct SoloPickerRow: View {
       // as a real Button for assistive tech; iOS gets the action via .combine.
       #if os(macOS)
         .accessibilityRepresentation {
-          Button(sound.title) { activateRow() }
+          Button(LocalizedStringKey(sound.title)) { activateRow() }
           .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
         }
       #endif

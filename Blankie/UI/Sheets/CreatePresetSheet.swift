@@ -217,7 +217,7 @@ extension CreatePresetSheet {
         ForEach(orderedSounds.filter { selectedSounds.contains($0.fileName) }) { sound in
           HStack(spacing: 8) {
             Label {
-              Text(sound.title)
+              Text(LocalizedStringKey(sound.title))
             } icon: {
               Image(systemName: sound.systemIconName)
                 .foregroundColor(activeAccentColor)

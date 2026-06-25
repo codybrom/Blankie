@@ -105,7 +105,7 @@ struct SoundSelectionView: View {
             .accessibilityHidden(true)
 
           Label {
-            Text(sound.title)
+            Text(LocalizedStringKey(sound.title))
               .foregroundStyle(.primary)
           } icon: {
             Image(systemName: sound.systemIconName)
@@ -132,7 +132,7 @@ struct SoundSelectionView: View {
         let isRowSelected = selectedSounds.contains(sound.fileName)
 
         Label {
-          Text(sound.title)
+          Text(LocalizedStringKey(sound.title))
         } icon: {
           Image(systemName: sound.systemIconName)
             .foregroundStyle(isRowSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.white))

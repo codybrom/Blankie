@@ -531,7 +531,7 @@ import SwiftUI
           if isPreparing {
             Text("Preparing…")
           } else {
-            Text(sound.title)
+            Text(LocalizedStringKey(sound.title))
           }
         }
         .font(.system(size: 9))
@@ -662,7 +662,7 @@ import SwiftUI
           .frame(width: 30, height: 42)
           .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
 
-        Text(sound.title)
+        Text(LocalizedStringKey(sound.title))
           .font(.system(size: 9))
           .foregroundColor(.secondary)
           .lineLimit(1)
