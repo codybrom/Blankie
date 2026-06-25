@@ -16,7 +16,7 @@ import SwiftUI
 
     var navigationTitle: String {
       if let soloSound = audioManager.soloModeSound {
-        return soloSound.title
+        return soloSound.localizedTitle
       }
 
       if audioManager.isQuickMix {

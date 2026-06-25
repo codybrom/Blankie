@@ -530,7 +530,7 @@ extension EditPresetSheet {
     // Only validate name for non-default presets
     if !preset.isDefault {
       guard !presetName.isEmpty else {
-        error = "Preset name cannot be empty"
+        error = String(localized: "Preset name cannot be empty")
         return
       }
     }

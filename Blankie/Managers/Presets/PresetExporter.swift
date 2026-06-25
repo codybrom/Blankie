@@ -241,9 +241,18 @@ class PresetExporter {
 
     // Get all customizations and filter to those used in this preset
     let allCustomizations = customizationManager.getAllCustomizations()
-    return allCustomizations.filter { customization in
-      presetSoundFileNames.contains(customization.fileName)
-    }
+    return allCustomizations
+      .filter { presetSoundFileNames.contains($0.fileName) }
+      .compactMap { customization in
+        // A built-in sound's name and icon are personal, cosmetic overrides
+        // (and a shared preset shouldn't leak them, nor force the recipient's
+        // built-in name away from their own localized default). Strip both;
+        // behavioral settings still travel. Drop entries left with nothing.
+        var stripped = customization
+        stripped.customTitle = nil
+        stripped.customIconName = nil
+        return stripped.hasCustomizations ? stripped : nil
+      }
   }
 
   private func createZipFile(from sourceURL: URL, to destinationURL: URL) async throws {

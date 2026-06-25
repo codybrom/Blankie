@@ -195,7 +195,7 @@ struct SoundIcon: View {
       .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
       // Name the control for VoiceOver/Voice Control even when the visible title
       // is hidden by "Show Sound Names" (the identifier above is test-only).
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityLabel(Text(sound.localizedTitle))
       .onTapGesture {
         #if os(macOS)
           // Clicking activates but must not keep keyboard focus — the ring is
@@ -254,7 +254,7 @@ struct SoundIcon: View {
 
       if globalSettings.showSoundNames {
         HStack(spacing: 4) {
-          Text(LocalizedStringKey(sound.title))
+          Text(sound.localizedTitle)
             .font(titleFont)
             .lineLimit(2)
             .multilineTextAlignment(.center)
@@ -312,7 +312,7 @@ struct SoundIcon: View {
           ? (sound.isSelected ? (accentColor) : .gray) : .gray
       )
       .disabled(!sound.isSelected)
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityLabel(Text(sound.localizedTitle))
       .accessibilityValue(
         Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
       )

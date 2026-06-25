@@ -78,7 +78,7 @@ import os
       .opacity(sound.isSelected ? 1.0 : 0.4)
       // VoiceOver focuses this to toggle the sound in/out of the mix and the volume slider below stays a separate adjustable element.
       .accessibilityElement(children: .ignore)
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityLabel(Text(sound.localizedTitle))
       .accessibilityAddTraits(.isButton)
       .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
       .accessibilityAction {
@@ -93,7 +93,7 @@ import os
         }
         if globalSettings.showSoundNames {
           HStack {
-            Text(LocalizedStringKey(sound.title))
+            Text(sound.localizedTitle)
               .font(
                 .callout.weight(
                   Locale.current.scriptCategory == .standard ? .regular : .thin)
@@ -131,7 +131,7 @@ import os
           sound.isSelected ? accentColor : .gray
         )
         .disabled(!sound.isSelected)
-        .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+        .accessibilityLabel(Text(sound.localizedTitle))
         .accessibilityValue(
           Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
         )

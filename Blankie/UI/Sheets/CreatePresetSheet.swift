@@ -217,7 +217,7 @@ extension CreatePresetSheet {
         ForEach(orderedSounds.filter { selectedSounds.contains($0.fileName) }) { sound in
           HStack(spacing: 8) {
             Label {
-              Text(sound.title)
+              Text(sound.localizedTitle)
             } icon: {
               Image(systemName: sound.systemIconName)
                 .foregroundColor(activeAccentColor)
@@ -277,7 +277,7 @@ extension CreatePresetSheet {
 
   func createPreset() {
     guard !presetName.isEmpty else {
-      error = "Preset name cannot be empty"
+      error = String(localized: "Preset name cannot be empty")
       return
     }
 
@@ -326,7 +326,7 @@ extension CreatePresetSheet {
         onCreated?()
       } catch {
         await MainActor.run {
-          self.error = "Failed to create preset"
+          self.error = String(localized: "Failed to create preset")
         }
       }
     }

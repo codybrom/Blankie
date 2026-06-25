@@ -264,10 +264,7 @@ struct SoundManagementView: View {
           .frame(width: 26)
           .accessibilityHidden(true)
 
-        Text(
-          isCustom
-            ? LocalizedStringKey(stringLiteral: sound.title) : LocalizedStringKey(sound.title)
-        )
+        Text(sound.localizedTitle)
         .foregroundStyle(.primary)
 
         Spacer()

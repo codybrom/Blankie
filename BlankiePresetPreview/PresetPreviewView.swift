@@ -135,8 +135,10 @@ struct PresetPreviewView: View {
       .scaledToFit()
   }
 
+  // Single pluralized key so the string catalog picks the right form per
+  // language (e.g. Polish one/few/many), instead of a Swift singular/plural split.
   private var soundCountText: LocalizedStringKey {
-    preset.soundCount == 1 ? "1 sound" : "\(preset.soundCount) sounds"
+    "\(preset.soundCount) sounds"
   }
 }
 

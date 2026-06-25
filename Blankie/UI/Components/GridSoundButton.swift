@@ -87,7 +87,7 @@ import SwiftUI
 
             if globalSettings.showSoundNames {
               HStack(spacing: 4) {
-                Text(LocalizedStringKey(sound.title))
+                Text(sound.localizedTitle)
                   .font(.subheadline)
                   .fontWeight(.medium)
                   .foregroundColor(.primary)
@@ -109,7 +109,7 @@ import SwiftUI
           // Label the tile explicitly so VoiceOver/Voice Control name it even
           // when "Show Sound Names" hides the visible title (otherwise the only
           // accessible text is the SF Symbol's derived name).
-          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+          .accessibilityLabel(Text(sound.localizedTitle))
           .onTapGesture {
             onTap()
           }
@@ -158,7 +158,7 @@ import SwiftUI
       .sensoryFeedback(.selection, trigger: sound.isSelected)
       .dynamicTypeSize(...DynamicTypeSize.accessibility3)
       .accessibilityShowsLargeContentViewer {
-        Label(LocalizedStringKey(sound.title), systemImage: sound.systemIconName)
+        Label(sound.localizedTitle, systemImage: sound.systemIconName)
       }
     }
 
@@ -212,7 +212,7 @@ import SwiftUI
       // aren't selected so the slider can't edit an inactive sound.
       .disabled(!isActive)
       .padding(.horizontal, 4)
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityLabel(Text(sound.localizedTitle))
       .accessibilityValue(
         Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
       )

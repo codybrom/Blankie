@@ -531,7 +531,7 @@ import SwiftUI
           if isPreparing {
             Text("Preparing…")
           } else {
-            Text(sound.title)
+            Text(sound.localizedTitle)
           }
         }
         .font(.system(size: 9))
@@ -540,7 +540,7 @@ import SwiftUI
         .frame(maxWidth: 64)
       }
       .onTapGesture { placeInField() }
-      .accessibilityLabel(Text("\(sound.title), in your head, tap to place in space"))
+      .accessibilityLabel(Text("\(sound.localizedTitle), in your head, tap to place in space"))
     }
 
     /// Long sounds render their mono variant first ("Preparing for Spatial"),
@@ -662,7 +662,7 @@ import SwiftUI
           .frame(width: 30, height: 42)
           .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
 
-        Text(sound.title)
+        Text(sound.localizedTitle)
           .font(.system(size: 9))
           .foregroundColor(.secondary)
           .lineLimit(1)
@@ -670,7 +670,7 @@ import SwiftUI
       }
       // Nudge up so the tail's tip sits on the placement point.
       .offset(y: -14)
-      .accessibilityLabel(Text("\(sound.title), placed in space"))
+      .accessibilityLabel(Text("\(sound.localizedTitle), placed in space"))
     }
 
     private var dragGesture: some Gesture {
