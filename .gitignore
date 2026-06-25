@@ -103,3 +103,6 @@ scripts/.build/
 Blankie/Resources/AnimatedArtwork/**/*.mov
 # In-progress download temp files from the fetch script.
 Blankie/Resources/AnimatedArtwork/**/*.mov.download
+
+# Animated-artwork source videos (and any .download temp files)
+ArtworkSources/
