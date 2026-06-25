@@ -14,7 +14,7 @@ A quick follow-up to 2.0 with two small additions and a handful of fixes.
 ### Added
 
 - **Quick Look preview for shared presets (iOS)** - Tap a `.blankie` file in Messages or Files and you'll see the preset's name, artwork, and sound count, plus how to add it to Blankie.
-- **Collapsible Library sections** - Collapse the Sounds and Presets lists in your Library. Blankie will remembers what you left open.
+- **Collapsible Library sections** - Collapse the Sounds and Presets lists in your Library. Blankie remembers what you left open.
 
 ### Changed
 
