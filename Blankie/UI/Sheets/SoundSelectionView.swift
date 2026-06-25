@@ -105,7 +105,7 @@ struct SoundSelectionView: View {
             .accessibilityHidden(true)
 
           Label {
-            Text(LocalizedStringKey(sound.title))
+            Text(sound.localizedTitle)
               .foregroundStyle(.primary)
           } icon: {
             Image(systemName: sound.systemIconName)
@@ -122,7 +122,7 @@ struct SoundSelectionView: View {
         .background(isSelected ? AnyShapeStyle(.tint.opacity(0.12)) : AnyShapeStyle(.clear))
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityLabel(Text(sound.localizedTitle))
       .accessibilityAddTraits(isSelected ? [.isSelected] : [])
       .accessibilityHint("Adds or removes this sound from the preset")
     }
@@ -132,7 +132,7 @@ struct SoundSelectionView: View {
         let isRowSelected = selectedSounds.contains(sound.fileName)
 
         Label {
-          Text(LocalizedStringKey(sound.title))
+          Text(sound.localizedTitle)
         } icon: {
           Image(systemName: sound.systemIconName)
             .foregroundStyle(isRowSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.white))
@@ -158,7 +158,7 @@ struct SoundSelectionView: View {
               handleSoundToggle(sound)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+            .accessibilityLabel(Text(sound.localizedTitle))
             .accessibilityAddTraits(.isButton)
             .accessibilityAddTraits(selectedSounds.contains(sound.fileName) ? [.isSelected] : [])
             .accessibilityHint("Adds or removes this sound from the preset")

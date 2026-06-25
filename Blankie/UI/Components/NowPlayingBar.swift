@@ -119,7 +119,7 @@ import SwiftUI
 
     private var title: String {
       if let soloSound = audioManager.soloModeSound {
-        return soloSound.title
+        return soloSound.localizedTitle
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")

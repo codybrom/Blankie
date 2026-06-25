@@ -253,7 +253,7 @@ struct PresetOnboardingSheet: View {
 
         // Sound info
         VStack(alignment: .leading, spacing: 4) {
-          Text(sound.title)
+          Text(sound.localizedTitle)
             .font(.body)
             .foregroundStyle(.primary)
         }
@@ -291,7 +291,7 @@ struct PresetOnboardingSheet: View {
       )
     }
     .buttonStyle(.plain)
-    .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+    .accessibilityLabel(Text(sound.localizedTitle))
     .accessibilityAddTraits(isSelected ? [.isSelected] : [])
   }
 
@@ -337,7 +337,7 @@ struct PresetOnboardingSheet: View {
           HStack(spacing: 8) {
             let chips = audioManager.sounds.filter { selectedSounds.contains($0.fileName) }
             ForEach(chips.prefix(5)) { sound in
-              Text(sound.title)
+              Text(sound.localizedTitle)
                 .font(.caption)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)

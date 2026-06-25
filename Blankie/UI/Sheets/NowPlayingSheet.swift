@@ -574,7 +574,7 @@ import SwiftUI
       HStack(alignment: .center) {
         VStack(alignment: .leading, spacing: 2) {
           if let soloSound = audioManager.soloModeSound {
-            Text(soloSound.title)
+            Text(soloSound.localizedTitle)
               .font(.title2)
               .fontWeight(.bold)
               .foregroundColor(.white)

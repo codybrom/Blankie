@@ -74,7 +74,7 @@ import UniformTypeIdentifiers
       // soloLayoutSound (not soloModeSound) so the title doesn't flip to the
       // preset name while sheet preview temporarily exits solo mode.
       if let soloSound = soloLayoutSound {
-        return soloSound.title
+        return soloSound.localizedTitle
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")

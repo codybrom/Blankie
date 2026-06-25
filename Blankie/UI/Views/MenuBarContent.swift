@@ -330,7 +330,7 @@
           // surface the toggle as a button on the icon (the slider is its own
           // adjustable stop).
           .accessibilityElement(children: .ignore)
-          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+          .accessibilityLabel(Text(sound.localizedTitle))
           .accessibilityAddTraits(.isButton)
           .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
           .accessibilityAction { activate() }
@@ -338,7 +338,7 @@
         VStack(alignment: .leading, spacing: 2) {
           if showSoundNames {
             HStack(spacing: 4) {
-              Text(LocalizedStringKey(sound.title))
+              Text(sound.localizedTitle)
                 .font(.callout)
               if sound.isMusic {
                 MusicTagBadge(
@@ -359,7 +359,7 @@
           .controlSize(.small)
           .tint(sound.isSelected ? accent : Color.gray)
           .disabled(!sound.isSelected)
-          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+          .accessibilityLabel(Text(sound.localizedTitle))
         }
       }
       .padding(.vertical, 2)

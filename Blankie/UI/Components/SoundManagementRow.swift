@@ -41,10 +41,7 @@ struct SoundManagementRowContent: View {
   }
 
   private var soundInfo: some View {
-    Text(
-      isCustomSound
-        ? LocalizedStringKey(stringLiteral: sound.title) : LocalizedStringKey(sound.title)
-    )
+    Text(sound.localizedTitle)
     .foregroundColor(.primary)
   }
 

@@ -77,7 +77,7 @@ struct SoloSoundIcon: View {
     .contentShape(Circle())
     .accessibilityElement(children: .ignore)
     .accessibilityAddTraits(.isButton)
-    .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+    .accessibilityLabel(Text(sound.localizedTitle))
     .accessibilityValue(Text(audioManager.isGloballyPlaying ? "Playing" : "Paused"))
     .accessibilityHint(Text("Plays or pauses the sound"))
     #if os(macOS)
