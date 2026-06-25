@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-06-24
+
+### Fixed
+
+- On iPad, lock screen animations played as a static image. Each animation will now properly show a version for the iPad lock screen.
+
 ## [2.0.1] - 2026-06-24
 
 A quick follow-up to 2.0 with two small additions and a handful of fixes.
@@ -274,7 +280,9 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.0.2...HEAD
+[2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/codybrom/blankie/compare/v1.0.13...v2.0.0
 [1.0.13]: https://github.com/codybrom/blankie/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/codybrom/blankie/compare/v1.0.11...v1.0.12
