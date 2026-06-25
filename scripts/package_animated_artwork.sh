@@ -18,13 +18,21 @@
 #   downloadPolicy = onDemand            downloaded only when a user picks it
 #   platforms      = iOS                 animated artwork is an iOS-only feature
 #
+# Each clip ships two variants because iPhone and iPad lock screens advertise
+# different artwork keys: a 3:4 portrait master (pack "<Name>", file
+# "<Name>/<Name>.mov") and a 1:1 square crop for iPad (pack "<Name>Square", file
+# "<Name>/<Name>Square.mov"). Both files live in the base clip's folder, which is
+# why a square pack maps to "<Name>/<Name>Square.mov" — matching
+# BackgroundResourceManager.relativeVideoPath(for:). All sources (both variants)
+# live together on one release, so there is no per-entry tag.
+#
 # Output: build/AssetPacks/<Name>.aar  (git-ignored)
 #
 # Usage:
-#   scripts/package_animated_artwork.sh                  # fetch + package all 21
+#   scripts/package_animated_artwork.sh                  # fetch + package all
 #   scripts/package_animated_artwork.sh RainLoop Beach   # only these artwork ids
 #   scripts/package_animated_artwork.sh --force          # re-download, then package
-#   TAG=artwork-assets-v2 scripts/package_animated_artwork.sh   # override release tag
+#   TAG=artwork-assets-v3 scripts/package_animated_artwork.sh   # override release tag
 #
 set -euo pipefail
 
@@ -34,7 +42,7 @@ TAG="${TAG:-artwork-assets-v1}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 MANIFEST="$SCRIPT_DIR/animated-artwork.manifest"
-ARTWORK_DIR="$ROOT_DIR/Blankie/Resources/AnimatedArtwork"
+ARTWORK_DIR="$ROOT_DIR/ArtworkSources"
 OUT_DIR="$ROOT_DIR/build/AssetPacks"
 BASE_URL="https://github.com/$REPO/releases/download/$TAG"
 
@@ -76,7 +84,11 @@ for entry in "${entries[@]}"; do
   # Honor an optional id filter.
   if [ -n "$FILTER" ] && [[ "$FILTER" != *" $name "* ]]; then continue; fi
 
-  dest="$ARTWORK_DIR/$name/$name.mov"
+  # Both variants of a clip share the base clip's folder, so a "<Name>Square"
+  # pack reads from "<Name>/<Name>Square.mov".
+  folder="$name"
+  [[ "$name" == *Square ]] && folder="${name%Square}"
+  dest="$ARTWORK_DIR/$folder/$name.mov"
 
   # 1) Ensure the source video is present and matches the manifest checksum.
   if [ "$FORCE" -eq 0 ] && [ -f "$dest" ] && [ "$(sha256 "$dest")" = "$want_sha" ]; then
@@ -108,7 +120,7 @@ for entry in "${entries[@]}"; do
 {
   "assetPackID": "$name",
   "downloadPolicy": { "onDemand": {} },
-  "fileSelectors": [ { "file": "$name/$name.mov" } ],
+  "fileSelectors": [ { "file": "$folder/$name.mov" } ],
   "platforms": [ "iOS" ]
 }
 JSON

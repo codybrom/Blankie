@@ -38,8 +38,10 @@ import os
         return
       }
 
-      // Try to load resources (may trigger ODR download in background)
-      guard let resources = loadAnimatedArtworkResources(for: preset) else {
+      // Try to load resources (may trigger a Background Assets download). The
+      // key decides which variant to serve: iPad's lock screen advertises only
+      // the 1x1 key, so it needs the square crop, not the 3:4 portrait master.
+      guard let resources = loadAnimatedArtworkResources(for: preset, key: artworkKey) else {
         // Resources not available yet (downloading) - keep existing artwork, don't remove
         // When download completes, updateAnimatedArtwork will be called again
         return
@@ -54,10 +56,10 @@ import os
         && !ProcessInfo.processInfo.isLowPowerModeEnabled
     }
 
-    private func loadAnimatedArtworkResources(for preset: Preset) -> (
+    private func loadAnimatedArtworkResources(for preset: Preset, key: AnimatedArtworkKey) -> (
       loopURL: URL, previewImage: UIImage
     )? {
-      guard let resources = animatedArtworkResources(for: preset),
+      guard let resources = animatedArtworkResources(for: preset, key: key),
         let previewImage = resources.previewImage
       else {
         return nil
@@ -114,7 +116,9 @@ import os
       currentAnimatedPreviewPath = nil
     }
 
-    func animatedArtworkResources(for preset: Preset) -> (loopURL: URL, previewImage: UIImage?)? {
+    func animatedArtworkResources(for preset: Preset, key: AnimatedArtworkKey) -> (
+      loopURL: URL, previewImage: UIImage?
+    )? {
       Logger.nowPlaying.debug("animatedArtworkResources called. preset id: \(preset.id.uuidString)")
       guard let animatedArtwork = preset.animatedArtwork else {
         Logger.nowPlaying.debug("animatedArtwork is nil, returning nil")
@@ -145,7 +149,7 @@ import os
       // Assets pack (no Documents copy), with the preview image from the bundle.
       if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
         Logger.nowPlaying.debug("Bundled artwork, resolving Background Assets pack: \(bundledId)")
-        return loadBundledBackgroundResources(bundledId: bundledId, preset: preset)
+        return loadBundledBackgroundResources(bundledId: bundledId, key: key, preset: preset)
       }
 
       // No loopPath and no bundled ID - invalid state
@@ -188,27 +192,36 @@ import os
 
     private func loadBundledBackgroundResources(
       bundledId: String,
+      key: AnimatedArtworkKey,
       preset: Preset
     ) -> (loopURL: URL, previewImage: UIImage?)? {
-      // The video lives in its Background Assets pack; serve it directly.
-      guard let loopURL = BackgroundResourceManager.shared.availableURL(for: bundledId) else {
-        Logger.nowPlaying.debug(
-          "Artwork pack \(bundledId) not available, triggering background download")
+      // Each clip ships as two variants so it animates on every lock screen:
+      // the 3:4 portrait master (pack "<id>", preview "<id>.jpg") for iPhone,
+      // and a 1:1 square crop (pack "<id>Square", preview "<id>Square.jpg") for
+      // iPad, which advertises only the 1x1 key. The pack id and preview image
+      // are otherwise resolved identically.
+      let packId = key == .square ? "\(bundledId)Square" : bundledId
+      let previewResource = key == .square ? "\(bundledId)Square" : bundledId
 
-        // Coalesce duplicate triggers for the same id (scrolling back onto a
+      // The video lives in its Background Assets pack; serve it directly.
+      guard let loopURL = BackgroundResourceManager.shared.availableURL(for: packId) else {
+        Logger.nowPlaying.debug(
+          "Artwork pack \(packId) not available, triggering background download")
+
+        // Coalesce duplicate triggers for the same pack (scrolling back onto a
         // card that's already downloading, repeated preset re-publishes, etc.)
-        if animatedArtworkDownloadTasks[bundledId] == nil {
-          animatedArtworkDownloadTasks[bundledId] = Task { @MainActor [weak self] in
+        if animatedArtworkDownloadTasks[packId] == nil {
+          animatedArtworkDownloadTasks[packId] = Task { @MainActor [weak self] in
             guard let self else { return }
-            defer { self.animatedArtworkDownloadTasks.removeValue(forKey: bundledId) }
+            defer { self.animatedArtworkDownloadTasks.removeValue(forKey: packId) }
             do {
-              _ = try await BackgroundResourceManager.shared.resourceURL(for: bundledId)
-              Logger.nowPlaying.debug("Downloaded artwork pack: \(bundledId)")
+              _ = try await BackgroundResourceManager.shared.resourceURL(for: packId)
+              Logger.nowPlaying.debug("Downloaded artwork pack: \(packId)")
               // Re-publish now that the pack is available locally.
               self.updateAnimatedArtwork(for: preset)
             } catch {
               Logger.nowPlaying.error(
-                "Failed to download artwork pack \(bundledId, privacy: .public): \(error, privacy: .public)"
+                "Failed to download artwork pack \(packId, privacy: .public): \(error, privacy: .public)"
               )
             }
           }
@@ -217,14 +230,15 @@ import os
         return nil
       }
 
-      Logger.nowPlaying.debug("Artwork pack \(bundledId) available at: \(loopURL)")
+      Logger.nowPlaying.debug("Artwork pack \(packId) available at: \(loopURL)")
 
-      // Preview image is bundled (named after the bundled id, e.g. "OceanWaves.jpg").
+      // Preview image is bundled (named after the variant, e.g. "OceanWaves.jpg"
+      // or "OceanWavesSquare.jpg").
       var previewImage: UIImage?
-      if let previewURL = Bundle.main.url(forResource: bundledId, withExtension: "jpg") {
+      if let previewURL = Bundle.main.url(forResource: previewResource, withExtension: "jpg") {
         previewImage = UIImage(contentsOfFile: previewURL.path)
       } else {
-        Logger.nowPlaying.debug("Preview image not found in bundle: \(bundledId).jpg")
+        Logger.nowPlaying.debug("Preview image not found in bundle: \(previewResource).jpg")
       }
 
       return (loopURL: loopURL, previewImage: previewImage)

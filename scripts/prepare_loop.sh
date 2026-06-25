@@ -17,6 +17,9 @@ Options:
       --crf VALUE        Constant Rate Factor (default: 20)
       --anchor POS       Crop anchor: center, top, bottom, left, right,
                          bottom-center, top-center (default: center)
+      --square           Also encode a 1:1 square loop video, <NAME>Square.mov,
+                         for iPad lock screens (which accept only the 1x1 key).
+                         Works on any input, including an already-3:4 master.
       --help             Show this help and exit
 
 The script crops the input to a 3:4 portrait aspect ratio (for iPhone lock screens),
@@ -24,6 +27,9 @@ scales to the requested size, encodes to the chosen codec, and writes:
   <NAME>.mov        (loop video)
   <NAME>.jpg        (first-frame preview, 3:4 portrait)
   <NAME>Square.jpg  (first-frame preview, 1:1 square)
+
+With --square it also writes:
+  <NAME>Square.mov  (loop video, 1:1 square)
 USAGE
 }
 
@@ -43,6 +49,7 @@ WIDTH=1080
 HEIGHT=1440
 CRF="20"
 ANCHOR="center"
+SQUARE_VIDEO=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -58,6 +65,8 @@ while [[ $# -gt 0 ]]; do
       CRF="$2"; shift 2;;
     --anchor)
       ANCHOR="$(to_lower "$2")"; shift 2;;
+    --square)
+      SQUARE_VIDEO=1; shift;;
     --help)
       usage; exit 0;;
     -*)
@@ -97,8 +106,12 @@ if [[ -z "$INPUT" ]]; then
       continue
     fi
 
-    # Check if all three outputs exist
-    if [[ ! -f "$ARTWORK_DIR/$name.mov" ]] || [[ ! -f "$ARTWORK_DIR/$name.jpg" ]] || [[ ! -f "$ARTWORK_DIR/${name}Square.jpg" ]]; then
+    # Reprocess if any expected output is missing. With --square that includes
+    # the square loop, so a source that already has the other three outputs
+    # still gets picked up to generate <name>Square.mov.
+    if [[ ! -f "$ARTWORK_DIR/$name.mov" ]] || [[ ! -f "$ARTWORK_DIR/$name.jpg" ]] \
+      || [[ ! -f "$ARTWORK_DIR/${name}Square.jpg" ]] \
+      || { [[ "$SQUARE_VIDEO" -eq 1 ]] && [[ ! -f "$ARTWORK_DIR/${name}Square.mov" ]]; }; then
       FILES_TO_PROCESS+=("$file")
     fi
   done < <(find "$ARTWORK_DIR" -type f \( -name "*.mp4" -o -name "*.avi" -o -name "*.mkv" \) ! -name ".*" -print0 | sort -z)
@@ -124,7 +137,9 @@ if [[ -z "$INPUT" ]]; then
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
     # Recursively call this script with the file as input
-    "$0" "$file" -w "$WIDTH" -h "$HEIGHT" --crf "$CRF" --anchor "$ANCHOR"
+    SQUARE_ARGS=()
+    [[ "$SQUARE_VIDEO" -eq 1 ]] && SQUARE_ARGS+=(--square)
+    "$0" "$file" -w "$WIDTH" -h "$HEIGHT" --crf "$CRF" --anchor "$ANCHOR" "${SQUARE_ARGS[@]}"
 
     echo ""
   done
@@ -198,6 +213,7 @@ esac
 LOOP_PATH="$OUTPUT_DIR/${NAME}.mov"
 PREVIEW_PATH="$OUTPUT_DIR/${NAME}.jpg"
 SQUARE_PREVIEW_PATH="$OUTPUT_DIR/${NAME}Square.jpg"
+SQUARE_LOOP_PATH="$OUTPUT_DIR/${NAME}Square.mov"
 
 FILTER="crop=${CROP_W}:${CROP_H}:${anchor_x}:${anchor_y},scale=${WIDTH}:${HEIGHT},setsar=1"
 
@@ -237,7 +253,24 @@ ffmpeg -hide_banner -y \
   -update 1 \
   "$SQUARE_PREVIEW_PATH"
 
+if [[ "$SQUARE_VIDEO" -eq 1 ]]; then
+  echo "🟦 Encoding square loop → $SQUARE_LOOP_PATH"
+  ffmpeg -hide_banner -y \
+    -i "$INPUT" \
+    -vf "$SQUARE_FILTER" \
+    -an \
+    -c:v "$VCODEC" \
+    -preset medium \
+    -crf "$CRF" \
+    "${CODEC_PARAMS[@]}" \
+    -pix_fmt yuv420p \
+    -tag:v "$TAG" \
+    -movflags +faststart \
+    "$SQUARE_LOOP_PATH"
+fi
+
 echo "✅ Done. Generated:"
 echo "   $LOOP_PATH"
 echo "   $PREVIEW_PATH"
 echo "   $SQUARE_PREVIEW_PATH"
+[[ "$SQUARE_VIDEO" -eq 1 ]] && echo "   $SQUARE_LOOP_PATH"

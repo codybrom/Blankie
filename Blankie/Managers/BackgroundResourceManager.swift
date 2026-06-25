@@ -83,7 +83,33 @@ final class BackgroundResourceManager: ObservableObject {
   /// Relative path of an artwork's video inside the asset-pack namespace.
   /// Must match the `fileSelectors` path used when packaging (see
   /// scripts/package_animated_artwork.sh).
-  private func relativeVideoPath(for id: String) -> String { "\(id)/\(id).mov" }
+  ///
+  /// Both variants of a clip live in the same folder, named after the base clip:
+  /// the 3:4 portrait master is `<id>/<id>.mov`, and the 1:1 square crop (pack id
+  /// `<id>Square`, used for iPad's lock screen) is `<id>/<id>Square.mov`. So a
+  /// "…Square" pack maps back to its base folder rather than a folder of its own.
+  private func relativeVideoPath(for id: String) -> String {
+    if id.hasSuffix("Square") {
+      let base = String(id.dropLast("Square".count))
+      return "\(base)/\(id).mov"
+    }
+    return "\(id)/\(id).mov"
+  }
+
+  /// Resolves a clip's base bundled id to the asset-pack id this device should
+  /// fetch: `<id>Square` on iPad (its lock screen takes only the 1x1 key), `<id>`
+  /// on iPhone, and the base id unchanged where animated artwork isn't a feature.
+  /// Routing every caller (gallery, prefetch, import, lock-screen publish)
+  /// through this keeps a device downloading exactly one variant per clip.
+  /// `nonisolated` so the synchronous prefetch mapping can call it off the main
+  /// actor; it reads only a device capability, no instance state.
+  nonisolated static func preferredPackID(for bundledID: String) -> String {
+    #if os(iOS)
+      return AnimatedArtworkKey.preferredForDevice == .square ? "\(bundledID)Square" : bundledID
+    #else
+      return bundledID
+    #endif
+  }
 
   // MARK: - Public API
 
