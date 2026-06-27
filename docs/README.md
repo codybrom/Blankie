@@ -16,7 +16,6 @@ The live site is available at [https://blankie.rest](https://blankie.rest)
 - [Lucide](https://lucide.dev) - Icons
 - [marked](https://marked.js.org) - Markdown rendering
 - [astro-seo](https://github.com/jonasmerlin/astro-seo) - SEO metadata
-- [@playform/compress](https://github.com/playform/compress) - Asset compression
 
 ## Performance
 
