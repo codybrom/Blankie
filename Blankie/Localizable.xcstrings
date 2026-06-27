@@ -107,7 +107,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%@ Lautstärke"
+            "value" : "Lautstärke von %@"
           }
         },
         "en-GB" : {
@@ -251,7 +251,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%@，在头脑中，轻点以置于空间中"
+            "value" : "%@，位于头部中央，轻点以置于空间中"
           }
         }
       }
@@ -451,7 +451,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minuteur de %lld h %lld min"
+            "value" : "Minuteur de %1$lld h %2$lld min"
           }
         },
         "hu" : {
@@ -463,7 +463,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Timer di %lld h %lld min"
+            "value" : "Timer di %1$lld h %2$lld min"
           }
         },
         "ja" : {
@@ -475,31 +475,31 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%lld시간 %lld분 타이머"
+            "value" : "%1$lld시간 %2$lld분 타이머"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minutnik %lld godz. %lld min"
+            "value" : "Minutnik %1$lld godz. %2$lld min"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Temporizador de %lld h %lld min"
+            "value" : "Temporizador de %1$lld h %2$lld min"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%lld Saat %lld Dakika Zamanlayıcı"
+            "value" : "%1$lld Saat %2$lld Dakikalık Zamanlayıcı"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%lld 小时 %lld 分钟计时器"
+            "value" : "%1$lld 小时 %2$lld 分钟计时器"
           }
         }
       }
@@ -884,7 +884,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%lld seçildi"
+            "value" : "%lld seçili"
           }
         },
         "zh-Hans" : {
@@ -1045,7 +1045,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "+%lld mais"
+            "value" : "mais %lld"
           }
         },
         "tr" : {
@@ -1649,7 +1649,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Köszönetnyilvánítás hozzáadása"
+            "value" : "Forrásmegjelölés hozzáadása"
           }
         },
         "it" : {
@@ -1667,7 +1667,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "크레딧 추가"
+            "value" : "출처 추가"
           }
         },
         "pl" : {
@@ -2060,7 +2060,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Add hozzá a neved a bétatesztelők listájához"
+            "value" : "Add hozzá a nevedet a bétatesztelők listájához"
           }
         },
         "it" : {
@@ -2096,7 +2096,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Adınızı Beta Test Eden Katkıları'na Ekleyin"
+            "value" : "Adınızı Beta Test Edenler Katkılarına Ekleyin"
           }
         },
         "zh-Hans" : {
@@ -2239,7 +2239,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "追加済み"
+            "value" : "追加日"
           }
         },
         "ko" : {
@@ -2305,7 +2305,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hozzáadja vagy eltávolítja ezt a hangot a sablonból"
+            "value" : "Hozzáadja ezt a hangot a sablonhoz, vagy eltávolítja belőle"
           }
         },
         "it" : {
@@ -2727,7 +2727,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "アルタナティブ"
+            "value" : "オルタナティブ"
           }
         },
         "ko" : {
@@ -2877,7 +2877,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Synthé d'ambiance"
+            "value" : "Synthé d’ambiance"
           }
         },
         "hu" : {
@@ -3032,25 +3032,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "La carátula animada no está disponible en este dispositivo."
+            "value" : "La ilustración animada no está disponible en este dispositivo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "L'illustration animée n'est pas disponible sur cet appareil."
+            "value" : "L’illustration animée n’est pas disponible sur cet appareil."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Az animált borító nem érhető el ezen az eszközön."
+            "value" : "Az animált borítókép nem érhető el ezen az eszközön."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "L'artwork animato non è disponibile su questo dispositivo."
+            "value" : "La copertina animata non è disponibile su questo dispositivo."
           }
         },
         "ja" : {
@@ -3074,7 +3074,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "A arte animada não está disponível neste dispositivo."
+            "value" : "A imagem animada não está disponível neste dispositivo."
           }
         },
         "tr" : {
@@ -3194,7 +3194,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Icône de l'app"
+            "value" : "Icône de l’app"
           }
         },
         "hu" : {
@@ -3450,7 +3450,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Biztosan visszaállítasz minden testreszabást ehhez a hanghoz?"
+            "value" : "Biztosan vissza szeretnéd állítani ennek a hangnak az összes testreszabását?"
           }
         },
         "it" : {
@@ -3462,7 +3462,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "このサウンドのすべてのカスタマイズをリセットしますか？"
+            "value" : "このサウンドのすべてのカスタマイズを本当にリセットしますか？"
           }
         },
         "ko" : {
@@ -3516,7 +3516,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Organizar"
+            "value" : "Distribuir"
           }
         },
         "fr" : {
@@ -3564,7 +3564,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Düzenle"
+            "value" : "Yerleştir"
           }
         },
         "zh-Hans" : {
@@ -3730,7 +3730,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%@ tarihinde"
+            "value" : "%@ saatinde"
           }
         },
         "zh-Hans" : {
@@ -4015,7 +4015,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Le fichier audio est trop volumineux. La taille maximale est de 150 MB."
+            "value" : "Le fichier audio est trop volumineux. La taille maximale est de 150 Mo."
           }
         },
         "hu" : {
@@ -4092,13 +4092,13 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Les fichiers audio de plus de 150 MB doivent être convertis pour économiser la mémoire."
+            "value" : "Les fichiers audio de plus de 150 Mo doivent être convertis pour économiser la mémoire."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "A 150 MB-nál nagyobb hangfájlokat a memória megőrzése érdekében át kell alakítani."
+            "value" : "A 150 MB-nál nagyobb hangfájlokat a memória kímélése érdekében át kell alakítani."
           }
         },
         "it" : {
@@ -4906,7 +4906,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie n'a pas pu ouvrir sa bibliothèque cette fois-ci, vos sons personnalisés sont donc indisponibles pour cette session. Vos données sont en sécurité — Blankie réessaiera à la prochaine ouverture."
+            "value" : "Blankie n’a pas pu ouvrir sa bibliothèque cette fois-ci, vos sons personnalisés sont donc indisponibles pour cette session. Vos données sont en sécurité — Blankie réessaiera à la prochaine ouverture."
           }
         },
         "hu" : {
@@ -4954,7 +4954,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie 这次未能打开它的音效库，因此本次使用期间您的自定义音效暂时不可用。您的数据是安全的——Blankie 会在您下次打开时再次尝试。"
+            "value" : "Blankie 这次未能打开音效库，因此本次使用期间您的自定义音效暂时不可用。您的数据是安全的——Blankie 会在您下次打开时再次尝试。"
           }
         }
       }
@@ -4977,13 +4977,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie tuvo que reconstruir su biblioteca tras un problema al abrirla. Tus sonidos prediseñados y las carátulas guardadas se restauraron, y tus sonidos importados se recuperaron de una copia de seguridad siempre que fue posible."
+            "value" : "Blankie tuvo que reconstruir su biblioteca tras un problema al abrirla. Tus sonidos prediseñados y las ilustraciones guardadas se restauraron, y tus sonidos importados se recuperaron de una copia de seguridad siempre que fue posible."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie a dû reconstruire sa bibliothèque après un problème d'ouverture. Vos préréglages et vos illustrations enregistrées ont été restaurés, et vos sons importés ont été récupérés depuis une copie de sauvegarde dans la mesure du possible."
+            "value" : "Blankie a dû reconstruire sa bibliothèque après un problème d’ouverture. Vos préréglages et vos illustrations enregistrées ont été restaurés, et vos sons importés ont été récupérés depuis une copie de sauvegarde dans la mesure du possible."
           }
         },
         "hu" : {
@@ -4995,7 +4995,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie ha dovuto ricostruire la sua libreria dopo un problema durante l'apertura. Le tue configurazioni e gli artwork salvati sono stati ripristinati, e i tuoi suoni importati sono stati recuperati da una copia di backup dove possibile."
+            "value" : "Blankie ha dovuto ricostruire la sua libreria dopo un problema durante l'apertura. Le tue configurazioni e le copertine salvate sono state ripristinate, e i tuoi suoni importati sono stati recuperati da una copia di backup dove possibile."
           }
         },
         "ja" : {
@@ -5019,7 +5019,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "O Blankie teve de reconstruir a sua biblioteca após um problema ao abri-la. As suas pré-definições e a arte guardada foram restauradas, e os seus sons importados foram recuperados a partir de uma cópia de segurança sempre que possível."
+            "value" : "O Blankie teve de reconstruir a sua biblioteca após um problema ao abri-la. As suas pré-definições e a imagem guardada foram restauradas, e os seus sons importados foram recuperados a partir de uma cópia de segurança sempre que possível."
           }
         },
         "tr" : {
@@ -5031,7 +5031,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "在打开时遇到问题后，Blankie 不得不重建它的音效库。您的预设和已保存的封面已经恢复，导入的音效也已尽可能从备份副本中找回。"
+            "value" : "在打开时遇到问题后，Blankie 不得不重建音效库。您的预设和已保存的封面已经恢复，导入的音效也已尽可能从备份副本中找回。"
           }
         }
       }
@@ -5174,7 +5174,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie wstrzyma się o %@"
+            "value" : "Blankie wstrzyma odtwarzanie o %@"
           }
         },
         "pt-PT" : {
@@ -5311,7 +5311,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Volume de Blankie avec le multimédia"
+            "value" : "Volume de Blankie avec les autres médias"
           }
         },
         "hu" : {
@@ -5353,7 +5353,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Medya ile Blankie Ses Düzeyi"
+            "value" : "Medya Çalarken Blankie Ses Düzeyi"
           }
         },
         "zh-Hans" : {
@@ -5371,7 +5371,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie wird am Ende des Timers angehalten"
+            "value" : "Blankie pausiert am Ende des Timers"
           }
         },
         "en-GB" : {
@@ -5449,7 +5449,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie wird angehalten, wenn der Timer abläuft"
+            "value" : "Blankie pausiert, wenn der Timer abläuft"
           }
         },
         "en-GB" : {
@@ -5687,7 +5687,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hintergrundbilder unscharf zeichnen"
+            "value" : "Hintergrundbilder weichzeichnen"
           }
         },
         "en-GB" : {
@@ -6064,19 +6064,19 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "기본 제공 사운드는 음악 태그를 유지합니다."
+            "value" : "기본 제공 소리는 음악 태그를 유지합니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wbudowane dźwięki zachowują swój tag muzyki."
+            "value" : "Wbudowane dźwięki zachowują swój tag muzyczny."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Os sons incorporados mantêm a sua etiqueta de música."
+            "value" : "Os sons integrados mantêm a sua etiqueta de música."
           }
         },
         "tr" : {
@@ -6088,7 +6088,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "内置声音会保留其音乐标签。"
+            "value" : "内置音效会保留其音乐标签。"
           }
         }
       }
@@ -6612,7 +6612,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Changer l'icône de l'app"
+            "value" : "Changer l’icône de l’app"
           }
         },
         "hu" : {
@@ -6648,7 +6648,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Mudar o ícone da app"
+            "value" : "Alterar o ícone da app"
           }
         },
         "tr" : {
@@ -6713,7 +6713,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "프리셋에 의해 변경됨"
+            "value" : "프리셋으로 변경됨"
           }
         },
         "pl" : {
@@ -8654,7 +8654,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Csatlakoztass fejhallgatót a térbeli hatás hallgatásához"
+            "value" : "Csatlakoztass fejhallgatót, hogy halld a térbeli hatást"
           }
         },
         "it" : {
@@ -9181,7 +9181,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Die Umwandlung in AAC würde bei minimalem Qualitätsverlust etwa %@ weniger Speicherplatz belegen. Dabei wird das Original ersetzt und kann nicht rückgängig gemacht werden."
+            "value" : "Die Umwandlung in AAC würde bei minimalem Qualitätsverlust etwa %@ weniger Speicherplatz belegen. Dabei wird das Original ersetzt; dieser Vorgang kann nicht rückgängig gemacht werden."
           }
         },
         "en-GB" : {
@@ -9217,13 +9217,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "AACに変換すると、わずかな音質の低下で約%@分の容量を節約できます。元のファイルは置き換えられ、元に戻すことはできません。"
+            "value" : "AACに変換すると、わずかな音質の低下で約%@の容量を節約できます。元のファイルは置き換えられ、元に戻すことはできません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "AAC로 변환하면 음질 손실은 거의 없이 공간을 약 %@ 절약할 수 있어요. 원본을 대체하며 되돌릴 수 없어요."
+            "value" : "AAC로 변환하면 음질 손실 거의 없이 공간을 약 %@ 절약할 수 있어요. 원본을 대체하며 되돌릴 수 없어요."
           }
         },
         "pl" : {
@@ -9259,7 +9259,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Die Umwandlung würde keinen Speicherplatz sparen, daher wurde das Original beibehalten."
+            "value" : "Die Umwandlung hätte keinen Speicherplatz gespart, daher wurde das Original beibehalten."
           }
         },
         "en-GB" : {
@@ -9598,7 +9598,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Létrehozol egy sablont a lejátszott hangokból?"
+            "value" : "Létrehozol egy sablont az éppen lejátszott hangokból?"
           }
         },
         "it" : {
@@ -9938,13 +9938,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "クレジット"
+            "value" : "著作情報"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "크레딧"
+            "value" : "출처"
           }
         },
         "pl" : {
@@ -10619,7 +10619,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Thema anpassen"
+            "value" : "Design anpassen"
           }
         },
         "en-GB" : {
@@ -10967,7 +10967,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Deep zaj"
+            "value" : "Mély zaj"
           }
         },
         "it" : {
@@ -11205,7 +11205,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Falta el preajuste predeterminado"
+            "value" : "Falta el sonido prediseñado predeterminado"
           }
         },
         "fr" : {
@@ -11217,13 +11217,13 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Az alapértelmezett előbeállítás hiányzik"
+            "value" : "Az alapértelmezett sablon hiányzik"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Il preset predefinito è mancante"
+            "value" : "La configurazione predefinita è mancante"
           }
         },
         "ja" : {
@@ -11241,19 +11241,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Brak domyślnego ustawienia"
+            "value" : "Brak domyślnego presetu"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "A predefinição padrão está em falta"
+            "value" : "A pré-definição padrão está em falta"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Varsayılan hazır ayar eksik"
+            "value" : "Varsayılan ön ayar eksik"
           }
         },
         "zh-Hans" : {
@@ -11270,7 +11270,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Standardthema"
+            "value" : "Standarddesign"
           }
         },
         "en-GB" : {
@@ -12029,7 +12029,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ライセンス条件を記述"
+            "value" : "ライセンス条件を入力"
           }
         },
         "ko" : {
@@ -12541,7 +12541,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "正在下载视频..."
+            "value" : "正在下载视频……"
           }
         }
       }
@@ -12624,7 +12624,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "正在下载..."
+            "value" : "正在下载……"
           }
         }
       }
@@ -12636,7 +12636,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Pins zum Platzieren ziehen. Auf einen Pin tippen, um ihn von der räumlichen Karte zu entfernen. Platzierungen werden nicht zwischen Sitzungen gesichert."
+            "value" : "Pins zum Platzieren ziehen. Auf einen Pin tippen, um ihn von der räumlichen Karte zu entfernen. Platzierungen werden zwischen Sitzungen nicht gespeichert."
           }
         },
         "en-GB" : {
@@ -13030,7 +13030,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ör. Bilinçli Meditasyon"
+            "value" : "örn. Bilinçli Meditasyon"
           }
         },
         "zh-Hans" : {
@@ -13167,13 +13167,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "クレジットを編集"
+            "value" : "著作情報を編集"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "크레딧 편집"
+            "value" : "출처 편집"
           }
         },
         "pl" : {
@@ -14208,7 +14208,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aktuális sablon exportálása…"
+            "value" : "Jelenlegi sablon exportálása…"
           }
         },
         "it" : {
@@ -14508,7 +14508,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Desvanecer al entrar y salir"
+            "value" : "Fundido de entrada y salida"
           }
         },
         "fr" : {
@@ -14520,7 +14520,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Be- és elhalkulás"
+            "value" : "Be- és kiúsztatás"
           }
         },
         "it" : {
@@ -14544,25 +14544,25 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Płynne pojawianie i zanikanie"
+            "value" : "Płynne narastanie i zanikanie"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Desvanecer ao iniciar e ao terminar"
+            "value" : "Aparecer e desvanecer gradualmente"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Açılışta ve Kapanışta Sönümle"
+            "value" : "Açılışta ve Kapanışta Yumuşat"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "淡入和淡出"
+            "value" : "淡入淡出"
           }
         }
       }
@@ -14924,7 +14924,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "No se pudo cargar el preajuste"
+            "value" : "No se pudo cargar el sonido prediseñado"
           }
         },
         "fr" : {
@@ -14936,13 +14936,13 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nem sikerült betölteni az előbeállítást"
+            "value" : "Nem sikerült betölteni a sablont"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Impossibile caricare il preset"
+            "value" : "Impossibile caricare la configurazione"
           }
         },
         "ja" : {
@@ -14960,19 +14960,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nie udało się wczytać ustawienia"
+            "value" : "Nie udało się wczytać presetu"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Não foi possível carregar a predefinição"
+            "value" : "Não foi possível carregar a pré-definição"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hazır ayar yüklenemedi"
+            "value" : "Ön ayar yüklenemedi"
           }
         },
         "zh-Hans" : {
@@ -15007,7 +15007,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "No se pudo guardar el preajuste"
+            "value" : "No se pudo guardar el sonido prediseñado"
           }
         },
         "fr" : {
@@ -15019,13 +15019,13 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nem sikerült menteni az előbeállítást"
+            "value" : "Nem sikerült menteni a sablont"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Impossibile salvare il preset"
+            "value" : "Impossibile salvare la configurazione"
           }
         },
         "ja" : {
@@ -15043,25 +15043,25 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nie udało się zapisać ustawienia"
+            "value" : "Nie udało się zapisać presetu"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Não foi possível guardar a predefinição"
+            "value" : "Não foi possível guardar a pré-definição"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hazır ayar kaydedilemedi"
+            "value" : "Ön ayar kaydedilemedi"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "无法存储预设"
+            "value" : "无法保存预设"
           }
         }
       }
@@ -16744,13 +16744,13 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Fejkövetés"
+            "value" : "Fejkövetéses"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Tracciamento testa"
+            "value" : "Segui la testa"
           }
         },
         "ja" : {
@@ -16762,13 +16762,13 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "헤드 트래킹"
+            "value" : "머리 추적"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Śledzenie głowy"
+            "value" : "Śledzenie ruchu głowy"
           }
         },
         "pt-PT" : {
@@ -16840,13 +16840,13 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "헤드 트래킹에는 호환되는 AirPods가 필요합니다"
+            "value" : "머리 추적에는 호환되는 AirPods가 필요합니다"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Śledzenie głowy wymaga zgodnych AirPods"
+            "value" : "Śledzenie ruchu głowy wymaga zgodnych AirPods"
           }
         },
         "pt-PT" : {
@@ -16911,13 +16911,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ウインドウを閉じたときにDockアイコンを非表示"
+            "value" : "ウィンドウを閉じたときにDockアイコンを非表示"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "윈도우를 닫으면 Dock 아이콘 가리기"
+            "value" : "창을 닫으면 Dock 아이콘 가리기"
           }
         },
         "pl" : {
@@ -16977,7 +16977,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Elrejti ezt a hangot a Hangok listából és a Minden Blankie-hang közül."
+            "value" : "Elrejti ezt a hangot a Hangok listájáról és a Minden Blankie-hang közül."
           }
         },
         "it" : {
@@ -17593,7 +17593,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Importe ficheiros M4A, MP3, WAV ou outros ficheiros de áudio para misturar os seus próprios sons."
+            "value" : "Importe ficheiros de áudio M4A, MP3, WAV ou outros para misturar os seus próprios sons."
           }
         },
         "tr" : {
@@ -18408,7 +18408,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "잘못된 볼륨 레벨이 지정되었습니다"
+            "value" : "잘못된 음량 값이 지정되었습니다"
           }
         },
         "pl" : {
@@ -18420,7 +18420,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nível de volume especificado inválido"
+            "value" : "Nível de volume inválido"
           }
         },
         "tr" : {
@@ -19480,7 +19480,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "언제 어디서나 오프라인으로 들으세요"
+            "value" : "언제 어디서나 오프라인으로 듣기"
           }
         },
         "pl" : {
@@ -19731,7 +19731,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wczytywanie presetów…"
+            "value" : "Ładowanie presetów…"
           }
         },
         "pt-PT" : {
@@ -19893,7 +19893,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wczytywanie dźwięków…"
+            "value" : "Ładowanie dźwięków…"
           }
         },
         "pt-PT" : {
@@ -20054,7 +20054,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wczytywanie..."
+            "value" : "Ładowanie..."
           }
         },
         "pt-PT" : {
@@ -20191,7 +20191,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Animations de l'écran verrouillé"
+            "value" : "Animations de l’écran verrouillé"
           }
         },
         "hu" : {
@@ -20250,7 +20250,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound in Schleife"
+            "value" : "In Schleife wiedergeben"
           }
         },
         "en" : {
@@ -20521,7 +20521,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Medio"
+            "value" : "Mediano"
           }
         },
         "fr" : {
@@ -21063,7 +21063,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Pakete dahil edilen öğe eksik: %@"
+            "value" : "Pakette bulunması gereken öğe eksik: %@"
           }
         },
         "zh-Hans" : {
@@ -21177,7 +21177,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Mélangez les préréglages dans un espace binaural 3D virtuel. Fonctionne mieux avec des écouteurs. Le suivi de la tête en 3D nécessite des AirPods compatibles et l’autorisation Motion."
+            "value" : "Mélangez les préréglages dans un espace binaural 3D virtuel. Fonctionne mieux avec des écouteurs. Le suivi de la tête en 3D nécessite des AirPods compatibles et l’autorisation d’accès au mouvement."
           }
         },
         "hu" : {
@@ -21201,7 +21201,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "가상 3D 바이노럴 공간에서 프리셋을 믹스합니다. 헤드폰을 사용하면 가장 효과적입니다. 3D 헤드 트래킹에는 호환되는 AirPods와 동작 권한이 필요합니다."
+            "value" : "가상 3D 바이노럴 공간에서 프리셋을 믹스합니다. 헤드폰을 사용하면 가장 효과적입니다. 3D 머리 추적에는 호환되는 AirPods와 동작 권한이 필요합니다."
           }
         },
         "pl" : {
@@ -21219,7 +21219,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ön ayarları sanal 3 boyutlu binaural bir alanda karıştırın. En iyi kulaklıkla çalışır. 3 boyutlu baş takibi için uyumlu AirPods ve Hareket izni gerekir."
+            "value" : "Ön ayarları sanal 3 boyutlu binaural bir alanda karıştırın. Kulaklıkla en iyi şekilde çalışır. 3 boyutlu baş takibi için uyumlu AirPods ve Hareket izni gerekir."
           }
         },
         "zh-Hans" : {
@@ -21291,7 +21291,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Miksuj dźwięki z osobnymi regulacjami głośności"
+            "value" : "Miksuj dźwięki z osobną regulacją głośności"
           }
         },
         "pt-PT" : {
@@ -22048,7 +22048,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "无已启用音效"
+            "value" : "没有已启用的音效"
           }
         }
       }
@@ -22131,7 +22131,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "无广告、无追踪器、无订阅"
+            "value" : "无广告、无跟踪器、无订阅"
           }
         }
       }
@@ -22422,7 +22422,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nincs találat az ikonokra"
+            "value" : "Nincsenek megfelelő ikonok"
           }
         },
         "it" : {
@@ -22655,7 +22655,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nincs lejátszott hang"
+            "value" : "Nem szól hang"
           }
         },
         "it" : {
@@ -22697,7 +22697,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "无音效正在播放"
+            "value" : "没有正在播放的音效"
           }
         }
       }
@@ -22875,7 +22875,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounds ohne Schleife sind immer nur für Voreinstellungen."
+            "value" : "Sounds ohne Schleife können nur in Voreinstellungen verwendet werden."
           }
         },
         "en-GB" : {
@@ -22887,7 +22887,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Los sonidos sin bucle siempre son solo para sonidos prediseñados."
+            "value" : "Los sonidos sin bucle siempre son de uso exclusivo en sonidos prediseñados."
           }
         },
         "fr" : {
@@ -22952,7 +22952,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Keines"
+            "value" : "Ohne"
           }
         },
         "en" : {
@@ -23149,7 +23149,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Niente in riproduzione"
+            "value" : "Ancora niente in riproduzione"
           }
         },
         "ja" : {
@@ -23214,7 +23214,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reproduciendo"
+            "value" : "Reproduciendo ahora"
           }
         },
         "fr" : {
@@ -23226,7 +23226,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Now Playing"
+            "value" : "Most szól"
           }
         },
         "it" : {
@@ -23262,7 +23262,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Çalınıyor"
+            "value" : "Şimdi Çalınan"
           }
         },
         "zh-Hans" : {
@@ -23679,7 +23679,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Es wird immer nur ein Musikklang abgespielt. Ein anderer stoppt diesen."
+            "value" : "Es wird immer nur ein Musikklang abgespielt. Sobald ein anderer gestartet wird, stoppt dieser."
           }
         },
         "en" : {
@@ -23721,19 +23721,19 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "音楽サウンドは一度に1つだけ再生されます。別のものを開始すると、これは停止します。"
+            "value" : "音楽サウンドは一度に1つだけ再生されます。別の音楽サウンドを開始すると、現在のものが停止します。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "음악 사운드는 한 번에 하나만 재생됩니다. 다른 것을 시작하면 이 사운드가 중지됩니다."
+            "value" : "음악 사운드는 한 번에 하나만 재생됩니다. 다른 음악을 시작하면 이 사운드가 중지됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Jednocześnie odtwarzany jest tylko jeden dźwięk muzyczny. Włączenie innego zatrzymuje ten."
+            "value" : "Jednocześnie odtwarzany jest tylko jeden dźwięk muzyczny. Włączenie innego zatrzyma obecny."
           }
         },
         "pt-PT" : {
@@ -23751,7 +23751,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "一次只能播放一个音乐声音。开始播放另一个会停止当前的。"
+            "value" : "一次只能播放一个音乐音效。开始播放另一个会停止当前播放的。"
           }
         }
       }
@@ -23948,7 +23948,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Apre il player completo"
+            "value" : "Apre il lettore completo"
           }
         },
         "ja" : {
@@ -24074,7 +24074,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wahl"
+            "value" : "Wahltaste"
           }
         },
         "en-GB" : {
@@ -24461,7 +24461,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Outra multimédia é reproduzida no volume do sistema"
+            "value" : "A restante multimédia é reproduzida ao volume do sistema"
           }
         },
         "tr" : {
@@ -25110,7 +25110,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "句点"
+            "value" : "句号"
           }
         }
       }
@@ -25565,7 +25565,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Riproduci Pausa"
+            "value" : "Riproduci/Ferma"
           }
         },
         "ja" : {
@@ -25829,19 +25829,19 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reprodução e Sons"
+            "value" : "Reprodução e sons"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Çalma ve Sesler"
+            "value" : "Oynatma ve Sesler"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "播放与声音"
+            "value" : "播放与音效"
           }
         }
       }
@@ -25918,7 +25918,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Çalma başarısız oldu: %@"
+            "value" : "Oynatma başarısız oldu: %@"
           }
         },
         "zh-Hans" : {
@@ -26526,7 +26526,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Préparation de l'exportation"
+            "value" : "Préparation de l’exportation"
           }
         },
         "hu" : {
@@ -26568,7 +26568,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dışa Aktarmaya Hazırlanılıyor"
+            "value" : "Dışa Aktarma Hazırlanıyor"
           }
         },
         "zh-Hans" : {
@@ -27575,13 +27575,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "La mezcla rápida es un panel de sonidos sencillo para acceder rápidamente en CarPlay y más allá. A diferencia de los sonidos prediseñados, no tiene volumen ajustable, no recuerda tus sonidos y no puede usar sonidos personalizados."
+            "value" : "La mezcla rápida es un panel de sonidos sencillo para acceder rápidamente en CarPlay y en otros lugares. A diferencia de los sonidos prediseñados, no tiene volumen ajustable, no recuerda tus sonidos y no puede usar sonidos personalizados."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix est un tableau de sons simple pour un accès rapide dans CarPlay et au-delà. Contrairement aux préréglages, il n'a pas de volume réglable, ne mémorise pas vos sons et ne peut pas utiliser de sons personnalisés."
+            "value" : "Quick Mix est un tableau de sons simple pour un accès rapide dans CarPlay et au-delà. Contrairement aux préréglages, il n’a pas de volume réglable, ne mémorise pas vos sons et ne peut pas utiliser de sons personnalisés."
           }
         },
         "hu" : {
@@ -27617,7 +27617,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "O Quick Mix é uma tabela de sons simples para acesso rápido no CarPlay e não só. Ao contrário das pré-definições, não tem volume ajustável, não memoriza os seus sons e não pode usar sons personalizados."
+            "value" : "O Quick Mix é um painel de sons simples para acesso rápido no CarPlay e não só. Ao contrário das pré-definições, não tem volume ajustável, não memoriza os seus sons e não pode usar sons personalizados."
           }
         },
         "tr" : {
@@ -27988,13 +27988,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reciente"
+            "value" : "Recientes"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Récent"
+            "value" : "Récents"
           }
         },
         "hu" : {
@@ -28030,7 +28030,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Recente"
+            "value" : "Recentes"
           }
         },
         "tr" : {
@@ -28907,7 +28907,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Restablecer a predeterminado"
+            "value" : "Restablecer a los valores predeterminados"
           }
         },
         "fr" : {
@@ -29174,7 +29174,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "タイマーを再開"
+            "value" : "タイマーを再スタート"
           }
         },
         "ko" : {
@@ -29800,7 +29800,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Stellen Sie einen Timer ein, um automatisch auszublenden"
+            "value" : "Stellen Sie einen Timer ein, der die Wiedergabe automatisch ausblendet"
           }
         },
         "en" : {
@@ -29854,7 +29854,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ustaw minutnik, aby automatycznie wyciszyć"
+            "value" : "Ustaw minutnik, aby dźwięki automatycznie się wyciszyły"
           }
         },
         "pt-PT" : {
@@ -30189,7 +30189,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "分享…"
+            "value" : "共享…"
           }
         }
       }
@@ -30302,7 +30302,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Shopping"
+            "value" : "Achats"
           }
         },
         "hu" : {
@@ -30403,7 +30403,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "일시 정지 시 Dock 아이콘 배지 표시"
+            "value" : "일시정지 시 Dock 아이콘 배지 표시"
           }
         },
         "pl" : {
@@ -30415,7 +30415,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Mostrar selo no ícone da Dock quando em pausa"
+            "value" : "Mostrar emblema no ícone da Dock quando em pausa"
           }
         },
         "tr" : {
@@ -30564,7 +30564,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "진행 표시 테두리 표시"
+            "value" : "진행 상태 테두리 표시"
           }
         },
         "pl" : {
@@ -30641,19 +30641,19 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "사운드 이름 표시"
+            "value" : "소리 이름 표시"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Pokazuj nazwy dźwięków"
+            "value" : "Pokaż nazwy dźwięków"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Mostrar Nomes dos Sons"
+            "value" : "Mostrar nomes dos sons"
           }
         },
         "tr" : {
@@ -30665,7 +30665,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "显示声音名称"
+            "value" : "显示音效名称"
           }
         }
       }
@@ -30713,7 +30713,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "サイドバーを表示/非表示"
+            "value" : "サイドバーを表示／非表示"
           }
         },
         "ko" : {
@@ -30797,7 +30797,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "이 소리의 크레딧을 표시합니다"
+            "value" : "이 소리의 출처를 표시합니다"
           }
         },
         "pl" : {
@@ -30832,7 +30832,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Zeigt den Mixer"
+            "value" : "Zeigt den Mixer an"
           }
         },
         "en-GB" : {
@@ -30874,7 +30874,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "믹서 보기"
+            "value" : "믹서를 표시합니다"
           }
         },
         "pl" : {
@@ -31120,19 +31120,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wyłącznik czasowy"
+            "value" : "Minutnik usypiania"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Temporizador de repouso"
+            "value" : "Temporizador para dormir"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Uyku Sayacı"
+            "value" : "Uyku Zamanlayıcısı"
           }
         },
         "zh-Hans" : {
@@ -31918,7 +31918,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "URL source"
+            "value" : "URL de la source"
           }
         },
         "hu" : {
@@ -31942,7 +31942,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "원본 URL"
+            "value" : "출처 URL"
           }
         },
         "pl" : {
@@ -32122,7 +32122,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "空间音频混合"
+            "value" : "空间音频混音"
           }
         }
       }
@@ -32565,7 +32565,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Előnézet leállítása"
+            "value" : "Előhallgatás leállítása"
           }
         },
         "it" : {
@@ -33008,7 +33008,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "使用 Apple Intelligence 建议图标"
+            "value" : "使用 Apple Intelligence 推荐图标"
           }
         }
       }
@@ -33086,7 +33086,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "使用 Apple Intelligence 建议名称"
+            "value" : "使用 Apple Intelligence 推荐名称"
           }
         }
       }
@@ -33461,7 +33461,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Koppints egy hangra, hogy hozzáadd vagy eltávolítsd a sablonból"
+            "value" : "Koppints egy hangra, hogy hozzáadd a sablonhoz vagy eltávolítsd belőle"
           }
         },
         "it" : {
@@ -33485,7 +33485,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Stuknij dźwięk, aby dodać go do tego presetu lub usunąć"
+            "value" : "Stuknij dźwięk, aby dodać go do tego presetu lub z niego usunąć"
           }
         },
         "pt-PT" : {
@@ -33497,7 +33497,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bu ön ayara eklemek veya kaldırmak için bir sese dokunun"
+            "value" : "Bu ön ayara eklemek veya buradan kaldırmak için bir sese dokunun"
           }
         },
         "zh-Hans" : {
@@ -33544,7 +33544,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Koppints bármelyik sablon csillagára, hogy ide add."
+            "value" : "Koppints bármelyik sablon csillagára, hogy ide felvedd."
           }
         },
         "it" : {
@@ -34003,7 +34003,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Die Standardvoreinstellung kann nicht bearbeitet werden. Starten Sie eine neue Voreinstellung mit Ihren aktuellen Sounds."
+            "value" : "Die Standardvoreinstellung kann nicht bearbeitet werden. Erstellen Sie eine neue Voreinstellung mit Ihren aktuellen Sounds."
           }
         },
         "en-GB" : {
@@ -34182,7 +34182,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "El preajuste no es válido o está dañado"
+            "value" : "El sonido prediseñado no es válido o está dañado"
           }
         },
         "fr" : {
@@ -34194,13 +34194,13 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Az előbeállítás érvénytelen vagy sérült"
+            "value" : "A sablon érvénytelen vagy sérült"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Il preset non è valido o è danneggiato"
+            "value" : "La configurazione non è valida o è danneggiata"
           }
         },
         "ja" : {
@@ -34218,19 +34218,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ustawienie jest nieprawidłowe lub uszkodzone"
+            "value" : "Preset jest nieprawidłowy lub uszkodzony"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "A predefinição é inválida ou está danificada"
+            "value" : "A pré-definição é inválida ou está danificada"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hazır ayar geçersiz ya da bozuk"
+            "value" : "Ön ayar geçersiz ya da bozuk"
           }
         },
         "zh-Hans" : {
@@ -34278,7 +34278,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Non è stato possibile scaricare questo artwork. Riprova più tardi."
+            "value" : "Non è stato possibile scaricare questa copertina. Riprova più tardi."
           }
         },
         "ja" : {
@@ -34302,7 +34302,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Não foi possível transferir esta arte. Tente novamente mais tarde."
+            "value" : "Não foi possível transferir esta imagem. Tente novamente mais tarde."
           }
         },
         "tr" : {
@@ -34416,7 +34416,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Esto no está disponible mientras se está conectado a CarPlay"
+            "value" : "Esto no está disponible mientras estás conectado a CarPlay"
           }
         },
         "fr" : {
@@ -34428,7 +34428,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ez nem érhető el, amíg CarPlay-hez van csatlakoztatva"
+            "value" : "Ez nem érhető el, amíg CarPlay-hez csatlakozol"
           }
         },
         "it" : {
@@ -34529,7 +34529,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "이 사운드"
+            "value" : "이 소리"
           }
         },
         "pl" : {
@@ -34547,13 +34547,13 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "bu sesi"
+            "value" : "bu ses"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "此声音"
+            "value" : "此音效"
           }
         }
       }
@@ -34606,7 +34606,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "이 소리는 이미 효율적으로 저장되어 있어요. 변환해도 공간이 많이 늘어나지 않아요."
+            "value" : "이 소리는 이미 효율적으로 저장되어 있어요. 변환해도 공간이 많이 확보되지 않아요."
           }
         },
         "pl" : {
@@ -34737,7 +34737,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Este video está seleccionado actualmente para tu pantalla bloqueada. Al eliminarlo, también se deseleccionará. Puedes descargarlo de nuevo más tarde."
+            "value" : "Este video está seleccionado actualmente para tu pantalla de bloqueo. Al eliminarlo, también se deseleccionará. Puedes descargarlo de nuevo más tarde."
           }
         },
         "fr" : {
@@ -34761,7 +34761,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "このビデオは現在ロック画面に選択されています。削除すると選択も解除されます。後で再度ダウンロードできます。"
+            "value" : "このビデオは現在、ロック画面用に選択されています。削除すると選択も解除されます。後で再度ダウンロードできます。"
           }
         },
         "ko" : {
@@ -34785,7 +34785,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bu video şu anda kilit ekranınız için seçili. Kaldırmak aynı zamanda seçimini de kaldırır. Daha sonra tekrar indirebilirsiniz."
+            "value" : "Bu video şu anda kilit ekranınız için seçili. Kaldırırsanız seçimi de kalkar. Daha sonra tekrar indirebilirsiniz."
           }
         },
         "zh-Hans" : {
@@ -35131,7 +35131,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Passen Sie zum Ändern „Blankie-Lautstärke bei anderen Medien“ in den Einstellungen an."
+            "value" : "Um dies zu ändern, passen Sie „Blankie-Lautstärke bei anderen Medien“ in den Einstellungen an."
           }
         },
         "en-GB" : {
@@ -35149,7 +35149,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Pour le modifier, ajustez « Volume de Blankie avec le multimédia » dans les Réglages."
+            "value" : "Pour le modifier, ajustez « Volume de Blankie avec les autres médias » dans les Réglages."
           }
         },
         "hu" : {
@@ -35673,7 +35673,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Spróbuj innego wyszukiwanego hasła"
+            "value" : "Spróbuj innego hasła wyszukiwania"
           }
         },
         "pt-PT" : {
@@ -36248,7 +36248,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Görüntü"
+            "value" : "Görünüm"
           }
         },
         "zh-Hans" : {
@@ -36659,7 +36659,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Piano Quente"
+            "value" : "Piano quente"
           }
         },
         "tr" : {
@@ -36893,7 +36893,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "次は何をしますか？"
+            "value" : "次にできること"
           }
         },
         "ko" : {
@@ -36965,7 +36965,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Se attivo, Blankie viene riprodotto insieme ad altre app, ma non puo usare i controlli multimediali."
+            "value" : "Se attivo, Blankie viene riprodotto insieme ad altre app, ma non può usare i controlli multimediali."
           }
         },
         "ja" : {
@@ -36989,7 +36989,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quando ativada, a Blankie reproduz em simultâneo com outras apps, mas não pode usar os controlos de multimédia."
+            "value" : "Quando ativada, o Blankie reproduz em simultâneo com outras apps, mas não pode usar os controlos de multimédia."
           }
         },
         "tr" : {
@@ -37217,13 +37217,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "わずかな音質の低下で約%@分の容量を節約できます。"
+            "value" : "わずかな音質の低下で約%@の容量を節約できます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "음질 손실은 거의 없이 공간을 약 %@ 절약할 수 있어요."
+            "value" : "음질 손실 거의 없이 공간을 약 %@ 절약할 수 있어요."
           }
         },
         "pl" : {
@@ -37534,7 +37534,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sei offline. Riconnettiti per scaricare questo artwork."
+            "value" : "Sei offline. Riconnettiti per scaricare questa copertina."
           }
         },
         "ja" : {
@@ -37558,7 +37558,7 @@
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Está offline. Volte a ligar-se para transferir esta arte."
+            "value" : "Está offline. Volte a ligar-se para transferir esta imagem."
           }
         },
         "tr" : {
@@ -37581,7 +37581,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ihre Voreinstellung wird enthalten"
+            "value" : "Ihre Voreinstellung enthält"
           }
         },
         "en" : {
