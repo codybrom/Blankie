@@ -12,7 +12,8 @@
   --color-dark-gray: #1a1a1a;
   --color-mid-gray: #a0a0a0;
   --color-light-gray: #f0f0f0;
-  --color-base: #e0e0e0;
+  --color-ink: #e0e0e0;
+  --color-white: #ffffff;
 
   /* Blankie 2.0 "B + Moon" identity — midnight navy + yellow→blue gradient.
      Values lifted from the design system's colors_and_type.css / home.css. */
@@ -73,12 +74,12 @@
 
 /* Focus and selection states */
 :focus-visible {
-  outline: 2px solid var(--color-base);
+  outline: 2px solid var(--color-ink);
   outline-offset: 2px;
 }
 
 ::selection {
-  background-color: var(--color-base);
+  background-color: var(--color-ink);
   color: var(--color-black);
 }
 
@@ -241,7 +242,7 @@ body {
   font-size: 0.8em;
   font-weight: 600;
   line-height: 1;
-  color: var(--color-base);
+  color: var(--color-ink);
   background: linear-gradient(180deg, #3a3a3f, #242428);
   border: 1px solid #0d0d0f;
   border-radius: 0.4em;
@@ -249,6 +250,20 @@ body {
     inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
     0 1.5px 0 0 #0d0d0f,
     0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Keycaps that hold a Lucide glyph instead of a letter ({{kbdicon:...}}, used
+   for the media keys). Tighter horizontal padding than a text key, and the
+   glyphs track the keycap text color via currentColor. Multiple glyphs (the
+   play/pause key) sit side by side with a hair of gap. */
+.kbd-combo kbd.kbd-iconcap {
+  gap: 0.05em;
+  padding: 0 0.4em;
+}
+
+.kbd-combo kbd .kbd-glyph {
+  width: 1.05em;
+  height: 1.05em;
 }
 
 /* Verbatim App Store review quotes ({{review:id}} in markdown and the
@@ -294,7 +309,7 @@ body {
 .review-quote figcaption,
 .prose .review-quote figcaption {
   /* mt-auto pins the byline to the card bottom in equal-height grid rows */
-  @apply mt-auto text-left text-xs text-gray-500;
+  @apply text-fg-3 mt-auto text-left text-xs;
 }
 
 /* Base UI Accordion wraps each trigger in an <h3>; cancel the .prose h3 margins
@@ -454,7 +469,7 @@ body {
 :root,
 .dark {
   --background: var(--color-navy-deep); /* Blankie 2.0 midnight navy */
-  --foreground: var(--color-base);
+  --foreground: var(--color-ink);
 
   /* Blankie 2.0 design tokens — aliases of the @theme palette (single source of
      truth). The hand-written page CSS consumes these bare names; the @theme
@@ -479,23 +494,23 @@ body {
 
   /* translucent frosted card — matches the site's existing bg-card look */
   --card: #ffffff1a;
-  --card-foreground: var(--color-base);
+  --card-foreground: var(--color-ink);
 
   /* opaque so popovers/menus hide the content behind them */
   --popover: #1c1c1e;
-  --popover-foreground: var(--color-base);
+  --popover-foreground: var(--color-ink);
 
   --primary: var(--color-primary-blue);
   --primary-foreground: #ffffff;
 
   --secondary: #2a2a2e;
-  --secondary-foreground: var(--color-base);
+  --secondary-foreground: var(--color-ink);
 
   --muted: var(--color-dark-gray);
   --muted-foreground: var(--color-mid-gray);
 
   /* --accent is the brand blue, defined above with the design tokens. */
-  --accent-foreground: var(--color-base);
+  --accent-foreground: var(--color-ink);
 
   --destructive: #e5484d;
 
@@ -512,11 +527,11 @@ body {
   --radius: 0.625rem;
 
   --sidebar: var(--color-dark-gray);
-  --sidebar-foreground: var(--color-base);
+  --sidebar-foreground: var(--color-ink);
   --sidebar-primary: var(--color-primary-blue);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #2a2a2e;
-  --sidebar-accent-foreground: var(--color-base);
+  --sidebar-accent-foreground: var(--color-ink);
   --sidebar-border: #ffffff1a;
   --sidebar-ring: var(--color-primary-blue);
 }

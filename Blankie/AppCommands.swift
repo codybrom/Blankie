@@ -18,7 +18,12 @@ import SwiftUI
     @StateObject private var appState = AppState.shared
     @State private var audioManager = AudioManager.shared
     @State private var presetManager = PresetManager.shared
+    @State private var globalSettings = GlobalSettings.shared
     @Environment(\.openWindow) private var openWindow
+
+    /// Master-volume nudge per keystroke. 1/16 matches the macOS hardware
+    /// volume keys, so ⌘↑/⌘↓ feel native next to them.
+    private let volumeStep = 1.0 / 16.0
 
     var body: some Commands {
       // Custom View menu instead of SidebarCommands() so the toggle can bind
@@ -31,10 +36,44 @@ import SwiftUI
       }
 
       CommandMenu("Controls") {
+        // Space mirrors the play/pause convention in music apps (Music, Spotify).
+        // SwiftUI routes the binding through the focus chain, so a focused text
+        // field or sound tile still gets the keystroke first.
         Button(audioManager.isGloballyPlaying ? "Pause" : "Play") {
           audioManager.togglePlayback()
         }
+        .keyboardShortcut(.playPause)
         .disabled(!audioManager.hasSelectedSounds)
+
+        Divider()
+
+        // Next/Previous cycle the favorites list (starred presets + solo
+        // sounds) — the same path CarPlay and the Now Playing remote drive.
+        Button("Next Favorite") {
+          audioManager.navigateToNextPreset()
+        }
+        .keyboardShortcut(.nextFavorite)
+        .disabled(!audioManager.canNavigateNextPrevious)
+
+        Button("Previous Favorite") {
+          audioManager.navigateToPreviousPreset()
+        }
+        .keyboardShortcut(.previousFavorite)
+        .disabled(!audioManager.canNavigateNextPrevious)
+
+        Divider()
+
+        Button("Volume Up") {
+          globalSettings.setVolume(globalSettings.volume + volumeStep)
+        }
+        .keyboardShortcut(.volumeUp)
+        .disabled(globalSettings.volume >= 1.0)
+
+        Button("Volume Down") {
+          globalSettings.setVolume(globalSettings.volume - volumeStep)
+        }
+        .keyboardShortcut(.volumeDown)
+        .disabled(globalSettings.volume <= 0.0)
       }
 
       CommandGroup(replacing: .appInfo) {

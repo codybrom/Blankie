@@ -48,8 +48,22 @@ struct AppShortcut: Identifiable {
     if modifiers.contains(.option) { tokens.append("⌥") }
     if modifiers.contains(.shift) { tokens.append("⇧") }
     if modifiers.contains(.command) { tokens.append("⌘") }
-    if let key { tokens.append(String(key.character).uppercased()) }
+    if let key { tokens.append(Self.displayName(for: key)) }
     return tokens
+  }
+
+  /// Name for keys whose `character` doesn't render legibly on its own
+  /// (Space is blank; the arrows are private-use glyphs). Letters and symbols
+  /// pass through uppercased.
+  private static func displayName(for key: KeyEquivalent) -> String {
+    switch key.character {
+    case " ": return "Space"
+    case KeyEquivalent.upArrow.character: return "↑"
+    case KeyEquivalent.downArrow.character: return "↓"
+    case KeyEquivalent.leftArrow.character: return "←"
+    case KeyEquivalent.rightArrow.character: return "→"
+    default: return String(key.character).uppercased()
+    }
   }
 
   /// Glyphs shown on screen, e.g. "⌘ ⇧ ?".
@@ -63,6 +77,11 @@ struct AppShortcut: Identifiable {
     "⌥": "Option",
     "⌃": "Control",
     "⏯": "Play Pause",
+    "Space": "Space",
+    "↑": "Up Arrow",
+    "↓": "Down Arrow",
+    "←": "Left Arrow",
+    "→": "Right Arrow",
     ",": "Comma",
     ".": "Period",
     "?": "Question Mark",
@@ -83,9 +102,14 @@ struct AppShortcut: Identifiable {
 
 extension AppShortcut {
   // Canonical definitions. Bound entries are applied via `.keyboardShortcut(_:)`
-  // in AppCommands; display-only entries (`closeWindow`, `playPause`) are owned
-  // by the system and just shown in the cheat sheet.
-  static let playPause = AppShortcut("Play/Pause Sounds", mediaGlyph: "⏯")
+  // in AppCommands; display-only entries (`closeWindow`) are owned by the
+  // system and just shown in the cheat sheet.
+  static let playPause = AppShortcut("Play/Pause Sounds", key: .space)
+  static let nextFavorite = AppShortcut("Next Favorite", key: .rightArrow, modifiers: .command)
+  static let previousFavorite = AppShortcut(
+    "Previous Favorite", key: .leftArrow, modifiers: .command)
+  static let volumeUp = AppShortcut("Volume Up", key: .upArrow, modifiers: .command)
+  static let volumeDown = AppShortcut("Volume Down", key: .downArrow, modifiers: .command)
   static let toggleSidebar = AppShortcut("Show/Hide Sidebar", key: "s", modifiers: .command)
   static let manageSounds = AppShortcut("Manage Sounds", key: "o", modifiers: .command)
   static let importFile = AppShortcut("Import", key: "i", modifiers: .command)
@@ -115,6 +139,10 @@ struct ShortcutsView: View {
 
   let shortcuts: [AppShortcut] = [
     .playPause,
+    .nextFavorite,
+    .previousFavorite,
+    .volumeUp,
+    .volumeDown,
     .toggleSidebar,
     .manageSounds,
     .importFile,

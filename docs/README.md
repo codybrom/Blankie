@@ -8,10 +8,14 @@ The live site is available at [https://blankie.rest](https://blankie.rest)
 
 ## Tech Stack
 
-- [Astro](https://astro.build) - Static Site Generator
+- [Astro](https://astro.build) - Static site generator
+- [React](https://react.dev) - Interactive island components
+- [TypeScript](https://www.typescriptlang.org) - Type safety
 - [Tailwind CSS](https://tailwindcss.com) - Styling
-- [astro-seo](https://github.com/jonasmerlin/astro-seo) - SEO optimization
-- [@playform/compress](https://github.com/playform/compress) - Asset compression
+- [shadcn/ui](https://ui.shadcn.com) on [Base UI](https://base-ui.com) - Component primitives
+- [Lucide](https://lucide.dev) - Icons
+- [marked](https://marked.js.org) - Markdown rendering
+- [astro-seo](https://github.com/jonasmerlin/astro-seo) - SEO metadata
 
 ## Performance
 
@@ -67,6 +71,15 @@ If you prefer developing without Docker, open a terminal inside the `docs` direc
     ```bash
     npm run preview
     ```
+
+### Checks
+
+Before opening a pull request, run the same checks CI expects:
+
+- `npm run check` - Astro and TypeScript type checking
+- `npm run lint` - ESLint
+- `npm run test` - Vitest unit tests
+- `npm run format` - Prettier formatting
 
 ## Deployment
 

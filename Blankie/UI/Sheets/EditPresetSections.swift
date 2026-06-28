@@ -107,7 +107,7 @@ extension EditPresetSheet {
             NavigationLink(value: SoundEditDestination(fileName: sound.fileName)) {
               HStack(spacing: 8) {
                 Label {
-                  Text(sound.title)
+                  Text(sound.localizedTitle)
                 } icon: {
                   Image(systemName: sound.systemIconName)
                     .foregroundColor(activeAccentColor)
@@ -130,7 +130,7 @@ extension EditPresetSheet {
             let rowIndex = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }) ?? 0
             HStack(spacing: 8) {
               Label {
-                Text(sound.title)
+                Text(sound.localizedTitle)
               } icon: {
                 Image(systemName: sound.systemIconName)
                   .foregroundColor(activeAccentColor)

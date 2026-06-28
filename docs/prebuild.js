@@ -16,7 +16,34 @@ const __dirname = dirname(__filename);
 // Define paths
 const projectRoot = path.resolve(__dirname, "..");
 const outputDir = path.join(__dirname, "public", "i18n");
-const globsPattern = path.join(projectRoot, "Blankie", "*.xcstrings");
+// Every app target that ships translatable strings. Wildcards (not a hardcoded
+// "Localizable") so each target's InfoPlist.xcstrings is picked up too.
+const globsPatterns = [
+  path.join(projectRoot, "Blankie", "*.xcstrings"),
+  path.join(projectRoot, "BlankiePresetPreview", "*.xcstrings"),
+];
+
+// Pull a { value, state } pair out of a localization node, supporting both flat
+// strings and pluralized strings. Plurals are represented by their "other" form
+// (the one translators edit on the site); without this they'd be dropped.
+function extractUnit(localization) {
+  if (!localization) return null;
+  if (localization.stringUnit?.value != null) {
+    return {
+      value: localization.stringUnit.value,
+      state: localization.stringUnit.state || "translated",
+    };
+  }
+  const plural = localization.variations?.plural;
+  if (plural) {
+    const category = plural.other ? "other" : Object.keys(plural)[0];
+    const unit = plural[category]?.stringUnit;
+    if (unit?.value != null) {
+      return { value: unit.value, state: unit.state || "translated" };
+    }
+  }
+  return null;
+}
 
 // Ensure output directory exists
 console.log(`\n✨ Prebuild: Ensuring i18n directory exists...`);
@@ -26,11 +53,13 @@ fs.mkdirSync(outputDir, { recursive: true });
 console.log(`✨ Prebuild: Extracting localization data...`);
 try {
   // Find all matching files
-  console.log(`Looking for files matching: ${globsPattern}`);
-  const files = globSync(globsPattern);
+  console.log(`Looking for files matching: ${globsPatterns.join(", ")}`);
+  const files = globSync(globsPatterns);
 
   if (files.length === 0) {
-    console.error(`❌ Prebuild: No files found matching: ${globsPattern}`);
+    console.error(
+      `❌ Prebuild: No files found matching: ${globsPatterns.join(", ")}`,
+    );
     process.exit(1);
   }
 
@@ -67,31 +96,30 @@ try {
             result.strings[key] = {};
           }
 
+          // Record which catalog the string came from (first file wins). Read
+          // back via the `sourceFile` key — excluded from locale enumeration.
+          if (!result.strings[key].sourceFile) {
+            result.strings[key].sourceFile = path.relative(projectRoot, file);
+          }
+
           // Extract comment if available
           if (item.comment) {
             result.strings[key].comment = item.comment;
           }
 
-          // Extract English strings if available (source language)
-          if (item.localizations?.en?.stringUnit?.value) {
-            result.strings[key].en = {
-              value: item.localizations.en.stringUnit.value,
-              state: item.localizations.en.stringUnit.state || "translated",
-            };
+          // Source (English) value + per-locale values. extractUnit handles
+          // both flat strings and plurals (via their "other" form).
+          const enUnit = extractUnit(item.localizations?.en);
+          if (enUnit) {
+            result.strings[key].en = enUnit;
           }
 
-          // Extract other locales if available
           if (item.localizations) {
             Object.keys(item.localizations).forEach((locale) => {
-              if (
-                locale !== "en" &&
-                item.localizations[locale]?.stringUnit?.value
-              ) {
-                result.strings[key][locale] = {
-                  value: item.localizations[locale].stringUnit.value,
-                  state:
-                    item.localizations[locale].stringUnit.state || "translated",
-                };
+              if (locale === "en") return;
+              const unit = extractUnit(item.localizations[locale]);
+              if (unit) {
+                result.strings[key][locale] = unit;
               }
             });
           }
@@ -118,6 +146,7 @@ try {
       sourceJson.strings[key] = {
         value: result.strings[key].en.value,
         comment: result.strings[key].comment || "",
+        sourceFile: result.strings[key].sourceFile || "",
       };
     }
   });
@@ -133,7 +162,7 @@ try {
   const languages = new Set(["en"]);
   Object.keys(result.strings).forEach((key) => {
     Object.keys(result.strings[key]).forEach((lang) => {
-      if (lang !== "comment" && lang !== "context") {
+      if (lang !== "comment" && lang !== "context" && lang !== "sourceFile") {
         languages.add(lang);
       }
     });
@@ -175,6 +204,7 @@ try {
             target: result.strings[key][lang].value,
             state: result.strings[key][lang].state || "translated",
             comment: result.strings[key].comment || "",
+            sourceFile: result.strings[key].sourceFile || "",
           };
 
           if (result.strings[key][lang].state === "needs_review") {
@@ -194,6 +224,7 @@ try {
             target: "",
             state: "needs_translation",
             comment: result.strings[key].comment || "",
+            sourceFile: result.strings[key].sourceFile || "",
           };
           needsTranslationStrings++;
         }
@@ -428,9 +459,7 @@ try {
     fs.mkdirSync(publicDir, { recursive: true });
     const zipPath = path.join(publicDir, "blankie-press-kit.zip");
     fs.rmSync(zipPath, { force: true });
-    const args = present
-      .map((f) => `"${path.join(assetsDir, f)}"`)
-      .join(" ");
+    const args = present.map((f) => `"${path.join(assetsDir, f)}"`).join(" ");
     // -j flattens paths so the archive holds bare filenames, -q is quiet.
     execSync(`zip -j -q "${zipPath}" ${args}`);
     console.log(

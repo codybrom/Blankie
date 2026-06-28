@@ -15,6 +15,15 @@ import Foundation
   enum AnimatedArtworkKey: String {
     case square = "MPNowPlayingInfoProperty1x1AnimatedArtwork"
     case portrait = "MPNowPlayingInfoProperty3x4AnimatedArtwork"
+
+    /// The variant this device's lock screen actually displays: iPad advertises
+    /// only the 1x1 key, iPhone the 3x4 key. The gallery and in-app preview key
+    /// off this (not the device idiom) so they match what the lock screen shows
+    /// and so iPad downloads only the square pack, never both variants.
+    static var preferredForDevice: AnimatedArtworkKey {
+      Set(MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys)
+        .contains(AnimatedArtworkKey.square.rawValue) ? .square : .portrait
+    }
   }
 
   func animatedArtworkResources(for preset: Preset) -> (loopURL: URL, previewImage: UIImage)? {

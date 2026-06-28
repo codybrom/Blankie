@@ -751,7 +751,10 @@ extension PresetManager {
       // Cancel any stale prefetch from the previous current-preset.
       nearbyArtworkPrefetchTask?.cancel()
       nearbyArtworkPrefetchTask = Task {
-        await BackgroundResourceManager.shared.preload(odrIds)
+        // Prefetch the variant this device will actually use, so iPad warms the
+        // square packs (not the portrait ones it never plays).
+        await BackgroundResourceManager.shared.preload(
+          odrIds.map { BackgroundResourceManager.preferredPackID(for: $0) })
       }
     #endif
   }

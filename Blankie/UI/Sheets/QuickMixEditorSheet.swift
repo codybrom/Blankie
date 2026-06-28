@@ -51,10 +51,10 @@ import SwiftUI
                       .foregroundColor(.accentColor)
                       .frame(width: 20)
                       .accessibilityHidden(true)
-                    Text(sound.title)
+                    Text(sound.localizedTitle)
                   }
                   .accessibilityElement(children: .combine)
-                  .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+                  .accessibilityLabel(Text(sound.localizedTitle))
                 }
               }
               .onMove { from, to in
@@ -133,7 +133,7 @@ import SwiftUI
                 .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
                 .frame(width: 20)
                 .accessibilityHidden(true)
-              Text(sound.title)
+              Text(sound.localizedTitle)
                 .foregroundColor(.primary)
               Spacer()
               if isSelected {
@@ -144,7 +144,7 @@ import SwiftUI
             }
           }
           .disabled(!isSelected && selectedSounds.count >= 8)
-          .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+          .accessibilityLabel(Text(sound.localizedTitle))
           .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         }
       }

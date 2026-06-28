@@ -195,7 +195,7 @@ struct SoundIcon: View {
       .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
       // Name the control for VoiceOver/Voice Control even when the visible title
       // is hidden by "Show Sound Names" (the identifier above is test-only).
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityLabel(Text(sound.localizedTitle))
       .onTapGesture {
         #if os(macOS)
           // Clicking activates but must not keep keyboard focus — the ring is
@@ -254,7 +254,7 @@ struct SoundIcon: View {
 
       if globalSettings.showSoundNames {
         HStack(spacing: 4) {
-          Text(LocalizedStringKey(sound.title))
+          Text(sound.localizedTitle)
             .font(titleFont)
             .lineLimit(2)
             .multilineTextAlignment(.center)
@@ -283,7 +283,7 @@ struct SoundIcon: View {
     /// Volume nudge for the tile's VoiceOver adjustable action and the Up/Down arrow keys. No-op when the sound is off (its slider is disabled then).
     private func adjustVolume(_ direction: AccessibilityAdjustmentDirection) {
       guard sound.isSelected else { return }
-      let step: Float = 0.05
+      let step: Float = 1.0 / 16.0  // 1/16, matching the master-volume shortcut and macOS volume keys
       switch direction {
       case .increment: sound.volume = min(1, sound.volume + step)
       case .decrement: sound.volume = max(0, sound.volume - step)
@@ -312,7 +312,7 @@ struct SoundIcon: View {
           ? (sound.isSelected ? (accentColor) : .gray) : .gray
       )
       .disabled(!sound.isSelected)
-      .accessibilityLabel(Text(LocalizedStringKey(sound.title)))
+      .accessibilityLabel(Text(sound.localizedTitle))
       .accessibilityValue(
         Text(Double(sound.volume).formatted(.percent.precision(.fractionLength(0))))
       )

@@ -104,7 +104,7 @@ struct PresetPreviewView: View {
   }
 
   private func step(
-    number: Int, label: String, @ViewBuilder icon: () -> some View
+    number: Int, label: LocalizedStringKey, @ViewBuilder icon: () -> some View
   ) -> some View {
     HStack(spacing: 14) {
       Text("\(number)")
@@ -121,16 +121,24 @@ struct PresetPreviewView: View {
   }
 
   /// The actual Blankie app icon, from the SharedAssets catalog that both the
-  /// app and this extension build. The display asset already carries its shape,
-  /// so it renders as-is.
+  /// app and this extension build. The display asset already carries its shape.
+  /// Downsampled once to display size so this memory-constrained Quick Look
+  /// extension doesn't decode the full 1024px asset for a 30pt icon (mirrors
+  /// `AboutView.currentAppIcon`).
+  private static let appIcon: UIImage? =
+    UIImage(named: "BlankieAppIconDisplay")?
+    .preparingThumbnail(of: CGSize(width: 90, height: 90))
+
   private var appMark: some View {
-    Image("BlankieAppIconDisplay")
+    Image(uiImage: Self.appIcon ?? UIImage())
       .resizable()
       .scaledToFit()
   }
 
+  // Single pluralized key so the string catalog picks the right form per
+  // language (e.g. Polish one/few/many), instead of a Swift singular/plural split.
   private var soundCountText: LocalizedStringKey {
-    preset.soundCount == 1 ? "1 sound" : "\(preset.soundCount) sounds"
+    "\(preset.soundCount) sounds"
   }
 }
 

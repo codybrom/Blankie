@@ -131,13 +131,11 @@ private enum SoundCustomizationImporter {
           continue
         }
 
-        // Apply each customization property if it's not nil
-        if let title = customization.customTitle {
-          customizationManager.setCustomTitle(title, for: customization.fileName)
-        }
-        if let iconName = customization.customIconName {
-          customizationManager.setCustomIcon(iconName, for: customization.fileName)
-        }
+        // Deliberately ignore a built-in sound's name and icon: those are the
+        // exporter's personal cosmetic overrides and must not replace this
+        // device's default (localized) built-in name/icon. Older archives may
+        // still carry them, so this guard — not just the export-side strip — is
+        // what guarantees they never apply. Behavioral settings below do apply.
         if let randomizeStart = customization.randomizeStartPosition {
           customizationManager.setRandomizeStartPosition(
             randomizeStart, for: customization.fileName
@@ -628,9 +626,11 @@ extension PresetImporter {
       }
 
       // Best-effort: pull the video's asset pack so it's ready for playback (iOS).
+      // Fetch the variant this device uses (square on iPad), not the base id.
+      let packID = BackgroundResourceManager.preferredPackID(for: bundledId)
       do {
-        _ = try await BackgroundResourceManager.shared.resourceURL(for: bundledId)
-        Logger.presets.debug("Import: Downloaded artwork pack '\(bundledId)'")
+        _ = try await BackgroundResourceManager.shared.resourceURL(for: packID)
+        Logger.presets.debug("Import: Downloaded artwork pack '\(packID)'")
       } catch {
         Logger.presets.error(
           "Import: Failed to download artwork pack '\(bundledId, privacy: .public)': \(error, privacy: .public)"

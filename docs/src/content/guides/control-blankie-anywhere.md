@@ -3,7 +3,7 @@ title: "Control Blankie from Anywhere"
 description: "Play and pause Blankie without opening the app. Media keys, AirPods, the lock screen, Control Center, the macOS menu bar, and CarPlay all work."
 category: "basics"
 order: 41
-updated: 2026-06-06
+updated: 2026-06-28
 platforms: "All Platforms"
 ---
 
@@ -11,9 +11,9 @@ Blankie hooks into the system's Now Playing controls. Once your soundscape is go
 
 ## On Mac
 
-- **Media keys**: the play/pause key on your keyboard controls Blankie like any music app.
+- **Media keys**: the {{kbdicon:play-pause}} play/pause key on your keyboard controls Blankie like any music app. The {{kbdicon:rewind}} and {{kbdicon:fast-forward}} keys will also let you navigate through sounds and presets you've marked as favorites.
 - **Menu bar**: the [Now Playing item in the macOS menu bar](https://support.apple.com/guide/mac-help/quickly-change-settings-mchl50f94f8f/mac) shows your active preset, with play/pause right there.
-- **Controls menu**: inside the app, the Controls menu has Play/Pause too.
+- **Controls menu**: inside the app, the Controls menu plays and pauses, steps through your favorites, and adjusts volume. The spacebar plays or pauses your whole mix too. The full list lives in [Blankie Keyboard Shortcuts for Mac](/guides/keyboard-shortcuts-mac/).
 
 <!-- image-todo: macOS, dark mode. Capture the macOS menu bar Now Playing control in its expanded/clicked state (the system Now Playing dropdown), showing Blankie as the active source: preset name visible (use 'Rainy Day' or similar real preset name), preset artwork thumbnail, and the play/pause transport control. Blankie should be actively playing (rain plus ocean waves). Crop tightly to the menu bar item and its dropdown panel only, not the full desktop. Include the menu bar so the reader recognizes where this lives. -->
 
