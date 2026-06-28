@@ -81,7 +81,7 @@
 		F9ED66022D321B7D00240F13 /* Blankie.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Blankie.xctestplan; sourceTree = "<group>"; };
 		F9ED6BAA2D321D3300240F13 /* BlankieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlankieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9ED70DE2D3229AD00240F13 /* BlankieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlankieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FADE000000000000005A0001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = SharedAssets/Assets.xcassets; sourceTree = "<group>"; };
+		FADE000000000000005A0001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -178,10 +178,10 @@
 			children = (
 				F91350602D233A43003C85BE /* Products */,
 				F9ED65FD2D321AF800240F13 /* Frameworks */,
+				FADE000000000000005A0001 /* Assets.xcassets */,
 				F9BC93262D41457D00E450FC /* Blankie */,
 				F95914D12FDF1D2300808460 /* BlankieAssets */,
 				F94CB79C2FEA47920077688E /* BlankiePresetPreview */,
-				FADE000000000000005A0001 /* Assets.xcassets */,
 				F9ED6DAB2D321F5D00240F13 /* BlankieTests */,
 				F9ED70DF2D3229AD00240F13 /* BlankieUITests */,
 				F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */,
