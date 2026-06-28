@@ -9,6 +9,9 @@
   "astro.language-server.ls-path": "docs/node_modules/@astrojs/language-server/bin/nodeServer.js",
   "astro.trace.server": "messages",
   "astro.updateImportsOnFileMove.enabled": true,
+  "cSpell.ignorePaths": [
+    "**/*.xcstrings"
+  ],
   "cSpell.words": [
     "afconvert",
     "affordances",
@@ -52,6 +55,7 @@
     "jhk0530",
     "Jinhwan",
     "Júlio",
+    "kbdicon",
     "kofi",
     "Kristopheros",
     "kur1k0",
@@ -76,6 +80,7 @@
     "Reorderable",
     "Sonoma",
     "SORTABLEGRID",
+    "spacebar",
     "spatialaudio",
     "starrable",
     "subheadline",

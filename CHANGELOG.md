@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.2] - 2026-06-24
+## [2.0.2] - 2026-06-28
 
 ### Added
 
+- **Keyboard shortcuts for playback (macOS)** - Press Space to play or pause. Use ⌘← and ⌘→ to step through your favorites, and ⌘↑ and ⌘↓ to raise or lower the volume. They're listed in the Controls menu and under Help → Keyboard Shortcuts.
 - **Translations in Quick Look preview for shared presets (iOS)** - The Quick Look previews added in Blankie 2.0.1 now have translations in 12 languages.
 - **Improved translations in several languages** - Corrected accents, grammatical gender, capitalization and word choice so the text reads more naturally.
 

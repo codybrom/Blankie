@@ -9,6 +9,8 @@ import play from "lucide-static/icons/play.svg?raw";
 import plus from "lucide-static/icons/plus.svg?raw";
 import settings from "lucide-static/icons/settings.svg?raw";
 import share from "lucide-static/icons/share.svg?raw";
+import rewind from "lucide-static/icons/rewind.svg?raw";
+import fastForward from "lucide-static/icons/fast-forward.svg?raw";
 import star from "lucide-static/icons/star.svg?raw";
 import timer from "lucide-static/icons/timer.svg?raw";
 import volume2 from "lucide-static/icons/volume-2.svg?raw";
@@ -36,6 +38,12 @@ interface KbdToken extends Tokens.Generic {
   keys: string;
 }
 
+/** Token produced by the inline `{{kbdicon:...}}` glyph-keycap extension. */
+interface KbdIconToken extends Tokens.Generic {
+  type: "kbdIcon";
+  icons: string;
+}
+
 /** Drop lucide-static's per-file license comment (attribution stays in the
  * package); the ISC notice doesn't need to ship in every page's HTML. */
 const normalize = (svg: string) => svg.replace(/<!--[\s\S]*?-->/g, "").trim();
@@ -43,6 +51,11 @@ const normalize = (svg: string) => svg.replace(/<!--[\s\S]*?-->/g, "").trim();
 /** Lucide is stroke-only; fill the shape for glyphs iOS draws solid. */
 const filled = (svg: string) =>
   svg.replace('fill="none"', 'fill="currentColor"');
+
+/** Composed play/pause glyph (triangle + two bars) in Lucide's filled style.
+ * Lucide ships play and pause separately but no combined symbol, and the media
+ * key prints both; one glyph keeps the keycap the same width as the others. */
+const playPause = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M4 6 4 18 12 12 Z"/><rect x="15" y="6" width="2.6" height="12" rx="1.1"/><rect x="19.4" y="6" width="2.6" height="12" rx="1.1"/></svg>`;
 
 /** Tint a glyph by setting its CSS color. Lucide strokes with currentColor, so
  * the stroke follows. var() resolves here because it's a style property, not an
@@ -65,6 +78,9 @@ const symbolSvgs: Record<string, string> = Object.fromEntries(
     more: ellipsis,
     play: filled(play),
     pause: filled(pause),
+    rewind: filled(rewind),
+    "fast-forward": filled(fastForward),
+    "play-pause": playPause,
     grid: layoutGrid,
     list,
     speaker: volume2,
@@ -166,6 +182,46 @@ marked.use({
           .map((key) => `<kbd>${esc(key)}</kbd>`)
           .join("");
         return `<span class="kbd-combo">${caps}</span>`;
+      },
+    },
+  ],
+});
+
+// Glyph keycaps: `{{kbdicon:skip-back}}` renders a Lucide glyph inside a keycap,
+// for keys printed with a symbol rather than a letter (the media keys). Multiple
+// space-separated names sit in one cap, so `{{kbdicon:play pause}}` reads as the
+// play/pause key. Reuses the {{icon:...}} registry; styled via `.kbd-iconcap`.
+marked.use({
+  extensions: [
+    {
+      name: "kbdIcon",
+      level: "inline",
+      start(src: string) {
+        return src.indexOf("{{kbdicon:");
+      },
+      tokenizer(src: string): KbdIconToken | undefined {
+        const match = /^\{\{kbdicon:([a-z0-9- ]+)\}\}/.exec(src);
+        if (!match) return undefined;
+        return { type: "kbdIcon", raw: match[0], icons: match[1] };
+      },
+      renderer(token) {
+        const glyphs = (token as KbdIconToken).icons
+          .trim()
+          .split(/\s+/)
+          .map((name) => {
+            const svg = symbolSvgs[name];
+            if (!svg) {
+              throw new Error(
+                `Unknown {{kbdicon:${name}}} — not in the {{icon}} registry`,
+              );
+            }
+            return svg.replace(
+              /<svg(\s)/,
+              `<svg class="kbd-glyph" aria-hidden="true"$1`,
+            );
+          })
+          .join("");
+        return `<span class="kbd-combo"><kbd class="kbd-iconcap">${glyphs}</kbd></span>`;
       },
     },
   ],
