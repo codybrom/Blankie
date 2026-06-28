@@ -9,9 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.2] - 2026-06-24
 
+### Added
+
+- **Translations in Quick Look preview for shared presets (iOS)** - The Quick Look previews added in Blankie 2.0.1 now have translations in 12 languages.
+- **Improved translations in several languages** - Corrected accents, grammatical gender, capitalization and word choice so the text reads more naturally.
+
 ### Fixed
 
-- On iPad, lock screen animations played as a static image. Each animation will now properly show a version for the iPad lock screen.
+- **iPad lock screen animations** - On iPad, lock screen animations were missing the correct aspect ratio videos. Each one now loads the correct version for the iPad lock screen.
+- **Multiple translation fixes** - Some areas were incorrectly defaulting to English even when translated text was available.
 
 ## [2.0.1] - 2026-06-24
 
