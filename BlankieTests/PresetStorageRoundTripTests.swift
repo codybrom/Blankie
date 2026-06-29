@@ -27,7 +27,7 @@ import Testing
   ])
 
   init() { snapshot.clear() }
-  deinit { snapshot.restore() }
+  isolated deinit { snapshot.restore() }
 
   @Test func defaultPresetRoundTrips() {
     let preset = PresetFactory.makePreset(name: "My Default", isDefault: true)
