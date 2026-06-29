@@ -42,7 +42,7 @@ struct SoundManagementRowContent: View {
 
   private var soundInfo: some View {
     Text(sound.localizedTitle)
-    .foregroundColor(.primary)
+      .foregroundColor(.primary)
   }
 
   @ViewBuilder

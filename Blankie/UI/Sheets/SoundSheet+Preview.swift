@@ -41,19 +41,21 @@ extension SoundSheet {
 
     // Start a new timer to update progress
     previewTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-      guard let preview = self.previewSound,
-        preview.isPlaying
-      else {
-        self.previewTimer?.invalidate()
-        self.previewTimer = nil
-        return
-      }
+      MainActor.assumeIsolated {
+        guard let preview = self.previewSound,
+          preview.isPlaying
+        else {
+          self.previewTimer?.invalidate()
+          self.previewTimer = nil
+          return
+        }
 
-      let duration = preview.playbackDuration
-      let currentTime = preview.playbackPosition
+        let duration = preview.playbackDuration
+        let currentTime = preview.playbackPosition
 
-      if duration > 0 {
-        self.previewProgress = currentTime / duration
+        if duration > 0 {
+          self.previewProgress = currentTime / duration
+        }
       }
     }
   }

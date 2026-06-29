@@ -27,7 +27,7 @@ import Testing
     audioManager.soloModeSound = nil
     audioManager.isQuickMix = false
   }
-  deinit {
+  isolated deinit {
     audioManager.soloModeSound = nil
     audioManager.isQuickMix = false
     audioManager.sounds = originalSounds

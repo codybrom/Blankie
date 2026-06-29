@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SoundMood: String, Codable, CaseIterable {
+nonisolated enum SoundMood: String, Codable, CaseIterable {
   case focus
   case sleep
   case relax

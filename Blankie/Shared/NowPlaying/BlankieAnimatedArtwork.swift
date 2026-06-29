@@ -20,7 +20,7 @@ import Foundation
     /// only the 1x1 key, iPhone the 3x4 key. The gallery and in-app preview key
     /// off this (not the device idiom) so they match what the lock screen shows
     /// and so iPad downloads only the square pack, never both variants.
-    static var preferredForDevice: AnimatedArtworkKey {
+    nonisolated static var preferredForDevice: AnimatedArtworkKey {
       Set(MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys)
         .contains(AnimatedArtworkKey.square.rawValue) ? .square : .portrait
     }

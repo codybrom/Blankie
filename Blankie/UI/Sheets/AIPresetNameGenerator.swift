@@ -130,8 +130,12 @@ public enum AIPresetNameGenerator {
         switch error {
         case .refusal(let refusal, _):
           Logger.ui.debug("AIPresetNameGenerator: Model refused request")
-          if let explanation = try? await refusal.explanation {
-            Logger.ui.debug("   Reason: \(String(describing: explanation))")
+          // The model's explanation is a non-Sendable Response; fetch and log it
+          // off the main actor so it never crosses back (debug diagnostics only).
+          Task.detached {
+            if let explanation = try? await refusal.explanation {
+              Logger.ui.debug("   Reason: \(String(describing: explanation))")
+            }
           }
         case .guardrailViolation:
           Logger.ui.debug("AIPresetNameGenerator: Guardrail violation detected")

@@ -569,7 +569,7 @@ struct SettingsView: View {
     #endif
     .tint(globalSettings.customAccentColor ?? .accentColor)
     .task {
-      showBetaTesterUI = await Bundle.main.isTestFlightOrDebug
+      showBetaTesterUI = await Bundle.main.isTestFlightOrDebug()
     }
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)

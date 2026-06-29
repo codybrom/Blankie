@@ -60,7 +60,7 @@ import SwiftUI
         routeObserver = NotificationCenter.default.addObserver(
           forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in
-          self?.refreshRoute()
+          MainActor.assumeIsolated { self?.refreshRoute() }
         }
       #endif
       if manager.isDeviceMotionAvailable {

@@ -27,7 +27,7 @@ import Testing
     timer.stopTimer()
     audioManager.isGloballyPlaying = false
   }
-  deinit {
+  isolated deinit {
     timer.stopTimer()
     timer.now = { Date() }  // restore the real clock for other suites
     audioManager.isGloballyPlaying = false

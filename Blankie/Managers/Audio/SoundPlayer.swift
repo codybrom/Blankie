@@ -68,6 +68,11 @@ final class SoundPlayer {
   private var baseVolume: Float = 1
   private(set) var fadeLevel: Float = 1
   private var fadeTimer: Timer?
+  // Fade progress + completion live on the instance (not captured in the timer's
+  // @Sendable closure). `fadeCompletion` is nil'd on every path that invalidates
+  // the timer so a superseded fade's completion never fires.
+  private var fadeStep = 0
+  private var fadeCompletion: (() -> Void)?
 
   /// True while a fade is ramping toward silence (pause/stop intent). Lets
   /// the engine rebuild skip resurrecting a node that is audibly fading out
@@ -143,7 +148,8 @@ final class SoundPlayer {
   /// Averages all channels into a mono buffer with the normalization boost
   /// baked in (hard-capped at full scale; the fold is for the spatial chain).
   /// Shared with SpatialAudioCache's chunked offline render.
-  static func monoFold(of buffer: AVAudioPCMBuffer, gainDB: Float) -> AVAudioPCMBuffer? {
+  nonisolated static func monoFold(of buffer: AVAudioPCMBuffer, gainDB: Float) -> AVAudioPCMBuffer?
+  {
     guard let src = buffer.floatChannelData,
       let monoFormat = AVAudioFormat(
         standardFormatWithSampleRate: buffer.format.sampleRate, channels: 1),
@@ -227,6 +233,7 @@ final class SoundPlayer {
   /// Sets the fade layer instantly (e.g. to 0 just before a fade-in starts).
   func setFadeLevel(_ level: Float) {
     fadeTimer?.invalidate()
+    fadeCompletion = nil
     isFadingToSilence = false
     fadeLevel = max(0, min(level, 1))
     applyVolume()
@@ -236,6 +243,7 @@ final class SoundPlayer {
   /// stop/seek) cancels the previous one — its completion never fires.
   func fade(to target: Float, duration: TimeInterval, completion: (() -> Void)? = nil) {
     fadeTimer?.invalidate()
+    fadeCompletion = nil
     let clampedTarget = max(0, min(target, 1))
     guard duration > 0, abs(clampedTarget - fadeLevel) > 0.001 else {
       isFadingToSilence = false
@@ -249,7 +257,8 @@ final class SoundPlayer {
     let start = fadeLevel
     let steps = max(Int(duration * 30), 1)
     let stepDuration = duration / Double(steps)
-    var currentStep = 0
+    fadeStep = 0
+    fadeCompletion = completion
 
     let timer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) {
       [weak self] timer in
@@ -257,17 +266,22 @@ final class SoundPlayer {
         timer.invalidate()
         return
       }
-      currentStep += 1
-      let progress = Float(currentStep) / Float(steps)
-      self.fadeLevel = start + (clampedTarget - start) * progress
-      self.applyVolume()
-
-      if currentStep >= steps {
-        timer.invalidate()
-        self.isFadingToSilence = false
-        self.fadeLevel = clampedTarget
+      // The fade timer fires on the main run loop; recover that isolation.
+      MainActor.assumeIsolated {
+        self.fadeStep += 1
+        let progress = Float(self.fadeStep) / Float(steps)
+        self.fadeLevel = start + (clampedTarget - start) * progress
         self.applyVolume()
-        completion?()
+
+        if self.fadeStep >= steps {
+          self.fadeTimer?.invalidate()
+          self.isFadingToSilence = false
+          self.fadeLevel = clampedTarget
+          self.applyVolume()
+          let done = self.fadeCompletion
+          self.fadeCompletion = nil
+          done?()
+        }
       }
     }
     timer.tolerance = stepDuration * 0.1
@@ -432,6 +446,7 @@ final class SoundPlayer {
   func stop() {
     generation += 1
     fadeTimer?.invalidate()
+    fadeCompletion = nil
     isFadingToSilence = false
     if node.engine != nil {
       node.stop()
@@ -446,6 +461,7 @@ final class SoundPlayer {
     let clamped = max(0, min(frame, max(totalFrames - 1, 0)))
     generation += 1
     fadeTimer?.invalidate()
+    fadeCompletion = nil
     isFadingToSilence = false
     if node.engine != nil {
       node.stop()
@@ -464,11 +480,13 @@ final class SoundPlayer {
 
   /// Fires the finished callback on main, fenced by `generation` so a stop()
   /// between scheduling and completion suppresses it.
-  private func fireFinishedIfCurrent(_ generation: Int) {
+  nonisolated private func fireFinishedIfCurrent(_ generation: Int) {
     DispatchQueue.main.async { [weak self] in
-      guard let self, generation == self.generation else { return }
-      Logger.sounds.debug("SoundPlayer: playback finished")
-      self.onPlaybackFinished?()
+      MainActor.assumeIsolated {
+        guard let self, generation == self.generation else { return }
+        Logger.sounds.debug("SoundPlayer: playback finished")
+        self.onPlaybackFinished?()
+      }
     }
   }
 }

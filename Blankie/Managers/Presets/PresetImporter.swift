@@ -205,8 +205,8 @@ class PresetImporter {
       }
     }
 
-    // Extract archive
-    let (archiveURL, tempExtractedURL) = try extractArchive(from: url)
+    // Extract archive (unzip runs off the main actor)
+    let (archiveURL, tempExtractedURL) = try await extractArchive(from: url)
 
     defer {
       // Clean up temporary files
@@ -255,7 +255,9 @@ class PresetImporter {
     return preset
   }
 
-  private func extractArchive(from url: URL) throws -> (
+  // @concurrent so the (CPU-heavy) unzip runs off the main actor. Pure file work,
+  // so it captures no main-actor state.
+  @concurrent private func extractArchive(from url: URL) async throws -> (
     archiveURL: URL, tempExtractedURL: URL?
   ) {
     var archiveURL = url

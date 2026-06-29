@@ -23,7 +23,7 @@ final class NowPlayingManager {
   private var isSetup = false
   var currentArtworkId: UUID?
   var currentStaticArtworkPath: String?
-  var staticArtworkTask: Task<Void, Never>?
+  nonisolated(unsafe) var staticArtworkTask: Task<Void, Never>?
   #if os(iOS)
     var currentAnimatedLoopPath: String?
     var currentAnimatedPreviewPath: String?
@@ -32,11 +32,11 @@ final class NowPlayingManager {
     // of spawning parallel downloads and cache-copy attempts.
     var animatedArtworkDownloadTasks: [String: Task<Void, Never>] = [:]
   #endif
-  private var updateTimer: Timer?
+  nonisolated(unsafe) private var updateTimer: Timer?
   // Drives elapsed-time republishing so the system scrubber (lock screen +
   // CarPlay) snaps back to the start each time the longest sound loops.
   // Independent of `updateTimer`.
-  private var progressTimer: Timer?
+  nonisolated(unsafe) private var progressTimer: Timer?
   // Last elapsed/duration we anchored the scrubber to. The system extrapolates
   // smoothly between writes, so we only re-anchor when the elapsed time jumps
   // backward (a sound loop wrapped) or the duration changes (sleep timer
@@ -45,8 +45,8 @@ final class NowPlayingManager {
   // forces the first tick after (re)start to anchor.
   private var lastObservedElapsed: TimeInterval = -1
   private var lastObservedDuration: TimeInterval = 0
-  private var timerActiveObservation: Task<Void, Never>?
-  private var lockScreenBgObservation: Task<Void, Never>?
+  nonisolated(unsafe) private var timerActiveObservation: Task<Void, Never>?
+  nonisolated(unsafe) private var lockScreenBgObservation: Task<Void, Never>?
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
   private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
 

@@ -91,7 +91,7 @@ import os
             // Allow audio system to process mode exits before applying new preset
             await Task.yield()
 
-            try await PresetManager.shared.applyPreset(preset)
+            try PresetManager.shared.applyPreset(preset)
             await MainActor.run {
               // Ensure playback starts
               AudioManager.shared.setGlobalPlaybackState(true)
@@ -141,7 +141,7 @@ import os
             // Allow audio system to process mode exits before applying new preset
             await Task.yield()
 
-            try await PresetManager.shared.applyPreset(preset)
+            try PresetManager.shared.applyPreset(preset)
             await MainActor.run {
               AudioManager.shared.setGlobalPlaybackState(true)
               CarPlayInterfaceController.shared.updateAllTemplates()
@@ -373,7 +373,7 @@ import os
             // Allow audio system to process mode exits before applying new preset
             await Task.yield()
 
-            try await PresetManager.shared.applyPreset(preset)
+            try PresetManager.shared.applyPreset(preset)
             await MainActor.run {
               // Ensure playback starts
               AudioManager.shared.setGlobalPlaybackState(true)

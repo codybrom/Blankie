@@ -773,7 +773,8 @@ import os
       setupTask = Task {
         do {
           // Ensure the video's Background Assets pack is downloaded, then play it.
-          let videoURL = try await BackgroundResourceManager.shared.resourceURL(for: asset.preferredPackID)
+          let videoURL = try await BackgroundResourceManager.shared.resourceURL(
+            for: asset.preferredPackID)
           // If the sheet dismissed during the download, stop here.
           if Task.isCancelled { return }
 
@@ -826,7 +827,7 @@ import os
     }
   }
 
-  struct BundledAnimatedLoop: Identifiable, Codable {
+  nonisolated struct BundledAnimatedLoop: Identifiable, Codable {
     let id: String
     let displayName: String
     let description: String
@@ -854,7 +855,8 @@ import os
     }
     /// Bundled preview image name for this device's variant.
     var preferredPreviewResourceName: String {
-      AnimatedArtworkKey.preferredForDevice == .square ? squarePreviewResourceName : previewResourceName
+      AnimatedArtworkKey.preferredForDevice == .square
+        ? squarePreviewResourceName : previewResourceName
     }
 
     static var allCases: [BundledAnimatedLoop] {

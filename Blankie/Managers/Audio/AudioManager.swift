@@ -153,7 +153,10 @@ class AudioManager {
 
   deinit {
     NotificationCenter.default.removeObserver(self)
-    cleanup()
+    // AudioManager is a process-lifetime singleton, so deinit never actually
+    // runs; assumeIsolated keeps the defensive cleanup compiling without an
+    // isolated deinit (which doesn't survive cross-module testability builds).
+    MainActor.assumeIsolated { cleanup() }
     Logger.audio.debug("AudioManager: Deinit called, cleanup performed")
   }
 }

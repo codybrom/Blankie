@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-class PresetExporter {
+nonisolated final class PresetExporter: Sendable {
   static let shared = PresetExporter()
 
   private init() {}
@@ -34,7 +34,9 @@ class PresetExporter {
     }
   }
 
-  func createArchive(for preset: Preset) async throws -> URL {
+  // @concurrent so the zip + file copies run off the main actor; every main-actor
+  // read inside is already hopped via `await MainActor.run`.
+  @concurrent func createArchive(for preset: Preset) async throws -> URL {
     let tempDir = FileManager.default.temporaryDirectory
     let archiveDir = tempDir.appendingPathComponent("\(preset.name).blankie-temp")
     let archiveZip = tempDir.appendingPathComponent("\(preset.name).blankie")
@@ -55,7 +57,7 @@ class PresetExporter {
     let customSounds = try await getCustomSounds(for: preset)
 
     // Get sound customizations for this preset
-    let soundCustomizations = getSoundCustomizations(for: preset)
+    let soundCustomizations = await getSoundCustomizations(for: preset)
 
     // Create archive object
     let archive = PresetArchive(
@@ -82,10 +84,9 @@ class PresetExporter {
   }
 
   private func getCustomSounds(for preset: Preset) async throws -> [CustomSoundMetadata] {
-    let customSoundManager = CustomSoundManager.shared
-
     // Get custom sounds on main actor and immediately convert to metadata
     let customSoundMetadata = await MainActor.run {
+      let customSoundManager = CustomSoundManager.shared
       let allCustomSounds = customSoundManager.getAllCustomSounds()
 
       // Filter to sounds used in this preset
@@ -214,10 +215,10 @@ class PresetExporter {
     try metadataData.write(to: metadataURL)
 
     // Copy sound files
-    let customSoundManager = CustomSoundManager.shared
     for soundMetadata in customSounds {
       // Get the sound URL on main actor to avoid sending CustomSoundData across actors
       let soundURL = await MainActor.run {
+        let customSoundManager = CustomSoundManager.shared
         if let customSoundData = customSoundManager.getCustomSound(by: soundMetadata.id) {
           return customSoundManager.getURLForCustomSound(customSoundData)
         }
@@ -233,15 +234,17 @@ class PresetExporter {
     }
   }
 
-  private func getSoundCustomizations(for preset: Preset) -> [SoundCustomization] {
-    let customizationManager = SoundCustomizationManager.shared
-
+  private func getSoundCustomizations(for preset: Preset) async -> [SoundCustomization] {
     // Get sound file names from the preset
     let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
 
-    // Get all customizations and filter to those used in this preset
-    let allCustomizations = customizationManager.getAllCustomizations()
-    return allCustomizations
+    // Read the manager's customizations on the main actor; the filtering below
+    // is pure value-type work that can stay off-main.
+    let allCustomizations = await MainActor.run {
+      SoundCustomizationManager.shared.getAllCustomizations()
+    }
+    return
+      allCustomizations
       .filter { presetSoundFileNames.contains($0.fileName) }
       .compactMap { customization in
         // A built-in sound's name and icon are personal, cosmetic overrides

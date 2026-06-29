@@ -5,7 +5,8 @@
       "name" : "Test Scheme Action",
       "options" : {
         "defaultTestExecutionTimeAllowance" : 60,
-        "testTimeoutsEnabled" : true
+        "testTimeoutsEnabled" : true,
+        "threadSanitizerEnabled" : true
       }
     }
   ],

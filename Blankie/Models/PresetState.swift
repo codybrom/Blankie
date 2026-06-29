@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PresetState: Codable, Equatable {
+nonisolated struct PresetState: Codable, Equatable {
   let fileName: String
   let isSelected: Bool
   let volume: Float
