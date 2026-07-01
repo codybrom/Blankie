@@ -1,0 +1,94 @@
+//
+//  WidgetPlayFavoriteIntent.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 7/1/26.
+//
+
+import AppIntents
+
+/// Plays a favorited item from a widget/Control tap. Takes a plain
+/// `starredItems` token rather than an entity type (unlike `PlayPresetIntent`)
+/// so the widget extension never needs to query `PresetManager`/`AudioManager`
+/// just to resolve a parameter — the token is already known from the cached
+/// `WidgetSnapshot` the tile/control was built from.
+struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
+  static var title: LocalizedStringResource { "Play Favorite" }
+  static var description: IntentDescription {
+    IntentDescription("Plays a favorited preset, Quick Mix, or sound from Blankie.")
+  }
+
+  @Parameter(title: "Favorite")
+  var favoriteToken: String
+
+  init() {}
+
+  /// Explicit init: the synthesized memberwise init for a `@Parameter`
+  /// property doesn't accept its plain wrapped-value type here.
+  init(favoriteToken: String) {
+    self.favoriteToken = favoriteToken
+  }
+
+  @MainActor
+  func perform() async throws -> some IntentResult {
+    await AppSetup.ensureManagersReadyForIntents()
+    let audio = AudioManager.shared
+
+    // Tapping the tile that's already active reads as "pause this", not
+    // "restart this" — matches the tile's own play/pause glyph in the widget.
+    if favoriteToken == audio.currentFavoriteToken {
+      audio.togglePlayback()
+      return .result()
+    }
+
+    // `PresetManager.executePresetApplication` no-ops sound-state application
+    // while a solo sound is active (originally for the narrow launch-restore
+    // case, where a preset is recorded as current but shouldn't disturb an
+    // already-playing solo sound) — that guard silently blocks every other
+    // preset tap while solo is active too, since it can't tell them apart.
+    // Exiting solo explicitly first, before applying, sidesteps that guard.
+    if audio.soloModeSound != nil {
+      audio.exitSoloModeWithoutResuming()
+    }
+    // `applyPreset` never touches `isQuickMix` — every other call site that
+    // can switch away from Quick Mix (CreatePresetSheet, LibraryView,
+    // CarPlay's PresetListTemplate, `enterSoloMode` itself) exits it
+    // explicitly first. Skipping that here left `isQuickMix` stuck `true`
+    // after picking a preset from a widget, so the next Quick Mix widget tap
+    // took the "already in Quick Mix" branch instead of entering fresh —
+    // toggling a sound on top of the preset's still-selected ones instead of
+    // replacing them.
+    if audio.isQuickMix {
+      audio.exitQuickMix()
+    }
+
+    if favoriteToken == GlobalSettings.allSoundsToken {
+      if let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {
+        try PresetManager.shared.applyPreset(defaultPreset)
+        audio.setGlobalPlaybackState(true)
+      }
+      return .result()
+    }
+
+    if favoriteToken == GlobalSettings.quickMixToken {
+      audio.enterQuickMix()
+      return .result()
+    }
+
+    if let fileName = GlobalSettings.soloFileName(fromToken: favoriteToken),
+      let soloSound = audio.sound(fileName: fileName)
+    {
+      audio.enterSoloMode(for: soloSound)
+      return .result()
+    }
+
+    guard let presetID = UUID(uuidString: favoriteToken),
+      let preset = PresetManager.shared.presets.first(where: { $0.id == presetID })
+    else {
+      throw BlankieIntentError.presetNotFound
+    }
+    try PresetManager.shared.applyPreset(preset)
+    audio.setGlobalPlaybackState(true)
+    return .result()
+  }
+}
