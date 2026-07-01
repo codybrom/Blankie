@@ -267,21 +267,26 @@ final class SoundPlayer {
         return
       }
       // The fade timer fires on the main run loop; recover that isolation.
-      MainActor.assumeIsolated {
+      let isFinalStep = MainActor.assumeIsolated { () -> Bool in
         self.fadeStep += 1
         let progress = Float(self.fadeStep) / Float(steps)
         self.fadeLevel = start + (clampedTarget - start) * progress
         self.applyVolume()
-
-        if self.fadeStep >= steps {
-          self.fadeTimer?.invalidate()
-          self.isFadingToSilence = false
-          self.fadeLevel = clampedTarget
-          self.applyVolume()
-          let done = self.fadeCompletion
-          self.fadeCompletion = nil
-          done?()
-        }
+        return self.fadeStep >= steps
+      }
+      guard isFinalStep else { return }
+      // Invalidate the timer instance that is actually firing rather than
+      // `self.fadeTimer` — a completion that chains a new fade synchronously
+      // would have already replaced it, and invalidating that would cancel
+      // the wrong fade.
+      timer.invalidate()
+      MainActor.assumeIsolated {
+        self.isFadingToSilence = false
+        self.fadeLevel = clampedTarget
+        self.applyVolume()
+        let done = self.fadeCompletion
+        self.fadeCompletion = nil
+        done?()
       }
     }
     timer.tolerance = stepDuration * 0.1
