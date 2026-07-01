@@ -32,7 +32,7 @@ extension NowPlayingManager {
       return
     }
 
-    #if os(iOS)
+    #if os(iOS) && !WIDGET_EXTENSION
       if let preset {
         // PRIORITY 2: For bundled animated artwork (ODR), load square preview from bundle
         if let bundledId = preset.animatedArtwork?.bundledIdentifier,
@@ -120,7 +120,7 @@ extension NowPlayingManager {
       return
     }
 
-    #if os(iOS)
+    #if os(iOS) && !WIDGET_EXTENSION
       if let preset {
         // PRIORITY 2: Bundled animated artwork (ODR) square preview from bundle
         if let bundledId = preset.animatedArtwork?.bundledIdentifier,

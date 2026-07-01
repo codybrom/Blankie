@@ -42,8 +42,10 @@ extension AudioManager {
     }
 
     // For CarPlay, try to load custom sounds even if protected data isn't available
-    // This allows CarPlay to function when the device is locked
-    #if !os(macOS)
+    // This allows CarPlay to function when the device is locked. UIApplication.shared
+    // is unavailable in app extensions (e.g. the widget extension, which also shares
+    // this file to run App Intents in-process), hence the WIDGET_EXTENSION guard.
+    #if !os(macOS) && !WIDGET_EXTENSION
       if !UIApplication.shared.isProtectedDataAvailable {
         Logger.audio.debug(
           "AudioManager: Protected data not available, attempting to load custom sounds anyway for CarPlay"
@@ -111,7 +113,7 @@ extension AudioManager {
     }
   }
 
-  #if !os(macOS)
+  #if !os(macOS) && !WIDGET_EXTENSION
     /// Wait for protected data to become available before accessing SwiftData
     /// This prevents crashes during CarPlay cold start on locked devices
     @MainActor
