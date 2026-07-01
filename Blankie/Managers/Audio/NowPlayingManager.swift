@@ -153,6 +153,38 @@ final class NowPlayingManager {
       "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )
 
+    // `preset` is `PresetManager.shared.currentPreset`, which neither solo
+    // mode nor Quick Mix clears — it's still the last preset that was active
+    // before either started. `displayInfo` already resolves both correctly
+    // (it checks `soloModeSound`/`isQuickMix` first), but naively reusing
+    // `preset`'s artwork/accent here would let that stale preset's thumbnail
+    // and color leak through and visually trump the soloed sound or Quick
+    // Mix on the widget.
+    let isSoloActive = AudioManager.shared.soloModeSound != nil
+    let presetIsOverridden = isSoloActive || AudioManager.shared.isQuickMix
+    let widgetThumbnailKey =
+      !presetIsOverridden && preset?.artworkId != nil
+      ? "preset_thumb_\(preset!.id.uuidString)" : nil
+    // `displayInfo.artist` synthesizes "Blankie" as a fallback in several
+    // places (solo built-in sounds, an empty sound list) so the lock screen
+    // never shows a blank artist line — the widget should never repeat that
+    // synthesized text as a second line; no real info means no second line.
+    let widgetSubtitle: String?
+    if let soloSound = AudioManager.shared.soloModeSound {
+      widgetSubtitle = soloSound.isCustom ? soloSound.creditedAuthor : nil
+    } else if AudioManager.shared.isQuickMix {
+      widgetSubtitle = resolvedCreatorName
+    } else if let creator = resolvedCreatorName {
+      widgetSubtitle = creator
+    } else {
+      let titles = currentMixSoundTitles()
+      widgetSubtitle = titles.isEmpty ? nil : soundNameSummary(titles)
+    }
+    AudioManager.shared.publishWidgetSnapshot(
+      title: displayInfo.title, subtitle: widgetSubtitle, isPlaying: isPlaying,
+      thumbnailKey: widgetThumbnailKey,
+      accentColorName: presetIsOverridden ? nil : preset?.accentColorName)
+
     // A full (artwork) update is needed when the preset OR the solo sound
     // changes. Solo sounds have no preset, so tracking only the preset id would
     // miss solo→solo transitions and leave the previous sound's icon up.
