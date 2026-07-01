@@ -267,3 +267,24 @@ struct AppSetup {
     }
   }
 }
+
+extension AppSetup {
+  /// Bootstraps the data managers App Intents depend on (custom sounds,
+  /// presets) for a Siri/Shortcuts invocation that reaches the app before its
+  /// SwiftUI scene ever appears. Apple documents background-mode intent
+  /// execution as running "quietly", with no guarantee the scene (and thus
+  /// `.onAppear` → `setupManagers()`) is ever instantiated — mirrors the same
+  /// bootstrap `IOSAppDelegate` already does for a headless CarPlay cold
+  /// start. Safe to call unconditionally, including redundantly alongside the
+  /// normal launch path: `setModelContext` and `loadCustomSoundsWhenReady()`
+  /// are both idempotent.
+  @MainActor
+  static func ensureManagersReadyForIntents() async {
+    if !SharedModelContainer.shared.isInitialized {
+      SharedModelContainer.shared.initialize()
+    }
+    AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+    PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+    await AudioManager.shared.loadCustomSoundsWhenReady()
+  }
+}

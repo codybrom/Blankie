@@ -18,6 +18,7 @@ struct PlayBlankieIntent: AppIntent, AudioPlaybackIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    await AppSetup.ensureManagersReadyForIntents()
     let audio = AudioManager.shared
     guard audio.hasSelectedSounds || audio.soloModeSound != nil else {
       return .result(dialog: IntentDialog("Select some sounds in Blankie first."))
@@ -46,6 +47,7 @@ struct ToggleBlankiePlaybackIntent: AppIntent, AudioPlaybackIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    await AppSetup.ensureManagersReadyForIntents()
     let audio = AudioManager.shared
     audio.togglePlayback()
     return .result(

@@ -25,6 +25,7 @@ struct PlaySoundIntent: AppIntent, AudioPlaybackIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    await AppSetup.ensureManagersReadyForIntents()
     guard let target = AudioManager.shared.sound(fileName: sound.id) else {
       throw BlankieIntentError.soundNotFound
     }

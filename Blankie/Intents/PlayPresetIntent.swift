@@ -25,6 +25,7 @@ struct PlayPresetIntent: AppIntent, AudioPlaybackIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    await AppSetup.ensureManagersReadyForIntents()
     guard let target = PresetManager.shared.presets.first(where: { $0.id == preset.id }) else {
       throw BlankieIntentError.presetNotFound
     }

@@ -37,6 +37,7 @@ struct PresetEntity: AppEntity {
 struct PresetEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery {
   @MainActor
   func entities(for identifiers: [PresetEntity.ID]) async throws -> [PresetEntity] {
+    await AppSetup.ensureManagersReadyForIntents()
     let presets = PresetManager.shared.presets
     return identifiers.compactMap { id in
       presets.first { $0.id == id }.map(PresetEntity.init)
@@ -45,18 +46,21 @@ struct PresetEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery 
 
   @MainActor
   func entities(matching string: String) async throws -> [PresetEntity] {
-    PresetManager.shared.presets
+    await AppSetup.ensureManagersReadyForIntents()
+    return PresetManager.shared.presets
       .filter { $0.displayName.localizedCaseInsensitiveContains(string) }
       .map(PresetEntity.init)
   }
 
   @MainActor
   func suggestedEntities() async throws -> [PresetEntity] {
-    PresetManager.shared.getRecentPresets().map(PresetEntity.init)
+    await AppSetup.ensureManagersReadyForIntents()
+    return PresetManager.shared.getRecentPresets().map(PresetEntity.init)
   }
 
   @MainActor
   func allEntities() async throws -> [PresetEntity] {
-    PresetManager.shared.presets.map(PresetEntity.init)
+    await AppSetup.ensureManagersReadyForIntents()
+    return PresetManager.shared.presets.map(PresetEntity.init)
   }
 }

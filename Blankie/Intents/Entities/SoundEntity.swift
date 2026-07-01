@@ -39,6 +39,7 @@ struct SoundEntity: AppEntity {
 struct SoundEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery {
   @MainActor
   func entities(for identifiers: [SoundEntity.ID]) async throws -> [SoundEntity] {
+    await AppSetup.ensureManagersReadyForIntents()
     let sounds = AudioManager.shared.sounds
     return identifiers.compactMap { fileName in
       sounds.first { $0.fileName == fileName }.map(SoundEntity.init)
@@ -47,13 +48,15 @@ struct SoundEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery {
 
   @MainActor
   func entities(matching string: String) async throws -> [SoundEntity] {
-    AudioManager.shared.sounds
+    await AppSetup.ensureManagersReadyForIntents()
+    return AudioManager.shared.sounds
       .filter { !$0.isPresetUseOnly && $0.localizedTitle.localizedCaseInsensitiveContains(string) }
       .map(SoundEntity.init)
   }
 
   @MainActor
   func suggestedEntities() async throws -> [SoundEntity] {
+    await AppSetup.ensureManagersReadyForIntents()
     let selected = AudioManager.shared.sounds.filter(\.isSelected)
     let source =
       selected.isEmpty ? AudioManager.shared.sounds.filter { !$0.isPresetUseOnly } : selected
@@ -62,6 +65,7 @@ struct SoundEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery {
 
   @MainActor
   func allEntities() async throws -> [SoundEntity] {
-    AudioManager.shared.sounds.filter { !$0.isPresetUseOnly }.map(SoundEntity.init)
+    await AppSetup.ensureManagersReadyForIntents()
+    return AudioManager.shared.sounds.filter { !$0.isPresetUseOnly }.map(SoundEntity.init)
   }
 }
