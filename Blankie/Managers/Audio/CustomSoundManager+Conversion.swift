@@ -18,7 +18,7 @@ import os
 
 extension CustomSoundManager {
   /// AAC bit rate for runtime conversion, matching the built-in library.
-  static let conversionBitRate = 192_000
+  nonisolated static let conversionBitRate = 192_000
 
   /// Lossy formats we never re-encode. Re-encoding already-compressed audio
   /// loses quality for little or no space saving, so conversion is only offered
@@ -168,7 +168,7 @@ extension CustomSoundManager {
   /// Streaming keeps memory bounded for long files. Stateless (no instance use)
   /// so it can run off the main actor without sending `self` across the boundary.
   /// Reused by importSound to force oversized imports to AAC.
-  static func transcodeToAAC(source: URL, destination: URL) async throws {
+  @concurrent static func transcodeToAAC(source: URL, destination: URL) async throws {
     let asset = AVURLAsset(url: source)
     guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
       throw ConversionError.noAudioTrack

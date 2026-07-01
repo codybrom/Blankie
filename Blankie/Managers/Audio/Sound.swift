@@ -213,7 +213,9 @@ open class Sound: NSObject, Identifiable {
   /// device-tested) made its transport button dance.
   static let remotePauseFadeDuration: TimeInterval = 0
 
-  @ObservationIgnored var volumeDebounceTimer: Timer?
+  // nonisolated(unsafe): only ever mutated on the main actor; the nonisolated
+  // deinit is the last reference, so invalidating it there is race-free.
+  @ObservationIgnored nonisolated(unsafe) var volumeDebounceTimer: Timer?
 
   var volume: Float = 0.75 {
     didSet {
@@ -233,17 +235,20 @@ open class Sound: NSObject, Identifiable {
       volumeDebounceTimer?.invalidate()
       volumeDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
         [weak self] _ in
-        guard let self = self else { return }
+        // The timer fires on the main run loop; recover that isolation statically.
+        MainActor.assumeIsolated {
+          guard let self = self else { return }
 
-        // Don't persist volume changes during Quick Mix mode
-        guard !AudioManager.shared.isQuickMix else {
-          Logger.sounds.debug(
-            "Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
-          return
+          // Don't persist volume changes during Quick Mix mode
+          guard !AudioManager.shared.isQuickMix else {
+            Logger.sounds.debug(
+              "Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
+            return
+          }
+
+          UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
+          Logger.sounds.debug("Sound: \(self.fileName) final volume saved as \(self.volume)")
         }
-
-        UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
-        Logger.sounds.debug("Sound: \(self.fileName) final volume saved as \(self.volume)")
       }
 
       // Volume changed: re-evaluate preset divergence (a preset records each

@@ -11,7 +11,7 @@ import SwiftUI
 import os
 
 /// Represents customizations applied to built-in sounds
-struct SoundCustomization: Codable, Identifiable {
+nonisolated struct SoundCustomization: Codable, Identifiable, Sendable {
   let id: UUID
   let fileName: String
   var customTitle: String?
@@ -274,7 +274,7 @@ class SoundCustomizationManager {
     // Debounce saves to avoid excessive UserDefaults writes during initialization
     saveTimer?.invalidate()
     saveTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
-      self?.performSave()
+      MainActor.assumeIsolated { self?.performSave() }
     }
   }
 

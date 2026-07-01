@@ -187,7 +187,7 @@ extension GlobalSettings {
     volumeDebounceTimer?.invalidate()
     volumeDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
       [weak self] _ in
-      self?.saveVolume(newVolume)
+      MainActor.assumeIsolated { self?.saveVolume(newVolume) }
     }
   }
 

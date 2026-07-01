@@ -20,7 +20,7 @@ class TimerManager {
   var selectedMinutes: Int
 
   // Plumbing the UI never reads; kept out of observation tracking.
-  @ObservationIgnored private var timer: Timer?
+  @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
   // Read by getEndTime() in view bodies, so it stays observation-tracked.
   private var startTime: Date?
 
@@ -53,7 +53,7 @@ class TimerManager {
     UserDefaults.shared.set(selectedMinutes, forKey: "timerLastSelectedMinutes")
 
     timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-      self?.updateTimer()
+      MainActor.assumeIsolated { self?.updateTimer() }
     }
 
     Logger.audio.debug("TimerManager: Started timer for \(duration) seconds")
@@ -136,6 +136,6 @@ class TimerManager {
   }
 
   deinit {
-    stopTimer()
+    timer?.invalidate()
   }
 }

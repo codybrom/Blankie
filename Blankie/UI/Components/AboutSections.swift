@@ -97,7 +97,7 @@ struct ContributorSection: View {
 
 /// Marks a flow item as a separator: it glues to the preceding item's line and
 /// is dropped when it would land at a line's end, so separators stay interior.
-private struct FlowSeparatorKey: LayoutValueKey {
+private nonisolated struct FlowSeparatorKey: LayoutValueKey {
   static let defaultValue = false
 }
 

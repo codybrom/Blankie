@@ -10,7 +10,7 @@ import ZIPFoundation
 import os
 
 /// ZIP archive utility using ZIPFoundation
-struct ArchiveUtility {
+nonisolated struct ArchiveUtility {
 
   enum ArchiveError: Error {
     case limitExceeded

@@ -9,7 +9,7 @@ import Foundation
 import os
 
 /// Configuration for app group shared between main app and CarPlay
-struct AppGroupConfiguration {
+nonisolated struct AppGroupConfiguration {
   /// Get the app group identifier from the bundle's entitlements
   static var identifier: String? {
     // Try to get from Info.plist first (if set as a custom key)
@@ -44,7 +44,7 @@ struct AppGroupConfiguration {
   }
 
   /// URL for shared documents directory
-  static var documentsURL: URL? {
+  nonisolated static var documentsURL: URL? {
     containerURL?.appendingPathComponent("Documents", isDirectory: true)
   }
 
@@ -65,7 +65,7 @@ struct AppGroupConfiguration {
   /// device or headless CarPlay launch before first unlock can still read it
   /// (parity with the SQLite store and audio files). Used by the durable file
   /// mirrors for preset artwork and custom-sound metadata.
-  static func writeProtectionlessFile(_ data: Data, to url: URL) throws {
+  nonisolated static func writeProtectionlessFile(_ data: Data, to url: URL) throws {
     try FileManager.default.createDirectory(
       at: url.deletingLastPathComponent(), withIntermediateDirectories: true,
       attributes: [.protectionKey: FileProtectionType.none])

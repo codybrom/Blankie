@@ -78,7 +78,7 @@ extension Color {
     }
   }
 
-  private static let colorMap: [String: Color] = [
+  nonisolated private static let colorMap: [String: Color] = [
     "red": .red,
     "pink": .pink,
     "orange": .orange,
@@ -93,7 +93,7 @@ extension Color {
     "purple": .purple,
   ]
 
-  init?(fromString string: String) {
+  nonisolated init?(fromString string: String) {
     if let color = Self.colorMap[string] {
       self = color
     } else {

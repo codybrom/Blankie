@@ -18,10 +18,10 @@
   import System
   import os
 
-  enum StorageReport {
+  nonisolated enum StorageReport {
     private static let logger = Logger(subsystem: "com.codybrom.blankie", category: "Storage")
 
-    static func log() {
+    nonisolated static func log() {
       let fm = FileManager.default
       logger.debug("──── Blankie storage report ────")
 
