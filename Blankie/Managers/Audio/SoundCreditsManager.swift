@@ -52,6 +52,10 @@ class SoundCreditsManager: ObservableObject {
     return soundDataMap[soundTitle]?.author
   }
 
+  func getSubtitle(for soundTitle: String) -> String? {
+    return soundDataMap[soundTitle]?.subtitle
+  }
+
   func getDescription(for soundTitle: String) -> String? {
     return soundDataMap[soundTitle]?.description
   }
@@ -76,6 +80,18 @@ struct ResolvedSoundCredit {
 }
 
 extension Sound {
+  /// A short character caption for this sound (e.g. "Brown noise, deep and
+  /// rumbling"), localized through the string catalog. Built-in sounds only;
+  /// custom sounds carry no subtitle. Looked up by original title so a renamed
+  /// built-in still resolves.
+  @MainActor var localizedSubtitle: String? {
+    guard !isCustom,
+      let subtitle = SoundCreditsManager.shared.getSubtitle(for: originalTitle),
+      !subtitle.isEmpty
+    else { return nil }
+    return NSLocalizedString(subtitle, comment: "Built-in sound subtitle caption")
+  }
+
   /// The credited author to display for this sound, or `nil` when there isn't
   /// one. Custom sounds use their stored credit; built-in sounds look the author
   /// up by their original title. Empty strings are treated as absent.
