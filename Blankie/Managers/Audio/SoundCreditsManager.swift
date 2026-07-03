@@ -67,6 +67,9 @@ class SoundCreditsManager: ObservableObject {
 
 /// A display-ready credit, resolved from sounds.json (built-in) or `CustomSoundData` (custom).
 struct ResolvedSoundCredit {
+  /// A sentence about the recording itself (built-in sounds only). Provenance
+  /// notes that pair with the source credit below them.
+  let description: String?
   let workTitle: String?
   let workUrl: URL?
   let author: String?
@@ -126,6 +129,7 @@ extension Sound {
         return nil
       }
       return ResolvedSoundCredit(
+        description: nil,
         workTitle: id3Title ?? nonEmpty(data.originalFileName),
         workUrl: sourceUrl.flatMap { URL(string: $0) },
         author: author,
@@ -137,6 +141,7 @@ extension Sound {
     guard let credit = SoundCreditsManager.shared.credits.first(where: { $0.name == originalTitle })
     else { return nil }
     return ResolvedSoundCredit(
+      description: nonEmpty(SoundCreditsManager.shared.getDescription(for: originalTitle)),
       workTitle: credit.soundName,
       workUrl: credit.soundUrl,
       author: credit.author,
