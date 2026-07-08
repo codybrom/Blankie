@@ -100,10 +100,11 @@ struct SoloSoundIcon: View {
 /// surface, so this replaces the grid rather than living in a separate sheet.
 struct SoloSoundCard: View {
   let sound: Sound
+  var iconSize: CGFloat = 200
 
   var body: some View {
     VStack(spacing: 16) {
-      SoloSoundIcon(sound: sound)
+      SoloSoundIcon(sound: sound, iconSize: iconSize)
         // The card's text below carries the name and subtitle to VoiceOver, so
         // the icon is decorative here — hide it to avoid announcing the title
         // twice while keeping the subtitle reachable.

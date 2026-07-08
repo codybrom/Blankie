@@ -171,7 +171,7 @@
     private var mixerContent: some View {
       VStack(spacing: 0) {
         if let solo = audioManager.soloModeSound {
-          SoloSoundIcon(sound: solo, iconSize: 120)
+          SoloSoundCard(sound: solo, iconSize: 120)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
         } else {
