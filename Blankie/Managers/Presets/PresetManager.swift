@@ -5,6 +5,7 @@
 //  Created by Cody Bromley on 1/1/25.
 //
 
+import CoreSpotlight
 import Foundation
 import Observation
 import SwiftUI
@@ -13,6 +14,12 @@ import os
 @Observable
 class PresetManager {
   @ObservationIgnored private var isInitializing = true
+  /// Signature of the preset/sound names last published to Siri and Spotlight,
+  /// so the (frequently-called) refresh no-ops unless the discoverable set would
+  /// actually differ. A sorted, joined string (like AudioManager's Now Playing
+  /// selection guard) — deterministic and order-independent, unlike a hashValue.
+  /// Per-process only; reset each launch.
+  @ObservationIgnored private var lastDiscoverableEntitiesSignature: String?
   static let shared = PresetManager()
 
   private(set) var presets: [Preset] = []
@@ -954,9 +961,63 @@ extension PresetManager {
 
     updateCurrentPresetBeforeSave()
     performActualSave()
+    refreshDiscoverableEntitiesIfNeeded()
 
     Logger.presets.debug("PresetManager: --- End Saving Presets ---")
   }
+
+  /// Refresh the system's discoverable view of presets and sounds — the
+  /// Siri/Shortcuts parameter vocabulary backing `PlayPresetIntent`/
+  /// `PlaySoundIntent`, and the Spotlight entity index — when the set of names
+  /// has actually changed. Safe to call often: the signature guard collapses
+  /// no-op calls. Skipped in the widget extension, which also compiles this file.
+  func refreshDiscoverableEntitiesIfNeeded() {
+    #if !WIDGET_EXTENSION
+      // Deterministic, order-independent signature over exactly what's donated
+      // (presets + non-preset-only sounds, matching `donateEntitiesToSpotlight`
+      // and `SoundEntityQuery`), so reordering alone doesn't force a refresh.
+      let presetPart = presets.map { "\($0.id.uuidString):\($0.name)" }.sorted()
+      let soundPart =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .map { "\($0.fileName):\($0.localizedTitle)" }
+        .sorted()
+      let signature = (presetPart + ["~"] + soundPart).joined(separator: "|")
+      guard signature != lastDiscoverableEntitiesSignature else { return }
+      lastDiscoverableEntitiesSignature = signature
+      // App Shortcuts don't surface on macOS; Spotlight indexing works on both.
+      #if !os(macOS)
+        BlankieShortcuts.updateAppShortcutParameters()
+      #endif
+      donateEntitiesToSpotlight()
+    #endif
+  }
+
+  #if !WIDGET_EXTENSION
+    /// Donate presets and solo-able sounds to their named Spotlight indexes so
+    /// they surface in system search. Entity arrays are built on the main actor
+    /// here; the indexing itself runs off it. Failures are non-fatal.
+    private func donateEntitiesToSpotlight() {
+      let presetEntities = presets.map(PresetEntity.init)
+      let soundEntities =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .map(SoundEntity.init)
+      // Named indexes keyed off the app's own bundle ID (so contributor builds
+      // don't collide), not the default index Apple reserves for dev/testing.
+      let bundleID = Bundle.main.bundleIdentifier ?? "com.codybrom.blankie"
+      Task {
+        do {
+          try await CSSearchableIndex(name: "\(bundleID).presets")
+            .indexAppEntities(presetEntities)
+          try await CSSearchableIndex(name: "\(bundleID).sounds")
+            .indexAppEntities(soundEntities)
+        } catch {
+          Logger.presets.error("Spotlight: entity indexing failed: \(error, privacy: .public)")
+        }
+      }
+    }
+  #endif
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {

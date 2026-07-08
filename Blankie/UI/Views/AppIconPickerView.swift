@@ -106,7 +106,7 @@ import os
         ("BlankieDarkIcon", String(localized: "Dark")),
         ("BlankieSliderIcon", String(localized: "Slider")),
         ("BlankieAltIcon", String(localized: "Alternative")),
-        ("BlankieWavesIcon", String(localized: "Waves")),
+        ("BlankieWavesIcon", String(localized: "appIcon.waves", defaultValue: "Waves")),
         ("BlankieClassicIcon", String(localized: "Classic")),
         ("BlankiePatchworkIcon", String(localized: "Inspired by Blanket by Rafael Mardojai CM")),
       ]

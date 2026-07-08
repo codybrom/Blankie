@@ -125,4 +125,32 @@ import Testing
     #expect(a.isSelected, "prior selection is restored on exit")
     #expect(a.volume == 0.5)
   }
+
+  // MARK: - Leaving transient modes
+
+  /// `leaveTransientModes` clears solo — the exit the Siri (`PlayPresetIntent`/
+  /// `PlaySoundIntent`) and widget play intents run first, so what they apply
+  /// isn't masked by an active solo sound.
+  @Test func leaveTransientModesExitsSolo() {
+    let solo = TestSound(fileName: "test-solo")
+    audioManager.sounds = [solo]
+    audioManager.enterSoloMode(for: solo, startPlaying: false)
+    #expect(audioManager.soloModeSound != nil)
+
+    audioManager.leaveTransientModes()
+    #expect(audioManager.soloModeSound == nil)
+  }
+
+  /// `leaveTransientModes` clears Quick Mix, so a later Quick Mix action enters
+  /// fresh instead of toggling on top of a still-active mix.
+  @Test func leaveTransientModesExitsQuickMix() {
+    let a = TestSound(fileName: "test-a")
+    a.isSelected = true
+    audioManager.sounds = [a]
+    audioManager.enterQuickMix()
+    #expect(audioManager.isQuickMix)
+
+    audioManager.leaveTransientModes()
+    #expect(!audioManager.isQuickMix)
+  }
 }

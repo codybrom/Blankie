@@ -9,7 +9,9 @@ import AppIntents
 
 /// App Intents-facing wrapper around `Sound`, keyed by the sound's stable
 /// `fileName` (not its `UUID`, which is re-minted every launch).
-struct SoundEntity: AppEntity {
+/// `IndexedEntity` makes sounds findable in Spotlight; the default index
+/// attributes are derived from `displayRepresentation` (title + icon).
+struct SoundEntity: AppEntity, IndexedEntity {
   let id: String
   var title: String
   var systemIconName: String

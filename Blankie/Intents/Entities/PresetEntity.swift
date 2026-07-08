@@ -9,7 +9,9 @@ import AppIntents
 
 /// App Intents-facing wrapper around `Preset`, so Siri/Shortcuts can pick a
 /// preset by name without exposing the full model (artwork, sound states, etc).
-struct PresetEntity: AppEntity {
+/// `IndexedEntity` makes presets findable in Spotlight; the default index
+/// attributes are derived from `displayRepresentation` (title + icon).
+struct PresetEntity: AppEntity, IndexedEntity {
   let id: UUID
   var name: String
   var isDefault: Bool
