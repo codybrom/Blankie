@@ -104,6 +104,10 @@ struct SoloSoundCard: View {
   var body: some View {
     VStack(spacing: 16) {
       SoloSoundIcon(sound: sound)
+        // The card's text below carries the name and subtitle to VoiceOver, so
+        // the icon is decorative here — hide it to avoid announcing the title
+        // twice while keeping the subtitle reachable.
+        .accessibilityHidden(true)
 
       VStack(spacing: 4) {
         Text(sound.localizedTitle)
@@ -117,9 +121,8 @@ struct SoloSoundCard: View {
         }
       }
       .multilineTextAlignment(.center)
-      // The name and caption are shown here on the card, so hide them from
-      // VoiceOver — the icon already exposes the title as a button label.
-      .accessibilityHidden(true)
+      // Read the name and its subtitle caption as one VoiceOver announcement.
+      .accessibilityElement(children: .combine)
     }
   }
 }
