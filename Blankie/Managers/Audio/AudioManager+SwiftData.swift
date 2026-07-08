@@ -122,6 +122,10 @@ extension AudioManager {
     await PresetManager.shared.initializePresetManager()
 
     reconcileLaunchPlaybackState()
+
+    // Publish the initial Siri/Shortcuts vocabulary and Spotlight index now that
+    // presets and sounds are fully loaded.
+    PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
   }
 
   /// Once every sound and preset is loaded, drop favorites whose target no
@@ -195,6 +199,10 @@ extension AudioManager {
           if notification.name == .customSoundDeleted {
             PresetManager.shared.cleanupDeletedCustomSounds()
           }
+
+          // A custom sound was added or removed — refresh Siri parameters and
+          // the Spotlight index so `PlaySoundIntent` matches the current sounds.
+          PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
         }
       }
   }
