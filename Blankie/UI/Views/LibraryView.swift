@@ -383,7 +383,9 @@ struct SoloPickerRow: View {
   }
 
   var body: some View {
-    HStack {
+    let subtitle = sound.localizedSubtitle
+    let a11yLabel = subtitle.map { "\(sound.localizedTitle). \($0)" } ?? sound.localizedTitle
+    return HStack {
       HStack(spacing: 10) {
         PresetThumbnail(
           artworkId: nil,
@@ -394,10 +396,19 @@ struct SoloPickerRow: View {
         )
         .accessibilityHidden(true)
 
-        Text(sound.localizedTitle)
-          .foregroundColor(
-            LibraryRowStyle.titleColor(
-              isCurrent: isCurrent, accent: accent, presentation: presentation))
+        VStack(alignment: .leading, spacing: 2) {
+          Text(sound.localizedTitle)
+            .foregroundColor(
+              LibraryRowStyle.titleColor(
+                isCurrent: isCurrent, accent: accent, presentation: presentation))
+
+          if let subtitle {
+            Text(subtitle)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+              .lineLimit(1)
+          }
+        }
 
         LibraryRowStyle.nowPlayingIndicator(
           isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying,
@@ -413,7 +424,7 @@ struct SoloPickerRow: View {
       // Merge the row into a single element so VoiceOver exposes the tap as an
       // activation (an un-combined container drops the .onTapGesture action).
       .accessibilityElement(children: .combine)
-      .accessibilityLabel(Text(sound.localizedTitle))
+      .accessibilityLabel(Text(a11yLabel))
       .accessibilityAddTraits(.isButton)
       .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
       // macOS doesn't expose .onTapGesture as a VoiceOver activation, so the
@@ -421,7 +432,7 @@ struct SoloPickerRow: View {
       // as a real Button for assistive tech; iOS gets the action via .combine.
       #if os(macOS)
         .accessibilityRepresentation {
-          Button(sound.localizedTitle) { activateRow() }
+          Button(a11yLabel) { activateRow() }
           .accessibilityAddTraits(isCurrent ? [.isSelected] : [])
         }
       #endif

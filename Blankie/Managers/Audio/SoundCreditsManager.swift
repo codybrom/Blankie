@@ -53,6 +53,10 @@ class SoundCreditsManager: ObservableObject {
     return soundDataMap[soundTitle]?.author
   }
 
+  func getSubtitle(for soundTitle: String) -> String? {
+    return soundDataMap[soundTitle]?.subtitle
+  }
+
   func getDescription(for soundTitle: String) -> String? {
     return soundDataMap[soundTitle]?.description
   }
@@ -64,6 +68,9 @@ class SoundCreditsManager: ObservableObject {
 
 /// A display-ready credit, resolved from sounds.json (built-in) or `CustomSoundData` (custom).
 struct ResolvedSoundCredit {
+  /// A sentence about the recording itself (built-in sounds only). Provenance
+  /// notes that pair with the source credit below them.
+  let description: String?
   let workTitle: String?
   let workUrl: URL?
   let author: String?
@@ -77,6 +84,18 @@ struct ResolvedSoundCredit {
 }
 
 extension Sound {
+  /// A short character caption for this sound (e.g. "Brown noise, deep and
+  /// rumbling"), localized through the string catalog. Built-in sounds only;
+  /// custom sounds carry no subtitle. Looked up by original title so a renamed
+  /// built-in still resolves.
+  @MainActor var localizedSubtitle: String? {
+    guard !isCustom,
+      let subtitle = SoundCreditsManager.shared.getSubtitle(for: originalTitle),
+      !subtitle.isEmpty
+    else { return nil }
+    return NSLocalizedString(subtitle, comment: "Built-in sound subtitle caption")
+  }
+
   /// The credited author to display for this sound, or `nil` when there isn't
   /// one. Custom sounds use their stored credit; built-in sounds look the author
   /// up by their original title. Empty strings are treated as absent.
@@ -111,6 +130,7 @@ extension Sound {
         return nil
       }
       return ResolvedSoundCredit(
+        description: nil,
         workTitle: id3Title ?? nonEmpty(data.originalFileName),
         workUrl: sourceUrl.flatMap { URL(string: $0) },
         author: author,
@@ -122,6 +142,7 @@ extension Sound {
     guard let credit = SoundCreditsManager.shared.credits.first(where: { $0.name == originalTitle })
     else { return nil }
     return ResolvedSoundCredit(
+      description: nonEmpty(SoundCreditsManager.shared.getDescription(for: originalTitle)),
       workTitle: credit.soundName,
       workUrl: credit.soundUrl,
       author: credit.author,

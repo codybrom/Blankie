@@ -113,6 +113,7 @@ class CustomSoundData {
       license: "Custom",
       soundUrl: "",
       soundName: originalFileName ?? fileName,
+      subtitle: nil,
       description: nil,
       note: nil,
       lufs: detectedLUFS,

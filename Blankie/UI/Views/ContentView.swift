@@ -162,7 +162,7 @@ import UniformTypeIdentifiers
         } else if let soloSound = soloLayoutSound {
           VStack {
             Spacer()
-            SoloSoundIcon(sound: soloSound)
+            SoloSoundCard(sound: soloSound)
               .transition(.scale.combined(with: .opacity))
             Spacer()
           }
