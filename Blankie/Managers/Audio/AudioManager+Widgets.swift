@@ -52,16 +52,15 @@ extension AudioManager {
   @MainActor
   func republishWidgetCatalog() {
     let last = WidgetStateStore.current().playback
-    // The live accent is the active preset's own when it has one (the Now
-    // Playing pipeline passes `preset?.accentColorName`); a global-accent
-    // change must not stomp that. Keep a preset-specific accent — one that
-    // differs from the app-wide custom accent — and otherwise rebuild from the
-    // (possibly just-changed) global accent.
-    let accentColorName =
-      last.accentColorName != nil
-        && last.accentColorName != GlobalSettings.shared.customAccentColor?.toString
-      ? last.accentColorName
-      : GlobalSettings.shared.customAccentColor?.toString
+    // Derive the accent from its source, not the last-published value: the
+    // active preset's own accent when a preset is what's playing (matching the
+    // Now Playing pipeline's `preset?.accentColorName`), otherwise the app-wide
+    // custom accent — so a global-accent change is reflected immediately even
+    // for a preset that has no accent of its own.
+    let presetAccent =
+      soloModeSound == nil && !isQuickMix
+      ? PresetManager.shared.currentPreset?.accentColorName : nil
+    let accentColorName = presetAccent ?? GlobalSettings.shared.customAccentColor?.toString
     let playback = WidgetPlaybackState(
       isPlaying: last.isPlaying,
       title: last.title,
