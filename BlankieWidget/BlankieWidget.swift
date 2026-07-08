@@ -110,10 +110,12 @@ struct NowPlayingSmallCard<PlayIntent: AppIntent>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(alignment: .top) {
-        WidgetArtwork(thumbnailKey: thumbnailKey, fallbackIcon: fallbackIcon, accentColor: accentColor)
-          .frame(width: 56, height: 56)
-          .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-          .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
+        WidgetArtwork(
+          thumbnailKey: thumbnailKey, fallbackIcon: fallbackIcon, accentColor: accentColor
+        )
+        .frame(width: 56, height: 56)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
 
         Spacer()
 

@@ -29,6 +29,10 @@ struct PlayPresetIntent: AppIntent, AudioPlaybackIntent {
     guard let target = PresetManager.shared.presets.first(where: { $0.id == preset.id }) else {
       throw BlankieIntentError.presetNotFound
     }
+    // Exit solo/Quick Mix first: applyPreset's sound-state application no-ops
+    // while a solo sound is active, and it never clears isQuickMix on its own —
+    // the same ritual WidgetPlayFavoriteIntent runs before applying a preset.
+    AudioManager.shared.leaveTransientModes()
     try PresetManager.shared.applyPreset(target)
     // applyPreset no-ops playback when the preset was already current, so
     // explicitly ensure it's playing regardless of prior state.
