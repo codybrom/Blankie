@@ -149,8 +149,7 @@ extension PresetManager {
 
     var updatedPreset = preset
     updatedPreset.name = newName
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
     // Validate the updated preset
     guard updatedPreset.validate() else {
@@ -314,8 +313,7 @@ extension PresetManager {
     } else {
       return
     }
-    preset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    preset.lastModifiedVersion = Bundle.main.appVersion
     presets[index] = preset
     if currentPreset?.id == presetID {
       currentPreset = preset
@@ -364,24 +362,12 @@ extension PresetManager {
       // The default preset tracks every available sound (matching
       // updateCurrentPresetBeforeSave), so a freshly imported sound the user
       // selects on the default grid is recorded and survives relaunch.
-      newStates = AudioManager.shared.sounds.map { sound in
-        PresetState(
-          fileName: sound.fileName,
-          isSelected: sound.isSelected,
-          volume: sound.volume
-        )
-      }
+      newStates = AudioManager.shared.sounds.map { $0.captureState() }
     } else {
       let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
       newStates = AudioManager.shared.sounds
         .filter { presetSoundFileNames.contains($0.fileName) }
-        .map { sound in
-          PresetState(
-            fileName: sound.fileName,
-            isSelected: sound.isSelected,
-            volume: sound.volume
-          )
-        }
+        .map { $0.captureState() }
     }
 
     // Preserve the preset's existing sound order, not the global customOrder
@@ -398,8 +384,7 @@ extension PresetManager {
       var updatedPreset = preset
       updatedPreset.soundStates = newStates
       updatedPreset.soundOrder = currentSoundOrder
-      updatedPreset.lastModifiedVersion =
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+      updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
       if let index = presets.firstIndex(where: { $0.id == preset.id }) {
         presets[index] = updatedPreset
@@ -550,8 +535,7 @@ extension PresetManager {
     // Update the preset
     var updatedPreset = preset
     updatedPreset.soundOrder = soundOrder
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
     // Update in the presets array
     if let index = presets.firstIndex(where: { $0.id == preset.id }) {
@@ -577,8 +561,7 @@ extension PresetManager {
     // Update the preset
     var updatedPreset = preset
     updatedPreset.soundOrder = newOrder
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
     // Update in the presets array
     if let index = presets.firstIndex(where: { $0.id == preset.id }) {
@@ -775,8 +758,7 @@ extension PresetManager {
 
   func createDefaultPreset() -> Preset {
     Logger.presets.debug("PresetManager: Creating new default preset")
-    let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    let currentVersion = Bundle.main.appVersion
     return Preset(
       id: UUID(),
       name: "Default",
@@ -1007,13 +989,7 @@ extension PresetManager {
         }
       } else {
         // For default preset, include all sounds
-        updatedPreset.soundStates = AudioManager.shared.sounds.map { sound in
-          PresetState(
-            fileName: sound.fileName,
-            isSelected: sound.isSelected,
-            volume: sound.volume
-          )
-        }
+        updatedPreset.soundStates = AudioManager.shared.sounds.map { $0.captureState() }
       }
       updatePresetAtIndex(index, with: updatedPreset)
       setCurrentPreset(updatedPreset)
