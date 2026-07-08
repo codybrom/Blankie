@@ -448,8 +448,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Timer für %lld Std. %lld Min."
+            "state" : "translated",
+            "value" : "Timer für %1$lld Std. %2$lld Min."
           }
         },
         "en" : {
@@ -461,13 +461,13 @@
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld Hour %lld Minute Timer"
+            "value" : "%1$lld Hour %2$lld Minute Timer"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Temporizador de %lld h %lld min"
+            "value" : "Temporizador de %1$lld h %2$lld min"
           }
         },
         "fr" : {
@@ -479,7 +479,7 @@
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%lld óra %lld perc időzítő"
+            "value" : "%1$lld óra %2$lld perc időzítő"
           }
         },
         "it" : {
@@ -491,7 +491,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%lld時間%lld分のタイマー"
+            "value" : "%1$lld時間%2$lld分のタイマー"
           }
         },
         "ko" : {
@@ -1179,7 +1179,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "1 Stunde"
           }
         },
@@ -1580,7 +1580,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Hinzufügen"
           }
         },
@@ -1592,61 +1592,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Añadir"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ajouter"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Hozzáadás"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aggiungi"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "追加"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "추가"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dodaj"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Adicionar"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ekle"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "添加"
           }
         }
@@ -1813,97 +1813,13 @@
         }
       }
     },
-    "Add Sound (Coming Soon!)" : {
-      "comment" : "A menu item for adding a sound (currently marked Coming Soon).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ton hinzufügen (Kommt bald!)"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add Sound (Coming Soon!)"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add Sound (Coming Soon!)"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Agregar sonido (¡Próximamente!)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter un son (bientôt disponible !)"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Egyéni hang hozzáadása (hamarosan)"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aggiungi un suono (Prossimamente!)"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "サウンドを追加（近日公開）"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "소리 추가 (준비 중!)"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj dźwięk (Wkrótce!)"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar som (Em breve!)"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ses Ekle (Yakında!)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "添加音效（即将推出！）"
-          }
-        }
-      }
-    },
     "Add to Favorites" : {
       "comment" : "A label for a button that adds a sound to the user's favorites.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zu Favoriten hinzufügen"
           }
         },
@@ -2230,7 +2146,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Hinzugefügt"
           }
         },
@@ -2410,13 +2326,13 @@
         }
       }
     },
-    "Airplane" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.airplane" : {
+      "comment" : "Display name of the built-in 'Airplane' sound (airplane cabin hum).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Flugzeug"
           }
         },
@@ -2434,61 +2350,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Avión"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Avion"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Repülőgép"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aereo"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "飛行機"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "비행기"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Samolot"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Avião"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Uçak"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "飞机"
           }
         }
@@ -2820,92 +2736,8 @@
         }
       }
     },
-    "Always Start Paused" : {
-      "comment" : "Label for the toggle that always starts the app paused.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Immer angehalten starten"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Always Start Paused"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Always Start Paused"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar siempre pausado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toujours démarrer en pause"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mindig csendesen induljon"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apri Sempre in Pausa"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "常に一時停止状態で開始"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "항상 일시정지로 시작"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wstrzymaj przy uruchomieniu"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Começar sempre em pausa"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Her Zaman Duraklatılmış Başlat"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启动时暂停播放"
-          }
-        }
-      }
-    },
-    "Ambient Synth" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.ambient-music" : {
+      "comment" : "Display name of the built-in 'Ambient Synth' sound (ambient synthesizer music).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -3191,8 +3023,8 @@
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "App"
+            "state" : "translated",
+            "value" : "アプリ"
           }
         },
         "ko" : {
@@ -3233,7 +3065,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "App-Symbol"
           }
         },
@@ -3269,8 +3101,8 @@
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Appアイコン"
+            "state" : "translated",
+            "value" : "アプリアイコン"
           }
         },
         "ko" : {
@@ -3573,7 +3405,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Anordnen"
           }
         },
@@ -3650,8 +3482,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Artwork"
+            "state" : "translated",
+            "value" : "Cover"
           }
         },
         "en" : {
@@ -3811,8 +3643,8 @@
         }
       }
     },
-    "Audio" : {
-      "comment" : "Section header for audio options.",
+    "iconCategory.audio" : {
+      "comment" : "The icon-picker category for speaker/sound symbols.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -3840,13 +3672,13 @@
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Audio"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Hang"
           }
         },
@@ -3858,37 +3690,120 @@
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "オーディオ"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "오디오"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dźwięk"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Áudio"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ses"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频"
+          }
+        }
+      }
+    },
+    "soundSheet.audioSectionHeader" : {
+      "comment" : "Section header for a sound's audio-processing options.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
             "state" : "needs_review",
+            "value" : "Audio"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Audio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hang"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Audio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オーディオ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dźwięk"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Áudio"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
             "value" : "音频"
           }
         }
@@ -4470,7 +4385,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zurück"
           }
         },
@@ -4632,7 +4547,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Verhalten beim Start"
+            "value" : "Verhalten"
           }
         },
         "en" : {
@@ -4786,8 +4701,8 @@
         }
       }
     },
-    "Birds" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.birds" : {
+      "comment" : "Display name of the built-in 'Birds' sound (bird songs).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -5263,90 +5178,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Blankie 将于 %@ 暂停"
-          }
-        }
-      }
-    },
-    "Blankie Settings" : {
-      "comment" : "Label for the menu item that opens Blankie's settings.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einstellungen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blankie Settings"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blankie Settings"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes de Blankie"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paramètres de Blankie"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blankie beállítások"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impostazioni di Blankie"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blankieの設定"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blankie 설정"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ustawienia Blankie"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Definições do Blankie"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blankie Ayarları"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blankie 设置"
           }
         }
       }
@@ -5828,8 +5659,8 @@
         }
       }
     },
-    "Boat" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.boat" : {
+      "comment" : "Display name of the built-in 'Boat' sound (a sailboat on the water).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -6509,7 +6340,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kategorie"
           }
         },
@@ -6527,61 +6358,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Categoría"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Catégorie"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kategória"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Categoria"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "カテゴリ"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "카테고리"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kategoria"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Categoria"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kategori"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "类别"
           }
         }
@@ -6592,7 +6423,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ändern"
           }
         },
@@ -6610,61 +6441,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cambiar"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Modifier"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Módosítás"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cambia"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "変更"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "변경"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zmień"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Alterar"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Değiştir"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "更改"
           }
         }
@@ -6907,7 +6738,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kanäle"
           }
         },
@@ -6925,61 +6756,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Canales"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Canaux"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Csatornák"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Canali"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "チャンネル"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "채널"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kanały"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Canais"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kanallar"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "声道"
           }
         }
@@ -6990,7 +6821,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Auswählen"
           }
         },
@@ -7396,8 +7227,8 @@
         }
       }
     },
-    "City" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.city" : {
+      "comment" : "Display name of the built-in 'City' sound (urban city ambience).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -7485,7 +7316,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Klassisch"
           }
         },
@@ -7568,8 +7399,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Keine"
+            "state" : "translated",
+            "value" : "Löschen"
           }
         },
         "en" : {
@@ -7651,8 +7482,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Alle entfernen"
+            "state" : "translated",
+            "value" : "Alle löschen"
           }
         },
         "en" : {
@@ -8059,12 +7890,12 @@
         }
       }
     },
-    "Clothing" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.clothing" : {
+      "comment" : "Icon-picker category for clothing icons: hats, jackets, coats.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kleidung"
           }
         },
@@ -8142,92 +7973,8 @@
         }
       }
     },
-    "Cody Bromley and contributors. All rights reserved." : {
-      "comment" : "The copyright notice shown in the About screen.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley und Mitwirkende. Alle Rechte vorbehalten."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley and contributors. All rights reserved."
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley and contributors. All rights reserved."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley y colaboradores. Todos los derechos reservados."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley et les contributeurs. Tous droits réservés."
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley és közreműködői. Minden jog fenntartva."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley ed i suoi contributori. Tutti i diritti riservati."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromleyと貢献者。無断転載を禁じます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley 및 기여자. 모든 권리 보유."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley i współautorzy. Wszelkie prawa zastrzeżone."
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley e contribuidores. Todos os direitos reservados."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley ve katkıda bulunanlar. Tüm hakları saklıdır."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cody Bromley 和贡献者。保留所有权利。"
-          }
-        }
-      }
-    },
-    "Coffee Shop" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.coffee-shop" : {
+      "comment" : "Display name of the built-in 'Coffee Shop' sound (coffee-shop ambience).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -8316,7 +8063,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Eingeklappt"
           }
         },
@@ -8472,7 +8219,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Komma"
           }
         },
@@ -8484,61 +8231,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Coma"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Virgule"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vessző"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Virgola"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "カンマ"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "쉼표"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Przecinek"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vírgula"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Virgül"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "逗号"
           }
         }
@@ -8550,7 +8297,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Befehl"
           }
         },
@@ -8622,8 +8369,8 @@
         }
       }
     },
-    "Communication" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.communication" : {
+      "comment" : "Icon-picker category for communication icons: speech and message bubbles.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8950,8 +8697,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Steuerung"
+            "state" : "translated",
+            "value" : "Steuerelemente"
           }
         },
         "en-GB" : {
@@ -9028,7 +8775,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Umwandeln"
           }
         },
@@ -9040,61 +8787,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Convertir"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Convertir"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Átalakítás"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Converti"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "変換"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "변환"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Konwertuj"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Converter"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dönüştür"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "转换"
           }
         }
@@ -9572,7 +9319,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Erstellen"
           }
         },
@@ -10061,8 +9808,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aktuell"
+            "state" : "translated",
+            "value" : "Aktuelle"
           }
         },
         "en-GB" : {
@@ -10294,8 +10041,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Eigenes"
+            "state" : "translated",
+            "value" : "Eigene"
           }
         },
         "en" : {
@@ -10348,8 +10095,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Własna"
+            "state" : "translated",
+            "value" : "Własne"
           }
         },
         "pt-PT" : {
@@ -10857,7 +10604,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cyan"
+            "value" : "Zyan"
           }
         },
         "en" : {
@@ -10940,7 +10687,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dunkel"
           }
         },
@@ -11012,8 +10759,8 @@
         }
       }
     },
-    "Deep Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.brown-noise" : {
+      "comment" : "Display name of the built-in 'Deep Noise' sound (brown noise / deep static)).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -12235,8 +11982,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Anzeige"
+            "state" : "translated",
+            "value" : "Zeigen"
           }
         },
         "en-GB" : {
@@ -12467,7 +12214,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Fertig"
           }
         },
@@ -12485,61 +12232,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Listo"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Terminé"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Kész"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Fine"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "完了"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "완료"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Gotowe"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Concluído"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bitti"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "完成"
           }
         }
@@ -12711,8 +12458,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Wird heruntergeladen ..."
+            "state" : "translated",
+            "value" : "Wird heruntergeladen ..."
           }
         },
         "en" : {
@@ -13039,7 +12786,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Dauer"
           }
         },
@@ -13206,7 +12953,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bearbeiten"
           }
         },
@@ -13224,61 +12971,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Editar"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Modifier"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Szerkesztés"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Modifica"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "編集"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "편집"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Edytuj"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Editar"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Düzenle"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "编辑"
           }
         }
@@ -13769,96 +13516,12 @@
         }
       }
     },
-    "Edited by" : {
-      "comment" : "Label indicating who edited a sound's attribution credits.",
-      "extractionState" : "manual",
+    "iconCategory.education" : {
+      "comment" : "Icon-picker category for school and writing icons: pencils, erasers, highlighters.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bearbeitet von"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edited by"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edited by"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editado por"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Édité par"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Módosította"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modificato da"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "編集："
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "편집자"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edytowane przez"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Editado por"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Düzenleyen"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "编辑"
-          }
-        }
-      }
-    },
-    "Education" : {
-      "comment" : "Icon category name in the icon picker.",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
             "value" : "Bildung"
           }
         },
@@ -13936,12 +13599,12 @@
         }
       }
     },
-    "Entertainment" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.entertainment" : {
+      "comment" : "Icon-picker category for entertainment and gaming icons: game controllers, dice.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Unterhaltung"
           }
         },
@@ -13959,7 +13622,7 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Entretenimiento"
           }
         },
@@ -13971,7 +13634,7 @@
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Szórakozás"
           }
         },
@@ -13989,7 +13652,7 @@
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "엔터테인먼트"
           }
         },
@@ -14013,7 +13676,7 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "娱乐"
           }
         }
@@ -14109,8 +13772,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ausgeklappt"
+            "state" : "translated",
+            "value" : "Erweitert"
           }
         },
         "en-GB" : {
@@ -14421,7 +14084,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Export fehlgeschlagen"
           }
         },
@@ -15226,13 +14889,13 @@
         }
       }
     },
-    "Fan" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.fan" : {
+      "comment" : "Display name of the built-in 'Fan' sound (mechanical hum of an  electric fan).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ventilator"
           }
         },
@@ -15311,11 +14974,11 @@
       }
     },
     "Favorite" : {
-      "comment" : "A toggle in the preset editor that marks the preset as a favorite.",
+      "comment" : "The 'Favorite' label, used both for the preset-editor toggle and the Now Playing star button's accessibility label (paired with 'Unfavorite').",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Favorit"
           }
         },
@@ -15398,7 +15061,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Favoriten"
           }
         },
@@ -15559,8 +15222,8 @@
         }
       }
     },
-    "Fireplace" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.fireplace" : {
+      "comment" : "Display name of the built-in 'Fireplace' sound (a crackling fire).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -15649,7 +15312,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Fixiert"
           }
         },
@@ -15721,8 +15384,8 @@
         }
       }
     },
-    "Food & Drink" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.foodAndDrink" : {
+      "comment" : "Icon-picker category for food and drink icons: cups, mugs, and takeout.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -15887,13 +15550,13 @@
         }
       }
     },
-    "Forest" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.forest" : {
+      "comment" : "Display name of the built-in 'Forest' sound (windy forest ambience).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Wald"
           }
         },
@@ -15976,8 +15639,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Format"
+            "state" : "translated",
+            "value" : "Dateiformat"
           }
         },
         "en" : {
@@ -16294,8 +15957,8 @@
         }
       }
     },
-    "Gentle Guitar" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.acoustic-guitar" : {
+      "comment" : "Display name of the built-in 'Gentle Guitar' sound (soft acoustic guitar).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -16383,8 +16046,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Loslegen"
+            "state" : "translated",
+            "value" : "Beginnen"
           }
         },
         "en" : {
@@ -16629,8 +16292,8 @@
         }
       }
     },
-    "Green Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.green-noise" : {
+      "comment" : "Display name of the built-in 'Green Noise' sound (prcoessed green noise static).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -16718,7 +16381,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Raster"
           }
         },
@@ -17184,13 +16847,13 @@
         }
       }
     },
-    "Home" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.home" : {
+      "comment" : "Icon-picker category for household and dwelling icons: houses, buildings, doors, windows, and furniture (the house/dwelling sense).",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Zuhause"
+            "state" : "translated",
+            "value" : "Haus"
           }
         },
         "en" : {
@@ -17267,12 +16930,95 @@
         }
       }
     },
+    "carplay.tab.home" : {
+      "comment" : "CarPlay landing-tab title for the home/main screen of the app",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Startseite"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inicio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Accueil"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kezdőlap"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Inizio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ホーム"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "홈"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Strona główna"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Início"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ana Sayfa"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "主页"
+          }
+        }
+      }
+    },
     "Hours" : {
       "comment" : "Label for the hours component of the sleep-timer duration picker.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Stunden"
           }
         },
@@ -17290,61 +17036,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Horas"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Heures"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Óra"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ore"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "時間"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "시간"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Godziny"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Horas"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Saat"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "小时"
           }
         }
@@ -17359,7 +17105,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Symbol"
           }
         },
@@ -17377,146 +17123,62 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Icono"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Icône"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ikon"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Icona"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "アイコン"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "아이콘"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ikona"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ícone"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Simge"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "图标"
-          }
-        }
-      }
-    },
-    "If disabled, Blankie will immediately play your most recent preset on launch" : {
-      "comment" : "Help text for the 'Always start paused' toggle, explaining that disabling it plays the most recent preset on launch.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wenn deaktiviert, wird Blankie Ihre letzte Voreinstellung beim Start sofort abspielen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If disabled, Blankie will immediately play your most recent preset on launch"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "If disabled, Blankie will immediately play your most recent preset on launch"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Si está deshabilitado, Blankie reproducirá inmediatamente su configuración más reciente al lanzar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Si désactivé, Blankie jouera immédiatement votre préréglage le plus récent au lancement"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ha ki van kapcsolva, az alkalmazás futtatásakor a Blankie automatikusan elindul a legutóbbi beállításokkal"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se disabilitato, Blankie riprodurrà immediatamente il configurazione più recente all'avvio"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "無効にすると、Blankieは起動時に直前のプリセットを再生します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "비활성화하면 Blankie 실행 시 최근 프리셋이 바로 재생됩니다."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jeśli wyłączone, Blankie uruchomi ostatnio używany preset przy starcie"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se desativado, o Blankie reproduzirá imediatamente a sua última pré-definição ao iniciar"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Devre dışı bırakılırsa, Blankie açılışta en son ön ayarınızı hemen çalar."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "如果禁用，Blankie 将在启动时立即播放您最近的预设"
           }
         }
       }
@@ -17526,7 +17188,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Importieren"
           }
         },
@@ -18026,7 +17688,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Wird importiert"
           }
         },
@@ -18276,7 +17938,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Informationen"
           }
         },
@@ -18930,8 +18592,8 @@
         }
       }
     },
-    "Laundry Room" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.laundry-room" : {
+      "comment" : "Display name of the built-in 'Laundry Room' sound (hum of a running clothes dryer).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -19182,7 +18844,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mediathek"
           }
         },
@@ -19336,7 +18998,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lizenz"
           }
         },
@@ -19585,7 +19247,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Liste"
           }
         },
@@ -19603,61 +19265,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lista"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Liste"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lista"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Elenco"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "リスト"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "목록"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lista"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lista"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Liste"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "列表"
           }
         }
@@ -19747,8 +19409,8 @@
         }
       }
     },
-    "Lo-Fi Beats" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.lofi-beats" : {
+      "comment" : "Display name of the built-in 'Lo-Fi Beats' sound (lo-fi hip-hop music).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -20243,7 +19905,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Wird geladen..."
           }
         },
@@ -20652,13 +20314,13 @@
         }
       }
     },
-    "Medical" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.medical" : {
+      "comment" : "Icon-picker category for medical and health icons: stethoscope, syringe, pills.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Medizin"
+            "state" : "translated",
+            "value" : "Gesundheit"
           }
         },
         "en" : {
@@ -20740,7 +20402,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Mittel"
           }
         },
@@ -20895,90 +20557,6 @@
         }
       }
     },
-    "menu.preferences" : {
-      "comment" : "The Preferences menu item that opens the app's settings window.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einstellungen..."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preferences..."
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preferences..."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes..."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Préférences..."
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tulajdonságok"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impostazioni…"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "設定..."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "설정..."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preferencje..."
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preferências..."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tercihler..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "偏好设置……"
-          }
-        }
-      }
-    },
     "Mint" : {
       "comment" : "The name of an accent color the user can choose for the app's theme.",
       "extractionState" : "manual",
@@ -21068,7 +20646,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Minuten"
           }
         },
@@ -21158,13 +20736,13 @@
         }
       }
     },
-    "Miscellaneous" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.miscellaneous" : {
+      "comment" : "Icon-picker category for assorted icons that don't fit the other groups (trash, signposts, etc.).",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Sonstiges"
+            "state" : "translated",
+            "value" : "Diverses"
           }
         },
         "en" : {
@@ -21729,7 +21307,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Musik"
           }
         },
@@ -21812,7 +21390,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Name"
           }
         },
@@ -21830,72 +21408,72 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nombre"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nom"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Név"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nome"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "名前"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "이름"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nazwa"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nome"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ad"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "名称"
           }
         }
       }
     },
-    "Nature" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.nature" : {
+      "comment" : "Icon-picker category for nature icons: plants, sun, moon, weather, and animals.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Natur"
           }
         },
@@ -21913,7 +21491,7 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Naturaleza"
           }
         },
@@ -21925,49 +21503,49 @@
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Természet"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Natura"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "自然"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "자연"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Natura"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Natureza"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Doğa"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "自然"
           }
         }
@@ -22142,12 +21720,12 @@
       }
     },
     "Next" : {
-      "comment" : "A button label that says \"Next\".",
+      "comment" : "A 'Next' button label, used both for the media transport (skip to next sound) and the onboarding wizard's next step.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Weiter"
           }
         },
@@ -23278,7 +22856,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ohne"
           }
         },
@@ -23296,61 +22874,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ninguna"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aucune"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nincs"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nessuna"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "なし"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "없음"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Brak"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Nenhuma"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Yok"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "无"
           }
         }
@@ -23600,12 +23178,12 @@
         }
       }
     },
-    "Objects" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.objects" : {
+      "comment" : "Icon-picker category for everyday physical-object icons: clocks, alarms, and similar items.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Objekte"
           }
         },
@@ -23688,7 +23266,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aus"
           }
         },
@@ -23742,8 +23320,8 @@
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Desativado"
+            "state" : "translated",
+            "value" : "Desligado"
           }
         },
         "tr" : {
@@ -24888,8 +24466,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pause"
+            "state" : "translated",
+            "value" : "Pausieren"
           }
         },
         "en" : {
@@ -24971,8 +24549,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Angehalten"
+            "state" : "translated",
+            "value" : "Pausiert"
           }
         },
         "en" : {
@@ -25305,8 +24883,8 @@
         }
       }
     },
-    "People & Activity" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.peopleAndActivity" : {
+      "comment" : "Icon-picker category for people and body icons: brain, eye, head and profile figures.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25394,7 +24972,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Punkt"
           }
         },
@@ -25712,8 +25290,8 @@
         }
       }
     },
-    "Pink Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.pink-noise" : {
+      "comment" : "Display name of the built-in 'Pink Noise' sound (pink noise static).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -26797,8 +26375,8 @@
         }
       }
     },
-    "Popular" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.popular" : {
+      "comment" : "Icon-picker category listing the most frequently chosen icons (shown first). 'Popular' means most-used, not fashionable.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -27130,8 +26708,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Wird vorbereitet…"
+            "state" : "translated",
+            "value" : "Vorbereiten …"
           }
         },
         "en-GB" : {
@@ -27216,90 +26794,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "Preset"
-          }
-        }
-      }
-    },
-    "Preset Name" : {
-      "comment" : "Label for the preset name text field.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Name der Voreinstellung "
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preset Name"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preset Name"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nombre del sonido prediseñado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nom du préréglage"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sablon neve"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nome della Configurazione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "プリセット名"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "프리셋 이름"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nazwa presetu"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nome da pré-definição"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ön Ayar Adı"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "预设名称"
           }
         }
       }
@@ -27634,7 +27128,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Vorschau"
           }
         },
@@ -27712,7 +27206,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zurück"
           }
         },
@@ -28035,7 +27529,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Fragezeichen"
           }
         },
@@ -28442,8 +27936,8 @@
         }
       }
     },
-    "Rain" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.rain" : {
+      "comment" : "Display name of the built-in 'Rain' sound (gentle rainfall).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -28609,8 +28103,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Zuletzt verwendet"
+            "state" : "translated",
+            "value" : "Benutzt"
           }
         },
         "en" : {
@@ -29027,7 +28521,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Aus Favoriten entfernen"
           }
         },
@@ -29105,180 +28599,12 @@
         }
       }
     },
-    "Rename Preset" : {
-      "comment" : "Tooltip for the button that renames a preset.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voreinstellung umbenennen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename Preset"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename Preset"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renombrar sonido prediseñado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renommer le préréglage"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sablon átnevezése"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rinomina Configurazione"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "プリセットの名前を変更"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "프리셋 이름 변경"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zmień nazwę presetu"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Renomear pré-definição"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ön Ayarı Yeniden Adlandır"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重命名预设"
-          }
-        }
-      }
-    },
-    "Report an Issue" : {
-      "comment" : "Label for the link to report an issue.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ein Problem melden"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Report an Issue"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Report an Issue"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reportar un problema"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Signaler un problème"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hiba bejelentése"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segnala un Problema"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "問題を報告"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "문제 신고"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zgłoś problem"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Comunicar um problema"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sorun Bildir"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "报告问题"
-          }
-        }
-      }
-    },
     "Required" : {
       "comment" : "Placeholder for a required text field, such as the preset name.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Erforderlich"
           }
         },
@@ -29361,7 +28687,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Zurücksetzen"
           }
         },
@@ -29415,8 +28741,8 @@
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Resetuj"
+            "state" : "translated",
+            "value" : "Zresetuj"
           }
         },
         "pt-PT" : {
@@ -29435,90 +28761,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "重置"
-          }
-        }
-      }
-    },
-    "Reset Sounds" : {
-      "comment" : "The label for the button that resets all sounds to their defaults.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Töne zurücksetzen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset Sounds"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset Sounds"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resetear sonidos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réinitialiser les sons"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A hangok visszaállítása"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Azzera i Suoni"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "サウンドをリセット"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "소리 초기화"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resetuj dźwięki"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Repor sons"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sesleri Sıfırla"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置音效"
           }
         }
       }
@@ -29611,8 +28853,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Auf Standardwerte zurücksetzen"
+            "state" : "translated",
+            "value" : "Auf Standard zurücksetzen"
           }
         },
         "en" : {
@@ -30368,7 +29610,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Bild auswählen"
           }
         },
@@ -30740,7 +29982,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Einstellungen"
           }
         },
@@ -30758,61 +30000,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ajustes"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Réglages"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Beállítások"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Impostazioni"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "設定"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "설정"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ustawienia"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Definições"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ayarlar"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "设置"
           }
         }
@@ -30824,7 +30066,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Einstellungen…"
           }
         },
@@ -30836,61 +30078,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ajustes…"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Réglages…"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Beállítások…"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Impostazioni…"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "設定…"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "설정…"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ustawienia…"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Definições…"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ayarlar…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "设置…"
           }
         }
@@ -30980,7 +30222,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Teilen…"
           }
         },
@@ -30992,61 +30234,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Compartir…"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Partager…"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Megosztás…"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Condividi…"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "共有…"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "공유…"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Udostępnij…"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Partilhar…"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Paylaş…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "共享…"
           }
         }
@@ -31130,12 +30372,12 @@
         }
       }
     },
-    "Shopping" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.shopping" : {
+      "comment" : "Icon-picker category for shopping icons: bags, carts, baskets, wallets.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Einkaufen"
           }
         },
@@ -31767,7 +31009,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Überspringen"
           }
         },
@@ -31851,8 +31093,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Schrägstrich"
+            "state" : "translated",
+            "value" : "Strich"
           }
         },
         "en-GB" : {
@@ -32043,7 +31285,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Schieberegler"
           }
         },
@@ -33194,12 +32436,12 @@
         }
       }
     },
-    "Sports" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.sports" : {
+      "comment" : "Icon-picker category for sports and fitness icons: balls, dumbbells, and gear.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Sport"
           }
         },
@@ -33273,90 +32515,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "运动"
-          }
-        }
-      }
-    },
-    "Star on GitHub" : {
-      "comment" : "Label for the link to star the project on GitHub.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Star on GitHub"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Star on GitHub"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Star on GitHub"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valora la app en GitHub"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mettre une étoile sur GitHub"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Értékeld csillaggal a GitHub-on"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Metti una stella su GitHub"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "GitHubでスターを付ける"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "GitHub에 별 남기기"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dodaj gwiazdkę na GitHub"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dar estrela no GitHub"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "GitHub’da Yıldızla"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在GitHub上收藏"
           }
         }
       }
@@ -33487,7 +32645,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Stopp"
           }
         },
@@ -33517,8 +32675,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ferma"
+            "state" : "translated",
+            "value" : "Interrompi"
           }
         },
         "ja" : {
@@ -33677,8 +32835,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Gestoppt"
+            "state" : "translated",
+            "value" : "Angehalten"
           }
         },
         "en-GB" : {
@@ -33826,8 +32984,8 @@
         }
       }
     },
-    "Storm" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.storm" : {
+      "comment" : "Display name of the built-in 'Storm' sound (a thunderstorm with no sounds of rain).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -33910,8 +33068,8 @@
         }
       }
     },
-    "Stream" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.stream" : {
+      "comment" : "Display name of the built-in 'Stream' sound (a flowing stream or brook).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -34150,8 +33308,8 @@
         }
       }
     },
-    "Summer Night" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.summer-night" : {
+      "comment" : "Display name of the built-in 'Summer Night' sound (crickets on a summer night).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -34234,12 +33392,12 @@
         }
       }
     },
-    "Symbols" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.symbols" : {
+      "comment" : "Icon-picker category for abstract geometric shapes: circles, squares, triangles (shapes/symbols, not emoji or logos).",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Symbole"
           }
         },
@@ -34257,61 +33415,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Símbolos"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Symboles"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Szimbólumok"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Simboli"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "記号"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "기호"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Symbole"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Símbolos"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Semboller"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "符号"
           }
         }
@@ -35163,90 +34321,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "默认预设无法编辑。使用您当前的音效创建一个新预设。"
-          }
-        }
-      }
-    },
-    "The default preset cannot be renamed" : {
-      "comment" : "Warning shown when the user tries to rename the default preset, which cannot be renamed.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Standardvoreinstellung kann nicht umbenannt werden"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The default preset cannot be renamed"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The default preset cannot be renamed"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El sonido prediseñado no se puede renombrar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le préréglage par défaut ne peut pas être renommé"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Az alapértelmezett sablont nem lehet átnevezni"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La configurazione predefinita non può essere rinominata"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "デフォルトのプリセットは名前を変更できません"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "기본 프리셋은 이름을 바꿀 수 없습니다"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Domyślny preset nie może zostać zmieniony"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A pré-definição padrão não pode ser renomeada"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Varsayılan ön ayar yeniden adlandırılamaz"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "默认预设无法重命名"
           }
         }
       }
@@ -36158,7 +35232,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Titel"
           }
         },
@@ -36176,61 +35250,61 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Título"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Titre"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Cím"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Titolo"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "タイトル"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "제목"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Tytuł"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Título"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Başlık"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "标题"
           }
         }
@@ -36444,12 +35518,12 @@
         }
       }
     },
-    "Tools" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.tools" : {
+      "comment" : "Icon-picker category for hand-tool icons: hammer, screwdriver, wrench.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Werkzeuge"
           }
         },
@@ -36467,68 +35541,68 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Herramientas"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Outils"
           }
         },
         "hu" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Eszközök"
           }
         },
         "it" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Strumenti"
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "ツール"
           }
         },
         "ko" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "도구"
           }
         },
         "pl" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Narzędzia"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Ferramentas"
           }
         },
         "tr" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Araçlar"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "工具"
           }
         }
       }
     },
-    "Train" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.train" : {
+      "comment" : "Display name of the built-in 'Train' sound (railcars passing on nearby train tracks).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -36695,8 +35769,8 @@
         }
       }
     },
-    "Transport" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.transport" : {
+      "comment" : "Icon-picker category for transportation icons: cars, buses, and other vehicles.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -37101,8 +36175,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Aus Favoriten entfernen"
+            "state" : "translated",
+            "value" : "Als Favorit entfernen"
           }
         },
         "en" : {
@@ -37430,7 +36504,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Darstellung"
           }
         },
@@ -37507,8 +36581,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Anzeigemodus"
+            "state" : "translated",
+            "value" : "Darstellungsmodus"
           }
         },
         "en" : {
@@ -37674,7 +36748,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lautstärke"
           }
         },
@@ -38061,8 +37135,8 @@
         }
       }
     },
-    "Warm Piano" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.warm-piano" : {
+      "comment" : "Display name of the built-in 'Warm Piano' sound (soft piano music).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -38145,8 +37219,8 @@
         }
       }
     },
-    "Waves" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.waves" : {
+      "comment" : "Display name of the built-in 'Waves' sound (ocean waves).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -38229,86 +37303,86 @@
         }
       }
     },
-    "Website" : {
-      "comment" : "Label for the link to the project's website.",
+    "Waves" : {
+      "comment" : "The display name of the 'Waves' app icon.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Webseite"
+            "value" : "Wellen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Website"
+            "value" : "Waves"
           }
         },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Website"
+            "value" : "Waves"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sitio web"
+            "value" : "Olas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Site web"
+            "value" : "Vagues"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Weboldal"
+            "value" : "Hullámok"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sito Web"
+            "value" : "Onde"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ウェブサイト"
+            "value" : "波"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹사이트"
+            "value" : "파도"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Strona www"
+            "value" : "Fale"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sítio"
+            "value" : "Ondas"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Web Sitesi"
+            "value" : "Dalgalar"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "官方网站"
+            "value" : "海浪"
           }
         }
       }
@@ -38529,8 +37603,8 @@
         }
       }
     },
-    "White Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.white-noise" : {
+      "comment" : "Display name of the built-in 'White Noise' sound (white noise static).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -38613,8 +37687,8 @@
         }
       }
     },
-    "Wind" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.wind" : {
+      "comment" : "Display name of the built-in 'Wind' sound (blowing wind).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {

@@ -58,14 +58,17 @@ open class Sound: NSObject, Identifiable {
       originalTitle: originalTitle) ?? originalTitle
   }
 
-  /// Title for display, localized through the string catalog. Only original
-  /// built-in names are catalog keys, so localization is gated to built-in
-  /// sounds the user hasn't renamed. A custom sound (or a renamed built-in)
-  /// carries user content and is shown verbatim — so a custom sound named
-  /// "Rain" is never turned into "Regen".
+  /// Title for display, localized through the string catalog. Built-in sounds
+  /// key off their stable `fileName` (`sound.<fileName>`) rather than the English
+  /// title, so localization survives a title reword and never clashes with an
+  /// unrelated string that happens to share the English text. Localization is
+  /// gated to built-in sounds the user hasn't renamed: a custom sound (or a
+  /// renamed built-in) carries user content and is shown verbatim — so a custom
+  /// sound named "Rain" is never turned into "Regen".
   var localizedTitle: String {
     guard !isCustom, title == originalTitle else { return title }
-    return NSLocalizedString(originalTitle, comment: "Built-in sound name")
+    return NSLocalizedString(
+      "sound.\(fileName)", value: originalTitle, comment: "Built-in sound name")
   }
 
   var systemIconName: String {

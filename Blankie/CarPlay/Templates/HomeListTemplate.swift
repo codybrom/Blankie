@@ -19,7 +19,11 @@ import os
   enum HomeListTemplate {
     @MainActor
     static func createTemplate() -> CPListTemplate {
-      let template = CPListTemplate(title: String(localized: "Home"), sections: [])
+      let template = CPListTemplate(
+        title: String(
+          localized: "carplay.tab.home", defaultValue: "Home",
+          comment: "CarPlay landing-tab title for the home/main screen of the app"),
+        sections: [])
       template.tabImage = UIImage(systemName: "house.fill")
       updateTemplate(template)
       return template
