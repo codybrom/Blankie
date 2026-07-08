@@ -9808,8 +9808,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktuelle"
+            "state" : "needs_review",
+            "value" : "Aktuell"
           }
         },
         "en-GB" : {
@@ -11982,8 +11982,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeigen"
+            "state" : "needs_review",
+            "value" : "Anzeige"
           }
         },
         "en-GB" : {
@@ -26708,8 +26708,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vorbereiten …"
+            "state" : "needs_review",
+            "value" : "Wird vorbereitet…"
           }
         },
         "en-GB" : {
@@ -28103,8 +28103,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Benutzt"
+            "state" : "needs_review",
+            "value" : "Zuletzt verwendet"
           }
         },
         "en" : {
@@ -31093,8 +31093,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strich"
+            "state" : "needs_review",
+            "value" : "Schrägstrich"
           }
         },
         "en-GB" : {
@@ -36175,8 +36175,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Als Favorit entfernen"
+            "state" : "needs_review",
+            "value" : "Aus Favoriten entfernen"
           }
         },
         "en" : {
@@ -37303,7 +37303,7 @@
         }
       }
     },
-    "Waves" : {
+    "appIcon.waves" : {
       "comment" : "The display name of the 'Waves' app icon.",
       "extractionState" : "manual",
       "localizations" : {
