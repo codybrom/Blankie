@@ -44,7 +44,7 @@ struct SetVolumeIntent: AppIntent {
     #endif
     let clamped = min(max(percent, 0), 100)
     GlobalSettings.shared.setVolume(Double(clamped) / 100.0)
-    let volumeText = clamped.formatted(.percent)
+    let volumeText = (Double(clamped) / 100.0).formatted(.percent)
     return .result(dialog: IntentDialog("Volume set to \(volumeText)."))
   }
 }
@@ -78,7 +78,7 @@ struct SetSoundVolumeIntent: AppIntent {
     }
     let clamped = min(max(percent, 0), 100)
     target.volume = Float(clamped) / 100.0
-    let volumeText = clamped.formatted(.percent)
+    let volumeText = (Double(clamped) / 100.0).formatted(.percent)
     return .result(dialog: IntentDialog("\(target.localizedTitle) volume set to \(volumeText)."))
   }
 }
