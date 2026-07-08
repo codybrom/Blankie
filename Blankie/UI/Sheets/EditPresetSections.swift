@@ -165,16 +165,18 @@ extension EditPresetSheet {
     #endif
   }
 
-  var orderedSelectedSounds: [Sound] {
-    // Filter to only include currently selected sounds
+  /// Single source of truth for selected-sound ordering, so the displayed
+  /// order and the saved order can never diverge.
+  var orderedSelectedFileNames: [String] {
+    // Keep the existing order, filtered to currently selected sounds
     let validOrder = soundOrder.filter { selectedSounds.contains($0) }
-
-    // Add any newly selected sounds that aren't in the order yet
+    // Append any newly selected sounds that aren't in the order yet
     let newSounds = selectedSounds.filter { !validOrder.contains($0) }
-    let finalOrder = validOrder + newSounds.sorted()
+    return validOrder + newSounds.sorted()
+  }
 
-    // Map to Sound objects
-    return finalOrder.compactMap { fileName in
+  var orderedSelectedSounds: [Sound] {
+    orderedSelectedFileNames.compactMap { fileName in
       audioManager.sounds.first(where: { $0.fileName == fileName })
     }
   }
