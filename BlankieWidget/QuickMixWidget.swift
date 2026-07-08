@@ -55,12 +55,15 @@ struct QuickMixProvider: TimelineProvider {
 private struct QuickMixTileView: View {
   let sound: WidgetQuickMixSound
   let size: CGFloat
+  /// The user's real accent (resolved from the entry), so a selected tile
+  /// matches the widget background instead of the target's static asset color.
+  let accent: Color
 
   var body: some View {
     Button(intent: WidgetToggleQuickMixSoundIntent(fileName: sound.fileName)) {
       ZStack {
         Circle()
-          .fill(sound.isSelected ? Color("AccentColor") : Color.white.opacity(0.08))
+          .fill(sound.isSelected ? accent : Color.white.opacity(0.08))
         Image(systemName: sound.systemIconName)
           .font(.system(size: size * 0.35, weight: .medium))
           .foregroundStyle(.white)
@@ -101,52 +104,64 @@ struct QuickMixWidgetEntryView: View {
   @Environment(\.colorScheme) private var colorScheme
   var entry: QuickMixProvider.Entry
 
-  private var columnCount: Int { 4 }
+  private let columnCount = 4
+  private let gridSpacing: CGFloat = 12
+  private let sideControlWidth: CGFloat = 26
+  private let hstackSpacing: CGFloat = 10
 
-  // `.flexible()` columns only size to the grid's available WIDTH, so with
-  // just 2 rows of sounds a `.systemLarge` canvas (much taller than it is
-  // wide-per-tile) was left with a huge dead zone below the grid. Sizing
-  // tiles explicitly per family — bigger on large — makes the same 2 rows
-  // actually use the extra vertical room instead of floating in empty space.
-  private var tileSize: CGFloat { family == .systemLarge ? 108 : 60 }
+  private var accent: Color { widgetAccentColor(entry.accentColorName) }
+
+  // Largest tile we'd like per family — bigger on large to use its extra
+  // vertical room, since with just 2 rows of sounds a `.systemLarge` canvas
+  // would otherwise leave a dead zone below the grid.
+  private var preferredTileSize: CGFloat { family == .systemLarge ? 108 : 60 }
+
+  // …but clamped to what four columns actually fit in the available width. A
+  // `.systemLarge` widget is no wider than a medium one on iPhone, so a fixed
+  // 108 overflowed and clipped the right column; deriving from the real width
+  // keeps the grid inside the canvas on every device.
+  private func tileSize(fitting width: CGFloat) -> CGFloat {
+    let available =
+      width - sideControlWidth - hstackSpacing - CGFloat(columnCount - 1) * gridSpacing
+    return max(0, min(preferredTileSize, available / CGFloat(columnCount)))
+  }
 
   var body: some View {
-    HStack(alignment: .center, spacing: 10) {
-      if entry.sounds.isEmpty {
-        VStack(spacing: 4) {
-          Image(systemName: "shuffle")
-            .font(.title2)
-            .foregroundStyle(.white.opacity(0.6))
-          Text("Add sounds to Quick Mix in Blankie to see them here.")
-            .font(.caption)
-            .foregroundStyle(.white.opacity(0.6))
-            .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else {
-        LazyVGrid(
-          columns: Array(repeating: GridItem(.fixed(tileSize), spacing: 12), count: columnCount),
-          spacing: 12
-        ) {
-          ForEach(entry.sounds) { sound in
-            QuickMixTileView(sound: sound, size: tileSize)
+    GeometryReader { geo in
+      let tile = tileSize(fitting: geo.size.width)
+      HStack(alignment: .center, spacing: hstackSpacing) {
+        if entry.sounds.isEmpty {
+          VStack(spacing: 4) {
+            Image(systemName: "shuffle")
+              .font(.title2)
+              .foregroundStyle(.white.opacity(0.6))
+            Text("Add sounds to Quick Mix in Blankie to see them here.")
+              .font(.caption)
+              .foregroundStyle(.white.opacity(0.6))
+              .multilineTextAlignment(.center)
           }
-        }
-        .frame(maxWidth: .infinity)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+          LazyVGrid(
+            columns: Array(
+              repeating: GridItem(.fixed(tile), spacing: gridSpacing), count: columnCount),
+            spacing: gridSpacing
+          ) {
+            ForEach(entry.sounds) { sound in
+              QuickMixTileView(sound: sound, size: tile, accent: accent)
+            }
+          }
+          .frame(maxWidth: .infinity)
 
-        QuickMixSideControlView(isActive: entry.isActive, isPlaying: entry.isPlaying)
-          .frame(width: 26)
+          QuickMixSideControlView(isActive: entry.isActive, isPlaying: entry.isPlaying)
+            .frame(width: sideControlWidth)
+        }
       }
+      // Fill the geometry so `QuickMixSideControlView`'s Spacer can span the
+      // widget's full height instead of the HStack collapsing to its content.
+      // (No manual padding — WidgetKit applies its own default content margins.)
+      .frame(width: geo.size.width, height: geo.size.height)
     }
-    // No manual padding: WidgetKit already applies its own default content
-    // margins around every widget's view unless the configuration opts out
-    // via `.contentMarginsDisabled()`, which this doesn't.
-    //
-    // The frame is still needed: without it the HStack sizes to its content
-    // and gets centered in the canvas — badge and button in
-    // `QuickMixSideControlView` end up floating in the middle of the widget
-    // instead of spanning its actual top/bottom via their own Spacer.
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .containerBackground(for: .widget) {
       // Quick Mix has no preset of its own to theme with, so it uses the
       // app's own real accent rather than a per-session/per-preset color.
