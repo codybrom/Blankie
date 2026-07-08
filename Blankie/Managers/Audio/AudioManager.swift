@@ -96,6 +96,10 @@ class AudioManager {
   /// then can't be stopped). Not `private` only because the bootstrap body lives
   /// in a separate extension file.
   @ObservationIgnored @MainActor var launchBootstrapTask: Task<Void, Never>?
+  /// Bumped each time a bootstrap task is installed. `Task` is a value type with
+  /// no identity, so waiters compare this generation (not the task itself) to
+  /// decide whether a retry was already started by another caller.
+  @ObservationIgnored @MainActor var launchBootstrapGeneration = 0
   /// Set once, inside the bootstrap task, after custom sounds have loaded.
   @ObservationIgnored @MainActor var hasLoadedCustomSounds = false
   /// Number of times the custom-sound load actually ran; internal so launch

@@ -30,12 +30,22 @@ extension AudioManager {
   /// retries once a context is set, so custom sounds can't stay unloaded.
   @MainActor
   func loadCustomSoundsWhenReady() async {
-    if let task = launchBootstrapTask {
+    // Join the in-flight bootstrap. A run that finished before a model context
+    // existed (built-ins-only early path) needs a retry once one is set — but
+    // only ONE caller may start it, or concurrent waiters each spawn a second
+    // full load (re-instantiating the custom Sound objects the active preset
+    // still holds). After awaiting, the caller that still sees the just-finished
+    // task claims the retry; any other waiter loops and joins the task that
+    // caller installed rather than starting its own.
+    while let task = launchBootstrapTask {
+      let generation = launchBootstrapGeneration
       await task.value
-      // A finished run that never had a model context should retry now that one
-      // may exist (this is what un-flashes the built-ins-only early path).
-      guard !hasLoadedCustomSounds, modelContext != nil else { return }
+      if hasLoadedCustomSounds || modelContext == nil { return }
+      // No new task was installed while we awaited: we claim the retry. If the
+      // generation moved, another caller already installed one — loop and join.
+      if launchBootstrapGeneration == generation { break }
     }
+    launchBootstrapGeneration += 1
     let task = Task { @MainActor in await performLaunchBootstrap() }
     launchBootstrapTask = task
     await task.value
