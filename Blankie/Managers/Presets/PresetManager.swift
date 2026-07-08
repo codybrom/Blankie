@@ -14,10 +14,12 @@ import os
 @Observable
 class PresetManager {
   @ObservationIgnored private var isInitializing = true
-  /// Signature of the preset/sound names last published to App Shortcuts, so
-  /// the (frequently-called) refresh no-ops unless the Siri parameter vocabulary
-  /// would actually differ. Per-process only; reset each launch.
-  @ObservationIgnored private var lastShortcutParameterSignature: Int?
+  /// Signature of the preset/sound names last published to Siri and Spotlight,
+  /// so the (frequently-called) refresh no-ops unless the discoverable set would
+  /// actually differ. A sorted, joined string (like AudioManager's Now Playing
+  /// selection guard) — deterministic and order-independent, unlike a hashValue.
+  /// Per-process only; reset each launch.
+  @ObservationIgnored private var lastDiscoverableEntitiesSignature: String?
   static let shared = PresetManager()
 
   private(set) var presets: [Preset] = []
@@ -971,11 +973,18 @@ extension PresetManager {
   /// no-op calls. Skipped in the widget extension, which also compiles this file.
   func refreshDiscoverableEntitiesIfNeeded() {
     #if !WIDGET_EXTENSION
-      let signature =
-        presets.map { "\($0.id.uuidString):\($0.name)" }.hashValue
-        ^ AudioManager.shared.sounds.map { "\($0.fileName):\($0.localizedTitle)" }.hashValue
-      guard signature != lastShortcutParameterSignature else { return }
-      lastShortcutParameterSignature = signature
+      // Deterministic, order-independent signature over exactly what's donated
+      // (presets + non-preset-only sounds, matching `donateEntitiesToSpotlight`
+      // and `SoundEntityQuery`), so reordering alone doesn't force a refresh.
+      let presetPart = presets.map { "\($0.id.uuidString):\($0.name)" }.sorted()
+      let soundPart =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .map { "\($0.fileName):\($0.localizedTitle)" }
+        .sorted()
+      let signature = (presetPart + ["~"] + soundPart).joined(separator: "|")
+      guard signature != lastDiscoverableEntitiesSignature else { return }
+      lastDiscoverableEntitiesSignature = signature
       // App Shortcuts don't surface on macOS; Spotlight indexing works on both.
       #if !os(macOS)
         BlankieShortcuts.updateAppShortcutParameters()
