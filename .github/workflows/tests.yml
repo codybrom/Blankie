@@ -1,0 +1,71 @@
+name: "Tests"
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    # Only the Xcode/app build surface — not docs, notes, apple_docs, scripts
+    # (incl. scripts/*.swift), or top-level markdown.
+    paths:
+      - "Blankie/**"
+      - "BlankieTests/**"
+      - "Blankie.xcodeproj/**"
+      - "Blankie.xctestplan"
+      - "Blankie*.plist"
+      - "**/*.entitlements"
+      - "**/*.xcconfig"
+      - ".github/workflows/tests.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "Blankie/**"
+      - "BlankieTests/**"
+      - "Blankie.xcodeproj/**"
+      - "Blankie.xctestplan"
+      - "Blankie*.plist"
+      - "**/*.entitlements"
+      - "**/*.xcconfig"
+      - ".github/workflows/tests.yml"
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Select latest Xcode
+        run: |
+          echo "Installed Xcode versions:"
+          ls -d /Applications/Xcode*.app 2>/dev/null || true
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$LATEST" ]; then LATEST=/Applications/Xcode.app; fi
+          # macos-26's default Xcode is 26.4.1, which can't open the project's
+          # objectVersion=100. Selecting the newest installed Xcode (26.5, the
+          # same build as local) is required so xcodebuild can read it.
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST"
+          xcodebuild -version
+      - name: Run unit tests
+        run: |
+          if [ ! -f "Configuration.xcconfig" ]; then
+            echo "Creating Configuration.xcconfig from example..."
+            cp Configuration.example.xcconfig Configuration.xcconfig
+            sed -i '' 's/YOUR_TEAM_ID_HERE/DUMMY_TEAM/' Configuration.xcconfig
+            sed -i '' 's/com.yournamehere.blankie/com.example.blankie/' Configuration.xcconfig
+          fi
+          # macOS build is currently broken (tracked separately); the unit tests
+          # run against the iOS Simulator variant of the same sources — no
+          # signing required.
+          DEVICE=$(xcrun simctl list devices available | grep -oE 'iPhone [^(]+' | head -1 | xargs)
+          echo "Using simulator: $DEVICE"
+          xcodebuild test \
+            -project Blankie.xcodeproj \
+            -scheme "Blankie (Universal)" \
+            -testPlan Blankie \
+            -destination "platform=iOS Simulator,name=$DEVICE" \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
