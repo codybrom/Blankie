@@ -543,16 +543,19 @@ extension PresetImporter {
     )
     preset.artworkId = artworkId
 
-    // Ensure static artwork path mirrors the exported image
+    // Ensure static artwork path mirrors the exported image. Only record the
+    // path once the write succeeds — a failed write would otherwise leave the
+    // preset pointing at a preview file that was never created. `artworkId`
+    // above is stored independently, so the artwork itself still survives.
     let staticId = UUID()
     let staticRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: staticId)
     do {
       _ = try AnimatedArtworkFileStore.writeData(artworkData, to: staticRel)
+      preset.staticArtworkPath = staticRel
     } catch {
       Logger.presets.error(
         "Import: Failed to write static artwork: \(error, privacy: .public)")
     }
-    preset.staticArtworkPath = staticRel
   }
 
   private func importAnimatedArtwork(for preset: inout Preset, from archiveURL: URL) async throws {
@@ -687,12 +690,15 @@ extension PresetImporter {
       let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: assetId)
       do {
         _ = try AnimatedArtworkFileStore.copyItem(at: previewSource, to: previewRel)
+        return previewRel
       } catch {
         Logger.presets.error(
           "Import: Failed to copy animated preview: \(error, privacy: .public)")
+        // Copy failed — fall through so we never hand back a path to a file
+        // that was never written; use the static preview if there is one.
       }
-      return previewRel
-    } else if let staticPath, AnimatedArtworkFileStore.fileExists(at: staticPath) {
+    }
+    if let staticPath, AnimatedArtworkFileStore.fileExists(at: staticPath) {
       return staticPath
     }
     return nil
