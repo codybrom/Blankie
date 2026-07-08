@@ -2410,8 +2410,8 @@
         }
       }
     },
-    "Airplane" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.airplane" : {
+      "comment" : "Display name of the built-in 'Airplane' sound (airplane cabin hum).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -2904,8 +2904,8 @@
         }
       }
     },
-    "Ambient Synth" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.ambient-music" : {
+      "comment" : "Display name of the built-in 'Ambient Synth' sound (ambient synthesizer music).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -3811,8 +3811,91 @@
         }
       }
     },
-    "Audio" : {
-      "comment" : "Section header for audio options.",
+    "iconCategory.audio" : {
+      "comment" : "The icon-picker category for speaker/sound symbols.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Audio"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Audio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Audio"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hang"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Audio"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "オーディオ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "오디오"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dźwięk"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Áudio"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ses"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "音频"
+          }
+        }
+      }
+    },
+    "soundSheet.audioSectionHeader" : {
+      "comment" : "Section header for a sound's audio-processing options.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -4786,8 +4869,8 @@
         }
       }
     },
-    "Birds" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.birds" : {
+      "comment" : "Display name of the built-in 'Birds' sound (bird songs).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -5828,8 +5911,8 @@
         }
       }
     },
-    "Boat" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.boat" : {
+      "comment" : "Display name of the built-in 'Boat' sound (a sailboat on the water).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -7396,8 +7479,8 @@
         }
       }
     },
-    "City" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.city" : {
+      "comment" : "Display name of the built-in 'City' sound (urban city ambience).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -8059,8 +8142,8 @@
         }
       }
     },
-    "Clothing" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.clothing" : {
+      "comment" : "Icon-picker category for clothing icons: hats, jackets, coats.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8226,8 +8309,8 @@
         }
       }
     },
-    "Coffee Shop" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.coffee-shop" : {
+      "comment" : "Display name of the built-in 'Coffee Shop' sound (coffee-shop ambience).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -8622,8 +8705,8 @@
         }
       }
     },
-    "Communication" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.communication" : {
+      "comment" : "Icon-picker category for communication icons: speech and message bubbles.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -11012,8 +11095,8 @@
         }
       }
     },
-    "Deep Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.brown-noise" : {
+      "comment" : "Display name of the built-in 'Deep Noise' sound (brown noise / deep static)).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -13853,8 +13936,8 @@
         }
       }
     },
-    "Education" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.education" : {
+      "comment" : "Icon-picker category for school and writing icons: pencils, erasers, highlighters.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -13936,8 +14019,8 @@
         }
       }
     },
-    "Entertainment" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.entertainment" : {
+      "comment" : "Icon-picker category for entertainment and gaming icons: game controllers, dice.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -15226,8 +15309,8 @@
         }
       }
     },
-    "Fan" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.fan" : {
+      "comment" : "Display name of the built-in 'Fan' sound (mechanical hum of an  electric fan).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -15559,8 +15642,8 @@
         }
       }
     },
-    "Fireplace" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.fireplace" : {
+      "comment" : "Display name of the built-in 'Fireplace' sound (a crackling fire).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -15721,8 +15804,8 @@
         }
       }
     },
-    "Food & Drink" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.foodAndDrink" : {
+      "comment" : "Icon-picker category for food and drink icons: cups, mugs, and takeout.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -15887,8 +15970,8 @@
         }
       }
     },
-    "Forest" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.forest" : {
+      "comment" : "Display name of the built-in 'Forest' sound (windy forest ambience).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -16294,8 +16377,8 @@
         }
       }
     },
-    "Gentle Guitar" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.acoustic-guitar" : {
+      "comment" : "Display name of the built-in 'Gentle Guitar' sound (soft acoustic guitar).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -16629,8 +16712,8 @@
         }
       }
     },
-    "Green Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.green-noise" : {
+      "comment" : "Display name of the built-in 'Green Noise' sound (prcoessed green noise static).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -17184,8 +17267,91 @@
         }
       }
     },
-    "Home" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.home" : {
+      "comment" : "Icon-picker category for household and dwelling icons: houses, buildings, doors, windows, and furniture (the house/dwelling sense).",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zuhause"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Home"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hogar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Maison"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Otthon"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Casa"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ホーム"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "홈"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Dom"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Casa"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ev"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "家居"
+          }
+        }
+      }
+    },
+    "carplay.tab.home" : {
+      "comment" : "CarPlay landing-tab title for the home/main screen of the app",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -18930,8 +19096,8 @@
         }
       }
     },
-    "Laundry Room" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.laundry-room" : {
+      "comment" : "Display name of the built-in 'Laundry Room' sound (hum of a running clothes dryer).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -19747,8 +19913,8 @@
         }
       }
     },
-    "Lo-Fi Beats" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.lofi-beats" : {
+      "comment" : "Display name of the built-in 'Lo-Fi Beats' sound (lo-fi hip-hop music).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -20652,8 +20818,8 @@
         }
       }
     },
-    "Medical" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.medical" : {
+      "comment" : "Icon-picker category for medical and health icons: stethoscope, syringe, pills.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -21158,8 +21324,8 @@
         }
       }
     },
-    "Miscellaneous" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.miscellaneous" : {
+      "comment" : "Icon-picker category for assorted icons that don't fit the other groups (trash, signposts, etc.).",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -21890,8 +22056,8 @@
         }
       }
     },
-    "Nature" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.nature" : {
+      "comment" : "Icon-picker category for nature icons: plants, sun, moon, weather, and animals.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -23600,8 +23766,8 @@
         }
       }
     },
-    "Objects" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.objects" : {
+      "comment" : "Icon-picker category for everyday physical-object icons: clocks, alarms, and similar items.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25305,8 +25471,8 @@
         }
       }
     },
-    "People & Activity" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.peopleAndActivity" : {
+      "comment" : "Icon-picker category for people and body icons: brain, eye, head and profile figures.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -25712,8 +25878,8 @@
         }
       }
     },
-    "Pink Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.pink-noise" : {
+      "comment" : "Display name of the built-in 'Pink Noise' sound (pink noise static).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -26797,8 +26963,8 @@
         }
       }
     },
-    "Popular" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.popular" : {
+      "comment" : "Icon-picker category listing the most frequently chosen icons (shown first). 'Popular' means most-used, not fashionable.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -28442,8 +28608,8 @@
         }
       }
     },
-    "Rain" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.rain" : {
+      "comment" : "Display name of the built-in 'Rain' sound (gentle rainfall).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -31130,8 +31296,8 @@
         }
       }
     },
-    "Shopping" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.shopping" : {
+      "comment" : "Icon-picker category for shopping icons: bags, carts, baskets, wallets.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -33194,8 +33360,8 @@
         }
       }
     },
-    "Sports" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.sports" : {
+      "comment" : "Icon-picker category for sports and fitness icons: balls, dumbbells, and gear.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -33826,8 +33992,8 @@
         }
       }
     },
-    "Storm" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.storm" : {
+      "comment" : "Display name of the built-in 'Storm' sound (a thunderstorm with no sounds of rain).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -33910,8 +34076,8 @@
         }
       }
     },
-    "Stream" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.stream" : {
+      "comment" : "Display name of the built-in 'Stream' sound (a flowing stream or brook).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -34150,8 +34316,8 @@
         }
       }
     },
-    "Summer Night" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.summer-night" : {
+      "comment" : "Display name of the built-in 'Summer Night' sound (crickets on a summer night).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -34234,8 +34400,8 @@
         }
       }
     },
-    "Symbols" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.symbols" : {
+      "comment" : "Icon-picker category for abstract geometric shapes: circles, squares, triangles (shapes/symbols, not emoji or logos).",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36444,8 +36610,8 @@
         }
       }
     },
-    "Tools" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.tools" : {
+      "comment" : "Icon-picker category for hand-tool icons: hammer, screwdriver, wrench.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36527,8 +36693,8 @@
         }
       }
     },
-    "Train" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.train" : {
+      "comment" : "Display name of the built-in 'Train' sound (railcars passing on nearby train tracks).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -36695,8 +36861,8 @@
         }
       }
     },
-    "Transport" : {
-      "comment" : "Icon category name in the icon picker.",
+    "iconCategory.transport" : {
+      "comment" : "Icon-picker category for transportation icons: cars, buses, and other vehicles.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -38061,8 +38227,8 @@
         }
       }
     },
-    "Warm Piano" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.warm-piano" : {
+      "comment" : "Display name of the built-in 'Warm Piano' sound (soft piano music).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -38141,6 +38307,90 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "温暖钢琴"
+          }
+        }
+      }
+    },
+    "sound.waves" : {
+      "comment" : "Display name of the built-in 'Waves' sound (ocean waves).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waves"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waves"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Olas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vagues"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hullámok"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onde"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "波"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "파도"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fale"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ondas"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dalgalar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "海浪"
           }
         }
       }
@@ -38529,8 +38779,8 @@
         }
       }
     },
-    "White Noise" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.white-noise" : {
+      "comment" : "Display name of the built-in 'White Noise' sound (white noise static).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -38613,8 +38863,8 @@
         }
       }
     },
-    "Wind" : {
-      "comment" : "The display name of a built-in ambient sound.",
+    "sound.wind" : {
+      "comment" : "Display name of the built-in 'Wind' sound (blowing wind).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
