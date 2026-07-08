@@ -292,7 +292,12 @@ import os
     }
 
     static func dismantleUIView(_ uiView: LoopingPlayerContainerView, coordinator: Coordinator) {
-      uiView.teardown()
+      // SwiftUI tears views down on the main actor; assert it so the main-actor
+      // `teardown()` (which stops the player and breaks the looper's observer
+      // retain cycle) can run here.
+      MainActor.assumeIsolated {
+        uiView.teardown()
+      }
     }
   }
 
@@ -328,10 +333,6 @@ import os
       looper = nil
       player = nil
       playerLayer.player = nil
-    }
-
-    deinit {
-      teardown()
     }
   }
 
