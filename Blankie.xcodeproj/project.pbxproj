@@ -20,6 +20,7 @@
 		FADE000000000000005A0003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0001 /* Assets.xcassets */; };
 		FADE000000000000005A0005 /* BrandAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0004 /* BrandAssets.xcassets */; };
 		FADE000000000000005A0006 /* BrandAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0004 /* BrandAssets.xcassets */; };
+		FADE000000000000005A0007 /* BrandAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0004 /* BrandAssets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -207,6 +208,15 @@
 			);
 			target = F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */;
 		};
+		FADE000000000000005B0001 /* Exceptions for "Blankie" folder in "BlankiePresetPreview" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/sounds.json,
+				UI/Components/FallbackArtwork.swift,
+				"Utils/Extensions/Color+Extension.swift",
+			);
+			target = F94CB7982FEA47920077688E /* BlankiePresetPreview */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -237,6 +247,7 @@
 		F9BC93262D41457D00E450FC /* Blankie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				FADE000000000000005B0001 /* Exceptions for "Blankie" folder in "BlankiePresetPreview" target */,
 				F91C40D12FF54FB100C58FC6 /* Exceptions for "Blankie" folder in "BlankieWidgetExtension" target */,
 			);
 			path = Blankie;
@@ -565,6 +576,7 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				FADE000000000000005A0003 /* Assets.xcassets in Resources */,
+				FADE000000000000005A0007 /* BrandAssets.xcassets in Resources */,
 			);
 		};
 		F95914CE2FDF1D2300808460 /* Resources */ = {

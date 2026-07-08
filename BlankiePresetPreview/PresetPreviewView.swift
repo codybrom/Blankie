@@ -67,12 +67,15 @@ struct PresetPreviewView: View {
       if let data = preset.artworkData, let image = UIImage(data: data) {
         Image(uiImage: image).resizable().aspectRatio(contentMode: .fill)
       } else {
-        ZStack {
-          Color.white.opacity(0.08)
-          Image(systemName: "moon.stars.fill")
-            .font(.system(size: 40, weight: .medium))
-            .foregroundStyle(.white.opacity(0.85))
-        }
+        // The app's own no-artwork treatment: a montage of the preset's sound
+        // icons (or the Blankie mark) in the preset's accent, so Quick Look
+        // matches what Blankie shows for the same preset.
+        FallbackArtwork(
+          glyph: .playback(
+            isQuickMix: false, isDefaultPreset: preset.isDefault, icons: preset.iconNames),
+          accent: preset.accentColorName.flatMap(Color.init(fromString:)) ?? .accentColor,
+          size: 120,
+          cornerRadius: 22)
       }
     }
     .frame(width: 120, height: 120)
@@ -144,5 +147,7 @@ struct PresetPreviewView: View {
 
 #Preview {
   PresetPreviewView(
-    preset: .init(name: "Coquí Calling", creator: "Cody", soundCount: 1, artworkData: nil))
+    preset: .init(
+      name: "Coquí Calling", creator: "Cody", soundCount: 3, artworkData: nil,
+      accentColorName: "teal", iconNames: ["cloud.rain", "wind", "bird"], isDefault: false))
 }
