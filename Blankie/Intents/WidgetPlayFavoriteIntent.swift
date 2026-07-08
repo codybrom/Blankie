@@ -31,6 +31,10 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult {
+    // A not-yet-configured Control Center control passes an empty token. No-op
+    // rather than falling through to the generic "preset not found" error.
+    guard !favoriteToken.isEmpty else { return .result() }
+
     await AppSetup.ensureManagersReadyForIntents()
     let audio = AudioManager.shared
 

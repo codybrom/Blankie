@@ -28,12 +28,13 @@ struct PlayBlankieIntent: AppIntent, AudioPlaybackIntent {
   }
 }
 
-struct PauseBlankieIntent: AppIntent {
+struct PauseBlankieIntent: AppIntent, AudioPlaybackIntent {
   static var title: LocalizedStringResource { "Pause" }
   static var description: IntentDescription { IntentDescription("Pauses Blankie's playback.") }
 
   @MainActor
   func perform() async throws -> some IntentResult & ProvidesDialog {
+    await AppSetup.ensureManagersReadyForIntents()
     AudioManager.shared.setGlobalPlaybackState(false)
     return .result(dialog: IntentDialog("Paused."))
   }
