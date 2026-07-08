@@ -23,10 +23,30 @@ extension AudioManager {
     setupCustomSoundObservers()
   }
 
-  /// Load all sounds (built-in + custom) after initialization is complete
-  /// This ensures PresetManager gets complete sound data
+  /// Load all sounds (built-in + custom) after initialization is complete, so
+  /// PresetManager gets complete sound data. Single-flight: every caller joins
+  /// the one in-flight bootstrap task rather than starting its own load. A run
+  /// that finished before a model context existed (built-ins-only early path)
+  /// retries once a context is set, so custom sounds can't stay unloaded.
   @MainActor
   func loadCustomSoundsWhenReady() async {
+    if let task = launchBootstrapTask {
+      await task.value
+      // A finished run that never had a model context should retry now that one
+      // may exist (this is what un-flashes the built-ins-only early path).
+      guard !hasLoadedCustomSounds, modelContext != nil else { return }
+    }
+    let task = Task { @MainActor in await performLaunchBootstrap() }
+    launchBootstrapTask = task
+    await task.value
+  }
+
+  /// The launch bootstrap body. Only one instance ever runs at a time (serialized
+  /// by `loadCustomSoundsWhenReady`'s single-flight task), so the
+  /// `hasLoadedCustomSounds` read/set gap can't race a concurrent caller into a
+  /// second full load.
+  @MainActor
+  private func performLaunchBootstrap() async {
     // Load built-in sounds first if not already loaded
     if sounds.isEmpty {
       Logger.audio.debug("AudioManager: Loading built-in sounds first...")
@@ -53,12 +73,15 @@ extension AudioManager {
       }
     #endif
 
-    // Load custom sounds once. This can be called more than once at launch
-    // (the CarPlay build fires it from IOSAppDelegate, and AppSetup fires it
-    // for every scheme); a second full load would tear down and re-create the
-    // custom Sound objects the active preset/UI already holds, leaving the
-    // originals playing with no way to stop them. PresetManager still gets
-    // (re-)initialized below in either case.
+    // Whether a previous no-context run already initialized PresetManager (and
+    // cleared its "Loading Presets…" spinner) with built-in sounds only. If so,
+    // re-apply the current preset after the late custom sounds load below.
+    // `isLoading` is PresetManager's public proxy for that state (it clears
+    // together with the private `isInitializing` at the end of `loadPresets()`).
+    let presetManagerWasAlreadyInitialized = !PresetManager.shared.isLoading
+
+    // Load custom sounds once. Serialized by the single-flight task, so this
+    // read/set of `hasLoadedCustomSounds` can't race a concurrent caller.
     if hasLoadedCustomSounds {
       Logger.audio.debug("AudioManager: Custom sounds already loaded, skipping reload")
     } else {
@@ -67,10 +90,22 @@ extension AudioManager {
       // loading, so recovered sounds reappear this launch.
       await CustomSoundManager.shared.reconcileCustomSoundsFromDisk()
       loadCustomSounds()
+      customSoundLoadPasses += 1
       hasLoadedCustomSounds = true
       // Back-fill mirrors for sounds saved before mirroring existed, so existing
       // libraries gain durability without waiting for an edit.
       CustomSoundManager.shared.syncAllMirrors()
+
+      // Custom sounds arrived after a built-ins-only early path already applied
+      // the current preset; re-apply it so they pick up their saved
+      // selection/volume. Autoplay-gated by `isGloballyPlaying`, so this cannot
+      // start audio on its own. Runs before `reconcileLaunchPlaybackState()` so a
+      // deferred solo restore still runs last and wins.
+      if presetManagerWasAlreadyInitialized,
+        let preset = PresetManager.shared.currentPreset
+      {
+        PresetManager.shared.applySoundStates(preset.soundStates)
+      }
     }
 
     // Initialize PresetManager with ALL sounds loaded

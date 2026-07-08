@@ -88,12 +88,19 @@ class AudioManager {
   /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
   /// otherwise fight the preset restoring its own selection set.
   @ObservationIgnored var isApplyingPresetStates = false
-  /// Set once custom sounds have been loaded from SwiftData. Guards against a
-  /// second full reload — on the CarPlay build both `IOSAppDelegate` and
-  /// `AppSetup` call `loadCustomSoundsWhenReady()`, and re-running the load
-  /// would re-instantiate custom `Sound` objects that the UI/preset still
-  /// references, orphaning the originals (which then can't be stopped).
+  /// The in-flight (or finished) launch bootstrap. Every caller of
+  /// `loadCustomSoundsWhenReady()` (scene setup, App Intents, CarPlay) joins this
+  /// one task instead of each running the load, so custom sounds can't be
+  /// double-loaded — a second full load re-instantiates the custom `Sound`
+  /// objects the active preset/UI still holds, orphaning the originals (which
+  /// then can't be stopped). Not `private` only because the bootstrap body lives
+  /// in a separate extension file.
+  @ObservationIgnored @MainActor var launchBootstrapTask: Task<Void, Never>?
+  /// Set once, inside the bootstrap task, after custom sounds have loaded.
   @ObservationIgnored @MainActor var hasLoadedCustomSounds = false
+  /// Number of times the custom-sound load actually ran; internal so launch
+  /// tests can assert the single-flight bootstrap coalesces concurrent callers.
+  @ObservationIgnored @MainActor var customSoundLoadPasses = 0
   @ObservationIgnored var customSoundObserver: AnyCancellable?
   #if os(iOS) || os(visionOS)
     @ObservationIgnored var audioSessionObserversSetup = false
@@ -312,11 +319,6 @@ extension AudioManager {
 extension AudioManager {
   // MARK: - Sound Management
 
-  @MainActor
-  func getVisibleSounds() -> [Sound] {
-    sounds
-  }
-
   /// Looks up a loaded sound by its stable `fileName` (not its `UUID`, which
   /// is re-minted every launch) — the identity App Intents resolve `SoundEntity`
   /// parameters against.
@@ -332,7 +334,7 @@ extension AudioManager {
   /// `defaultSoundOrder`. Unknown sounds sort last.
   @MainActor
   func orderedVisibleSounds(for preset: Preset?) -> [Sound] {
-    let visible = getVisibleSounds().filter { sound in
+    let visible = sounds.filter { sound in
       if let preset, !preset.isDefault {
         return preset.soundStates.contains { $0.fileName == sound.fileName }
       }
@@ -400,12 +402,6 @@ extension AudioManager {
     Logger.audio.debug(
       "AudioManager: Moved sound '\(movedSound.fileName)' from \(sourceIndex) to \(destinationIndex)"
     )
-  }
-
-  /// Move a visible sound to a new position
-  @MainActor
-  func moveVisibleSound(from sourceIndex: Int, to destinationIndex: Int) {
-    moveSound(from: sourceIndex, to: destinationIndex)
   }
 
   /// Apply volume settings to all playing sounds by triggering volume updates
