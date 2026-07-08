@@ -485,6 +485,13 @@ struct SettingsView: View {
                 // toggle above rather than a peer control.
                 .padding(.top, 8)
                 .padding(.leading, 16)
+
+                // Link the mental model: this is the fallback, and any preset
+                // can pick its own artwork in the editor.
+                Text("Presets can choose their own artwork when you edit them.")
+                  .font(.footnote)
+                  .foregroundStyle(.secondary)
+                  .padding(.leading, 16)
               }
             #endif
           }
