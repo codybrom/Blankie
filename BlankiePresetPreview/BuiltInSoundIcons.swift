@@ -17,13 +17,20 @@ enum BuiltInSoundIcons {
   private static let map: [String: String] = {
     guard let url = Bundle.main.url(forResource: "sounds", withExtension: "json"),
       let data = try? Data(contentsOf: url),
-      let sounds = try? JSONDecoder().decode([Entry].self, from: data)
+      let catalog = try? JSONDecoder().decode(Catalog.self, from: data)
     else { return [:] }
     return Dictionary(
-      sounds.map { ($0.fileName, $0.systemIconName) }, uniquingKeysWith: { first, _ in first })
+      catalog.sounds.map { ($0.fileName, $0.systemIconName) },
+      uniquingKeysWith: { first, _ in first })
   }()
 
   static func icon(for fileName: String) -> String? { map[fileName] }
+
+  /// `sounds.json` is a top-level object wrapping the sound records in a
+  /// `sounds` array, not a bare array.
+  private struct Catalog: Decodable {
+    let sounds: [Entry]
+  }
 
   /// The only two fields the fallback needs from each `sounds.json` record.
   private struct Entry: Decodable {

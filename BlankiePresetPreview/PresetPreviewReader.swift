@@ -95,24 +95,40 @@ enum PresetPreviewReader {
   private static func resolveIcons(
     for selected: [ArchivedSoundState], in archive: Archive
   ) -> [String] {
-    var overrides: [String: String] = [:]  // fileName -> customIconName
-    var customIcons: [String: String] = [:]  // fileName -> systemIconName
+    var overrides: [String: String] = [:]  // baseName -> customIconName
+    var customIcons: [String: String] = [:]  // baseName -> systemIconName
     if let data = entryData(in: archive, path: "sounds/metadata.json"),
       let manifest = try? JSONDecoder().decode(ArchivedSoundsManifest.self, from: data)
     {
       for sound in manifest.customSounds {
-        if let icon = sound.systemIconName { customIcons[sound.fileName] = icon }
+        if let icon = sound.systemIconName { customIcons[baseName(sound.fileName)] = icon }
       }
       for custom in manifest.builtInCustomizations {
-        if let icon = custom.customIconName { overrides[custom.fileName] = icon }
+        if let icon = custom.customIconName { overrides[baseName(custom.fileName)] = icon }
       }
     }
 
     return selected.compactMap { state in
-      overrides[state.fileName]
-        ?? customIcons[state.fileName]
-        ?? BuiltInSoundIcons.icon(for: state.fileName)
+      let key = baseName(state.fileName)
+      return overrides[key]
+        ?? customIcons[key]
+        ?? BuiltInSoundIcons.icon(for: key)
     }
+  }
+
+  /// A sound's file name reaches the fallback in two forms: a preset's
+  /// `soundStates` reference both built-ins and custom sounds by their base name
+  /// (no extension), while `sounds/metadata.json` stores custom sounds *with*
+  /// the extension (and legacy presets may carry a built-in's extension). Strip
+  /// a known audio extension so both sides key on the same base name.
+  private static let audioExtensions: Set<String> = [
+    "m4a", "mp3", "wav", "aif", "aiff", "flac", "ogg", "opus", "caf", "aac", "au",
+  ]
+
+  private static func baseName(_ fileName: String) -> String {
+    let ext = (fileName as NSString).pathExtension.lowercased()
+    guard !ext.isEmpty, audioExtensions.contains(ext) else { return fileName }
+    return (fileName as NSString).deletingPathExtension
   }
 
   /// Extract a single archive entry into memory without unpacking the whole zip,
