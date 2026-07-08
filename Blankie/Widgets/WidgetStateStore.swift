@@ -97,12 +97,21 @@ struct WidgetSnapshot: Codable, Equatable {
 enum WidgetStateStore {
   private static let key = "widgetSnapshot"
 
+  /// The last snapshot `publish` actually wrote, so a byte-identical republish
+  /// (the debounced Now Playing tick fires far more often than the data
+  /// changes) skips the write and the timeline reload. App-side only.
+  @MainActor private static var lastPublished: WidgetSnapshot?
+
   /// Called by the app whenever playback or favorites change. Reloads every
   /// widget/Control timeline so the new snapshot renders immediately — the
   /// single choke point, so callers never forget the reload half of the pair.
+  /// No-ops when the snapshot is unchanged from the last publish.
+  @MainActor
   static func publish(_ snapshot: WidgetSnapshot) {
+    guard snapshot != lastPublished else { return }
     guard let data = try? JSONEncoder().encode(snapshot) else { return }
     UserDefaults.shared.set(data, forKey: key)
+    lastPublished = snapshot
     WidgetCenter.shared.reloadAllTimelines()
   }
 
