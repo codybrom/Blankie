@@ -32,13 +32,20 @@ struct SetVolumeIntent: AppIntent {
       guard GlobalSettings.shared.mixWithOthers else {
         return .result(
           dialog: IntentDialog(
-            "Volume is controlled by your device's volume buttons on iPhone and iPad. Turn on Mix with Other Audio in Blankie's settings to set it here instead."
+            LocalizedStringResource(
+              "volume.deviceControlled",
+              defaultValue:
+                "Volume is controlled by your device's volume buttons. Turn on Mix with Other Audio in Blankie's settings to set it here instead.",
+              comment:
+                "Shown via Siri when setting volume while Mix with Other Audio is off. Varies by device (iPhone/iPad)."
+            )
           ))
       }
     #endif
     let clamped = min(max(percent, 0), 100)
     GlobalSettings.shared.setVolume(Double(clamped) / 100.0)
-    return .result(dialog: IntentDialog("Volume set to \(clamped)%."))
+    let volumeText = (Double(clamped) / 100.0).formatted(.percent)
+    return .result(dialog: IntentDialog("Volume set to \(volumeText)."))
   }
 }
 
@@ -71,6 +78,7 @@ struct SetSoundVolumeIntent: AppIntent {
     }
     let clamped = min(max(percent, 0), 100)
     target.volume = Float(clamped) / 100.0
-    return .result(dialog: IntentDialog("\(target.localizedTitle) volume set to \(clamped)%."))
+    let volumeText = (Double(clamped) / 100.0).formatted(.percent)
+    return .result(dialog: IntentDialog("\(target.localizedTitle) volume set to \(volumeText)."))
   }
 }

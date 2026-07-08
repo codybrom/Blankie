@@ -11,6 +11,16 @@ import os
 extension AudioManager {
   // MARK: - Quick Mix Mode
 
+  /// Leave any active transient mode — solo first, then Quick Mix — before
+  /// switching to a preset. Both exits self-guard, so this no-ops when neither
+  /// is active. Centralizes the exit-both ritual that preset-switch call sites
+  /// (Library, CreatePreset, CarPlay, widget intents) previously open-coded.
+  @MainActor
+  func leaveTransientModes() {
+    exitSoloModeWithoutResuming()
+    exitQuickMix()
+  }
+
   @MainActor
   func enterQuickMix(with initialSounds: [Sound] = []) {
     Logger.audio.debug("AudioManager: Entering Quick Mix mode")

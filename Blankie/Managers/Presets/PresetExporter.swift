@@ -49,8 +49,7 @@ nonisolated final class PresetExporter: Sendable {
     try FileManager.default.createDirectory(at: archiveDir, withIntermediateDirectories: true)
 
     // Create archive manifest
-    let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
+    let currentVersion = Bundle.main.appVersion
     let manifest = ArchiveManifest(blankieVersion: currentVersion)
 
     // Get custom sounds for this preset

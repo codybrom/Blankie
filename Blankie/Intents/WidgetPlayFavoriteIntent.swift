@@ -51,20 +51,11 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
     // already-playing solo sound) — that guard silently blocks every other
     // preset tap while solo is active too, since it can't tell them apart.
     // Exiting solo explicitly first, before applying, sidesteps that guard.
-    if audio.soloModeSound != nil {
-      audio.exitSoloModeWithoutResuming()
-    }
-    // `applyPreset` never touches `isQuickMix` — every other call site that
-    // can switch away from Quick Mix (CreatePresetSheet, LibraryView,
-    // CarPlay's PresetListTemplate, `enterSoloMode` itself) exits it
-    // explicitly first. Skipping that here left `isQuickMix` stuck `true`
-    // after picking a preset from a widget, so the next Quick Mix widget tap
-    // took the "already in Quick Mix" branch instead of entering fresh —
-    // toggling a sound on top of the preset's still-selected ones instead of
-    // replacing them.
-    if audio.isQuickMix {
-      audio.exitQuickMix()
-    }
+    // `applyPreset` never exits Quick Mix on its own; leaving both transient
+    // modes here (via the shared helper) also fixes the bug where `isQuickMix`
+    // stayed `true` after a widget preset tap, so a later Quick Mix tap toggled
+    // on top of the preset instead of entering fresh.
+    audio.leaveTransientModes()
 
     if favoriteToken == GlobalSettings.allSoundsToken {
       if let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {

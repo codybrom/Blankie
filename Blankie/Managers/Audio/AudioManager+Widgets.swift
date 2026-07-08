@@ -46,6 +46,40 @@ extension AudioManager {
     WidgetStateStore.publish(snapshot)
   }
 
+  /// Republish favorites/Quick Mix/pinnable/accent data after a settings change,
+  /// carrying the last-published playback state so this never contradicts the
+  /// Now Playing pipeline about what's playing.
+  @MainActor
+  func republishWidgetCatalog() {
+    let last = WidgetStateStore.current().playback
+    // Derive the accent from its source, not the last-published value: the
+    // active preset's own accent when a preset is what's playing (matching the
+    // Now Playing pipeline's `preset?.accentColorName`), otherwise the app-wide
+    // custom accent — so a global-accent change is reflected immediately even
+    // for a preset that has no accent of its own.
+    let presetAccent =
+      soloModeSound == nil && !isQuickMix
+      ? PresetManager.shared.currentPreset?.accentColorName : nil
+    let accentColorName = presetAccent ?? GlobalSettings.shared.customAccentColor?.toString
+    let playback = WidgetPlaybackState(
+      isPlaying: last.isPlaying,
+      title: last.title,
+      subtitle: last.subtitle,
+      soundSystemIconNames: last.soundSystemIconNames,
+      thumbnailKey: last.thumbnailKey,
+      activeToken: currentFavoriteToken,
+      accentColorName: accentColorName
+    )
+    let snapshot = WidgetSnapshot(
+      playback: playback,
+      favorites: GlobalSettings.shared.starredItems.compactMap(widgetFavorite(forToken:)),
+      quickMixSounds: widgetQuickMixSounds(),
+      pinnableItems: widgetPinnableItems(),
+      defaultAccentColorName: GlobalSettings.shared.customAccentColor?.toString
+    )
+    WidgetStateStore.publish(snapshot)
+  }
+
   /// Each of `GlobalSettings.quickMixSoundFileNames`, marked selected only
   /// when Quick Mix is the mode actually driving playback right now — a
   /// sound can be `isSelected` via a regular preset without that meaning
@@ -95,19 +129,18 @@ extension AudioManager {
   /// fallback chain `NowPlayingManager`'s widget subtitle uses for whatever's
   /// currently playing, applied here to an arbitrary (possibly not currently
   /// active) preset so a pinned preset and that preset actually playing read
-  /// the same way. Mirrors `NowPlayingManager.soundNameSummary`'s truncation
-  /// (full list under budget, else a count) without depending on that
-  /// instance method, since this resolves an arbitrary preset's own stored
-  /// sound states rather than the live mix.
-  private func presetSubtitle(for preset: Preset) -> String? {
+  /// the same way. Shares `NowPlayingManager.soundNameSummary` for the
+  /// truncation rule (full list under budget, else a count), resolving an
+  /// arbitrary preset's own stored sound states rather than the live mix.
+  func presetSubtitle(for preset: Preset) -> String? {
     if let creator = preset.creatorName { return creator }
     let order = preset.soundOrder ?? preset.soundStates.map(\.fileName)
     let selected = Set(preset.soundStates.filter(\.isSelected).map(\.fileName))
-    let titles = order.filter { selected.contains($0) }.compactMap { sound(fileName: $0)?.localizedTitle }
+    let titles = order.filter { selected.contains($0) }.compactMap {
+      sound(fileName: $0)?.localizedTitle
+    }
     guard !titles.isEmpty else { return nil }
-    let joined = titles.joined(separator: ", ")
-    return joined.count <= 50 || titles.count == 1
-      ? joined : String(localized: "\(titles.count) sounds")
+    return NowPlayingManager.soundNameSummary(titles)
   }
 
   /// The `starredItems` token matching what's currently active, if any —
@@ -136,7 +169,7 @@ extension AudioManager {
   /// leave the *widget's own* generic `Color("AccentColor")` asset as the
   /// fallback instead and read as a different, wrong color from what
   /// `NowPlayingWidget` shows for that same sound while it's playing.
-  private func widgetFavorite(forToken token: String) -> WidgetFavorite? {
+  func widgetFavorite(forToken token: String) -> WidgetFavorite? {
     if token == GlobalSettings.allSoundsToken {
       return WidgetFavorite(
         token: token,

@@ -295,12 +295,7 @@ struct PresetPickerRow: View {
         // applyPreset's "already active" short-circuit and never resume them —
         // leaving everything silent. Force a re-apply when leaving solo.
         let wasSolo = audioManager.soloModeSound != nil
-        if wasSolo {
-          audioManager.exitSoloModeWithoutResuming()
-        }
-        if audioManager.isQuickMix {
-          audioManager.exitQuickMix()
-        }
+        audioManager.leaveTransientModes()
         try presetManager.applyPreset(preset, forceReapply: wasSolo)
         if dismissOnSelect { dismiss() }
         onSelection?()

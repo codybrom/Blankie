@@ -255,13 +255,14 @@ struct AppSetup {
     // calls loadCustomSoundsWhenReady() from its AppDelegate to cover a
     // headless CarPlay cold-start (no UI scene), so on that build a normal
     // launch reaches this point twice. That overlap is safe because
-    // loadCustomSoundsWhenReady() is idempotent: its `hasLoadedCustomSounds`
-    // guard skips re-instantiating custom Sound objects (re-creating them
-    // would orphan the originals the active preset/UI still holds, leaving
-    // them playing with no way to stop them), while still (re-)initializing
-    // PresetManager. Without this call, PresetManager.isLoading never clears
-    // and the preset picker is stuck on "Loading Presets…". The model context
-    // was set just above, so the load can proceed immediately.
+    // loadCustomSoundsWhenReady() is single-flight: concurrent callers join the
+    // one in-flight bootstrap task rather than each re-instantiating custom
+    // Sound objects (re-creating them would orphan the originals the active
+    // preset/UI still holds, leaving them playing with no way to stop them). A
+    // completed run that had no model context retries once one exists. Without
+    // this call, PresetManager.isLoading never clears and the preset picker is
+    // stuck on "Loading Presets…". The model context was set just above, so the
+    // load can proceed immediately.
     Task { @MainActor in
       await AudioManager.shared.loadCustomSoundsWhenReady()
     }
@@ -276,8 +277,9 @@ extension AppSetup {
   /// `.onAppear` → `setupManagers()`) is ever instantiated — mirrors the same
   /// bootstrap `IOSAppDelegate` already does for a headless CarPlay cold
   /// start. Safe to call unconditionally, including redundantly alongside the
-  /// normal launch path: `setModelContext` and `loadCustomSoundsWhenReady()`
-  /// are both idempotent.
+  /// normal launch path: `setModelContext` is idempotent and
+  /// `loadCustomSoundsWhenReady()` is single-flight, so this call joins any
+  /// bootstrap already in progress instead of starting a second load.
   @MainActor
   static func ensureManagersReadyForIntents() async {
     if !SharedModelContainer.shared.isInitialized {

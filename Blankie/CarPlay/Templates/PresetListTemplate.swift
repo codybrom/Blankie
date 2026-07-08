@@ -76,16 +76,8 @@ import os
         Task {
           do {
             await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
+              // Leave solo/Quick Mix so the previous preset doesn't briefly play.
+              AudioManager.shared.leaveTransientModes()
             }
 
             // Allow audio system to process mode exits before applying new preset
@@ -126,16 +118,8 @@ import os
         Task {
           do {
             await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
+              // Leave solo/Quick Mix so the previous preset doesn't briefly play.
+              AudioManager.shared.leaveTransientModes()
             }
 
             // Allow audio system to process mode exits before applying new preset
@@ -358,16 +342,8 @@ import os
         Task {
           do {
             await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
+              // Leave solo/Quick Mix so the previous preset doesn't briefly play.
+              AudioManager.shared.leaveTransientModes()
             }
 
             // Allow audio system to process mode exits before applying new preset

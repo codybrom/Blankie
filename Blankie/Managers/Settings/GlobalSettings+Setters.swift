@@ -19,6 +19,7 @@ extension GlobalSettings {
       UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.accentColor)
     }
     logCurrentSettings()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   /// macOS-only; stored under the platform-scoped autoPlayOnLaunchMac key.
@@ -117,6 +118,7 @@ extension GlobalSettings {
     quickMixSoundFileNames = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.quickMixSoundFileNames)
     logCurrentSettings()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   // MARK: - Starred items (iPad sidebar + CarPlay)
@@ -128,6 +130,7 @@ extension GlobalSettings {
     // A favorited solo sound participates in lock-screen next/previous, so the
     // command availability depends on the favorites list — refresh it here.
     AudioManager.shared.updateNextPreviousCommandState()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   /// Whether the given token (`allSoundsToken`, `quickMixToken`, or a preset

@@ -17,3 +17,11 @@ nonisolated struct PresetState: Codable, Equatable {
       && abs(lhs.volume - rhs.volume) < Float.ulpOfOne
   }
 }
+
+extension Sound {
+  /// Snapshot this sound's current selection and volume as a `PresetState`.
+  @MainActor
+  func captureState() -> PresetState {
+    PresetState(fileName: fileName, isSelected: isSelected, volume: volume)
+  }
+}

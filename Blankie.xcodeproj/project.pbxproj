@@ -153,7 +153,6 @@
 				Managers/Audio/SoundPlayer.swift,
 				Managers/Audio/SpatialSessionManager.swift,
 				Managers/BackgroundResourceManager.swift,
-				Managers/DockPresenceManager.swift,
 				Managers/Presets/PresetArtworkManager.swift,
 				Managers/Presets/PresetError.swift,
 				Managers/Presets/PresetManager.swift,
@@ -182,6 +181,7 @@
 				"Utils/AudioAnalyzer+LUFS.swift",
 				"Utils/AudioAnalyzer+Weighting.swift",
 				Utils/ErrorReporting/ErrorReporter.swift,
+				"Utils/Extensions/Bundle+Version.swift",
 				"Utils/Extensions/Color+Extension.swift",
 				"Utils/Extensions/Locale+ScriptDetection.swift",
 				"Utils/Extensions/TimeInterval+Clock.swift",
@@ -579,10 +579,6 @@
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			name = "Run Script";
-			outputPaths = (
-				"$(INFOPLIST_FILE)",
-				"$(PROJECT_DIR)/Configuration.xcconfig",
-			);
 			shellPath = /bin/sh;
 			shellScript = (
 				"#!/bin/sh",
