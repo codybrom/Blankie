@@ -93,3 +93,36 @@ struct SoloSoundIcon: View {
     .sensoryFeedback(.selection, trigger: sound.isSelected)
   }
 }
+
+/// The solo sound presented as a Now Playing card: the large icon with the
+/// sound's name and its subtitle caption beneath, mirroring the system Now
+/// Playing layout. In solo mode the mixer view itself IS the now-playing
+/// surface, so this replaces the grid rather than living in a separate sheet.
+struct SoloSoundCard: View {
+  let sound: Sound
+
+  var body: some View {
+    VStack(spacing: 16) {
+      SoloSoundIcon(sound: sound)
+        // The card's text below carries the name and subtitle to VoiceOver, so
+        // the icon is decorative here — hide it to avoid announcing the title
+        // twice while keeping the subtitle reachable.
+        .accessibilityHidden(true)
+
+      VStack(spacing: 4) {
+        Text(sound.localizedTitle)
+          .font(.title2)
+          .fontWeight(.semibold)
+
+        if let subtitle = sound.localizedSubtitle {
+          Text(subtitle)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
+      }
+      .multilineTextAlignment(.center)
+      // Read the name and its subtitle caption as one VoiceOver announcement.
+      .accessibilityElement(children: .combine)
+    }
+  }
+}

@@ -41,8 +41,16 @@ struct SoundManagementRowContent: View {
   }
 
   private var soundInfo: some View {
-    Text(sound.localizedTitle)
-      .foregroundColor(.primary)
+    VStack(alignment: .leading, spacing: 2) {
+      Text(sound.localizedTitle)
+        .foregroundColor(.primary)
+      if let subtitle = sound.localizedSubtitle {
+        Text(subtitle)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+      }
+    }
   }
 
   @ViewBuilder
