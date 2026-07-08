@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		AAAA0000000000000000AA02 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA0000000000000000AA03 /* ZIPFoundation */; };
+		F91C1C852FF54C7F00C58FC6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F91C1C842FF54C7F00C58FC6 /* WidgetKit.framework */; };
+		F91C1C872FF54C7F00C58FC6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F91C1C862FF54C7F00C58FC6 /* SwiftUI.framework */; };
+		F91C1C942FF54C8200C58FC6 /* BlankieWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F91C1C832FF54C7F00C58FC6 /* BlankieWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F94CB79B2FEA47920077688E /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F94CB79A2FEA47920077688E /* QuickLook.framework */; };
 		F94CB7A72FEA47920077688E /* BlankiePresetPreview.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F94CB7992FEA47920077688E /* BlankiePresetPreview.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F94CB7B02FEA47A80077688E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F94CB7AF2FEA47A80077688E /* ZIPFoundation */; };
@@ -15,9 +18,18 @@
 		F9C0AF062E0DAF7A00E4530D /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F9C0AA3E2E0DADF300E4530D /* ZIPFoundation */; };
 		FADE000000000000005A0002 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0001 /* Assets.xcassets */; };
 		FADE000000000000005A0003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0001 /* Assets.xcassets */; };
+		FADE000000000000005A0005 /* BrandAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0004 /* BrandAssets.xcassets */; };
+		FADE000000000000005A0006 /* BrandAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FADE000000000000005A0004 /* BrandAssets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		F91C1C922FF54C8200C58FC6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F91350572D233A43003C85BE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F91C1C822FF54C7F00C58FC6;
+			remoteInfo = BlankieWidgetExtension;
+		};
 		F94CB7A52FEA47920077688E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F91350572D233A43003C85BE /* Project object */;
@@ -55,6 +67,7 @@
 			dstSubfolder = PlugIns;
 			files = (
 				F94CB7A72FEA47920077688E /* BlankiePresetPreview.appex in Embed Foundation Extensions */,
+				F91C1C942FF54C8200C58FC6 /* BlankieWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 		};
@@ -71,6 +84,9 @@
 
 /* Begin PBXFileReference section */
 		F913505F2D233A43003C85BE /* Blankie.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blankie.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F91C1C832FF54C7F00C58FC6 /* BlankieWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BlankieWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F91C1C842FF54C7F00C58FC6 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = /System/Library/Frameworks/WidgetKit.framework; sourceTree = "<absolute>"; };
+		F91C1C862FF54C7F00C58FC6 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = /System/Library/Frameworks/SwiftUI.framework; sourceTree = "<absolute>"; };
 		F921ED992D272AE300D4F3D3 /* Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		F93A3B112D26E93600EFC1C9 /* Blankie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Blankie.entitlements; sourceTree = "<group>"; };
 		F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Blankie.xcodeproj; sourceTree = "<group>"; };
@@ -82,9 +98,101 @@
 		F9ED6BAA2D321D3300240F13 /* BlankieTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlankieTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9ED70DE2D3229AD00240F13 /* BlankieUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlankieUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FADE000000000000005A0001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FADE000000000000005A0004 /* BrandAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = BrandAssets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F91C1C992FF54C8200C58FC6 /* Exceptions for "BlankieWidget" folder in "BlankieWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F91C1C822FF54C7F00C58FC6 /* BlankieWidgetExtension */;
+		};
+		F91C40D12FF54FB100C58FC6 /* Exceptions for "Blankie" folder in "BlankieWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				App/AppGroupConfiguration.swift,
+				App/AppGroupFileMirror.swift,
+				App/AppSetup.swift,
+				Intents/IntentError.swift,
+				Intents/PlaybackIntents.swift,
+				Intents/PlaybackToggleValueIntent.swift,
+				Intents/WidgetPlayFavoriteIntent.swift,
+				Intents/WidgetToggleQuickMixSoundIntent.swift,
+				Managers/Audio/AudioEngineManager.swift,
+				"Managers/Audio/AudioEngineManager+Lifecycle.swift",
+				Managers/Audio/AudioError.swift,
+				Managers/Audio/AudioManager.swift,
+				"Managers/Audio/AudioManager+Analysis.swift",
+				"Managers/Audio/AudioManager+MediaControls.swift",
+				"Managers/Audio/AudioManager+Notifications.swift",
+				"Managers/Audio/AudioManager+PlaybackControl.swift",
+				"Managers/Audio/AudioManager+QuickMix.swift",
+				"Managers/Audio/AudioManager+SoloMode.swift",
+				"Managers/Audio/AudioManager+SoundLoading.swift",
+				"Managers/Audio/AudioManager+SwiftData.swift",
+				"Managers/Audio/AudioManager+Widgets.swift",
+				Managers/Audio/AudioSessionManager.swift,
+				Managers/Audio/CustomSoundManager.swift,
+				"Managers/Audio/CustomSoundManager+Conversion.swift",
+				"Managers/Audio/CustomSoundManager+Helpers.swift",
+				"Managers/Audio/CustomSoundManager+Import.swift",
+				"Managers/Audio/CustomSoundManager+Metadata.swift",
+				"Managers/Audio/CustomSoundManager+Mirror.swift",
+				Managers/Audio/NowPlayingManager.swift,
+				"Managers/Audio/NowPlayingManager+AnimatedArtwork.swift",
+				"Managers/Audio/NowPlayingManager+Artwork.swift",
+				"Managers/Audio/NowPlayingManager+Helpers.swift",
+				Managers/Audio/Sound.swift,
+				"Managers/Audio/Sound+Loading.swift",
+				"Managers/Audio/Sound+Metadata.swift",
+				"Managers/Audio/Sound+Normalization.swift",
+				"Managers/Audio/Sound+Playback.swift",
+				Managers/Audio/SoundCreditsManager.swift,
+				Managers/Audio/SoundPlayer.swift,
+				Managers/Audio/SpatialSessionManager.swift,
+				Managers/BackgroundResourceManager.swift,
+				Managers/DockPresenceManager.swift,
+				Managers/Presets/PresetArtworkManager.swift,
+				Managers/Presets/PresetError.swift,
+				Managers/Presets/PresetManager.swift,
+				Managers/Settings/GlobalSettings.swift,
+				"Managers/Settings/GlobalSettings+Initialization.swift",
+				"Managers/Settings/GlobalSettings+Setters.swift",
+				Managers/Timer/TimerManager.swift,
+				Models/BlankieSchema.swift,
+				Models/Credits.swift,
+				Models/CustomSoundData.swift,
+				Models/Language.swift,
+				Models/License.swift,
+				Models/PlaybackProfile.swift,
+				Models/Preset.swift,
+				Models/PresetArchive.swift,
+				Models/PresetArtwork.swift,
+				Models/PresetState.swift,
+				Models/PresetStorage.swift,
+				Models/SoundCredit.swift,
+				Models/SoundCustomization.swift,
+				Models/SoundData.swift,
+				Shared/NowPlaying/BlankieAnimatedArtwork.swift,
+				Shared/Utilities/AnimatedArtworkFileStore.swift,
+				UI/Components/FallbackArtwork.swift,
+				Utils/AudioAnalyzer.swift,
+				"Utils/AudioAnalyzer+LUFS.swift",
+				"Utils/AudioAnalyzer+Weighting.swift",
+				Utils/ErrorReporting/ErrorReporter.swift,
+				"Utils/Extensions/Color+Extension.swift",
+				"Utils/Extensions/Locale+ScriptDetection.swift",
+				"Utils/Extensions/TimeInterval+Clock.swift",
+				Utils/FileHashUtility.swift,
+				Utils/ImageExtensions.swift,
+				Utils/Logging.swift,
+				Utils/SpatialAudioCache.swift,
+				Widgets/WidgetStateStore.swift,
+			);
+			target = F91C1C822FF54C7F00C58FC6 /* BlankieWidgetExtension */;
+		};
 		F94CB7AD2FEA47920077688E /* Exceptions for "BlankiePresetPreview" folder in "BlankiePresetPreview" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -99,16 +207,17 @@
 			);
 			target = F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */;
 		};
-		F97812B62EA2EF1E00580F1A /* Exceptions for "Blankie" folder in "Blankie" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Managers/Audio/README.md,
-			);
-			target = F913505E2D233A43003C85BE /* Blankie */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		F91C1C882FF54C7F00C58FC6 /* BlankieWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F91C1C992FF54C8200C58FC6 /* Exceptions for "BlankieWidget" folder in "BlankieWidgetExtension" target */,
+			);
+			path = BlankieWidget;
+			sourceTree = "<group>";
+		};
 		F94CB79C2FEA47920077688E /* BlankiePresetPreview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -128,7 +237,7 @@
 		F9BC93262D41457D00E450FC /* Blankie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				F97812B62EA2EF1E00580F1A /* Exceptions for "Blankie" folder in "Blankie" target */,
+				F91C40D12FF54FB100C58FC6 /* Exceptions for "Blankie" folder in "BlankieWidgetExtension" target */,
 			);
 			path = Blankie;
 			sourceTree = "<group>";
@@ -150,6 +259,13 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				AAAA0000000000000000AA02 /* ZIPFoundation in Frameworks */,
+			);
+		};
+		F91C1C802FF54C7F00C58FC6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				F91C1C872FF54C7F00C58FC6 /* SwiftUI.framework in Frameworks */,
+				F91C1C852FF54C7F00C58FC6 /* WidgetKit.framework in Frameworks */,
 			);
 		};
 		F94CB7962FEA47920077688E /* Frameworks */ = {
@@ -179,11 +295,13 @@
 				F91350602D233A43003C85BE /* Products */,
 				F9ED65FD2D321AF800240F13 /* Frameworks */,
 				FADE000000000000005A0001 /* Assets.xcassets */,
+				FADE000000000000005A0004 /* BrandAssets.xcassets */,
 				F9BC93262D41457D00E450FC /* Blankie */,
 				F95914D12FDF1D2300808460 /* BlankieAssets */,
 				F94CB79C2FEA47920077688E /* BlankiePresetPreview */,
 				F9ED6DAB2D321F5D00240F13 /* BlankieTests */,
 				F9ED70DF2D3229AD00240F13 /* BlankieUITests */,
+				F91C1C882FF54C7F00C58FC6 /* BlankieWidget */,
 				F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */,
 				F9ED66022D321B7D00240F13 /* Blankie.xctestplan */,
 				F93A3B112D26E93600EFC1C9 /* Blankie.entitlements */,
@@ -199,6 +317,7 @@
 				F9ED70DE2D3229AD00240F13 /* BlankieUITests.xctest */,
 				F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */,
 				F94CB7992FEA47920077688E /* BlankiePresetPreview.appex */,
+				F91C1C832FF54C7F00C58FC6 /* BlankieWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -213,6 +332,8 @@
 			children = (
 				F9ED65FE2D321AF800240F13 /* XCTest.framework */,
 				F94CB79A2FEA47920077688E /* QuickLook.framework */,
+				F91C1C842FF54C7F00C58FC6 /* WidgetKit.framework */,
+				F91C1C862FF54C7F00C58FC6 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -236,6 +357,7 @@
 			dependencies = (
 				F95914D72FDF1D2300808460 /* PBXTargetDependency */,
 				F94CB7A62FEA47920077688E /* PBXTargetDependency */,
+				F91C1C932FF54C8200C58FC6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F9BC93262D41457D00E450FC /* Blankie */,
@@ -247,6 +369,24 @@
 			productName = Blankie;
 			productReference = F913505F2D233A43003C85BE /* Blankie.app */;
 			productType = "com.apple.product-type.application";
+		};
+		F91C1C822FF54C7F00C58FC6 /* BlankieWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F91C1C9A2FF54C8200C58FC6 /* Build configuration list for PBXNativeTarget "BlankieWidgetExtension" */;
+			buildPhases = (
+				F91C1C7F2FF54C7F00C58FC6 /* Sources */,
+				F91C1C802FF54C7F00C58FC6 /* Frameworks */,
+				F91C1C812FF54C7F00C58FC6 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				F91C1C882FF54C7F00C58FC6 /* BlankieWidget */,
+			);
+			name = BlankieWidgetExtension;
+			productName = BlankieWidgetExtension;
+			productReference = F91C1C832FF54C7F00C58FC6 /* BlankieWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		F94CB7982FEA47920077688E /* BlankiePresetPreview */ = {
 			isa = PBXNativeTarget;
@@ -336,12 +476,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2650;
-				LastUpgradeCheck = 2600;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
 				TargetAttributes = {
 					F913505E2D233A43003C85BE = {
 						CreatedOnToolsVersion = 16.2;
 						LastSwiftMigration = 1620;
+					};
+					F91C1C822FF54C7F00C58FC6 = {
+						CreatedOnToolsVersion = 26.6;
 					};
 					F94CB7982FEA47920077688E = {
 						CreatedOnToolsVersion = 26.5;
@@ -399,6 +542,7 @@
 				F9ED70DD2D3229AD00240F13 /* BlankieUITests */,
 				F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */,
 				F94CB7982FEA47920077688E /* BlankiePresetPreview */,
+				F91C1C822FF54C7F00C58FC6 /* BlankieWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -408,6 +552,13 @@
 			isa = PBXResourcesBuildPhase;
 			files = (
 				FADE000000000000005A0002 /* Assets.xcassets in Resources */,
+				FADE000000000000005A0005 /* BrandAssets.xcassets in Resources */,
+			);
+		};
+		F91C1C812FF54C7F00C58FC6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				FADE000000000000005A0006 /* BrandAssets.xcassets in Resources */,
 			);
 		};
 		F94CB7972FEA47920077688E /* Resources */ = {
@@ -473,6 +624,11 @@
 			files = (
 			);
 		};
+		F91C1C7F2FF54C7F00C58FC6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		F94CB7952FEA47920077688E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -496,6 +652,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		F91C1C932FF54C8200C58FC6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F91C1C822FF54C7F00C58FC6 /* BlankieWidgetExtension */;
+			targetProxy = F91C1C922FF54C8200C58FC6 /* PBXContainerItemProxy */;
+		};
 		F94CB7A62FEA47920077688E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
@@ -704,10 +865,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -715,7 +872,11 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
@@ -769,10 +930,6 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -780,12 +937,218 @@
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
+		};
+		F91C1C952FF54C8200C58FC6 /* Debug configuration for PBXNativeTarget "BlankieWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieWidget/BlankieWidget.entitlements;
+				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 2.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codybrom.blankie.BlankieWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Debug;
+		};
+		F91C1C962FF54C8200C58FC6 /* Debug-CarPlay configuration for PBXNativeTarget "BlankieWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieWidget/BlankieWidget.entitlements;
+				CODE_SIGN_IDENTITY = "$(CODE_SIGN_IDENTITY)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 2.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codybrom.blankie.BlankieWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = "Debug-CarPlay";
+		};
+		F91C1C972FF54C8200C58FC6 /* Release configuration for PBXNativeTarget "BlankieWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieWidget/BlankieWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 2.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codybrom.blankie.BlankieWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = Release;
+		};
+		F91C1C982FF54C8200C58FC6 /* Release-CarPlay configuration for PBXNativeTarget "BlankieWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CODE_SIGN_ENTITLEMENTS = BlankieWidget/BlankieWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(CURRENT_PROJECT_VERSION)";
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlankieWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = BlankieWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 2.0.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.codybrom.blankie.BlankieWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 26.5;
+			};
+			name = "Release-CarPlay";
 		};
 		F94CB7A92FEA47920077688E /* Debug configuration for PBXNativeTarget "BlankiePresetPreview" */ = {
 			isa = XCBuildConfiguration;
@@ -1199,10 +1562,6 @@
 				"OTHER_SWIFT_FLAGS[sdk=iphoneos*]" = "-DCARPLAY_ENABLED";
 				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-DCARPLAY_ENABLED";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1210,7 +1569,11 @@
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
@@ -1237,12 +1600,12 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1388,10 +1751,6 @@
 				"OTHER_SWIFT_FLAGS[sdk=iphoneos*]" = "-DCARPLAY_ENABLED";
 				"OTHER_SWIFT_FLAGS[sdk=iphonesimulator*]" = "-DCARPLAY_ENABLED";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER)";
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_VERSION = 6.0;
-				SWIFT_STRICT_CONCURRENCY = complete;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1399,7 +1758,11 @@
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				XROS_DEPLOYMENT_TARGET = 26.0;
@@ -1427,12 +1790,12 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1488,12 +1851,12 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1522,12 +1885,12 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 2.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				"PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*]" = "$(PRODUCT_BUNDLE_IDENTIFIER).tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -1609,6 +1972,16 @@
 				F9E62BDF2DE8BD360004A3F8 /* Debug-CarPlay configuration for PBXNativeTarget "Blankie" */,
 				F91350882D233A44003C85BE /* Release configuration for PBXNativeTarget "Blankie" */,
 				F9E62BE32DE8BD410004A3F8 /* Release-CarPlay configuration for PBXNativeTarget "Blankie" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		F91C1C9A2FF54C8200C58FC6 /* Build configuration list for PBXNativeTarget "BlankieWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F91C1C952FF54C8200C58FC6 /* Debug configuration for PBXNativeTarget "BlankieWidgetExtension" */,
+				F91C1C962FF54C8200C58FC6 /* Debug-CarPlay configuration for PBXNativeTarget "BlankieWidgetExtension" */,
+				F91C1C972FF54C8200C58FC6 /* Release configuration for PBXNativeTarget "BlankieWidgetExtension" */,
+				F91C1C982FF54C8200C58FC6 /* Release-CarPlay configuration for PBXNativeTarget "BlankieWidgetExtension" */,
 			);
 			defaultConfigurationName = Release;
 		};

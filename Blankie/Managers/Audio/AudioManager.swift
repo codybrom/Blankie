@@ -317,6 +317,14 @@ extension AudioManager {
     sounds
   }
 
+  /// Looks up a loaded sound by its stable `fileName` (not its `UUID`, which
+  /// is re-minted every launch) — the identity App Intents resolve `SoundEntity`
+  /// parameters against.
+  @MainActor
+  func sound(fileName: String) -> Sound? {
+    sounds.first { $0.fileName == fileName }
+  }
+
   /// Visible sounds for a preset context, ordered by the active sound order —
   /// the single source for the mixer grid, the menu bar list, and iOS. A custom
   /// (non-default) preset shows only its own sounds in its `soundOrder`; the
