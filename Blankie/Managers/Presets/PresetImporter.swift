@@ -336,14 +336,15 @@ extension PresetImporter {
       return [:]  // No custom sounds to import
     }
 
-    // Read sounds metadata and customizations
-    let customSounds = try readSoundsMetadata(from: soundsDir)
-    guard !customSounds.isEmpty else {
+    // Decode the archive's sound metadata once — it carries both the custom
+    // sounds to import and their customizations (icon info).
+    guard let soundsManifest = try readSoundsManifest(from: soundsDir),
+      !soundsManifest.customSounds.isEmpty
+    else {
       return [:]
     }
-
-    // Also read customizations to get icon info
-    let customizations = try readCustomizations(from: soundsDir)
+    let customSounds = soundsManifest.customSounds
+    let customizations = soundsManifest.builtInCustomizations
 
     // Import each custom sound
     var importedCount = 0
@@ -373,31 +374,15 @@ extension PresetImporter {
     return idMapping
   }
 
-  private func readSoundsMetadata(from soundsDir: URL) throws -> [CustomSoundMetadata] {
+  /// The archive's `metadata.json`, decoded once; `nil` when the file is absent.
+  private func readSoundsManifest(from soundsDir: URL) throws -> SoundsManifest? {
     let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
     guard FileManager.default.fileExists(atPath: metadataURL.path) else {
-      return []
+      return nil
     }
 
     let metadataData = try Data(contentsOf: metadataURL)
-    let soundsManifest = try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
-    return soundsManifest.customSounds
-  }
-
-  private func readCustomizations(from soundsDir: URL) throws -> [SoundCustomization] {
-    let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
-    guard FileManager.default.fileExists(atPath: metadataURL.path) else {
-      return []
-    }
-
-    do {
-      let metadataData = try Data(contentsOf: metadataURL)
-      let soundsManifest = try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
-      return soundsManifest.builtInCustomizations
-    } catch {
-      // Return empty array if no customizations found
-      return []
-    }
+    return try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
   }
 
   @MainActor
@@ -561,7 +546,12 @@ extension PresetImporter {
     // Ensure static artwork path mirrors the exported image
     let staticId = UUID()
     let staticRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: staticId)
-    _ = try? AnimatedArtworkFileStore.writeData(artworkData, to: staticRel)
+    do {
+      _ = try AnimatedArtworkFileStore.writeData(artworkData, to: staticRel)
+    } catch {
+      Logger.presets.error(
+        "Import: Failed to write static artwork: \(error, privacy: .public)")
+    }
     preset.staticArtworkPath = staticRel
   }
 
@@ -583,52 +573,50 @@ extension PresetImporter {
   ) throws {
     Logger.presets.debug("Import: Restoring bundled animation '\(bundledId)' from app bundle")
 
-    // Capture the preset ID to look it up later
-    let presetId = preset.id
+    var updatedAnimated = animated
+    updatedAnimated.loopPath = nil
+    updatedAnimated.bundledIdentifier = bundledId
 
-    // Restore the artwork reference + previews, then download the video pack.
-    Task { @MainActor in
-      // Preview images are bundled (not part of the asset pack). Copy the small
-      // ones into Documents as the static artwork fallback. The video itself is
-      // served from its Background Assets pack and is never copied to Documents.
-      guard
-        let previewURL = Bundle.main.url(
-          forResource: "\(bundledId)/\(bundledId)", withExtension: "jpg"),
-        let squarePreviewURL = Bundle.main.url(
-          forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
-      else {
-        Logger.presets.error(
-          "Import: Failed to find preview images for '\(bundledId, privacy: .public)'")
-        return
-      }
-
+    // Preview images are bundled (not part of the asset pack). Copy the small
+    // ones into Documents synchronously so the paths land on the preset BEFORE
+    // importArchive re-IDs and stores it — a Task would race that re-ID and its
+    // lookup would never match, leaving the preset with placeholder art.
+    if let previewURL = Bundle.main.url(
+      forResource: "\(bundledId)/\(bundledId)", withExtension: "jpg"),
+      let squarePreviewURL = Bundle.main.url(
+        forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
+    {
       let assetId = UUID()
       let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
         for: assetId, fileExtension: "jpg")
       let squarePreviewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
         for: assetId, fileExtension: "jpg", suffix: "Square")
-
-      _ = try? AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
-      _ = try? AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
-
-      // Update the preset's animated artwork reference (bundled video resolves
-      // via bundledIdentifier at playback time, so loopPath stays nil).
-      var updatedAnimated = animated
-      updatedAnimated.loopPath = nil
-      updatedAnimated.previewPath = previewRel
-      updatedAnimated.squarePreviewPath = squarePreviewRel
-      updatedAnimated.bundledIdentifier = bundledId
-
-      if let index = PresetManager.shared.presets.firstIndex(where: { $0.id == presetId }) {
-        var updatedPreset = PresetManager.shared.presets[index]
-        updatedPreset.animatedArtwork = updatedAnimated
-        PresetManager.shared.updatePresetAtIndex(index, with: updatedPreset)
-        PresetManager.shared.savePresets()
-        Logger.presets.debug("Import: Successfully restored bundled animation '\(bundledId)'")
+      do {
+        _ = try AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
+        updatedAnimated.previewPath = previewRel
+      } catch {
+        Logger.presets.error(
+          "Import: Failed to copy preview for '\(bundledId, privacy: .public)': \(error, privacy: .public)"
+        )
       }
+      do {
+        _ = try AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
+        updatedAnimated.squarePreviewPath = squarePreviewRel
+      } catch {
+        Logger.presets.error(
+          "Import: Failed to copy square preview for '\(bundledId, privacy: .public)': \(error, privacy: .public)"
+        )
+      }
+    } else {
+      Logger.presets.error(
+        "Import: Failed to find preview images for '\(bundledId, privacy: .public)'")
+    }
 
-      // Best-effort: pull the video's asset pack so it's ready for playback (iOS).
-      // Fetch the variant this device uses (square on iPad), not the base id.
+    preset.animatedArtwork = updatedAnimated
+
+    // Best-effort: pull the video's asset pack so it's ready for playback (iOS).
+    // Fetch the variant this device uses (square on iPad), not the base id.
+    Task { @MainActor in
       let packID = BackgroundResourceManager.preferredPackID(for: bundledId)
       do {
         _ = try await BackgroundResourceManager.shared.resourceURL(for: packID)
@@ -640,15 +628,6 @@ extension PresetImporter {
         // Don't throw - preset can still be used without animated artwork
       }
     }
-
-    // Set up the animated artwork reference with the bundled identifier so the
-    // preset is usable immediately; previews + video arrive asynchronously above.
-    var updatedAnimated = animated
-    updatedAnimated.loopPath = nil
-    updatedAnimated.bundledIdentifier = bundledId
-    preset.animatedArtwork = updatedAnimated
-
-    Logger.presets.debug("Import: Scheduled download for bundled animation '\(bundledId)'")
   }
 
   private func importCustomAnimation(
@@ -706,7 +685,12 @@ extension PresetImporter {
     let previewSource = archiveURL.appendingPathComponent(PresetArchive.animatedPreviewFileName)
     if FileManager.default.fileExists(atPath: previewSource.path) {
       let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: assetId)
-      _ = try? AnimatedArtworkFileStore.copyItem(at: previewSource, to: previewRel)
+      do {
+        _ = try AnimatedArtworkFileStore.copyItem(at: previewSource, to: previewRel)
+      } catch {
+        Logger.presets.error(
+          "Import: Failed to copy animated preview: \(error, privacy: .public)")
+      }
       return previewRel
     } else if let staticPath, AnimatedArtworkFileStore.fileExists(at: staticPath) {
       return staticPath
@@ -767,8 +751,7 @@ extension PresetImporter {
       soundStates: preset.soundStates,
       isDefault: false,
       createdVersion: preset.createdVersion,
-      lastModifiedVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        ?? "2.0.0",
+      lastModifiedVersion: Bundle.main.appVersion,
       soundOrder: preset.soundOrder,
       creatorName: preset.creatorName,
       artworkId: preset.artworkId,
@@ -851,8 +834,7 @@ extension PresetImporter {
   }
 
   func validateCompatibility(_ manifest: ArchiveManifest) throws {
-    let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
+    let currentVersion = Bundle.main.appVersion
 
     guard manifest.compatibility.isCompatible(with: currentVersion) else {
       throw ImportError.incompatibleVersion
