@@ -63,6 +63,12 @@ final class BackgroundResourceManager: ObservableObject {
     /// of racing several.
     private var inFlight: [String: Task<URL, Error>] = [:]
 
+    /// Resolved playable URLs per pack id. `AssetPackManager.url(for:)` warns
+    /// (and can hang) when called on the main thread, so it is resolved off the
+    /// main actor exactly once per pack and memoized here — the pack's location
+    /// is stable while it stays on disk. Evicted when a pack is removed.
+    private var urlCache: [String: URL] = [:]
+
     /// Current network reachability, so we can warn before a download instead of
     /// failing with an opaque server error. A `.satisfied` path doesn't guarantee
     /// the download succeeds, so this only short-circuits the clearly-offline
@@ -89,7 +95,7 @@ final class BackgroundResourceManager: ObservableObject {
   /// the 3:4 portrait master is `<id>/<id>.mov`, and the 1:1 square crop (pack id
   /// `<id>Square`, used for iPad's lock screen) is `<id>/<id>Square.mov`. So a
   /// "…Square" pack maps back to its base folder rather than a folder of its own.
-  private func relativeVideoPath(for id: String) -> String {
+  private nonisolated func relativeVideoPath(for id: String) -> String {
     if id.hasSuffix("Square") {
       let base = String(id.dropLast("Square".count))
       return "\(base)/\(id).mov"
@@ -123,7 +129,7 @@ final class BackgroundResourceManager: ObservableObject {
       // Fast path: already on disk → mount without entering `.downloading`.
       if AssetPackManager.shared.assetPackIsAvailableLocally(withID: id) {
         states[id] = .available
-        return try AssetPackManager.shared.url(for: FilePath(relativeVideoPath(for: id)))
+        return try await cachedURL(for: id)
       }
 
       // A download is required. If we're clearly offline, warn now rather than
@@ -163,8 +169,15 @@ final class BackgroundResourceManager: ObservableObject {
   /// synchronously and triggers a download separately when this returns nil.
   func availableURL(for id: String) -> URL? {
     #if os(iOS)
-      guard AssetPackManager.shared.assetPackIsAvailableLocally(withID: id) else { return nil }
-      return try? AssetPackManager.shared.url(for: FilePath(relativeVideoPath(for: id)))
+      guard AssetPackManager.shared.assetPackIsAvailableLocally(withID: id) else {
+        urlCache[id] = nil
+        return nil
+      }
+      // Read only the memoized URL — never resolve here. This runs on the main
+      // actor (Now Playing), and `AssetPackManager.url(for:)` warns/hangs on the
+      // main thread. On a miss, the Now Playing path calls `resourceURL(for:)`,
+      // which resolves off the main actor, caches, and republishes.
+      return urlCache[id]
     #else
       return nil
     #endif
@@ -190,6 +203,7 @@ final class BackgroundResourceManager: ObservableObject {
       do {
         try await AssetPackManager.shared.remove(assetPackWithID: id)
         states[id] = .notDownloaded
+        urlCache[id] = nil
         logger.info("Removed artwork asset pack \(id, privacy: .public)")
       } catch {
         logger.error(
@@ -212,6 +226,22 @@ final class BackgroundResourceManager: ObservableObject {
   }
 
   #if os(iOS)
+    // MARK: - URL resolution
+
+    /// Memoized playable URL for a locally-available pack, resolving
+    /// `AssetPackManager.url(for:)` off the main actor (it warns and can hang on
+    /// the main thread). The pack location is stable while on disk, so it is
+    /// resolved at most once per pack per session.
+    private func cachedURL(for id: String) async throws -> URL {
+      if let cached = urlCache[id] { return cached }
+      let path = relativeVideoPath(for: id)
+      let url = try await Task.detached {
+        try AssetPackManager.shared.url(for: FilePath(path))
+      }.value
+      urlCache[id] = url
+      return url
+    }
+
     // MARK: - Download
 
     private func download(id: String) async throws -> URL {
@@ -229,7 +259,7 @@ final class BackgroundResourceManager: ObservableObject {
           of: pack, requireLatestVersion: false)
         states[id] = .available
         logger.info("Downloaded artwork asset pack \(id, privacy: .public)")
-        return try AssetPackManager.shared.url(for: FilePath(relativeVideoPath(for: id)))
+        return try await cachedURL(for: id)
       } catch {
         // Log the raw error for diagnostics, but surface a friendly one to the
         // UI. If the network dropped mid-download, prefer the offline message.
