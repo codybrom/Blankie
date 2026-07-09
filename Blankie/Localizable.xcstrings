@@ -26884,6 +26884,7 @@
       }
     },
     "Play ${preset}" : {
+      "comment" : "Shortcuts-app summary for the Play Preset action. ${preset} is the preset name — keep the token.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -26966,6 +26967,7 @@
       }
     },
     "Play ${sound}" : {
+      "comment" : "Shortcuts-app summary for the Play Sound action. ${sound} is the sound name — keep the token.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -30485,6 +30487,7 @@
     },
     "Remove" : {
       "comment" : "Removes the artwork from a preset artwork tile.",
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -32308,6 +32311,7 @@
       }
     },
     "Set ${sound} volume to ${percent}%" : {
+      "comment" : "Shortcuts-app summary for setting one sound's volume. ${sound} is the sound name and ${percent} the level (0–100) — keep both tokens and the % sign.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -32474,6 +32478,7 @@
       }
     },
     "Set Blankie volume to ${percent}%" : {
+      "comment" : "Shortcuts-app summary for setting the app's overall volume. ${percent} is the level (0–100) — keep the token and the % sign. 'Blankie' is the app name.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -38231,6 +38236,7 @@
       }
     },
     "Stop Blankie in ${minutes} minutes" : {
+      "comment" : "Shortcuts-app summary for the sleep-timer (stop) action. ${minutes} is the number of minutes — keep the token. 'Blankie' is the app name.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -42775,6 +42781,30 @@
       "comment" : "Shown via Siri when setting volume while Mix with Other Audio is off. Varies by device (iPhone/iPad).",
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres iPads geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres iPhones geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres Geräts geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
+                }
+              }
+            }
+          }
+        },
         "en" : {
           "variations" : {
             "device" : {
@@ -42818,30 +42848,6 @@
                 "stringUnit" : {
                   "state" : "needs_review",
                   "value" : "Volume is controlled by your device's volume buttons. Turn on Mix with Other Audio in Blankie's settings to set it here instead."
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "device" : {
-              "ipad" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres iPads geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
-                }
-              },
-              "iphone" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres iPhones geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "needs_review",
-                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres Geräts geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
                 }
               }
             }
