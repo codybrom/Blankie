@@ -448,6 +448,18 @@ struct SettingsView: View {
             "Show Progress Borders")
         }
 
+        #if os(iOS)
+          // iPhone-only: the sounds answer touch in their own haptic voice.
+          Toggle(
+            isOn: Binding(
+              get: { globalSettings.touchFeedback },
+              set: { globalSettings.setTouchFeedback($0) }
+            )
+          ) {
+            Text("Touch Feedback")
+          }
+        #endif
+
         #if os(iOS) || os(visionOS)
           // Animated artwork on the Lock Screen / Now Playing card. The toggle
           // is the on/off; the default picker chooses what Quick Mix and All

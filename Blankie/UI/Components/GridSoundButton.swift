@@ -111,6 +111,7 @@ import SwiftUI
           // accessible text is the SF Symbol's derived name).
           .accessibilityLabel(Text(sound.localizedTitle))
           .onTapGesture {
+            HapticsManager.shared.noteUserToggle()
             onTap()
           }
           // Reorder drags start from the icon/title only, never the slider
@@ -151,11 +152,13 @@ import SwiftUI
       // gap is always preserved.
       .scaleEffect(isLit ? 1.0 : 0.95)
       .animation(.easeInOut(duration: 0.15), value: isLit)
-      // Fire on the user's own selection toggle, not on `isLit`. Keying off
-      // `isLit` (which folds in global play state) skipped feedback when
-      // toggling while paused and fired one haptic per active tile on every
-      // global play/pause.
-      .sensoryFeedback(.selection, trigger: sound.isSelected)
+      // Answer the user's own selection toggle in the sound's haptic voice
+      // (plan 011). Keyed off `isSelected`, not `isLit` (which folds in global
+      // play state): keying off `isLit` skipped feedback when toggling while
+      // paused and fired one haptic per active tile on every global play/pause.
+      .onChange(of: sound.isSelected) { _, selected in
+        HapticsManager.shared.playSelection(for: sound, selected: selected)
+      }
       .dynamicTypeSize(...DynamicTypeSize.accessibility3)
       .accessibilityShowsLargeContentViewer {
         Label(sound.localizedTitle, systemImage: sound.systemIconName)

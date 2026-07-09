@@ -90,7 +90,9 @@ struct SoloSoundIcon: View {
       // playback rather than deselecting it.
       audioManager.togglePlayback()
     }
-    .sensoryFeedback(.selection, trigger: sound.isSelected)
+    .onChange(of: sound.isSelected) { _, selected in
+      HapticsManager.shared.playSelection(for: sound, selected: selected)
+    }
   }
 }
 

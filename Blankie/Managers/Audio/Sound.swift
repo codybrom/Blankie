@@ -36,6 +36,11 @@ open class Sound: NSObject, Identifiable {
   /// `isMusic` customization overrides it.
   let isMusicDefault: Bool
 
+  /// Named haptic voice from sounds.json — the sound's felt character when
+  /// touched (plan 011, feature A). Custom sounds carry the neutral default.
+  /// Resolved to intensity/sharpness by `HapticVoice.voice(for:)`.
+  let hapticVoiceName: String
+
   // Properties for unified sound model
   let isCustom: Bool
   var fileURL: URL?
@@ -313,7 +318,7 @@ open class Sound: NSObject, Identifiable {
     title: String, systemIconName: String, fileName: String, fileExtension: String = "mp3",
     defaultOrder _: Int = 0, lufs: Float? = nil, normalizationFactor: Float? = nil,
     truePeakdBTP: Float? = nil, needsLimiter: Bool = false,
-    isMusic: Bool = false,
+    isMusic: Bool = false, hapticVoice: String = "neutral",
     isCustom: Bool = false, fileURL: URL? = nil, dateAdded: Date? = nil,
     customSoundDataID: UUID? = nil, duration: TimeInterval? = nil
   ) {
@@ -326,6 +331,7 @@ open class Sound: NSObject, Identifiable {
     self.truePeakdBTP = truePeakdBTP
     self.needsLimiter = needsLimiter
     self.isMusicDefault = isMusic
+    self.hapticVoiceName = hapticVoice
     self.isCustom = isCustom
     self.fileURL = fileURL
     self.dateAdded = dateAdded

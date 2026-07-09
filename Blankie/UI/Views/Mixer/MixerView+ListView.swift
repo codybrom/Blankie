@@ -26,13 +26,17 @@ import os
       .padding(.vertical, 12)
       .contentShape(.rect(cornerRadius: 12))
       .onTapGesture {
+        HapticsManager.shared.noteUserToggle()
         audioManager.toggleOrResume(sound)
       }
       .glassEffect(.regular, in: .rect(cornerRadius: 12))
-      // Match the grid: fire on the user's own selection toggle, not on global
-      // play state, so feedback fires when toggling while paused and never
-      // batch-fires on global play/pause. See GridSoundButton.
-      .sensoryFeedback(.selection, trigger: sound.isSelected)
+      // Match the grid: answer the user's own selection toggle in the sound's
+      // haptic voice, keyed off `isSelected` not global play state, so feedback
+      // fires when toggling while paused and never batch-fires on global
+      // play/pause. See GridSoundButton.
+      .onChange(of: sound.isSelected) { _, selected in
+        HapticsManager.shared.playSelection(for: sound, selected: selected)
+      }
     }
 
     private var accentColor: Color {

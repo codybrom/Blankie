@@ -118,6 +118,9 @@ struct BlankieApp: App {
       Task { @MainActor in
         PresetManager.shared.savePresets()
       }
+      // The haptic engine is stopped by the system on suspend anyway; do it
+      // explicitly so our running flag stays honest.
+      HapticsManager.shared.stop()
     case .inactive:
       // Save state when app becomes inactive
       AudioManager.shared.saveState()
@@ -125,8 +128,8 @@ struct BlankieApp: App {
         PresetManager.shared.savePresets()
       }
     case .active:
-      // App is active, no action needed
-      break
+      // Warm the haptic engine so the first touch of the session is snappy.
+      HapticsManager.shared.handleBecameActive()
     @unknown default:
       break
     }

@@ -59,6 +59,13 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setTouchFeedback(_ value: Bool) {
+    touchFeedback = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.touchFeedback)
+    logCurrentSettings()
+  }
+
+  @MainActor
   func setLibrarySoundsExpanded(_ value: Bool) {
     librarySoundsExpanded = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.librarySoundsExpanded)

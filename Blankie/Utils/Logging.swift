@@ -31,4 +31,5 @@ extension Logger {
   nonisolated static let settings = Logger(subsystem: subsystem, category: "Settings")
   nonisolated static let carPlay = Logger(subsystem: subsystem, category: "CarPlay")
   nonisolated static let ui = Logger(subsystem: subsystem, category: "UI")
+  nonisolated static let haptics = Logger(subsystem: subsystem, category: "Haptics")
 }

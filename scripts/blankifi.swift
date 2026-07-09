@@ -627,6 +627,228 @@ func padL(_ s: String, _ w: Int) -> String {
   s.count >= w ? s : String(repeating: " ", count: w - s.count) + s
 }
 
+// MARK: - Haptics (audio → AHAP)
+
+/// Zero-crossing rate of a segment (0…~1). A cheap brightness cue that needs no
+/// FFT: low for a deep hum, high for bright/noisy content.
+func zcr(_ seg: ArraySlice<Float>) -> Float {
+  let a = Array(seg)
+  guard a.count > 1 else { return 0 }
+  var c = 0
+  for i in 1..<a.count where (a[i] >= 0) != (a[i - 1] >= 0) { c += 1 }
+  return Float(c) / Float(a.count - 1)
+}
+
+/// Brightness → Core Haptics sharpness, from ZCR. The sqrt expands the low end
+/// so mid-frequency pops (a fire crackle over a low rumble) don't read as flat
+/// the way a raw high-pass/RMS ratio did.
+func sharpnessOf(_ seg: ArraySlice<Float>) -> Float {
+  max(0, min(1, zcr(seg).squareRoot() * 1.3))
+}
+
+func downsampled(_ v: [Float], _ n: Int) -> [Float] {
+  guard v.count > n, n > 0 else { return v }
+  return (0..<n).map { v[min(v.count - 1, Int(Double($0) / Double(n) * Double(v.count)))] }
+}
+
+func sparkline(_ v: [Float]) -> String {
+  let blocks = Array(" ▁▂▃▄▅▆▇█")
+  let mx = (v.max() ?? 1) + 1e-9
+  return String(v.map { blocks[max(0, min(8, Int(($0 / mx) * 8)))] })
+}
+
+func ahapTransient(_ time: Double, _ intensity: Float, _ sharpness: Float) -> [String: Any] {
+  [
+    "Event": [
+      "Time": time, "EventType": "HapticTransient",
+      "EventParameters": [
+        ["ParameterID": "HapticIntensity", "ParameterValue": Double(intensity)],
+        ["ParameterID": "HapticSharpness", "ParameterValue": Double(sharpness)],
+      ],
+    ]
+  ]
+}
+
+func ahapContinuous(_ duration: Double, _ sharpness: Float) -> [String: Any] {
+  [
+    "Event": [
+      "Time": 0.0, "EventType": "HapticContinuous", "EventDuration": duration,
+      "EventParameters": [
+        ["ParameterID": "HapticIntensity", "ParameterValue": 1.0],
+        ["ParameterID": "HapticSharpness", "ParameterValue": Double(sharpness)],
+      ],
+    ]
+  ]
+}
+
+struct HapticSuggestion {
+  let name: String
+  let dur: Double
+  let startSec: Double
+  let envN: [Float]
+  let onsets: [(t: Double, i: Float, s: Float)]
+  let picks: [(t: Double, i: Float, s: Float)]
+  let density: Double
+  let sharpness: Float
+  let gapFrac: Float
+  let transientLike: Bool
+  let pattern: [[String: Any]]
+}
+
+/// Analyze a sound's audio and derive a ~1s haptic "voice" — either a set of
+/// transient taps (percussive, spiky, or bright textures) or a continuous swell
+/// whose intensity curve is sampled from the envelope (sustained textures).
+func analyzeHaptics(_ url: URL) -> HapticSuggestion? {
+  guard let read = try? readChannels(url) else { return nil }
+  let mono = toMono(read.channels)
+  let sr = read.sampleRate
+
+  // A steady ~1.1s window past the leading edge (fall back to the top).
+  let (head, tail) = detectEdges(mono, sr: sr)
+  var start = head
+  var end = min(tail, start + Int(sr * 1.1))
+  if end - start < Int(sr * 0.3) {
+    start = 0
+    end = min(mono.count, Int(sr * 1.1))
+  }
+  let seg = mono[start..<end]
+  let dur = Double(end - start) / sr
+
+  // 10 ms normalized RMS envelope.
+  let hop = max(1, Int(sr * 0.01))
+  let hopDur = Double(hop) / sr
+  let env = rmsEnvelope(seg, win: hop)
+  let emax = (env.max() ?? 1) + 1e-9
+  let envN = env.map { $0 / emax }
+
+  // Spectral-flux onsets: positive envelope jumps, peaks ≥45 ms apart. Each
+  // onset's sharpness comes from a 20 ms attack window (the pop itself), not the
+  // whole segment — so a crisp pop over a dull rumble reads as sharp.
+  var flux = [Float](repeating: 0, count: envN.count)
+  for i in 1..<envN.count { flux[i] = max(0, envN[i] - envN[i - 1]) }
+  let fmean = flux.reduce(0, +) / Float(max(1, flux.count))
+  var fvar: Float = 0
+  for f in flux { fvar += (f - fmean) * (f - fmean) }
+  let fstd = (fvar / Float(max(1, flux.count))).squareRoot()
+  let thr = fmean + 0.8 * fstd
+  let minGap = max(1, Int(0.045 / hopDur))
+  let attack = max(1, Int(sr * 0.02))
+  var onsets: [(t: Double, i: Float, s: Float)] = []
+  var last = -minGap
+  if flux.count > 2 {
+    for k in 1..<(flux.count - 1)
+    where flux[k] > thr && flux[k] >= flux[k - 1] && flux[k] >= flux[k + 1] && k - last >= minGap {
+      let idx = start + k * hop
+      let sharp = sharpnessOf(mono[idx..<min(end, idx + attack)])
+      onsets.append((Double(k) * hopDur, min(1, envN[k]), sharp))
+      last = k
+    }
+  }
+  let density = Double(onsets.count) / dur
+  // Gappiness: fraction of near-silent frames (spiky, percussive textures drop
+  // between hits; a smooth swell never does).
+  let gapFrac = Float(envN.filter { $0 < 0.35 }.count) / Float(max(1, envN.count))
+  let medianSharp = onsets.isEmpty ? 0 : median(onsets.map { $0.s })
+  // Transient if there ARE distinct events AND the texture is either spiky
+  // (gaps) or bright (sharp attacks). A dense-but-smooth-and-dull swell (waves,
+  // wind) stays continuous.
+  let transientLike = density >= 5 && (gapFrac >= 0.25 || medianSharp >= 0.4)
+  let overallSharp = sharpnessOf(seg)
+
+  var pattern: [[String: Any]] = []
+  var picks: [(t: Double, i: Float, s: Float)] = []
+  if transientLike {
+    picks = Array(onsets.sorted { $0.i > $1.i }.prefix(14)).sorted { $0.t < $1.t }
+    for o in picks { pattern.append(ahapTransient(o.t, max(0.2, o.i), o.s)) }
+  } else {
+    pattern.append(ahapContinuous(dur, overallSharp))
+    let pts = 12
+    let cps = (0...pts).map { j -> [String: Any] in
+      let frac = Double(j) / Double(pts)
+      let idx = min(envN.count - 1, Int(frac * Double(envN.count - 1)))
+      return ["Time": frac * dur, "ParameterValue": Double(envN[idx])]
+    }
+    pattern.append([
+      "ParameterCurve": [
+        "ParameterID": "HapticIntensityControl", "Time": 0.0, "ParameterCurveControlPoints": cps,
+      ]
+    ])
+  }
+
+  return HapticSuggestion(
+    name: url.deletingPathExtension().lastPathComponent, dur: dur, startSec: Double(start) / sr,
+    envN: envN, onsets: onsets, picks: picks, density: density, sharpness: overallSharp,
+    gapFrac: gapFrac, transientLike: transientLike, pattern: pattern)
+}
+
+@discardableResult
+func writeAHAP(_ s: HapticSuggestion, to outDir: String) -> String {
+  let ahap: [String: Any] = [
+    "Version": 1, "Metadata": ["Project": "Blankie", "Created": "blankifi haptics"],
+    "Pattern": s.pattern,
+  ]
+  let outURL = URL(fileURLWithPath: outDir).appendingPathComponent("\(s.name).ahap")
+  let data = try! JSONSerialization.data(withJSONObject: ahap, options: [.prettyPrinted, .sortedKeys])
+  try! data.write(to: outURL)
+  return outURL.path
+}
+
+/// `haptics <file>` (single) or `haptics --all` (every sound in sounds.json).
+func cmdHaptics(_ args: [String]) {
+  var outDir = FileManager.default.temporaryDirectory.path
+  if let i = args.firstIndex(of: "--out"), i + 1 < args.count { outDir = args[i + 1] }
+
+  if args.contains("--all") {
+    var soundsDir = "Blankie/Resources/Sounds"
+    var jsonPath = "Blankie/Resources/sounds.json"
+    if let i = args.firstIndex(of: "--sounds-dir"), i + 1 < args.count { soundsDir = args[i + 1] }
+    if let i = args.firstIndex(of: "--json"), i + 1 < args.count { jsonPath = args[i + 1] }
+    guard let data = FileManager.default.contents(atPath: jsonPath),
+      let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let sounds = obj["sounds"] as? [[String: Any]]
+    else { fail("cannot read \(jsonPath)") }
+    print("sound            current    derived        dens  shrp  gap   envelope")
+    print(String(repeating: "─", count: 96))
+    for s in sounds {
+      guard let fn = s["fileName"] as? String else { continue }
+      let cur = (s["hapticVoice"] as? String) ?? "-"
+      let url = URL(fileURLWithPath: "\(soundsDir)/\(fn).m4a")
+      guard let a = analyzeHaptics(url) else {
+        print("\(fn.padding(toLength: 16, withPad: " ", startingAt: 0)) (cannot read)")
+        continue
+      }
+      writeAHAP(a, to: outDir)
+      let derived = a.transientLike ? "transient×\(a.picks.count)" : "continuous"
+      print(
+        String(
+          format: "%@ %@ %@ %4.1f  %.2f  %.2f  %@",
+          fn.padding(toLength: 16, withPad: " ", startingAt: 0),
+          cur.padding(toLength: 10, withPad: " ", startingAt: 0),
+          derived.padding(toLength: 14, withPad: " ", startingAt: 0),
+          a.density, a.sharpness, a.gapFrac, sparkline(downsampled(a.envN, 40))))
+    }
+    print("\nwrote \(sounds.count) .ahap files to \(outDir)")
+    return
+  }
+
+  guard let path = args.first else { fail("usage: haptics <file> [--out DIR]  |  haptics --all") }
+  guard let a = analyzeHaptics(URL(fileURLWithPath: path)) else { fail("cannot read \(path)") }
+  let out = writeAHAP(a, to: outDir)
+  print(
+    "── \(a.name)   window \(String(format: "%.2f", a.dur))s @ \(String(format: "%.1f", a.startSec))s ──"
+  )
+  print("   env  \(sparkline(downsampled(a.envN, 64)))")
+  print(
+    String(
+      format: "   onsets %d (%.1f/sec)   sharpness %.2f   gap %.2f   → %@", a.onsets.count, a.density,
+      a.sharpness, a.gapFrac,
+      a.transientLike ? "TRANSIENT (\(a.picks.count) taps)" : "CONTINUOUS (envelope swell)"))
+  if a.transientLike {
+    for o in a.picks { print(String(format: "      t=%.3f  i=%.2f  s=%.2f", o.t, o.i, o.s)) }
+  }
+  print("   wrote \(out)")
+}
+
 @main
 struct BlankIFI {
   static func main() async {
@@ -640,6 +862,7 @@ struct BlankIFI {
           fix       <in> <out> [--xfade-ms 250] [--bitrate 192000]
           convert   <in> <out.m4a> [--bitrate 192000]
           reanalyze [--write] [--json PATH] [--sounds-dir DIR]
+          haptics   <file> [--out DIR]  |  haptics --all [--out DIR]
         """)
       return
     }
@@ -650,6 +873,7 @@ struct BlankIFI {
     case "fix": cmdFix(rest)
     case "convert": cmdConvert(rest)
     case "reanalyze": await cmdReanalyze(rest)
+    case "haptics": cmdHaptics(rest)
     default: fail("unknown subcommand '\(cmd)'")
     }
   }

@@ -7,6 +7,7 @@
       "description": "This is a light to medium rain storm. A little thunder may be heard. Towards the end of the sound, there is a train horn in the distance.",
       "duration": 92.26068,
       "fileName": "rain",
+      "hapticVoice": "patter",
       "license": "ccBy4",
       "loopCut": {
         "source": "524605__alex36917__rain-ambience.wav",
@@ -37,6 +38,7 @@
       "description": "A storm with thunder and rain.",
       "duration": 25.662993,
       "fileName": "storm",
+      "hapticVoice": "thunder",
       "license": "ccBy4",
       "lufs": -17.80347,
       "moods": [
@@ -59,6 +61,7 @@
       "description": "Wind whistling with some squalls in a field in Texas.",
       "duration": 211.137506,
       "fileName": "wind",
+      "hapticVoice": "gust",
       "license": "cc0",
       "loopCut": {
         "source": "217506__felixblume__wind-blowing-in-a-field-in-texas-usa.wav",
@@ -88,6 +91,7 @@
       "description": "Close field recording of medium ambient waves crushing on the shore of Kalundborg Fjord at Røsnæs. Water cascading through small stones as it pulls back into the ocean.",
       "duration": 115.429138,
       "fileName": "waves",
+      "hapticVoice": "wave",
       "license": "ccBy4",
       "loopCut": {
         "source": "48412__luftrum__oceanwavescrushing.wav",
@@ -117,6 +121,7 @@
       "description": "A small meandering stream in the woods.",
       "duration": 148.28644,
       "fileName": "stream",
+      "hapticVoice": "flow",
       "license": "cc0",
       "loopCut": {
         "source": "333987__gluckose__stream2.wav",
@@ -146,6 +151,7 @@
       "description": "This wood thrush was recorded around 7:30 in the morning in heavy woods in deep southern Illinois.",
       "duration": 128.101088,
       "fileName": "birds",
+      "hapticVoice": "bright",
       "license": "cc0",
       "loopCut": {
         "source": "156826__kvgarlic__woodthrushinmorningshawneeforestmay272012.wav",
@@ -174,6 +180,7 @@
       "description": "Crickets chirping in the night.",
       "duration": 46.855601,
       "fileName": "summer-night",
+      "hapticVoice": "crickets",
       "license": "publicDomain",
       "loopCut": {
         "source": "Night_Sounds_-_Crickets-Lisa_Redfern-591005346.wav",
@@ -203,6 +210,7 @@
       "description": "JR Yamanote Line trains near Okachimachi station, Tokyo. Recorded December 2013.",
       "duration": 568.437007,
       "fileName": "train",
+      "hapticVoice": "train",
       "license": "ccBy3",
       "lufs": -24.6932,
       "moods": [
@@ -225,6 +233,7 @@
       "description": "Rope squeaks on boat.",
       "duration": 40.602771,
       "fileName": "boat",
+      "hapticVoice": "creak",
       "license": "cc0",
       "loopCut": {
         "source": "439365__falcet__ambience_sea_boat_night_ropes_4.wav",
@@ -253,6 +262,7 @@
       "description": "Street level in New York.",
       "duration": 21.416961,
       "fileName": "city",
+      "hapticVoice": "bustle",
       "license": "ccBy3",
       "loopCut": {
         "source": "44796__gezortenplotz__nyc_street-leve02l.wav",
@@ -280,6 +290,7 @@
       "description": "Contains persons talking and other sounds, none of the words are discernible.",
       "duration": 12.820771,
       "fileName": "coffee-shop",
+      "hapticVoice": "bright",
       "license": "publicDomain",
       "loopCut": {
         "source": "Restaurant Ambiance -SoundBible.com-628640170.wav",
@@ -307,6 +318,7 @@
       "description": "Very small crackles and sizzle burn sound effects along with air movement.",
       "duration": 26.496893,
       "fileName": "fireplace",
+      "hapticVoice": "crackle",
       "license": "publicDomain",
       "loopCut": {
         "source": "yell-YELLPealeCabinWoodstove20160914T15ms.mp3",
@@ -336,6 +348,7 @@
       "description": "20 seconds of pure pink noise generated in Python using numpy",
       "duration": 20.0,
       "fileName": "pink-noise",
+      "hapticVoice": "fuzz",
       "license": "cc0",
       "lufs": -27.186657,
       "moods": [
@@ -358,6 +371,7 @@
       "description": "20 seconds of pure white noise generated in Python using numpy",
       "duration": 19.75,
       "fileName": "white-noise",
+      "hapticVoice": "fuzz",
       "license": "cc0",
       "lufs": -27.459412,
       "moods": [
@@ -380,6 +394,7 @@
       "description": "Deep brown noise generated in Python with numpy (cumulative-sum white noise, 15 Hz high-pass, 400 Hz low-pass).",
       "duration": 19.678,
       "fileName": "brown-noise",
+      "hapticVoice": "round",
       "license": "cc0",
       "lufs": -27.19954,
       "moods": [
@@ -402,6 +417,7 @@
       "description": "Green noise generated in Python with numpy (pink noise band-passed 120 to 600 Hz).",
       "duration": 8.971042,
       "fileName": "green-noise",
+      "hapticVoice": "wash",
       "license": "cc0",
       "lufs": -27.198704,
       "moods": [
@@ -424,6 +440,7 @@
       "description": "Drone and collage of ambient sounds layered with field recordings.",
       "duration": 157.607596,
       "fileName": "ambient-music",
+      "hapticVoice": "pad",
       "isMusic": true,
       "license": "cc0",
       "lufs": -19.467264,
@@ -447,6 +464,7 @@
       "description": "Acoustic guitar in open D tuning.",
       "duration": 124.04102,
       "fileName": "acoustic-guitar",
+      "hapticVoice": "pluck",
       "isMusic": true,
       "license": "cc0",
       "lufs": -9.099611,
@@ -470,6 +488,7 @@
       "description": "Steady air conditioner fan hum.",
       "duration": 65.63644,
       "fileName": "fan",
+      "hapticVoice": "whir",
       "license": "cc0",
       "lufs": -26.943624,
       "moods": [
@@ -492,6 +511,7 @@
       "description": "Lo-fi hip-hop beat from the album Lazy Summer Lofi.",
       "duration": 120.00102,
       "fileName": "lofi-beats",
+      "hapticVoice": "beat",
       "isMusic": true,
       "license": "cc0",
       "lufs": -16.672398,
@@ -515,6 +535,7 @@
       "description": "Strong wind moving through pine branches.",
       "duration": 51.935782,
       "fileName": "forest",
+      "hapticVoice": "gust",
       "license": "cc0",
       "lufs": -34.196365,
       "moods": [
@@ -537,6 +558,7 @@
       "description": "The steady hum of an airplane cabin in flight.",
       "duration": 54.840839,
       "fileName": "airplane",
+      "hapticVoice": "drone",
       "license": "cc0",
       "lufs": -30.26169,
       "moods": [
@@ -560,6 +582,7 @@
       "description": "The steady hum of a laundry room.",
       "duration": 31.898912,
       "fileName": "laundry-room",
+      "hapticVoice": "tumble",
       "license": "cc0",
       "lufs": -25.118107,
       "moods": [
@@ -582,6 +605,7 @@
       "description": "An original piano berceuse composed for Blankie.",
       "duration": 132.41381,
       "fileName": "warm-piano",
+      "hapticVoice": "pad",
       "isMusic": true,
       "license": "cc0",
       "lufs": -28.62282,

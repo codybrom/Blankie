@@ -61,6 +61,11 @@ extension GlobalSettings {
     showProgressBorder =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? true
 
+    // Custom touch feedback (haptic voices). Default to true — it upgrades the
+    // generic selection tick that already fired.
+    touchFeedback =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.touchFeedback) as? Bool ?? true
+
     // Lock portrait orientation on iOS preference (default to false)
     lockPortraitOrientationiOS =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockPortraitOrientationiOS) as? Bool

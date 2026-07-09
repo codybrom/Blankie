@@ -197,6 +197,7 @@ struct SoundIcon: View {
       // is hidden by "Show Sound Names" (the identifier above is test-only).
       .accessibilityLabel(Text(sound.localizedTitle))
       .onTapGesture {
+        HapticsManager.shared.noteUserToggle()
         #if os(macOS)
           // Clicking activates but must not keep keyboard focus — the ring is
           // for Tab navigation only.
@@ -204,7 +205,9 @@ struct SoundIcon: View {
         #endif
         activateTile()
       }
-      .sensoryFeedback(.selection, trigger: sound.isSelected)
+      .onChange(of: sound.isSelected) { _, selected in
+        HapticsManager.shared.playSelection(for: sound, selected: selected)
+      }
       #if os(macOS)
         // Volume is a separate VoiceOver stop so the rotor stays reliable
         .accessibilityAction { DispatchQueue.main.async { activateTile() } }

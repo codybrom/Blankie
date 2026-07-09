@@ -40976,6 +40976,9 @@
         }
       }
     },
+    "Touch Feedback" : {
+
+    },
     "Traffic on a busy street" : {
       "comment" : "A short character caption for a built-in ambient sound, shown beneath its name.",
       "extractionState" : "manual",

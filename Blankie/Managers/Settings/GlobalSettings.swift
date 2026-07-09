@@ -54,6 +54,7 @@ enum UserDefaultsKeys {
   static let hideDockWhenWindowClosed = "hideDockWhenWindowClosed"
   static let librarySoundsExpanded = "librarySoundsExpanded"
   static let libraryPresetsExpanded = "libraryPresetsExpanded"
+  static let touchFeedback = "touchFeedback"
 }
 
 /// Blur (in points) applied to a preset's background artwork behind the mixer
@@ -123,6 +124,11 @@ class GlobalSettings {
   /// the collapse state survives launches. Both default to expanded.
   var librarySoundsExpanded: Bool
   var libraryPresetsExpanded: Bool
+  /// iPhone only: custom per-sound haptic feedback (the sounds' "voices" and,
+  /// later, the winding timer's crank). On by default — it replaces the generic
+  /// system selection tick that already fired, with a nicer, sound-specific
+  /// one. The separate continuous ambient-haptics feature opts in on its own.
+  var touchFeedback: Bool
 
   // Platform-specific settings
   /// Availability gate for the experimental spatial feature: shows the
@@ -158,6 +164,7 @@ class GlobalSettings {
     hideDockWhenWindowClosed = false
     librarySoundsExpanded = true
     libraryPresetsExpanded = true
+    touchFeedback = true
 
     // Then load actual values from UserDefaults
     loadBasicSettings()

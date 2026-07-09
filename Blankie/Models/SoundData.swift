@@ -49,6 +49,10 @@ struct SoundData: Codable {
   let truePeakdBTP: Float?
   let needsLimiter: Bool?
   let isMusic: Bool?
+  /// Named haptic voice (plan 011, feature A) — the sound's felt character when
+  /// touched: "soft", "round", "crackle", "mechanical", "bright", or "neutral".
+  /// Absent falls back to "neutral". See `HapticVoice`.
+  let hapticVoice: String?
 }
 
 struct SoundsContainer: Codable {
