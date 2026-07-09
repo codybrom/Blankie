@@ -166,6 +166,7 @@
 				Models/CustomSoundData.swift,
 				Models/Language.swift,
 				Models/License.swift,
+				Models/PlayableItem.swift,
 				Models/PlaybackProfile.swift,
 				Models/Preset.swift,
 				Models/PresetArchive.swift,
