@@ -143,21 +143,13 @@ extension AudioManager {
     return NowPlayingManager.soundNameSummary(titles)
   }
 
-  /// The `starredItems` token matching what's currently active, if any —
-  /// resolved the same way `PresetManager.themingPreset` picks what's "in
-  /// charge" of the mixer right now (solo, then Quick Mix, then preset).
+  /// The `starredItems` token matching what's currently active, if any — the
+  /// persisted form of `activeItem`, which also drives `themingPreset` so the
+  /// two agree on what's "in charge" of the mixer (solo, then Quick Mix, then
+  /// preset).
   @MainActor
   var currentFavoriteToken: String? {
-    if let soloSound = soloModeSound {
-      return GlobalSettings.soloToken(forFileName: soloSound.fileName)
-    }
-    if isQuickMix {
-      return GlobalSettings.quickMixToken
-    }
-    if let preset = PresetManager.shared.currentPreset {
-      return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
-    }
-    return nil
+    activeItem?.token
   }
 
   /// Resolves one `starredItems` token to widget-display info, mirroring the

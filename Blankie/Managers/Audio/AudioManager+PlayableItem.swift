@@ -24,6 +24,24 @@ struct PlayableItemDisplay {
 }
 
 extension AudioManager {
+  /// What is currently driving the mixer, as one identity: solo outranks Quick
+  /// Mix, which outranks the current preset (the default preset reads as
+  /// `.allSounds`). Nil when nothing is active. This is the single precedence
+  /// `currentFavoriteToken` and `PresetManager.themingPreset` both derive from.
+  @MainActor
+  var activeItem: PlayableItem? {
+    if let soloSound = soloModeSound {
+      return .solo(fileName: soloSound.fileName)
+    }
+    if isQuickMix {
+      return .quickMix
+    }
+    if let preset = PresetManager.shared.currentPreset {
+      return preset.isDefault ? .allSounds : .preset(preset.id)
+    }
+    return nil
+  }
+
   /// Resolves a `PlayableItem` to its display fields, or nil when it points at a
   /// sound/preset that no longer exists (a dead token). Non-preset items have no
   /// accent of their own, so they use the app's `customAccentColor` — the same
