@@ -250,7 +250,6 @@ open class Sound: NSObject, Identifiable {
           }
 
           UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
-          Logger.sounds.debug("Sound: \(self.fileName) final volume saved as \(self.volume)")
         }
       }
 
