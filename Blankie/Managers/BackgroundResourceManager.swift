@@ -246,6 +246,11 @@ final class BackgroundResourceManager: ObservableObject {
 
     private func download(id: String) async throws -> URL {
       states[id] = .downloading(progress: 0)
+      // Drop any memoized URL before (re)downloading: if the system evicted the
+      // pack out from under us, a fresh install can land at a different URL, so
+      // the post-download `cachedURL(for:)` must resolve anew rather than return
+      // the stale pre-eviction value.
+      urlCache[id] = nil
 
       // Mirror live download progress into `states` for the gallery UI.
       let progressTask = Task { [weak self] in await self?.observeProgress(id: id) }
