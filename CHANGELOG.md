@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - Unreleased
+
+Blankie 2.1 puts your sounds on the Home Screen, in Control Center, and a Siri phrase away.
+
+### Added
+
+- **Home Screen widgets (iPhone and iPad)** - Put Blankie on your Home Screen. Now Playing shows what's on with play controls, Favorites and Quick Mix start a mix in a tap, and a Pinned Sound widget launches one specific sound.
+- **Control Center controls** - Add Blankie to Control Center to play or pause and start a favorite without opening the app.
+- **Siri, Shortcuts, and Spotlight** - Ask Siri to play a preset or sound, build your own Shortcuts around Blankie's actions (play, pause, presets, sounds, and volume), and find your presets and sounds in Spotlight search. The Siri phrases are localized in every supported language.
+- **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description in the Library, so it's clearer what each one is before you play it. Both are translated into every supported language.
+
+### Changed
+
+- **Artwork selection UI** - The preset editor now shows a background tile (for the images that display behind your sounds) and a Lock Screen tile (animated artwork for your lockscreen) with a live preview.
+- **Quick Look preset preview artwork (iOS)** - A shared `.blankie` file with no saved artwork will now show the same fallback artwork Blankie uses in the app.
+- Improved translations across all 11 languages.
+
+### Fixed
+
+- On the lock screen and in CarPlay, the next and previous buttons could stay disabled after launch until you switched presets.
+
 ## [2.0.2] - 2026-06-28
 
 ### Added
@@ -287,7 +308,8 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v2.0.2...HEAD
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/codybrom/blankie/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/codybrom/blankie/compare/v1.0.13...v2.0.0
