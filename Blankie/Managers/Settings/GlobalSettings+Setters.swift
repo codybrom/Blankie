@@ -161,12 +161,16 @@ extension GlobalSettings {
   @MainActor
   func pruneStarredItems(validPresetIDs: Set<String>, validSoundFileNames: Set<String>? = nil) {
     let pruned = starredItems.filter { token in
-      if let fileName = GlobalSettings.soloFileName(fromToken: token) {
+      switch PlayableItem(token: token) {
+      case .allSounds, .quickMix:
+        return true
+      case .solo(let fileName):
         return validSoundFileNames?.contains(fileName) ?? true
+      case .preset(let id):
+        return validPresetIDs.contains(id.uuidString)
+      case nil:
+        return false
       }
-      return token == GlobalSettings.allSoundsToken
-        || token == GlobalSettings.quickMixToken
-        || validPresetIDs.contains(token)
     }
     if pruned != starredItems {
       setStarredItems(pruned)

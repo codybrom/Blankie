@@ -57,33 +57,31 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
     // on top of the preset instead of entering fresh.
     audio.leaveTransientModes()
 
-    if favoriteToken == GlobalSettings.allSoundsToken {
+    switch PlayableItem(token: favoriteToken) {
+    case .allSounds:
       if let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {
         try PresetManager.shared.applyPreset(defaultPreset)
         audio.setGlobalPlaybackState(true)
       }
       return .result()
-    }
-
-    if favoriteToken == GlobalSettings.quickMixToken {
+    case .quickMix:
       audio.enterQuickMix()
       return .result()
-    }
-
-    if let fileName = GlobalSettings.soloFileName(fromToken: favoriteToken),
-      let soloSound = audio.sound(fileName: fileName)
-    {
+    case .solo(let fileName):
+      guard let soloSound = audio.sound(fileName: fileName) else {
+        throw BlankieIntentError.presetNotFound
+      }
       audio.enterSoloMode(for: soloSound)
       return .result()
-    }
-
-    guard let presetID = UUID(uuidString: favoriteToken),
-      let preset = PresetManager.shared.presets.first(where: { $0.id == presetID })
-    else {
+    case .preset(let id):
+      guard let preset = PresetManager.shared.presets.first(where: { $0.id == id }) else {
+        throw BlankieIntentError.presetNotFound
+      }
+      try PresetManager.shared.applyPreset(preset)
+      audio.setGlobalPlaybackState(true)
+      return .result()
+    case nil:
       throw BlankieIntentError.presetNotFound
     }
-    try PresetManager.shared.applyPreset(preset)
-    audio.setGlobalPlaybackState(true)
-    return .result()
   }
 }

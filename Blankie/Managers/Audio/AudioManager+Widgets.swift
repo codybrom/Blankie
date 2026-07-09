@@ -170,47 +170,16 @@ extension AudioManager {
   /// fallback instead and read as a different, wrong color from what
   /// `NowPlayingWidget` shows for that same sound while it's playing.
   func widgetFavorite(forToken token: String) -> WidgetFavorite? {
-    if token == GlobalSettings.allSoundsToken {
-      return WidgetFavorite(
-        token: token,
-        displayName: String(localized: "All Blankie Sounds"),
-        systemIconName: "square.grid.2x2",
-        thumbnailKey: nil,
-        accentColorName: GlobalSettings.shared.customAccentColor?.toString,
-        subtitle: nil
-      )
+    guard let item = PlayableItem(token: token), let display = display(for: item) else {
+      return nil
     }
-    if token == GlobalSettings.quickMixToken {
-      return WidgetFavorite(
-        token: token,
-        displayName: String(localized: "Quick Mix"),
-        systemIconName: "shuffle",
-        thumbnailKey: nil,
-        accentColorName: GlobalSettings.shared.customAccentColor?.toString,
-        subtitle: nil
-      )
-    }
-    if let fileName = GlobalSettings.soloFileName(fromToken: token) {
-      guard let soloSound = sound(fileName: fileName) else { return nil }
-      return WidgetFavorite(
-        token: token,
-        displayName: soloSound.localizedTitle,
-        systemIconName: soloSound.systemIconName,
-        thumbnailKey: nil,
-        accentColorName: GlobalSettings.shared.customAccentColor?.toString,
-        subtitle: soloSound.isCustom ? soloSound.creditedAuthor : nil
-      )
-    }
-    guard let presetID = UUID(uuidString: token),
-      let preset = PresetManager.shared.presets.first(where: { $0.id == presetID })
-    else { return nil }
     return WidgetFavorite(
       token: token,
-      displayName: preset.displayName,
-      systemIconName: "square.stack.3d.up.fill",
-      thumbnailKey: "preset_thumb_\(preset.id.uuidString)",
-      accentColorName: preset.accentColorName,
-      subtitle: presetSubtitle(for: preset)
+      displayName: display.displayName,
+      systemIconName: display.systemIconName,
+      thumbnailKey: display.thumbnailKey,
+      accentColorName: display.accentColorName,
+      subtitle: display.subtitle
     )
   }
 }
