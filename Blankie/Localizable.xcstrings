@@ -15357,6 +15357,7 @@
     },
     "From Lock Screen" : {
       "comment" : "Shown under the preset Background tile when it is mirroring the Lock Screen artwork (no separate background image set).",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -18000,6 +18001,7 @@
     },
     "Image" : {
       "comment" : "Shown under the preset background tile when a custom image is set.",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -40329,6 +40331,7 @@
     },
     "Your background shows behind your sounds." : {
       "comment" : "Footer under the preset Artwork tile on macOS (no lock screen artwork there).",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -40346,6 +40349,7 @@
     },
     "Your background shows behind your sounds. Lock Screen art is free animated artwork that plays while your phone is locked." : {
       "comment" : "Footer under the preset Artwork tiles explaining what each one does.",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

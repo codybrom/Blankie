@@ -119,9 +119,8 @@ import os
     private var tileLabel: some View {
       ArtworkTile(
         caption: "Lock Screen",
-        valueLabel: selectedAsset.map { "\($0.displayName)" } ?? "None",
         isSet: selectedAsset != nil,
-        placeholderIcon: "moon.stars",
+        placeholderIcon: "play.rectangle",
         placeholderLabel: "Browse",
         accent: accent,
         onTap: { showingGallery = true },
@@ -1016,7 +1015,13 @@ import os
         ? squarePreviewResourceName : previewResourceName
     }
 
-    static var allCases: [BundledAnimatedLoop] {
+    /// Cached once: the bundle's animated-artwork set is fixed at runtime, and
+    /// this is read on every gallery/tile render. Recomputing re-walked the
+    /// bundle directory and re-decoded every metadata JSON each time (and spammed
+    /// the log), so it is loaded a single time on first access.
+    static let allCases: [BundledAnimatedLoop] = loadFromBundle()
+
+    private static func loadFromBundle() -> [BundledAnimatedLoop] {
       // Files are copied flat to bundle root, not in AnimatedArtwork subfolder
       guard let resourceURL = Bundle.main.resourceURL else {
         Logger.ui.error("Failed to find bundle resource directory")

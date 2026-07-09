@@ -65,6 +65,8 @@ struct PresetDetailsSection: View {
   private var artworkSection: some View {
     Section {
       HStack(alignment: .top, spacing: 16) {
+        Spacer(minLength: 0)
+
         backgroundTile
           .frame(maxWidth: 160)
 
@@ -85,14 +87,6 @@ struct PresetDetailsSection: View {
       .padding(.vertical, 4)
     } header: {
       Text("Artwork")
-    } footer: {
-      #if os(iOS)
-        Text(
-          "Your background shows behind your sounds. Lock Screen art is free animated artwork that plays while your phone is locked."
-        )
-      #else
-        Text("Your background shows behind your sounds.")
-      #endif
     }
     .onChange(of: artworkData) { _, _ in
       onEdited?()
@@ -107,7 +101,6 @@ struct PresetDetailsSection: View {
     let shown = backgroundImage ?? mirror
     return ArtworkTile(
       caption: "Background",
-      valueLabel: artworkData != nil ? "Image" : (mirror != nil ? "From Lock Screen" : "None"),
       isSet: shown != nil,
       placeholderIcon: "photo",
       placeholderLabel: "Add Image",
@@ -256,7 +249,6 @@ struct PresetDetailsSection: View {
 /// Background and Lock Screen tiles, echoing the iPhone wallpaper picker's pair.
 struct ArtworkTile<Thumbnail: View>: View {
   let caption: LocalizedStringKey
-  let valueLabel: LocalizedStringKey
   /// Whether artwork is set: drives the border, the remove control, and whether
   /// the thumbnail or the empty placeholder shows.
   let isSet: Bool
@@ -270,7 +262,7 @@ struct ArtworkTile<Thumbnail: View>: View {
   @ViewBuilder var thumbnail: () -> Thumbnail
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .center, spacing: 8) {
       ZStack(alignment: .topTrailing) {
         Button(action: onTap) {
           RoundedRectangle(cornerRadius: 12)
@@ -316,10 +308,7 @@ struct ArtworkTile<Thumbnail: View>: View {
       Text(caption)
         .font(.subheadline)
         .fontWeight(.medium)
-      Text(valueLabel)
-        .font(.caption)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
+        .multilineTextAlignment(.center)
     }
   }
 }
