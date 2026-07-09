@@ -31,6 +31,12 @@ class PresetManager {
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId
       )
+      // The lock-screen / CarPlay next & previous cycle is favorites-only and
+      // depends on where the now-current preset sits in that list. Media-controls
+      // setup computes it once before presets have loaded, so recompute on every
+      // preset change (this also fires when the last-active preset is applied at
+      // launch, after favorites and presets are available).
+      AudioManager.shared.updateNextPreviousCommandState()
     }
   }
 
