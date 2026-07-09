@@ -233,7 +233,6 @@ import os
   private struct LockScreenTileThumbnail: View {
     let asset: BundledAnimatedLoop?
 
-    @StateObject private var resourceManager = BackgroundResourceManager.shared
     @State private var videoURL: URL?
 
     var body: some View {
@@ -267,8 +266,13 @@ import os
       videoURL = nil
       guard let asset else { return }
       // Play only what is already on the device; don't fetch a pack for a tile.
-      guard case .available = resourceManager.state(for: asset.preferredPackID) else { return }
-      videoURL = try? await BackgroundResourceManager.shared.resourceURL(for: asset.preferredPackID)
+      guard case .available = BackgroundResourceManager.shared.state(for: asset.preferredPackID)
+      else { return }
+      let url = try? await BackgroundResourceManager.shared.resourceURL(for: asset.preferredPackID)
+      // The asset can change while awaiting; `.task(id:)` cancels this task, so
+      // don't publish a URL for a stale asset.
+      guard !Task.isCancelled else { return }
+      videoURL = url
     }
   }
 

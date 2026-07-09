@@ -59,9 +59,9 @@ struct PresetDetailsSection: View {
   /// Two side-by-side preview tiles that mirror the iPhone Home Screen / Lock
   /// Screen pairing: "Background" is the photo shown behind the sounds (and the
   /// Now Playing thumbnail); "Lock Screen" is the free animated artwork. They
-  /// are independent — a preset can carry both — so the footer explains each
-  /// rather than the UI forcing a single choice. macOS has no animated artwork,
-  /// so it shows the Background tile only.
+  /// are independent — a preset can carry both — so both tiles are shown rather
+  /// than the UI forcing a single choice. macOS has no animated artwork, so it
+  /// shows the Background tile only.
   private var artworkSection: some View {
     Section {
       HStack(alignment: .top, spacing: 16) {
@@ -107,13 +107,13 @@ struct PresetDetailsSection: View {
       accent: accent,
       onTap: { showingImagePicker = true },
       // Only removable when it is an actual photo; the mirrored still is owned
-      // by the Lock Screen tile.
+      // by the Lock Screen tile. Clearing artworkData fires `onEdited` via the
+      // section's `.onChange(of: artworkData)`, so it isn't called again here.
       onRemove: artworkData == nil
         ? nil
         : {
           artworkData = nil
           onRemoveArtwork?()
-          onEdited?()
         },
       thumbnail: {
         if let shown {
@@ -301,7 +301,9 @@ struct ArtworkTile<Thumbnail: View>: View {
               .padding(6)
           }
           .buttonStyle(.plain)
-          .accessibilityLabel("Remove")
+          // Caption-aware so VoiceOver distinguishes the two tiles' remove
+          // buttons (e.g. "Remove Background" vs "Remove Lock Screen").
+          .accessibilityLabel(Text("Remove \(Text(caption))"))
         }
       }
 
