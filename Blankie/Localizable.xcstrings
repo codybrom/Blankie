@@ -432,7 +432,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%1$lld eigene Sounds werden nur von „%2$@“ verwendet. Auch diese löschen?"
+            "value" : "%1$lld eigene Geräusche werden nur von „%2$@“ verwendet. Auch diese löschen?"
           }
         },
         "en" : {
@@ -989,7 +989,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "%lld Sounds"
+            "value" : "%lld Geräusche"
           }
         },
         "en" : {
@@ -1234,7 +1234,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "1 eigener Sound wird nur von „%@“ verwendet. Auch diesen löschen?"
+            "value" : "1 eigenes Geräusch wird nur von „%@“ verwendet. Auch dieses löschen?"
           }
         },
         "en-GB" : {
@@ -2531,7 +2531,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Eigene Sounds und Hintergründe hinzufügen"
+            "value" : "Eigene Geräusche und Hintergründe hinzufügen"
           }
         },
         "en" : {
@@ -2854,7 +2854,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Fügt diesen Sound zur Voreinstellung hinzu oder entfernt ihn"
+            "value" : "Fügt dieses Geräusch zur Voreinstellung hinzu oder entfernt es."
           }
         },
         "en-GB" : {
@@ -2936,7 +2936,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Alle Blankie-Sounds"
+            "value" : "Alle Blankie-Geräusche"
           }
         },
         "en-GB" : {
@@ -3257,7 +3257,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Das Bearbeiten von animiertem Artwork ist auf iOS verfügbar"
+            "value" : "Das Bearbeiten von animierten Motiven ist auf iOS verfügbar"
           }
         },
         "en" : {
@@ -3341,7 +3341,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Animiertes Artwork ist auf diesem Gerät nicht verfügbar."
+            "value" : "Animierte Motive sind auf diesem Gerät nicht verfügbar."
           }
         },
         "en-GB" : {
@@ -3820,7 +3820,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sind Sie sicher, dass Sie diesen Sound löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+            "value" : "Sind Sie sicher, dass Sie dieses Geräusch löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
           }
         },
         "en" : {
@@ -3903,7 +3903,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sind Sie sicher, dass Sie alle Anpassungen für diesen Sound zurücksetzen möchten?"
+            "value" : "Sind Sie sicher, dass Sie alle Anpassungen für dieses Geräusch zurücksetzen möchten?"
           }
         },
         "en" : {
@@ -4397,7 +4397,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Audiodatei ist zu groß. Die maximale Größe beträgt 150MB."
+            "value" : "Audiodatei ist zu groß. Die maximale Größe beträgt 150 MB."
           }
         },
         "en-GB" : {
@@ -5287,7 +5287,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie konnte seine Mediathek dieses Mal nicht öffnen, daher sind Ihre eigenen Sounds in dieser Sitzung nicht verfügbar. Ihre Daten sind sicher – Blankie versucht es beim nächsten Öffnen erneut."
+            "value" : "Blankie konnte seine Mediathek dieses Mal nicht öffnen, daher sind Ihre eigenen Geräusche in dieser Sitzung nicht verfügbar. Ihre Daten sind sicher – Blankie versucht es beim nächsten Öffnen erneut."
           }
         },
         "en-GB" : {
@@ -5364,7 +5364,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie musste seine Mediathek nach einem Problem beim Öffnen neu aufbauen. Ihre Voreinstellungen und gespeicherten Artworks wurden wiederhergestellt, und Ihre importierten Sounds wurden, wo möglich, aus einer Sicherungskopie wiederhergestellt."
+            "value" : "Blankie musste seine Mediathek nach einem Problem beim Öffnen neu aufbauen. Ihre Voreinstellungen und gespeicherten Motive wurden wiederhergestellt, und Ihre importierten Geräusche wurden, wo möglich, aus einer Sicherungskopie wiederhergestellt."
           }
         },
         "en-GB" : {
@@ -6080,7 +6080,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Helles, gleichmäßiges weißes Rauschen"
+            "value" : "Helles, gleichmäßiges Rauschen"
           }
         },
         "en" : {
@@ -6414,7 +6414,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Integrierte Sounds"
+            "value" : "Integrierte Geräusche"
           }
         },
         "en" : {
@@ -6498,7 +6498,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Integrierte Sounds behalten ihre Musikmarkierung."
+            "value" : "Integrierte Geräusche behalten ihre Musikmarkierung."
           }
         },
         "en" : {
@@ -6744,7 +6744,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ruhiges, naturnahes grünes Rauschen"
+            "value" : "Ruhiges, naturnahes Rauschen"
           }
         },
         "en" : {
@@ -6995,7 +6995,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bricht den Sleep-Timer von Blankie ab."
+            "value" : "Bricht den Schlaf-Timer von Blankie ab."
           }
         },
         "en-GB" : {
@@ -7476,7 +7476,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Änderungen wirken sich in allen Modi auf diesen Sound aus"
+            "value" : "Änderungen wirken sich in allen Modi auf dieses Geräusch aus"
           }
         },
         "en-GB" : {
@@ -7798,7 +7798,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Artwork auswählen"
+            "value" : "Motiv auswählen"
           }
         },
         "en" : {
@@ -7965,7 +7965,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounds auswählen"
+            "value" : "Geräusche auswählen"
           }
         },
         "en" : {
@@ -10052,7 +10052,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Voreinstellung aus laufenden Sounds erstellen?"
+            "value" : "Voreinstellung aus laufenden Geräuschen erstellen?"
           }
         },
         "en-GB" : {
@@ -10936,7 +10936,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Eigene Sounds"
+            "value" : "Eigene Geräusche"
           }
         },
         "en" : {
@@ -11097,7 +11097,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound anpassen"
+            "value" : "Geräusch anpassen"
           }
         },
         "en" : {
@@ -12077,7 +12077,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Voreinstellung und %lld Sounds löschen"
+            "value" : "Voreinstellung und %lld Geräusche löschen"
           }
         },
         "en-GB" : {
@@ -12155,7 +12155,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Voreinstellung und 1 Sound löschen"
+            "value" : "Voreinstellung und 1 Geräusch löschen"
           }
         },
         "en-GB" : {
@@ -12388,7 +12388,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound löschen"
+            "value" : "Geräusch löschen"
           }
         },
         "en" : {
@@ -12472,7 +12472,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound löschen…"
+            "value" : "Geräusch löschen…"
           }
         },
         "en-GB" : {
@@ -13109,7 +13109,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Video wird heruntergeladen ..."
+            "value" : "Video wird heruntergeladen …"
           }
         },
         "en" : {
@@ -14011,7 +14011,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix bearbeiten"
+            "value" : "Schnellmix bearbeiten"
           }
         },
         "en" : {
@@ -14094,7 +14094,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound bearbeiten"
+            "value" : "Geräusch bearbeiten"
           }
         },
         "en" : {
@@ -14178,7 +14178,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound bearbeiten…"
+            "value" : "Geräusch bearbeiten…"
           }
         },
         "en-GB" : {
@@ -16118,7 +16118,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wird mit Apple Intelligence generiert ..."
+            "value" : "Wird mit Apple Intelligence generiert …"
           }
         },
         "en-GB" : {
@@ -16840,7 +16840,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blendet diesen Sound aus der Sounds-Liste und „Alle Blankie-Sounds“ aus."
+            "value" : "Blendet dieses Geräusch aus der Geräuscheliste und „Alle Blankie-Geräusche“ aus."
           }
         },
         "en-GB" : {
@@ -18747,7 +18747,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Importieren Sie M4A-, MP3-, WAV- oder andere Audiodateien, um Ihre eigenen Sounds beizumischen."
+            "value" : "Importieren Sie M4A-, MP3-, WAV- oder andere Audiodateien, um Ihre eigenen Geräusche beizumischen."
           }
         },
         "en" : {
@@ -18830,7 +18830,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound importieren"
+            "value" : "Geräusch importieren"
           }
         },
         "en" : {
@@ -18914,7 +18914,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Eigene Sounds und Hintergründe importieren"
+            "value" : "Eigene Geräusche und Hintergründe importieren"
           }
         },
         "en" : {
@@ -18997,7 +18997,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Importieren Sie Ihre eigenen Sounds, um Ihren Mix zu personalisieren."
+            "value" : "Importieren Sie Ihre eigenen Geräusche, um Ihren Mix zu personalisieren."
           }
         },
         "en" : {
@@ -19164,7 +19164,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound wird importiert …"
+            "value" : "Geräusch wird importiert …"
           }
         },
         "en" : {
@@ -21053,7 +21053,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounds werden geladen …"
+            "value" : "Geräusche werden geladen …"
           }
         },
         "en-GB" : {
@@ -21712,7 +21712,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounds verwalten"
+            "value" : "Geräusche verwalten"
           }
         },
         "en" : {
@@ -22368,7 +22368,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Fehlendes mitgeliefertes Asset: %@"
+            "value" : "Fehlende mitgelieferte Ressource: %@"
           }
         },
         "en" : {
@@ -22608,7 +22608,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Mischen Sie Sounds mit individuellen Lautstärkereglern"
+            "value" : "Mischen Sie Geräusche mit individuellen Lautstärkereglern"
           }
         },
         "en" : {
@@ -23431,7 +23431,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Keine aktiven Sounds"
+            "value" : "Keine aktiven Geräusche"
           }
         },
         "en-GB" : {
@@ -23675,7 +23675,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Keine eigenen Sounds"
+            "value" : "Keine eigenen Geräusche"
           }
         },
         "en" : {
@@ -23758,7 +23758,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Keine eigenen Sounds"
+            "value" : "Keine eigenen Geräusche"
           }
         },
         "en" : {
@@ -24003,7 +24003,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Keine Sounds in dieser Voreinstellung"
+            "value" : "Keine Geräusche in dieser Voreinstellung"
           }
         },
         "en-GB" : {
@@ -24080,7 +24080,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Keine Sounds werden abgespielt"
+            "value" : "Keine Geräusche werden abgespielt"
           }
         },
         "en-GB" : {
@@ -24157,7 +24157,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Keine Sounds ausgewählt"
+            "value" : "Keine Geräusche ausgewählt"
           }
         },
         "en" : {
@@ -24324,7 +24324,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounds ohne Schleife können nur in Voreinstellungen verwendet werden."
+            "value" : "Geräusche ohne Schleife können nur in Voreinstellungen verwendet werden."
           }
         },
         "en-GB" : {
@@ -24968,7 +24968,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Gilt nur, wenn „Sound in Schleife“ aktiviert ist."
+            "value" : "Gilt nur, wenn „Geräusch in Schleife“ aktiviert ist."
           }
         },
         "en-GB" : {
@@ -25362,7 +25362,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Öffnet die Soundquelle"
+            "value" : "Öffnet die Geräuschquelle"
           }
         },
         "en-GB" : {
@@ -25851,7 +25851,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Überschreibt Ihre Standard-Themeneinstellungen, wenn diese Voreinstellung aktiv ist"
+            "value" : "Überschreibt Ihre Standard-Designeinstellungen, wenn diese Voreinstellung aktiv ist"
           }
         },
         "en-GB" : {
@@ -26561,7 +26561,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wählen Sie eine Voreinstellung oder einen Sound, um zu beginnen"
+            "value" : "Wählen Sie eine Voreinstellung oder ein Geräusch, um zu beginnen"
           }
         },
         "en-GB" : {
@@ -26639,7 +26639,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wählen Sie einige Sounds für Ihren ersten Mix aus"
+            "value" : "Wählen Sie einige Geräusche für Ihren ersten Mix aus"
           }
         },
         "en" : {
@@ -27630,7 +27630,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sounds abspielen/pausieren"
+            "value" : "Geräusche abspielen/pausieren"
           }
         },
         "en" : {
@@ -27714,7 +27714,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wiedergabe & Klänge"
+            "value" : "Wiedergabe & Geräusche"
           }
         },
         "en-GB" : {
@@ -28456,7 +28456,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Spielt den Sound ab oder pausiert ihn"
+            "value" : "Spielt das Geräusch ab oder pausiert es"
           }
         },
         "en-GB" : {
@@ -28617,7 +28617,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Download wird vorbereitet ..."
+            "value" : "Download wird vorbereitet …"
           }
         },
         "en" : {
@@ -29825,7 +29825,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix"
+            "value" : "Schnellmix"
           }
         },
         "en" : {
@@ -29909,7 +29909,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix ist ein einfaches Soundboard für schnellen Zugriff in CarPlay und darüber hinaus. Anders als Voreinstellungen hat es keine anpassbare Lautstärke, merkt sich Ihre Sounds nicht und kann keine eigenen Sounds verwenden."
+            "value" : "Schnellmix ist ein einfaches Soundboard für schnellen Zugriff in CarPlay und darüber hinaus. Anders als Voreinstellungen hat er keine anpassbare Lautstärke, merkt sich Ihre Geräusche nicht und kann keine eigenen Geräusche verwenden."
           }
         },
         "en" : {
@@ -30657,7 +30657,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Artwork entfernen"
+            "value" : "Motiv entfernen"
           }
         },
         "en" : {
@@ -31729,7 +31729,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Speichern Sie Ihre aktuelle Soundkonfiguration als Voreinstellung, um später schnell darauf zugreifen zu können."
+            "value" : "Speichern Sie Ihre aktuelle Geräuschmischung als Voreinstellung, um später schnell darauf zugreifen zu können."
           }
         },
         "en" : {
@@ -31812,7 +31812,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Änderungen werden gespeichert ..."
+            "value" : "Änderungen werden gespeichert …"
           }
         },
         "en" : {
@@ -31895,7 +31895,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Symbole suchen ..."
+            "value" : "Symbole suchen …"
           }
         },
         "en" : {
@@ -31979,7 +31979,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wählen Sie mindestens 2 Sounds aus"
+            "value" : "Wählen Sie mindestens 2 Geräusche aus"
           }
         },
         "en" : {
@@ -32147,7 +32147,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Wähle zuerst einige Geräusche in Blankie aus."
+            "value" : "Wählen Sie zuerst einige Geräusche in Blankie aus."
           }
         },
         "en" : {
@@ -32230,7 +32230,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounddatei auswählen"
+            "value" : "Geräuschdatei auswählen"
           }
         },
         "en" : {
@@ -33292,7 +33292,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dock-Symbolkennzeichnung bei Pause anzeigen"
+            "value" : "Dock-Symbolkennzeichen bei Pause anzeigen"
           }
         },
         "en-GB" : {
@@ -33530,7 +33530,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Klangnamen anzeigen"
+            "value" : "Geräuschnamen anzeigen"
           }
         },
         "en-GB" : {
@@ -33686,7 +33686,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Zeigt die Credits für diesen Sound an"
+            "value" : "Zeigt die Credits für dieses Geräusch an"
           }
         },
         "en-GB" : {
@@ -34327,7 +34327,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Langsame, verträumte Elektromusik"
+            "value" : "Langsame, verträumte elektronische Musik"
           }
         },
         "en" : {
@@ -34495,7 +34495,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Weiches, warmes rosa Rauschen"
+            "value" : "Weicheres, wärmeres Rauschen"
           }
         },
         "en" : {
@@ -34829,7 +34829,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound Check passt die Lautheit verschiedener Sounds an, damit sie mit derselben Lautstärke abgespielt werden."
+            "value" : "Sound Check passt die Lautheit verschiedener Geräusche an, damit sie mit derselben Lautstärke abgespielt werden."
           }
         },
         "en" : {
@@ -34913,7 +34913,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sound Credits"
+            "value" : "Credits zu den Geräuschen"
           }
         },
         "en" : {
@@ -34996,7 +34996,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounddatei"
+            "value" : "Geräuschdatei"
           }
         },
         "en" : {
@@ -35079,7 +35079,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sound-Name"
+            "value" : "Geräuschname"
           }
         },
         "en" : {
@@ -37178,7 +37178,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounds"
+            "value" : "Geräusche"
           }
         },
         "en" : {
@@ -37261,7 +37261,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sounds (%lld/8)"
+            "value" : "Geräusche (%lld/8)"
           }
         },
         "en" : {
@@ -39042,7 +39042,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Tippen Sie auf einen Sound, um ihn zu dieser Voreinstellung hinzuzufügen oder daraus zu entfernen"
+            "value" : "Tippen Sie auf ein Geräusch, um es zu dieser Voreinstellung hinzuzufügen oder daraus zu entfernen"
           }
         },
         "en" : {
@@ -39780,7 +39780,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Die Standardvoreinstellung kann nicht bearbeitet werden. Erstellen Sie eine neue Voreinstellung mit Ihren aktuellen Sounds."
+            "value" : "Die Standardvoreinstellung kann nicht bearbeitet werden. Erstellen Sie eine neue Voreinstellung mit Ihren aktuellen Geräuschen."
           }
         },
         "en-GB" : {
@@ -40025,7 +40025,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dieses Artwork konnte nicht geladen werden. Versuchen Sie es später erneut."
+            "value" : "Dieses Motiv konnte nicht geladen werden. Versuchen Sie es später erneut."
           }
         },
         "en-GB" : {
@@ -40258,7 +40258,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "diesen Sound"
+            "value" : "dieses Geräusch"
           }
         },
         "en" : {
@@ -40341,7 +40341,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Dieser Sound ist bereits platzsparend gespeichert. Eine Umwandlung würde kaum Speicherplatz freigeben."
+            "value" : "Dieses Geräusch ist bereits platzsparend gespeichert. Eine Umwandlung würde kaum Speicherplatz freigeben."
           }
         },
         "en-GB" : {
@@ -40419,7 +40419,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Die Datei dieses Sounds konnte nicht gefunden werden."
+            "value" : "Die Datei dieses Geräuschs konnte nicht gefunden werden."
           }
         },
         "en-GB" : {
@@ -41566,7 +41566,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Diesen Sound ausschalten"
+            "value" : "Dieses Geräusch ausschalten"
           }
         },
         "en-GB" : {
@@ -42822,6 +42822,270 @@
               }
             }
           }
+        },
+        "de" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres iPads geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres iPhones geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Die Lautstärke wird über die Lautstärketasten Ihres Geräts geregelt. Aktivieren Sie „Mit anderem Audio mischen“ in den Einstellungen von Blankie, um sie stattdessen hier festzulegen."
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "El volumen se controla con los botones de volumen del iPad. Activa Mezclar con otro audio en los ajustes de Blankie para ajustarlo aquí."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "El volumen se controla con los botones de volumen del iPhone. Activa Mezclar con otro audio en los ajustes de Blankie para ajustarlo aquí."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "El volumen se controla con los botones de volumen del dispositivo. Activa Mezclar con otro audio en los ajustes de Blankie para ajustarlo aquí."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Le volume est réglé à l’aide des boutons de volume de votre iPad. Activez « Mélanger avec d’autres sources audio » dans les réglages de Blankie pour le régler ici."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Le volume est réglé à l’aide des boutons de volume de votre iPhone. Activez « Mélanger avec d’autres sources audio » dans les réglages de Blankie pour le régler ici."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Le volume est réglé à l’aide des boutons de volume de votre appareil. Activez « Mélanger avec d’autres sources audio » dans les réglages de Blankie pour le régler ici."
+                }
+              }
+            }
+          }
+        },
+        "hu" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "A hangerőt az iPad hangerőgombjai szabályozzák. Kapcsolja be a Keverés más hangokkal funkciót a Blankie beállításaiban, hogy inkább itt állíthassa be."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "A hangerőt az iPhone hangerőgombjai szabályozzák. Kapcsolja be a Keverés más hangokkal funkciót a Blankie beállításaiban, hogy inkább itt állíthassa be."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "A hangerőt az eszköz hangerőgombjai szabályozzák. Kapcsolja be a Keverés más hangokkal funkciót a Blankie beállításaiban, hogy inkább itt állíthassa be."
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Il volume è controllato dai pulsanti del volume del tuo iPad. Attiva Mixa con altri contenuti audio nelle impostazioni di Blankie per regolarlo qui."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Il volume è controllato dai pulsanti del volume del tuo iPhone. Attiva Mixa con altri contenuti audio nelle impostazioni di Blankie per regolarlo qui."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Il volume è controllato dai pulsanti del volume del tuo dispositivo. Attiva Mixa con altri contenuti audio nelle impostazioni di Blankie per regolarlo qui."
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "音量はiPadの音量ボタンで調整されます。ここで調整するには、Blankieの設定で「他のオーディオとミックス」をオンにしてください。"
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "音量はiPhoneの音量ボタンで調整されます。ここで調整するには、Blankieの設定で「他のオーディオとミックス」をオンにしてください。"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "音量はお使いのデバイスの音量ボタンで調整されます。ここで調整するには、Blankieの設定で「他のオーディオとミックス」をオンにしてください。"
+                }
+              }
+            }
+          }
+        },
+        "ko" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "볼륨은 iPad의 볼륨 버튼으로 조절됩니다. 대신 여기에서 조절하려면 Blankie 설정에서 '다른 오디오와 함께 재생'을 켜세요."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "볼륨은 iPhone의 볼륨 버튼으로 조절됩니다. 대신 여기에서 조절하려면 Blankie 설정에서 '다른 오디오와 함께 재생'을 켜세요."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "볼륨은 기기의 볼륨 버튼으로 조절됩니다. 대신 여기에서 조절하려면 Blankie 설정에서 '다른 오디오와 함께 재생'을 켜세요."
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Głośnością sterują przyciski głośności iPada. Włącz opcję Miksuj z innym dźwiękiem w ustawieniach Blankie, aby zamiast tego ustawiać ją tutaj."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Głośnością sterują przyciski głośności iPhone'a. Włącz opcję Miksuj z innym dźwiękiem w ustawieniach Blankie, aby zamiast tego ustawiać ją tutaj."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Głośnością sterują przyciski głośności urządzenia. Włącz opcję Miksuj z innym dźwiękiem w ustawieniach Blankie, aby zamiast tego ustawiać ją tutaj."
+                }
+              }
+            }
+          }
+        },
+        "pt-PT" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "O volume é controlado pelos botões de volume do seu iPad. Ative Misturar com outro áudio nas definições do Blankie para o ajustar aqui."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "O volume é controlado pelos botões de volume do seu iPhone. Ative Misturar com outro áudio nas definições do Blankie para o ajustar aqui."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "O volume é controlado pelos botões de volume do seu dispositivo. Ative Misturar com outro áudio nas definições do Blankie para o ajustar aqui."
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Ses düzeyi, iPad'inizin ses düğmeleriyle denetlenir. Bunun yerine buradan ayarlamak için Blankie ayarlarında Diğer Seslerle Karıştır'ı açın."
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Ses düzeyi, iPhone'unuzun ses düğmeleriyle denetlenir. Bunun yerine buradan ayarlamak için Blankie ayarlarında Diğer Seslerle Karıştır'ı açın."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "Ses düzeyi, cihazınızın ses düğmeleriyle denetlenir. Bunun yerine buradan ayarlamak için Blankie ayarlarında Diğer Seslerle Karıştır'ı açın."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "device" : {
+              "ipad" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "音量由 iPad 的音量按钮控制。在 Blankie 的设置中开启“与其他音频混合播放”，即可改为在此处调节。"
+                }
+              },
+              "iphone" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "音量由 iPhone 的音量按钮控制。在 Blankie 的设置中开启“与其他音频混合播放”，即可改为在此处调节。"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "needs_review",
+                  "value" : "音量由设备的音量按钮控制。在 Blankie 的设置中开启“与其他音频混合播放”，即可改为在此处调节。"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -43078,7 +43342,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Welche Voreinstellung möchtest du abspielen?"
+            "value" : "Welche Voreinstellung möchten Sie abspielen?"
           }
         },
         "en" : {
@@ -43162,7 +43426,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Welches Geräusch möchtest du anpassen?"
+            "value" : "Welches Geräusch möchten Sie anpassen?"
           }
         },
         "en" : {
@@ -43246,7 +43510,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Welches Geräusch möchtest du abspielen?"
+            "value" : "Welches Geräusch möchten Sie abspielen?"
           }
         },
         "en" : {
@@ -43737,7 +44001,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Sie sind offline. Stellen Sie die Verbindung wieder her, um dieses Artwork zu laden."
+            "value" : "Sie sind offline. Stellen Sie die Verbindung wieder her, um dieses Motiv zu laden."
           }
         },
         "en-GB" : {

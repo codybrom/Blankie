@@ -411,7 +411,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Blau"
           }
         },
@@ -483,7 +483,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Braun"
           }
         },
@@ -555,8 +555,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Cyan"
+            "state" : "translated",
+            "value" : "Zyan"
           }
         },
         "es" : {
@@ -627,7 +627,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Grün"
           }
         },
@@ -699,7 +699,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Indigo"
           }
         },
@@ -771,8 +771,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mint"
+            "state" : "translated",
+            "value" : "Minze"
           }
         },
         "es" : {
@@ -843,7 +843,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Orange"
           }
         },
@@ -915,8 +915,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pink"
+            "state" : "translated",
+            "value" : "Rosa"
           }
         },
         "es" : {
@@ -987,7 +987,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Lila"
           }
         },
@@ -1059,7 +1059,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Rot"
           }
         },
@@ -1131,7 +1131,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "System"
           }
         },
@@ -1369,8 +1369,8 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Türkis"
+            "state" : "translated",
+            "value" : "Blaugrün"
           }
         },
         "es" : {
@@ -1441,7 +1441,7 @@
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Gelb"
           }
         },
