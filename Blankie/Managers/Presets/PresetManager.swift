@@ -1061,13 +1061,9 @@ extension PresetManager {
       updatePresetAtIndex(index, with: updatedPreset)
       setCurrentPreset(updatedPreset)
 
-      Logger.presets.debug("Saving current preset state for '\(updatedPreset.name)':")
-      Logger.presets.debug("  - Active sounds:")
-      updatedPreset.soundStates
-        .filter { $0.isSelected }
-        .forEach { state in
-          Logger.presets.debug("    * \(state.fileName) (Volume: \(state.volume))")
-        }
+      let activeCount = updatedPreset.soundStates.filter { $0.isSelected }.count
+      Logger.presets.debug(
+        "Saving current preset state for '\(updatedPreset.name)' (\(activeCount) active sounds)")
     }
   }
 
