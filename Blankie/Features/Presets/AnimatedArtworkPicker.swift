@@ -15,11 +15,20 @@ import os
   import UIKit
 
   struct AnimatedArtworkPicker: View {
+    /// How the picker renders its entrance: an inline form row (Settings'
+    /// "Default Animation") or a preview tile (the preset editor's Lock Screen
+    /// tile). Both open the same gallery.
+    enum Presentation {
+      case row
+      case tile
+    }
+
     @Binding var artwork: AnimatedArtworkRef?
     @Binding var staticArtworkPath: String?
     /// Row label. Defaults to the per-preset wording; the app-wide default in
-    /// Settings passes "Default Animation" instead.
+    /// Settings passes "Default Animation" instead. Unused by the tile style.
     let label: LocalizedStringKey
+    let presentation: Presentation
     /// Accent used by the gallery (pills, selection, Choose button). Passed in
     /// by the call site so Settings uses the app-wide accent and Edit Preset
     /// uses the edited preset's accent — never the unrelated playing preset's.
@@ -35,27 +44,63 @@ import os
       artwork: Binding<AnimatedArtworkRef?>,
       staticArtworkPath: Binding<String?>,
       label: LocalizedStringKey = "Lock Screen Animation",
+      presentation: Presentation = .row,
       accent: Color = GlobalSettings.shared.customAccentColor ?? .accentColor,
       onChange: @escaping () -> Void
     ) {
       _artwork = artwork
       _staticArtworkPath = staticArtworkPath
       self.label = label
+      self.presentation = presentation
       self.accent = accent
       self.onChange = onChange
       _selectedBundledIdentifier = State(initialValue: artwork.wrappedValue?.bundledIdentifier)
     }
 
     var body: some View {
+      content
+        .sheet(isPresented: $showingGallery) {
+          AnimatedArtworkGallery(
+            selectedIdentifier: $selectedBundledIdentifier,
+            accent: accent,
+            onSelect: { asset in
+              Task {
+                await applyBundledAsset(asset)
+                showingGallery = false
+              }
+            },
+            onClear: {
+              removeAnimatedArtwork()
+              showingGallery = false
+            }
+          )
+        }
+        .onAppear {
+          selectedBundledIdentifier = artwork?.bundledIdentifier
+        }
+        .onChange(of: artwork?.bundledIdentifier) { _, newValue in
+          selectedBundledIdentifier = newValue
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+      switch presentation {
+      case .row:
+        rowLabel
+      case .tile:
+        tileLabel
+      }
+    }
+
+    private var rowLabel: some View {
       Button {
         showingGallery = true
       } label: {
         HStack {
           Text(label)
           Spacer()
-          if let identifier = selectedBundledIdentifier,
-            let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == identifier })
-          {
+          if let asset = selectedAsset {
             Text(asset.displayName)
               .foregroundColor(.secondary)
           } else {
@@ -69,28 +114,27 @@ import os
         }
       }
       .buttonStyle(.plain)
-      .sheet(isPresented: $showingGallery) {
-        AnimatedArtworkGallery(
-          selectedIdentifier: $selectedBundledIdentifier,
-          accent: accent,
-          onSelect: { asset in
-            Task {
-              await applyBundledAsset(asset)
-              showingGallery = false
-            }
-          },
-          onClear: {
-            removeAnimatedArtwork()
-            showingGallery = false
-          }
-        )
-      }
-      .onAppear {
-        selectedBundledIdentifier = artwork?.bundledIdentifier
-      }
-      .onChange(of: artwork?.bundledIdentifier) { _, newValue in
-        selectedBundledIdentifier = newValue
-      }
+    }
+
+    private var tileLabel: some View {
+      ArtworkTile(
+        caption: "Lock Screen",
+        isSet: selectedAsset != nil,
+        placeholderIcon: "play.rectangle",
+        placeholderLabel: "Browse",
+        accent: accent,
+        onTap: { showingGallery = true },
+        onRemove: selectedBundledIdentifier == nil ? nil : { removeAnimatedArtwork() },
+        thumbnail: {
+          LockScreenTileThumbnail(asset: selectedAsset)
+        }
+      )
+    }
+
+    /// The currently selected bundled loop, if any.
+    private var selectedAsset: BundledAnimatedLoop? {
+      guard let identifier = selectedBundledIdentifier else { return nil }
+      return BundledAnimatedLoop.allCases.first { $0.id == identifier }
     }
 
     @MainActor
@@ -176,6 +220,122 @@ import os
           errorMessage = error.localizedDescription
         }
       }
+    }
+  }
+
+  // MARK: - Lock Screen Tile Thumbnail
+
+  /// The Lock Screen tile's fill: the selected loop's still square preview,
+  /// with the muted looping video layered on top once it is confirmed on the
+  /// device. It never triggers a download for a thumbnail — a selected asset is
+  /// already downloaded, so this animates in practice; if the download was
+  /// evicted it stays a still until the user re-picks it.
+  private struct LockScreenTileThumbnail: View {
+    let asset: BundledAnimatedLoop?
+
+    @State private var videoURL: URL?
+
+    var body: some View {
+      ZStack {
+        stillPreview
+        if let videoURL {
+          LoopingPlayerView(url: videoURL)
+        }
+      }
+      .task(id: asset?.id) {
+        await loadVideoIfAvailable()
+      }
+    }
+
+    @ViewBuilder private var stillPreview: some View {
+      if let asset,
+        let url = Bundle.main.url(
+          forResource: asset.squarePreviewResourceName,
+          withExtension: asset.squarePreviewExtension),
+        let uiImage = UIImage(contentsOfFile: url.path)
+      {
+        Image(uiImage: uiImage)
+          .resizable()
+          .aspectRatio(contentMode: .fill)
+      } else {
+        Color.secondary.opacity(0.12)
+      }
+    }
+
+    private func loadVideoIfAvailable() async {
+      videoURL = nil
+      guard let asset else { return }
+      // Play only what is already on the device; don't fetch a pack for a tile.
+      guard case .available = BackgroundResourceManager.shared.state(for: asset.preferredPackID)
+      else { return }
+      let url = try? await BackgroundResourceManager.shared.resourceURL(for: asset.preferredPackID)
+      // The asset can change while awaiting; `.task(id:)` cancels this task, so
+      // don't publish a URL for a stale asset.
+      guard !Task.isCancelled else { return }
+      videoURL = url
+    }
+  }
+
+  // MARK: - Looping Player View
+
+  /// A muted, seamlessly-looping, aspect-fill video layer for tile-sized
+  /// previews. Uses `AVPlayerLooper` for gapless loops and the `.pauses`
+  /// background policy so it never claims the Now Playing controls.
+  private struct LoopingPlayerView: UIViewRepresentable {
+    let url: URL
+
+    func makeUIView(context: Context) -> LoopingPlayerContainerView {
+      let view = LoopingPlayerContainerView()
+      view.configure(url: url)
+      return view
+    }
+
+    func updateUIView(_ uiView: LoopingPlayerContainerView, context: Context) {
+      uiView.configure(url: url)
+    }
+
+    static func dismantleUIView(_ uiView: LoopingPlayerContainerView, coordinator: Coordinator) {
+      // SwiftUI tears views down on the main actor; assert it so the main-actor
+      // `teardown()` (which stops the player and breaks the looper's observer
+      // retain cycle) can run here.
+      MainActor.assumeIsolated {
+        uiView.teardown()
+      }
+    }
+  }
+
+  private final class LoopingPlayerContainerView: UIView {
+    override class var layerClass: AnyClass { AVPlayerLayer.self }
+    private var playerLayer: AVPlayerLayer { layer as! AVPlayerLayer }
+    private var player: AVQueuePlayer?
+    private var looper: AVPlayerLooper?
+    private var currentURL: URL?
+
+    func configure(url: URL) {
+      guard url != currentURL else { return }
+      currentURL = url
+      teardown()
+
+      let item = AVPlayerItem(url: url)
+      let queue = AVQueuePlayer()
+      queue.isMuted = true
+      // Keep this preview from taking over background audio / Now Playing.
+      queue.audiovisualBackgroundPlaybackPolicy = .pauses
+      queue.preventsDisplaySleepDuringVideoPlayback = false
+
+      looper = AVPlayerLooper(player: queue, templateItem: item)
+      playerLayer.player = queue
+      playerLayer.videoGravity = .resizeAspectFill
+      player = queue
+      queue.play()
+    }
+
+    func teardown() {
+      player?.pause()
+      looper?.disableLooping()
+      looper = nil
+      player = nil
+      playerLayer.player = nil
     }
   }
 
@@ -859,7 +1019,13 @@ import os
         ? squarePreviewResourceName : previewResourceName
     }
 
-    static var allCases: [BundledAnimatedLoop] {
+    /// Cached once: the bundle's animated-artwork set is fixed at runtime, and
+    /// this is read on every gallery/tile render. Recomputing re-walked the
+    /// bundle directory and re-decoded every metadata JSON each time (and spammed
+    /// the log), so it is loaded a single time on first access.
+    static let allCases: [BundledAnimatedLoop] = loadFromBundle()
+
+    private static func loadFromBundle() -> [BundledAnimatedLoop] {
       // Files are copied flat to bundle root, not in AnimatedArtwork subfolder
       guard let resourceURL = Bundle.main.resourceURL else {
         Logger.ui.error("Failed to find bundle resource directory")
