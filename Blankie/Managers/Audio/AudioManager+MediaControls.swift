@@ -123,16 +123,18 @@ extension AudioManager {
   private var navigableItems: [NavigableItem] {
     let presets = PresetManager.shared.presets
     return GlobalSettings.shared.starredItems.compactMap { token in
-      if GlobalSettings.soloFileName(fromToken: token) != nil {
-        return sound(forSoloToken: token).map { NavigableItem.solo($0) }
-      }
-      switch token {
-      case GlobalSettings.allSoundsToken:
+      switch PlayableItem(token: token) {
+      case .solo(let fileName):
+        return sound(fileName: fileName).map { NavigableItem.solo($0) }
+      case .allSounds:
         return presets.first { $0.isDefault }.map { NavigableItem.preset($0) }
-      case GlobalSettings.quickMixToken:
+      case .quickMix:
+        // Quick Mix isn't part of the favorites navigation cycle.
         return nil
-      default:
-        return presets.first { $0.id.uuidString == token }.map { NavigableItem.preset($0) }
+      case .preset(let id):
+        return presets.first { $0.id == id }.map { NavigableItem.preset($0) }
+      case nil:
+        return nil
       }
     }
   }

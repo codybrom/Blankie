@@ -699,48 +699,51 @@ struct LibraryView: View {
 
   @ViewBuilder
   private func tokenRow(_ token: String) -> some View {
-    if let sound = audioManager.sound(forSoloToken: token) {
-      soloRow(sound)
-    } else {
-      switch token {
-      case GlobalSettings.allSoundsToken:
-        if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
-          PresetPickerRow(
-            preset: defaultPreset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
-            presentation: presentation, onSelection: onSelect)
-        }
-      default:
-        if let preset = presetManager.presets.first(where: { $0.id.uuidString == token }) {
-          let row = PresetPickerRow(
-            preset: preset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
-            presentation: presentation, onSelection: onSelect)
-          // Custom presets only — never the default or solo rows. macOS uses a
-          // context menu (replacing the old per-row pencil and trash); iOS/iPadOS
-          // offers the same edit/delete choice via a trailing swipe.
-          #if os(macOS)
-            row.contextMenu {
-              Button("Edit Preset…") { selectedPresetForEdit = preset }
-              Button("Delete Preset…", role: .destructive) { presetToDelete = preset }
-            }
-          #else
-            row.swipeActions(edge: .trailing, allowsFullSwipe: false) {
-              Button(role: .destructive) {
-                presetToDelete = preset
-              } label: {
-                Label("Delete", systemImage: "trash")
-              }
-              // Clear the inherited app accent so the destructive role's own
-              // danger color shows; Edit keeps the default (app accent) tint.
-              .tint(nil)
-              Button {
-                selectedPresetForEdit = preset
-              } label: {
-                Label("Edit", systemImage: "slider.vertical.3")
-              }
-            }
-          #endif
-        }
+    switch PlayableItem(token: token) {
+    case .solo(let fileName):
+      if let sound = audioManager.sound(fileName: fileName) {
+        soloRow(sound)
       }
+    case .allSounds:
+      if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
+        PresetPickerRow(
+          preset: defaultPreset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+          presentation: presentation, onSelection: onSelect)
+      }
+    case .preset(let id):
+      if let preset = presetManager.presets.first(where: { $0.id == id }) {
+        let row = PresetPickerRow(
+          preset: preset, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
+          presentation: presentation, onSelection: onSelect)
+        // Custom presets only — never the default or solo rows. macOS uses a
+        // context menu (replacing the old per-row pencil and trash); iOS/iPadOS
+        // offers the same edit/delete choice via a trailing swipe.
+        #if os(macOS)
+          row.contextMenu {
+            Button("Edit Preset…") { selectedPresetForEdit = preset }
+            Button("Delete Preset…", role: .destructive) { presetToDelete = preset }
+          }
+        #else
+          row.swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+              presetToDelete = preset
+            } label: {
+              Label("Delete", systemImage: "trash")
+            }
+            // Clear the inherited app accent so the destructive role's own
+            // danger color shows; Edit keeps the default (app accent) tint.
+            .tint(nil)
+            Button {
+              selectedPresetForEdit = preset
+            } label: {
+              Label("Edit", systemImage: "slider.vertical.3")
+            }
+          }
+        #endif
+      }
+    case .quickMix, .none:
+      // Quick Mix and dead tokens have no Library row (unchanged).
+      EmptyView()
     }
   }
 

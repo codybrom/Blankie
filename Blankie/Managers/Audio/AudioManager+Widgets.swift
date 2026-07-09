@@ -143,21 +143,13 @@ extension AudioManager {
     return NowPlayingManager.soundNameSummary(titles)
   }
 
-  /// The `starredItems` token matching what's currently active, if any —
-  /// resolved the same way `PresetManager.themingPreset` picks what's "in
-  /// charge" of the mixer right now (solo, then Quick Mix, then preset).
+  /// The `starredItems` token matching what's currently active, if any — the
+  /// persisted form of `activeItem`, which also drives `themingPreset` so the
+  /// two agree on what's "in charge" of the mixer (solo, then Quick Mix, then
+  /// preset).
   @MainActor
   var currentFavoriteToken: String? {
-    if let soloSound = soloModeSound {
-      return GlobalSettings.soloToken(forFileName: soloSound.fileName)
-    }
-    if isQuickMix {
-      return GlobalSettings.quickMixToken
-    }
-    if let preset = PresetManager.shared.currentPreset {
-      return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
-    }
-    return nil
+    activeItem?.token
   }
 
   /// Resolves one `starredItems` token to widget-display info, mirroring the
@@ -170,47 +162,16 @@ extension AudioManager {
   /// fallback instead and read as a different, wrong color from what
   /// `NowPlayingWidget` shows for that same sound while it's playing.
   func widgetFavorite(forToken token: String) -> WidgetFavorite? {
-    if token == GlobalSettings.allSoundsToken {
-      return WidgetFavorite(
-        token: token,
-        displayName: String(localized: "All Blankie Sounds"),
-        systemIconName: "square.grid.2x2",
-        thumbnailKey: nil,
-        accentColorName: GlobalSettings.shared.customAccentColor?.toString,
-        subtitle: nil
-      )
+    guard let item = PlayableItem(token: token), let display = display(for: item) else {
+      return nil
     }
-    if token == GlobalSettings.quickMixToken {
-      return WidgetFavorite(
-        token: token,
-        displayName: String(localized: "Quick Mix"),
-        systemIconName: "shuffle",
-        thumbnailKey: nil,
-        accentColorName: GlobalSettings.shared.customAccentColor?.toString,
-        subtitle: nil
-      )
-    }
-    if let fileName = GlobalSettings.soloFileName(fromToken: token) {
-      guard let soloSound = sound(fileName: fileName) else { return nil }
-      return WidgetFavorite(
-        token: token,
-        displayName: soloSound.localizedTitle,
-        systemIconName: soloSound.systemIconName,
-        thumbnailKey: nil,
-        accentColorName: GlobalSettings.shared.customAccentColor?.toString,
-        subtitle: soloSound.isCustom ? soloSound.creditedAuthor : nil
-      )
-    }
-    guard let presetID = UUID(uuidString: token),
-      let preset = PresetManager.shared.presets.first(where: { $0.id == presetID })
-    else { return nil }
     return WidgetFavorite(
       token: token,
-      displayName: preset.displayName,
-      systemIconName: "square.stack.3d.up.fill",
-      thumbnailKey: "preset_thumb_\(preset.id.uuidString)",
-      accentColorName: preset.accentColorName,
-      subtitle: presetSubtitle(for: preset)
+      displayName: display.displayName,
+      systemIconName: display.systemIconName,
+      thumbnailKey: display.thumbnailKey,
+      accentColorName: display.accentColorName,
+      subtitle: display.subtitle
     )
   }
 }

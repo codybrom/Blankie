@@ -55,9 +55,15 @@ class PresetManager {
   /// re-evaluates when solo / Quick Mix state changes.
   @MainActor
   var themingPreset: Preset? {
-    let audio = AudioManager.shared
-    if audio.soloModeSound != nil || audio.isQuickMix { return nil }
-    return currentPreset
+    // Derived from AudioManager.activeItem so this agrees with
+    // currentFavoriteToken: only a preset (or the default) themes the UI; solo
+    // and Quick Mix do not.
+    switch AudioManager.shared.activeItem {
+    case .preset, .allSounds:
+      return currentPreset
+    case .solo, .quickMix, .none:
+      return nil
+    }
   }
 
   /// Watches AudioManager's (now `@Observable`) sounds array for add/remove so a

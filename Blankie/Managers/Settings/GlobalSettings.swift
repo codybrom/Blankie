@@ -67,21 +67,23 @@ class GlobalSettings {
   static let shared = GlobalSettings()
 
   /// Tokens for the non-preset starrable items. Presets use their UUID string.
-  static let allSoundsToken = "allSounds"
-  static let quickMixToken = "quickMix"
+  /// These forward to `PlayableItem`, the single codec for the token grammar.
+  static let allSoundsToken = PlayableItem.allSounds.token
+  static let quickMixToken = PlayableItem.quickMix.token
 
   /// Prefix for solo-sound tokens. A soloed sound is starred as
   /// `"solo:<fileName>"`, using the sound's stable `fileName` as its identity.
-  static let soloTokenPrefix = "solo:"
+  static let soloTokenPrefix = PlayableItem.soloTokenPrefix
 
   /// The starred token for soloing the given sound file.
   static func soloToken(forFileName fileName: String) -> String {
-    soloTokenPrefix + fileName
+    PlayableItem.solo(fileName: fileName).token
   }
 
   /// The sound file name encoded in a solo token, or nil if it isn't one.
   static func soloFileName(fromToken token: String) -> String? {
-    token.hasPrefix(soloTokenPrefix) ? String(token.dropFirst(soloTokenPrefix.count)) : nil
+    if case .solo(let fileName) = PlayableItem(token: token) { return fileName }
+    return nil
   }
 
   var volume: Double
