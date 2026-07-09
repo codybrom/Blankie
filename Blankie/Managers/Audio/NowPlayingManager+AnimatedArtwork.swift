@@ -94,19 +94,34 @@ import os
       let previewPath = preset.animatedArtwork?.previewPath ?? preset.staticArtworkPath
 
       let artworkID = loopKey ?? preset.id.uuidString
-      let animatedArtwork = MPMediaItemAnimatedArtwork(
+      nowPlayingInfo[artworkKey.rawValue] = Self.makeAnimatedArtwork(
         artworkID: artworkID,
-        previewImageRequestHandler: { _, completion in
-          completion(resources.previewImage)
-        },
-        videoAssetFileURLRequestHandler: { _, completion in
-          completion(resources.loopURL)
-        }
+        previewImage: resources.previewImage,
+        loopURL: resources.loopURL
       )
-
-      nowPlayingInfo[artworkKey.rawValue] = animatedArtwork
       currentAnimatedLoopPath = loopKey
       currentAnimatedPreviewPath = previewPath
+    }
+
+    /// Wraps the preview image and loop URL in `MPMediaItemAnimatedArtwork`.
+    /// Declared `nonisolated` so the request handler closures do NOT inherit
+    /// `NowPlayingManager`'s `@MainActor` isolation — MediaRemote invokes them
+    /// from its own `NowPlayingInfo` serial queue, and an isolated closure traps
+    /// the runtime's executor check there (mirrors `makeArtwork`).
+    nonisolated static func makeAnimatedArtwork(
+      artworkID: String,
+      previewImage: UIImage,
+      loopURL: URL
+    ) -> MPMediaItemAnimatedArtwork {
+      MPMediaItemAnimatedArtwork(
+        artworkID: artworkID,
+        previewImageRequestHandler: { _, completion in
+          completion(previewImage)
+        },
+        videoAssetFileURLRequestHandler: { _, completion in
+          completion(loopURL)
+        }
+      )
     }
 
     func removeAnimatedArtwork() {
