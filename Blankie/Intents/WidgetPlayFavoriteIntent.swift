@@ -65,7 +65,7 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
       return .result()
     case .solo(let fileName):
       guard let soloSound = audio.sound(fileName: fileName) else {
-        throw BlankieIntentError.presetNotFound
+        throw BlankieIntentError.soundNotFound
       }
       audio.enterSoloMode(for: soloSound)
       return .result()
