@@ -66,7 +66,7 @@ import os
     private func debouncedSaveWindowFrame(_ window: NSWindow) {
       debounceTimer?.invalidate()
       debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
-        self?.saveWindowFrame(window)
+        MainActor.assumeIsolated { self?.saveWindowFrame(window) }
       }
     }
 

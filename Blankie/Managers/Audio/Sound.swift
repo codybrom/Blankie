@@ -58,14 +58,17 @@ open class Sound: NSObject, Identifiable {
       originalTitle: originalTitle) ?? originalTitle
   }
 
-  /// Title for display, localized through the string catalog. Only original
-  /// built-in names are catalog keys, so localization is gated to built-in
-  /// sounds the user hasn't renamed. A custom sound (or a renamed built-in)
-  /// carries user content and is shown verbatim — so a custom sound named
-  /// "Rain" is never turned into "Regen".
+  /// Title for display, localized through the string catalog. Built-in sounds
+  /// key off their stable `fileName` (`sound.<fileName>`) rather than the English
+  /// title, so localization survives a title reword and never clashes with an
+  /// unrelated string that happens to share the English text. Localization is
+  /// gated to built-in sounds the user hasn't renamed: a custom sound (or a
+  /// renamed built-in) carries user content and is shown verbatim — so a custom
+  /// sound named "Rain" is never turned into "Regen".
   var localizedTitle: String {
     guard !isCustom, title == originalTitle else { return title }
-    return NSLocalizedString(originalTitle, comment: "Built-in sound name")
+    return NSLocalizedString(
+      "sound.\(fileName)", value: originalTitle, comment: "Built-in sound name")
   }
 
   var systemIconName: String {
@@ -213,7 +216,9 @@ open class Sound: NSObject, Identifiable {
   /// device-tested) made its transport button dance.
   static let remotePauseFadeDuration: TimeInterval = 0
 
-  @ObservationIgnored var volumeDebounceTimer: Timer?
+  // nonisolated(unsafe): only ever mutated on the main actor; the nonisolated
+  // deinit is the last reference, so invalidating it there is race-free.
+  @ObservationIgnored nonisolated(unsafe) var volumeDebounceTimer: Timer?
 
   var volume: Float = 0.75 {
     didSet {
@@ -233,17 +238,19 @@ open class Sound: NSObject, Identifiable {
       volumeDebounceTimer?.invalidate()
       volumeDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
         [weak self] _ in
-        guard let self = self else { return }
+        // The timer fires on the main run loop; recover that isolation statically.
+        MainActor.assumeIsolated {
+          guard let self = self else { return }
 
-        // Don't persist volume changes during Quick Mix mode
-        guard !AudioManager.shared.isQuickMix else {
-          Logger.sounds.debug(
-            "Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
-          return
+          // Don't persist volume changes during Quick Mix mode
+          guard !AudioManager.shared.isQuickMix else {
+            Logger.sounds.debug(
+              "Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
+            return
+          }
+
+          UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
         }
-
-        UserDefaults.shared.set(self.volume, forKey: "\(self.fileName)_volume")
-        Logger.sounds.debug("Sound: \(self.fileName) final volume saved as \(self.volume)")
       }
 
       // Volume changed: re-evaluate preset divergence (a preset records each

@@ -265,7 +265,7 @@ struct SoundManagementView: View {
           .accessibilityHidden(true)
 
         Text(sound.localizedTitle)
-        .foregroundStyle(.primary)
+          .foregroundStyle(.primary)
 
         Spacer()
 

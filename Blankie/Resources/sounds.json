@@ -25,6 +25,7 @@
       "normalizationFactor": 1.3047235,
       "soundName": "rain ambience",
       "soundUrl": "https://freesound.org/s/524605/",
+      "subtitle": "Soft, steady rainfall",
       "systemIconName": "cloud.rain",
       "title": "Rain",
       "truePeakdBTP": -0.09582323
@@ -46,6 +47,7 @@
       "normalizationFactor": 0.34687543,
       "soundName": "Infinite Storm.wav",
       "soundUrl": "https://freesound.org/s/41739",
+      "subtitle": "Deep, rolling thunder",
       "systemIconName": "cloud.bolt.rain",
       "title": "Storm",
       "truePeakdBTP": 0.20141469
@@ -74,6 +76,7 @@
       "normalizationFactor": 0.34433237,
       "soundName": "Wind blowing in a field in Texas, USA",
       "soundUrl": "https://freesound.org/s/217506/",
+      "subtitle": "Whistling, rushing gusts",
       "systemIconName": "wind",
       "title": "Wind",
       "truePeakdBTP": -0.44027612
@@ -102,6 +105,7 @@
       "normalizationFactor": 0.6328937,
       "soundName": "oceanwavescrushing.wav",
       "soundUrl": "https://freesound.org/s/48412/",
+      "subtitle": "Surf rolling onto the shore",
       "systemIconName": "water.waves",
       "title": "Waves",
       "truePeakdBTP": -1.2500726
@@ -130,6 +134,7 @@
       "normalizationFactor": 4.0023947,
       "soundName": "stream2.wav",
       "soundUrl": "https://freesound.org/s/333987/",
+      "subtitle": "Bubbling, trickling water",
       "systemIconName": "humidity",
       "title": "Stream",
       "truePeakdBTP": -15.663198
@@ -158,6 +163,7 @@
       "normalizationFactor": 4.741137,
       "soundName": "WoodThrushinMorningShawneeForestMay272012.wav",
       "soundUrl": "https://freesound.org/s/156826/",
+      "subtitle": "Morning chirping in the trees",
       "systemIconName": "bird",
       "title": "Birds",
       "truePeakdBTP": -24.517021
@@ -185,6 +191,7 @@
       "normalizationFactor": 0.22898631,
       "soundName": "Crickets Chirping At Night",
       "soundUrl": "https://soundbible.com/2083-Crickets-Chirping-At-Night.html",
+      "subtitle": "Crickets chirping in the dark",
       "systemIconName": "moon.stars.fill",
       "title": "Summer Night",
       "truePeakdBTP": -3.295281
@@ -206,6 +213,7 @@
       "normalizationFactor": 0.7667609,
       "soundName": "Trains of the Yamanote Line",
       "soundUrl": "https://freesound.org/s/259988/",
+      "subtitle": "Railcars pass on nearby tracks",
       "systemIconName": "tram.fill",
       "title": "Train",
       "truePeakdBTP": -2.109943
@@ -233,6 +241,7 @@
       "normalizationFactor": 7.943282,
       "soundName": "Ambience_Sea_Boat_Night_Ropes_4.wav",
       "soundUrl": "https://freesound.org/s/439365/",
+      "subtitle": "Creaking ropes aboard a sailboat",
       "systemIconName": "sailboat.fill",
       "title": "Boat",
       "truePeakdBTP": -25.552116
@@ -260,6 +269,7 @@
       "normalizationFactor": 3.5643487,
       "soundName": "NYC_street leve02l.wav",
       "soundUrl": "https://freesound.org/s/44796/",
+      "subtitle": "Traffic on a busy street",
       "systemIconName": "building.2",
       "title": "City",
       "truePeakdBTP": -18.747208
@@ -286,6 +296,7 @@
       "normalizationFactor": 0.5999022,
       "soundName": "Restaurant Ambiance",
       "soundUrl": "https://soundbible.com/1664-Restaurant-Ambiance.html",
+      "subtitle": "Indistinct café chatter",
       "systemIconName": "cup.and.saucer.fill",
       "title": "Coffee Shop",
       "truePeakdBTP": -8.590274
@@ -313,6 +324,7 @@
       "normalizationFactor": 7.081784,
       "soundName": "Woodstove",
       "soundUrl": "https://www.nps.gov/media/video/view.htm?id=1E69FA23-BC88-460E-8EFD-8D3BA8B06C53",
+      "subtitle": "Crackling, popping logs",
       "systemIconName": "fireplace",
       "title": "Fireplace",
       "truePeakdBTP": -1.2723314
@@ -334,6 +346,7 @@
       "normalizationFactor": 1.0217222,
       "soundName": "Pink Noise (Stereo)",
       "soundUrl": "https://blankie.rest/credits",
+      "subtitle": "Softer, warmer static",
       "systemIconName": "waveform.path",
       "title": "Pink Noise",
       "truePeakdBTP": -13.174751
@@ -355,6 +368,7 @@
       "normalizationFactor": 1.0543154,
       "soundName": "White Noise (Stereo)",
       "soundUrl": "https://blankie.rest/credits",
+      "subtitle": "Bright, steady static",
       "systemIconName": "waveform",
       "title": "White Noise",
       "truePeakdBTP": -22.625587
@@ -376,6 +390,7 @@
       "normalizationFactor": 1.0232387,
       "soundName": "Deep Noise (Stereo)",
       "soundUrl": "https://blankie.rest/credits",
+      "subtitle": "Low and heavy brown noise",
       "systemIconName": "waveform.low",
       "title": "Deep Noise",
       "truePeakdBTP": -12.099489
@@ -397,6 +412,7 @@
       "normalizationFactor": 1.0231403,
       "soundName": "Green Noise (Stereo)",
       "soundUrl": "https://blankie.rest/credits",
+      "subtitle": "Calm, nature-like static",
       "systemIconName": "waveform.mid",
       "title": "Green Noise",
       "truePeakdBTP": -16.555126
@@ -419,6 +435,7 @@
       "normalizationFactor": 0.42011017,
       "soundName": "Couple' Morning.wav",
       "soundUrl": "https://freesound.org/s/742808/",
+      "subtitle": "Slow, dreamy electronic music",
       "systemIconName": "pianokeys.inverse",
       "title": "Ambient Synth",
       "truePeakdBTP": -4.2743454
@@ -441,6 +458,7 @@
       "normalizationFactor": 0.12734462,
       "soundName": "acoustic guitar in open D",
       "soundUrl": "https://freesound.org/s/653928/",
+      "subtitle": "Warm, acoustic guitar",
       "systemIconName": "guitars.fill",
       "title": "Gentle Guitar",
       "truePeakdBTP": 1.0351397
@@ -462,6 +480,7 @@
       "normalizationFactor": 0.9935306,
       "soundName": "Air Conditioner Fan Hum.wav",
       "soundUrl": "https://freesound.org/s/515859/",
+      "subtitle": "A steady, whirring hum",
       "systemIconName": "fan.desk",
       "title": "Fan",
       "truePeakdBTP": -11.977426
@@ -484,6 +503,7 @@
       "normalizationFactor": 0.30452284,
       "soundName": "Laundry On The Wire",
       "soundUrl": "https://freemusicarchive.org/music/holiznacc0/lazy-summer-lofi-1/laundry-on-the-wiremp3/",
+      "subtitle": "Mellow, chill hip-hop",
       "systemIconName": "music.quarternote.3",
       "title": "Lo-Fi Beats",
       "truePeakdBTP": 0.15277258
@@ -505,6 +525,7 @@
       "normalizationFactor": 2.2899094,
       "soundName": "Wind_pine.wav",
       "soundUrl": "https://freesound.org/s/202989/",
+      "subtitle": "Steady breeze through the pines",
       "systemIconName": "tree.fill",
       "title": "Forest",
       "truePeakdBTP": -13.119295
@@ -527,6 +548,7 @@
       "normalizationFactor": 1.4557424,
       "soundName": "Interior airplane.WAV",
       "soundUrl": "https://freesound.org/s/133496/",
+      "subtitle": "Mid-flight hum of an airplane cabin",
       "systemIconName": "airplane",
       "title": "Airplane",
       "truePeakdBTP": -18.990189
@@ -548,6 +570,7 @@
       "normalizationFactor": 0.8052029,
       "soundName": "Laundry Room Ambience.wav",
       "soundUrl": "https://freesound.org/s/411914/",
+      "subtitle": "A dryer tumbling clothes",
       "systemIconName": "washer.fill",
       "title": "Laundry Room",
       "truePeakdBTP": -4.139728
@@ -570,6 +593,7 @@
       "normalizationFactor": 1.2054272,
       "soundName": "Sleepy Upright Piano Seamless Loop",
       "soundUrl": "https://freesound.org/people/blankie.rest/sounds/859607/",
+      "subtitle": "A quiet, gentle lullaby",
       "systemIconName": "pianokeys",
       "title": "Warm Piano",
       "truePeakdBTP": -11.317333

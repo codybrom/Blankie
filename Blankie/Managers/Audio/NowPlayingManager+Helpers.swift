@@ -65,7 +65,12 @@ extension NowPlayingManager {
   /// mid-word ("Grass St…"). A short mix shows its names in full; once the list
   /// would overflow a conservative character budget, fall back to a single
   /// count ("6 sounds") — clean, and trivially localizable as one plural string.
-  func soundNameSummary(_ titles: [String]) -> String {
+  func soundNameSummary(_ titles: [String]) -> String { Self.soundNameSummary(titles) }
+
+  /// The single source of the subtitle rule — shared by the lock screen and the
+  /// widget subtitle so a budget/wording change can't diverge the two. Declared
+  /// `nonisolated static` so the widget-catalog builder can reach it off-actor.
+  nonisolated static func soundNameSummary(_ titles: [String]) -> String {
     guard !titles.isEmpty else { return "Blankie" }
     let joined = titles.joined(separator: ", ")
     let budget = 50

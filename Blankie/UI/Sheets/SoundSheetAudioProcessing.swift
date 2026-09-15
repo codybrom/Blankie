@@ -10,7 +10,12 @@ import SwiftUI
 extension SoundSheetForm {
   @ViewBuilder
   var audioProcessingSection: some View {
-    Section(header: Text("Audio")) {
+    Section(
+      header: Text(
+        String(
+          localized: "soundSheet.audioSectionHeader", defaultValue: "Audio",
+          comment: "Section header for a sound's audio-processing options."))
+    ) {
       // Preview with waveform
       HStack(spacing: 12) {
         // Play/Stop button

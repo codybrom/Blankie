@@ -27,6 +27,22 @@ import SwiftUI
     @State private var showingTimer = false
     var backgroundImage: PlatformImage?
 
+    /// Rendered inline as the solo mixer's now-playing surface rather than in a
+    /// sheet: drops the drag handle and the dark sheet background so the player
+    /// content sits over the mixer's own backdrop, and hides the close chevron
+    /// (solo is left by choosing another sound or preset, not by dismissing).
+    var inline: Bool = false
+
+    /// Fired when the inline player's next/previous lands on a preset (so solo
+    /// ends). The mixer would otherwise drop back to the grid; instead it opens
+    /// the full Now Playing sheet for the preset, keeping the expanded player.
+    var onNavigateToPreset: (() -> Void)?
+
+    /// The mirror of `onNavigateToPreset`: fired when the modal sheet's
+    /// next/previous lands on a solo sound. The sheet dismisses so the inline
+    /// solo player takes over instead of the sheet showing the solo sound.
+    var onNavigateToSolo: (() -> Void)?
+
     /// CarPlay routes audio (and volume) to the car, so the in-app volume bar
     /// has nothing to control there — hide the whole row when connected.
     /// Reads AudioManager's published flag (fed by CarPlayAudioBridge).
@@ -71,57 +87,72 @@ import SwiftUI
     }
 
     var body: some View {
-      // Size to the presenting sheet (not the window): a large-detent sheet is a
-      // touch shorter than the full window, so framing to the sheet keeps the
-      // bottom controls on screen instead of clipped.
-      GeometryReader { proxy in
-        ZStack {
-          // Background fills the whole sheet. Rounded top corners show while the
-          // zoom transition is mid-flight and behind the sheet's own rounding.
-          Color.black
-            .overlay {
-              if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
-                let image = backgroundImage
-              {
-                Image(uiImage: image)
-                  .resizable()
-                  .aspectRatio(contentMode: .fill)
-                  .frame(maxWidth: .infinity, maxHeight: .infinity)
-                  .clipped()
-                  .blur(radius: 40)
-                  .opacity(0.4)
-              } else {
-                LinearGradient(
-                  colors: [
-                    accentColor.opacity(0.6),
-                    accentColor.opacity(0.3),
-                    Color.black.opacity(0.8),
-                  ],
-                  startPoint: .topLeading,
-                  endPoint: .bottomTrailing
+      Group {
+        if inline {
+          // Inline in the solo mixer: the player content over the mixer's own
+          // backdrop, no sheet chrome. Extend into the bottom safe area like the
+          // sheet does (which ignoresSafeArea) so the shared layout's bottom
+          // spacer clears the home indicator once, not twice — otherwise the
+          // AirPlay/Timer row rides ~34pt high and won't line up with the sheet.
+          GeometryReader { proxy in
+            nowPlayingView(in: proxy.size)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+          }
+          .ignoresSafeArea(.container, edges: .bottom)
+        } else {
+          // Size to the presenting sheet (not the window): a large-detent sheet is
+          // a touch shorter than the full window, so framing to the sheet keeps the
+          // bottom controls on screen instead of clipped.
+          GeometryReader { proxy in
+            ZStack {
+              // Background fills the whole sheet. Rounded top corners show while the
+              // zoom transition is mid-flight and behind the sheet's own rounding.
+              Color.black
+                .overlay {
+                  if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
+                    let image = backgroundImage
+                  {
+                    Image(uiImage: image)
+                      .resizable()
+                      .aspectRatio(contentMode: .fill)
+                      .frame(maxWidth: .infinity, maxHeight: .infinity)
+                      .clipped()
+                      .blur(radius: 40)
+                      .opacity(0.4)
+                  } else {
+                    LinearGradient(
+                      colors: [
+                        accentColor.opacity(0.6),
+                        accentColor.opacity(0.3),
+                        Color.black.opacity(0.8),
+                      ],
+                      startPoint: .topLeading,
+                      endPoint: .bottomTrailing
+                    )
+                  }
+                }
+                .clipShape(
+                  UnevenRoundedRectangle(
+                    topLeadingRadius: 38,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: 38,
+                    style: .continuous
+                  )
                 )
-              }
-            }
-            .clipShape(
-              UnevenRoundedRectangle(
-                topLeadingRadius: 38,
-                bottomLeadingRadius: 0,
-                bottomTrailingRadius: 0,
-                topTrailingRadius: 38,
-                style: .continuous
-              )
-            )
-            .ignoresSafeArea()
-            .accessibilityHidden(true)
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
 
-          // Content stays within the top safe area so the drag handle and
-          // everything below it sit clear of the Dynamic Island.
-          expandedPlayerView(proxy.size)
-            .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 10)
+              // Content stays within the top safe area so the drag handle and
+              // everything below it sit clear of the Dynamic Island.
+              expandedPlayerView(proxy.size)
+                .padding(.top, proxy.safeAreaInsets.top > 0 ? proxy.safeAreaInsets.top : 10)
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+          }
+          .ignoresSafeArea()
         }
-        .frame(width: proxy.size.width, height: proxy.size.height)
       }
-      .ignoresSafeArea()
       .sheet(isPresented: $showingTimer) {
         // Detents and presentationSizing don't compose — when both are set the
         // detents win and presentationSizing is ignored, leaving iPad stuck at
@@ -580,7 +611,14 @@ import SwiftUI
               .foregroundColor(.white)
               .lineLimit(1)
 
-            if soloSound.isCustom, let author = soloSound.creditedAuthor {
+            // Built-in sounds carry a subtitle caption; custom sounds show their
+            // credited author instead (they have no subtitle).
+            if let subtitle = soloSound.localizedSubtitle {
+              Text(subtitle)
+                .font(.title3)
+                .foregroundColor(.white.opacity(0.7))
+                .lineLimit(1)
+            } else if soloSound.isCustom, let author = soloSound.creditedAuthor {
               Text(author)
                 .font(.title3)
                 .foregroundColor(.white.opacity(0.7))
@@ -644,6 +682,32 @@ import SwiftUI
       .padding(.horizontal, 32)
     }
 
+    /// Run a next/previous, then hand off if we've crossed between a solo sound
+    /// (inline player) and a preset (sheet), all in one non-animated transaction
+    /// so the aligned layouts swap in place instead of the sheet sliding/zooming.
+    private func performNavigation(_ navigate: () -> Void) {
+      var transaction = Transaction()
+      transaction.disablesAnimations = true
+      withTransaction(transaction) {
+        navigate()
+        handlePostNavigation()
+      }
+    }
+
+    /// Keep next/previous consistent about where a sound "lives": solo sounds
+    /// belong to the inline player, presets to the modal sheet. After navigating,
+    /// hand off if we've crossed that line.
+    private func handlePostNavigation() {
+      if inline {
+        // Inline solo player landed on a preset → open the full sheet for it.
+        if audioManager.soloModeSound == nil { onNavigateToPreset?() }
+      } else {
+        // Modal sheet landed on a solo sound → dismiss so the solo sound's
+        // inline page takes over instead of showing it in the sheet.
+        if audioManager.soloModeSound != nil { onNavigateToSolo?() }
+      }
+    }
+
     // MARK: - Transport Controls
 
     @ViewBuilder
@@ -654,7 +718,7 @@ import SwiftUI
 
         if canNavigate {
           Button {
-            audioManager.navigateToPreviousPreset()
+            performNavigation(audioManager.navigateToPreviousPreset)
           } label: {
             Image(systemName: "backward.fill")
               .font(.system(size: 32))
@@ -680,7 +744,7 @@ import SwiftUI
 
         if canNavigate {
           Button {
-            audioManager.navigateToNextPreset()
+            performNavigation(audioManager.navigateToNextPreset)
           } label: {
             Image(systemName: "forward.fill")
               .font(.system(size: 32))
@@ -708,19 +772,22 @@ import SwiftUI
 
     private var bottomActionsContent: some View {
       HStack(spacing: 20) {
-        // Left: collapse back to the mini bar
-        Button {
-          onDismiss?()
-        } label: {
-          Image(systemName: "chevron.down")
-            .foregroundColor(.white.opacity(0.7))
-            .font(.system(size: 20, weight: .medium))
-            .frame(width: 56, height: 56)
-            .contentShape(Circle())
+        // Left: collapse back to the mini bar. Sheet only — the inline solo
+        // player has no close button (the mixer's own nav bar collapses it).
+        if !inline {
+          Button {
+            onDismiss?()
+          } label: {
+            Image(systemName: "chevron.down")
+              .foregroundColor(.white.opacity(0.7))
+              .font(.system(size: 20, weight: .medium))
+              .frame(width: 56, height: 56)
+              .contentShape(Circle())
+          }
+          .buttonStyle(.plain)
+          .accessibilityLabel(Text("Close"))
+          .modifier(NowPlayingActionGlass())
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("Close"))
-        .modifier(NowPlayingActionGlass())
 
         // Middle: AirPlay / audio output route picker. The Playing Audio HIG
         // asks apps to permit rerouting of audio output when possible; this is

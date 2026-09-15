@@ -39,7 +39,7 @@ import Testing
     settings.starredItems = []
   }
 
-  deinit {
+  isolated deinit {
     settings.starredItems = originalStarred
     settings.menuBarOnlyMode = originalMenuBarOnly
     settings.hideDockWhenWindowClosed = originalHideDock

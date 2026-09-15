@@ -14,7 +14,9 @@ final class BlankieBasicScreenshotTests: XCTestCase {
     executionTimeAllowance = 300  // 5 minutes
   }
 
-  private func findAndTapSoundButton(_ app: XCUIApplication, soundName: String, iconName: String)
+  @MainActor private func findAndTapSoundButton(
+    _ app: XCUIApplication, soundName: String, iconName: String
+  )
     -> Bool
   {
     // Strategy 1: Direct button access by accessibility identifier

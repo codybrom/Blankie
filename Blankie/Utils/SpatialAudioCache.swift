@@ -14,7 +14,7 @@ import os
 /// segments otherwise carry the source channel count). Caches live in the
 /// system Caches directory keyed by source name + baked boost, so a
 /// re-analysis simply renders a fresh variant and the old one ages out.
-enum SpatialAudioCache {
+nonisolated enum SpatialAudioCache {
 
   private static var directory: URL {
     FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]

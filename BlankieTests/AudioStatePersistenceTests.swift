@@ -30,7 +30,7 @@ import Testing
     audioManager.isQuickMix = false
     snapshot.clear()
   }
-  deinit {
+  isolated deinit {
     audioManager.soloModeSound = nil
     audioManager.isQuickMix = false
     audioManager.sounds = originalSounds
@@ -56,7 +56,8 @@ import Testing
     audioManager.saveState()
 
     let entry = savedEntry(for: "test-solo")
-    #expect(entry?["isSelected"] as? Bool == false, "pre-solo selection persisted, not the forced true")
+    #expect(
+      entry?["isSelected"] as? Bool == false, "pre-solo selection persisted, not the forced true")
     #expect(isClose(entry?["volume"] as? Float ?? -1, 0.4), "pre-solo volume persisted, not 1.0")
   }
 

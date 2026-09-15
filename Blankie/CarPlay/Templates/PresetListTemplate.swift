@@ -76,22 +76,14 @@ import os
         Task {
           do {
             await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
+              // Leave solo/Quick Mix so the previous preset doesn't briefly play.
+              AudioManager.shared.leaveTransientModes()
             }
 
             // Allow audio system to process mode exits before applying new preset
             await Task.yield()
 
-            try await PresetManager.shared.applyPreset(preset)
+            try PresetManager.shared.applyPreset(preset)
             await MainActor.run {
               // Ensure playback starts
               AudioManager.shared.setGlobalPlaybackState(true)
@@ -126,22 +118,14 @@ import os
         Task {
           do {
             await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
+              // Leave solo/Quick Mix so the previous preset doesn't briefly play.
+              AudioManager.shared.leaveTransientModes()
             }
 
             // Allow audio system to process mode exits before applying new preset
             await Task.yield()
 
-            try await PresetManager.shared.applyPreset(preset)
+            try PresetManager.shared.applyPreset(preset)
             await MainActor.run {
               AudioManager.shared.setGlobalPlaybackState(true)
               CarPlayInterfaceController.shared.updateAllTemplates()
@@ -224,16 +208,18 @@ import os
         glyphFraction = 0.44
       }
 
-      // 44pt is the CarPlay list image footprint; render at 2x for crisp glyphs.
+      // Fill the list image slot (per car, read at runtime) at the car
+      // display's scale, matching how the system scales cached thumbnails.
+      let slot = CPListItem.maximumImageSize
       let view = FallbackArtwork(
         glyph: glyph,
         accent: accent,
-        size: 44,
+        size: min(slot.width, slot.height),
         cornerRadius: 0,
         glyphFraction: glyphFraction
       )
       let renderer = ImageRenderer(content: view)
-      renderer.scale = 2
+      renderer.scale = CarPlayInterfaceController.shared.carDisplayScale
       renderer.isOpaque = true
       return renderer.uiImage
     }
@@ -358,22 +344,14 @@ import os
         Task {
           do {
             await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
+              // Leave solo/Quick Mix so the previous preset doesn't briefly play.
+              AudioManager.shared.leaveTransientModes()
             }
 
             // Allow audio system to process mode exits before applying new preset
             await Task.yield()
 
-            try await PresetManager.shared.applyPreset(preset)
+            try PresetManager.shared.applyPreset(preset)
             await MainActor.run {
               // Ensure playback starts
               AudioManager.shared.setGlobalPlaybackState(true)

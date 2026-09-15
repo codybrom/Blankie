@@ -92,19 +92,7 @@ struct PresetStorage {
 
     do {
       let presets = try JSONDecoder().decode([Preset].self, from: data)
-      let summary = presets.map { preset in
-        let sounds = preset.soundStates.filter { $0.isSelected }
-          .map { "      - \($0.fileName) (Volume: \($0.volume))" }
-        return
-          ([
-            "  - '\(preset.name)':",
-            "    * Order: \(preset.order ?? -1)",
-            "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")",
-            "    * Creator: \(preset.creatorName ?? "None")",
-            "    * Active sounds:",
-          ] + sounds).joined(separator: "\n")
-      }.joined(separator: "\n")
-      Logger.presets.debug("PresetStorage: Loaded \(presets.count) custom presets\n\(summary)")
+      Logger.presets.debug("PresetStorage: Loaded \(presets.count) custom presets")
       return presets
     } catch {
       // The library failed to decode as a whole. Back up the raw blob so it's

@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum SoundMood: String, Codable, CaseIterable {
+nonisolated enum SoundMood: String, Codable, CaseIterable {
   case focus
   case sleep
   case relax
@@ -39,6 +39,7 @@ struct SoundData: Codable {
   let license: String
   let soundUrl: String
   let soundName: String
+  let subtitle: String?
   let description: String?
   let note: String?
   let lufs: Float?

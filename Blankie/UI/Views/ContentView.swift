@@ -47,6 +47,15 @@ import UniformTypeIdentifiers
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
+    /// The preset whose artwork backs the tile grid: the theming preset (nil
+    /// during solo / Quick Mix) while the grid is actually on screen.
+    private var backdropPreset: Preset? {
+      guard !presetManager.isLoading, !appState.showingSettingsPane,
+        !(showingSpatialMixer && spatialEntryAvailable), soloLayoutSound == nil
+      else { return nil }
+      return presetManager.themingPreset
+    }
+
     /// Whether the Spatial Mix toggle (and pane) is available: opted in via
     /// Preferences, preset mode only — mirrors iOS's gating.
     private var spatialEntryAvailable: Bool {
@@ -162,7 +171,7 @@ import UniformTypeIdentifiers
         } else if let soloSound = soloLayoutSound {
           VStack {
             Spacer()
-            SoloSoundIcon(sound: soloSound)
+            SoloSoundCard(sound: soloSound)
               .transition(.scale.combined(with: .opacity))
             Spacer()
           }
@@ -279,7 +288,13 @@ import UniformTypeIdentifiers
         }
         .frame(maxWidth: .infinity)
       }
-      .containerBackground(.ultraThinMaterial, for: .window)
+      .background {
+        PresetArtworkBackdrop(
+          preset: backdropPreset, blurRadius: globalSettings.backgroundBlurRadius)
+      }
+      // Opaque on purpose: every material tracks whatever is behind the
+      // window, so over a light desktop the pane went gray and unreadable.
+      .containerBackground(Color(nsColor: .windowBackgroundColor), for: .window)
 
       .navigationTitle(navigationTitle)
       .modifier(
@@ -537,5 +552,48 @@ import UniformTypeIdentifiers
       showingShortcuts: .constant(false)
     )
     .frame(width: 600, height: 400)
+  }
+  /// Blurred, dimmed preset artwork behind the tile grid — the layer iOS's
+  /// `presetBackgroundView` draws, so the artwork labelled "Background" in the
+  /// preset editor is the background on the Mac too. Presets without artwork
+  /// show the opaque window base. Dimmer than iOS's 0.6 / 0.15: at this pane
+  /// size those left the glass tiles see-through. Same blur, so the artwork
+  /// still reads as the artwork.
+  private struct PresetArtworkBackdrop: View {
+    let preset: Preset?
+    let blurRadius: Double
+    @State private var image: NSImage?
+
+    var body: some View {
+      GeometryReader { geometry in
+        if let image {
+          Image(nsImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .blur(radius: blurRadius)
+            .opacity(0.35)
+            .clipped()
+            .overlay(Color.black.opacity(0.45))
+            // Distinct identity per image so artwork swaps crossfade.
+            .id(ObjectIdentifier(image))
+            .transition(.opacity)
+        }
+      }
+      .ignoresSafeArea()
+      .accessibilityHidden(true)
+      .task(
+        id:
+          "\(preset?.id.uuidString ?? "")-\(preset?.artworkId?.uuidString ?? "")-\(preset?.animatedArtwork?.previewPath ?? "")"
+      ) {
+        guard let preset else {
+          withAnimation(.easeInOut(duration: 0.35)) { image = nil }
+          return
+        }
+        // Keep the old image until the next loads, then crossfade to it.
+        let loaded = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+        withAnimation(.easeInOut(duration: 0.35)) { image = loaded }
+      }
+    }
   }
 #endif

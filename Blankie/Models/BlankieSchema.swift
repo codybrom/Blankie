@@ -22,15 +22,15 @@ import SwiftData
 /// it to `BlankieMigrationPlan.schemas`, and add a `MigrationStage` describing
 /// the V(N-1) → V(N) transition. V1 below references the live types on purpose:
 /// it's the first version and matches the already-shipped store exactly.
-enum BlankieSchemaV1: VersionedSchema {
-  static var versionIdentifier = Schema.Version(1, 0, 0)
+nonisolated enum BlankieSchemaV1: VersionedSchema {
+  static let versionIdentifier = Schema.Version(1, 0, 0)
 
   static var models: [any PersistentModel.Type] {
     [CustomSoundData.self, PresetArtwork.self]
   }
 }
 
-enum BlankieMigrationPlan: SchemaMigrationPlan {
+nonisolated enum BlankieMigrationPlan: SchemaMigrationPlan {
   static var schemas: [any VersionedSchema.Type] {
     [BlankieSchemaV1.self]
   }

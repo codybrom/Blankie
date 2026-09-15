@@ -118,7 +118,7 @@ import SwiftUI
 
   /// Lightweight wrapper that gives a `Sound` the mutable `position` the
   /// sortable grid tracks, without touching the `Sound` model itself.
-  private struct SortableSound: Identifiable, SortableGridProtocol {
+  private nonisolated struct SortableSound: Identifiable, SortableGridProtocol {
     let sound: Sound
     var position: CGRect = .zero
     var id: Sound.ID { sound.id }

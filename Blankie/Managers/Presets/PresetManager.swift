@@ -5,6 +5,7 @@
 //  Created by Cody Bromley on 1/1/25.
 //
 
+import CoreSpotlight
 import Foundation
 import Observation
 import SwiftUI
@@ -13,6 +14,13 @@ import os
 @Observable
 class PresetManager {
   @ObservationIgnored private var isInitializing = true
+  /// Signature of the preset/sound names last published to Siri and Spotlight,
+  /// so the (frequently-called) refresh no-ops unless the discoverable set would
+  /// actually differ. A sorted, joined string (like AudioManager's Now Playing
+  /// selection guard) — deterministic and order-independent, unlike a hashValue.
+  /// Per-process only; reset each launch.
+  @ObservationIgnored private var lastDiscoverableEntitiesSignature: String?
+  @ObservationIgnored private var spotlightDonationTask: Task<Void, Never>?
   static let shared = PresetManager()
 
   private(set) var presets: [Preset] = []
@@ -24,6 +32,12 @@ class PresetManager {
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId
       )
+      // The lock-screen / CarPlay next & previous cycle is favorites-only and
+      // depends on where the now-current preset sits in that list. Media-controls
+      // setup computes it once before presets have loaded, so recompute on every
+      // preset change (this also fires when the last-active preset is applied at
+      // launch, after favorites and presets are available).
+      AudioManager.shared.updateNextPreviousCommandState()
     }
   }
 
@@ -42,9 +56,15 @@ class PresetManager {
   /// re-evaluates when solo / Quick Mix state changes.
   @MainActor
   var themingPreset: Preset? {
-    let audio = AudioManager.shared
-    if audio.soloModeSound != nil || audio.isQuickMix { return nil }
-    return currentPreset
+    // Derived from AudioManager.activeItem so this agrees with
+    // currentFavoriteToken: only a preset (or the default) themes the UI; solo
+    // and Quick Mix do not.
+    switch AudioManager.shared.activeItem {
+    case .preset, .allSounds:
+      return currentPreset
+    case .solo, .quickMix, .none:
+      return nil
+    }
   }
 
   /// Watches AudioManager's (now `@Observable`) sounds array for add/remove so a
@@ -149,8 +169,7 @@ extension PresetManager {
 
     var updatedPreset = preset
     updatedPreset.name = newName
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
     // Validate the updated preset
     guard updatedPreset.validate() else {
@@ -314,8 +333,7 @@ extension PresetManager {
     } else {
       return
     }
-    preset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    preset.lastModifiedVersion = Bundle.main.appVersion
     presets[index] = preset
     if currentPreset?.id == presetID {
       currentPreset = preset
@@ -364,24 +382,12 @@ extension PresetManager {
       // The default preset tracks every available sound (matching
       // updateCurrentPresetBeforeSave), so a freshly imported sound the user
       // selects on the default grid is recorded and survives relaunch.
-      newStates = AudioManager.shared.sounds.map { sound in
-        PresetState(
-          fileName: sound.fileName,
-          isSelected: sound.isSelected,
-          volume: sound.volume
-        )
-      }
+      newStates = AudioManager.shared.sounds.map { $0.captureState() }
     } else {
       let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
       newStates = AudioManager.shared.sounds
         .filter { presetSoundFileNames.contains($0.fileName) }
-        .map { sound in
-          PresetState(
-            fileName: sound.fileName,
-            isSelected: sound.isSelected,
-            volume: sound.volume
-          )
-        }
+        .map { $0.captureState() }
     }
 
     // Preserve the preset's existing sound order, not the global customOrder
@@ -398,8 +404,7 @@ extension PresetManager {
       var updatedPreset = preset
       updatedPreset.soundStates = newStates
       updatedPreset.soundOrder = currentSoundOrder
-      updatedPreset.lastModifiedVersion =
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+      updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
       if let index = presets.firstIndex(where: { $0.id == preset.id }) {
         presets[index] = updatedPreset
@@ -550,8 +555,7 @@ extension PresetManager {
     // Update the preset
     var updatedPreset = preset
     updatedPreset.soundOrder = soundOrder
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
     // Update in the presets array
     if let index = presets.firstIndex(where: { $0.id == preset.id }) {
@@ -577,8 +581,7 @@ extension PresetManager {
     // Update the preset
     var updatedPreset = preset
     updatedPreset.soundOrder = newOrder
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
     // Update in the presets array
     if let index = presets.firstIndex(where: { $0.id == preset.id }) {
@@ -775,8 +778,7 @@ extension PresetManager {
 
   func createDefaultPreset() -> Preset {
     Logger.presets.debug("PresetManager: Creating new default preset")
-    let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    let currentVersion = Bundle.main.appVersion
     return Preset(
       id: UUID(),
       name: "Default",
@@ -972,9 +974,74 @@ extension PresetManager {
 
     updateCurrentPresetBeforeSave()
     performActualSave()
+    refreshDiscoverableEntitiesIfNeeded()
 
     Logger.presets.debug("PresetManager: --- End Saving Presets ---")
   }
+
+  /// Refresh the system's discoverable view of presets and sounds — the
+  /// Siri/Shortcuts parameter vocabulary backing `PlayPresetIntent`/
+  /// `PlaySoundIntent`, and the Spotlight entity index — when the set of names
+  /// has actually changed. Safe to call often: the signature guard collapses
+  /// no-op calls. Skipped in the widget extension, which also compiles this file.
+  func refreshDiscoverableEntitiesIfNeeded() {
+    #if !WIDGET_EXTENSION
+      // Deterministic, order-independent signature over exactly what's donated
+      // (presets + non-preset-only sounds, matching `donateEntitiesToSpotlight`
+      // and `SoundEntityQuery`), so reordering alone doesn't force a refresh.
+      let presetPart = presets.map { "\($0.id.uuidString):\($0.name)" }.sorted()
+      let soundPart =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .map { "\($0.fileName):\($0.localizedTitle)" }
+        .sorted()
+      let signature = (presetPart + ["~"] + soundPart).joined(separator: "|")
+      guard signature != lastDiscoverableEntitiesSignature else { return }
+      lastDiscoverableEntitiesSignature = signature
+      // App Shortcuts don't surface on macOS; Spotlight indexing works on both.
+      #if !os(macOS)
+        BlankieShortcuts.updateAppShortcutParameters()
+      #endif
+      donateEntitiesToSpotlight()
+    #endif
+  }
+
+  #if !WIDGET_EXTENSION
+    /// Replace the named Spotlight indexes' contents with the current presets
+    /// and solo-able sounds. Indexing is additive, so each type is deleted
+    /// first or entries for deleted presets/sounds would linger in search.
+    /// Entity arrays are built on the main actor here; the indexing itself
+    /// runs off it. Failures are non-fatal.
+    private func donateEntitiesToSpotlight() {
+      let presetEntities = presets.map(PresetEntity.init)
+      let soundEntities =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .map(SoundEntity.init)
+      // Named indexes keyed off the app's own bundle ID (so contributor builds
+      // don't collide), not the default index Apple reserves for dev/testing.
+      let bundleID = Bundle.main.bundleIdentifier ?? "com.codybrom.blankie"
+      // Chain on the previous donation so overlapping refreshes (an archive
+      // import posts one per custom sound) can't interleave delete and index.
+      let previous = spotlightDonationTask
+      spotlightDonationTask = Task {
+        await previous?.value
+        do {
+          let presetIndex = CSSearchableIndex(name: "\(bundleID).presets")
+          try await presetIndex.deleteAppEntities(ofType: PresetEntity.self)
+          try await presetIndex.indexAppEntities(presetEntities)
+          let soundIndex = CSSearchableIndex(name: "\(bundleID).sounds")
+          try await soundIndex.deleteAppEntities(ofType: SoundEntity.self)
+          try await soundIndex.indexAppEntities(soundEntities)
+        } catch {
+          Logger.presets.error("Spotlight: entity indexing failed: \(error, privacy: .public)")
+          // Forget the signature so the next refresh retries rather than
+          // trusting an index this pass never reached.
+          lastDiscoverableEntitiesSignature = nil
+        }
+      }
+    }
+  #endif
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {
@@ -1007,24 +1074,14 @@ extension PresetManager {
         }
       } else {
         // For default preset, include all sounds
-        updatedPreset.soundStates = AudioManager.shared.sounds.map { sound in
-          PresetState(
-            fileName: sound.fileName,
-            isSelected: sound.isSelected,
-            volume: sound.volume
-          )
-        }
+        updatedPreset.soundStates = AudioManager.shared.sounds.map { $0.captureState() }
       }
       updatePresetAtIndex(index, with: updatedPreset)
       setCurrentPreset(updatedPreset)
 
-      Logger.presets.debug("Saving current preset state for '\(updatedPreset.name)':")
-      Logger.presets.debug("  - Active sounds:")
-      updatedPreset.soundStates
-        .filter { $0.isSelected }
-        .forEach { state in
-          Logger.presets.debug("    * \(state.fileName) (Volume: \(state.volume))")
-        }
+      let activeCount = updatedPreset.soundStates.filter { $0.isSelected }.count
+      Logger.presets.debug(
+        "Saving current preset state for '\(updatedPreset.name)' (\(activeCount) active sounds)")
     }
   }
 
@@ -1176,22 +1233,27 @@ extension PresetManager {
 
 extension PresetManager {
   /// Cache a small thumbnail for quick access. Pass `force: true` after an
-  /// artwork edit to regenerate an already-cached thumbnail.
+  /// artwork edit to regenerate an already-cached thumbnail. Returns whether a
+  /// thumbnail was written; batch callers pass `reloadingWidgets: false` and
+  /// reload once themselves.
   @MainActor
-  func cacheThumbnail(for preset: Preset, force: Bool = false) async {
+  @discardableResult
+  func cacheThumbnail(
+    for preset: Preset, force: Bool = false, reloadingWidgets: Bool = true
+  ) async -> Bool {
     #if os(iOS)
       // Check if thumbnail is already cached
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
       if !force, userDefaults.data(forKey: thumbnailKey) != nil {
-        return  // Already cached
+        return false  // Already cached
       }
 
       // Source image: static artwork if present, else the animated artwork's
       // preview — so presets with only animated artwork still get a CarPlay
       // thumbnail (matching the mixer / Now Playing / library picker).
       guard let fullImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
-      else { return }
+      else { return false }
 
       // Generate a thumbnail for CarPlay (44x44 points)
       let thumbnailSize = CGSize(width: 44, height: 44)
@@ -1202,17 +1264,24 @@ extension PresetManager {
       UIGraphicsEndImageContext()
 
       // Cache the thumbnail in app group UserDefaults for CarPlay access
-      if let thumbnail = thumbnail,
-        let thumbnailData = thumbnail.pngData()
-      {
-        userDefaults.set(thumbnailData, forKey: thumbnailKey)
-        Logger.presets.debug("PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
-        NotificationCenter.default.post(name: .presetThumbnailUpdated, object: preset.id)
+      guard let thumbnail = thumbnail, let thumbnailData = thumbnail.pngData() else {
+        return false
       }
+      userDefaults.set(thumbnailData, forKey: thumbnailKey)
+      Logger.presets.debug("PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
+      // CarPlay lists observe the notification; widgets need an explicit reload
+      // because their snapshot carries only the thumbnail key, not the bytes.
+      NotificationCenter.default.post(name: .presetThumbnailUpdated, object: preset.id)
+      if reloadingWidgets {
+        WidgetStateStore.artworkDidChange()
+      }
+      return true
+    #else
+      return false
     #endif
   }
 
-  /// Cache thumbnails for all presets
+  /// Cache thumbnails for all presets, reloading widgets once if any were written.
   @MainActor
   func cacheAllThumbnails() async {
     // Don't cache if we're still loading
@@ -1221,16 +1290,25 @@ extension PresetManager {
       return
     }
 
+    var wroteAny = false
     for preset in presets {
-      await cacheThumbnail(for: preset)
+      if await cacheThumbnail(for: preset, reloadingWidgets: false) {
+        wroteAny = true
+      }
+    }
+    if wroteAny {
+      WidgetStateStore.artworkDidChange()
     }
   }
 
   /// Remove cached thumbnail when a preset is deleted or its artwork removed
   func removeThumbnail(for presetId: UUID) {
     let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
-    userDefaults.removeObject(forKey: "preset_thumb_\(presetId.uuidString)")
+    let thumbnailKey = "preset_thumb_\(presetId.uuidString)"
+    guard userDefaults.data(forKey: thumbnailKey) != nil else { return }
+    userDefaults.removeObject(forKey: thumbnailKey)
     NotificationCenter.default.post(name: .presetThumbnailUpdated, object: presetId)
+    WidgetStateStore.artworkDidChange()
   }
 }
 

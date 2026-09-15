@@ -20,9 +20,9 @@
   final class MenuBarController {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
-    private var visibilityObservation: Task<Void, Never>?
+    nonisolated(unsafe) private var visibilityObservation: Task<Void, Never>?
     private var visibilityKVO: NSKeyValueObservation?
-    private var closeObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var closeObserver: NSObjectProtocol?
 
     init(modelContainer: ModelContainer) {
       popover.behavior = .transient

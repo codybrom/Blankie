@@ -123,7 +123,7 @@
 
   /// Gives a `Sound` the mutable `position` the sortable grid tracks, without
   /// touching the `Sound` model.
-  private struct SortableSoundMac: Identifiable, SortableGridProtocol {
+  private nonisolated struct SortableSoundMac: Identifiable, SortableGridProtocol {
     let sound: Sound
     var position: CGRect = .zero
     var id: Sound.ID { sound.id }

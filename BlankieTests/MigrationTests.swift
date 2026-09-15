@@ -21,7 +21,7 @@ import Testing
     Self.clearAllTestKeys()
   }
 
-  deinit {
+  isolated deinit {
     Self.clearAllTestKeys()
   }
 

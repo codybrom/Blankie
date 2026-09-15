@@ -21,7 +21,7 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
   }
 
   /// Audits the main mixer screen — the densest, highest-traffic surface.
-  func testMixerAccessibilityAudit() throws {
+  @MainActor func testMixerAccessibilityAudit() throws {
     let app = XCUIApplication()
     // ScreenshotMode activates sounds so the audit sees a populated grid.
     app.launchArguments = ["-UITestingResetDefaults", "YES", "-ScreenshotMode", "YES"]
@@ -51,7 +51,7 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
 
   /// Whether an audit issue is a documented framework/system false positive to
   /// ignore, or a real finding that should fail the test.
-  private func shouldIgnoreAuditIssue(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
+  @MainActor private func shouldIgnoreAuditIssue(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
     // Structural containers (NavigationSplitView's groups, the grid's `Other`,
     // window-chrome groups) are layout wrappers, not controls — they trip the
     // no-description and parent/child checks while their labeled descendants

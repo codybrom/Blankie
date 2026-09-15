@@ -23,7 +23,7 @@ import Testing
   ])
 
   init() { snapshot.clear() }
-  deinit { snapshot.restore() }
+  isolated deinit { snapshot.restore() }
 
   @Test func obsoleteKeysPurgedEvenAfterMigrationCompleted() {
     // Simulate a user who already completed the one-time migration…

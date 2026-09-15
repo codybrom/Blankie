@@ -1,0 +1,48 @@
+//
+//  PlaySoundIntent.swift
+//  Blankie
+//
+//  Created by Cody Bromley on 6/30/26.
+//
+
+import AppIntents
+
+struct PlaySoundIntent: AppIntent, AudioPlaybackIntent {
+  static var title: LocalizedStringResource { "Play Sound" }
+  static var description: IntentDescription {
+    IntentDescription("Adds a sound to the current mix and starts playing it.")
+  }
+
+  @Parameter(
+    title: "Sound",
+    requestValueDialog: IntentDialog("Which sound would you like to play?")
+  )
+  var sound: SoundEntity
+
+  static var parameterSummary: some ParameterSummary {
+    Summary("Play \(\.$sound)")
+  }
+
+  @MainActor
+  func perform() async throws -> some IntentResult & ProvidesDialog {
+    await AppSetup.ensureManagersReadyForIntents()
+    guard let target = AudioManager.shared.sound(fileName: sound.id) else {
+      throw BlankieIntentError.soundNotFound
+    }
+    // Preset-use-only sounds have no tile on the default grid, so playing one
+    // there would leave nothing to stop it — the state the sound sheet and
+    // preset application both prevent.
+    if target.isPresetUseOnly, PresetManager.shared.currentPreset?.isDefault ?? true {
+      return .result(dialog: IntentDialog("\(target.localizedTitle) is set to preset use only."))
+    }
+    // Leave solo/Quick Mix so the sound is actually audible: solo suppresses a
+    // newly selected non-solo sound, and Quick Mix would otherwise stay active
+    // with its own sound set instead of the sound being added to the mix.
+    AudioManager.shared.leaveTransientModes()
+    if !target.isSelected {
+      target.isSelected = true
+    }
+    AudioManager.shared.setGlobalPlaybackState(true)
+    return .result(dialog: IntentDialog("Playing \(target.localizedTitle)."))
+  }
+}

@@ -51,9 +51,13 @@ import Testing
       checkedLocales += 1
 
       for category in IconCategory.allCases {
+        // `localizedName` keys the catalog on `iconCategory.<case>`, not the
+        // English raw value.
+        let key = "iconCategory.\(category)"
         #expect(
-          lproj.localizedString(forKey: category.rawValue, value: sentinel, table: nil) != sentinel,
-          "Category '\(category.rawValue)' has no '\(locale)' entry in the string catalog")
+          lproj.localizedString(forKey: key, value: sentinel, table: nil) != sentinel,
+          "Category '\(category.rawValue)' has no '\(locale)' entry for '\(key)' in the string catalog"
+        )
       }
     }
 

@@ -68,7 +68,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { _ in
-        self.handleAppTermination()
+        MainActor.assumeIsolated { self.handleAppTermination() }
       }
     }
 
@@ -78,7 +78,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] _ in
-        self?.handleDidEnterBackground()
+        MainActor.assumeIsolated { self?.handleDidEnterBackground() }
       }
 
       NotificationCenter.default.addObserver(
@@ -86,7 +86,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] _ in
-        self?.handleWillEnterForeground()
+        MainActor.assumeIsolated { self?.handleWillEnterForeground() }
       }
     }
 
@@ -138,7 +138,9 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        self?.handleAudioInterruption(notification)
+        // Delivered on the main queue; the notification never leaves it.
+        nonisolated(unsafe) let note = notification
+        MainActor.assumeIsolated { self?.handleAudioInterruption(note) }
       }
     }
 
@@ -211,7 +213,9 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        self?.handleAudioRouteChange(notification)
+        // Delivered on the main queue; the notification never leaves it.
+        nonisolated(unsafe) let note = notification
+        MainActor.assumeIsolated { self?.handleAudioRouteChange(note) }
       }
     }
 
@@ -253,11 +257,13 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { _ in
-        self.handleAppTermination()
+        // willTerminate fires on the main queue; recover isolation synchronously
+        // (a Task would defer past app exit and lose the state save).
+        MainActor.assumeIsolated { self.handleAppTermination() }
       }
 
       Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-        self?.saveState()
+        MainActor.assumeIsolated { self?.saveState() }
       }
     }
   #endif

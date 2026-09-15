@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PresetState: Codable, Equatable {
+nonisolated struct PresetState: Codable, Equatable {
   let fileName: String
   let isSelected: Bool
   let volume: Float
@@ -15,5 +15,13 @@ struct PresetState: Codable, Equatable {
   static func == (lhs: PresetState, rhs: PresetState) -> Bool {
     lhs.fileName == rhs.fileName && lhs.isSelected == rhs.isSelected
       && abs(lhs.volume - rhs.volume) < Float.ulpOfOne
+  }
+}
+
+extension Sound {
+  /// Snapshot this sound's current selection and volume as a `PresetState`.
+  @MainActor
+  func captureState() -> PresetState {
+    PresetState(fileName: fileName, isSelected: isSelected, volume: volume)
   }
 }

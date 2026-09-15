@@ -19,7 +19,11 @@ import os
   enum HomeListTemplate {
     @MainActor
     static func createTemplate() -> CPListTemplate {
-      let template = CPListTemplate(title: String(localized: "Home"), sections: [])
+      let template = CPListTemplate(
+        title: String(
+          localized: "carplay.tab.home", defaultValue: "Home",
+          comment: "CarPlay landing-tab title for the home/main screen of the app"),
+        sections: [])
       template.tabImage = UIImage(systemName: "house.fill")
       updateTemplate(template)
       return template
@@ -107,18 +111,21 @@ import os
     private static func favoritesSection() -> CPListSection? {
       let presets = PresetManager.shared.presets
       let items: [CPListItem] = GlobalSettings.shared.starredItems.compactMap { token in
-        if let sound = AudioManager.shared.sound(forSoloToken: token) {
+        switch PlayableItem(token: token) {
+        case .solo(let fileName):
+          guard let sound = AudioManager.shared.sound(fileName: fileName) else { return nil }
           return PresetListTemplate.createSoloItem(sound)
-        }
-        switch token {
-        case GlobalSettings.allSoundsToken:
+        case .allSounds:
           guard let defaultPreset = presets.first(where: { $0.isDefault }) else { return nil }
           return PresetListTemplate.createAllSoundsItem(defaultPreset)
-        case GlobalSettings.quickMixToken:
+        case .quickMix:
+          // Quick Mix has its own tab, so its token is skipped here.
           return nil
-        default:
-          guard let preset = presets.first(where: { $0.id.uuidString == token }) else { return nil }
+        case .preset(let id):
+          guard let preset = presets.first(where: { $0.id == id }) else { return nil }
           return PresetListTemplate.createPresetListItem(preset)
+        case .none:
+          return nil
         }
       }
 

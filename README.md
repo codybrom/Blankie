@@ -8,7 +8,7 @@
   <p align="center">
     <img src="https://img.shields.io/badge/macOS%2026+-111111?style=flat&logo=apple&logoColor=white" alt="macOS">
     <img src="https://img.shields.io/badge/iOS%2026+-111111?style=flat&logo=apple&logoColor=white" alt="iOS">
-    <img src="https://img.shields.io/badge/Swift%205-F05138?style=flat&logo=Swift&logoColor=white" alt="Swift">
+    <img src="https://img.shields.io/badge/Swift%206-F05138?style=flat&logo=Swift&logoColor=white" alt="Swift">
     <img src="https://img.shields.io/badge/SwiftUI-0071e3.svg?style=flat&logo=swift&logoColor=white" alt="SwiftUI">
     <a href="https://github.com/codybrom/blankie/blob/main/LICENSE"><img src="https://img.shields.io/github/license/codybrom/blankie.svg?style=flat" alt="License"></a>
     <a href="https://formulae.brew.sh/cask/blankie"><img src="https://img.shields.io/badge/Homebrew-Available-FBB040?style=flat&logo=homebrew&logoColor=white" alt="Homebrew"></a>
