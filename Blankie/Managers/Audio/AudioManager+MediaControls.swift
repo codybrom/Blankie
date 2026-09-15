@@ -178,6 +178,9 @@ extension AudioManager {
   /// one favorite; otherwise any favorite is a valid destination. Quick Mix is
   /// never part of the cycle.
   func updateNextPreviousCommandState() {
-    nowPlayingManager.setNavigationCommandsEnabled(canNavigateNextPrevious)
+    // Optional-chained: before the launch bootstrap installs the backend there
+    // is nothing to enable, and `setupMediaControls()` recomputes this the
+    // moment it arrives.
+    nowPlayingManager?.setNavigationCommandsEnabled(canNavigateNextPrevious)
   }
 }

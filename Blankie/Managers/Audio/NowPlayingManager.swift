@@ -112,11 +112,11 @@ final class NowPlayingManager: NowPlayingPublishing {
     }
   }
 
-  func updateInfo(
-    preset: Preset? = nil,
-    presetName: String? = nil,
-    creatorName: String? = nil,
-    artworkId: UUID? = nil,
+  func publishInfo(
+    preset: Preset?,
+    presetName: String?,
+    creatorName: String?,
+    artworkId: UUID?,
     isPlaying: Bool
   ) {
     // Debounce rapid successive updates during initialization

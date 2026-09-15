@@ -24,7 +24,8 @@ struct RemoteCommandHandlers {
 /// What a Now Playing backend must publish and which remote commands it installs.
 @MainActor
 protocol NowPlayingPublishing: AnyObject {
-  func updateInfo(
+  /// Every backend implements this; call sites use `updateInfo`.
+  func publishInfo(
     preset: Preset?,
     presetName: String?,
     creatorName: String?,
@@ -50,7 +51,7 @@ extension NowPlayingPublishing {
     artworkId: UUID? = nil,
     isPlaying: Bool
   ) {
-    updateInfo(
+    publishInfo(
       preset: preset,
       presetName: presetName,
       creatorName: creatorName,
