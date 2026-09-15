@@ -14,8 +14,9 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 ### Added
 
 - **Home Screen widgets (iPhone and iPad)** - Put Blankie on your Home Screen. Now Playing shows what's on with play controls, Favorites and Quick Mix start a mix in a tap, and a Pinned Sound widget launches one specific sound.
-- **Siri, Shortcuts, and Spotlight** - Ask Siri to play a preset or sound, build your own Shortcuts around Blankie's actions (play, pause, presets, sounds, and volume), and find your presets and sounds in Spotlight search. The Siri phrases are localized in every supported language.
-- **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description. The subtitle shows when you solo a sound and when you pick sounds for a preset. The description sits behind the sound's info button. Both are translated into every supported language.
+- **Siri, Shortcuts, and Spotlight** - Ask Siri to play a preset or sound, build your own Shortcuts around Blankie's actions (play, pause, presets, sounds, and volume), and find your presets and sounds in Spotlight search. Siri phrases are localized for supported languages.
+- **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description. The subtitle shows when you play a sound by itself and when you select sounds for a preset. Descriptions and subtitles are translated into  supported languages.
+- **Preset artwork behind the mixer (Mac)** - A preset's background artwork now shows behind your sounds on the Mac, dimmed so the tiles stay readable, the same way it does on iPhone and iPad.
 
 ### Changed
 
@@ -26,6 +27,9 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 ### Fixed
 
 - On the lock screen and in CarPlay, the next and previous buttons could stay disabled after launch until you switched presets.
+- On the Mac, the window used a translucent material that could make it hard to view over a light desktop. It now uses a solid background.
+- In cars set to light mode, CarPlay used light colored text that could be hard to read. Blankie now properly follows CarPlay's light or dark appearance with proper colors.
+- Picking a preset in CarPlay when nothing was selected could light up the sounds without starting playback.
 
 ## [2.0.2] - 2026-06-28
 
