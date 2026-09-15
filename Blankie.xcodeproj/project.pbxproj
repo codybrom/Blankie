@@ -148,6 +148,8 @@
 				"Managers/Audio/NowPlayingManager+AnimatedArtwork.swift",
 				"Managers/Audio/NowPlayingManager+Artwork.swift",
 				"Managers/Audio/NowPlayingManager+Helpers.swift",
+				"Managers/Audio/NowPlayingManager+RemoteCommands.swift",
+				Managers/Audio/NowPlayingPublishing.swift,
 				Managers/Audio/Sound.swift,
 				"Managers/Audio/Sound+Loading.swift",
 				"Managers/Audio/Sound+Metadata.swift",

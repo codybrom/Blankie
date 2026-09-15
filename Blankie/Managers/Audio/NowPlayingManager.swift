@@ -15,10 +15,14 @@ import os
   import UIKit
 #endif
 
-/// Manages Now Playing info for media playback controls
+/// The MediaPlayer (`MPNowPlayingInfoCenter`) Now Playing backend, used below OS 27.
 @MainActor
-final class NowPlayingManager {
+final class NowPlayingManager: NowPlayingPublishing {
   var nowPlayingInfo: [String: Any] = [:]
+
+  /// The remote-command actions installed by `AudioManager`, invoked by the
+  /// `MPRemoteCommandCenter` targets.
+  var remoteCommandHandlers: RemoteCommandHandlers?
 
   private var isSetup = false
   var currentArtworkId: UUID?

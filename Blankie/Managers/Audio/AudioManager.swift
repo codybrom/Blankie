@@ -7,7 +7,6 @@
 
 import AVFoundation
 import Combine
-import MediaPlayer
 import Observation
 import SwiftData
 import SwiftUI
@@ -82,7 +81,7 @@ class AudioManager {
   @ObservationIgnored private var soundChangeCoalesceTask: Task<Void, Never>?
 
   @ObservationIgnored var modelContext: ModelContext?
-  @ObservationIgnored var nowPlayingManager: NowPlayingManager!
+  @ObservationIgnored var nowPlayingManager: (any NowPlayingPublishing)!
   @ObservationIgnored @MainActor var isInitializing = true
   /// True while a preset's sound states are being applied. Suppresses the
   /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
