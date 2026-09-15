@@ -20,6 +20,7 @@ class PresetManager {
   /// selection guard) — deterministic and order-independent, unlike a hashValue.
   /// Per-process only; reset each launch.
   @ObservationIgnored private var lastDiscoverableEntitiesSignature: String?
+  @ObservationIgnored private var spotlightDonationTask: Task<Void, Never>?
   static let shared = PresetManager()
 
   private(set) var presets: [Preset] = []
@@ -1006,9 +1007,11 @@ extension PresetManager {
   }
 
   #if !WIDGET_EXTENSION
-    /// Donate presets and solo-able sounds to their named Spotlight indexes so
-    /// they surface in system search. Entity arrays are built on the main actor
-    /// here; the indexing itself runs off it. Failures are non-fatal.
+    /// Replace the named Spotlight indexes' contents with the current presets
+    /// and solo-able sounds. Indexing is additive, so each type is deleted
+    /// first or entries for deleted presets/sounds would linger in search.
+    /// Entity arrays are built on the main actor here; the indexing itself
+    /// runs off it. Failures are non-fatal.
     private func donateEntitiesToSpotlight() {
       let presetEntities = presets.map(PresetEntity.init)
       let soundEntities =
@@ -1018,14 +1021,23 @@ extension PresetManager {
       // Named indexes keyed off the app's own bundle ID (so contributor builds
       // don't collide), not the default index Apple reserves for dev/testing.
       let bundleID = Bundle.main.bundleIdentifier ?? "com.codybrom.blankie"
-      Task {
+      // Chain on the previous donation so overlapping refreshes (an archive
+      // import posts one per custom sound) can't interleave delete and index.
+      let previous = spotlightDonationTask
+      spotlightDonationTask = Task {
+        await previous?.value
         do {
-          try await CSSearchableIndex(name: "\(bundleID).presets")
-            .indexAppEntities(presetEntities)
-          try await CSSearchableIndex(name: "\(bundleID).sounds")
-            .indexAppEntities(soundEntities)
+          let presetIndex = CSSearchableIndex(name: "\(bundleID).presets")
+          try await presetIndex.deleteAppEntities(ofType: PresetEntity.self)
+          try await presetIndex.indexAppEntities(presetEntities)
+          let soundIndex = CSSearchableIndex(name: "\(bundleID).sounds")
+          try await soundIndex.deleteAppEntities(ofType: SoundEntity.self)
+          try await soundIndex.indexAppEntities(soundEntities)
         } catch {
           Logger.presets.error("Spotlight: entity indexing failed: \(error, privacy: .public)")
+          // Forget the signature so the next refresh retries rather than
+          // trusting an index this pass never reached.
+          lastDiscoverableEntitiesSignature = nil
         }
       }
     }
