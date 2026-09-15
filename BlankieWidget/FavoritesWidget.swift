@@ -69,6 +69,7 @@ private struct FavoriteStripItemView: View {
       }
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(favorite.displayName)
   }
 }
 
@@ -98,6 +99,7 @@ private struct FavoriteTileView: View {
       }
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(favorite.displayName)
   }
 }
 
