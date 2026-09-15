@@ -18,8 +18,8 @@ struct QuickMixEntry: TimelineEntry {
   let date: Date
   let sounds: [WidgetQuickMixSound]
   /// Whether Quick Mix (not some other preset/solo sound) is the mode
-  /// actually driving playback right now — the header's play/pause glyph
-  /// only reads as "pause Quick Mix" when both this and `isPlaying` are true.
+  /// actually driving playback right now — the side control's play/pause
+  /// button only appears when this is true and a sound is selected.
   let isActive: Bool
   let isPlaying: Bool
   /// The app's own accent (`GlobalSettings.customAccentColor`) — Quick Mix
@@ -78,23 +78,29 @@ private struct QuickMixTileView: View {
 /// it — a column, not a header row, so it doesn't eat into the grid's own
 /// vertical space. Lets Quick Mix's grid of otherwise-generic sound circles
 /// still read as Blankie's and be played/paused as a whole without tapping
-/// an individual sound circle.
+/// an individual sound circle. The button acts on Quick Mix itself and only
+/// appears once it's active with a sound selected — entering an empty Quick
+/// Mix from here would silence the current preset and have nothing to play,
+/// and the global toggle would pause whatever other preset was playing.
+/// Until then, tapping a sound circle is the way in.
 private struct QuickMixSideControlView: View {
-  let isActive: Bool
+  let showsTransport: Bool
   let isPlaying: Bool
 
   var body: some View {
     VStack(spacing: 8) {
       BlankieBadge()
       Spacer(minLength: 0)
-      Button(intent: ToggleBlankiePlaybackIntent()) {
-        Image(systemName: isActive && isPlaying ? "pause.fill" : "play.fill")
-          .font(.system(size: 12, weight: .bold))
-          .foregroundStyle(.black)
-          .frame(width: 26, height: 26)
-          .background(.white, in: Circle())
+      if showsTransport {
+        Button(intent: WidgetPlayFavoriteIntent(favoriteToken: GlobalSettings.quickMixToken)) {
+          Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(.black)
+            .frame(width: 26, height: 26)
+            .background(.white, in: Circle())
+        }
+        .buttonStyle(.plain)
       }
-      .buttonStyle(.plain)
     }
   }
 }
@@ -153,8 +159,11 @@ struct QuickMixWidgetEntryView: View {
           }
           .frame(maxWidth: .infinity)
 
-          QuickMixSideControlView(isActive: entry.isActive, isPlaying: entry.isPlaying)
-            .frame(width: sideControlWidth)
+          QuickMixSideControlView(
+            showsTransport: entry.isActive && entry.sounds.contains(where: \.isSelected),
+            isPlaying: entry.isPlaying
+          )
+          .frame(width: sideControlWidth)
         }
       }
       // Fill the geometry so `QuickMixSideControlView`'s Spacer can span the
