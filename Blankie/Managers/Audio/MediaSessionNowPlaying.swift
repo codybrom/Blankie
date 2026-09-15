@@ -18,6 +18,7 @@
   final class MediaSessionNowPlaying: NowPlayingPublishing {
     private let model = NowPlayingSessionModel()
     private var session: MediaSession<NowPlayingSessionModel>?
+    private var primaryRequest: Task<Void, Never>?
     private var timerActiveObservation: Task<Void, Never>?
     private var timerDurationObservation: Task<Void, Never>?
 
@@ -38,6 +39,7 @@
     }
 
     deinit {
+      primaryRequest?.cancel()
       timerActiveObservation?.cancel()
       timerDurationObservation?.cancel()
     }
@@ -58,12 +60,20 @@
         "MediaSessionNowPlaying: publishing title: \(displayInfo.title), subtitle: \(displayInfo.artist)"
       )
 
+      let soloFileName = AudioManager.shared.soloModeSound?.fileName
+      let isQuickMix = AudioManager.shared.isQuickMix
+      // Several call sites publish a name without the preset (`exitSoloMode` is
+      // one), and the system reads a changed id as a different item. In preset
+      // mode fall back to the current preset so one user action doesn't flip the
+      // id through `default` and back.
+      let resolvedPresetID =
+        preset?.id
+        ?? (soloFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset?.id : nil)
+
       model.title = displayInfo.title
       model.subtitle = displayInfo.artist
       model.contentID = NowPlayingSessionMapping.contentID(
-        soloFileName: AudioManager.shared.soloModeSound?.fileName,
-        isQuickMix: AudioManager.shared.isQuickMix,
-        presetID: preset?.id)
+        soloFileName: soloFileName, isQuickMix: isQuickMix, presetID: resolvedPresetID)
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)
       refreshTiming()
 
@@ -71,7 +81,7 @@
         preset: preset, resolvedCreatorName: resolvedCreatorName, title: displayInfo.title,
         isPlaying: isPlaying)
 
-      ensureSession()
+      publishSessionIfPlaying()
     }
 
     func republishCurrentPreset() {
@@ -98,6 +108,7 @@
     func updatePlaybackState(isPlaying: Bool) {
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)
       refreshTiming()
+      publishSessionIfPlaying()
     }
 
     func updateProgress(currentTime: TimeInterval, duration: TimeInterval) {
@@ -106,6 +117,9 @@
     }
 
     func clear() {
+      // Not terminal: the next publish while playing builds a fresh session.
+      primaryRequest?.cancel()
+      primaryRequest = nil
       session = nil
       model.title = ""
       model.subtitle = nil
@@ -158,23 +172,24 @@
         accentColorName: presetIsOverridden ? nil : preset?.accentColorName)
     }
 
-    /// Publishes the session once and keeps it: pausing must not drop the card,
-    /// only `clear()` does.
-    private func ensureSession() {
-      guard session == nil else { return }
-      #if os(iOS) || os(visionOS)
-        // Apple asks for a configured audio session before requesting primary.
-        // Launching with autoplay off never reaches `playSelected()`, so the
-        // .playback category isn't set yet when the first publish arrives.
-        AudioManager.shared.setupAudioSessionForPlayback()
-      #endif
+    /// Claims the Now Playing card, but only once playback has started: every
+    /// play path configures the audio session first, which is the ordering Apple
+    /// asks for before requesting primary — so the backend never touches the
+    /// session itself. Published once and kept: pausing must not drop the card,
+    /// only `clear()` does, and the next playing publish rebuilds it.
+    private func publishSessionIfPlaying() {
+      guard model.playback == .playing, session == nil else { return }
       let session = MediaSession(model)
       self.session = session
-      Task { @MainActor in
+      primaryRequest = Task { @MainActor [weak self] in
         do {
           try await session.requestToBecomeApplicationPrimary()
           Logger.nowPlaying.debug("MediaSessionNowPlaying: session is application primary")
         } catch {
+          // Drop it so the next publish while playing retries; holding a session
+          // that never became primary would leave the app with no card at all.
+          // Only if it's still the current one — `clear()` may have replaced it.
+          if self?.session === session { self?.session = nil }
           Logger.nowPlaying.error(
             "MediaSessionNowPlaying: requestToBecomeApplicationPrimary failed: \(String(describing: error), privacy: .public)"
           )
