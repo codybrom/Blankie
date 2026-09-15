@@ -56,13 +56,11 @@ struct SoundEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery {
       .map(SoundEntity.init)
   }
 
+  /// Also the vocabulary for the parameterized Siri phrases
+  /// (`updateAppShortcutParameters`), so every solo-able sound belongs here.
   @MainActor
   func suggestedEntities() async throws -> [SoundEntity] {
-    await AppSetup.ensureManagersReadyForIntents()
-    let selected = AudioManager.shared.sounds.filter(\.isSelected)
-    let source =
-      selected.isEmpty ? AudioManager.shared.sounds.filter { !$0.isPresetUseOnly } : selected
-    return source.map(SoundEntity.init)
+    try await allEntities()
   }
 
   @MainActor

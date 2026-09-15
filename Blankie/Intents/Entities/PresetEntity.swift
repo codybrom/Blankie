@@ -54,10 +54,11 @@ struct PresetEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery 
       .map(PresetEntity.init)
   }
 
+  /// Also the vocabulary for the parameterized Siri phrases
+  /// (`updateAppShortcutParameters`), so every preset belongs here.
   @MainActor
   func suggestedEntities() async throws -> [PresetEntity] {
-    await AppSetup.ensureManagersReadyForIntents()
-    return PresetManager.shared.getRecentPresets().map(PresetEntity.init)
+    try await allEntities()
   }
 
   @MainActor
