@@ -17,8 +17,9 @@ struct WidgetPlaybackState: Codable, Equatable {
   var title: String
   var subtitle: String?
   var soundSystemIconNames: [String]
-  /// Key into the App Group's cached `preset_thumb_<uuid>` artwork, when the
-  /// current preset has cached artwork. Nil for solo/Quick Mix/no-artwork.
+  /// Key into the App Group's cached `preset_thumb_<uuid>` artwork for the
+  /// current preset. Nil for solo/Quick Mix/the default preset; the widget
+  /// falls back to the icon when nothing is cached under the key.
   var thumbnailKey: String?
   /// The `starredItems` token (if any) matching what's currently active —
   /// preset UUID string, `allSoundsToken`, `quickMixToken`, or a

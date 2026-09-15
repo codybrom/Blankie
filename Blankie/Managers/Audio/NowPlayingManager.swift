@@ -162,9 +162,12 @@ final class NowPlayingManager {
     // Mix on the widget.
     let isSoloActive = AudioManager.shared.soloModeSound != nil
     let presetIsOverridden = isSoloActive || AudioManager.shared.isQuickMix
+    // Any non-default preset gets its key, artwork or not: the thumbnail cache
+    // also covers animated-only presets, and the widget falls back to the icon
+    // when nothing is cached — the same rule as `display(for:)`.
     let widgetThumbnailKey =
-      !presetIsOverridden && preset?.artworkId != nil
-      ? "preset_thumb_\(preset!.id.uuidString)" : nil
+      presetIsOverridden
+      ? nil : preset.flatMap { $0.isDefault ? nil : "preset_thumb_\($0.id.uuidString)" }
     // `displayInfo.artist` synthesizes "Blankie" as a fallback in several
     // places (solo built-in sounds, an empty sound list) so the lock screen
     // never shows a blank artist line — the widget should never repeat that

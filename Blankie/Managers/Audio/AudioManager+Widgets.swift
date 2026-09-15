@@ -101,28 +101,16 @@ extension AudioManager {
   /// `starredItems`, since pinning one specific thing to the Home Screen
   /// shouldn't require starring it first. Mirrors CarPlay's
   /// `SoundsListTemplate` solo-eligibility filter (`!isPresetUseOnly`).
-  private func widgetPinnableItems() -> [WidgetFavorite] {
-    let presetItems = PresetManager.shared.presets.map { preset in
-      WidgetFavorite(
-        token: preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString,
-        displayName: preset.displayName,
-        systemIconName: "square.stack.3d.up.fill",
-        thumbnailKey: "preset_thumb_\(preset.id.uuidString)",
-        accentColorName: preset.accentColorName,
-        subtitle: presetSubtitle(for: preset)
-      )
+  /// Resolved through `widgetFavorite(forToken:)` so a pinned item and its
+  /// Favorites tile share one identity.
+  func widgetPinnableItems() -> [WidgetFavorite] {
+    let presetTokens = PresetManager.shared.presets.map { preset in
+      preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
     }
-    let soundItems = sounds.filter { !$0.isPresetUseOnly }.map { sound in
-      WidgetFavorite(
-        token: GlobalSettings.soloToken(forFileName: sound.fileName),
-        displayName: sound.localizedTitle,
-        systemIconName: sound.systemIconName,
-        thumbnailKey: nil,
-        accentColorName: GlobalSettings.shared.customAccentColor?.toString,
-        subtitle: sound.isCustom ? sound.creditedAuthor : nil
-      )
+    let soundTokens = sounds.filter { !$0.isPresetUseOnly }.map { sound in
+      GlobalSettings.soloToken(forFileName: sound.fileName)
     }
-    return presetItems + soundItems
+    return (presetTokens + soundTokens).compactMap(widgetFavorite(forToken:))
   }
 
   /// Creator name, or the preset's own configured sound list — the same

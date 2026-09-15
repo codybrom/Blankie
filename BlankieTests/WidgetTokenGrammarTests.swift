@@ -140,6 +140,20 @@ import Testing
     #expect(audioManager.widgetFavorite(forToken: UUID().uuidString) == nil)
   }
 
+  // MARK: widgetPinnableItems()
+
+  /// The Pinned widget's picker entry for the default preset must carry the
+  /// same identity as its Favorites tile: grid icon, no thumbnail, no subtitle.
+  @Test func pinnableDefaultPresetMatchesFavoritesIdentity() throws {
+    PresetManager.shared.setPresets([PresetFactory.makePreset(isDefault: true)])
+
+    let pinned = try #require(
+      audioManager.widgetPinnableItems().first { $0.token == GlobalSettings.allSoundsToken })
+    let favorite = try #require(
+      audioManager.widgetFavorite(forToken: GlobalSettings.allSoundsToken))
+    #expect(pinned == favorite)
+  }
+
   // MARK: presetSubtitle(for:)
 
   @Test func presetSubtitleCreatorWinsOverSounds() {
