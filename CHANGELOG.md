@@ -30,6 +30,7 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 - On the Mac, the window used a translucent material that could make it hard to view over a light desktop. It now uses a solid background.
 - In cars set to light mode, CarPlay used light colored text that could be hard to read. Blankie now properly follows CarPlay's light or dark appearance with proper colors.
 - Picking a preset in CarPlay when nothing was selected could light up the sounds without starting playback.
+- In CarPlay, presets without artwork showed a smaller image than presets with artwork.
 
 ## [2.0.2] - 2026-06-28
 
