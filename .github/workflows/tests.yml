@@ -30,6 +30,12 @@ on:
 permissions:
   contents: read
 
+# One run per ref: a newer push cancels the superseded run instead of
+# queueing behind it on the shared runners.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit-tests:
     name: Unit tests

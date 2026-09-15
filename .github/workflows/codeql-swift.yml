@@ -17,20 +17,19 @@ on:
       - ".github/workflows/codeql-swift.yml"
   pull_request:
     branches: ["main"]
-    # ready_for_review so flipping a draft to ready kicks off a scan
+    # ready_for_review so flipping a draft to ready kicks off a scan.
+    # No path filter here: the PR's "Code scanning results" check expects
+    # every category main has, and a filtered-out run reads as
+    # "configuration not found".
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - "Blankie/**"
-      - "BlankieTests/**"
-      - "BlankieUITests/**"
-      - "Blankie.xcodeproj/**"
-      - "Blankie.xctestplan"
-      - "Blankie*.plist"
-      - "**/*.entitlements"
-      - "**/*.xcconfig"
-      - ".github/workflows/codeql-swift.yml"
   schedule:
     - cron: "15 14 * * 1"
+
+# One run per ref: a newer push cancels the superseded run instead of
+# queueing behind it on the shared runners.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
