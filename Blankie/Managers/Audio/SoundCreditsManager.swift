@@ -142,7 +142,8 @@ extension Sound {
     guard let credit = SoundCreditsManager.shared.credits.first(where: { $0.name == originalTitle })
     else { return nil }
     return ResolvedSoundCredit(
-      description: nonEmpty(SoundCreditsManager.shared.getDescription(for: originalTitle)),
+      description: nonEmpty(SoundCreditsManager.shared.getDescription(for: originalTitle))
+        .map { NSLocalizedString($0, comment: "Built-in sound description") },
       workTitle: credit.soundName,
       workUrl: credit.soundUrl,
       author: credit.author,
