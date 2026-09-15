@@ -26,6 +26,10 @@ on:
       - "**/*.xcconfig"
       - ".github/workflows/tests.yml"
 
+# The job only checks out and runs xcodebuild; nothing writes back.
+permissions:
+  contents: read
+
 jobs:
   unit-tests:
     name: Unit tests
