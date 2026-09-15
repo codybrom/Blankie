@@ -121,6 +121,7 @@
 				Intents/PlaybackToggleValueIntent.swift,
 				Intents/WidgetPlayFavoriteIntent.swift,
 				Intents/WidgetToggleQuickMixSoundIntent.swift,
+				Localizable.xcstrings,
 				Managers/Audio/AudioEngineManager.swift,
 				"Managers/Audio/AudioEngineManager+Lifecycle.swift",
 				Managers/Audio/AudioError.swift,
