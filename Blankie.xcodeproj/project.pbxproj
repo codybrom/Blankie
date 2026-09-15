@@ -144,6 +144,7 @@
 				"Managers/Audio/CustomSoundManager+Import.swift",
 				"Managers/Audio/CustomSoundManager+Metadata.swift",
 				"Managers/Audio/CustomSoundManager+Mirror.swift",
+				Managers/Audio/NowPlayingDisplay.swift,
 				Managers/Audio/NowPlayingManager.swift,
 				"Managers/Audio/NowPlayingManager+AnimatedArtwork.swift",
 				"Managers/Audio/NowPlayingManager+Artwork.swift",

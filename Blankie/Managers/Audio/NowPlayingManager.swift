@@ -151,7 +151,7 @@ final class NowPlayingManager: NowPlayingPublishing {
     let resolvedPresetName = preset?.name ?? presetName
     let resolvedCreatorName = preset?.creatorName ?? creatorName
 
-    let displayInfo = getDisplayInfo(
+    let displayInfo = NowPlayingDisplay.getDisplayInfo(
       presetName: resolvedPresetName, creatorName: resolvedCreatorName)
     Logger.nowPlaying.debug(
       "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
@@ -172,21 +172,8 @@ final class NowPlayingManager: NowPlayingPublishing {
     let widgetThumbnailKey =
       presetIsOverridden
       ? nil : preset.flatMap { $0.isDefault ? nil : "preset_thumb_\($0.id.uuidString)" }
-    // `displayInfo.artist` synthesizes "Blankie" as a fallback in several
-    // places (solo built-in sounds, an empty sound list) so the lock screen
-    // never shows a blank artist line — the widget should never repeat that
-    // synthesized text as a second line; no real info means no second line.
-    let widgetSubtitle: String?
-    if let soloSound = AudioManager.shared.soloModeSound {
-      widgetSubtitle = soloSound.isCustom ? soloSound.creditedAuthor : nil
-    } else if AudioManager.shared.isQuickMix {
-      widgetSubtitle = resolvedCreatorName
-    } else if let creator = resolvedCreatorName {
-      widgetSubtitle = creator
-    } else {
-      let titles = currentMixSoundTitles()
-      widgetSubtitle = titles.isEmpty ? nil : soundNameSummary(titles)
-    }
+    let widgetSubtitle = NowPlayingDisplay.widgetSubtitle(
+      resolvedCreatorName: resolvedCreatorName)
     AudioManager.shared.publishWidgetSnapshot(
       title: displayInfo.title, subtitle: widgetSubtitle, isPlaying: isPlaying,
       thumbnailKey: widgetThumbnailKey,
@@ -309,26 +296,7 @@ final class NowPlayingManager: NowPlayingPublishing {
     // A running timer takes over the album line ("20 Minute Timer") so it shows
     // on the lock screen / CarPlay regardless of mode, replacing the sounds list.
     if TimerManager.shared.isTimerActive {
-      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = timerAlbumLabel()
-    }
-  }
-
-  /// "20 Minute Timer" / "1 Hour Timer" / "1 Hour 30 Minute Timer" from the
-  /// timer's total duration (adjectival singular, matching the in-app phrasing).
-  private func timerAlbumLabel() -> String {
-    let total = Int(TimerManager.shared.selectedDuration.rounded())
-    let hours = total / 3600
-    let minutes = (total % 3600) / 60
-    // This shows on the lock screen of a multi-language app, so localize each
-    // shape (translators can reorder the placeholders / set plurals per locale).
-    if hours > 0, minutes > 0 {
-      return String(localized: "\(hours) Hour \(minutes) Minute Timer")
-    } else if hours > 0 {
-      return String(localized: "\(hours) Hour Timer")
-    } else if minutes > 0 {
-      return String(localized: "\(minutes) Minute Timer")
-    } else {
-      return String(localized: "Timer")
+      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = NowPlayingDisplay.timerAlbumLabel()
     }
   }
 
@@ -354,7 +322,8 @@ final class NowPlayingManager: NowPlayingPublishing {
       return
     }
     // Same preset-ordered, switched-on list as the artist line.
-    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = soundNameSummary(currentMixSoundTitles())
+    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = NowPlayingDisplay.soundNameSummary(
+      NowPlayingDisplay.currentMixSoundTitles())
   }
 
   private func updateDurationFromPlayingSounds() {
@@ -365,39 +334,12 @@ final class NowPlayingManager: NowPlayingPublishing {
   /// (falling back to indeterminate). Used by the initial publish; the periodic
   /// tick re-anchors the live center afterward.
   private func applyProgressAnchorToInfo() {
-    if let anchor = currentProgressAnchor() {
+    if let anchor = NowPlayingDisplay.currentProgressAnchor() {
       nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = anchor.duration
       nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = anchor.elapsed
     } else {
       setInfiniteDuration()
     }
-  }
-
-  /// The elapsed/duration the scrubber should represent right now, or `nil` for
-  /// an indeterminate bar. Priority: an active sleep timer (real, slow,
-  /// meaningful progress that ends where playback stops) wins over the looping
-  /// audio, then the solo sound, then the longest selected sound's loop.
-  private func currentProgressAnchor() -> (elapsed: TimeInterval, duration: TimeInterval)? {
-    let sleepTimer = TimerManager.shared
-    if sleepTimer.isTimerActive, sleepTimer.selectedDuration > 0 {
-      let elapsed = sleepTimer.selectedDuration - sleepTimer.remainingTime
-      return (max(0, elapsed), sleepTimer.selectedDuration)
-    }
-
-    let anchorSound: Sound?
-    if let soloSound = AudioManager.shared.soloModeSound {
-      anchorSound = soloSound
-    } else {
-      // Use active (selected) sounds, not only playing ones, so we still track
-      // time when paused; mirror the "longest selected sound" choice.
-      anchorSound =
-        AudioManager.shared.sounds
-        .filter { $0.isSelected }
-        .max { $0.playbackDuration < $1.playbackDuration }
-    }
-
-    guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
-    return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
 
   private func setInfiniteDuration() {
@@ -526,7 +468,7 @@ final class NowPlayingManager: NowPlayingPublishing {
       return
     }
 
-    guard let anchor = currentProgressAnchor() else { return }
+    guard let anchor = NowPlayingDisplay.currentProgressAnchor() else { return }
     let elapsed = anchor.elapsed
     let duration = anchor.duration
     defer {
