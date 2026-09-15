@@ -115,6 +115,13 @@ enum WidgetStateStore {
     WidgetCenter.shared.reloadAllTimelines()
   }
 
+  /// Called when the artwork cached under a `preset_thumb_<uuid>` key is
+  /// rewritten or removed. The snapshot carries only the key, so an
+  /// artwork-only change looks unchanged to `publish`; reload directly.
+  static func artworkDidChange() {
+    WidgetCenter.shared.reloadAllTimelines()
+  }
+
   static func current() -> WidgetSnapshot {
     guard let data = UserDefaults.shared.data(forKey: key),
       let snapshot = try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
