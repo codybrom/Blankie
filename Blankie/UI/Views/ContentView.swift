@@ -279,7 +279,9 @@ import UniformTypeIdentifiers
         }
         .frame(maxWidth: .infinity)
       }
-      .containerBackground(.ultraThinMaterial, for: .window)
+      // Opaque on purpose: every material tracks whatever is behind the
+      // window, so over a light desktop the pane went gray and unreadable.
+      .containerBackground(Color(nsColor: .windowBackgroundColor), for: .window)
 
       .navigationTitle(navigationTitle)
       .modifier(
