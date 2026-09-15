@@ -31,10 +31,7 @@ final class NowPlayingManager: NowPlayingPublishing {
   #if os(iOS)
     var currentAnimatedLoopPath: String?
     var currentAnimatedPreviewPath: String?
-    // ODR download + Documents-cache tasks in flight, keyed by bundled id.
-    // Lets duplicate triggers for the same animated artwork coalesce instead
-    // of spawning parallel downloads and cache-copy attempts.
-    var animatedArtworkDownloadTasks: [String: Task<Void, Never>] = [:]
+    let animatedArtworkResolver = AnimatedArtworkResolver()
   #endif
   nonisolated(unsafe) private var updateTimer: Timer?
   // Drives elapsed-time republishing so the system scrubber (lock screen +

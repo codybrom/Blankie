@@ -9,6 +9,10 @@
 
 import SwiftUI
 
+#if os(iOS)
+  import UIKit
+#endif
+
 /// Display rules shared by every Now Playing backend.
 @MainActor
 enum NowPlayingDisplay {
@@ -148,6 +152,18 @@ enum NowPlayingDisplay {
     guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
     return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
+
+  // MARK: - Animated artwork
+
+  #if os(iOS)
+    /// Whether the lock screen should get an animated background at all: the
+    /// user's setting, Reduce Motion, and Low Power Mode each veto it.
+    static func shouldPublishAnimatedArtwork() -> Bool {
+      GlobalSettings.shared.lockScreenBackgroundEnabled
+        && !UIAccessibility.isReduceMotionEnabled
+        && !ProcessInfo.processInfo.isLowPowerModeEnabled
+    }
+  #endif
 
   // MARK: - Fallback artwork
 

@@ -13,14 +13,32 @@
   import Observation
   import os
 
+  #if os(iOS)
+    import UIKit
+  #endif
+
   @available(iOS 27, macOS 27, visionOS 27, *)
   @MainActor
   final class MediaSessionNowPlaying: NowPlayingPublishing {
-    private let model = NowPlayingSessionModel()
+    let model = NowPlayingSessionModel()
     private var session: MediaSession<NowPlayingSessionModel>?
     private var primaryRequest: Task<Void, Never>?
     private var timerActiveObservation: Task<Void, Never>?
     private var timerDurationObservation: Task<Void, Never>?
+    private var lockScreenBgObservation: Task<Void, Never>?
+    /// Last preset / soloed sound the artwork was built for: the system caches
+    /// artwork by id, so rebuilding it on every incremental publish is wasted
+    /// work (and would restart the animated loop).
+    var lastPresetId: UUID?
+    var lastSoloSoundId: UUID?
+    var artworkLoad: Task<Void, Never>?
+    #if os(iOS)
+      var currentAnimatedLoopPath: String?
+      var currentAnimatedPreviewPath: String?
+      let animatedArtworkResolver = AnimatedArtworkResolver()
+      private var reduceMotionObservation: Task<Void, Never>?
+      private var powerStateObservation: Task<Void, Never>?
+    #endif
 
     init() {
       // Re-anchor the scrubber when a sleep timer starts, ends, or is extended.
@@ -36,12 +54,44 @@
           self?.refreshTiming()
         }
       }
+
+      // Republish the lock-screen background when the user toggles the setting.
+      lockScreenBgObservation = Task { [weak self] in
+        for await _ in Observations({ GlobalSettings.shared.lockScreenBackgroundEnabled }) {
+          self?.republishCurrentPreset()
+        }
+      }
+
+      #if os(iOS)
+        // Reduce Motion and Low Power Mode each suppress the animated
+        // background, so republish whenever either flips.
+        reduceMotionObservation = Task { [weak self] in
+          for await _ in NotificationCenter.default.notifications(
+            named: UIAccessibility.reduceMotionStatusDidChangeNotification)
+          {
+            self?.republishCurrentPreset()
+          }
+        }
+        powerStateObservation = Task { [weak self] in
+          for await _ in NotificationCenter.default.notifications(
+            named: Notification.Name.NSProcessInfoPowerStateDidChange)
+          {
+            self?.republishCurrentPreset()
+          }
+        }
+      #endif
     }
 
     deinit {
       primaryRequest?.cancel()
+      artworkLoad?.cancel()
       timerActiveObservation?.cancel()
       timerDurationObservation?.cancel()
+      lockScreenBgObservation?.cancel()
+      #if os(iOS)
+        reduceMotionObservation?.cancel()
+        powerStateObservation?.cancel()
+      #endif
     }
 
     func publishInfo(
@@ -75,7 +125,9 @@
       model.contentID = NowPlayingSessionMapping.contentID(
         soloFileName: soloFileName, isQuickMix: isQuickMix, presetID: resolvedPresetID)
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)
+      model.entityIdentifiers = entityIdentifiers(for: preset)
       refreshTiming()
+      refreshArtwork(preset: preset, fallbackArtworkId: artworkId)
 
       publishWidgetSnapshot(
         preset: preset, resolvedCreatorName: resolvedCreatorName, title: displayInfo.title,
@@ -96,6 +148,9 @@
     }
 
     func forceRefresh(preset: Preset, isPlaying: Bool) {
+      // Clear the artwork identity so the same preset's new artwork is rebuilt.
+      lastPresetId = nil
+      lastSoloSoundId = nil
       updateInfo(
         preset: preset,
         presetName: preset.name,
@@ -120,6 +175,8 @@
       // Not terminal: the next publish while playing builds a fresh session.
       primaryRequest?.cancel()
       primaryRequest = nil
+      artworkLoad?.cancel()
+      artworkLoad = nil
       session = nil
       model.title = ""
       model.subtitle = nil
@@ -131,6 +188,12 @@
         model.animatedArtwork = nil
       #endif
       model.entityIdentifiers = []
+      lastPresetId = nil
+      lastSoloSoundId = nil
+      #if os(iOS)
+        currentAnimatedLoopPath = nil
+        currentAnimatedPreviewPath = nil
+      #endif
       // The installed handlers and navigation state survive: AudioManager
       // installs them once at setup, exactly as the 26 backend keeps its
       // command-center targets across a clear.

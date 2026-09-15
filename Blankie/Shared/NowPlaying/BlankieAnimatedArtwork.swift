@@ -12,6 +12,10 @@ import Foundation
   import MediaPlayer
   import UIKit
 
+  #if canImport(NowPlaying)
+    import NowPlaying
+  #endif
+
   enum AnimatedArtworkKey: String {
     case square = "MPNowPlayingInfoProperty1x1AnimatedArtwork"
     case portrait = "MPNowPlayingInfoProperty3x4AnimatedArtwork"
@@ -20,8 +24,16 @@ import Foundation
     /// only the 1x1 key, iPhone the 3x4 key. The gallery and in-app preview key
     /// off this (not the device idiom) so they match what the lock screen shows
     /// and so iPad downloads only the square pack, never both variants.
+    /// On 27 the NowPlaying framework answers the same question, and mixing it
+    /// with MediaPlayer for local playback is undefined — so ask whichever
+    /// framework owns the card.
     nonisolated static var preferredForDevice: AnimatedArtworkKey {
-      Set(MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys)
+      #if canImport(NowPlaying)
+        if #available(iOS 27, *) {
+          return AnimatedArtwork.compatibleAspectRatios.contains(.square) ? .square : .portrait
+        }
+      #endif
+      return Set(MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys)
         .contains(AnimatedArtworkKey.square.rawValue) ? .square : .portrait
     }
   }

@@ -73,7 +73,7 @@ import Testing
   }
 
   @Test func runningTimerIsFinite() {
-    let timer = SessionTimer(duration: 1800, elapsed: 60, timestamp: now)
+    let timer = NowPlayingSessionMapping.SessionTimer(duration: 1800, elapsed: 60, timestamp: now)
     #expect(NowPlayingSessionMapping.duration(timer: timer) == .finite(1800))
   }
 
@@ -102,5 +102,101 @@ import Testing
     #expect(
       NowPlayingSessionMapping.contentID(soloFileName: nil, isQuickMix: false, presetID: nil)
         == "default")
+  }
+
+  // MARK: - Artwork identity
+
+  @Test func storedArtworkUsesItsIdentifier() {
+    let id = UUID()
+    #expect(
+      NowPlayingSessionMapping.artworkID(source: .stored(id), accentColorName: "blue")
+        == "artwork:\(id.uuidString)")
+  }
+
+  @Test func fileArtworkUsesItsPath() {
+    #expect(
+      NowPlayingSessionMapping.artworkID(source: .file("previews/rain.jpg"), accentColorName: nil)
+        == "static:previews/rain.jpg")
+  }
+
+  @Test func bundledArtworkUsesItsIdentifier() {
+    #expect(
+      NowPlayingSessionMapping.artworkID(source: .bundled("OceanWaves"), accentColorName: nil)
+        == "bundled:OceanWaves")
+  }
+
+  @Test func soloArtworkFoldsInTheAccent() {
+    // The soloed sound's card is drawn in the accent, so two accents have to be
+    // two ids — the system never re-requests an id it already cached.
+    #expect(
+      NowPlayingSessionMapping.artworkID(source: .solo(fileName: "rain"), accentColorName: "teal")
+        == "solo:rain:teal")
+  }
+
+  @Test func missingAccentFallsBackToDefault() {
+    #expect(
+      NowPlayingSessionMapping.artworkID(source: .solo(fileName: "rain"), accentColorName: nil)
+        == "solo:rain:default")
+  }
+
+  @Test func fallbackArtworkFoldsInKindAccentAndIcons() {
+    #expect(
+      NowPlayingSessionMapping.artworkID(
+        source: .fallback(kind: "composite", icons: ["cloud.rain", "wind"]),
+        accentColorName: "indigo") == "fallback:composite:indigo:cloud.rain,wind")
+  }
+
+  @Test func fallbackArtworkWithoutIconsEndsEmpty() {
+    #expect(
+      NowPlayingSessionMapping.artworkID(
+        source: .fallback(kind: "brand", icons: []), accentColorName: nil)
+        == "fallback:brand:default:")
+  }
+
+  @Test func differentIconsGiveDifferentArtworkIdentities() {
+    let one = NowPlayingSessionMapping.artworkID(
+      source: .fallback(kind: "composite", icons: ["cloud.rain"]), accentColorName: "blue")
+    let two = NowPlayingSessionMapping.artworkID(
+      source: .fallback(kind: "composite", icons: ["wind"]), accentColorName: "blue")
+    #expect(one != two)
+  }
+
+  // MARK: - Aspect ratios
+
+  @Test func supportedRatiosKeepTheDeviceOrder() {
+    #expect(
+      NowPlayingSessionMapping.supportedRatios(
+        compatible: [.tall, .square], available: [.square, .tall]) == [.tall, .square])
+  }
+
+  @Test func supportedRatiosDropWhatHasNoLoop() {
+    #expect(
+      NowPlayingSessionMapping.supportedRatios(compatible: [.square, .tall], available: [.tall])
+        == [.tall])
+  }
+
+  @Test func supportedRatiosIgnoreWhatTheDeviceCannotShow() {
+    #expect(
+      NowPlayingSessionMapping.supportedRatios(compatible: [.square], available: [.square, .tall])
+        == [.square])
+  }
+
+  @Test func noCompatibleRatiosPublishNothing() {
+    #expect(
+      NowPlayingSessionMapping.supportedRatios(compatible: [], available: [.square]).isEmpty)
+  }
+
+  // MARK: - Animated artwork identity
+
+  @Test func animatedArtworkPrefersTheLoopKey() {
+    #expect(
+      NowPlayingSessionMapping.animatedArtworkID(loopKey: "OceanWaves", presetID: UUID())
+        == "OceanWaves")
+  }
+
+  @Test func animatedArtworkFallsBackToThePresetIdentifier() {
+    let id = UUID()
+    #expect(
+      NowPlayingSessionMapping.animatedArtworkID(loopKey: nil, presetID: id) == id.uuidString)
   }
 }

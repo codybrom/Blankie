@@ -23,8 +23,8 @@
     var title = ""
     var subtitle: String?
     var contentID = "default"
-    var playback: SessionPlayback = .paused
-    var timer: SessionTimer?
+    var playback: NowPlayingSessionMapping.SessionPlayback = .paused
+    var timer: NowPlayingSessionMapping.SessionTimer?
 
     // Artwork is held type-erased. A stored `Artwork?` would put a resilient
     // NowPlaying struct in this class's field layout, and completing that layout
@@ -65,7 +65,19 @@
         state: state, elapsedTime: timer.elapsed, timestamp: timer.timestamp)
     }
 
-    var commands: [MediaCommand] { [] }
+    /// The remote commands the session offers. Navigation is only enabled when
+    /// there is somewhere to go, mirroring the 26 backend's command-center
+    /// enablement.
+    var commands: [MediaCommand] {
+      guard let handlers else { return [] }
+      return [
+        .play { handlers.play() },
+        .pause { handlers.pause() },
+        .togglePlayPause { handlers.togglePlayPause() },
+        .next { _ = handlers.next() }.enabled(navigationEnabled),
+        .previous { _ = handlers.previous() }.enabled(navigationEnabled),
+      ]
+    }
 
     private func makeContent() -> GenericContent {
       #if os(iOS)
