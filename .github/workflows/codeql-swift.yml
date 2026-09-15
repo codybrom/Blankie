@@ -74,11 +74,17 @@ jobs:
           # macOS build is currently broken (tracked separately); CodeQL only
           # needs the Swift source compiled, so build the iOS Simulator variant
           # of the same sources — no signing required.
+          # The extractor traces every compiler invocation, and a generic
+          # simulator destination compiles arm64 and x86_64. The shared runner
+          # lost communication twice under that load, so build one
+          # architecture with two concurrent jobs.
           xcodebuild clean build \
             -project Blankie.xcodeproj \
             -scheme "Blankie (Universal)" \
             -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
+            -jobs 2 \
+            ARCHS=arm64 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
