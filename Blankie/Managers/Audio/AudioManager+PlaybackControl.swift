@@ -21,9 +21,8 @@ extension AudioManager {
   /// while playing, toggle the sound in/out of the mix; while paused, select it
   /// (if it isn't already) and resume — so a tap always gets audio going rather
   /// than selecting silently or deselecting an already-on tile. The
-  /// `updateHasSelectedSounds()` call reflects a brand-new selection
-  /// synchronously, otherwise `setGlobalPlaybackState(true)` would see the
-  /// still-empty (coalesced) selection and coerce right back to paused.
+  /// `updateHasSelectedSounds()` call publishes the new selection immediately
+  /// rather than after the coalesced pass.
   @MainActor func toggleOrResume(_ sound: Sound) {
     if !isGloballyPlaying {
       if !sound.isSelected {
@@ -215,7 +214,7 @@ extension AudioManager {
     // any such request to paused. In-app buttons already gate on this; remote
     // commands (lock screen / Control Center / CarPlay) did not, which let the
     // app advertise rate 1.0 over silence and read as "playing" with no sound.
-    let shouldPlay = playing && (soloModeSound != nil || hasSelectedSounds)
+    let shouldPlay = playing && hasPlayableSelection
     if playing && !shouldPlay {
       Logger.audio.debug("AudioManager: Ignoring play request with no selected sounds")
     }
@@ -248,6 +247,14 @@ extension AudioManager {
         isPlaying: isGloballyPlaying
       )
     }
+  }
+
+  /// Whether a play request has anything to play: a solo sound or any selected
+  /// sound. Scans the live selection rather than `hasSelectedSounds`, which
+  /// only updates on a coalesced pass — intents and preset application ask to
+  /// play right after selecting and would otherwise see an empty mix.
+  var hasPlayableSelection: Bool {
+    soloModeSound != nil || sounds.contains { $0.isSelected }
   }
 
   // MARK: - Music Exclusivity

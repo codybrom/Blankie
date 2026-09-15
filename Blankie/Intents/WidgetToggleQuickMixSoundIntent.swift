@@ -41,15 +41,11 @@ struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
       return .result()
     }
 
-    // Paused: any tap should get sound going, never read as "deselect" —
-    // the same tap-to-resume rule regular sound tiles use
-    // (`AudioManager.toggleOrResume`). Without this, tapping an
-    // already-selected-but-paused sound would just toggle it off.
+    // Paused: any tap should get sound going, never read as "deselect" — the
+    // same tap-to-resume rule regular sound tiles use. Without this, tapping
+    // an already-selected-but-paused sound would just toggle it off.
     guard audio.isGloballyPlaying else {
-      if !target.isSelected {
-        target.isSelected = true
-      }
-      audio.setGlobalPlaybackState(true)
+      audio.toggleOrResume(target)
       return .result()
     }
 
