@@ -4,8 +4,8 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  The persisted token grammar wiring favorites to widgets, Control Center,
-//  Siri, and CarPlay. A `starredItems` token is one of four mutually exclusive
+//  The persisted token grammar wiring favorites to widgets, Siri, and
+//  CarPlay. A `starredItems` token is one of four mutually exclusive
 //  shapes (allSounds | quickMix | solo:<fileName> | preset-UUID); this pins the
 //  codec, the token→display resolution, and the active-token precedence so a
 //  format or precedence change can't silently break those surfaces.

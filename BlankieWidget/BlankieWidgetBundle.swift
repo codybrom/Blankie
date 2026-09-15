@@ -15,7 +15,5 @@ struct BlankieWidgetBundle: WidgetBundle {
     FavoritesWidget()
     PinnedItemWidget()
     QuickMixWidget()
-    PlaybackControl()
-    FavoriteControl()
   }
 }

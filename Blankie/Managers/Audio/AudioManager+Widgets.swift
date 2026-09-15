@@ -9,10 +9,10 @@ import Foundation
 import SwiftUI
 
 extension AudioManager {
-  /// Rebuilds and republishes the Home Screen widget / Control Center
-  /// snapshot. Called from the same place `NowPlayingManager` republishes
-  /// lock-screen info (`performNowPlayingUpdate`), so widget state stays in
-  /// lockstep with it instead of drifting via a second set of call sites.
+  /// Rebuilds and republishes the Home Screen widget snapshot. Called from
+  /// the same place `NowPlayingManager` republishes lock-screen info
+  /// (`performNowPlayingUpdate`), so widget state stays in lockstep with it
+  /// instead of drifting via a second set of call sites.
   @MainActor
   func publishWidgetSnapshot(
     title: String, subtitle: String?, isPlaying: Bool, thumbnailKey: String?,

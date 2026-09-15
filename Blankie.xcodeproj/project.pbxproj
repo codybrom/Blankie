@@ -118,7 +118,6 @@
 				App/AppSetup.swift,
 				Intents/IntentError.swift,
 				Intents/PlaybackIntents.swift,
-				Intents/PlaybackToggleValueIntent.swift,
 				Intents/WidgetPlayFavoriteIntent.swift,
 				Intents/WidgetToggleQuickMixSoundIntent.swift,
 				Localizable.xcstrings,

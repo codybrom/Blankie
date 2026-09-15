@@ -13,8 +13,7 @@ import WidgetKit
 /// configuration picker — reads `WidgetStateStore.current().pinnableItems`,
 /// every preset and solo-able sound rather than just what's starred. Pinning
 /// one specific thing to the Home Screen shouldn't require favoriting it
-/// first, unlike `FavoriteControlEntity`, which is intentionally
-/// starred-only.
+/// first, unlike the Favorites widget, which is intentionally starred-only.
 struct PinnableItemEntity: AppEntity {
   let id: String
   var displayName: String

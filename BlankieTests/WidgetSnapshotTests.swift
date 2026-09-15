@@ -4,8 +4,8 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  The cached snapshot the Home Screen widgets and Control Center controls
-//  render off the App Group. Covers the encode round-trip and corrupt-data
+//  The cached snapshot the Home Screen widgets render off the App Group.
+//  Covers the encode round-trip and corrupt-data
 //  fallback, the publish dedup (identical snapshots skip the write + timeline
 //  reload), the shared subtitle rule, and that a favorites change republishes
 //  the catalog immediately.

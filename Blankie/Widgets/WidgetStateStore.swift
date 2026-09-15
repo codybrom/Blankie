@@ -8,11 +8,10 @@
 import Foundation
 import WidgetKit
 
-/// What the Home Screen widgets and Control Center controls render. The
-/// widget extension process never touches `AudioManager`/`PresetManager`
-/// (AVFoundation, SwiftData) directly for rendering — it reads this cached
-/// snapshot from the App Group instead. The app rebuilds and republishes it
-/// whenever playback or favorites change.
+/// What the Home Screen widgets render. The widget extension process never
+/// touches `AudioManager`/`PresetManager` (AVFoundation, SwiftData) directly
+/// for rendering — it reads this cached snapshot from the App Group instead.
+/// The app rebuilds and republishes it whenever playback or favorites change.
 struct WidgetPlaybackState: Codable, Equatable {
   var isPlaying: Bool
   var title: String
@@ -73,7 +72,7 @@ struct WidgetSnapshot: Codable, Equatable {
   /// Every preset (not just starred ones) plus every solo-able sound, for
   /// the Pinned Sound widget's configuration picker — pinning one specific
   /// thing to the Home Screen shouldn't require starring it first, unlike
-  /// the Favorites widget/Control, which are intentionally starred-only.
+  /// the Favorites widget, which is intentionally starred-only.
   var pinnableItems: [WidgetFavorite]
   /// The app's own accent (`GlobalSettings.customAccentColor`), for widgets
   /// with no preset/sound of their own to theme with — the Quick Mix widget.
@@ -103,7 +102,7 @@ enum WidgetStateStore {
   @MainActor private static var lastPublished: WidgetSnapshot?
 
   /// Called by the app whenever playback or favorites change. Reloads every
-  /// widget/Control timeline so the new snapshot renders immediately — the
+  /// widget timeline so the new snapshot renders immediately — the
   /// single choke point, so callers never forget the reload half of the pair.
   /// No-ops when the snapshot is unchanged from the last publish.
   @MainActor

@@ -7,11 +7,11 @@
 
 import AppIntents
 
-/// Plays a favorited item from a widget/Control tap. Takes a plain
+/// Plays a favorited item from a widget tap. Takes a plain
 /// `starredItems` token rather than an entity type (unlike `PlayPresetIntent`)
 /// so the widget extension never needs to query `PresetManager`/`AudioManager`
 /// just to resolve a parameter — the token is already known from the cached
-/// `WidgetSnapshot` the tile/control was built from.
+/// `WidgetSnapshot` the tile was built from.
 struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
   static var title: LocalizedStringResource { "Play Favorite" }
   static var description: IntentDescription {
@@ -31,10 +31,6 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
 
   @MainActor
   func perform() async throws -> some IntentResult {
-    // A not-yet-configured Control Center control passes an empty token. No-op
-    // rather than falling through to the generic "preset not found" error.
-    guard !favoriteToken.isEmpty else { return .result() }
-
     await AppSetup.ensureManagersReadyForIntents()
     let audio = AudioManager.shared
 

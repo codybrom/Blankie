@@ -9,12 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.0] - Unreleased
 
-Blankie 2.1 puts your sounds on the Home Screen, in Control Center, and a Siri phrase away.
+Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 
 ### Added
 
 - **Home Screen widgets (iPhone and iPad)** - Put Blankie on your Home Screen. Now Playing shows what's on with play controls, Favorites and Quick Mix start a mix in a tap, and a Pinned Sound widget launches one specific sound.
-- **Control Center controls** - Add Blankie to Control Center to play or pause and start a favorite without opening the app.
 - **Siri, Shortcuts, and Spotlight** - Ask Siri to play a preset or sound, build your own Shortcuts around Blankie's actions (play, pause, presets, sounds, and volume), and find your presets and sounds in Spotlight search. The Siri phrases are localized in every supported language.
 - **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description in the Library, so it's clearer what each one is before you play it. Both are translated into every supported language.
 
