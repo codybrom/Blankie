@@ -46,8 +46,6 @@
       hasBuiltArtwork = true
       lastPresetId = preset?.id
       lastSoloSoundId = soloSoundId
-      artworkLoad?.cancel()
-      artworkLoad = nil
 
       if let soloSound {
         // Solo mode: the sound's own icon, not the last preset's artwork.
@@ -95,15 +93,13 @@
     /// preview, then the drawn fallback.
     private func applyStaticArtwork(for preset: Preset?, fallbackArtworkId: UUID?) {
       if let artworkId = preset?.artworkId ?? fallbackArtworkId {
-        artworkLoad = Task { @MainActor [weak self] in
-          let data = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
-          guard let self, !Task.isCancelled else { return }
-          if let data {
-            self.setArtwork(data: data, source: .stored(artworkId))
-          } else {
-            Logger.nowPlaying.debug("MediaSessionNowPlaying: no stored artwork, using fallback")
-            self.applyFallbackArtwork()
-          }
+        // Decided in the same pass as the title: the system reads an item's
+        // artwork once, so a still that arrives later is never shown.
+        if let data = PresetArtworkManager.shared.storedArtworkData(id: artworkId) {
+          setArtwork(data: data, source: .stored(artworkId))
+        } else {
+          Logger.nowPlaying.debug("MediaSessionNowPlaying: no stored artwork, using fallback")
+          applyFallbackArtwork()
         }
         return
       }

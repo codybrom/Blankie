@@ -35,7 +35,6 @@
     /// with no preset), so the first pass has to be forced or that card would
     /// never get artwork at all.
     var hasBuiltArtwork = false
-    var artworkLoad: Task<Void, Never>?
     #if os(iOS)
       var currentAnimatedLoopPath: String?
       var currentAnimatedPreviewPath: String?
@@ -88,7 +87,6 @@
 
     deinit {
       primaryRequest?.cancel()
-      artworkLoad?.cancel()
       timerActiveObservation?.cancel()
       timerDurationObservation?.cancel()
       lockScreenBgObservation?.cancel()
@@ -188,8 +186,6 @@
       // Not terminal: the next publish while playing builds a fresh session.
       primaryRequest?.cancel()
       primaryRequest = nil
-      artworkLoad?.cancel()
-      artworkLoad = nil
       session = nil
       model.title = ""
       model.subtitle = nil

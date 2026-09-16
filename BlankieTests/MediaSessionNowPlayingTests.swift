@@ -111,6 +111,21 @@
       #expect(backend.model.artwork != nil)
     }
 
+    /// Stored artwork is decided in the same pass as the title. With no row for
+    /// the id, the drawn fallback is published at once instead of leaving the
+    /// card bare while a load runs — the system never re-reads a bare item.
+    @Test func presetWithStoredArtworkIDPublishesArtworkSynchronously() {
+      guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
+      let backend = MediaSessionNowPlaying()
+      var preset = PresetFactory.makePreset(accentColorName: "blue")
+      preset.artworkId = UUID()
+      PresetManager.shared.setCurrentPreset(preset)
+
+      backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      #expect(backend.model.artwork != nil)
+      #expect(backend.model.artwork?.id.hasPrefix("fallback:") == true)
+    }
+
     /// Rebuilding artwork restarts the animated loop, so an incremental publish
     /// of the same preset keeps the id; a new accent through `forceRefresh`
     /// changes it, because the drawn fallback renders in that accent.
