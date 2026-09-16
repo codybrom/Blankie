@@ -21,7 +21,7 @@ Everything below was established on a physical device. None of it is documented 
 
 ### How Blankie stays in sync
 
-Four cooperating mechanisms. All of them are required. All four belong to the MediaPlayer backend (`NowPlayingManager`) and apply only below OS 27; the NowPlaying-framework backend needs none of them.
+Four cooperating mechanisms. All of them are required. Mechanisms 2 and 3 are the MediaPlayer backend's (`NowPlayingManager`) answer to rate derivation and per-key publishing, and apply only below OS 27; 1 and 4 are engine concerns that both backends rely on.
 
 1. **Idle the engine on full pause.** `AudioEngineManager.pauseIfIdle()` pauses hardware I/O once no registered player is rendering (preview mode and the mid-fade play-rescue keep it running). The graph stays intact and `ensureRunning()` restarts it on the next play. The audio session intentionally stays active so the system controls remain visible.
 2. **Publish nothing while a pause fade renders.** `NowPlayingManager.performNowPlayingUpdate` holds all writes while `!isPlaying && engine.isRunning`, because any write in that window re-asserts "playing." `AudioManager.scheduleEngineIdlePause` does one full republish after the engine idles.
@@ -68,7 +68,7 @@ Animated artwork is declared per aspect ratio: the ratios this device reports th
 
 ### Two guards, both needed
 
-Every file that imports NowPlaying is wrapped whole in `#if canImport(NowPlaying)`, because no generally available CI runner ships the 27 SDK. Use sites add `if #available(iOS 27, macOS 27, visionOS 27, *)`, because the deployment target stays on 26 and the choice is a runtime one. Files with no framework import — the protocol, the mappings, the shared display rules — stay unconditional. Linking needs nothing: NowPlaying weak-links automatically.
+Every 27-only file is wrapped whole in `#if canImport(NowPlaying)`, because no generally available CI runner ships the 27 SDK (a file that also serves 26, like `BlankieAnimatedArtwork.swift`, guards just its import and its use sites). Use sites add `if #available(iOS 27, macOS 27, visionOS 27, *)`, because the deployment target stays on 26 and the choice is a runtime one. Files with no framework import — the protocol, the mappings, the shared display rules — stay unconditional. Linking needs nothing: NowPlaying weak-links automatically.
 
 Weak linking has a cost. On an OS without NowPlaying.framework the symbols resolve to null, and a stored property whose type is a framework struct makes the enclosing type's metadata crash whenever something realizes every Objective-C class (XCTest does at startup). So no framework struct is ever stored: `NowPlayingSessionModel` keeps `artwork` and `animatedArtwork` in type-erased `Any?` boxes behind computed accessors, everything else is stored as Blankie's own value types (`SessionPlayback`, `SessionTimer`, `SessionAspectRatio`), and framework values are built inside computed properties or local scope. A class reference such as `MediaSession<Model>?` is a plain pointer and is safe.
 
