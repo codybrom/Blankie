@@ -31,6 +31,10 @@
     /// work (and would restart the animated loop).
     var lastPresetId: UUID?
     var lastSoloSoundId: UUID?
+    /// Both ids start nil, which is also a valid identity (Quick Mix publishes
+    /// with no preset), so the first pass has to be forced or that card would
+    /// never get artwork at all.
+    var hasBuiltArtwork = false
     var artworkLoad: Task<Void, Never>?
     #if os(iOS)
       var currentAnimatedLoopPath: String?
@@ -116,18 +120,20 @@
       // one), and the system reads a changed id as a different item. In preset
       // mode fall back to the current preset so one user action doesn't flip the
       // id through `default` and back.
-      let resolvedPresetID =
-        preset?.id
-        ?? (soloFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset?.id : nil)
+      // Resolved once and used for the id, the entity and the artwork, so a
+      // publish can't claim a preset's content id while pointing at no entity.
+      let resolvedPreset =
+        preset
+        ?? (soloFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset : nil)
 
       model.title = displayInfo.title
       model.subtitle = displayInfo.artist
       model.contentID = NowPlayingSessionMapping.contentID(
-        soloFileName: soloFileName, isQuickMix: isQuickMix, presetID: resolvedPresetID)
+        soloFileName: soloFileName, isQuickMix: isQuickMix, presetID: resolvedPreset?.id)
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)
-      model.entityIdentifiers = entityIdentifiers(for: preset)
+      model.entityIdentifiers = entityIdentifiers(for: resolvedPreset)
       refreshTiming()
-      refreshArtwork(preset: preset, fallbackArtworkId: artworkId)
+      refreshArtwork(preset: resolvedPreset, fallbackArtworkId: artworkId)
 
       publishWidgetSnapshot(
         preset: preset, resolvedCreatorName: resolvedCreatorName, title: displayInfo.title,
@@ -190,6 +196,7 @@
       model.entityIdentifiers = []
       lastPresetId = nil
       lastSoloSoundId = nil
+      hasBuiltArtwork = false
       #if os(iOS)
         currentAnimatedLoopPath = nil
         currentAnimatedPreviewPath = nil

@@ -26,11 +26,21 @@ import Foundation
     /// and so iPad downloads only the square pack, never both variants.
     /// On 27 the NowPlaying framework answers the same question, and mixing it
     /// with MediaPlayer for local playback is undefined — so ask whichever
-    /// framework owns the card.
+    /// framework owns the card. A device that takes both crops still prefetches
+    /// and previews one, by idiom: the outcome the 26 keys already produced.
     nonisolated static var preferredForDevice: AnimatedArtworkKey {
       #if canImport(NowPlaying)
         if #available(iOS 27, *) {
-          return AnimatedArtwork.compatibleAspectRatios.contains(.square) ? .square : .portrait
+          let compatible = AnimatedArtwork.compatibleAspectRatios
+          let square = compatible.contains(.square)
+          if square, compatible.contains(.tall) {
+            // The idiom is main-actor API and every caller reaches this from the
+            // main actor (the prefetch mapping runs inside a main-actor task).
+            return MainActor.assumeIsolated {
+              UIDevice.current.userInterfaceIdiom == .pad ? .square : .portrait
+            }
+          }
+          return square ? .square : .portrait
         }
       #endif
       return Set(MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys)

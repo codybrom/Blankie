@@ -35,13 +35,15 @@
 
     // MARK: - Artwork
 
-    /// Rebuilds the card's artwork, but only when the preset or the soloed
-    /// sound actually changed — the system caches artwork by id, and a new
-    /// animated artwork restarts the video.
+    /// Rebuilds the card's artwork, but after the first pass only when the
+    /// preset or the soloed sound actually changed — the system caches artwork
+    /// by id, and a new animated artwork restarts the video.
     func refreshArtwork(preset: Preset?, fallbackArtworkId: UUID?) {
       let soloSound = AudioManager.shared.soloModeSound
       let soloSoundId = soloSound?.id
-      guard preset?.id != lastPresetId || soloSoundId != lastSoloSoundId else { return }
+      guard !hasBuiltArtwork || preset?.id != lastPresetId || soloSoundId != lastSoloSoundId
+      else { return }
+      hasBuiltArtwork = true
       lastPresetId = preset?.id
       lastSoloSoundId = soloSoundId
       artworkLoad?.cancel()
@@ -223,10 +225,9 @@
         let ratios = NowPlayingSessionMapping.supportedRatios(
           compatible: AnimatedArtwork.compatibleAspectRatios.map(Self.sessionRatio),
           available: Set(found.keys))
-        guard !ratios.isEmpty else {
-          model.animatedArtwork = nil
-          return
-        }
+        // Nothing playable yet (a pack is most likely still downloading): keep
+        // whatever is on the card and let `onDownloaded` come back for it.
+        guard !ratios.isEmpty else { return }
 
         model.animatedArtwork = AnimatedArtwork(
           id: NowPlayingSessionMapping.animatedArtworkID(loopKey: loopKey, presetID: preset.id),
@@ -254,12 +255,18 @@
       private func animatedResources(for preset: Preset)
         -> [NowPlayingSessionMapping.SessionAspectRatio: (preview: Data, loop: URL)]
       {
+        // One pack per clip, as on 26: the other crop is published only if it
+        // happens to be local already.
+        let preferredKey = AnimatedArtworkKey.preferredForDevice
         var found: [NowPlayingSessionMapping.SessionAspectRatio: (preview: Data, loop: URL)] = [:]
         for ratio in AnimatedArtwork.compatibleAspectRatios {
+          let key = Self.artworkKey(for: ratio)
           guard
             let resources = animatedArtworkResolver.resources(
-              for: preset, key: Self.artworkKey(for: ratio),
-              onDownloaded: { [weak self] in self?.republishCurrentPreset() }),
+              for: preset, key: key, downloadIfMissing: key == preferredKey,
+              // Straight back to the animation, not through `publishInfo`: by
+              // now the identity gate has recorded this preset and would drop it.
+              onDownloaded: { [weak self] in self?.refreshAnimatedArtwork(for: preset) }),
             let preview = Self.jpegData(resources.previewImage)
           else { continue }
           found[Self.sessionRatio(ratio)] = (preview: preview, loop: resources.loopURL)

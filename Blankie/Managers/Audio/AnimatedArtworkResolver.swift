@@ -4,15 +4,13 @@
 //
 //  Created by Cody Bromley on 9/15/26.
 //
-//  Where a preset's animated artwork actually lives — Documents cache, or a
-//  Background Assets pack that may still need downloading — shared by both
-//  Now Playing backends.
-
-import os
+//  Where a preset's animated artwork actually lives: the Documents cache, or a
+//  Background Assets pack that may still need downloading.
 
 #if os(iOS)
   import Foundation
   import UIKit
+  import os
 
   /// Resolves a preset's loop video and preview image, downloading the bundled
   /// artwork's asset pack when it isn't on the device yet.
@@ -26,9 +24,12 @@ import os
     /// The loop video and preview for `key`, or nil when nothing is playable
     /// yet. A bundled pack that still has to download returns nil now and calls
     /// `onDownloaded` once it lands.
+    /// - Parameter downloadIfMissing: false returns nil for a pack that isn't on
+    ///   the device rather than starting a download.
     func resources(
       for preset: Preset,
       key: AnimatedArtworkKey,
+      downloadIfMissing: Bool = true,
       onDownloaded: @escaping @MainActor () -> Void
     ) -> (loopURL: URL, previewImage: UIImage?)? {
       Logger.nowPlaying.debug("animatedArtworkResources called. preset id: \(preset.id.uuidString)")
@@ -62,7 +63,8 @@ import os
       if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
         Logger.nowPlaying.debug("Bundled artwork, resolving Background Assets pack: \(bundledId)")
         return loadBundledBackgroundResources(
-          bundledId: bundledId, key: key, onDownloaded: onDownloaded)
+          bundledId: bundledId, key: key, downloadIfMissing: downloadIfMissing,
+          onDownloaded: onDownloaded)
       }
 
       // No loopPath and no bundled ID - invalid state
@@ -106,6 +108,7 @@ import os
     private func loadBundledBackgroundResources(
       bundledId: String,
       key: AnimatedArtworkKey,
+      downloadIfMissing: Bool,
       onDownloaded: @escaping @MainActor () -> Void
     ) -> (loopURL: URL, previewImage: UIImage?)? {
       // Each clip ships as two variants so it animates on every lock screen:
@@ -118,6 +121,10 @@ import os
 
       // The video lives in its Background Assets pack; serve it directly.
       guard let loopURL = BackgroundResourceManager.shared.availableURL(for: packId) else {
+        // A non-preferred variant is served only if it is already local: this
+        // device fetches one pack per clip, the same as the 26 path.
+        guard downloadIfMissing else { return nil }
+
         Logger.nowPlaying.debug(
           "Artwork pack \(packId) not available, triggering background download")
 
