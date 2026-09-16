@@ -24,8 +24,11 @@ enum NowPlayingDisplay {
   ) {
     // Check if we're in solo mode
     if let soloSound = AudioManager.shared.soloModeSound {
-      // Built-in sound authors are shown in the dedicated credits screens, but for user-added sounds show the creator name if available
-      let artist = (soloSound.isCustom ? soloSound.creditedAuthor : nil) ?? "Blankie"
+      // A built-in sound's caption is the best second line. Custom sounds have no
+      // caption, so they show their creator; the app name is the last resort.
+      let artist =
+        soloSound.localizedSubtitle ?? (soloSound.isCustom ? soloSound.creditedAuthor : nil)
+        ?? "Blankie"
       return (title: soloSound.title, artist: artist)
     } else if AudioManager.shared.isQuickMix {
       // Quick Mix has no preset of its own; name it explicitly rather than

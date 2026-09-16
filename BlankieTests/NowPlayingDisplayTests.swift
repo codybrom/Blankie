@@ -26,7 +26,7 @@ import Testing
   private let originalQuickMix: Bool
   private let originalPresets: [Preset]
   private let originalCurrentPreset: Preset?
-  nonisolated private static let testNames = ["test-rain", "test-waves"]
+  nonisolated private static let testNames = ["test-rain", "test-waves", "Rain"]
 
   init() {
     originalAutoPlay = GlobalSettings.shared.autoPlayOnLaunch
@@ -137,6 +137,19 @@ import Testing
     let info = NowPlayingDisplay.getDisplayInfo(presetName: "Rainy Night", creatorName: "Ada")
     #expect(info.title == "test-rain")
     #expect(info.artist == "Blankie")
+  }
+
+  /// A built-in sound that carries a caption publishes it as the second line,
+  /// so the lock screen reads "Rain / Soft, steady rainfall" instead of
+  /// "Rain / Blankie". The caption resolves by title through the credits data.
+  @Test func soloSoundPublishesItsCaptionAsArtist() {
+    let rain = TestSound(fileName: "Rain")
+    audioManager.sounds = [rain]
+    audioManager.soloModeSound = rain
+
+    let caption = rain.localizedSubtitle
+    #expect(caption != nil)
+    #expect(NowPlayingDisplay.getDisplayInfo(presetName: nil).artist == caption)
   }
 
   /// Quick Mix has no preset of its own, so it names itself instead of falling
