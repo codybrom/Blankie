@@ -23,6 +23,9 @@
     let model = NowPlayingSessionModel()
     private var session: MediaSession<NowPlayingSessionModel>?
     private var primaryRequest: Task<Void, Never>?
+    /// The publish waiting out the debounce; the newest call replaces it.
+    private var pendingPublish: PendingPublish?
+    private var publishDebounce: Task<Void, Never>?
     private var timerActiveObservation: Task<Void, Never>?
     private var timerDurationObservation: Task<Void, Never>?
     private var lockScreenBgObservation: Task<Void, Never>?
@@ -89,6 +92,7 @@
 
     deinit {
       primaryRequest?.cancel()
+      publishDebounce?.cancel()
       timerActiveObservation?.cancel()
       timerDurationObservation?.cancel()
       lockScreenBgObservation?.cancel()
@@ -105,8 +109,44 @@
       artworkId: UUID?,
       isPlaying: Bool
     ) {
-      let resolvedPresetName = preset?.name ?? presetName
-      let resolvedCreatorName = preset?.creatorName ?? creatorName
+      // Debounced 0.1 s, exactly as the 26 backend: one preset switch publishes
+      // six times while its sounds settle, and MediaRemote throttles an app
+      // that pushes that often ("Application exceeded audio metadata throttle
+      // limit"), dropping updates, artwork included. Playback state is not
+      // debounced (`updatePlaybackState`), so a remote pause still lands at once.
+      pendingPublish = PendingPublish(
+        preset: preset, presetName: presetName, creatorName: creatorName,
+        artworkId: artworkId, isPlaying: isPlaying)
+      publishDebounce?.cancel()
+      publishDebounce = Task { @MainActor [weak self] in
+        try? await Task.sleep(for: .milliseconds(100))
+        guard !Task.isCancelled else { return }
+        self?.flushPendingPublish()
+      }
+    }
+
+    /// Publishes the pending state now rather than when the debounce fires.
+    func flushPendingPublish() {
+      publishDebounce?.cancel()
+      publishDebounce = nil
+      guard let pending = pendingPublish else { return }
+      pendingPublish = nil
+      performPublish(pending)
+    }
+
+    private struct PendingPublish {
+      let preset: Preset?
+      let presetName: String?
+      let creatorName: String?
+      let artworkId: UUID?
+      let isPlaying: Bool
+    }
+
+    private func performPublish(_ pending: PendingPublish) {
+      let preset = pending.preset
+      let isPlaying = pending.isPlaying
+      let resolvedPresetName = preset?.name ?? pending.presetName
+      let resolvedCreatorName = preset?.creatorName ?? pending.creatorName
 
       let displayInfo = NowPlayingDisplay.getDisplayInfo(
         presetName: resolvedPresetName, creatorName: resolvedCreatorName)
@@ -133,7 +173,7 @@
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)
       model.entityIdentifiers = entityIdentifiers(for: resolvedPreset)
       refreshTiming()
-      refreshArtwork(preset: resolvedPreset, fallbackArtworkId: artworkId)
+      refreshArtwork(preset: resolvedPreset, fallbackArtworkId: pending.artworkId)
 
       publishWidgetSnapshot(
         preset: preset, resolvedCreatorName: resolvedCreatorName, title: displayInfo.title,

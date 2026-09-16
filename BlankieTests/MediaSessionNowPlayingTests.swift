@@ -69,6 +69,34 @@
       return preset
     }
 
+    // MARK: - Publishing
+
+    /// Publishes are debounced 0.1 s as on the 26 backend: nothing lands
+    /// synchronously, and a burst lands once, as its last state. Flushed here
+    /// rather than slept through: the test host's main actor does not reliably
+    /// run other main-actor tasks while a test sleeps.
+    @Test func publishesLandOnceAsTheirLastState() {
+      guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
+      let backend = MediaSessionNowPlaying()
+      let first = PresetFactory.makePreset(accentColorName: "blue")
+      let second = makeCurrentPreset()
+
+      backend.updateInfo(preset: first, presetName: first.name, isPlaying: false)
+      backend.updateInfo(preset: second, presetName: second.name, isPlaying: false)
+      #expect(backend.model.contentID == "default")
+      #expect(backend.model.title.isEmpty)
+
+      backend.flushPendingPublish()
+      #expect(backend.model.contentID == "preset:\(second.id.uuidString)")
+      #expect(backend.model.title == second.name)
+
+      // Flushed once: a second flush has nothing left to publish.
+      backend.updateInfo(preset: first, presetName: first.name, isPlaying: false)
+      backend.flushPendingPublish()
+      backend.flushPendingPublish()
+      #expect(backend.model.contentID == "preset:\(first.id.uuidString)")
+    }
+
     // MARK: - Content identity
 
     /// `exitSoloMode` publishes a name with no preset; the system reads a
@@ -79,9 +107,11 @@
       let preset = makeCurrentPreset()
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.contentID == "preset:\(preset.id.uuidString)")
 
       backend.updateInfo(presetName: "Blankie", isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.contentID == "preset:\(preset.id.uuidString)")
     }
 
@@ -95,6 +125,7 @@
       audioManager.soloModeSound = rain
 
       backend.updateInfo(presetName: "Blankie", isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.contentID == "solo:\(Self.testName)")
     }
 
@@ -108,6 +139,7 @@
       PresetManager.shared.setCurrentPreset(nil)
 
       backend.updateInfo(presetName: "Blankie", isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.artwork != nil)
     }
 
@@ -122,6 +154,7 @@
       PresetManager.shared.setCurrentPreset(preset)
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.artwork != nil)
       #expect(backend.model.artwork?.id.hasPrefix("fallback:") == true)
     }
@@ -137,11 +170,13 @@
       let preset = makeCurrentPreset()
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       let before = backend.model.artwork?.id
       #expect(before?.hasPrefix("fallback:") == true)
 
       rain.isSelected = true
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       let after = backend.model.artwork?.id
       #expect(after?.hasPrefix("fallback:") == true)
       #expect(after != before)
@@ -166,12 +201,14 @@
         PresetManager.shared.setCurrentPreset(preset)
         let withOwnStill = MediaSessionNowPlaying()
         withOwnStill.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+        withOwnStill.flushPendingPublish()
         #expect(withOwnStill.model.artwork?.id == "static:\(stillPath)")
 
         preset.staticArtworkPath = nil
         PresetManager.shared.setCurrentPreset(preset)
         let inheriting = MediaSessionNowPlaying()
         inheriting.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+        inheriting.flushPendingPublish()
         #expect(inheriting.model.artwork?.id == "bundled:\(defaultLoop.id)")
       }
     #endif
@@ -185,14 +222,17 @@
       let preset = makeCurrentPreset(accentColorName: "blue")
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       let firstID = backend.model.artwork?.id
       #expect(firstID != nil)
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.artwork?.id == firstID)
 
       let recolored = makeCurrentPreset(id: preset.id, accentColorName: "red")
       backend.forceRefresh(preset: recolored, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.artwork?.id != firstID)
     }
 
@@ -205,6 +245,7 @@
       let backend = MediaSessionNowPlaying()
       let preset = makeCurrentPreset()
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
 
       backend.clear()
       #expect(backend.model.title.isEmpty)
@@ -212,6 +253,7 @@
       #expect(backend.model.content?.artwork == nil)
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.title == preset.name)
       #expect(backend.model.contentID == "preset:\(preset.id.uuidString)")
     }
@@ -226,10 +268,12 @@
       let preset = makeCurrentPreset()
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.timer == nil)
 
       TimerManager.shared.startTimer(duration: 600)
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.timer?.duration == 600)
       // A timed card publishes under its own id so the system re-reads the
       // finite duration instead of keeping the continuous layout.
@@ -237,6 +281,7 @@
 
       TimerManager.shared.stopTimer()
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
       #expect(backend.model.timer == nil)
       #expect(backend.model.content?.id == backend.model.contentID)
     }
