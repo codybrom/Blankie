@@ -42,7 +42,10 @@
       let soloSound = AudioManager.shared.soloModeSound
       let soloSoundId = soloSound?.id
       guard !hasBuiltArtwork || preset?.id != lastPresetId || soloSoundId != lastSoloSoundId
-      else { return }
+      else {
+        refreshFallbackArtworkIfItsIdChanged()
+        return
+      }
       hasBuiltArtwork = true
       lastPresetId = preset?.id
       lastSoloSoundId = soloSoundId
@@ -159,6 +162,16 @@
         return
       }
       setArtwork(data: data, source: .solo(fileName: sound.fileName))
+    }
+
+    /// The drawn fallback encodes the selected sounds' icons and the accent, so
+    /// a selection change within the same preset needs a new still although the
+    /// identity gate holds. Static only: the animated loop stays put.
+    private func refreshFallbackArtworkIfItsIdChanged() {
+      guard let current = model.artwork?.id, current.hasPrefix("fallback:") else { return }
+      let id = NowPlayingSessionMapping.artworkID(
+        source: Self.fallbackArtworkSource(), accentColorName: artworkAccentName)
+      if id != current { applyFallbackArtwork() }
     }
 
     /// The drawn fallback a mix without artwork of its own shows. A render can
@@ -281,12 +294,21 @@
               for: preset, key: key, downloadIfMissing: key == preferredKey,
               // Straight back to the animation, not through `publishInfo`: by
               // now the identity gate has recorded this preset and would drop it.
-              onDownloaded: { [weak self] in self?.refreshAnimatedArtwork(for: preset) }),
+              onDownloaded: { [weak self] in self?.refreshAnimatedArtworkForCurrentPreset() }),
             let preview = Self.jpegData(resources.previewImage)
           else { continue }
           found[Self.sessionRatio(ratio)] = (preview: preview, loop: resources.loopURL)
         }
         return found
+      }
+
+      /// A pack finished downloading: refresh whatever is current now, not the
+      /// preset that started the request. It may have changed since, and the
+      /// resolver coalesces downloads by pack, so a later preset shares this call.
+      private func refreshAnimatedArtworkForCurrentPreset() {
+        guard AudioManager.shared.soloModeSound == nil else { return }
+        refreshAnimatedArtwork(
+          for: effectiveArtworkPreset(for: PresetManager.shared.currentPreset))
       }
 
       private func clearAnimatedArtwork() {

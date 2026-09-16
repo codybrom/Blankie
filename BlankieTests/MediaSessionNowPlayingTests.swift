@@ -126,6 +126,27 @@
       #expect(backend.model.artwork?.id.hasPrefix("fallback:") == true)
     }
 
+    /// The drawn fallback is a montage of the selected sounds, so selecting a
+    /// sound inside the same preset must change the still even though the
+    /// preset itself did not.
+    @Test func fallbackArtworkFollowsTheSelectionWithinAPreset() {
+      guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
+      let backend = MediaSessionNowPlaying()
+      let rain = TestSound(fileName: Self.testName)
+      audioManager.sounds = [rain]
+      let preset = makeCurrentPreset()
+
+      backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      let before = backend.model.artwork?.id
+      #expect(before?.hasPrefix("fallback:") == true)
+
+      rain.isSelected = true
+      backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      let after = backend.model.artwork?.id
+      #expect(after?.hasPrefix("fallback:") == true)
+      #expect(after != before)
+    }
+
     #if os(iOS)
       /// A preset's own still beats the preview of the app-wide default animation
       /// it inherits for the lock screen; without one, the inherited preview wins.
