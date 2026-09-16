@@ -126,6 +126,35 @@
       #expect(backend.model.artwork?.id.hasPrefix("fallback:") == true)
     }
 
+    #if os(iOS)
+      /// A preset's own still beats the preview of the app-wide default animation
+      /// it inherits for the lock screen; without one, the inherited preview wins.
+      @Test func ownStillBeatsTheInheritedDefaultAnimation() throws {
+        guard #available(iOS 27, *) else { return }
+        guard let defaultLoop = BundledAnimatedLoop.allCases.first else { return }
+        GlobalSettings.shared.setDefaultLockScreenArtwork(
+          AnimatedArtworkRef(source: .bundled, bundledIdentifier: defaultLoop.id))
+        let stillPath = "test-still-\(UUID().uuidString).jpg"
+        _ = try AnimatedArtworkFileStore.writeData(Data([0xFF, 0xD8, 0xFF, 0xD9]), to: stillPath)
+        defer { AnimatedArtworkFileStore.removeItemIfExists(relativePath: stillPath) }
+
+        var preset = PresetFactory.makePreset(accentColorName: "blue")
+        preset.artworkId = nil
+        preset.animatedArtwork = nil
+        preset.staticArtworkPath = stillPath
+        PresetManager.shared.setCurrentPreset(preset)
+        let withOwnStill = MediaSessionNowPlaying()
+        withOwnStill.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+        #expect(withOwnStill.model.artwork?.id == "static:\(stillPath)")
+
+        preset.staticArtworkPath = nil
+        PresetManager.shared.setCurrentPreset(preset)
+        let inheriting = MediaSessionNowPlaying()
+        inheriting.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+        #expect(inheriting.model.artwork?.id == "bundled:\(defaultLoop.id)")
+      }
+    #endif
+
     /// Rebuilding artwork restarts the animated loop, so an incremental publish
     /// of the same preset keeps the id; a new accent through `forceRefresh`
     /// changes it, because the drawn fallback renders in that accent.

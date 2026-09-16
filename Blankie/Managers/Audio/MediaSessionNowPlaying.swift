@@ -35,6 +35,8 @@
     /// with no preset), so the first pass has to be forced or that card would
     /// never get artwork at all.
     var hasBuiltArtwork = false
+    /// Last good JPEG per fallback-artwork id, for when a render fails.
+    var fallbackArtworkCache: [String: Data] = [:]
     #if os(iOS)
       var currentAnimatedLoopPath: String?
       var currentAnimatedPreviewPath: String?

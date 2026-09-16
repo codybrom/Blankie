@@ -57,7 +57,8 @@
       }
 
       let effectivePreset = effectiveArtworkPreset(for: preset)
-      applyStaticArtwork(for: effectivePreset, fallbackArtworkId: fallbackArtworkId)
+      applyStaticArtwork(
+        for: preset, inherited: effectivePreset, fallbackArtworkId: fallbackArtworkId)
       #if os(iOS)
         refreshAnimatedArtwork(for: effectivePreset)
       #endif
@@ -88,10 +89,13 @@
       return effectivePreset
     }
 
-    /// The still image, in the 26 backend's priority order: stored artwork, the
-    /// bundled square preview, the cached square preview, any other cached
-    /// preview, then the drawn fallback.
-    private func applyStaticArtwork(for preset: Preset?, fallbackArtworkId: UUID?) {
+    /// The still image: stored artwork, then the preset's own previews (bundled
+    /// square preview, cached square preview, any other cached preview), then
+    /// the same previews of the inherited default animation, then the drawn
+    /// fallback. A preset's own image always beats the app-wide default's.
+    private func applyStaticArtwork(
+      for preset: Preset?, inherited: Preset?, fallbackArtworkId: UUID?
+    ) {
       if let artworkId = preset?.artworkId ?? fallbackArtworkId {
         // Decided in the same pass as the title: the system reads an item's
         // artwork once, so a still that arrives later is never shown.
@@ -106,6 +110,7 @@
 
       #if os(iOS) && !WIDGET_EXTENSION
         if let preset, applyCachedArtwork(for: preset) { return }
+        if let inherited, inherited != preset, applyCachedArtwork(for: inherited) { return }
       #endif
 
       applyFallbackArtwork()
@@ -156,13 +161,27 @@
       setArtwork(data: data, source: .solo(fileName: sound.fileName))
     }
 
-    /// The drawn fallback a mix without artwork of its own shows.
+    /// The drawn fallback a mix without artwork of its own shows. A render can
+    /// fail while the app is in the background; then the last good render for
+    /// the same id stands in, and the next publish tries again rather than
+    /// leaving the card bare (the system never re-reads a bare item).
     private func applyFallbackArtwork() {
-      guard let data = Self.jpegData(NowPlayingDisplay.mixFallbackImage()) else {
+      let source = Self.fallbackArtworkSource()
+      let id = NowPlayingSessionMapping.artworkID(
+        source: source, accentColorName: artworkAccentName)
+      if let data = Self.jpegData(NowPlayingDisplay.mixFallbackImage()) {
+        fallbackArtworkCache[id] = data
+        setArtwork(data: data, source: source)
+      } else if let data = fallbackArtworkCache[id] {
+        Logger.nowPlaying.error(
+          "MediaSessionNowPlaying: fallback artwork render failed, reusing \(id, privacy: .public)")
+        setArtwork(data: data, source: source)
+      } else {
+        Logger.nowPlaying.error(
+          "MediaSessionNowPlaying: fallback artwork render failed for \(id, privacy: .public)")
         model.artwork = nil
-        return
+        hasBuiltArtwork = false
       }
-      setArtwork(data: data, source: Self.fallbackArtworkSource())
     }
 
     /// The provider is called on the system's schedule and cached by id, so it
