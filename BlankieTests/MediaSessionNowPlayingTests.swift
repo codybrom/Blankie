@@ -36,7 +36,9 @@
       originalCurrentPreset = PresetManager.shared.currentPreset
       originalDefaultArtwork = GlobalSettings.shared.defaultLockScreenArtwork
       GlobalSettings.shared.setAutoPlayOnLaunch(false)
-      AudioManager.shared.resetSounds()
+      // Not `resetSounds()`: its debounced global-volume save lands on the main
+      // run loop after this suite ends and races the migration suite that runs
+      // next. Every test sets the sounds, solo and Quick Mix state it needs.
       audioManager.soloModeSound = nil
       audioManager.isQuickMix = false
       // With no app-wide lock screen animation, a preset that carries no artwork
