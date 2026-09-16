@@ -56,7 +56,7 @@ The `MediaSession` is built on the first publish while playing, then `requestToB
 
 ### Declared state
 
-`MediaPlaybackSnapshot` carries `.playing()` or `.paused`; the state is declared, not inferred from hardware I/O. Duration is `MediaDuration.continuous` for an ambient mix and `.finite` only while a sleep timer runs, where the snapshot also carries `elapsedTime` and `timestamp` captured at the same instant so the system extrapolates between publishes. Timer changes arrive through `Observations` on `isTimerActive` and `selectedDuration`, not a poll. There is no loop progress on 27 by decision: `updateProgress` is a no-op and only the sleep timer moves the scrubber.
+`MediaPlaybackSnapshot` carries `.playing()` or `.paused`; the state is declared, not inferred from hardware I/O. Duration is `MediaDuration.continuous` for an ambient mix and `.finite` only while a sleep timer runs, where the snapshot also carries `elapsedTime` and `timestamp` captured at the same instant so the system extrapolates between publishes. Timer changes arrive through `Observations` on `isTimerActive` and `selectedDuration`, not a poll. There is no loop progress on 27 by decision: `updateProgress` is a no-op and only the sleep timer moves the scrubber. While a sleep timer runs the id carries a `:timed` suffix: the system reads an item's duration once per id, so the timed card has to arrive as a new item for the finite length (and the scrubber) to appear, and it reverts when the timer ends.
 
 ### Artwork, entities, commands
 

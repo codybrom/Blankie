@@ -104,6 +104,13 @@ import Testing
         == "default")
   }
 
+  /// A running sleep timer publishes under its own id, and the base id comes
+  /// back untouched when it ends.
+  @Test func timedContentIDIsSuffixedOnlyWhileATimerRuns() {
+    #expect(NowPlayingSessionMapping.contentID("quickmix", timed: true) == "quickmix:timed")
+    #expect(NowPlayingSessionMapping.contentID("quickmix", timed: false) == "quickmix")
+  }
+
   // MARK: - Artwork identity
 
   @Test func storedArtworkUsesItsIdentifier() {

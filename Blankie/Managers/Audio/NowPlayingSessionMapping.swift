@@ -95,6 +95,12 @@ enum NowPlayingSessionMapping {
     }
   }
 
+  /// The system reads a content item's duration once per id, so a running sleep
+  /// timer publishes under a distinct id and the card re-reads its finite length.
+  nonisolated static func contentID(_ base: String, timed: Bool) -> String {
+    timed ? "\(base):timed" : base
+  }
+
   /// The artwork's identity. The system caches artwork by id and never asks for
   /// a cached one again, so this has to change whenever the rendered image
   /// would — which for the drawn fallbacks means folding in the accent and the
