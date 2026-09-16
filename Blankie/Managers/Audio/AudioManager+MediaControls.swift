@@ -30,12 +30,14 @@ extension AudioManager {
   private func makeRemoteCommandHandlers() -> RemoteCommandHandlers {
     RemoteCommandHandlers(
       play: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote play received")
         // Only play if we're currently paused
         if !(self?.isGloballyPlaying ?? false) {
           self?.setGlobalPlaybackState(true)
         }
       },
       pause: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote pause received")
         // Only pause if we're currently playing; remote pauses cut instantly
         // (see Sound.remotePauseFadeDuration).
         if self?.isGloballyPlaying ?? false {
@@ -43,10 +45,12 @@ extension AudioManager {
         }
       },
       togglePlayPause: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote toggle play/pause received")
         // Same instant remote pause as pauseCommand (ignored when resuming).
         self?.togglePlayback(pauseFadeDuration: Sound.remotePauseFadeDuration)
       },
       next: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote next received")
         guard let self = self else { return false }
 
         // Quick Mix isn't part of the favorites cycle; solo sounds can be (when
@@ -60,6 +64,7 @@ extension AudioManager {
         return true
       },
       previous: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote previous received")
         guard let self = self else { return false }
 
         // Quick Mix isn't part of the favorites cycle; solo sounds can be (when

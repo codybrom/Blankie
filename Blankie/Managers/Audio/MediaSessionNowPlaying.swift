@@ -62,7 +62,7 @@
       // Republish the lock-screen background when the user toggles the setting.
       lockScreenBgObservation = Task { [weak self] in
         for await _ in Observations({ GlobalSettings.shared.lockScreenBackgroundEnabled }) {
-          self?.republishCurrentPreset()
+          self?.republishForArtworkGateChange()
         }
       }
 
@@ -73,14 +73,14 @@
           for await _ in NotificationCenter.default.notifications(
             named: UIAccessibility.reduceMotionStatusDidChangeNotification)
           {
-            self?.republishCurrentPreset()
+            self?.republishForArtworkGateChange()
           }
         }
         powerStateObservation = Task { [weak self] in
           for await _ in NotificationCenter.default.notifications(
             named: Notification.Name.NSProcessInfoPowerStateDidChange)
           {
-            self?.republishCurrentPreset()
+            self?.republishForArtworkGateChange()
           }
         }
       #endif
@@ -151,6 +151,13 @@
         artworkId: preset?.artworkId,
         isPlaying: AudioManager.shared.isGloballyPlaying
       )
+    }
+
+    /// Republish after a gate that decides what the artwork shows flipped while
+    /// the preset itself did not, so the identity gate can't skip the rebuild.
+    private func republishForArtworkGateChange() {
+      hasBuiltArtwork = false
+      republishCurrentPreset()
     }
 
     func forceRefresh(preset: Preset, isPlaying: Bool) {
