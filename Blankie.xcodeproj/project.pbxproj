@@ -92,6 +92,8 @@
 		F921ED992D272AE300D4F3D3 /* Configuration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration.xcconfig; sourceTree = "<group>"; };
 		F93A3B112D26E93600EFC1C9 /* Blankie.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Blankie.entitlements; sourceTree = "<group>"; };
 		F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Blankie.xcodeproj; sourceTree = "<group>"; };
+		F93F8540305E302200EC23DE /* Blankie-CarPlay.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Blankie-CarPlay.entitlements"; sourceTree = "<group>"; };
+		F93F8541305E302200EC23DE /* Blankie-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Blankie-macOS.entitlements"; sourceTree = "<group>"; };
 		F94CB7992FEA47920077688E /* BlankiePresetPreview.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BlankiePresetPreview.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F94CB79A2FEA47920077688E /* QuickLook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLook.framework; path = System/Library/Frameworks/QuickLook.framework; sourceTree = SDKROOT; };
 		F95914D02FDF1D2300808460 /* BlankieAssetDownloader.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.extensionkit-extension"; includeInIndex = 0; path = BlankieAssetDownloader.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -324,6 +326,8 @@
 				F93A3B122D26E93600EFC1C9 /* Blankie.xcodeproj */,
 				F9ED66022D321B7D00240F13 /* Blankie.xctestplan */,
 				F93A3B112D26E93600EFC1C9 /* Blankie.entitlements */,
+				F93F8540305E302200EC23DE /* Blankie-CarPlay.entitlements */,
+				F93F8541305E302200EC23DE /* Blankie-macOS.entitlements */,
 				FC1DBEF3AED8F826C95BC33E /* Blankie-Info.plist */,
 				B879D528169AA46385D0B95D /* Blankie-CarPlay.plist */,
 				F921ED992D272AE300D4F3D3 /* Configuration.xcconfig */,
