@@ -17,12 +17,15 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 - **Siri, Shortcuts, and Spotlight** - Ask Siri to play a preset or sound, build your own Shortcuts around Blankie's actions (play, pause, presets, sounds, and volume), and find your presets and sounds in Spotlight search. Siri phrases are localized for supported languages.
 - **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description. The subtitle shows when you play a sound by itself and when you select sounds for a preset. Descriptions and subtitles are translated into supported languages.
 - **Preset artwork behind the mixer (Mac)** - A preset's background artwork now shows behind your sounds on the Mac, dimmed so the tiles stay readable, the same way it does on iPhone and iPad.
+- **Now Playing on iOS 27, iPadOS 27 and macOS 27** - On the new systems Blankie publishes through Apple's Now Playing framework. The Lock Screen, Control Center, AirPods and CarPlay show the state Blankie declares (paused means paused, the moment you pause it), a countdown bar while a sleep timer runs, and animated Lock Screen artwork, tall on iPhone and square on iPad. On iOS 26 and macOS 26 nothing changes.
 
 ### Changed
 
 - **Artwork selection UI** - The preset editor now shows a background tile (for the images that display behind your sounds) and a Lock Screen tile (animated artwork for your lockscreen) with a live preview.
 - **Quick Look preset preview artwork (iOS)** - A shared `.blankie` file with no saved artwork will now show the same fallback artwork Blankie uses in the app.
 - Improved translations across all 11 languages.
+- **Sound captions in Now Playing** - Play a sound by itself and its caption ("Soft, steady rainfall") now shows under its name on the Lock Screen, in Control Center and in CarPlay, the same line you see in the app.
+- **No progress bar for looping sounds on iOS 27 and macOS 27** - Loops have no end, so the card shows none. The bar comes back for a sleep timer and counts down to when the sounds stop.
 
 ### Fixed
 
