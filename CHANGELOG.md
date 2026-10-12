@@ -34,7 +34,7 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 - In cars set to light mode, CarPlay used light colored text that could be hard to read. Blankie now properly follows CarPlay's light or dark appearance with proper colors.
 - Picking a preset in CarPlay when nothing was selected could light up the sounds without starting playback.
 - In CarPlay, presets without artwork showed a smaller image than presets with artwork.
-- Changing your mix just before soloing a sound, previewing one, or switching presets could lose that change. Leaving solo without resuming could also stop later changes from saving to the preset.
+- Changing your mix just before playing a sound by itself, previewing one, or switching presets could lose that change. Going from a sound playing by itself straight to a preset or Quick Mix could also stop later changes from saving to the preset.
 - Skipping to the next or previous preset from the lock screen, Control Center or CarPlay while paused started playback. It now stays paused.
 - Blankie could keep reporting that it was playing over silence after you previewed a sound while paused, after a mix ended up with nothing selected, or after you resumed a sound that was still fading out. If the audio engine failed to start, a later retry could resume playback after you had paused or leave a sound silent.
 - The lock screen could show Blankie as playing right after you paused it.
