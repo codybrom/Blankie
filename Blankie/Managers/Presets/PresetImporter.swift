@@ -426,7 +426,7 @@ extension PresetImporter {
 
     // Extract the UUID from the filename if it's different from metadata ID
     let fileNameWithoutExt = (soundFileURL.lastPathComponent as NSString).deletingPathExtension
-    let actualId: UUID
+    var actualId: UUID
     if let uuidFromFilename = UUID(uuidString: fileNameWithoutExt),
       uuidFromFilename != soundMetadata.id
     {
@@ -436,6 +436,15 @@ extension PresetImporter {
       actualId = uuidFromFilename
     } else {
       actualId = soundMetadata.id
+    }
+
+    // The ID names the stored file, so an ID already in use (a different file
+    // with the same ID, e.g. a SHA mismatch) would overwrite that sound's audio
+    // and leave two rows with one ID. Mint a fresh one; idMapping remaps the preset.
+    if CustomSoundManager.shared.getCustomSound(by: actualId) != nil
+      || CustomSoundManager.shared.customAudioFileNamesOnDisk().contains(actualId.uuidString)
+    {
+      actualId = UUID()
     }
 
     do {
