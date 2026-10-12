@@ -34,6 +34,17 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 - In cars set to light mode, CarPlay used light colored text that could be hard to read. Blankie now properly follows CarPlay's light or dark appearance with proper colors.
 - Picking a preset in CarPlay when nothing was selected could light up the sounds without starting playback.
 - In CarPlay, presets without artwork showed a smaller image than presets with artwork.
+- Changing your mix just before soloing a sound, previewing one, or switching presets could lose that change. Leaving solo without resuming could also stop later changes from saving to the preset.
+- Skipping to the next or previous preset from the lock screen, Control Center or CarPlay while paused started playback. It now stays paused.
+- Blankie could keep reporting that it was playing over silence after you previewed a sound while paused, after a mix ended up with nothing selected, or after you resumed a sound that was still fading out. If the audio engine failed to start, a later retry could resume playback after you had paused or leave a sound silent.
+- The lock screen could show Blankie as playing right after you paused it.
+- Lock screen artwork could fall out of step with the preset. A preset without animated artwork kept the previous preset's animation, a newly downloaded animation didn't appear until you changed presets, and switching presets quickly could pair one preset's name with another's artwork.
+- Adding time to the sleep timer at the moment it ran out could still stop your sounds.
+- Importing a preset could crash Blankie on every launch if the file listed a sound twice. An import could also remove artwork from the preset it was exported from, or replace one of your custom sounds with a different one that shared its ID.
+- Custom sounds could disappear from presets and favorites after Blankie rebuilt its data, even though their audio was still there. Adding or deleting a custom sound while one played by itself, in a preview or in Quick Mix could leave it playing with no way to stop it, and a sound deleted while it was being converted or restored could leave a stray file behind or come back.
+- Custom sounds about 25 hours or longer crashed Blankie during import, in the sound editor, or when played, and some damaged audio files could crash the sound editor.
+- If moving your data to the shared app container was interrupted during an update, Blankie could start with an incomplete store and custom sounds it couldn't find. It now finishes the move on the next launch.
+- With Mix with Other Audio turned on, returning to Blankie while connected to CarPlay let other apps' audio mix with your sounds in the car.
 
 ## [2.0.2] - 2026-06-28
 
