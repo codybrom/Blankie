@@ -111,6 +111,7 @@ extension AudioManager {
 
       AudioSessionManager.shared.reactivateForForeground(
         mixWithOthers: GlobalSettings.shared.mixWithOthers,
+        isCarPlayConnected: isCarPlayConnected,
         isPlaying: isGloballyPlaying
       )
 
