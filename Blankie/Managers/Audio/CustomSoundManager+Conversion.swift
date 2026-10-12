@@ -44,7 +44,11 @@ extension CustomSoundManager {
     guard !Self.lossyExtensions.contains(ext.lowercased()) else { return nil }
     guard let currentBytes, currentBytes > 5 * 1024 * 1024 else { return nil }
     guard let duration, duration > 0 else { return nil }
-    let projected = Int64(Double(Self.conversionBitRate) / 8.0 * duration)
+    // Exactly: a malformed file's duration can be infinite, and Int64(_:) traps.
+    guard
+      let projected = Int64(
+        exactly: (Double(Self.conversionBitRate) / 8.0 * duration).rounded(.down))
+    else { return nil }
     let estimate = CompressionEstimate(currentBytes: currentBytes, projectedBytes: projected)
     guard estimate.savedFraction > 0.5 else { return nil }
     return estimate
