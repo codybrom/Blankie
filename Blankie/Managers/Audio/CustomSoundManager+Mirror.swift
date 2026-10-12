@@ -163,9 +163,18 @@ extension CustomSoundManager {
     guard let dir = getCustomSoundsDirectoryURL() else { return }
     let existing = Set(getAllCustomSounds().map { $0.fileName })
 
-    let snapshotsToRestore = await Task.detached(priority: .utility) {
+    let scanned = await Task.detached(priority: .utility) {
       Self.restorableSnapshots(in: dir, excluding: existing)
     }.value
+
+    // Re-check against the live store: an import or delete can land during the
+    // scan, and restoring it again would duplicate the row or revive a deleted one.
+    let current = Set(getAllCustomSounds().map { $0.fileName })
+    let snapshotsToRestore = scanned.filter { snapshot in
+      !current.contains(snapshot.fileName)
+        && FileManager.default.fileExists(
+          atPath: dir.appendingPathComponent("\(snapshot.fileName).\(snapshot.fileExtension)").path)
+    }
     guard !snapshotsToRestore.isEmpty else { return }
 
     do {
