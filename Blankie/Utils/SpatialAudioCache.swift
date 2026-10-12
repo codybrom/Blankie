@@ -76,8 +76,9 @@ nonisolated enum SpatialAudioCache {
 
       let chunkFrames: AVAudioFrameCount = 48_000
       while inFile.framePosition < inFile.length {
-        let remaining = AVAudioFrameCount(inFile.length - inFile.framePosition)
-        let frames = min(chunkFrames, remaining)
+        // Clamp before narrowing: the remainder alone can exceed UInt32.
+        let frames = AVAudioFrameCount(
+          min(AVAudioFramePosition(chunkFrames), inFile.length - inFile.framePosition))
         guard
           let chunk = AVAudioPCMBuffer(pcmFormat: inFormat, frameCapacity: frames)
         else { throw CocoaError(.fileReadUnknown) }

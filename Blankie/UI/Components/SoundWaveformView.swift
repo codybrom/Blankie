@@ -112,9 +112,9 @@ struct SoundWaveformView: View {
   {
     let file = try AVAudioFile(forReading: url)
     let format = file.processingFormat
-    let frameCount = UInt32(file.length)
-
-    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+    guard let frameCount = AVAudioFrameCount(exactly: file.length),
+      let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount)
+    else {
       return []
     }
 
