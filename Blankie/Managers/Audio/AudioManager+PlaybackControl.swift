@@ -114,11 +114,12 @@ extension AudioManager {
       // Play the solo sound at its current volume
       soloSound.play()
 
-      // Update Now Playing info for solo mode
+      // Update Now Playing info for solo mode. Read the state when the Task runs:
+      // a pause queued ahead of it must not be overwritten with "playing".
       Task { @MainActor in
         nowPlayingManager.updateInfo(
           presetName: soloSound.title,
-          isPlaying: true
+          isPlaying: self.isGloballyPlaying
         )
       }
       return
@@ -143,7 +144,7 @@ extension AudioManager {
         presetName: currentPreset?.name,
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId,
-        isPlaying: true
+        isPlaying: self.isGloballyPlaying
       )
     }
   }
