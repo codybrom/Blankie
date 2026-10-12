@@ -343,6 +343,12 @@ extension AudioManager {
     previewModeSound = nil
     previewModeOriginalStates.removeAll()
 
+    // A preview while paused ran the engine; idle it once the fade-out lands,
+    // or iOS keeps reporting the app as playing over silence.
+    if !isGloballyPlaying {
+      scheduleEngineIdlePause(afterFade: Sound.fadeDuration)
+    }
+
     Logger.audio.debug("AudioManager: Preview mode exited")
   }
 }

@@ -167,7 +167,7 @@ extension AudioManager {
   /// After the pause fade-outs land, idles the engine and does the single
   /// paused publish (held until then — see performNowPlayingUpdate). The
   /// session stays active so the system controls remain visible.
-  private func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
+  func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
     Task { @MainActor [weak self] in
       // Zero-length fades pause their nodes synchronously inside pauseAll,
       // so the engine can idle in this same runloop turn — don't sleep.
