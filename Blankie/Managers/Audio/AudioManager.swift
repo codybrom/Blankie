@@ -231,19 +231,22 @@ extension AudioManager {
 
   func updateHasSelectedSounds() {
     let newValue = sounds.contains { $0.isSelected }
+
+    // Nothing selected pauses playback: silence should read as paused, never as
+    // a silent "playing" state. Checked on every pass, not only on a change —
+    // hasSelectedSounds can already be false when playback starts (e.g. a mode
+    // exit briefly restored a selection that the next preset then cleared).
+    if !newValue && isGloballyPlaying {
+      Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
+      Task { @MainActor in
+        setGlobalPlaybackState(false)
+      }
+    }
+
     if hasSelectedSounds != newValue {
       Logger.audio.debug(
         "AudioManager: hasSelectedSounds changed from \(self.hasSelectedSounds) to \(newValue)")
       hasSelectedSounds = newValue
-
-      // Turning off the last sound pauses playback: silence should read as
-      // paused, never as a silent "playing" state.
-      if !newValue && isGloballyPlaying {
-        Logger.audio.debug("AudioManager: Last sound deselected - pausing playback")
-        Task { @MainActor in
-          setGlobalPlaybackState(false)
-        }
-      }
 
       // Auto-start playback when sounds are selected and nothing is currently playing
       // Only auto-start if autoplay is enabled and we're not during initialization
