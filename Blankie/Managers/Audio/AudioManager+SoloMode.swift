@@ -229,6 +229,16 @@ extension AudioManager {
     // Clear from persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: nil)
 
+    // Same re-sync as exitSoloMode: replaying the current preset short-circuits
+    // as already active, so presetStatesApplied would stay false and later mix
+    // edits would never persist. Skipped inside applySoundStates (which calls
+    // this) so its isApplyingPresetStates window isn't closed early.
+    if !isApplyingPresetStates, !PresetManager.shared.presetStatesApplied,
+      let preset = PresetManager.shared.currentPreset
+    {
+      PresetManager.shared.applySoundStates(preset.soundStates)
+    }
+
     // Update media control command state
     updateNextPreviousCommandState()
 
