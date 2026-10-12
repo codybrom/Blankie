@@ -82,8 +82,9 @@ extension CustomSoundManager {
     }
 
     let beforeBytes = fileSize(at: sourceURL)
-    let tempURL = dir.appendingPathComponent("\(data.fileName)-aac-tmp.m4a")
-    try? FileManager.default.removeItem(at: tempURL)
+    // Unique per run: a second conversion of the same sound must never unlink (or
+    // swap in) this run's half-written file.
+    let tempURL = dir.appendingPathComponent("\(data.fileName)-aac-\(UUID().uuidString).m4a")
 
     do {
       try await Self.transcodeToAAC(source: sourceURL, destination: tempURL)
@@ -100,6 +101,13 @@ extension CustomSoundManager {
     guard afterBytes > 0, afterBytes < beforeBytes else {
       try? FileManager.default.removeItem(at: tempURL)
       return .failure(.noSavings)
+    }
+
+    // The sound may have been deleted during the transcode; don't move an
+    // orphan file into place or save the deleted model.
+    guard getCustomSound(by: soundDataID) != nil else {
+      try? FileManager.default.removeItem(at: tempURL)
+      return .failure(.soundNotFound)
     }
 
     // Release the live player before replacing the file so its handle is dropped
