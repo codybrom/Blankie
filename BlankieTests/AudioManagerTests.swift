@@ -117,7 +117,7 @@ struct AudioManagerTests {
   }
 
   /// An imported archive can repeat a name in `soundOrder`. Ordering must not
-  /// trap: the preset is saved before it renders, so it crashed every launch.
+  /// trap. The preset is saved before it renders, so it crashed every launch.
   @Test func orderingToleratesDuplicateSoundOrder() {
     let preset = PresetFactory.makePreset(soundOrder: ["rain", "waves", "rain"])
     #expect(audioManager.orderedVisibleSounds(for: preset).map(\.fileName) == ["rain", "waves"])

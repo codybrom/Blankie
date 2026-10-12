@@ -232,10 +232,10 @@ extension AudioManager {
   func updateHasSelectedSounds() {
     let newValue = sounds.contains { $0.isSelected }
 
-    // Nothing selected pauses playback: silence should read as paused, never as
-    // a silent "playing" state. Checked on every pass, not only on a change —
-    // hasSelectedSounds can already be false when playback starts (e.g. a mode
-    // exit briefly restored a selection that the next preset then cleared).
+    // Nothing selected pauses playback, since silence should read as paused and
+    // never as a silent "playing" state. Check on every pass, not only on a
+    // change, because hasSelectedSounds can already be false when playback starts
+    // (e.g. a mode exit briefly restored a selection that the next preset cleared).
     if !newValue && isGloballyPlaying {
       Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
       Task { @MainActor in
@@ -363,8 +363,8 @@ extension AudioManager {
     } else {
       order = defaultSoundOrder
     }
-    // First occurrence wins: an imported archive's order can repeat a name, and
-    // uniqueKeysWithValues would trap on it (on every launch once saved).
+    // Keep the first occurrence. An imported archive's order can repeat a name,
+    // and uniqueKeysWithValues would trap on it (on every launch once saved).
     let rank = Dictionary(
       order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
     return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }

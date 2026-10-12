@@ -229,7 +229,7 @@ extension AudioManager {
     // Clear from persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: nil)
 
-    // Same re-sync as exitSoloMode: replaying the current preset short-circuits
+    // Same re-sync as exitSoloMode. Replaying the current preset short-circuits
     // as already active, so presetStatesApplied would stay false and later mix
     // edits would never persist. Skipped inside applySoundStates (which calls
     // this) so its isApplyingPresetStates window isn't closed early.
@@ -343,7 +343,7 @@ extension AudioManager {
     previewModeSound = nil
     previewModeOriginalStates.removeAll()
 
-    // A preview while paused ran the engine; idle it once the fade-out lands,
+    // A preview while paused ran the engine. Idle it once the fade-out lands,
     // or iOS keeps reporting the app as playing over silence.
     if !isGloballyPlaying {
       scheduleEngineIdlePause(afterFade: Sound.fadeDuration)

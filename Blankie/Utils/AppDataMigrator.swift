@@ -151,8 +151,8 @@ enum AppDataMigrator {
     // If app group store already exists, no migration needed
     if appGroupStoreExists {
       Logger.app.debug("AppDataMigrator: App group store already exists, no migration needed")
-      // Still move the sound files: a run interrupted after the store copy
-      // would otherwise leave rows pointing at files that never moved.
+      // Still move the sound files. Otherwise a run interrupted after the store
+      // copy would leave rows pointing at files that never moved.
       migrateCustomSoundFiles()
       return true
     }
@@ -171,7 +171,7 @@ enum AppDataMigrator {
         let appGroupDir = appGroupURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: appGroupDir, withIntermediateDirectories: true)
 
-        // Copy all related files (main db, wal, shm) as a set: stage each under a
+        // Copy all related files (main db, wal, shm) as a set. Stage each under a
         // temporary name, then rename into place, so a failure never leaves a
         // partial store that the "store exists" check above would accept.
         let extensions = ["", "-wal", "-shm"].filter {
@@ -186,7 +186,7 @@ enum AppDataMigrator {
           try? fileManager.removeItem(at: stagedFile)
           try fileManager.copyItem(at: URL(fileURLWithPath: storeURL.path + ext), to: stagedFile)
         }
-        // The main file goes last: it's what the "store exists" check looks for.
+        // The main file goes last because it's what the "store exists" check looks for.
         for (ext, stagedFile) in zip(extensions, staged).reversed() {
           let destFile = URL(fileURLWithPath: appGroupURL.path + ext)
           try? fileManager.removeItem(at: destFile)  // stale -wal/-shm from a failed run

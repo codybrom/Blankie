@@ -44,7 +44,7 @@ extension CustomSoundManager {
     guard !Self.lossyExtensions.contains(ext.lowercased()) else { return nil }
     guard let currentBytes, currentBytes > 5 * 1024 * 1024 else { return nil }
     guard let duration, duration > 0 else { return nil }
-    // Exactly: a malformed file's duration can be infinite, and Int64(_:) traps.
+    // A malformed file's duration can be infinite, and Int64(_:) traps on it.
     guard
       let projected = Int64(
         exactly: (Double(Self.conversionBitRate) / 8.0 * duration).rounded(.down))
@@ -86,7 +86,7 @@ extension CustomSoundManager {
     }
 
     let beforeBytes = fileSize(at: sourceURL)
-    // Unique per run: a second conversion of the same sound must never unlink (or
+    // Unique per run, so a second conversion of the same sound can never unlink (or
     // swap in) this run's half-written file.
     let tempURL = dir.appendingPathComponent("\(data.fileName)-aac-\(UUID().uuidString).m4a")
 
@@ -107,7 +107,7 @@ extension CustomSoundManager {
       return .failure(.noSavings)
     }
 
-    // The sound may have been deleted during the transcode; don't move an
+    // The sound may have been deleted during the transcode. If so, don't move an
     // orphan file into place or save the deleted model.
     guard getCustomSound(by: soundDataID) != nil else {
       try? FileManager.default.removeItem(at: tempURL)

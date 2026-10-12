@@ -18,8 +18,8 @@ import os
     }
 
     func updateAnimatedArtwork(for preset: Preset?) {
-      // No animation at all (not even the inherited default) must clear the
-      // card; only a still-downloading pack keeps the current loop below.
+      // No animation at all (not even the inherited default) clears the card.
+      // Only a still-downloading pack keeps the current loop below.
       guard let preset, preset.animatedArtwork != nil else {
         removeAnimatedArtwork()
         return
@@ -59,7 +59,7 @@ import os
         let resources = animatedArtworkResolver.resources(
           for: preset, key: key,
           // Rebuild for whatever is current now (not the captured preset) and
-          // publish in full: incremental updates never carry artwork keys.
+          // publish in full, since incremental updates never carry artwork keys.
           onDownloaded: { [weak self] in
             self?.needsArtworkRebuild = true
             self?.republishCurrentPreset()

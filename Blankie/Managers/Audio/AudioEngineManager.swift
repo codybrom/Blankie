@@ -315,14 +315,14 @@ final class AudioEngineManager {
     let delay = 0.25 * pow(2.0, Double(attempt))
     Task { @MainActor in
       try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-      // Key on play intent, not engine state: a pause in the meantime must not
+      // Key on play intent, not engine state. A pause in the meantime must not
       // restart the engine, and a rebuild may have restarted it without
       // rescheduling the sound that failed to start.
       guard AudioManager.shared.isGloballyPlaying else { return }
       // Recovering the engine isn't enough: if we were "playing" while it was
       // down, nothing rescheduled the sounds, so the lock screen shows rate 1.0
-      // over silence. Resume the (solo-aware) selection once it's back; sounds
-      // already playing no-op.
+      // over silence. Resume the (solo-aware) selection once it's back. Sounds
+      // already playing ignore the call.
       if self.ensureRunning() {
         AudioManager.shared.playSelected()
       }

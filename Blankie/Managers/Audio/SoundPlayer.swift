@@ -412,7 +412,7 @@ final class SoundPlayer {
     }
 
     let chunkFrames = AVAudioFrameCount(SoundPlayer.streamChunkSeconds * sampleRate)
-    // Clamp before narrowing: the remainder alone can exceed UInt32 (2^32+ frames).
+    // Clamp before narrowing, since the remainder alone can exceed UInt32 (2^32+ frames).
     let count = AVAudioFrameCount(
       min(AVAudioFramePosition(chunkFrames), totalFrames - streamNextFrame))
     let chunkStart = streamNextFrame

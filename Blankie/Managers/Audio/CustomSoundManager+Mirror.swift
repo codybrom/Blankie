@@ -167,7 +167,7 @@ extension CustomSoundManager {
       Self.restorableSnapshots(in: dir, excluding: existing)
     }.value
 
-    // Re-check against the live store: an import or delete can land during the
+    // Re-check against the live store. An import or delete can land during the
     // scan, and restoring it again would duplicate the row or revive a deleted one.
     let current = Set(getAllCustomSounds().map { $0.fileName })
     let snapshotsToRestore = scanned.filter { snapshot in

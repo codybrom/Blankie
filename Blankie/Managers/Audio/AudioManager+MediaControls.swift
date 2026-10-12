@@ -130,8 +130,8 @@ extension AudioManager {
       }
       Logger.audio.debug("AudioManager: Navigating to preset: \(preset.name)")
       do {
-        // Respect the current play/pause state: skipping onto a preset while
-        // paused shouldn't start playback (matches solo navigation below).
+        // Respect the current play/pause state, so skipping onto a preset while
+        // paused doesn't start playback (matches solo navigation below).
         try PresetManager.shared.applyPreset(preset, autoPlay: isGloballyPlaying)
         if isGloballyPlaying {
           setGlobalPlaybackState(true)

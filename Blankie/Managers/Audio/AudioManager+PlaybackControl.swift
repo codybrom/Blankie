@@ -114,8 +114,8 @@ extension AudioManager {
       // Play the solo sound at its current volume
       soloSound.play()
 
-      // Update Now Playing info for solo mode. Read the state when the Task runs:
-      // a pause queued ahead of it must not be overwritten with "playing".
+      // Update Now Playing info for solo mode. Read the state when the Task runs
+      // so a pause queued ahead of it isn't overwritten with "playing".
       Task { @MainActor in
         nowPlayingManager.updateInfo(
           presetName: soloSound.title,

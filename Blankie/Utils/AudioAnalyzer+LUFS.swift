@@ -61,7 +61,7 @@ extension AudioAnalyzer {
     let filterCoefficients = getKWeightingCoefficients()
 
     while position < file.length {
-      // Clamp before narrowing: the remainder alone can exceed UInt32.
+      // Clamp before narrowing, since the remainder alone can exceed UInt32.
       let framesToRead = AVAudioFrameCount(
         min(AVAudioFramePosition(chunkSize), file.length - position))
 

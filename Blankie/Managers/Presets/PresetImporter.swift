@@ -233,7 +233,7 @@ class PresetImporter {
       preset.name = await DuplicateDetectionHelper.generateUniquePresetName(baseName: preset.name)
     }
 
-    // Re-ID the preset before anything is stored under its ID: artwork saved for
+    // Re-ID the preset before anything is stored under its ID. Artwork saved for
     // the archive's ID would purge the artwork of the preset it was exported from
     // (or of an earlier import of the same archive).
     preset = createNewPresetInstance(from: preset)
@@ -440,7 +440,7 @@ extension PresetImporter {
 
     // The ID names the stored file, so an ID already in use (a different file
     // with the same ID, e.g. a SHA mismatch) would overwrite that sound's audio
-    // and leave two rows with one ID. Mint a fresh one; idMapping remaps the preset.
+    // and leave two rows with one ID. Mint a fresh one and let idMapping remap the preset.
     if CustomSoundManager.shared.getCustomSound(by: actualId) != nil
       || CustomSoundManager.shared.customAudioFileNamesOnDisk().contains(actualId.uuidString)
     {

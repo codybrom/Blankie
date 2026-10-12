@@ -55,7 +55,7 @@ nonisolated class AudioAnalyzer {
       // Create an audio file for reading
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
-      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz); imports have no length cap.
+      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz), and imports have no length cap.
       guard let frameCount = AVAudioFrameCount(exactly: file.length) else { return nil }
 
       // Read the entire file into a buffer
@@ -190,7 +190,7 @@ nonisolated class AudioAnalyzer {
       var position: AVAudioFramePosition = 0
 
       while position < file.length {
-        // Clamp before narrowing: the remainder alone can exceed UInt32.
+        // Clamp before narrowing, since the remainder alone can exceed UInt32.
         let framesToRead = AVAudioFrameCount(
           min(AVAudioFramePosition(chunkSize), file.length - position))
 

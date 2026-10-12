@@ -627,7 +627,7 @@ extension PresetManager {
 
   @MainActor func preparePresetApplication(_ preset: Preset) {
     // Persist an edit still waiting on the 100 ms coalesced refresh into the
-    // outgoing preset; once the switch lands, that refresh skips or targets the new one.
+    // outgoing preset. Once the switch lands, that refresh skips or targets the new one.
     updateCurrentPresetState()
     currentPreset = preset
     // The mixer no longer matches the (now-current) preset until executePreset-
