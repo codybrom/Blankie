@@ -360,7 +360,10 @@ extension AudioManager {
     } else {
       order = defaultSoundOrder
     }
-    let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+    // First occurrence wins: an imported archive's order can repeat a name, and
+    // uniqueKeysWithValues would trap on it (on every launch once saved).
+    let rank = Dictionary(
+      order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
     return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
   }
 
@@ -374,7 +377,8 @@ extension AudioManager {
     let selected = preset.soundStates.filter(\.isSelected).map(\.fileName)
     let ordered: [String]
     if let order = preset.soundOrder {
-      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+      let rank = Dictionary(
+        order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
       ordered = selected.sorted { (rank[$0] ?? Int.max) < (rank[$1] ?? Int.max) }
     } else {
       ordered = selected
