@@ -18,7 +18,9 @@ import os
     }
 
     func updateAnimatedArtwork(for preset: Preset?) {
-      guard let preset else {
+      // No animation at all (not even the inherited default) must clear the
+      // card; only a still-downloading pack keeps the current loop below.
+      guard let preset, preset.animatedArtwork != nil else {
         removeAnimatedArtwork()
         return
       }

@@ -235,7 +235,11 @@
       /// The lock screen's loop, published for every aspect ratio this device
       /// can show and we have both a video and a preview for.
       private func refreshAnimatedArtwork(for preset: Preset?) {
-        guard let preset, NowPlayingDisplay.shouldPublishAnimatedArtwork() else {
+        // No animation at all (not even the inherited default) must clear the
+        // card; only a still-downloading pack keeps the current loop below.
+        guard let preset, preset.animatedArtwork != nil,
+          NowPlayingDisplay.shouldPublishAnimatedArtwork()
+        else {
           clearAnimatedArtwork()
           return
         }
