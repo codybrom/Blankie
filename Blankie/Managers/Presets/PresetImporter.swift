@@ -233,6 +233,11 @@ class PresetImporter {
       preset.name = await DuplicateDetectionHelper.generateUniquePresetName(baseName: preset.name)
     }
 
+    // Re-ID the preset before anything is stored under its ID: artwork saved for
+    // the archive's ID would purge the artwork of the preset it was exported from
+    // (or of an earlier import of the same archive).
+    preset = createNewPresetInstance(from: preset)
+
     try await importArtwork(for: &preset, from: archiveURL)
 
     // Apply the archive's sound customizations (custom titles, icons, etc.) before
@@ -246,9 +251,6 @@ class PresetImporter {
     if !idMapping.isEmpty {
       preset = updatePresetSoundStates(preset, with: idMapping)
     }
-
-    // Re-ID the preset so it can't collide with an existing one
-    preset = createNewPresetInstance(from: preset)
 
     await addAndActivatePreset(preset)
 
