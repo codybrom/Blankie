@@ -58,7 +58,12 @@ import os
       guard
         let resources = animatedArtworkResolver.resources(
           for: preset, key: key,
-          onDownloaded: { [weak self] in self?.updateAnimatedArtwork(for: preset) }),
+          // Rebuild for whatever is current now (not the captured preset) and
+          // publish in full: incremental updates never carry artwork keys.
+          onDownloaded: { [weak self] in
+            self?.needsArtworkRebuild = true
+            self?.republishCurrentPreset()
+          }),
         let previewImage = resources.previewImage
       else {
         return nil

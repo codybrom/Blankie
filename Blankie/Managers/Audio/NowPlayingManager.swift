@@ -50,6 +50,9 @@ final class NowPlayingManager: NowPlayingPublishing {
   nonisolated(unsafe) private var lockScreenBgObservation: Task<Void, Never>?
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
   private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
+  // Set when artwork changed without a preset/solo change (an animation pack
+  // finished downloading), so the next update rebuilds and publishes it in full.
+  var needsArtworkRebuild = false
 
   init() {
     // Republish the lock-screen background when the user toggles the setting.
@@ -189,7 +192,8 @@ final class NowPlayingManager: NowPlayingPublishing {
 
     // Only update artwork when the preset/solo sound changes, to avoid
     // restarting animated artwork on every incremental tick.
-    if presetChanged || soloChanged {
+    if presetChanged || soloChanged || needsArtworkRebuild {
+      needsArtworkRebuild = false
       if let soloSound = AudioManager.shared.soloModeSound {
         // Solo mode: show the sound's own icon, not the last preset's artwork.
         applySoloArtwork(for: soloSound)
