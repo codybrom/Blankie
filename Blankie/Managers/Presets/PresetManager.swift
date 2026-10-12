@@ -423,8 +423,12 @@ extension PresetManager {
   }
 
   @MainActor
-  func applyPreset(_ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false) throws
-  {
+  /// `autoPlay: false` applies the mix without starting playback (remote
+  /// next/previous while paused).
+  func applyPreset(
+    _ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false,
+    autoPlay: Bool = true
+  ) throws {
     logPresetApplication(preset)
 
     guard preset.validate() else {
@@ -437,7 +441,7 @@ extension PresetManager {
     }
 
     preparePresetApplication(preset)
-    executePresetApplication(preset: preset, isInitialLoad: isInitialLoad)
+    executePresetApplication(preset: preset, isInitialLoad: isInitialLoad, autoPlay: autoPlay)
 
   }
 
@@ -646,7 +650,7 @@ extension PresetManager {
     )
   }
 
-  func executePresetApplication(preset: Preset, isInitialLoad: Bool) {
+  func executePresetApplication(preset: Preset, isInitialLoad: Bool, autoPlay: Bool = true) {
     // The default grid hides preset-use-only sounds, so never activate one
     // from the default preset — a stale selection (e.g. marked preset-only
     // while a custom preset was current) would play with no tile to stop it.
@@ -688,7 +692,7 @@ extension PresetManager {
       // Allow sound states to be applied before autoplay
       await Task.yield()
 
-      let shouldAutoPlay = !isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch
+      let shouldAutoPlay = autoPlay && (!isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch)
       if shouldAutoPlay, targetStates.contains(where: { $0.isSelected }) {
         AudioManager.shared.setGlobalPlaybackState(true)
       }
