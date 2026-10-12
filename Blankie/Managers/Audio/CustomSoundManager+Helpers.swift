@@ -168,6 +168,19 @@ extension CustomSoundManager {
     return nil
   }
 
+  /// File names (no extension) of the custom audio files on disk. Launch pruning
+  /// counts these as valid so a row lost to a store rebuild can't strip a
+  /// reference whose audio still exists.
+  func customAudioFileNamesOnDisk() -> Set<String> {
+    guard let dir = getCustomSoundsDirectoryURL(),
+      let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path)
+    else { return [] }
+    return Set(
+      entries
+        .filter { !$0.hasPrefix(".") && !$0.hasSuffix(Self.mirrorSuffix) }
+        .map { ($0 as NSString).deletingPathExtension })
+  }
+
   /// Returns the file URL for a custom sound data object
   func fileURL(for customSound: CustomSoundData) -> URL? {
     guard let customSoundsDir = getCustomSoundsDirectoryURL() else { return nil }

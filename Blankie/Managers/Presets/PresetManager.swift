@@ -489,7 +489,10 @@ extension PresetManager {
     let decision = Self.customSoundCleanupDecision(
       presetStates: presets.map(\.soundStates),
       loadedSoundFileNames: Set(AudioManager.shared.sounds.map(\.fileName)),
+      // Audio still on disk counts too: a row can vanish in a store rebuild while
+      // its file survives, and pruning here is irreversible.
       customRowFileNames: Set(customRows.map(\.fileName))
+        .union(CustomSoundManager.shared.customAudioFileNamesOnDisk())
     )
     guard case .filtered(let filteredStates) = decision else {
       Logger.presets.debug(

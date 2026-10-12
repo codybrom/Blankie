@@ -143,6 +143,7 @@ extension AudioManager {
     // solo favorites are kept rather than irreversibly pruned (mirrors the bail
     // in PresetManager.cleanupDeletedCustomSounds).
     let customRowNames = Set(CustomSoundManager.shared.getAllCustomSounds().map { $0.fileName })
+      .union(CustomSoundManager.shared.customAudioFileNamesOnDisk())
     let validNames = Set(sounds.map { $0.fileName }).union(customRowNames)
     let soloFavoriteIsUnknown = GlobalSettings.shared.starredItems.contains { token in
       guard let fileName = GlobalSettings.soloFileName(fromToken: token) else { return false }
