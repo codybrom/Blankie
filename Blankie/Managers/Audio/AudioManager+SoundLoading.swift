@@ -180,6 +180,37 @@ extension AudioManager {
     refreshSoundDerivedState()
   }
 
+  /// Applies a custom-sound add or delete without rebuilding the sounds that
+  /// didn't change. Solo, preview, and Quick Mix hold `Sound` instances, so a
+  /// full reload would leave them pointing at detached copies nothing can stop.
+  @MainActor
+  func syncCustomSounds() {
+    let rowIDs = Set(CustomSoundManager.shared.getAllCustomSounds().map(\.id))
+    let loadedIDs = Set(sounds.compactMap { $0.isCustom ? $0.customSoundDataID : nil })
+
+    let removedIDs = loadedIDs.subtracting(rowIDs)
+    if !removedIDs.isEmpty {
+      // Same teardown as stopAndRemoveCustomSounds.
+      for sound in sounds
+      where sound.isCustom && (sound.customSoundDataID.map { removedIDs.contains($0) } ?? false) {
+        sound.unload()
+        sound.isSelected = false
+      }
+      sounds.removeAll { sound in
+        guard sound.isCustom, let customId = sound.customSoundDataID else { return false }
+        return removedIDs.contains(customId)
+      }
+      cleanupOrphanedSoundOrder()
+    }
+
+    let addedIDs = rowIDs.subtracting(loadedIDs)
+    if !addedIDs.isEmpty {
+      loadCustomSoundsByIds(addedIDs)
+    } else if !removedIDs.isEmpty {
+      refreshSoundDerivedState()
+    }
+  }
+
   @MainActor
   func loadCustomSounds() {
     Logger.audio.debug("AudioManager: Loading custom sounds")
