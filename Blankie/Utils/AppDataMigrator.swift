@@ -42,8 +42,15 @@ enum AppDataMigrator {
     Logger.app.debug("AppDataMigrator: Starting unified app data migration...")
 
     migrateToAppGroup()
-    migrateSwiftDataToAppGroup()
+    let storeMigrated = migrateSwiftDataToAppGroup()
     migrateUserDefaultsToShared()
+
+    // A failed store copy leaves the migration unmarked so the next launch
+    // retries it (every step is idempotent).
+    guard storeMigrated else {
+      Logger.app.error("AppDataMigrator: Store migration failed; will retry next launch")
+      return
+    }
 
     // Mark all migrations as completed
     UserDefaults.shared.set(true, forKey: migrationCompletedKey)
@@ -126,11 +133,13 @@ enum AppDataMigrator {
     }
   }
 
-  /// Migrate SwiftData to app group (from SwiftDataMigration.swift)
-  private static func migrateSwiftDataToAppGroup() {
+  /// Migrate SwiftData to app group (from SwiftDataMigration.swift). Returns
+  /// false only when an existing store was found but couldn't be copied.
+  @discardableResult
+  private static func migrateSwiftDataToAppGroup() -> Bool {
     guard let appGroupURL = AppGroupConfiguration.dataStoreURL else {
       Logger.app.debug("AppDataMigrator: No app group URL available")
-      return
+      return true
     }
 
     let fileManager = FileManager.default
@@ -142,14 +151,19 @@ enum AppDataMigrator {
     // If app group store already exists, no migration needed
     if appGroupStoreExists {
       Logger.app.debug("AppDataMigrator: App group store already exists, no migration needed")
-      return
+      // Still move the sound files: a run interrupted after the store copy
+      // would otherwise leave rows pointing at files that never moved.
+      migrateCustomSoundFiles()
+      return true
     }
 
     // Try to find and migrate existing store
     let possibleStoreLocations = getPossibleStoreLocations()
     var migrated = false
+    var foundStore = false
 
     for storeURL in possibleStoreLocations where fileManager.fileExists(atPath: storeURL.path) {
+      foundStore = true
       Logger.app.debug("AppDataMigrator: Found existing store at \(storeURL.path)")
 
       do {
@@ -157,17 +171,27 @@ enum AppDataMigrator {
         let appGroupDir = appGroupURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: appGroupDir, withIntermediateDirectories: true)
 
-        // Copy all related files (main db, wal, shm)
-        let extensions = ["", "-wal", "-shm"]
+        // Copy all related files (main db, wal, shm) as a set: stage each under a
+        // temporary name, then rename into place, so a failure never leaves a
+        // partial store that the "store exists" check above would accept.
+        let extensions = ["", "-wal", "-shm"].filter {
+          fileManager.fileExists(atPath: storeURL.path + $0)
+        }
+        let staged = extensions.map { URL(fileURLWithPath: appGroupURL.path + $0 + ".migrating") }
+        defer {
+          for stagedFile in staged { try? fileManager.removeItem(at: stagedFile) }
+        }
 
-        for ext in extensions {
-          let sourceFile = URL(fileURLWithPath: storeURL.path + ext)
+        for (ext, stagedFile) in zip(extensions, staged) {
+          try? fileManager.removeItem(at: stagedFile)
+          try fileManager.copyItem(at: URL(fileURLWithPath: storeURL.path + ext), to: stagedFile)
+        }
+        // The main file goes last: it's what the "store exists" check looks for.
+        for (ext, stagedFile) in zip(extensions, staged).reversed() {
           let destFile = URL(fileURLWithPath: appGroupURL.path + ext)
-
-          if fileManager.fileExists(atPath: sourceFile.path) {
-            try fileManager.copyItem(at: sourceFile, to: destFile)
-            Logger.app.debug("  Copied: \(sourceFile.lastPathComponent)")
-          }
+          try? fileManager.removeItem(at: destFile)  // stale -wal/-shm from a failed run
+          try fileManager.moveItem(at: stagedFile, to: destFile)
+          Logger.app.debug("  Copied: \(destFile.lastPathComponent)")
         }
 
         migrated = true
@@ -184,6 +208,7 @@ enum AppDataMigrator {
 
     // Also migrate custom sound files
     migrateCustomSoundFiles()
+    return migrated || !foundStore
   }
 
   /// Get possible locations for existing SwiftData stores
