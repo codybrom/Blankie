@@ -90,6 +90,9 @@ extension AudioManager {
 
     Logger.audio.debug("AudioManager: Entering solo mode for '\(sound.title)'")
 
+    // Persist a pending (coalesced) mix edit before solo stops preset saves.
+    PresetManager.shared.updateCurrentPresetState()
+
     // Solo and Quick Mix are mutually exclusive; leave Quick Mix first.
     if isQuickMix {
       exitQuickMix()
@@ -237,6 +240,9 @@ extension AudioManager {
   @MainActor
   func enterPreviewMode(for sound: Sound) {
     Logger.audio.debug("AudioManager: Entering preview mode for '\(sound.title)'")
+
+    // Persist a pending (coalesced) mix edit before preview stops preset saves.
+    PresetManager.shared.updateCurrentPresetState()
 
     // Store original volume and playback states (don't touch selection states)
     previewModeOriginalStates.removeAll()
