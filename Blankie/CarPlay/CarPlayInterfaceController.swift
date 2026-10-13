@@ -36,6 +36,8 @@ import os
     private var quickMixTemplate: CPGridTemplate?
     private var soundsTemplate: CPListTemplate?
     var currentEditTemplate: CPListTemplate?
+    /// The preset the open edit stack was built for.
+    var currentEditPresetID: UUID?
     var currentTimerTemplate: CPListTemplate?
 
     // Public getter for interfaceController to allow access from methods
@@ -97,6 +99,14 @@ import os
       currentTimerTemplate = nil
       interfaceController = nil
       isConnected = false
+
+      // Drop the templates so the observers stop rebuilding them on the phone.
+      homeTemplate = nil
+      presetsTemplate = nil
+      quickMixTemplate = nil
+      soundsTemplate = nil
+      currentEditTemplate = nil
+      currentEditPresetID = nil
 
       // CarPlay teardown means the car route is gone and the only route left is
       // the phone, where audio must not resume. Pause first so exitQuickMix's
@@ -291,6 +301,7 @@ import os
           self?.updateSoundsTemplate()
           self?.updateQuickMixTemplate()
           self?.updateNowPlayingButtons()
+          self?.refreshOrDismissEditStack()
         }
       }
 
@@ -305,10 +316,14 @@ import os
       // The Sounds list and Quick Mix grid both render a per-sound "playing"
       // state; a CarPlay tap posts `.soundStateChanged`, but a phone-side toggle
       // (which may not flip global playback) has no such signal. Tracking each
-      // sound's `playbackState` closes that phone → CarPlay direction.
+      // sound's `playbackState` closes that phone → CarPlay direction. Title,
+      // icon and preset-use-only are tracked too, so a stale row can't solo a
+      // sound that was hidden on the phone.
       playbackStateObservation = Task { @MainActor [weak self] in
         for await _ in Observations({
-          AudioManager.shared.sounds.map { $0.playbackState == .playing }
+          AudioManager.shared.sounds.map {
+            ($0.playbackState == .playing, $0.isPresetUseOnly, $0.title, $0.systemIconName)
+          }
         }) {
           self?.updateSoundsTemplate()
           self?.updateQuickMixTemplate()
@@ -346,6 +361,7 @@ import os
           self?.updateHomeTemplate()
           self?.updatePresetsTemplate()
           self?.updateNowPlayingButtons()
+          self?.refreshOrDismissEditStack()
         }
       }
 
@@ -357,10 +373,12 @@ import os
         }
       }
 
-      // Observe favorites changes so the Home Favorites section refreshes.
+      // Observe favorites changes so the Home Favorites section and the Now
+      // Playing star refresh, including stars changed on the phone.
       starredItemsObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ GlobalSettings.shared.starredItems }) {
           self?.updateHomeTemplate()
+          self?.updateNowPlayingButtons()
         }
       }
 

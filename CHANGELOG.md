@@ -29,22 +29,15 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 
 ### Fixed
 
-- On the lock screen and in CarPlay, the next and previous buttons could stay disabled after launch until you switched presets.
-- On the Mac, the window used a translucent material that could make it hard to view over a light desktop. It now uses a solid background.
-- In cars set to light mode, CarPlay used light colored text that could be hard to read. Blankie now properly follows CarPlay's light or dark appearance with proper colors.
-- Picking a preset in CarPlay when nothing was selected could light up the sounds without starting playback.
-- In CarPlay, presets without artwork showed a smaller image than presets with artwork.
-- Changing your mix just before playing a sound by itself, previewing one, or switching presets could lose that change. Going from a sound playing by itself straight to a preset or Quick Mix could also stop later changes from saving to the preset.
-- Skipping to the next or previous preset from the lock screen, Control Center or CarPlay while paused started playback. It now stays paused.
-- Blankie could keep reporting that it was playing over silence after you previewed a sound while paused, after a mix ended up with nothing selected, or after you resumed a sound that was still fading out. If the audio engine failed to start, a later retry could resume playback after you had paused or leave a sound silent.
-- The lock screen could show Blankie as playing right after you paused it.
-- Lock screen artwork could fall out of step with the preset. A preset without animated artwork kept the previous preset's animation, a newly downloaded animation didn't appear until you changed presets, and switching presets quickly could pair one preset's name with another's artwork.
-- Adding time to the sleep timer at the moment it ran out could still stop your sounds.
-- Importing a preset could crash Blankie on every launch if the file listed a sound twice. An import could also remove artwork from the preset it was exported from, or replace one of your custom sounds with a different one that shared its ID.
-- Custom sounds could disappear from presets and favorites after Blankie rebuilt its data, even though their audio was still there. Adding or deleting a custom sound while one played by itself, in a preview or in Quick Mix could leave it playing with no way to stop it, and a sound deleted while it was being converted or restored could leave a stray file behind or come back.
-- Custom sounds about 25 hours or longer crashed Blankie during import, in the sound editor, or when played, and some damaged audio files could crash the sound editor.
-- If moving your data to the shared app container was interrupted during an update, Blankie could start with an incomplete store and custom sounds it couldn't find. It now finishes the move on the next launch.
-- With Mix with Other Audio turned on, returning to Blankie while connected to CarPlay let other apps' audio mix with your sounds in the car.
+- Blankie could report that it was playing over silence, or start playing when it should have stayed paused. Starting a preset from CarPlay, Siri or a widget, or leaving Quick Mix for a preset, could also briefly play the previous mix.
+- A change to your mix made right before switching presets, starting Quick Mix or playing a sound by itself could be lost.
+- On the lock screen, Blankie could show as playing right after you paused, artwork could fall out of step with the preset, and the next and previous buttons could stay disabled after launch.
+- Adding time to the sleep timer as it ran out could still stop your sounds.
+- Importing a preset could crash Blankie on every launch or overwrite artwork and custom sounds. Custom sounds could also disappear from presets, keep playing with no way to stop them, or crash Blankie when longer than about 25 hours. Some damaged audio files crashed the sound editor.
+- If an update was interrupted while moving your data, Blankie now finishes the move on the next launch.
+- Widgets, Siri and Spotlight could keep showing a preset or sound's old name, or one you had deleted.
+- CarPlay now follows the car's light or dark appearance, enables next and previous right after launch, keeps favorites and edits in step with your iPhone, and keeps other apps' audio out of your mix. Picking a preset when nothing was selected now starts playback, and presets without artwork show a full-size image.
+- On the Mac, the window now has a solid background, Autoplay on Open no longer starts sounds after launch, and the menu bar icon comes back when you turn Show in Menu Bar on.
 
 ## [2.0.2] - 2026-06-28
 

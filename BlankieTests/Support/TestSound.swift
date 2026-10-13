@@ -8,7 +8,8 @@
 //  are safe no-ops (they all guard on `player`). Lets tests drive AudioManager's
 //  selection, solo, Quick Mix, and music-exclusivity state machines without
 //  touching the real audio engine. The `isMusic` / `isCustom` flags are settable
-//  for the music-tag and built-in-only paths.
+//  for the music-tag and built-in-only paths, and `customSoundDataID` links a
+//  custom stand-in to its SwiftData row.
 //
 
 import Foundation
@@ -16,14 +17,18 @@ import Foundation
 @testable import Blankie
 
 final class TestSound: Sound {
-  init(fileName: String, isMusic: Bool = false, isCustom: Bool = false) {
+  init(
+    fileName: String, isMusic: Bool = false, isCustom: Bool = false,
+    customSoundDataID: UUID? = nil
+  ) {
     super.init(
       title: fileName,
       systemIconName: "speaker.wave",
       fileName: fileName,
       fileExtension: "m4a",
       isMusic: isMusic,
-      isCustom: isCustom)
+      isCustom: isCustom,
+      customSoundDataID: customSoundDataID)
   }
 
   override func loadSound() {

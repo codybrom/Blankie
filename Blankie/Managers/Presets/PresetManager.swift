@@ -227,7 +227,8 @@ extension PresetManager {
         do {
           Logger.presets.debug(
             "PresetManager: Applying next custom preset '\(nextCustomPreset.name)'")
-          try applyPreset(nextCustomPreset)
+          // Deleting while paused stays paused.
+          try applyPreset(nextCustomPreset, autoPlay: AudioManager.shared.isGloballyPlaying)
         } catch {
           handleError(error)
         }
@@ -244,7 +245,7 @@ extension PresetManager {
             Logger.presets.debug(
               "PresetManager: No other custom presets. Updating default and setting current preset to nil."
             )
-            try applyPreset(updatedDefaultPreset)
+            try applyPreset(updatedDefaultPreset, autoPlay: AudioManager.shared.isGloballyPlaying)
           } catch {
             handleError(error)
           }
@@ -422,27 +423,45 @@ extension PresetManager {
     AnimatedArtworkFileStore.removeItemIfExists(relativePath: preset.staticArtworkPath)
   }
 
+  /// Starts a preset from Siri, a widget or CarPlay. Leaves solo and Quick Mix
+  /// first, since an application skips solo and never exits Quick Mix itself.
+  /// An application plays the new mix, so only a current preset needs a play.
+  @MainActor
+  func playPreset(_ preset: Preset) throws {
+    AudioManager.shared.leaveTransientModes()
+    if try !applyPreset(preset) {
+      AudioManager.shared.setGlobalPlaybackState(true)
+    }
+  }
+
   @MainActor
   /// `autoPlay: false` applies the mix without starting playback (remote
-  /// next/previous while paused).
+  /// next/previous while paused). Returns false when the preset was already
+  /// active and nothing was applied. Callers that want playback start it only
+  /// then, since an application starts playback itself once the new mix is in.
+  @discardableResult
   func applyPreset(
     _ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false,
     autoPlay: Bool = true
-  ) throws {
+  ) throws -> Bool {
     logPresetApplication(preset)
 
     guard preset.validate() else {
       throw PresetError.invalidPreset
     }
 
+    // A preset command ends a sound-editor preview first. Resume the mix only
+    // when it stays, because an application replaces it.
     if preset.id == currentPreset?.id, !isInitialLoad, !forceReapply {
+      AudioManager.shared.exitPreviewMode()
       handleAlreadyActivePreset(preset)
-      return
+      return false
     }
+    AudioManager.shared.exitPreviewMode(resuming: false)
 
     preparePresetApplication(preset)
     executePresetApplication(preset: preset, isInitialLoad: isInitialLoad, autoPlay: autoPlay)
-
+    return true
   }
 
   /// Outcome of deciding which custom-sound states to keep. Pure and `Equatable`
@@ -985,6 +1004,8 @@ extension PresetManager {
     updateCurrentPresetBeforeSave()
     performActualSave()
     refreshDiscoverableEntitiesIfNeeded()
+    // Names, accents, and membership feed the widgets. Publish skips identical snapshots.
+    AudioManager.shared.republishWidgetCatalog()
 
     Logger.presets.debug("PresetManager: --- End Saving Presets ---")
   }

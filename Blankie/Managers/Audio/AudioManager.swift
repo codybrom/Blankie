@@ -83,6 +83,9 @@ class AudioManager {
   @ObservationIgnored var modelContext: ModelContext?
   @ObservationIgnored var nowPlayingManager: (any NowPlayingPublishing)!
   @ObservationIgnored @MainActor var isInitializing = true
+  /// Set once the open-time autoplay fired or playback otherwise started, so it
+  /// can't re-fire on a later empty-to-selected change.
+  @ObservationIgnored var launchAutoPlayHandled = false
   /// True while a preset's sound states are being applied. Suppresses the
   /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
   /// otherwise fight the preset restoring its own selection set.
@@ -251,9 +254,11 @@ extension AudioManager {
       // Auto-start playback when sounds are selected and nothing is currently playing
       // Only auto-start if autoplay is enabled and we're not during initialization
       if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch
+        && !isInitializing && !launchAutoPlayHandled
       {
         Logger.audio.debug(
           "AudioManager: Auto-starting playback for selected sounds (autoplay enabled)")
+        launchAutoPlayHandled = true
         Task { @MainActor in
           setGlobalPlaybackState(true)
         }

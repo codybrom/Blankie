@@ -70,6 +70,7 @@ extension AudioManager {
     let preset = PresetManager.shared.currentPreset
     if GlobalSettings.shared.autoPlayOnLaunch, sounds.contains(where: { $0.isSelected }) {
       isGloballyPlaying = true
+      launchAutoPlayHandled = true
       playSelected()
       nowPlayingManager.updateInfo(
         preset: preset, presetName: preset?.name, creatorName: preset?.creatorName,
@@ -90,12 +91,15 @@ extension AudioManager {
 
     Logger.audio.debug("AudioManager: Entering solo mode for '\(sound.title)'")
 
+    exitPreviewMode(resuming: false)
+
     // Persist a pending (coalesced) mix edit before solo stops preset saves.
     PresetManager.shared.updateCurrentPresetState()
 
-    // Solo and Quick Mix are mutually exclusive; leave Quick Mix first.
+    // Solo and Quick Mix are mutually exclusive, so leave Quick Mix first. Don't
+    // resume the pre-Quick-Mix mix, since solo pauses it right away.
     if isQuickMix {
-      exitQuickMix()
+      exitQuickMix(resuming: false)
     }
 
     // Spatial sessions are bound to the preset mix; soloing ends them.
@@ -304,8 +308,10 @@ extension AudioManager {
     Logger.audio.debug("AudioManager: Preview mode started for '\(sound.title)'")
   }
 
+  /// `resuming: false` restores volumes without restarting the pre-preview
+  /// mix, for callers that start or replace playback right after.
   @MainActor
-  func exitPreviewMode() {
+  func exitPreviewMode(resuming: Bool = true) {
     guard let previewSound = previewModeSound else { return }
     Logger.audio.debug("AudioManager: Exiting preview mode for '\(previewSound.title)'")
 
@@ -333,7 +339,7 @@ extension AudioManager {
         // rescues a sound still mid fade-out (node.isPlaying lags playbackState
         // by ~0.5s, so an isPlaying guard here would skip the rescue and strand
         // the sound silent while selected and globally playing).
-        if originalState.isPlaying, isGloballyPlaying, sound.isSelected {
+        if resuming, originalState.isPlaying, isGloballyPlaying, sound.isSelected {
           sound.play()
         }
       }

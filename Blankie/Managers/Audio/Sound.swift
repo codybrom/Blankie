@@ -220,6 +220,11 @@ open class Sound: NSObject, Identifiable {
   // deinit is the last reference, so invalidating it there is race-free.
   @ObservationIgnored nonisolated(unsafe) var volumeDebounceTimer: Timer?
 
+  /// Saves a pending debounced volume now (the app is quitting or suspending).
+  func flushPendingVolumeSave() {
+    volumeDebounceTimer?.fire()
+  }
+
   var volume: Float = 0.75 {
     didSet {
       guard volume >= 0, volume <= 1 else {

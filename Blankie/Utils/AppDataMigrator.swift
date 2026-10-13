@@ -45,8 +45,10 @@ enum AppDataMigrator {
     let storeMigrated = migrateSwiftDataToAppGroup()
     migrateUserDefaultsToShared()
 
-    // A failed store copy leaves the migration unmarked so the next launch
-    // retries it (every step is idempotent).
+    // A failed store copy leaves the migration unmarked, so the next launch runs
+    // it again (every step is idempotent). That only retries the copy if this
+    // launch never opened a store at the destination. Otherwise the legacy store
+    // stays where it was, intact.
     guard storeMigrated else {
       Logger.app.error("AppDataMigrator: Store migration failed; will retry next launch")
       return
@@ -171,28 +173,7 @@ enum AppDataMigrator {
         let appGroupDir = appGroupURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: appGroupDir, withIntermediateDirectories: true)
 
-        // Copy all related files (main db, wal, shm) as a set. Stage each under a
-        // temporary name, then rename into place, so a failure never leaves a
-        // partial store that the "store exists" check above would accept.
-        let extensions = ["", "-wal", "-shm"].filter {
-          fileManager.fileExists(atPath: storeURL.path + $0)
-        }
-        let staged = extensions.map { URL(fileURLWithPath: appGroupURL.path + $0 + ".migrating") }
-        defer {
-          for stagedFile in staged { try? fileManager.removeItem(at: stagedFile) }
-        }
-
-        for (ext, stagedFile) in zip(extensions, staged) {
-          try? fileManager.removeItem(at: stagedFile)
-          try fileManager.copyItem(at: URL(fileURLWithPath: storeURL.path + ext), to: stagedFile)
-        }
-        // The main file goes last because it's what the "store exists" check looks for.
-        for (ext, stagedFile) in zip(extensions, staged).reversed() {
-          let destFile = URL(fileURLWithPath: appGroupURL.path + ext)
-          try? fileManager.removeItem(at: destFile)  // stale -wal/-shm from a failed run
-          try fileManager.moveItem(at: stagedFile, to: destFile)
-          Logger.app.debug("  Copied: \(destFile.lastPathComponent)")
-        }
+        try copyStoreAtomically(from: storeURL, to: appGroupURL)
 
         migrated = true
         Logger.app.debug("AppDataMigrator: SwiftData migration completed successfully")
@@ -209,6 +190,32 @@ enum AppDataMigrator {
     // Also migrate custom sound files
     migrateCustomSoundFiles()
     return migrated || !foundStore
+  }
+
+  /// Copies a store's main, -wal, and -shm files as a set. Each is staged under a
+  /// temporary name, then renamed into place, so a failure never leaves a partial
+  /// store that the "store exists" check would accept.
+  static func copyStoreAtomically(from storeURL: URL, to appGroupURL: URL) throws {
+    let fileManager = FileManager.default
+    let extensions = ["", "-wal", "-shm"].filter {
+      fileManager.fileExists(atPath: storeURL.path + $0)
+    }
+    let staged = extensions.map { URL(fileURLWithPath: appGroupURL.path + $0 + ".migrating") }
+    defer {
+      for stagedFile in staged { try? fileManager.removeItem(at: stagedFile) }
+    }
+
+    for (ext, stagedFile) in zip(extensions, staged) {
+      try? fileManager.removeItem(at: stagedFile)
+      try fileManager.copyItem(at: URL(fileURLWithPath: storeURL.path + ext), to: stagedFile)
+    }
+    // The main file goes last because it's what the "store exists" check looks for.
+    for (ext, stagedFile) in zip(extensions, staged).reversed() {
+      let destFile = URL(fileURLWithPath: appGroupURL.path + ext)
+      try? fileManager.removeItem(at: destFile)  // stale -wal/-shm from a failed run
+      try fileManager.moveItem(at: stagedFile, to: destFile)
+      Logger.app.debug("  Copied: \(destFile.lastPathComponent)")
+    }
   }
 
   /// Get possible locations for existing SwiftData stores

@@ -102,8 +102,20 @@ import os
       return item
     }
 
+    /// Solos a sound tapped in the car. The preset list's solo rows share it.
     @MainActor
-    private static func playSoundInSoloMode(_ sound: Sound) {
+    static func playSoundInSoloMode(_ sound: Sound) {
+      // The car may have gone away before this tap ran. Never start on the phone.
+      guard CarPlayInterfaceController.shared.isConnected else { return }
+
+      // A row drawn before the sound was deleted or became preset-use-only can't
+      // solo it (the same rule the intents follow).
+      guard AudioManager.shared.sounds.contains(where: { $0 === sound }), !sound.isPresetUseOnly
+      else {
+        CarPlayInterfaceController.shared.updateAllTemplates()
+        return
+      }
+
       // If this sound is already in solo mode, just show Now Playing
       if AudioManager.shared.soloModeSound?.id == sound.id {
         // Just navigate to Now Playing screen without changing playback

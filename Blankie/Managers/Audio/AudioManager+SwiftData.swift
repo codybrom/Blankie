@@ -126,6 +126,8 @@ extension AudioManager {
     // Publish the initial Siri/Shortcuts vocabulary and Spotlight index now that
     // presets and sounds are fully loaded.
     PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
+    // An earlier built-ins-only publish left out custom favorites and pinnable sounds.
+    republishWidgetCatalog()
   }
 
   /// Once every sound and preset is loaded, drop favorites whose target no
@@ -204,6 +206,8 @@ extension AudioManager {
           // A custom sound was added or removed — refresh Siri parameters and
           // the Spotlight index so `PlaySoundIntent` matches the current sounds.
           PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
+          // Pinnable sounds and solo favorites in the widgets changed too.
+          self?.republishWidgetCatalog()
         }
       }
   }

@@ -147,7 +147,9 @@ enum NowPlayingDisplay {
         .max { $0.playbackDuration < $1.playbackDuration }
     }
 
-    guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
+    // Under a second, a 0.25 s position poll can't see the wrap (it needs a
+    // 0.5 s drop), so the bar would run past the end. Show it indeterminate.
+    guard let anchorSound, anchorSound.playbackDuration >= 1 else { return nil }
     return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
 

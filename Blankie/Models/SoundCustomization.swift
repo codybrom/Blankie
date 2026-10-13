@@ -212,6 +212,11 @@ class SoundCustomizationManager {
     }
   }
 
+  /// Saves a pending debounced write now (the app is quitting or suspending).
+  func flushPendingSave() {
+    saveTimer?.fire()
+  }
+
   private func performSave() {
     do {
       let data = try JSONEncoder().encode(Array(customizations.values))

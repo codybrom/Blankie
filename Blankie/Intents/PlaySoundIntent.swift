@@ -38,7 +38,8 @@ struct PlaySoundIntent: AppIntent, AudioPlaybackIntent {
     // Leave solo/Quick Mix so the sound is actually audible: solo suppresses a
     // newly selected non-solo sound, and Quick Mix would otherwise stay active
     // with its own sound set instead of the sound being added to the mix.
-    AudioManager.shared.leaveTransientModes()
+    // The sound joins the restored pre-Quick-Mix mix, so keep it.
+    AudioManager.shared.leaveTransientModes(restoringQuickMix: true)
     if !target.isSelected {
       target.isSelected = true
     }

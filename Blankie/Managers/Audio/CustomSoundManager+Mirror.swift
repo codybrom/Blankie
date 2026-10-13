@@ -166,7 +166,13 @@ extension CustomSoundManager {
     let scanned = await Task.detached(priority: .utility) {
       Self.restorableSnapshots(in: dir, excluding: existing)
     }.value
+    restoreScannedSnapshots(scanned, in: dir)
+  }
 
+  /// Inserts rows for the sidecars a reconcile scan found, skipping any whose
+  /// row now exists or whose audio is now gone.
+  @MainActor
+  func restoreScannedSnapshots(_ scanned: [CustomSoundSnapshot], in dir: URL) {
     // Re-check against the live store. An import or delete can land during the
     // scan, and restoring it again would duplicate the row or revive a deleted one.
     let current = Set(getAllCustomSounds().map { $0.fileName })

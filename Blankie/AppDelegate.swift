@@ -8,6 +8,19 @@
 import SwiftUI
 import os
 
+/// Debounced saves only land when their timers fire, so fire them before the
+/// app quits (or, on iOS, suspends and may be killed without notice).
+@MainActor private func flushPendingSaves() {
+  GlobalSettings.shared.flushPendingVolumeSave()
+  for sound in AudioManager.shared.sounds { sound.flushPendingVolumeSave() }
+  SoundCustomizationManager.shared.flushPendingSave()
+  // A mix edit reaches the current preset only after a 100 ms coalesce.
+  PresetManager.shared.updateCurrentPresetState()
+  #if os(macOS)
+    WindowObserver.shared.flushPendingSave()
+  #endif
+}
+
 #if os(macOS)
   final class MacAppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
@@ -114,6 +127,10 @@ import os
       }
     }
 
+    func applicationWillTerminate(_: Notification) {
+      flushPendingSaves()
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
       return false  // Prevent app from quitting when last window closes
     }
@@ -211,7 +228,18 @@ import os
         #endif
       }
 
+      // A scene-based app gets no app-delegate background callback, so observe it.
+      NotificationCenter.default.addObserver(
+        forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main
+      ) { _ in
+        MainActor.assumeIsolated { flushPendingSaves() }
+      }
+
       return true
+    }
+
+    func applicationWillTerminate(_: UIApplication) {
+      flushPendingSaves()
     }
 
     #if CARPLAY_ENABLED && canImport(CarPlay)

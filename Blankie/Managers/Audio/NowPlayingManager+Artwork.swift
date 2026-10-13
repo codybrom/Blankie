@@ -29,11 +29,13 @@ extension NowPlayingManager {
       // If this artwork is already showing (a forced refresh of the same preset),
       // keep it rather than falling through to a lower-priority image.
       guard artworkId != currentArtworkId else { return }
-      currentArtworkId = artworkId
       currentStaticArtworkPath = nil
       // Read synchronously, as the OS 27 backend does. Suspending here let a
       // second update interleave and publish one preset's title with another's still.
-      updateArtwork(artworkData: PresetArtworkManager.shared.storedArtworkData(id: artworkId))
+      let data = PresetArtworkManager.shared.storedArtworkData(id: artworkId)
+      // Record the id only once it loads, so a failed read is retried later.
+      currentArtworkId = data == nil ? nil : artworkId
+      updateArtwork(artworkData: data)
       return
     }
 

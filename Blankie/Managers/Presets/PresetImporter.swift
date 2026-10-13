@@ -144,8 +144,10 @@ private enum SoundCustomizationImporter {
         if let normalizeAudio = customization.normalizeAudio {
           customizationManager.setNormalizeAudio(normalizeAudio, for: customization.fileName)
         }
-        if let volumeAdjustment = customization.volumeAdjustment {
-          customizationManager.setVolumeAdjustment(volumeAdjustment, for: customization.fileName)
+        if let volumeAdjustment = customization.volumeAdjustment, volumeAdjustment.isFinite {
+          // Clamp to the editor slider's range, since an archive can carry anything.
+          customizationManager.setVolumeAdjustment(
+            min(max(volumeAdjustment, 0.5), 8.0), for: customization.fileName)
         }
         if let loopSound = customization.loopSound {
           customizationManager.setLoopSound(loopSound, for: customization.fileName)
@@ -799,8 +801,12 @@ extension PresetImporter {
           return UUID(uuidString: state.fileName)
         }
 
-      if !customSoundIds.isEmpty {
-        audioManager.loadCustomSoundsByIds(Set(customSoundIds))
+      // Skip ids already loaded. Reloading them would orphan the instances
+      // solo, preview, or Quick Mix still hold.
+      let loadedIds = Set(audioManager.sounds.compactMap(\.customSoundDataID))
+      let newIds = Set(customSoundIds).subtracting(loadedIds)
+      if !newIds.isEmpty {
+        audioManager.loadCustomSoundsByIds(newIds)
       }
 
       // Add to presets
@@ -818,8 +824,10 @@ extension PresetImporter {
       // Save presets to persist the import
       presetManager.savePresets()
 
-      // Activate the imported preset immediately
+      // Activate the imported preset immediately. Leave solo/Quick Mix first, or
+      // solo skips the apply and a Quick Mix exit would discard it.
       do {
+        audioManager.leaveTransientModes()
         try presetManager.applyPreset(preset)
       } catch {
         Logger.presets.error("Import: Failed to apply preset: \(error, privacy: .public)")

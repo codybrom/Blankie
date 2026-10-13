@@ -195,15 +195,17 @@
 
     /// Republish after a gate that decides what the artwork shows flipped while
     /// the preset itself did not, so the identity gate can't skip the rebuild.
-    private func republishForArtworkGateChange() {
+    func republishForArtworkGateChange() {
       hasBuiltArtwork = false
       republishCurrentPreset()
     }
 
     func forceRefresh(preset: Preset, isPlaying: Bool) {
       // Clear the artwork identity so the same preset's new artwork is rebuilt.
+      // A nil id alone matches Quick Mix's identity, so also drop the built flag.
       lastPresetId = nil
       lastSoloSoundId = nil
+      hasBuiltArtwork = false
       updateInfo(
         preset: preset,
         presetName: preset.name,

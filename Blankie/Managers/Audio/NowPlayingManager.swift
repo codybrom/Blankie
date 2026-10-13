@@ -370,6 +370,8 @@ final class NowPlayingManager: NowPlayingPublishing {
     isPlaying: Bool
   ) {
     lastPresetId = nil  // Clear cache to force full artwork update
+    // A nil id alone matches Quick Mix's identity, so flag the rebuild too.
+    needsArtworkRebuild = true
     updateInfo(
       preset: preset,
       presetName: preset.name,
@@ -479,7 +481,8 @@ final class NowPlayingManager: NowPlayingPublishing {
 
     let isFirst = lastObservedElapsed < 0
     let wrapped = elapsed < lastObservedElapsed - 0.5  // sound loop restarted
-    let durationChanged = abs(duration - lastObservedDuration) > 0.5
+    // Each source's duration is an exact constant, so any change means a new source.
+    let durationChanged = abs(duration - lastObservedDuration) > 0.001
     // A timer never wraps and has constant duration, so it'd anchor once and rely
     // on extrapolation — which CarPlay does unreliably, stalling the bar. Re-anchor
     // each whole second (timing-only, in-place publish; artwork untouched).

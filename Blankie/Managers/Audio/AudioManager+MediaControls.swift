@@ -132,8 +132,10 @@ extension AudioManager {
       do {
         // Respect the current play/pause state, so skipping onto a preset while
         // paused doesn't start playback (matches solo navigation below).
-        try PresetManager.shared.applyPreset(preset, autoPlay: isGloballyPlaying)
-        if isGloballyPlaying {
+        // An application starts the new mix itself. Playing here would start the old one.
+        let wasPlaying = isGloballyPlaying
+        let started = try PresetManager.shared.applyPreset(preset, autoPlay: wasPlaying)
+        if wasPlaying, !started {
           setGlobalPlaybackState(true)
         }
       } catch {

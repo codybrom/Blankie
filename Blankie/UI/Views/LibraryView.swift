@@ -617,7 +617,8 @@ struct LibraryView: View {
       Logger.ui.error("LibraryView: Failed to delete custom sound: \(error, privacy: .public)")
       return
     }
-    AudioManager.shared.loadCustomSounds()
+    // Drop only the deleted sound (a full reload strands solo/preview/Quick Mix instances).
+    AudioManager.shared.syncCustomSounds()
   }
 
   /// Reorder the non-favorited custom presets, persisting their master `order`.

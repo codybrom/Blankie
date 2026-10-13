@@ -160,9 +160,8 @@ extension CustomSoundManager {
       // (keyed by the unchanged file name).
       await liveSound.reanalyzeAudio()
     } else {
-      // Not currently loaded — fall back to a full reload so the record's new
-      // extension is picked up.
-      AudioManager.shared.loadCustomSounds()
+      // No instance yet. Load just this one so the others aren't rebuilt.
+      AudioManager.shared.loadCustomSoundsByIds([soundDataID])
     }
 
     Logger.sounds.debug(
