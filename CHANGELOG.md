@@ -37,7 +37,7 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 - If an update was interrupted while moving your data, Blankie now finishes the move on the next launch.
 - Widgets, Siri and Spotlight could keep showing a preset or sound's old name, or one you had deleted.
 - CarPlay now follows the car's light or dark appearance, enables next and previous right after launch, keeps favorites and edits in step with your iPhone, and keeps other apps' audio out of your mix. Picking a preset when nothing was selected now starts playback, and presets without artwork show a full-size image.
-- On the Mac, the window now has a solid background, Autoplay on Open no longer starts sounds after launch, and the menu bar icon comes back when you turn Show in Menu Bar on.
+- On the Mac, the window now has a solid background, Autoplay on Open only plays when Blankie opens (not when you select a sound later), and the menu bar icon comes back when you turn Show in Menu Bar on.
 
 ## [2.0.2] - 2026-06-28
 
