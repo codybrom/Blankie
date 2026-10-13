@@ -9,9 +9,9 @@
 //  don't start the old mix. It also checks that leaving Quick Mix for a preset
 //  drops the pre-Quick-Mix mix, a pending edit is saved before Quick Mix,
 //  deleting the current preset while paused stays paused, a stale widget tile
-//  leaves solo alone, an invalid preset leaves Quick Mix alone, and play/pause
-//  or a preset command ends a preview (an ignored play or an emptied mix
-//  doesn't).
+//  leaves solo alone, playPreset starts a current preset, an invalid preset
+//  leaves Quick Mix alone, and play/pause or a preset command ends a preview
+//  (an ignored play or an emptied mix doesn't).
 //
 //  Engine-free (TestSounds), serialized and main-actor, on an isolated preset
 //  list (SingletonSandbox).
@@ -105,6 +105,19 @@ import Testing
     #expect(presetManager.currentPreset == nil)
     #expect(!a.isSelected)
     #expect(a.volume == 0.5)
+  }
+
+  /// A preset that's already current applies nothing, so playPreset starts it.
+  @Test func playPresetStartsTheCurrentPreset() async throws {
+    let (a, b) = makeSounds()
+    let current = preset("Entry Current", selecting: [a.fileName], from: [a, b])
+    await install([current])
+    #expect(!audioManager.isGloballyPlaying)
+
+    try presetManager.playPreset(current)
+
+    #expect(audioManager.isGloballyPlaying)
+    audioManager.setGlobalPlaybackState(false)
   }
 
   /// A preset that fails validation throws before leaving Quick Mix, so the

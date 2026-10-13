@@ -5,9 +5,10 @@
 //  Created by Cody Bromley on 10/12/26.
 //
 //  Pins the play-state races the modes and Now Playing models found. They cover
-//  the empty-mix pause, remote navigation while paused, deferred "playing"
-//  publishes, and the foreground session under CarPlay. Engine-free (TestSounds), with a recording
-//  Now Playing backend so nothing reaches the system card.
+//  launch autoplay, the empty-mix pause, remote navigation while paused,
+//  deferred "playing" publishes, and the foreground session under CarPlay.
+//  Engine-free (TestSounds), with a recording Now Playing backend so nothing
+//  reaches the system card.
 //
 //  Serialized and main-actor because it drives the AudioManager, PresetManager
 //  and GlobalSettings singletons. Every touched value and key is restored in deinit.
@@ -87,6 +88,34 @@ import Testing
   private func selectWhilePaused(_ sound: Sound) async {
     sound.isSelected = true
     await spinMainLoop(timeout: 0.05)
+  }
+
+  // MARK: - Launch autoplay (F7)
+
+  /// Autoplay on Open fires once per launch. After a play, selecting a sound
+  /// into an emptied mix while paused leaves it paused.
+  @Test func launchAutoplayDoesNotFireAfterAPlay() async {
+    let originalAutoPlay = GlobalSettings.shared.autoPlayOnLaunch
+    let originalHandled = audioManager.launchAutoPlayHandled
+    defer {
+      GlobalSettings.shared.setAutoPlayOnLaunch(originalAutoPlay)
+      audioManager.launchAutoPlayHandled = originalHandled
+    }
+    let a = TestSound(fileName: "test-a")
+    a.isSelected = true
+    audioManager.sounds = [a]
+    audioManager.launchAutoPlayHandled = false
+    audioManager.setGlobalPlaybackState(true)
+    audioManager.setGlobalPlaybackState(false)
+
+    a.isSelected = false
+    audioManager.updateHasSelectedSounds()
+    GlobalSettings.shared.setAutoPlayOnLaunch(true)
+    await selectWhilePaused(a)
+    audioManager.updateHasSelectedSounds()
+    await spinMainLoop(timeout: 0.2)
+
+    #expect(!audioManager.isGloballyPlaying)
   }
 
   // MARK: - Empty mix (F5)

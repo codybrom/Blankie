@@ -6,7 +6,8 @@
 //
 //  Pins the ways lock screen artwork fell out of step with the preset. A preset
 //  with no animation kept the previous loop, a forced refresh dropped the
-//  preset's own still, and a finished download never reached the 26 card.
+//  preset's own still, a failed still read was never retried, and a finished
+//  download never reached the 26 card.
 //
 //  The 26 (MediaPlayer) cases call the backend's artwork steps directly and
 //  never publish, so they are safe next to the 27 backend. The one that does
@@ -103,6 +104,18 @@ import Testing
 
     #expect(backend.currentArtworkId == artworkId)
     #expect(backend.nowPlayingInfo[MPMediaItemPropertyArtwork] as? String == "this preset's still")
+  }
+
+  /// On 26, a still that fails to load leaves its id unrecorded, so the next
+  /// update reads it again instead of treating it as already showing.
+  @Test func failedStillReadLeavesTheIdUnrecorded() async {
+    let backend = NowPlayingManager()
+    var preset = makePresetWithoutAnimation()
+    preset.artworkId = UUID()  // nothing stored under this id
+
+    await backend.loadStaticArtworkSync(from: preset, fallbackArtworkId: nil)
+
+    #expect(backend.currentArtworkId == nil)
   }
 
   // MARK: - Finished download (N5)

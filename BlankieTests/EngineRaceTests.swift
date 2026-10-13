@@ -80,10 +80,15 @@ import Testing
     engineManager.startEngine = { _ in throw StartFailure() }
     audioManager.isGloballyPlaying = true
     #expect(!engineManager.ensureRunning(), "the injected failure schedules a retry")
+    guard case .failed(retryCount: 1) = engineManager.state else {
+      Issue.record("this test's failure should schedule the first retry")
+      return
+    }
 
     engineManager.startEngine = { try $0.start() }
     audioManager.isGloballyPlaying = false  // the user pauses before the retry
-    await spinMainLoop(timeout: 0.6)
+    // The retry fires at 0.25 s. Wait well past it, or until it restarts the engine.
+    await spinMainLoop(timeout: 1.5) { self.engineManager.engine.isRunning }
 
     #expect(!engineManager.engine.isRunning, "the retry must not restart a paused engine")
   }
@@ -94,17 +99,20 @@ import Testing
   @Test func startRetryResumesSoundAfterRebuildRestartedEngine() async throws {
     let sound = try makeProbe()
     audioManager.sounds = [sound]
-    sound.isSelected = true
-    await spinMainLoop(timeout: 0.05)  // let the paused auto-play check pass
-
     engineManager.startEngine = { _ in throw StartFailure() }
     audioManager.isGloballyPlaying = true
-    sound.play()
+    // Selecting while playing auto-plays the sound, and its failed start
+    // schedules the retry. Nothing else will start it after this.
+    sound.isSelected = true
+    await spinMainLoop(timeout: 2) {
+      if case .failed = self.engineManager.state { true } else { false }
+    }
     #expect(!sound.isPlaying, "the failed start leaves the sound silent")
 
     engineManager.startEngine = { try $0.start() }
     #expect(engineManager.ensureRunning(), "the rebuild brings the engine back first")
-    await spinMainLoop(timeout: 1.0) { sound.isPlaying }
+    // The retry fires at 0.25 s. Allow for a loaded host.
+    await spinMainLoop(timeout: 3) { sound.isPlaying }
 
     #expect(sound.isPlaying, "the retry must resume the sound the failed start left silent")
     audioManager.isGloballyPlaying = false

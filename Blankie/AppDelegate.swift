@@ -10,7 +10,7 @@ import os
 
 /// Debounced saves only land when their timers fire, so fire them before the
 /// app quits (or, on iOS, suspends and may be killed without notice).
-@MainActor private func flushPendingSaves() {
+@MainActor func flushPendingSaves() {
   GlobalSettings.shared.flushPendingVolumeSave()
   for sound in AudioManager.shared.sounds { sound.flushPendingVolumeSave() }
   SoundCustomizationManager.shared.flushPendingSave()

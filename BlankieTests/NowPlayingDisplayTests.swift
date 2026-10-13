@@ -192,4 +192,18 @@ import Testing
     #expect(!TimerManager.shared.isTimerActive)
     #expect(NowPlayingDisplay.currentProgressAnchor() == nil)
   }
+
+  /// The position poll can't see a sub-second loop wrap, so the bar stays
+  /// indeterminate instead of running past the end.
+  @Test func progressAnchorIsNilForSubSecondLoops() {
+    let short = TestSound(fileName: "test-rain")
+    short.isSelected = true
+    audioManager.sounds = [short]
+    #expect(!TimerManager.shared.isTimerActive)
+
+    short.stubbedDuration = 0.6
+    #expect(NowPlayingDisplay.currentProgressAnchor() == nil)
+    short.stubbedDuration = 1.5
+    #expect(NowPlayingDisplay.currentProgressAnchor()?.duration == 1.5)
+  }
 }
