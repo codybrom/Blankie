@@ -112,7 +112,7 @@ import os
           ("boat", 0.7),
         ]
 
-        audioManager.sounds.forEach { $0.isSelected = false }
+        for sound in audioManager.sounds { sound.isSelected = false }
 
         for (fileName, volume) in soundsToActivate {
           if let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) {

@@ -19,8 +19,10 @@ nonisolated struct ArchiveUtility {
   // Caps for untrusted .blankie archives — far above any real preset
   // (a manifest, artwork, and a few sounds capped at 50 MB each).
   private static let maxEntryCount = 512
-  private static let maxTotalUncompressedBytes: Int64 = 512 << 20  // 512 MiB (8 sounds @ 50 MB + artwork)
-  private static let maxEntryUncompressedBytes: Int64 = 64 << 20  // 64 MiB per entry (clears a 50 MB sound)
+  // 512 MiB in all (8 sounds at 50 MB plus artwork)
+  private static let maxTotalUncompressedBytes: Int64 = 512 << 20
+  // 64 MiB per entry (clears a 50 MB sound)
+  private static let maxEntryUncompressedBytes: Int64 = 64 << 20
 
   static func extract(from archiveURL: URL, to destinationURL: URL) throws {
     try FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true)

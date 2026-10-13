@@ -156,7 +156,7 @@ extension CustomSoundManager {
     do {
       let files = try FileManager.default.contentsOfDirectory(atPath: documentsPath.path)
       Logger.sounds.debug("CustomSoundManager: Files in CustomSounds directory:")
-      files.forEach { file in
+      for file in files {
         Logger.sounds.debug("  - \(file)")
       }
     } catch {

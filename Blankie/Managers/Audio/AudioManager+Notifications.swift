@@ -41,7 +41,7 @@ extension AudioManager {
       // A media-services reset invalidates every node bound to the dead
       // engine; tear down players (keeping selection) for lazy rebuild.
       AudioEngineManager.shared.onEngineReset = { [weak self] in
-        self?.sounds.forEach { $0.unload() }
+        for sound in self?.sounds ?? [] { sound.unload() }
       }
 
       audioSessionObserversSetup = true

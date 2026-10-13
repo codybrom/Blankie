@@ -102,9 +102,9 @@ import SwiftUI
     }
 
     private func timeAdjustmentButton(_ label: LocalizedStringKey, minutes: Int) -> some View {
-      return Button(action: {
+      return Button {
         timerManager.addTime(minutes: minutes)
-      }) {
+      } label: {
         Text(label)
           .font(.system(.body, design: .rounded))
           .fontWeight(.medium)
