@@ -239,7 +239,8 @@ extension AudioManager {
     // never as a silent "playing" state. Check on every pass, not only on a
     // change, because hasSelectedSounds can already be false when playback starts
     // (e.g. a mode exit briefly restored a selection that the next preset cleared).
-    if !newValue && isGloballyPlaying {
+    // A preview waits until it ends (the editor can deselect the sound it plays).
+    if !newValue && isGloballyPlaying && previewModeSound == nil {
       Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
       Task { @MainActor in
         setGlobalPlaybackState(false)

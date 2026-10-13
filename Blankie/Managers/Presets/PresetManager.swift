@@ -428,6 +428,8 @@ extension PresetManager {
   /// An application plays the new mix, so only a current preset needs a play.
   @MainActor
   func playPreset(_ preset: Preset) throws {
+    // Validate before leaving Quick Mix, which drops the earlier mix.
+    guard preset.validate() else { throw PresetError.invalidPreset }
     AudioManager.shared.leaveTransientModes()
     if try !applyPreset(preset) {
       AudioManager.shared.setGlobalPlaybackState(true)

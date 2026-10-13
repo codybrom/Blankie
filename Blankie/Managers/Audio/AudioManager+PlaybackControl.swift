@@ -207,10 +207,6 @@ extension AudioManager {
       return
     }
 
-    // Play/pause from anywhere (remote, CarPlay, intents, timer) ends a sound-editor
-    // preview first. Playback below restarts or pauses the mix itself.
-    exitPreviewMode(resuming: false)
-
     Logger.audio.debug(
       "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
     )
@@ -233,6 +229,13 @@ extension AudioManager {
         // A play during an interruption supersedes it, so its end can't resume over a later pause.
         wasPlayingWhenInterrupted = false
       #endif
+    }
+
+    // Play/pause from anywhere (remote, CarPlay, intents, timer) ends a sound-editor
+    // preview. A play ignored for an empty mix leaves it alone. Playback below
+    // restarts or pauses the mix itself.
+    if !playing || shouldPlay {
+      exitPreviewMode(resuming: false)
     }
 
     // Then handle playback

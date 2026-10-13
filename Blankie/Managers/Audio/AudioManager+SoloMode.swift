@@ -349,6 +349,9 @@ extension AudioManager {
     previewModeSound = nil
     previewModeOriginalStates.removeAll()
 
+    // A mix emptied during the preview pauses now.
+    updateHasSelectedSounds()
+
     // A preview while paused ran the engine. Idle it once the fade-out lands,
     // or iOS keeps reporting the app as playing over silence.
     if !isGloballyPlaying {

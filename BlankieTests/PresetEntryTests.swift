@@ -9,7 +9,9 @@
 //  don't start the old mix. It also checks that leaving Quick Mix for a preset
 //  drops the pre-Quick-Mix mix, a pending edit is saved before Quick Mix,
 //  deleting the current preset while paused stays paused, a stale widget tile
-//  leaves solo alone, and play/pause or a preset command ends a preview.
+//  leaves solo alone, an invalid preset leaves Quick Mix alone, and play/pause
+//  or a preset command ends a preview (an ignored play or an emptied mix
+//  doesn't).
 //
 //  Engine-free (TestSounds), serialized and main-actor, on an isolated preset
 //  list (SingletonSandbox).
@@ -105,6 +107,23 @@ import Testing
     #expect(a.volume == 0.5)
   }
 
+  /// A preset that fails validation throws before leaving Quick Mix, so the
+  /// earlier mix isn't dropped for nothing.
+  @Test func invalidPresetLeavesQuickMixAlone() async {
+    let (a, b) = makeSounds()
+    await install([preset("Entry QM Invalid", selecting: [a.fileName], from: [a, b])])
+    let invalid = PresetFactory.makePreset(
+      name: "Entry Missing",
+      soundStates: [PresetState(fileName: "test-entry-missing", isSelected: true, volume: 0.5)],
+      soundOrder: ["test-entry-missing"])
+
+    audioManager.enterQuickMix()
+    #expect(throws: PresetError.self) { try self.presetManager.playPreset(invalid) }
+
+    #expect(audioManager.isQuickMix)
+    audioManager.exitQuickMix()
+  }
+
   /// The default exit (Quick Mix's own close) still restores the earlier mix.
   @Test func exitingQuickMixRestoresThePreset() async {
     let (a, b) = makeSounds()
@@ -178,6 +197,37 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
 
     #expect(audioManager.previewModeSound == nil)
+  }
+
+  /// A play ignored because nothing is selected leaves the preview playing.
+  @Test func ignoredPlayLeavesThePreview() async {
+    let (a, _) = makeSounds()
+    a.isSelected = false
+    audioManager.previewModeSound = TestSound(fileName: "test-entry-preview")
+
+    audioManager.setGlobalPlaybackState(true)
+    #expect(audioManager.previewModeSound != nil)
+
+    audioManager.setGlobalPlaybackState(false)
+    #expect(audioManager.previewModeSound == nil)
+  }
+
+  /// The editor can deselect the sound it previews. The empty-mix pause waits
+  /// for the preview to end instead of cutting it off.
+  @Test func emptiedMixPausesAfterThePreview() async {
+    let (a, _) = makeSounds()
+    audioManager.setGlobalPlaybackState(true)
+    audioManager.previewModeSound = a
+
+    a.isSelected = false
+    audioManager.updateHasSelectedSounds()
+    await sandbox.settle()
+    #expect(audioManager.isGloballyPlaying)
+    #expect(audioManager.previewModeSound === a)
+
+    audioManager.exitPreviewMode(resuming: false)
+    await sandbox.settle()
+    #expect(!audioManager.isGloballyPlaying)
   }
 
   /// Applying a preset ends the preview before the new mix goes in.
