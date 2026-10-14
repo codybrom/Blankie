@@ -53,6 +53,9 @@ final class NowPlayingManager: NowPlayingPublishing {
   // Set when artwork changed without a preset/solo change (an animation pack
   // finished downloading), so the next update rebuilds and publishes it in full.
   var needsArtworkRebuild = false
+  /// The drawn fallback's glyph while it's the artwork, so a later selection
+  /// change can redraw it. Nil while other artwork shows.
+  var shownFallbackGlyph: FallbackArtwork.Glyph?
 
   init() {
     // Republish the lock-screen background when the user toggles the setting.
@@ -238,6 +241,7 @@ final class NowPlayingManager: NowPlayingPublishing {
       // Incremental update - only update specific keys to avoid restarting animated artwork
       // CRITICAL: We update keys in-place on the existing dictionary to preserve artwork objects
       let center = MPNowPlayingInfoCenter.default()
+      let redrewFallback = redrawFallbackIfStale()
 
       if var updated = center.nowPlayingInfo {
         Logger.nowPlaying.debug(
@@ -252,7 +256,7 @@ final class NowPlayingManager: NowPlayingPublishing {
           MPNowPlayingInfoPropertyPlaybackRate,
           MPMediaItemPropertyPlaybackDuration,
           MPNowPlayingInfoPropertyElapsedPlaybackTime,
-        ] {
+        ] + (redrewFallback ? [MPMediaItemPropertyArtwork] : []) {
           updated[key] = nowPlayingInfo[key]
         }
         center.nowPlayingInfo = updated
@@ -276,6 +280,7 @@ final class NowPlayingManager: NowPlayingPublishing {
   private func applySoloArtwork(for sound: Sound) {
     currentArtworkId = nil
     currentStaticArtworkPath = nil
+    shownFallbackGlyph = nil
     if let artwork = soloArtwork(for: sound) {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     } else if let fallback = loadArtwork() {
@@ -502,6 +507,7 @@ final class NowPlayingManager: NowPlayingPublishing {
     currentStaticArtworkPath = nil
     lastPresetId = nil
     lastSoloSoundId = nil
+    shownFallbackGlyph = nil
     #if os(iOS)
       removeAnimatedArtwork()
     #endif

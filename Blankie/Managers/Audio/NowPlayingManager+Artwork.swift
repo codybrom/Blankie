@@ -229,15 +229,29 @@ extension NowPlayingManager {
     Logger.nowPlaying.debug(
       "NowPlayingManager: Processing artwork data: \(artworkData != nil ? "\(artworkData!.count) bytes" : "None")"
     )
+    let fallbackGlyph = NowPlayingDisplay.mixFallbackGlyph()
+    shownFallbackGlyph = nil
     if let customArtwork = loadCustomArtwork(from: artworkData) {
       Logger.nowPlaying.debug("NowPlayingManager: Custom artwork loaded successfully")
       nowPlayingInfo[MPMediaItemPropertyArtwork] = customArtwork
-    } else if let defaultArtwork = loadArtwork() {
+    } else if let defaultArtwork = loadArtwork(glyph: fallbackGlyph) {
       Logger.nowPlaying.debug("NowPlayingManager: Using default artwork")
       nowPlayingInfo[MPMediaItemPropertyArtwork] = defaultArtwork
+      shownFallbackGlyph = fallbackGlyph
     } else {
       Logger.nowPlaying.debug("NowPlayingManager: No artwork available")
     }
+  }
+
+  /// Redraws the fallback when the glyph it shows is out of date. A new preset
+  /// selects its sounds a beat after its first publish, so the fallback drawn
+  /// then pictures the previous selection. Returns whether it redrew.
+  func redrawFallbackIfStale() -> Bool {
+    guard let shown = shownFallbackGlyph, shown != NowPlayingDisplay.mixFallbackGlyph() else {
+      return false
+    }
+    updateArtwork(artworkData: nil)
+    return true
   }
 
   /// Load artwork from SwiftData and update Now Playing info

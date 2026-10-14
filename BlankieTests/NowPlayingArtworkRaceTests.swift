@@ -6,8 +6,9 @@
 //
 //  Pins the ways lock screen artwork fell out of step with the preset. A preset
 //  with no animation kept the previous loop, a forced refresh dropped the
-//  preset's own still, a failed still read was never retried, and a finished
-//  download never reached the 26 card.
+//  preset's own still, a failed still read was never retried, a new preset's
+//  fallback kept the previous selection, and a finished download never reached
+//  the 26 card.
 //
 //  The 26 (MediaPlayer) cases call the backend's artwork steps directly and
 //  never publish, so they are safe next to the 27 backend. The one that does
@@ -116,6 +117,29 @@ import Testing
     await backend.loadStaticArtworkSync(from: preset, fallbackArtworkId: nil)
 
     #expect(backend.currentArtworkId == nil)
+  }
+
+  /// On 26, a new preset's first publish draws the fallback before its sounds
+  /// are selected, so it showed the Blankie mark. The next publish redraws it
+  /// once the selection lands, and leaves it alone after that.
+  @Test func fallbackRedrawsWhenTheSelectionLandsLater() {
+    let originalSounds = AudioManager.shared.sounds
+    let sound = TestSound(fileName: "test-fallback-redraw")
+    defer {
+      AudioManager.shared.sounds = originalSounds
+      UserDefaults.shared.removeObject(forKey: "\(sound.fileName)_isSelected")
+    }
+    AudioManager.shared.sounds = [sound]
+    PresetManager.shared.setCurrentPreset(makePresetWithoutAnimation())
+    let backend = NowPlayingManager()
+
+    backend.updateArtwork(artworkData: nil)
+    #expect(backend.shownFallbackGlyph == .brand)
+
+    sound.isSelected = true
+    #expect(backend.redrawFallbackIfStale())
+    #expect(backend.shownFallbackGlyph == .composite([sound.systemIconName]))
+    #expect(!backend.redrawFallbackIfStale(), "an up-to-date fallback isn't redrawn")
   }
 
   // MARK: - Finished download (N5)
