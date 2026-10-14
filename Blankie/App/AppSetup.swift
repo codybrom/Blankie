@@ -290,16 +290,20 @@ extension AppSetup {
   /// `.onAppear` → `setupManagers()`) is ever instantiated — mirrors the same
   /// bootstrap `IOSAppDelegate` already does for a headless CarPlay cold
   /// start. Safe to call unconditionally, including redundantly alongside the
-  /// normal launch path: `setModelContext` is idempotent and
-  /// `loadCustomSoundsWhenReady()` is single-flight, so this call joins any
-  /// bootstrap already in progress instead of starting a second load.
+  /// normal launch path: the contexts are only set when nothing has set them
+  /// yet, and `loadCustomSoundsWhenReady()` is single-flight, so this call
+  /// joins any bootstrap already in progress instead of starting a second load.
   @MainActor
   static func ensureManagersReadyForIntents() async {
     if !SharedModelContainer.shared.isInitialized {
       SharedModelContainer.shared.initialize()
     }
-    AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
-    PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+    // The system runs entity queries every few seconds. Setting the contexts
+    // again re-subscribes the custom-sound observers each time.
+    if AudioManager.shared.modelContext == nil {
+      AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+      PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+    }
     await AudioManager.shared.loadCustomSoundsWhenReady()
   }
 }
