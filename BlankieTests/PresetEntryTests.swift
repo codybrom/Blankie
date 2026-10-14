@@ -9,7 +9,8 @@
 //  don't start the old mix. It also checks that leaving Quick Mix for a preset
 //  drops the pre-Quick-Mix mix, a pending edit is saved before Quick Mix,
 //  deleting the current preset while paused stays paused, a stale widget tile
-//  leaves solo alone, playPreset starts a current preset, an invalid preset
+//  leaves solo alone, playPreset starts a current preset (also after a relaunch
+//  into solo), Play Sound joins a custom preset, an invalid preset
 //  leaves Quick Mix alone, and play/pause or a preset command ends a preview
 //  (an ignored play or an emptied mix doesn't, and solo out of one keeps playing).
 //
@@ -198,6 +199,51 @@ import Testing
 
     #expect(audioManager.soloModeSound === b)
     audioManager.exitSoloModeWithoutResuming()
+  }
+
+  // MARK: - Siri and solo
+
+  /// A custom preset shows and saves only its own sounds, so Play Sound adds the
+  /// sound to it. Otherwise it plays with no tile to stop it.
+  @Test func playSoundJoinsTheCurrentCustomPreset() async throws {
+    let (a, b) = makeSounds()
+    await install([preset("Entry Siri", selecting: [a.fileName], from: [a])])
+
+    var intent = PlaySoundIntent()
+    intent.sound = SoundEntity(sound: b)
+    _ = try await intent.perform()
+    // The coalesced save can land well after the intent's manager setup, so
+    // poll for it rather than settling a fixed time.
+    func saved() -> PresetState? {
+      presetManager.currentPreset?.soundStates.first { $0.fileName == b.fileName }
+    }
+    for _ in 0..<40 where saved()?.isSelected != true {
+      try? await Task.sleep(for: .milliseconds(50))
+    }
+
+    #expect(b.isSelected)
+    #expect(audioManager.orderedVisibleSounds(for: presetManager.currentPreset).contains(b))
+    #expect(saved()?.isSelected == true)
+    audioManager.setGlobalPlaybackState(false)
+  }
+
+  /// A relaunch into solo skips the preset's apply. Playing that same preset
+  /// re-applies its selection on the way out of solo, so the mix plays.
+  @Test func playPresetAfterARelaunchIntoSoloPlaysThePreset() async throws {
+    let (a, b) = makeSounds()
+    let current = preset("Entry Relaunch", selecting: [a.fileName], from: [a, b])
+    await install([current])
+    presetManager.presetStatesApplied = false  // as after a relaunch into solo
+    a.isSelected = false
+    audioManager.enterSoloMode(for: b, startPlaying: false)
+
+    try presetManager.playPreset(current)
+
+    #expect(audioManager.soloModeSound == nil)
+    #expect(a.isSelected)
+    #expect(!b.isSelected)
+    #expect(audioManager.isGloballyPlaying)
+    audioManager.setGlobalPlaybackState(false)
   }
 
   // MARK: - Commands end a preview (F2)

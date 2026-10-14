@@ -8,6 +8,11 @@ on:
     paths:
       - "Blankie/**"
       - "BlankieTests/**"
+      - "BlankieWidget/**"
+      - "BlankiePresetPreview/**"
+      - "BlankieAssets/**"
+      - "Assets.xcassets/**"
+      - "BrandAssets.xcassets/**"
       - "Blankie.xcodeproj/**"
       - "Blankie.xctestplan"
       - "Blankie*.plist"
@@ -19,6 +24,11 @@ on:
     paths:
       - "Blankie/**"
       - "BlankieTests/**"
+      - "BlankieWidget/**"
+      - "BlankiePresetPreview/**"
+      - "BlankieAssets/**"
+      - "Assets.xcassets/**"
+      - "BrandAssets.xcassets/**"
       - "Blankie.xcodeproj/**"
       - "Blankie.xctestplan"
       - "Blankie*.plist"

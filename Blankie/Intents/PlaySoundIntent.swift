@@ -40,6 +40,12 @@ struct PlaySoundIntent: AppIntent, AudioPlaybackIntent {
     // with its own sound set instead of the sound being added to the mix.
     // The sound joins the restored pre-Quick-Mix mix, so keep it.
     AudioManager.shared.leaveTransientModes(restoringQuickMix: true)
+    // A custom preset shows and saves only its own sounds, so add the sound to
+    // it first. Otherwise it plays with no tile to stop it.
+    if let preset = PresetManager.shared.currentPreset, !preset.isDefault {
+      PresetManager.shared.setSound(
+        target.fileName, member: true, ofPreset: preset.id, volume: target.volume)
+    }
     if !target.isSelected {
       target.isSelected = true
     }

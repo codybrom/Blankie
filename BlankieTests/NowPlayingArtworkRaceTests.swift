@@ -5,10 +5,10 @@
 //  Created by Cody Bromley on 10/12/26.
 //
 //  Pins the ways lock screen artwork fell out of step with the preset. A preset
-//  with no animation kept the previous loop, a forced refresh dropped the
-//  preset's own still, a failed still read was never retried, a new preset's
-//  fallback kept the previous selection, and a finished download never reached
-//  the 26 card.
+//  with no animation (or a loop not on the device yet) kept the previous loop,
+//  a forced refresh dropped the preset's own still, a failed still read was
+//  never retried, a new preset's fallback kept the previous selection, and a
+//  finished download never reached the 26 card.
 //
 //  The 26 (MediaPlayer) cases call the backend's artwork steps directly and
 //  never publish, so they are safe next to the 27 backend. The one that does
@@ -79,6 +79,27 @@ import Testing
       let backend = MediaSessionNowPlaying()
       backend.currentAnimatedLoopPath = "previous-preset-loop"
       let preset = makePresetWithoutAnimation()
+      PresetManager.shared.setCurrentPreset(preset)
+
+      backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
+
+      #expect(backend.currentAnimatedLoopPath == nil)
+      #expect(backend.model.animatedArtwork == nil)
+    }
+
+    /// On 27, a preset whose loop isn't on the device yet clears the previous
+    /// preset's loop rather than keeping it under the new title.
+    @Test func mediaSessionPresetWithAnUnavailableLoopClearsTheOldOne() throws {
+      guard #available(iOS 27, *) else { return }
+      guard NowPlayingDisplay.shouldPublishAnimatedArtwork() else {
+        try Test.cancel("Reduce Motion or Low Power Mode turns animated artwork off here")
+      }
+      let backend = MediaSessionNowPlaying()
+      backend.currentAnimatedLoopPath = "previous-preset-loop"
+      var preset = makePresetWithoutAnimation()
+      preset.animatedArtwork = AnimatedArtworkRef(
+        source: .custom, loopPath: "test-missing-\(UUID().uuidString).mov")
       PresetManager.shared.setCurrentPreset(preset)
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)

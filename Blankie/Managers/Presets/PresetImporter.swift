@@ -598,9 +598,9 @@ extension PresetImporter {
     // importArchive re-IDs and stores it — a Task would race that re-ID and its
     // lookup would never match, leaving the preset with placeholder art.
     if let previewURL = Bundle.main.url(
-      forResource: "\(bundledId)/\(bundledId)", withExtension: "jpg"),
+      forResource: bundledId, withExtension: "jpg"),
       let squarePreviewURL = Bundle.main.url(
-        forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
+        forResource: "\(bundledId)Square", withExtension: "jpg")
     {
       let assetId = UUID()
       let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(

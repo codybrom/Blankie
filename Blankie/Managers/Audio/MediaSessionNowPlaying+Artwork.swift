@@ -236,7 +236,6 @@
       /// can show and we have both a video and a preview for.
       private func refreshAnimatedArtwork(for preset: Preset?) {
         // No animation at all (not even the inherited default) clears the card.
-        // Only a still-downloading pack keeps the current loop below.
         guard let preset, preset.animatedArtwork != nil,
           NowPlayingDisplay.shouldPublishAnimatedArtwork()
         else {
@@ -257,9 +256,13 @@
         let ratios = NowPlayingSessionMapping.supportedRatios(
           compatible: AnimatedArtwork.compatibleAspectRatios.map(Self.sessionRatio),
           available: Set(found.keys))
-        // Nothing playable yet (a pack is most likely still downloading): keep
-        // whatever is on the card and let `onDownloaded` come back for it.
-        guard !ratios.isEmpty else { return }
+        // Nothing playable yet (a pack still downloading, or a missing loop).
+        // Clear the previous loop so it can't sit under this preset's title;
+        // `onDownloaded` comes back once a pack lands.
+        guard !ratios.isEmpty else {
+          clearAnimatedArtwork()
+          return
+        }
 
         model.animatedArtwork = AnimatedArtwork(
           id: NowPlayingSessionMapping.animatedArtworkID(loopKey: loopKey, presetID: preset.id),
