@@ -5,10 +5,10 @@
 //  Created by Cody Bromley on 10/12/26.
 //
 //  Pins the ways lock screen artwork fell out of step with the preset. A preset
-//  with no animation kept the previous loop, a forced refresh dropped the
-//  preset's own still, a failed still read was never retried, a new preset's
-//  fallback kept the previous selection, and a finished download never reached
-//  the 26 card.
+//  with no animation (or a loop not on the device yet) kept the previous loop,
+//  a forced refresh dropped the preset's own still, a failed still read was
+//  never retried, a new preset's fallback kept the previous selection, and a
+//  finished download never reached the 26 card.
 //
 //  The 26 (MediaPlayer) cases call the backend's artwork steps directly and
 //  never publish, so they are safe next to the 27 backend. The one that does
@@ -23,6 +23,10 @@ import MediaPlayer
 import Testing
 
 @testable import Blankie
+
+#if os(iOS)
+  import UIKit
+#endif
 
 @Suite(.serialized) @MainActor final class NowPlayingArtworkRaceTests {
   private let originalCurrentPreset: Preset?
@@ -82,6 +86,48 @@ import Testing
       PresetManager.shared.setCurrentPreset(preset)
 
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
+
+      #expect(backend.currentAnimatedLoopPath == nil)
+      #expect(backend.model.animatedArtwork == nil)
+    }
+
+    /// On 27, a preset whose loop isn't on the device yet clears the previous
+    /// preset's loop rather than keeping it under the new title.
+    @Test func mediaSessionPresetWithAnUnavailableLoopClearsTheOldOne() throws {
+      guard #available(iOS 27, *) else { return }
+      guard NowPlayingDisplay.shouldPublishAnimatedArtwork() else {
+        try Test.cancel("Reduce Motion or Low Power Mode turns animated artwork off here")
+      }
+      // A playable custom loop: any file stands in for the video, but the
+      // preview has to decode.
+      let loopPath = AnimatedArtworkFileStore.makeRelativeLoopPath(for: UUID())
+      let previewPath = AnimatedArtworkFileStore.makeRelativePreviewPath(
+        for: UUID(), fileExtension: "jpg")
+      let preview = try #require(
+        UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4))
+          .image { _ in }.jpegData(compressionQuality: 0.9))
+      _ = try AnimatedArtworkFileStore.writeData(Data([0]), to: loopPath)
+      _ = try AnimatedArtworkFileStore.writeData(preview, to: previewPath)
+      defer {
+        AnimatedArtworkFileStore.removeItemIfExists(relativePath: loopPath)
+        AnimatedArtworkFileStore.removeItemIfExists(relativePath: previewPath)
+      }
+      let backend = MediaSessionNowPlaying()
+
+      var playable = makePresetWithoutAnimation()
+      playable.animatedArtwork = AnimatedArtworkRef(
+        source: .custom, loopPath: loopPath, previewPath: previewPath)
+      PresetManager.shared.setCurrentPreset(playable)
+      backend.updateInfo(preset: playable, presetName: playable.name, isPlaying: false)
+      backend.flushPendingPublish()
+      try #require(backend.model.animatedArtwork != nil)
+
+      var pending = makePresetWithoutAnimation()
+      pending.animatedArtwork = AnimatedArtworkRef(
+        source: .custom, loopPath: "test-missing-\(UUID().uuidString).mov")
+      PresetManager.shared.setCurrentPreset(pending)
+      backend.updateInfo(preset: pending, presetName: pending.name, isPlaying: false)
       backend.flushPendingPublish()
 
       #expect(backend.currentAnimatedLoopPath == nil)

@@ -16,9 +16,8 @@ import Testing
 @testable import Blankie
 
 /// Bundled animated-artwork identifiers whose static previews ship in the app
-/// bundle. The importer resolves `<id>/<id>.jpg` and `<id>/<id>Square.jpg`;
-/// enumerate them at runtime so the test skips cleanly if none are present in
-/// the test host's bundle rather than hardcoding one that may not resolve.
+/// bundle. They're copied flat, so the importer resolves `<id>.jpg` and
+/// `<id>Square.jpg` at the bundle root, as the picker does.
 private nonisolated enum BundledArtworkProbe {
   static let candidateIds = [
     "Abstract1", "Abstract2", "Abstract3", "Abstract4", "Beach", "Bokeh",
@@ -29,8 +28,8 @@ private nonisolated enum BundledArtworkProbe {
 
   static var firstResolvableId: String? {
     candidateIds.first { id in
-      Bundle.main.url(forResource: "\(id)/\(id)", withExtension: "jpg") != nil
-        && Bundle.main.url(forResource: "\(id)/\(id)Square", withExtension: "jpg") != nil
+      Bundle.main.url(forResource: id, withExtension: "jpg") != nil
+        && Bundle.main.url(forResource: "\(id)Square", withExtension: "jpg") != nil
     }
   }
 }
@@ -39,10 +38,9 @@ private nonisolated enum BundledArtworkProbe {
 
   /// A preset whose `animatedArtwork` is a bundled reference gets both preview
   /// paths set on the `inout` preset synchronously, backed by files on disk, and
-  /// keeps its bundled identifier with no loop path. Skipped when the test host
-  /// bundle carries no bundled preview JPGs to copy from.
-  @Test(.enabled(if: BundledArtworkProbe.firstResolvableId != nil))
-  func importSetsBundledPreviewPathsSynchronously() async throws {
+  /// keeps its bundled identifier with no loop path. The previews ship in the
+  /// app, so a lookup that finds none fails rather than skipping.
+  @Test func importSetsBundledPreviewPathsSynchronously() async throws {
     let bundledId = try #require(BundledArtworkProbe.firstResolvableId)
 
     var preset = PresetFactory.makePreset(
