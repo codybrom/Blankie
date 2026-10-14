@@ -243,6 +243,9 @@ extension AudioManager {
     if !newValue && isGloballyPlaying && previewModeSound == nil {
       Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
       Task { @MainActor in
+        // Check again when it runs. Entering solo ends a preview and queues this
+        // pause, then starts the solo sound before it lands.
+        guard isGloballyPlaying, !hasPlayableSelection, previewModeSound == nil else { return }
         setGlobalPlaybackState(false)
       }
     }

@@ -277,7 +277,14 @@
       #expect(backend.model.timer?.duration == 600)
       // A timed card publishes under its own id so the system re-reads the
       // finite duration instead of keeping the continuous layout.
-      #expect(backend.model.content?.id == "\(backend.model.contentID):timed")
+      #expect(backend.model.content?.id == "\(backend.model.contentID):timed:600")
+
+      // Adding time arrives as a new item too, or the card keeps the old end.
+      TimerManager.shared.addTime(minutes: 5)
+      backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      backend.flushPendingPublish()
+      #expect(backend.model.timer?.duration == 900)
+      #expect(backend.model.content?.id == "\(backend.model.contentID):timed:900")
 
       TimerManager.shared.stopTimer()
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)

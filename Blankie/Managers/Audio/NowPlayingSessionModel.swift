@@ -80,7 +80,7 @@
     }
 
     private func makeContent() -> GenericContent {
-      let id = NowPlayingSessionMapping.contentID(contentID, timed: timer != nil)
+      let id = NowPlayingSessionMapping.contentID(contentID, timerDuration: timer?.duration)
       #if os(iOS)
         if let artwork, let animatedArtwork {
           return GenericContent(

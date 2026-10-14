@@ -11,7 +11,7 @@
 //  deleting the current preset while paused stays paused, a stale widget tile
 //  leaves solo alone, playPreset starts a current preset, an invalid preset
 //  leaves Quick Mix alone, and play/pause or a preset command ends a preview
-//  (an ignored play or an emptied mix doesn't).
+//  (an ignored play or an emptied mix doesn't, and solo out of one keeps playing).
 //
 //  Engine-free (TestSounds), serialized and main-actor, on an isolated preset
 //  list (SingletonSandbox).
@@ -241,6 +241,24 @@ import Testing
     audioManager.exitPreviewMode(resuming: false)
     await sandbox.settle()
     #expect(!audioManager.isGloballyPlaying)
+  }
+
+  /// Entering solo ends the preview and queues the empty-mix pause before the
+  /// solo sound starts. The pause checks again when it runs, so solo keeps playing.
+  @Test func soloFromAnEmptiedPreviewKeepsPlaying() async {
+    let (a, b) = makeSounds()
+    audioManager.setGlobalPlaybackState(true)
+    audioManager.previewModeSound = a
+    a.isSelected = false
+    audioManager.updateHasSelectedSounds()
+
+    audioManager.enterSoloMode(for: b)
+    await sandbox.settle()
+
+    #expect(audioManager.soloModeSound === b)
+    #expect(audioManager.isGloballyPlaying)
+    audioManager.exitSoloModeWithoutResuming()
+    audioManager.setGlobalPlaybackState(false)
   }
 
   /// Applying a preset ends the preview before the new mix goes in.

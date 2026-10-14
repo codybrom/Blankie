@@ -46,11 +46,11 @@ enum AppDataMigrator {
     migrateUserDefaultsToShared()
 
     // A failed store copy leaves the migration unmarked, so the next launch runs
-    // it again (every step is idempotent). That only retries the copy if this
-    // launch never opened a store at the destination. Otherwise the legacy store
-    // stays where it was, intact.
+    // it again (every step is idempotent). Store setup stays in memory meanwhile,
+    // since any store at the destination would read as a finished copy.
     guard storeMigrated else {
       Logger.app.error("AppDataMigrator: Store migration failed; will retry next launch")
+      AppSetup.storeCopyPending = true
       return
     }
 
