@@ -36,9 +36,7 @@ jobs:
     name: Analyze (swift)
     # Don't scan draft PRs (push/schedule are unaffected)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    # The Xcode 27 image (macOS 27), so the OS 27 code behind
-    # `canImport(NowPlaying)` is compiled and scanned.
-    runs-on: xcode-27
+    runs-on: macos-26
     timeout-minutes: 120
     permissions:
       security-events: write
@@ -53,13 +51,17 @@ jobs:
         with:
           languages: swift
           build-mode: manual
-      - name: Select Xcode
+      - name: Select latest Xcode
         run: |
           echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
-          # The image's default Xcode.app is the release build. The newest
-          # installed one is a beta, so don't pick by version.
-          sudo xcode-select -s /Applications/Xcode.app
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$LATEST" ]; then LATEST=/Applications/Xcode.app; fi
+          # macos-26's default Xcode is 26.4.1, which can't open the project's
+          # objectVersion=100. Selecting the newest installed Xcode (26.5, the
+          # same build as local) is required so xcodebuild can read it.
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST"
           xcodebuild -version
       - name: Build Swift project
         run: |
