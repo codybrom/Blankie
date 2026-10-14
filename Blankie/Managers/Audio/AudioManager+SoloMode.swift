@@ -70,6 +70,7 @@ extension AudioManager {
     let preset = PresetManager.shared.currentPreset
     if GlobalSettings.shared.autoPlayOnLaunch, sounds.contains(where: { $0.isSelected }) {
       isGloballyPlaying = true
+      launchAutoPlayHandled = true
       playSelected()
       nowPlayingManager.updateInfo(
         preset: preset, presetName: preset?.name, creatorName: preset?.creatorName,
@@ -90,9 +91,15 @@ extension AudioManager {
 
     Logger.audio.debug("AudioManager: Entering solo mode for '\(sound.title)'")
 
-    // Solo and Quick Mix are mutually exclusive; leave Quick Mix first.
+    exitPreviewMode(resuming: false)
+
+    // Persist a pending (coalesced) mix edit before solo stops preset saves.
+    PresetManager.shared.updateCurrentPresetState()
+
+    // Solo and Quick Mix are mutually exclusive, so leave Quick Mix first. Don't
+    // resume the pre-Quick-Mix mix, since solo pauses it right away.
     if isQuickMix {
-      exitQuickMix()
+      exitQuickMix(resuming: false)
     }
 
     // Spatial sessions are bound to the preset mix; soloing ends them.
@@ -226,6 +233,16 @@ extension AudioManager {
     // Clear from persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: nil)
 
+    // Same re-sync as exitSoloMode. Replaying the current preset short-circuits
+    // as already active, so presetStatesApplied would stay false and later mix
+    // edits would never persist. Skipped inside applySoundStates (which calls
+    // this) so its isApplyingPresetStates window isn't closed early.
+    if !isApplyingPresetStates, !PresetManager.shared.presetStatesApplied,
+      let preset = PresetManager.shared.currentPreset
+    {
+      PresetManager.shared.applySoundStates(preset.soundStates)
+    }
+
     // Update media control command state
     updateNextPreviousCommandState()
 
@@ -237,6 +254,9 @@ extension AudioManager {
   @MainActor
   func enterPreviewMode(for sound: Sound) {
     Logger.audio.debug("AudioManager: Entering preview mode for '\(sound.title)'")
+
+    // Persist a pending (coalesced) mix edit before preview stops preset saves.
+    PresetManager.shared.updateCurrentPresetState()
 
     // Store original volume and playback states (don't touch selection states)
     previewModeOriginalStates.removeAll()
@@ -288,8 +308,10 @@ extension AudioManager {
     Logger.audio.debug("AudioManager: Preview mode started for '\(sound.title)'")
   }
 
+  /// `resuming: false` restores volumes without restarting the pre-preview
+  /// mix, for callers that start or replace playback right after.
   @MainActor
-  func exitPreviewMode() {
+  func exitPreviewMode(resuming: Bool = true) {
     guard let previewSound = previewModeSound else { return }
     Logger.audio.debug("AudioManager: Exiting preview mode for '\(previewSound.title)'")
 
@@ -317,7 +339,7 @@ extension AudioManager {
         // rescues a sound still mid fade-out (node.isPlaying lags playbackState
         // by ~0.5s, so an isPlaying guard here would skip the rescue and strand
         // the sound silent while selected and globally playing).
-        if originalState.isPlaying, isGloballyPlaying, sound.isSelected {
+        if resuming, originalState.isPlaying, isGloballyPlaying, sound.isSelected {
           sound.play()
         }
       }
@@ -326,6 +348,15 @@ extension AudioManager {
     // Clear preview mode
     previewModeSound = nil
     previewModeOriginalStates.removeAll()
+
+    // A mix emptied during the preview pauses now.
+    updateHasSelectedSounds()
+
+    // A preview while paused ran the engine. Idle it once the fade-out lands,
+    // or iOS keeps reporting the app as playing over silence.
+    if !isGloballyPlaying {
+      scheduleEngineIdlePause(afterFade: Sound.fadeDuration)
+    }
 
     Logger.audio.debug("AudioManager: Preview mode exited")
   }

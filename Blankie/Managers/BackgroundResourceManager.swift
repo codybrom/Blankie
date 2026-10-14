@@ -145,10 +145,12 @@ final class BackgroundResourceManager: ObservableObject {
 
       let task = Task<URL, Error> { [weak self] in
         guard let self else { throw BackgroundResourceError.unavailable(id) }
-        defer { self.inFlight.removeValue(forKey: id) }
         return try await self.download(id: id)
       }
       inFlight[id] = task
+      // A removal can cancel this task and a newer request take its slot, so
+      // only clear the entry while it's still this one.
+      defer { if inFlight[id] == task { inFlight[id] = nil } }
       return try await task.value
     #else
       throw BackgroundResourceError.unavailable(id)
@@ -286,6 +288,8 @@ final class BackgroundResourceManager: ObservableObject {
     /// the terminal state.
     private func observeProgress(id: String) async {
       for await update in AssetPackManager.shared.statusUpdates(forAssetPackWithID: id) {
+        // An update can land after download() wrote the terminal state.
+        guard case .downloading = states[id] else { continue }
         if case .downloading(_, let progress) = update {
           states[id] = .downloading(progress: progress.fractionCompleted)
         }

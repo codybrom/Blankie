@@ -56,6 +56,12 @@ final class AudioEngineManager {
   // Start-retry backoff bookkeeping.
   private var startRetryCount = 0
   private let maxStartRetries = 5
+  /// One retry in flight at a time. Every selected sound's play() reaches
+  /// ensureRunning, so one failed pass would otherwise spend the whole budget.
+  private var startRetryPending = false
+
+  /// Starts the engine. Tests replace it to simulate a start failure.
+  var startEngine: (AVAudioEngine) throws -> Void = { try $0.start() }
 
   /// Set by `AudioManager`: a media-services reset tears down every Sound's
   /// player (without touching selection) for lazy rebuild on next play.
@@ -259,7 +265,7 @@ final class AudioEngineManager {
     engine.prepare()
 
     do {
-      try engine.start()
+      try startEngine(engine)
       startRetryCount = 0
       state = .running
       return true
@@ -295,6 +301,7 @@ final class AudioEngineManager {
   /// Exponential backoff (0.25 · 2^n s, 5 tries); after the cap, reports the
   /// failure and leaves the app paused with controls alive.
   private func scheduleStartRetry() {
+    guard !startRetryPending else { return }
     guard startRetryCount < maxStartRetries else {
       Logger.audio.error(
         "AudioEngineManager: Engine start gave up after \(self.maxStartRetries, privacy: .public) retries"
@@ -313,13 +320,23 @@ final class AudioEngineManager {
     state = .failed(retryCount: startRetryCount)
 
     let delay = 0.25 * pow(2.0, Double(attempt))
+    startRetryPending = true
     Task { @MainActor in
       try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-      guard !self.engine.isRunning else { return }
+      self.startRetryPending = false
+      // Key on play intent, not engine state. A pause in the meantime must not
+      // restart the engine, and a rebuild may have restarted it without
+      // rescheduling the sound that failed to start.
+      guard AudioManager.shared.isGloballyPlaying else {
+        // The user paused. The next play starts with a full budget.
+        self.startRetryCount = 0
+        return
+      }
       // Recovering the engine isn't enough: if we were "playing" while it was
       // down, nothing rescheduled the sounds, so the lock screen shows rate 1.0
-      // over silence. Resume the (solo-aware) selection once it's back.
-      if self.ensureRunning(), AudioManager.shared.isGloballyPlaying {
+      // over silence. Resume the (solo-aware) selection once it's back. Sounds
+      // already playing ignore the call.
+      if self.ensureRunning() {
         AudioManager.shared.playSelected()
       }
     }

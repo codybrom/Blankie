@@ -41,7 +41,7 @@ extension AudioManager {
       // A media-services reset invalidates every node bound to the dead
       // engine; tear down players (keeping selection) for lazy rebuild.
       AudioEngineManager.shared.onEngineReset = { [weak self] in
-        self?.sounds.forEach { $0.unload() }
+        for sound in self?.sounds ?? [] { sound.unload() }
       }
 
       audioSessionObserversSetup = true
@@ -111,6 +111,7 @@ extension AudioManager {
 
       AudioSessionManager.shared.reactivateForForeground(
         mixWithOthers: GlobalSettings.shared.mixWithOthers,
+        isCarPlayConnected: isCarPlayConnected,
         isPlaying: isGloballyPlaying
       )
 
@@ -168,20 +169,11 @@ extension AudioManager {
       // active while paused, so the interruption can end with .shouldResume even
       // though the user had nothing going.
       wasPlayingWhenInterrupted = isGloballyPlaying
+      // An interruption ends a sound-editor preview, even while globally paused.
+      exitPreviewMode(resuming: false)
       if isGloballyPlaying {
         Task { @MainActor in
-          // Update Now Playing info to show paused state with current position
-          // Use active (selected) sounds to ensure we have position even when pausing
-          let activeSounds = self.sounds.filter { $0.isSelected }
-          if let longestSound = activeSounds.max(by: {
-            $0.playbackDuration < $1.playbackDuration
-          }), longestSound.isLoaded {
-            self.nowPlayingManager.updateProgress(
-              currentTime: longestSound.playbackPosition,
-              duration: longestSound.playbackDuration
-            )
-          }
-
+          // The paused publish applies the progress anchor (timer > solo > longest loop).
           self.setGlobalPlaybackState(false)
         }
       }

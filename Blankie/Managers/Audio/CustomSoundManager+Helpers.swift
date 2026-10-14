@@ -156,7 +156,7 @@ extension CustomSoundManager {
     do {
       let files = try FileManager.default.contentsOfDirectory(atPath: documentsPath.path)
       Logger.sounds.debug("CustomSoundManager: Files in CustomSounds directory:")
-      files.forEach { file in
+      for file in files {
         Logger.sounds.debug("  - \(file)")
       }
     } catch {
@@ -166,6 +166,19 @@ extension CustomSoundManager {
     }
 
     return nil
+  }
+
+  /// File names (no extension) of the custom audio files on disk. Launch pruning
+  /// counts these as valid so a row lost to a store rebuild can't strip a
+  /// reference whose audio still exists.
+  func customAudioFileNamesOnDisk() -> Set<String> {
+    guard let dir = getCustomSoundsDirectoryURL(),
+      let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path)
+    else { return [] }
+    return Set(
+      entries
+        .filter { !$0.hasPrefix(".") && !$0.hasSuffix(Self.mirrorSuffix) }
+        .map { ($0 as NSString).deletingPathExtension })
   }
 
   /// Returns the file URL for a custom sound data object

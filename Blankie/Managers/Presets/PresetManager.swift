@@ -227,7 +227,8 @@ extension PresetManager {
         do {
           Logger.presets.debug(
             "PresetManager: Applying next custom preset '\(nextCustomPreset.name)'")
-          try applyPreset(nextCustomPreset)
+          // Deleting while paused stays paused.
+          try applyPreset(nextCustomPreset, autoPlay: AudioManager.shared.isGloballyPlaying)
         } catch {
           handleError(error)
         }
@@ -244,7 +245,7 @@ extension PresetManager {
             Logger.presets.debug(
               "PresetManager: No other custom presets. Updating default and setting current preset to nil."
             )
-            try applyPreset(updatedDefaultPreset)
+            try applyPreset(updatedDefaultPreset, autoPlay: AudioManager.shared.isGloballyPlaying)
           } catch {
             handleError(error)
           }
@@ -422,23 +423,47 @@ extension PresetManager {
     AnimatedArtworkFileStore.removeItemIfExists(relativePath: preset.staticArtworkPath)
   }
 
+  /// Starts a preset from Siri, a widget or CarPlay. Leaves solo and Quick Mix
+  /// first, since an application skips solo and never exits Quick Mix itself.
+  /// An application plays the new mix, so only a current preset needs a play.
   @MainActor
-  func applyPreset(_ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false) throws
-  {
+  func playPreset(_ preset: Preset) throws {
+    // Validate before leaving Quick Mix, which drops the earlier mix.
+    guard preset.validate() else { throw PresetError.invalidPreset }
+    AudioManager.shared.leaveTransientModes()
+    if try !applyPreset(preset) {
+      AudioManager.shared.setGlobalPlaybackState(true)
+    }
+  }
+
+  @MainActor
+  /// `autoPlay: false` applies the mix without starting playback (remote
+  /// next/previous while paused). Returns false when the preset was already
+  /// active and nothing was applied. Callers that want playback start it only
+  /// then, since an application starts playback itself once the new mix is in.
+  @discardableResult
+  func applyPreset(
+    _ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false,
+    autoPlay: Bool = true
+  ) throws -> Bool {
     logPresetApplication(preset)
 
     guard preset.validate() else {
       throw PresetError.invalidPreset
     }
 
+    // A preset command ends a sound-editor preview first. Resume the mix only
+    // when it stays, because an application replaces it.
     if preset.id == currentPreset?.id, !isInitialLoad, !forceReapply {
+      AudioManager.shared.exitPreviewMode()
       handleAlreadyActivePreset(preset)
-      return
+      return false
     }
+    AudioManager.shared.exitPreviewMode(resuming: false)
 
     preparePresetApplication(preset)
-    executePresetApplication(preset: preset, isInitialLoad: isInitialLoad)
-
+    executePresetApplication(preset: preset, isInitialLoad: isInitialLoad, autoPlay: autoPlay)
+    return true
   }
 
   /// Outcome of deciding which custom-sound states to keep. Pure and `Equatable`
@@ -485,7 +510,10 @@ extension PresetManager {
     let decision = Self.customSoundCleanupDecision(
       presetStates: presets.map(\.soundStates),
       loadedSoundFileNames: Set(AudioManager.shared.sounds.map(\.fileName)),
+      // Audio still on disk counts too: a row can vanish in a store rebuild while
+      // its file survives, and pruning here is irreversible.
       customRowFileNames: Set(customRows.map(\.fileName))
+        .union(CustomSoundManager.shared.customAudioFileNamesOnDisk())
     )
     guard case .filtered(let filteredStates) = decision else {
       Logger.presets.debug(
@@ -619,6 +647,9 @@ extension PresetManager {
   }
 
   @MainActor func preparePresetApplication(_ preset: Preset) {
+    // Persist an edit still waiting on the 100 ms coalesced refresh into the
+    // outgoing preset. Once the switch lands, that refresh skips or targets the new one.
+    updateCurrentPresetState()
     currentPreset = preset
     // The mixer no longer matches the (now-current) preset until executePreset-
     // Application's async applySoundStates runs. Clear the flag so a debounced
@@ -643,7 +674,7 @@ extension PresetManager {
     )
   }
 
-  func executePresetApplication(preset: Preset, isInitialLoad: Bool) {
+  func executePresetApplication(preset: Preset, isInitialLoad: Bool, autoPlay: Bool = true) {
     // The default grid hides preset-use-only sounds, so never activate one
     // from the default preset — a stale selection (e.g. marked preset-only
     // while a custom preset was current) would play with no tile to stop it.
@@ -685,7 +716,7 @@ extension PresetManager {
       // Allow sound states to be applied before autoplay
       await Task.yield()
 
-      let shouldAutoPlay = !isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch
+      let shouldAutoPlay = autoPlay && (!isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch)
       if shouldAutoPlay, targetStates.contains(where: { $0.isSelected }) {
         AudioManager.shared.setGlobalPlaybackState(true)
       }
@@ -975,6 +1006,8 @@ extension PresetManager {
     updateCurrentPresetBeforeSave()
     performActualSave()
     refreshDiscoverableEntitiesIfNeeded()
+    // Names, accents, and membership feed the widgets. Publish skips identical snapshots.
+    AudioManager.shared.republishWidgetCatalog()
 
     Logger.presets.debug("PresetManager: --- End Saving Presets ---")
   }

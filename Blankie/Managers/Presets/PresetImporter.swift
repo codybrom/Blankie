@@ -144,8 +144,10 @@ private enum SoundCustomizationImporter {
         if let normalizeAudio = customization.normalizeAudio {
           customizationManager.setNormalizeAudio(normalizeAudio, for: customization.fileName)
         }
-        if let volumeAdjustment = customization.volumeAdjustment {
-          customizationManager.setVolumeAdjustment(volumeAdjustment, for: customization.fileName)
+        if let volumeAdjustment = customization.volumeAdjustment, volumeAdjustment.isFinite {
+          // Clamp to the editor slider's range, since an archive can carry anything.
+          customizationManager.setVolumeAdjustment(
+            min(max(volumeAdjustment, 0.5), 8.0), for: customization.fileName)
         }
         if let loopSound = customization.loopSound {
           customizationManager.setLoopSound(loopSound, for: customization.fileName)
@@ -233,6 +235,11 @@ class PresetImporter {
       preset.name = await DuplicateDetectionHelper.generateUniquePresetName(baseName: preset.name)
     }
 
+    // Re-ID the preset before anything is stored under its ID. Artwork saved for
+    // the archive's ID would purge the artwork of the preset it was exported from
+    // (or of an earlier import of the same archive).
+    preset = createNewPresetInstance(from: preset)
+
     try await importArtwork(for: &preset, from: archiveURL)
 
     // Apply the archive's sound customizations (custom titles, icons, etc.) before
@@ -246,9 +253,6 @@ class PresetImporter {
     if !idMapping.isEmpty {
       preset = updatePresetSoundStates(preset, with: idMapping)
     }
-
-    // Re-ID the preset so it can't collide with an existing one
-    preset = createNewPresetInstance(from: preset)
 
     await addAndActivatePreset(preset)
 
@@ -424,7 +428,7 @@ extension PresetImporter {
 
     // Extract the UUID from the filename if it's different from metadata ID
     let fileNameWithoutExt = (soundFileURL.lastPathComponent as NSString).deletingPathExtension
-    let actualId: UUID
+    var actualId: UUID
     if let uuidFromFilename = UUID(uuidString: fileNameWithoutExt),
       uuidFromFilename != soundMetadata.id
     {
@@ -434,6 +438,15 @@ extension PresetImporter {
       actualId = uuidFromFilename
     } else {
       actualId = soundMetadata.id
+    }
+
+    // The ID names the stored file, so an ID already in use (a different file
+    // with the same ID, e.g. a SHA mismatch) would overwrite that sound's audio
+    // and leave two rows with one ID. Mint a fresh one and let idMapping remap the preset.
+    if CustomSoundManager.shared.getCustomSound(by: actualId) != nil
+      || CustomSoundManager.shared.customAudioFileNamesOnDisk().contains(actualId.uuidString)
+    {
+      actualId = UUID()
     }
 
     do {
@@ -788,8 +801,12 @@ extension PresetImporter {
           return UUID(uuidString: state.fileName)
         }
 
-      if !customSoundIds.isEmpty {
-        audioManager.loadCustomSoundsByIds(Set(customSoundIds))
+      // Skip ids already loaded. Reloading them would orphan the instances
+      // solo, preview, or Quick Mix still hold.
+      let loadedIds = Set(audioManager.sounds.compactMap(\.customSoundDataID))
+      let newIds = Set(customSoundIds).subtracting(loadedIds)
+      if !newIds.isEmpty {
+        audioManager.loadCustomSoundsByIds(newIds)
       }
 
       // Add to presets
@@ -807,8 +824,10 @@ extension PresetImporter {
       // Save presets to persist the import
       presetManager.savePresets()
 
-      // Activate the imported preset immediately
+      // Activate the imported preset immediately. Leave solo/Quick Mix first, or
+      // solo skips the apply and a Quick Mix exit would discard it.
       do {
+        audioManager.leaveTransientModes()
         try presetManager.applyPreset(preset)
       } catch {
         Logger.presets.error("Import: Failed to apply preset: \(error, privacy: .public)")

@@ -711,6 +711,9 @@ extension EditPresetSheet {
     }
     PresetStorage.saveCustomPresets(customPresets)
     Logger.ui.debug("EditPresetSheet: Presets saved directly without state override")
+    // This bypasses savePresets, so refresh the Siri/Spotlight names and widgets it would.
+    presetManager.refreshDiscoverableEntitiesIfNeeded()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   private func deletePreset(_ preset: Preset) {

@@ -147,7 +147,9 @@ enum NowPlayingDisplay {
         .max { $0.playbackDuration < $1.playbackDuration }
     }
 
-    guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
+    // Under a second, a 0.25 s position poll can't see the wrap (it needs a
+    // 0.5 s drop), so the bar would run past the end. Show it indeterminate.
+    guard let anchorSound, anchorSound.playbackDuration >= 1 else { return nil }
     return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
 
@@ -206,11 +208,17 @@ enum NowPlayingDisplay {
   /// The fallback shown when a preset/mix has no custom or animated artwork:
   /// Quick Mix → grid, "All Blankie Sounds" → the Blankie mark, a custom preset
   /// → a montage of its playing sounds — matching the preset's library tile.
-  static func mixFallbackImage() -> PlatformImage? {
-    let glyph = FallbackArtwork.Glyph.playback(
+  static func mixFallbackImage(_ glyph: FallbackArtwork.Glyph = mixFallbackGlyph())
+    -> PlatformImage?
+  {
+    fallbackArtworkImage(glyph: glyph, fraction: 0.5)
+  }
+
+  /// The glyph `mixFallbackImage()` draws for the live playback state.
+  static func mixFallbackGlyph() -> FallbackArtwork.Glyph {
+    .playback(
       isQuickMix: AudioManager.shared.isQuickMix,
       isDefaultPreset: PresetManager.shared.currentPreset?.isDefault ?? true,
       icons: AudioManager.shared.playingSoundIcons())
-    return fallbackArtworkImage(glyph: glyph, fraction: 0.5)
   }
 }

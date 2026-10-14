@@ -29,11 +29,15 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 
 ### Fixed
 
-- On the lock screen and in CarPlay, the next and previous buttons could stay disabled after launch until you switched presets.
-- On the Mac, the window used a translucent material that could make it hard to view over a light desktop. It now uses a solid background.
-- In cars set to light mode, CarPlay used light colored text that could be hard to read. Blankie now properly follows CarPlay's light or dark appearance with proper colors.
-- Picking a preset in CarPlay when nothing was selected could light up the sounds without starting playback.
-- In CarPlay, presets without artwork showed a smaller image than presets with artwork.
+- Blankie could report that it was playing over silence, or start playing when it should have stayed paused. Starting a preset from CarPlay, Siri or a widget, or leaving Quick Mix for a preset, could also briefly play the previous mix.
+- A change to your mix made right before switching presets, starting Quick Mix or playing a sound by itself could be lost.
+- On the lock screen, Blankie could show as playing right after you paused, artwork could fall out of step with the preset or the sounds you turned on, and the next and previous buttons could stay disabled after launch.
+- Adding time to the sleep timer as it ran out could still stop your sounds.
+- Importing a preset could crash Blankie on every launch or overwrite artwork and custom sounds. Custom sounds could also disappear from presets, keep playing with no way to stop them, or crash Blankie when longer than about 25 hours. Some damaged audio files crashed the sound editor.
+- If an update was interrupted while moving your data, Blankie now finishes the move on the next launch.
+- Widgets, Siri and Spotlight could keep showing a preset or sound's old name, or one you had deleted.
+- CarPlay now follows the car's light or dark appearance, enables next and previous right after launch, keeps favorites and edits in step with your iPhone, and keeps other apps' audio out of your mix. Picking a preset when nothing was selected now starts playback, and presets without artwork show a full-size image.
+- On the Mac, the window now has a solid background, Autoplay on Open only plays when Blankie opens (not when you select a sound later), and the menu bar icon comes back when you turn Show in Menu Bar on.
 
 ## [2.0.2] - 2026-06-28
 

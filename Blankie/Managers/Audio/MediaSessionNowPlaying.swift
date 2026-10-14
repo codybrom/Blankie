@@ -38,7 +38,8 @@
     /// with no preset), so the first pass has to be forced or that card would
     /// never get artwork at all.
     var hasBuiltArtwork = false
-    /// Last good JPEG per fallback-artwork id, for when a render fails.
+    /// The last good fallback render, keyed by its artwork id, for when a render
+    /// fails. Only the current id is ever read, so it holds one entry.
     var fallbackArtworkCache: [String: Data] = [:]
     #if os(iOS)
       var currentAnimatedLoopPath: String?
@@ -195,15 +196,17 @@
 
     /// Republish after a gate that decides what the artwork shows flipped while
     /// the preset itself did not, so the identity gate can't skip the rebuild.
-    private func republishForArtworkGateChange() {
+    func republishForArtworkGateChange() {
       hasBuiltArtwork = false
       republishCurrentPreset()
     }
 
     func forceRefresh(preset: Preset, isPlaying: Bool) {
       // Clear the artwork identity so the same preset's new artwork is rebuilt.
+      // A nil id alone matches Quick Mix's identity, so also drop the built flag.
       lastPresetId = nil
       lastSoloSoundId = nil
+      hasBuiltArtwork = false
       updateInfo(
         preset: preset,
         presetName: preset.name,

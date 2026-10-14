@@ -130,8 +130,12 @@ extension AudioManager {
       }
       Logger.audio.debug("AudioManager: Navigating to preset: \(preset.name)")
       do {
-        try PresetManager.shared.applyPreset(preset)
-        if isGloballyPlaying {
+        // Respect the current play/pause state, so skipping onto a preset while
+        // paused doesn't start playback (matches solo navigation below).
+        // An application starts the new mix itself. Playing here would start the old one.
+        let wasPlaying = isGloballyPlaying
+        let started = try PresetManager.shared.applyPreset(preset, autoPlay: wasPlaying)
+        if wasPlaying, !started {
           setGlobalPlaybackState(true)
         }
       } catch {
@@ -141,8 +145,7 @@ extension AudioManager {
       }
     case .solo(let sound):
       Logger.audio.debug("AudioManager: Navigating to solo sound: \(sound.title)")
-      // Respect the current play/pause state, matching preset navigation —
-      // skipping onto a solo favorite while paused shouldn't start playback.
+      // Respect the current play/pause state, matching preset navigation.
       enterSoloMode(for: sound, startPlaying: isGloballyPlaying)
     }
   }

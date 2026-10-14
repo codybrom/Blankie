@@ -42,6 +42,8 @@ extension Sound {
     guard !player.isPlaying else {
       if playbackState == .paused {
         Logger.sounds.debug("Sound: Rescuing mid-fade pause for '\(self.fileName)'")
+        // The idle-pause safety net can pause the engine under a fading node.
+        _ = AudioEngineManager.shared.ensureRunning()
         player.fade(to: 1, duration: Sound.fadeDuration)
         playbackState = .playing
       } else {

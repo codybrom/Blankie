@@ -70,6 +70,11 @@ import os
       }
     }
 
+    /// Saves a pending debounced frame now (the app is quitting).
+    func flushPendingSave() {
+      debounceTimer?.fire()
+    }
+
     private func saveWindowFrame(_ window: NSWindow) {
       let frame = window.frame
       let frameDict: [String: Double] = [

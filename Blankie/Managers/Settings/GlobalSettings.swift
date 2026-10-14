@@ -193,6 +193,11 @@ extension GlobalSettings {
     }
   }
 
+  /// Saves a pending debounced volume now (the app is quitting or suspending).
+  func flushPendingVolumeSave() {
+    volumeDebounceTimer?.fire()
+  }
+
   private func saveVolume(_ newVolume: Double) {
     let validVolume = validateVolume(newVolume)
     UserDefaults.shared.set(validVolume, forKey: UserDefaultsKeys.volume)

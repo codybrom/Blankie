@@ -54,8 +54,10 @@ extension NowPlayingManager {
   }
 
   /// The mix's fallback artwork, wrapped for MediaPlayer.
-  func loadArtwork() -> MPMediaItemArtwork? {
-    guard let image = NowPlayingDisplay.mixFallbackImage() else { return nil }
+  func loadArtwork(
+    glyph: FallbackArtwork.Glyph = NowPlayingDisplay.mixFallbackGlyph()
+  ) -> MPMediaItemArtwork? {
+    guard let image = NowPlayingDisplay.mixFallbackImage(glyph) else { return nil }
     return Self.makeArtwork(from: image)
   }
 }

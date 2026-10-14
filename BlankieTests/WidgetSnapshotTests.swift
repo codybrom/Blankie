@@ -7,8 +7,8 @@
 //  The cached snapshot the Home Screen widgets render off the App Group.
 //  Covers the encode round-trip and corrupt-data
 //  fallback, the publish dedup (identical snapshots skip the write + timeline
-//  reload), the shared subtitle rule, and that a favorites change republishes
-//  the catalog immediately.
+//  reload), the shared subtitle rule, and that a favorites change or a preset
+//  save republishes the catalog immediately.
 //
 //  Serialized + main-actor: mutates the GlobalSettings.shared singleton and the
 //  shared "widgetSnapshot" default; each test restores the touched values.
@@ -81,6 +81,20 @@ import Testing
   }
 
   // MARK: - Round-trip / corrupt fallback
+
+  /// Saving presets republishes the catalog, so a rename reaches the Pinned
+  /// Sound picker without waiting for a playback change.
+  @Test func savingPresetsRepublishesTheirNames() async {
+    let sandbox = await SingletonSandbox.make()
+    defer { sandbox.restore() }
+    let preset = PresetFactory.makePreset(
+      name: "Widget Rename Probe \(UUID().uuidString.prefix(6))", soundStates: [], soundOrder: [])
+    sandbox.presetManager.setPresets([preset])
+
+    sandbox.presetManager.savePresets()
+
+    #expect(WidgetStateStore.current().pinnableItems.contains { $0.displayName == preset.name })
+  }
 
   @Test func snapshotEncodeDecodeRoundTrips() throws {
     let original = makeSnapshot(title: "Round Trip")

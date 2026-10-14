@@ -178,6 +178,14 @@ struct SoundSheet: View {
       .onDisappear {
         handleOnDisappear()
       }
+      // A remote command, interruption, or mode change can end the preview from
+      // outside. Drop the saved solo so stopPreview doesn't re-enter it on top.
+      .onChange(of: AudioManager.shared.previewModeSound == nil) { _, ended in
+        if ended, isPreviewing {
+          previousSoloModeSound = nil
+          isPreviewing = false
+        }
+      }
       // Tint the whole sheet so accent-colored icons (selected sound icon,
       // icon-picker highlight, Reset button) resolve from one stable environment
       // and don't flip when a tinted control is touched. Standalone, sound
@@ -246,6 +254,11 @@ struct SoundSheet: View {
       Logger.ui.debug("SoundSheet: Stopping preview in onDisappear")
       stopPreview()
     }
+
+    // Edits here (name, icon, preset-only) change what widgets, Siri, and
+    // Spotlight list. Both refreshes skip when nothing changed.
+    AudioManager.shared.republishWidgetCatalog()
+    PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
   }
 }
 

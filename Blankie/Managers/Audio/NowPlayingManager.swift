@@ -50,6 +50,12 @@ final class NowPlayingManager: NowPlayingPublishing {
   nonisolated(unsafe) private var lockScreenBgObservation: Task<Void, Never>?
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
   private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
+  // Set when artwork changed without a preset/solo change (an animation pack
+  // finished downloading), so the next update rebuilds and publishes it in full.
+  var needsArtworkRebuild = false
+  /// The drawn fallback's glyph while it's the artwork, so a later selection
+  /// change can redraw it. Nil while other artwork shows.
+  var shownFallbackGlyph: FallbackArtwork.Glyph?
 
   init() {
     // Republish the lock-screen background when the user toggles the setting.
@@ -189,7 +195,8 @@ final class NowPlayingManager: NowPlayingPublishing {
 
     // Only update artwork when the preset/solo sound changes, to avoid
     // restarting animated artwork on every incremental tick.
-    if presetChanged || soloChanged {
+    if presetChanged || soloChanged || needsArtworkRebuild {
+      needsArtworkRebuild = false
       if let soloSound = AudioManager.shared.soloModeSound {
         // Solo mode: show the sound's own icon, not the last preset's artwork.
         applySoloArtwork(for: soloSound)
@@ -234,6 +241,7 @@ final class NowPlayingManager: NowPlayingPublishing {
       // Incremental update - only update specific keys to avoid restarting animated artwork
       // CRITICAL: We update keys in-place on the existing dictionary to preserve artwork objects
       let center = MPNowPlayingInfoCenter.default()
+      let redrewFallback = redrawFallbackIfStale()
 
       if var updated = center.nowPlayingInfo {
         Logger.nowPlaying.debug(
@@ -248,7 +256,7 @@ final class NowPlayingManager: NowPlayingPublishing {
           MPNowPlayingInfoPropertyPlaybackRate,
           MPMediaItemPropertyPlaybackDuration,
           MPNowPlayingInfoPropertyElapsedPlaybackTime,
-        ] {
+        ] + (redrewFallback ? [MPMediaItemPropertyArtwork] : []) {
           updated[key] = nowPlayingInfo[key]
         }
         center.nowPlayingInfo = updated
@@ -272,6 +280,7 @@ final class NowPlayingManager: NowPlayingPublishing {
   private func applySoloArtwork(for sound: Sound) {
     currentArtworkId = nil
     currentStaticArtworkPath = nil
+    shownFallbackGlyph = nil
     if let artwork = soloArtwork(for: sound) {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     } else if let fallback = loadArtwork() {
@@ -366,6 +375,8 @@ final class NowPlayingManager: NowPlayingPublishing {
     isPlaying: Bool
   ) {
     lastPresetId = nil  // Clear cache to force full artwork update
+    // A nil id alone matches Quick Mix's identity, so flag the rebuild too.
+    needsArtworkRebuild = true
     updateInfo(
       preset: preset,
       presetName: preset.name,
@@ -475,7 +486,8 @@ final class NowPlayingManager: NowPlayingPublishing {
 
     let isFirst = lastObservedElapsed < 0
     let wrapped = elapsed < lastObservedElapsed - 0.5  // sound loop restarted
-    let durationChanged = abs(duration - lastObservedDuration) > 0.5
+    // Each source's duration is an exact constant, so any change means a new source.
+    let durationChanged = abs(duration - lastObservedDuration) > 0.001
     // A timer never wraps and has constant duration, so it'd anchor once and rely
     // on extrapolation — which CarPlay does unreliably, stalling the bar. Re-anchor
     // each whole second (timing-only, in-place publish; artwork untouched).
@@ -495,6 +507,7 @@ final class NowPlayingManager: NowPlayingPublishing {
     currentStaticArtworkPath = nil
     lastPresetId = nil
     lastSoloSoundId = nil
+    shownFallbackGlyph = nil
     #if os(iOS)
       removeAnimatedArtwork()
     #endif

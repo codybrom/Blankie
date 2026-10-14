@@ -16,7 +16,7 @@ import SwiftUI
 
 struct FallbackArtwork: View {
   /// What sits on the card.
-  enum Glyph {
+  enum Glyph: Equatable {
     case symbol(String)  // an SF Symbol — sound fallbacks, the waveform mark
     case brand  // the Blankie mark ("blankie.symbol")
     case composite([String])  // a montage of a preset's sound icons (up to 4)

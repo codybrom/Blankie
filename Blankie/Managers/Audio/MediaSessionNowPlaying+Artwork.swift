@@ -183,7 +183,7 @@
       let id = NowPlayingSessionMapping.artworkID(
         source: source, accentColorName: artworkAccentName)
       if let data = Self.jpegData(NowPlayingDisplay.mixFallbackImage()) {
-        fallbackArtworkCache[id] = data
+        fallbackArtworkCache = [id: data]
         setArtwork(data: data, source: source)
       } else if let data = fallbackArtworkCache[id] {
         Logger.nowPlaying.error(
@@ -235,7 +235,11 @@
       /// The lock screen's loop, published for every aspect ratio this device
       /// can show and we have both a video and a preview for.
       private func refreshAnimatedArtwork(for preset: Preset?) {
-        guard let preset, NowPlayingDisplay.shouldPublishAnimatedArtwork() else {
+        // No animation at all (not even the inherited default) clears the card.
+        // Only a still-downloading pack keeps the current loop below.
+        guard let preset, preset.animatedArtwork != nil,
+          NowPlayingDisplay.shouldPublishAnimatedArtwork()
+        else {
           clearAnimatedArtwork()
           return
         }
@@ -292,23 +296,13 @@
           guard
             let resources = animatedArtworkResolver.resources(
               for: preset, key: key, downloadIfMissing: key == preferredKey,
-              // Straight back to the animation, not through `publishInfo`: by
-              // now the identity gate has recorded this preset and would drop it.
-              onDownloaded: { [weak self] in self?.refreshAnimatedArtworkForCurrentPreset() }),
+              // Republish with the identity gate cleared, for whatever is current now.
+              onDownloaded: { [weak self] in self?.republishForArtworkGateChange() }),
             let preview = Self.jpegData(resources.previewImage)
           else { continue }
           found[Self.sessionRatio(ratio)] = (preview: preview, loop: resources.loopURL)
         }
         return found
-      }
-
-      /// A pack finished downloading: refresh whatever is current now, not the
-      /// preset that started the request. It may have changed since, and the
-      /// resolver coalesces downloads by pack, so a later preset shares this call.
-      private func refreshAnimatedArtworkForCurrentPreset() {
-        guard AudioManager.shared.soloModeSound == nil else { return }
-        refreshAnimatedArtwork(
-          for: effectiveArtworkPreset(for: PresetManager.shared.currentPreset))
       }
 
       private func clearAnimatedArtwork() {

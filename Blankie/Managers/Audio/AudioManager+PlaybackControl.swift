@@ -114,11 +114,12 @@ extension AudioManager {
       // Play the solo sound at its current volume
       soloSound.play()
 
-      // Update Now Playing info for solo mode
+      // Update Now Playing info for solo mode. Read the state when the Task runs
+      // so a pause queued ahead of it isn't overwritten with "playing".
       Task { @MainActor in
         nowPlayingManager.updateInfo(
           presetName: soloSound.title,
-          isPlaying: true
+          isPlaying: self.isGloballyPlaying
         )
       }
       return
@@ -143,7 +144,7 @@ extension AudioManager {
         presetName: currentPreset?.name,
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId,
-        isPlaying: true
+        isPlaying: self.isGloballyPlaying
       )
     }
   }
@@ -167,7 +168,7 @@ extension AudioManager {
   /// After the pause fade-outs land, idles the engine and does the single
   /// paused publish (held until then — see performNowPlayingUpdate). The
   /// session stays active so the system controls remain visible.
-  private func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
+  func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
     Task { @MainActor [weak self] in
       // Zero-length fades pause their nodes synchronously inside pauseAll,
       // so the engine can idle in this same runloop turn — don't sleep.
@@ -221,6 +222,21 @@ extension AudioManager {
 
     // Update state first
     isGloballyPlaying = shouldPlay
+    if shouldPlay {
+      // Playback is underway, so the macOS open-time autoplay must not fire later.
+      launchAutoPlayHandled = true
+      #if os(iOS) || os(visionOS)
+        // A play during an interruption supersedes it, so its end can't resume over a later pause.
+        wasPlayingWhenInterrupted = false
+      #endif
+    }
+
+    // Play/pause from anywhere (remote, CarPlay, intents, timer) ends a sound-editor
+    // preview. A play ignored for an empty mix leaves it alone. Playback below
+    // restarts or pauses the mix itself.
+    if !playing || shouldPlay {
+      exitPreviewMode(resuming: false)
+    }
 
     // Then handle playback
     if shouldPlay {

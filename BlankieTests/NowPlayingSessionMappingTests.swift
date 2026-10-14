@@ -105,10 +105,15 @@ import Testing
   }
 
   /// A running sleep timer publishes under its own id, and the base id comes
-  /// back untouched when it ends.
+  /// back untouched when it ends. Adding time changes the id, since the system
+  /// reads a duration once per id and would keep the old end.
   @Test func timedContentIDIsSuffixedOnlyWhileATimerRuns() {
-    #expect(NowPlayingSessionMapping.contentID("quickmix", timed: true) == "quickmix:timed")
-    #expect(NowPlayingSessionMapping.contentID("quickmix", timed: false) == "quickmix")
+    #expect(
+      NowPlayingSessionMapping.contentID("quickmix", timerDuration: 600) == "quickmix:timed:600")
+    #expect(
+      NowPlayingSessionMapping.contentID("quickmix", timerDuration: 900)
+        != NowPlayingSessionMapping.contentID("quickmix", timerDuration: 600))
+    #expect(NowPlayingSessionMapping.contentID("quickmix", timerDuration: nil) == "quickmix")
   }
 
   // MARK: - Artwork identity

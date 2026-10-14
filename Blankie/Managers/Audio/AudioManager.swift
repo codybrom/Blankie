@@ -83,6 +83,9 @@ class AudioManager {
   @ObservationIgnored var modelContext: ModelContext?
   @ObservationIgnored var nowPlayingManager: (any NowPlayingPublishing)!
   @ObservationIgnored @MainActor var isInitializing = true
+  /// Set once the open-time autoplay fired or playback otherwise started, so it
+  /// can't re-fire on a later empty-to-selected change.
+  @ObservationIgnored var launchAutoPlayHandled = false
   /// True while a preset's sound states are being applied. Suppresses the
   /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
   /// otherwise fight the preset restoring its own selection set.
@@ -231,26 +234,35 @@ extension AudioManager {
 
   func updateHasSelectedSounds() {
     let newValue = sounds.contains { $0.isSelected }
+
+    // Nothing selected pauses playback, since silence should read as paused and
+    // never as a silent "playing" state. Check on every pass, not only on a
+    // change, because hasSelectedSounds can already be false when playback starts
+    // (e.g. a mode exit briefly restored a selection that the next preset cleared).
+    // A preview waits until it ends (the editor can deselect the sound it plays).
+    if !newValue && isGloballyPlaying && previewModeSound == nil {
+      Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
+      Task { @MainActor in
+        // Check again when it runs. Entering solo ends a preview and queues this
+        // pause, then starts the solo sound before it lands.
+        guard isGloballyPlaying, !hasPlayableSelection, previewModeSound == nil else { return }
+        setGlobalPlaybackState(false)
+      }
+    }
+
     if hasSelectedSounds != newValue {
       Logger.audio.debug(
         "AudioManager: hasSelectedSounds changed from \(self.hasSelectedSounds) to \(newValue)")
       hasSelectedSounds = newValue
 
-      // Turning off the last sound pauses playback: silence should read as
-      // paused, never as a silent "playing" state.
-      if !newValue && isGloballyPlaying {
-        Logger.audio.debug("AudioManager: Last sound deselected - pausing playback")
-        Task { @MainActor in
-          setGlobalPlaybackState(false)
-        }
-      }
-
       // Auto-start playback when sounds are selected and nothing is currently playing
       // Only auto-start if autoplay is enabled and we're not during initialization
       if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch
+        && !isInitializing && !launchAutoPlayHandled
       {
         Logger.audio.debug(
           "AudioManager: Auto-starting playback for selected sounds (autoplay enabled)")
+        launchAutoPlayHandled = true
         Task { @MainActor in
           setGlobalPlaybackState(true)
         }
@@ -360,7 +372,10 @@ extension AudioManager {
     } else {
       order = defaultSoundOrder
     }
-    let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+    // Keep the first occurrence. An imported archive's order can repeat a name,
+    // and uniqueKeysWithValues would trap on it (on every launch once saved).
+    let rank = Dictionary(
+      order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
     return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
   }
 
@@ -374,7 +389,8 @@ extension AudioManager {
     let selected = preset.soundStates.filter(\.isSelected).map(\.fileName)
     let ordered: [String]
     if let order = preset.soundOrder {
-      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+      let rank = Dictionary(
+        order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
       ordered = selected.sorted { (rank[$0] ?? Int.max) < (rank[$1] ?? Int.max) }
     } else {
       ordered = selected

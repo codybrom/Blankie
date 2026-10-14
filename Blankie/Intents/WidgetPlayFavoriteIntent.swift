@@ -41,26 +41,16 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
       return .result()
     }
 
-    // `PresetManager.executePresetApplication` no-ops sound-state application
-    // while a solo sound is active (originally for the narrow launch-restore
-    // case, where a preset is recorded as current but shouldn't disturb an
-    // already-playing solo sound) — that guard silently blocks every other
-    // preset tap while solo is active too, since it can't tell them apart.
-    // Exiting solo explicitly first, before applying, sidesteps that guard.
-    // `applyPreset` never exits Quick Mix on its own; leaving both transient
-    // modes here (via the shared helper) also fixes the bug where `isQuickMix`
-    // stayed `true` after a widget preset tap, so a later Quick Mix tap toggled
-    // on top of the preset instead of entering fresh.
-    audio.leaveTransientModes()
-
+    // Resolve the token first so a stale tile throws without touching what's
+    // playing. `playPreset` leaves solo and Quick Mix itself.
     switch PlayableItem(token: favoriteToken) {
     case .allSounds:
       if let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {
-        try PresetManager.shared.applyPreset(defaultPreset)
-        audio.setGlobalPlaybackState(true)
+        try PresetManager.shared.playPreset(defaultPreset)
       }
       return .result()
     case .quickMix:
+      // Entering Quick Mix or solo leaves the other mode itself.
       audio.enterQuickMix()
       return .result()
     case .solo(let fileName):
@@ -73,8 +63,7 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
       guard let preset = PresetManager.shared.presets.first(where: { $0.id == id }) else {
         throw BlankieIntentError.presetNotFound
       }
-      try PresetManager.shared.applyPreset(preset)
-      audio.setGlobalPlaybackState(true)
+      try PresetManager.shared.playPreset(preset)
       return .result()
     case nil:
       throw BlankieIntentError.presetNotFound

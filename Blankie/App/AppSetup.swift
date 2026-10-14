@@ -76,6 +76,10 @@ struct AppSetup {
   /// launch writes go through `recordStoreState`.
   @MainActor static var storeState: StoreState = .healthy
 
+  /// Whether this launch found a legacy store it couldn't copy into the app group.
+  /// The migrator sets it at launch on the main thread, before store setup reads it.
+  nonisolated(unsafe) static var storeCopyPending = false
+
   private static let storeFailureCountKey = "swiftDataStoreOpenFailureCount"
 
   /// Record the launch store state. `createModelContainer()` always runs on the
@@ -115,6 +119,15 @@ struct AppSetup {
   static func createModelContainer() -> ModelContainer {
     let schema = Schema(versionedSchema: BlankieSchemaV1.self)
     AppGroupConfiguration.setupDirectories()
+
+    // The legacy store couldn't be copied in. A new store at the destination
+    // would end the retry and strand it, so run in memory until a launch copies it.
+    if storeCopyPending {
+      recordStoreState(.temporaryInMemory)
+      Logger.app.error(
+        "AppSetup: Store migration pending; running in-memory so the next launch retries the copy")
+      return makeInMemoryContainer(schema: schema)
+    }
 
     do {
       let container = try makeOnDiskContainer(schema: schema)

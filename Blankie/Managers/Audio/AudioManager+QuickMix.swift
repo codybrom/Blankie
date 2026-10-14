@@ -15,15 +15,22 @@ extension AudioManager {
   /// switching to a preset. Both exits self-guard, so this no-ops when neither
   /// is active. Centralizes the exit-both ritual that preset-switch call sites
   /// (Library, CreatePreset, CarPlay, widget intents) previously open-coded.
+  /// The preset about to be applied replaces the mix, so Quick Mix doesn't
+  /// restore the pre-Quick-Mix mix unless `restoringQuickMix` is set.
   @MainActor
-  func leaveTransientModes() {
+  func leaveTransientModes(restoringQuickMix: Bool = false) {
     exitSoloModeWithoutResuming()
-    exitQuickMix()
+    exitQuickMix(restoring: restoringQuickMix)
   }
 
   @MainActor
   func enterQuickMix(with initialSounds: [Sound] = []) {
     Logger.audio.debug("AudioManager: Entering Quick Mix mode")
+
+    exitPreviewMode(resuming: false)
+
+    // Persist a pending (coalesced) mix edit before Quick Mix clears the preset.
+    PresetManager.shared.updateCurrentPresetState()
 
     // Exit solo mode if active
     if soloModeSound != nil {
@@ -91,8 +98,10 @@ extension AudioManager {
     )
   }
 
+  /// `restoring: false` drops the pre-Quick-Mix mix and preset (a preset apply
+  /// follows). `resuming: false` restores them without starting playback.
   @MainActor
-  func exitQuickMix() {
+  func exitQuickMix(restoring: Bool = true, resuming: Bool = true) {
     guard isQuickMix else { return }
     Logger.audio.debug("AudioManager: Exiting Quick Mix mode")
 
@@ -103,11 +112,15 @@ extension AudioManager {
 
     // Restore original states
     for state in quickMixOriginalStates {
-      state.sound.isSelected = state.isSelected
       state.sound.volume = state.volume
+      guard restoring else {
+        state.sound.isSelected = false
+        continue
+      }
+      state.sound.isSelected = state.isSelected
 
       // Resume playing if it was selected before
-      if state.isSelected, isGloballyPlaying {
+      if state.isSelected, isGloballyPlaying, resuming {
         state.sound.play()
       }
     }
@@ -122,7 +135,7 @@ extension AudioManager {
     updateNextPreviousCommandState()
 
     // Restore the previous preset if it exists
-    if let savedPreset = preQuickMixPreset {
+    if restoring, let savedPreset = preQuickMixPreset {
       Logger.audio.debug("AudioManager: Restoring previous preset: '\(savedPreset.name)'")
       PresetManager.shared.setCurrentPreset(savedPreset)
 

@@ -112,9 +112,9 @@ struct SoundWaveformView: View {
   {
     let file = try AVAudioFile(forReading: url)
     let format = file.processingFormat
-    let frameCount = UInt32(file.length)
-
-    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+    guard let frameCount = AVAudioFrameCount(exactly: file.length),
+      let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount)
+    else {
       return []
     }
 
@@ -130,10 +130,12 @@ struct SoundWaveformView: View {
     let barCount = Int((targetWidth + barSpacing) / (barWidth + barSpacing))
 
     // Downsample to target number of bars
-    return downsample(samples, to: barCount)
+    return Self.downsample(samples, to: barCount)
   }
 
-  nonisolated private func downsample(_ samples: [Float], to targetCount: Int) -> [Float] {
+  nonisolated static func downsample(_ samples: [Float], to targetCount: Int) -> [Float] {
+    // Under ~2 pt of width there's room for zero bars (and the chunk math divides by it).
+    guard targetCount > 0 else { return [] }
     guard samples.count > targetCount else {
       return samples.map { abs($0) }
     }

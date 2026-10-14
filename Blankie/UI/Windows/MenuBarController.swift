@@ -57,6 +57,8 @@
         guard statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.behavior = .removalAllowed  // Cmd-drag-out removes it
+        // The system restores a Cmd-dragged-out item as hidden. The setting is on, so show it.
+        item.isVisible = true
         if let button = item.button {
           let image = NSImage(named: "blankie.symbol")
           image?.isTemplate = true
