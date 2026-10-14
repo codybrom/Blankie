@@ -24,6 +24,10 @@ import Testing
 
 @testable import Blankie
 
+#if os(iOS)
+  import UIKit
+#endif
+
 @Suite(.serialized) @MainActor final class NowPlayingArtworkRaceTests {
   private let originalCurrentPreset: Preset?
   private let originalDefaultArtwork: AnimatedArtworkRef?
@@ -95,14 +99,35 @@ import Testing
       guard NowPlayingDisplay.shouldPublishAnimatedArtwork() else {
         try Test.cancel("Reduce Motion or Low Power Mode turns animated artwork off here")
       }
+      // A playable custom loop: any file stands in for the video, but the
+      // preview has to decode.
+      let loopPath = AnimatedArtworkFileStore.makeRelativeLoopPath(for: UUID())
+      let previewPath = AnimatedArtworkFileStore.makeRelativePreviewPath(
+        for: UUID(), fileExtension: "jpg")
+      let preview = try #require(
+        UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4))
+          .image { _ in }.jpegData(compressionQuality: 0.9))
+      _ = try AnimatedArtworkFileStore.writeData(Data([0]), to: loopPath)
+      _ = try AnimatedArtworkFileStore.writeData(preview, to: previewPath)
+      defer {
+        AnimatedArtworkFileStore.removeItemIfExists(relativePath: loopPath)
+        AnimatedArtworkFileStore.removeItemIfExists(relativePath: previewPath)
+      }
       let backend = MediaSessionNowPlaying()
-      backend.currentAnimatedLoopPath = "previous-preset-loop"
-      var preset = makePresetWithoutAnimation()
-      preset.animatedArtwork = AnimatedArtworkRef(
-        source: .custom, loopPath: "test-missing-\(UUID().uuidString).mov")
-      PresetManager.shared.setCurrentPreset(preset)
 
-      backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
+      var playable = makePresetWithoutAnimation()
+      playable.animatedArtwork = AnimatedArtworkRef(
+        source: .custom, loopPath: loopPath, previewPath: previewPath)
+      PresetManager.shared.setCurrentPreset(playable)
+      backend.updateInfo(preset: playable, presetName: playable.name, isPlaying: false)
+      backend.flushPendingPublish()
+      try #require(backend.model.animatedArtwork != nil)
+
+      var pending = makePresetWithoutAnimation()
+      pending.animatedArtwork = AnimatedArtworkRef(
+        source: .custom, loopPath: "test-missing-\(UUID().uuidString).mov")
+      PresetManager.shared.setCurrentPreset(pending)
+      backend.updateInfo(preset: pending, presetName: pending.name, isPlaying: false)
       backend.flushPendingPublish()
 
       #expect(backend.currentAnimatedLoopPath == nil)
