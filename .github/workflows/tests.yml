@@ -75,6 +75,20 @@ jobs:
           # macOS build is currently broken (tracked separately); the unit tests
           # run against the iOS Simulator variant of the same sources — no
           # signing required.
+          # An unsigned build carries no entitlements, and on iOS 27
+          # AssetPackManager stops the app when its app group is missing. Link
+          # the group in as the simulator's entitlements section, as signed
+          # simulator builds do. The debug dylib is off so the section lands in
+          # the main executable, where the simulator reads it.
+          APP_GROUP=$(sed -n 's/^APP_GROUP_IDENTIFIER *= *//p' Configuration.xcconfig)
+          ENTITLEMENTS="$RUNNER_TEMP/simulator.entitlements"
+          printf '%s\n' \
+            '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<plist version="1.0"><dict>' \
+            '<key>com.apple.security.application-groups</key>' \
+            "<array><string>$APP_GROUP</string></array>" \
+            '</dict></plist>' > "$ENTITLEMENTS"
+          plutil -lint "$ENTITLEMENTS"
           DEVICE=$(xcrun simctl list devices available | grep -oE 'iPhone [^(]+' | head -1 | xargs)
           echo "Using simulator: $DEVICE"
           xcodebuild test \
@@ -86,4 +100,6 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            ENABLE_DEBUG_DYLIB=NO \
+            "OTHER_LDFLAGS=\$(inherited) -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker $ENTITLEMENTS"
