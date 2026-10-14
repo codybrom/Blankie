@@ -72,10 +72,8 @@ jobs:
             sed -i '' 's/YOUR_TEAM_ID_HERE/DUMMY_TEAM/' Configuration.xcconfig
             sed -i '' 's/com.yournamehere.blankie/com.example.blankie/' Configuration.xcconfig
           fi
-          # macOS build is currently broken (tracked separately); the unit tests
-          # run against the iOS Simulator variant of the same sources — no
-          # signing required.
-          # An unsigned build carries no entitlements, and on iOS 27
+          # The unit tests run on the iOS Simulator, unsigned. An unsigned build
+          # carries no entitlements, and on iOS 27
           # AssetPackManager stops the app when its app group is missing. Link
           # the group in as the simulator's entitlements section, as signed
           # simulator builds do. The debug dylib is off so the section lands in
