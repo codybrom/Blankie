@@ -7,7 +7,6 @@
 
 import AVFoundation
 import Combine
-import MediaPlayer
 import Observation
 import SwiftData
 import SwiftUI
@@ -82,7 +81,7 @@ class AudioManager {
   @ObservationIgnored private var soundChangeCoalesceTask: Task<Void, Never>?
 
   @ObservationIgnored var modelContext: ModelContext?
-  @ObservationIgnored var nowPlayingManager: NowPlayingManager!
+  @ObservationIgnored var nowPlayingManager: (any NowPlayingPublishing)!
   @ObservationIgnored @MainActor var isInitializing = true
   /// True while a preset's sound states are being applied. Suppresses the
   /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
@@ -128,8 +127,19 @@ class AudioManager {
 
     // Delay media controls and notification setup to avoid triggering audio session
     Task { @MainActor in
-      // Initialize NowPlayingManager on MainActor
-      self.nowPlayingManager = NowPlayingManager()
+      // Pick the Now Playing backend for this OS, on the MainActor.
+      #if canImport(NowPlaying) && !WIDGET_EXTENSION
+        if #available(iOS 27, macOS 27, visionOS 27, *) {
+          self.nowPlayingManager = MediaSessionNowPlaying()
+          Logger.nowPlaying.debug("AudioManager: Now Playing backend is MediaSession")
+        } else {
+          self.nowPlayingManager = NowPlayingManager()
+          Logger.nowPlaying.debug("AudioManager: Now Playing backend is MediaPlayer")
+        }
+      #else
+        self.nowPlayingManager = NowPlayingManager()
+        Logger.nowPlaying.debug("AudioManager: Now Playing backend is MediaPlayer")
+      #endif
 
       // Allow app to fully launch before setting up delayed components
       await Task.yield()

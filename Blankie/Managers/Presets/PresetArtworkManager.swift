@@ -158,6 +158,26 @@ class PresetArtworkManager: ObservableObject {
     return nil
   }
 
+  /// The stored artwork bytes, read synchronously: the SwiftData row, else the
+  /// app-group file mirror. Now Playing decides its still in one pass with the title.
+  func storedArtworkData(id: UUID) -> Data? {
+    if let context = modelContext {
+      let descriptor = FetchDescriptor<PresetArtwork>(
+        predicate: #Predicate { $0.id == id }
+      )
+      do {
+        if let data = try context.fetch(descriptor).first?.imageData {
+          return data
+        }
+      } catch {
+        Logger.presets.error(
+          "PresetArtworkManager: Failed to load artwork data: \(error, privacy: .public)")
+      }
+    }
+    guard let url = Self.artworkFileURL(for: id) else { return nil }
+    return try? Data(contentsOf: url)
+  }
+
   /// Load raw artwork data by artwork ID
   func loadArtworkData(id: UUID) async -> Data? {
     await Task {
