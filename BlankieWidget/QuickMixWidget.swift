@@ -71,6 +71,8 @@ private struct QuickMixTileView: View {
       .frame(width: size, height: size)
     }
     .buttonStyle(.plain)
+    .accessibilityLabel(sound.displayName)
+    .accessibilityAddTraits(sound.isSelected ? .isSelected : [])
   }
 }
 

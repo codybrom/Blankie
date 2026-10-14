@@ -592,6 +592,8 @@ import UniformTypeIdentifiers
         }
         // Keep the old image until the next loads, then crossfade to it.
         let loaded = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+        // A load that finishes after the preset changed would cover the new page.
+        guard !Task.isCancelled else { return }
         withAnimation(.easeInOut(duration: 0.35)) { image = loaded }
       }
     }

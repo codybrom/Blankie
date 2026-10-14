@@ -234,7 +234,7 @@ struct FavoritesWidget: Widget {
       FavoritesWidgetEntryView(entry: entry)
     }
     .configurationDisplayName("Favorites")
-    .description("Your favorited presets, Quick Mix, and sounds, plus a mini player.")
+    .description("Your favorited presets and sounds, plus a mini player.")
     .supportedFamilies([.systemMedium, .systemLarge])
   }
 }
@@ -252,10 +252,7 @@ struct FavoritesWidget: Widget {
       favorites: [
         WidgetFavorite(
           token: "allSounds", displayName: "All Blankie Sounds", systemIconName: "square.grid.2x2",
-          thumbnailKey: nil, accentColorName: nil, subtitle: nil),
-        WidgetFavorite(
-          token: "quickMix", displayName: "Quick Mix", systemIconName: "shuffle", thumbnailKey: nil,
-          accentColorName: nil, subtitle: nil),
+          thumbnailKey: nil, accentColorName: nil, subtitle: nil)
       ],
       quickMixSounds: [],
       pinnableItems: [],
