@@ -24,7 +24,7 @@ extension AudioManager {
         title: title,
         subtitle: subtitle,
         // Quick Mix's "now playing" icon is its own recognizable shuffle
-        // glyph (matching the Favorites tile), not whichever individual
+        // glyph (matching its sidebar row), not whichever individual
         // sound happens to be in the mix. Solo mode preserves other sounds'
         // `isSelected` state (it only mutes them), so `playingSoundIcons`
         // would otherwise pull in icons for sounds that aren't actually
@@ -38,7 +38,7 @@ extension AudioManager {
         activeToken: currentFavoriteToken,
         accentColorName: accentColorName ?? GlobalSettings.shared.customAccentColor?.toString
       ),
-      favorites: GlobalSettings.shared.starredItems.compactMap(widgetFavorite(forToken:)),
+      favorites: widgetFavorites(),
       quickMixSounds: widgetQuickMixSounds(),
       pinnableItems: widgetPinnableItems(),
       defaultAccentColorName: GlobalSettings.shared.customAccentColor?.toString
@@ -72,12 +72,20 @@ extension AudioManager {
     )
     let snapshot = WidgetSnapshot(
       playback: playback,
-      favorites: GlobalSettings.shared.starredItems.compactMap(widgetFavorite(forToken:)),
+      favorites: widgetFavorites(),
       quickMixSounds: widgetQuickMixSounds(),
       pinnableItems: widgetPinnableItems(),
       defaultAccentColorName: GlobalSettings.shared.customAccentColor?.toString
     )
     WidgetStateStore.publish(snapshot)
+  }
+
+  /// The starred items for the Favorites widget. Quick Mix is left out, as in
+  /// CarPlay: a tile can't pick its sounds, so entering it would only go silent.
+  private func widgetFavorites() -> [WidgetFavorite] {
+    GlobalSettings.shared.starredItems
+      .filter { $0 != GlobalSettings.quickMixToken }
+      .compactMap(widgetFavorite(forToken:))
   }
 
   /// Each of `GlobalSettings.quickMixSoundFileNames`, marked selected only

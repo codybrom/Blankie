@@ -200,6 +200,15 @@ import Testing
     // from the last publish and is guaranteed to write.
     settings.setStarredItems([])
     settings.setStarredItems(tokens)
-    #expect(WidgetStateStore.current().favorites.map(\.token) == tokens)
+    #expect(WidgetStateStore.current().favorites.map(\.token) == [GlobalSettings.allSoundsToken])
+  }
+
+  /// A starred Quick Mix stays off the Favorites widget. Its tile would enter
+  /// Quick Mix with no sounds and stop what's playing.
+  @Test func favoritesLeaveOutQuickMix() {
+    // Empty first, so the target differs from the last publish and writes.
+    settings.setStarredItems([])
+    settings.setStarredItems([GlobalSettings.quickMixToken, GlobalSettings.allSoundsToken])
+    #expect(WidgetStateStore.current().favorites.map(\.token) == [GlobalSettings.allSoundsToken])
   }
 }
