@@ -180,6 +180,8 @@
       let after = backend.model.artwork?.id
       #expect(after?.hasPrefix("fallback:") == true)
       #expect(after != before)
+      // Only the last good render is kept for a failed one to fall back on.
+      #expect(backend.fallbackArtworkCache.count == 1)
     }
 
     #if os(iOS)

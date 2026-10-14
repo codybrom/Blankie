@@ -183,7 +183,7 @@
       let id = NowPlayingSessionMapping.artworkID(
         source: source, accentColorName: artworkAccentName)
       if let data = Self.jpegData(NowPlayingDisplay.mixFallbackImage()) {
-        fallbackArtworkCache[id] = data
+        fallbackArtworkCache = [id: data]
         setArtwork(data: data, source: source)
       } else if let data = fallbackArtworkCache[id] {
         Logger.nowPlaying.error(
