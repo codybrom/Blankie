@@ -73,21 +73,25 @@ jobs:
           fi
           # CodeQL only needs the Swift source compiled, so build the iOS
           # Simulator variant unsigned.
-          # The extractor traces every compiler invocation, and a generic
-          # simulator destination compiles arm64 and x86_64. The shared runner
-          # lost communication twice under that load, so build one
-          # architecture with two concurrent jobs.
+          # The extractor traces every compiler invocation, and the shared
+          # runner keeps losing communication under that load. Build one
+          # architecture, one job at a time, with no debug info or preview
+          # dylib, which CodeQL doesn't need.
           xcodebuild clean build \
             -project Blankie.xcodeproj \
             -scheme "Blankie (Universal)" \
             -destination "generic/platform=iOS Simulator" \
             -configuration Debug \
-            -jobs 2 \
+            -jobs 1 \
             ARCHS=arm64 \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            GCC_GENERATE_DEBUGGING_SYMBOLS=NO \
+            DEBUG_INFORMATION_FORMAT= \
+            ENABLE_PREVIEWS=NO \
+            ENABLE_DEBUG_DYLIB=NO
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
