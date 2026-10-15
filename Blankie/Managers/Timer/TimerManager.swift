@@ -20,7 +20,7 @@ class TimerManager {
   var selectedMinutes: Int
 
   // Plumbing the UI never reads; kept out of observation tracking.
-  @ObservationIgnored private var timer: Timer?
+  @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
   // Read by getEndTime() in view bodies, so it stays observation-tracked.
   private var startTime: Date?
 
@@ -28,7 +28,7 @@ class TimerManager {
   // expiry deterministically via tick() instead of waiting on the 1 Hz timer.
   @ObservationIgnored var now: () -> Date = { Date() }
 
-  // Bumped on every start/stop. handleTimerExpired dispatches its stop+pause
+  // Bumped on every start/stop/extend. handleTimerExpired dispatches its stop+pause
   // async (to batch them on the main actor); the generation lets that late task
   // detect a cancel or re-arm in the meantime and skip pausing the new session.
   @ObservationIgnored private var expiryGeneration = 0
@@ -53,7 +53,7 @@ class TimerManager {
     UserDefaults.shared.set(selectedMinutes, forKey: "timerLastSelectedMinutes")
 
     timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-      self?.updateTimer()
+      MainActor.assumeIsolated { self?.updateTimer() }
     }
 
     Logger.audio.debug("TimerManager: Started timer for \(duration) seconds")
@@ -131,11 +131,13 @@ class TimerManager {
 
   func addTime(minutes: Int) {
     guard isTimerActive else { return }
+    // Extending at the instant of expiry must cancel the already-queued pause.
+    expiryGeneration &+= 1
     remainingTime += TimeInterval(minutes * 60)
     selectedDuration += TimeInterval(minutes * 60)
   }
 
   deinit {
-    stopTimer()
+    timer?.invalidate()
   }
 }

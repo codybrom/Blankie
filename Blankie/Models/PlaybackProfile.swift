@@ -9,7 +9,7 @@ import Foundation
 import os
 
 /// Stores pre-computed loudness analysis results for efficient playback
-struct PlaybackProfile: Codable, Equatable {
+nonisolated struct PlaybackProfile: Codable, Equatable, Sendable {
   let id: String  // Unique identifier (filename or hash)
   let filename: String
   let fileHash: String?  // Optional hash to detect file changes
@@ -101,8 +101,15 @@ struct PlaybackProfile: Codable, Equatable {
 
 // MARK: - Profile Storage
 
-/// Manages persistence of playback profiles
-class PlaybackProfileStore {
+/// Manages persistence of playback profiles.
+///
+/// Its own concurrent `queue` (parallel reads, barrier writes) is the
+/// synchronization domain, so it stays `nonisolated` + `@unchecked Sendable`
+/// rather than main-actor: `profile(for:)` must be callable synchronously from
+/// off-main analysis and from non-async `.filter`s. All `profiles` access goes
+/// through `queue`; `loadProfiles()` runs in `init` before `shared` is published.
+/// The thread sanitizer guards this unchecked conformance.
+nonisolated final class PlaybackProfileStore: @unchecked Sendable {
   static let shared = PlaybackProfileStore()
 
   private let storageURL: URL = {

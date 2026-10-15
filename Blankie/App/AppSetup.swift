@@ -76,6 +76,10 @@ struct AppSetup {
   /// launch writes go through `recordStoreState`.
   @MainActor static var storeState: StoreState = .healthy
 
+  /// Whether this launch found a legacy store it couldn't copy into the app group.
+  /// The migrator sets it at launch on the main thread, before store setup reads it.
+  nonisolated(unsafe) static var storeCopyPending = false
+
   private static let storeFailureCountKey = "swiftDataStoreOpenFailureCount"
 
   /// Record the launch store state. `createModelContainer()` always runs on the
@@ -115,6 +119,15 @@ struct AppSetup {
   static func createModelContainer() -> ModelContainer {
     let schema = Schema(versionedSchema: BlankieSchemaV1.self)
     AppGroupConfiguration.setupDirectories()
+
+    // The legacy store couldn't be copied in. A new store at the destination
+    // would end the retry and strand it, so run in memory until a launch copies it.
+    if storeCopyPending {
+      recordStoreState(.temporaryInMemory)
+      Logger.app.error(
+        "AppSetup: Store migration pending; running in-memory so the next launch retries the copy")
+      return makeInMemoryContainer(schema: schema)
+    }
 
     do {
       let container = try makeOnDiskContainer(schema: schema)
@@ -255,15 +268,42 @@ struct AppSetup {
     // calls loadCustomSoundsWhenReady() from its AppDelegate to cover a
     // headless CarPlay cold-start (no UI scene), so on that build a normal
     // launch reaches this point twice. That overlap is safe because
-    // loadCustomSoundsWhenReady() is idempotent: its `hasLoadedCustomSounds`
-    // guard skips re-instantiating custom Sound objects (re-creating them
-    // would orphan the originals the active preset/UI still holds, leaving
-    // them playing with no way to stop them), while still (re-)initializing
-    // PresetManager. Without this call, PresetManager.isLoading never clears
-    // and the preset picker is stuck on "Loading Presets…". The model context
-    // was set just above, so the load can proceed immediately.
+    // loadCustomSoundsWhenReady() is single-flight: concurrent callers join the
+    // one in-flight bootstrap task rather than each re-instantiating custom
+    // Sound objects (re-creating them would orphan the originals the active
+    // preset/UI still holds, leaving them playing with no way to stop them). A
+    // completed run that had no model context retries once one exists. Without
+    // this call, PresetManager.isLoading never clears and the preset picker is
+    // stuck on "Loading Presets…". The model context was set just above, so the
+    // load can proceed immediately.
     Task { @MainActor in
       await AudioManager.shared.loadCustomSoundsWhenReady()
     }
+  }
+}
+
+extension AppSetup {
+  /// Bootstraps the data managers App Intents depend on (custom sounds,
+  /// presets) for a Siri/Shortcuts invocation that reaches the app before its
+  /// SwiftUI scene ever appears. Apple documents background-mode intent
+  /// execution as running "quietly", with no guarantee the scene (and thus
+  /// `.onAppear` → `setupManagers()`) is ever instantiated — mirrors the same
+  /// bootstrap `IOSAppDelegate` already does for a headless CarPlay cold
+  /// start. Safe to call unconditionally, including redundantly alongside the
+  /// normal launch path: the contexts are only set when nothing has set them
+  /// yet, and `loadCustomSoundsWhenReady()` is single-flight, so this call
+  /// joins any bootstrap already in progress instead of starting a second load.
+  @MainActor
+  static func ensureManagersReadyForIntents() async {
+    if !SharedModelContainer.shared.isInitialized {
+      SharedModelContainer.shared.initialize()
+    }
+    // The system runs entity queries every few seconds. Setting the contexts
+    // again re-subscribes the custom-sound observers each time.
+    if AudioManager.shared.modelContext == nil {
+      AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+      PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
+    }
+    await AudioManager.shared.loadCustomSoundsWhenReady()
   }
 }

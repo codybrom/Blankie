@@ -18,6 +18,8 @@ extension TimeInterval {
   /// Negative intervals format with a single leading minus (e.g. `"-2:30"`),
   /// used for the sleep-timer "time left" countdown.
   var minuteSecondClock: String {
+    // Int(_:) traps on non-finite or huge values (a malformed file's duration).
+    guard isFinite, abs(self) < 1e15 else { return "--:--" }
     let totalSeconds = Int(self)
     let sign = totalSeconds < 0 ? "-" : ""
     let magnitude = abs(totalSeconds)

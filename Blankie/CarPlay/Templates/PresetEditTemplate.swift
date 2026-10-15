@@ -79,6 +79,17 @@
       template.updateSections([section])
     }
 
+    /// Edits apply to the live mix of the preset the stack was opened for. A tap
+    /// that lands after a switch, solo or Quick Mix dismisses the stack instead.
+    @MainActor
+    private static func editsLiveMix() -> Bool {
+      guard CarPlayInterfaceController.shared.editStackIsLive else {
+        CarPlayInterfaceController.shared.dismissEditStack()
+        return false
+      }
+      return true
+    }
+
     private static func createSoundEditItem(_ sound: Sound) -> CPListItem {
       let isSelected = sound.isSelected
       let percent = Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))
@@ -204,6 +215,7 @@
       )
       item.handler = { _, completion in
         Task { @MainActor in
+          guard editsLiveMix() else { return completion() }
           sound.isSelected = false
           sound.pause()
           AudioManager.shared.updateHasSelectedSounds()
@@ -233,6 +245,7 @@
         } else {
           item.handler = { _, completion in
             Task { @MainActor in
+              guard editsLiveMix() else { return completion() }
               sound.volume = volume
               AudioManager.shared.updateHasSelectedSounds()
               PresetManager.shared.savePresets()
@@ -275,14 +288,11 @@
 
         item.handler = { _, completion in
           Task { @MainActor in
-            // Turn on the sound with selected volume
-            sound.isSelected = true
+            guard editsLiveMix() else { return completion() }
+            // Turn on the sound with selected volume. Selecting it auto-plays
+            // while playback is active (with the solo guard), so no direct play().
             sound.volume = volume
-
-            // If global playback is active, start playing this sound
-            if AudioManager.shared.isGloballyPlaying {
-              sound.play()
-            }
+            sound.isSelected = true
 
             // Update AudioManager state
             AudioManager.shared.updateHasSelectedSounds()

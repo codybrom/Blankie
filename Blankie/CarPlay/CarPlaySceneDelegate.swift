@@ -16,6 +16,7 @@ import os
   class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
 
     private var interfaceController: CPInterfaceController?
+    private weak var templateScene: CPTemplateApplicationScene?
 
     override init() {
       super.init()
@@ -28,6 +29,8 @@ import os
     ) {
       Logger.carPlay.debug("CarPlay: Scene delegate didConnect called!")
       self.interfaceController = interfaceController
+      templateScene = scene
+      applyCarContentStyle(scene.contentStyle)
 
       // Covers CarPlay connects the route-change observer can miss.
       Task { @MainActor in
@@ -44,7 +47,19 @@ import os
     ) {
       Logger.carPlay.debug("CarPlay: Disconnected!")
       self.interfaceController = nil
+      templateScene = nil
       CarPlayInterfaceController.shared.disconnect()
+    }
+
+    func contentStyleDidChange(_ contentStyle: UIUserInterfaceStyle) {
+      applyCarContentStyle(contentStyle)
+    }
+
+    /// The app-wide Info.plist dark lock reaches the CarPlay scene too; pin the
+    /// scene's window to the car's own light/dark so CarPlay follows the car.
+    private func applyCarContentStyle(_ style: UIUserInterfaceStyle) {
+      Logger.carPlay.debug("CarPlay: Applying car content style \(style.rawValue)")
+      templateScene?.carWindow.overrideUserInterfaceStyle = style
     }
   }
 

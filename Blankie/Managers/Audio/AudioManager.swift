@@ -7,7 +7,6 @@
 
 import AVFoundation
 import Combine
-import MediaPlayer
 import Observation
 import SwiftData
 import SwiftUI
@@ -82,18 +81,32 @@ class AudioManager {
   @ObservationIgnored private var soundChangeCoalesceTask: Task<Void, Never>?
 
   @ObservationIgnored var modelContext: ModelContext?
-  @ObservationIgnored var nowPlayingManager: NowPlayingManager!
+  @ObservationIgnored var nowPlayingManager: (any NowPlayingPublishing)!
   @ObservationIgnored @MainActor var isInitializing = true
+  /// Set once the open-time autoplay fired or playback otherwise started, so it
+  /// can't re-fire on a later empty-to-selected change.
+  @ObservationIgnored var launchAutoPlayHandled = false
   /// True while a preset's sound states are being applied. Suppresses the
   /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
   /// otherwise fight the preset restoring its own selection set.
   @ObservationIgnored var isApplyingPresetStates = false
-  /// Set once custom sounds have been loaded from SwiftData. Guards against a
-  /// second full reload — on the CarPlay build both `IOSAppDelegate` and
-  /// `AppSetup` call `loadCustomSoundsWhenReady()`, and re-running the load
-  /// would re-instantiate custom `Sound` objects that the UI/preset still
-  /// references, orphaning the originals (which then can't be stopped).
+  /// The in-flight (or finished) launch bootstrap. Every caller of
+  /// `loadCustomSoundsWhenReady()` (scene setup, App Intents, CarPlay) joins this
+  /// one task instead of each running the load, so custom sounds can't be
+  /// double-loaded — a second full load re-instantiates the custom `Sound`
+  /// objects the active preset/UI still holds, orphaning the originals (which
+  /// then can't be stopped). Not `private` only because the bootstrap body lives
+  /// in a separate extension file.
+  @ObservationIgnored @MainActor var launchBootstrapTask: Task<Void, Never>?
+  /// Bumped each time a bootstrap task is installed. `Task` is a value type with
+  /// no identity, so waiters compare this generation (not the task itself) to
+  /// decide whether a retry was already started by another caller.
+  @ObservationIgnored @MainActor var launchBootstrapGeneration = 0
+  /// Set once, inside the bootstrap task, after custom sounds have loaded.
   @ObservationIgnored @MainActor var hasLoadedCustomSounds = false
+  /// Number of times the custom-sound load actually ran; internal so launch
+  /// tests can assert the single-flight bootstrap coalesces concurrent callers.
+  @ObservationIgnored @MainActor var customSoundLoadPasses = 0
   @ObservationIgnored var customSoundObserver: AnyCancellable?
   #if os(iOS) || os(visionOS)
     @ObservationIgnored var audioSessionObserversSetup = false
@@ -117,8 +130,19 @@ class AudioManager {
 
     // Delay media controls and notification setup to avoid triggering audio session
     Task { @MainActor in
-      // Initialize NowPlayingManager on MainActor
-      self.nowPlayingManager = NowPlayingManager()
+      // Pick the Now Playing backend for this OS, on the MainActor.
+      #if canImport(NowPlaying) && !WIDGET_EXTENSION
+        if #available(iOS 27, macOS 27, visionOS 27, *) {
+          self.nowPlayingManager = MediaSessionNowPlaying()
+          Logger.nowPlaying.debug("AudioManager: Now Playing backend is MediaSession")
+        } else {
+          self.nowPlayingManager = NowPlayingManager()
+          Logger.nowPlaying.debug("AudioManager: Now Playing backend is MediaPlayer")
+        }
+      #else
+        self.nowPlayingManager = NowPlayingManager()
+        Logger.nowPlaying.debug("AudioManager: Now Playing backend is MediaPlayer")
+      #endif
 
       // Allow app to fully launch before setting up delayed components
       await Task.yield()
@@ -153,7 +177,10 @@ class AudioManager {
 
   deinit {
     NotificationCenter.default.removeObserver(self)
-    cleanup()
+    // AudioManager is a process-lifetime singleton, so deinit never actually
+    // runs; assumeIsolated keeps the defensive cleanup compiling without an
+    // isolated deinit (which doesn't survive cross-module testability builds).
+    MainActor.assumeIsolated { cleanup() }
     Logger.audio.debug("AudioManager: Deinit called, cleanup performed")
   }
 }
@@ -207,26 +234,35 @@ extension AudioManager {
 
   func updateHasSelectedSounds() {
     let newValue = sounds.contains { $0.isSelected }
+
+    // Nothing selected pauses playback, since silence should read as paused and
+    // never as a silent "playing" state. Check on every pass, not only on a
+    // change, because hasSelectedSounds can already be false when playback starts
+    // (e.g. a mode exit briefly restored a selection that the next preset cleared).
+    // A preview waits until it ends (the editor can deselect the sound it plays).
+    if !newValue && isGloballyPlaying && previewModeSound == nil {
+      Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
+      Task { @MainActor in
+        // Check again when it runs. Entering solo ends a preview and queues this
+        // pause, then starts the solo sound before it lands.
+        guard isGloballyPlaying, !hasPlayableSelection, previewModeSound == nil else { return }
+        setGlobalPlaybackState(false)
+      }
+    }
+
     if hasSelectedSounds != newValue {
       Logger.audio.debug(
         "AudioManager: hasSelectedSounds changed from \(self.hasSelectedSounds) to \(newValue)")
       hasSelectedSounds = newValue
 
-      // Turning off the last sound pauses playback: silence should read as
-      // paused, never as a silent "playing" state.
-      if !newValue && isGloballyPlaying {
-        Logger.audio.debug("AudioManager: Last sound deselected - pausing playback")
-        Task { @MainActor in
-          setGlobalPlaybackState(false)
-        }
-      }
-
       // Auto-start playback when sounds are selected and nothing is currently playing
       // Only auto-start if autoplay is enabled and we're not during initialization
       if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch
+        && !isInitializing && !launchAutoPlayHandled
       {
         Logger.audio.debug(
           "AudioManager: Auto-starting playback for selected sounds (autoplay enabled)")
+        launchAutoPlayHandled = true
         Task { @MainActor in
           setGlobalPlaybackState(true)
         }
@@ -309,9 +345,12 @@ extension AudioManager {
 extension AudioManager {
   // MARK: - Sound Management
 
+  /// Looks up a loaded sound by its stable `fileName` (not its `UUID`, which
+  /// is re-minted every launch) — the identity App Intents resolve `SoundEntity`
+  /// parameters against.
   @MainActor
-  func getVisibleSounds() -> [Sound] {
-    sounds
+  func sound(fileName: String) -> Sound? {
+    sounds.first { $0.fileName == fileName }
   }
 
   /// Visible sounds for a preset context, ordered by the active sound order —
@@ -321,7 +360,7 @@ extension AudioManager {
   /// `defaultSoundOrder`. Unknown sounds sort last.
   @MainActor
   func orderedVisibleSounds(for preset: Preset?) -> [Sound] {
-    let visible = getVisibleSounds().filter { sound in
+    let visible = sounds.filter { sound in
       if let preset, !preset.isDefault {
         return preset.soundStates.contains { $0.fileName == sound.fileName }
       }
@@ -333,7 +372,10 @@ extension AudioManager {
     } else {
       order = defaultSoundOrder
     }
-    let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+    // Keep the first occurrence. An imported archive's order can repeat a name,
+    // and uniqueKeysWithValues would trap on it (on every launch once saved).
+    let rank = Dictionary(
+      order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
     return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
   }
 
@@ -347,7 +389,8 @@ extension AudioManager {
     let selected = preset.soundStates.filter(\.isSelected).map(\.fileName)
     let ordered: [String]
     if let order = preset.soundOrder {
-      let rank = Dictionary(uniqueKeysWithValues: order.enumerated().map { ($1, $0) })
+      let rank = Dictionary(
+        order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
       ordered = selected.sorted { (rank[$0] ?? Int.max) < (rank[$1] ?? Int.max) }
     } else {
       ordered = selected
@@ -389,12 +432,6 @@ extension AudioManager {
     Logger.audio.debug(
       "AudioManager: Moved sound '\(movedSound.fileName)' from \(sourceIndex) to \(destinationIndex)"
     )
-  }
-
-  /// Move a visible sound to a new position
-  @MainActor
-  func moveVisibleSound(from sourceIndex: Int, to destinationIndex: Int) {
-    moveSound(from: sourceIndex, to: destinationIndex)
   }
 
   /// Apply volume settings to all playing sounds by triggering volume updates

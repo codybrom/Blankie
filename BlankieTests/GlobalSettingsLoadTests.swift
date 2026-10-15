@@ -31,7 +31,7 @@ import Testing
     originalBlur = settings.backgroundBlurRadius
     snapshot.clear()
   }
-  deinit {
+  isolated deinit {
     settings.volume = originalVolume
     settings.backgroundBlurRadius = originalBlur
     snapshot.restore()
@@ -59,7 +59,8 @@ import Testing
     settings.loadBasicSettings()
 
     #expect(isClose(settings.backgroundBlurRadius, defaultBackgroundBlurRadius))
-    let stored = UserDefaults.shared.object(forKey: UserDefaultsKeys.backgroundBlurRadius) as? Double
+    let stored =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.backgroundBlurRadius) as? Double
     #expect(stored != nil && isClose(stored ?? -1, defaultBackgroundBlurRadius))
   }
 

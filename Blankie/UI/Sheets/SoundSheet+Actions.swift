@@ -299,9 +299,9 @@ extension SoundSheet {
 
     switch result {
     case .success:
-
-      // Reload custom sounds in AudioManager
-      AudioManager.shared.loadCustomSounds()
+      // Drop only the deleted sound. A full reload would rebuild every custom
+      // Sound and strand the instances solo, preview, or Quick Mix still hold.
+      AudioManager.shared.syncCustomSounds()
 
       dismiss()
     case .failure(let error):
@@ -322,6 +322,9 @@ extension SoundSheet {
     }
     PresetStorage.saveCustomPresets(customPresets)
     Logger.ui.debug("SoundSheet: Presets saved directly without state override")
+    // This bypasses savePresets, so refresh the Siri/Spotlight names and widgets it would.
+    presetManager.refreshDiscoverableEntitiesIfNeeded()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   // MARK: - Dismiss Action

@@ -266,7 +266,8 @@ struct SoundIcon: View {
               accentColor: accentColor)
           }
         }
-        .frame(maxWidth: maxWidth - 20, minHeight: 32)  // Consistent padding and height for all sizes
+        // Consistent padding and height for all sizes
+        .frame(maxWidth: maxWidth - 20, minHeight: 32)
         .contentShape(Rectangle())
         // Hide so VoiceOver only reads once
         .accessibilityHidden(true)
@@ -283,7 +284,8 @@ struct SoundIcon: View {
     /// Volume nudge for the tile's VoiceOver adjustable action and the Up/Down arrow keys. No-op when the sound is off (its slider is disabled then).
     private func adjustVolume(_ direction: AccessibilityAdjustmentDirection) {
       guard sound.isSelected else { return }
-      let step: Float = 1.0 / 16.0  // 1/16, matching the master-volume shortcut and macOS volume keys
+      // 1/16, matching the master-volume shortcut and macOS volume keys
+      let step: Float = 1.0 / 16.0
       switch direction {
       case .increment: sound.volume = min(1, sound.volume + step)
       case .decrement: sound.volume = max(0, sound.volume - step)

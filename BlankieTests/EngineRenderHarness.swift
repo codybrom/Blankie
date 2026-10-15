@@ -46,7 +46,9 @@ enum EngineRenderHarness {
       throw EngineRenderError.limiterUnavailable(-1)
     }
 
-    var result: Result<AVAudioUnit, Error>?
+    // nonisolated(unsafe): the completion handler writes `result` and signals the
+    // semaphore; the wait() below establishes happens-before before we read it.
+    nonisolated(unsafe) var result: Result<AVAudioUnit, Error>?
     let semaphore = DispatchSemaphore(value: 0)
     AVAudioUnit.instantiate(with: description, options: []) { unit, error in
       if let unit {

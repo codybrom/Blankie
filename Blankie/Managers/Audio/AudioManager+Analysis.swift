@@ -27,27 +27,32 @@ extension AudioManager {
 
       await withTaskGroup(of: Void.self) { group in
         for sound in batch {
+          // Read main-actor `Sound` state here (on the main actor) before handing
+          // the work to a background task — `Sound` is main-actor and non-Sendable,
+          // so only these Sendable values cross into the task.
+          // Custom profiles are keyed by the bare fileName; built-ins by
+          // fileName.extension (matches soundsNeedingAnalysis and delete-cleanup).
+          let isCustom = sound.isCustom
+          let fileName = sound.fileName
+          let fileExtension = sound.fileExtension
+          let customURL = isCustom ? sound.fileURL : nil
+          let profileKey = isCustom ? fileName : "\(fileName).\(fileExtension)"
+
           group.addTask {
-            // Check if we need to analyze this sound. Custom profiles are keyed
-            // by the bare fileName; built-ins by fileName.extension (matches
-            // soundsNeedingAnalysis and the delete-cleanup key).
-            let profileKey =
-              sound.isCustom ? sound.fileName : "\(sound.fileName).\(sound.fileExtension)"
             let existingProfile = PlaybackProfileStore.shared.profile(for: profileKey)
 
             if forceReanalysis || existingProfile == nil {
               // Get the sound URL
               let url: URL?
-              if sound.isCustom, let customURL = sound.fileURL {
+              if isCustom, let customURL {
                 url = customURL
               } else {
-                url = Bundle.main.url(
-                  forResource: sound.fileName, withExtension: sound.fileExtension)
+                url = Bundle.main.url(forResource: fileName, withExtension: fileExtension)
               }
 
               guard let soundURL = url else {
                 Logger.audio.error(
-                  "AudioManager: Could not find URL for \(sound.fileName, privacy: .public)")
+                  "AudioManager: Could not find URL for \(fileName, privacy: .public)")
                 return
               }
 
@@ -58,7 +63,7 @@ extension AudioManager {
               if let profile = PlaybackProfile.from(analysis: analysis, filename: profileKey) {
                 PlaybackProfileStore.shared.store(profile)
                 Logger.audio.debug(
-                  "AudioManager: Analyzed and stored profile for \(sound.fileName)")
+                  "AudioManager: Analyzed and stored profile for \(fileName)")
               }
             }
           }

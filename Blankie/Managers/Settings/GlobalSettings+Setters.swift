@@ -19,6 +19,7 @@ extension GlobalSettings {
       UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.accentColor)
     }
     logCurrentSettings()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   /// macOS-only; stored under the platform-scoped autoPlayOnLaunchMac key.
@@ -117,6 +118,7 @@ extension GlobalSettings {
     quickMixSoundFileNames = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.quickMixSoundFileNames)
     logCurrentSettings()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   // MARK: - Starred items (iPad sidebar + CarPlay)
@@ -128,6 +130,7 @@ extension GlobalSettings {
     // A favorited solo sound participates in lock-screen next/previous, so the
     // command availability depends on the favorites list — refresh it here.
     AudioManager.shared.updateNextPreviousCommandState()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   /// Whether the given token (`allSoundsToken`, `quickMixToken`, or a preset
@@ -158,12 +161,16 @@ extension GlobalSettings {
   @MainActor
   func pruneStarredItems(validPresetIDs: Set<String>, validSoundFileNames: Set<String>? = nil) {
     let pruned = starredItems.filter { token in
-      if let fileName = GlobalSettings.soloFileName(fromToken: token) {
+      switch PlayableItem(token: token) {
+      case .allSounds, .quickMix:
+        return true
+      case .solo(let fileName):
         return validSoundFileNames?.contains(fileName) ?? true
+      case .preset(let id):
+        return validPresetIDs.contains(id.uuidString)
+      case nil:
+        return false
       }
-      return token == GlobalSettings.allSoundsToken
-        || token == GlobalSettings.quickMixToken
-        || validPresetIDs.contains(token)
     }
     if pruned != starredItems {
       setStarredItems(pruned)

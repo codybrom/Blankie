@@ -21,9 +21,8 @@ extension AudioManager {
   /// while playing, toggle the sound in/out of the mix; while paused, select it
   /// (if it isn't already) and resume — so a tap always gets audio going rather
   /// than selecting silently or deselecting an already-on tile. The
-  /// `updateHasSelectedSounds()` call reflects a brand-new selection
-  /// synchronously, otherwise `setGlobalPlaybackState(true)` would see the
-  /// still-empty (coalesced) selection and coerce right back to paused.
+  /// `updateHasSelectedSounds()` call publishes the new selection immediately
+  /// rather than after the coalesced pass.
   @MainActor func toggleOrResume(_ sound: Sound) {
     if !isGloballyPlaying {
       if !sound.isSelected {
@@ -115,11 +114,12 @@ extension AudioManager {
       // Play the solo sound at its current volume
       soloSound.play()
 
-      // Update Now Playing info for solo mode
+      // Update Now Playing info for solo mode. Read the state when the Task runs
+      // so a pause queued ahead of it isn't overwritten with "playing".
       Task { @MainActor in
         nowPlayingManager.updateInfo(
           presetName: soloSound.title,
-          isPlaying: true
+          isPlaying: self.isGloballyPlaying
         )
       }
       return
@@ -144,7 +144,7 @@ extension AudioManager {
         presetName: currentPreset?.name,
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId,
-        isPlaying: true
+        isPlaying: self.isGloballyPlaying
       )
     }
   }
@@ -168,7 +168,7 @@ extension AudioManager {
   /// After the pause fade-outs land, idles the engine and does the single
   /// paused publish (held until then — see performNowPlayingUpdate). The
   /// session stays active so the system controls remain visible.
-  private func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
+  func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
     Task { @MainActor [weak self] in
       // Zero-length fades pause their nodes synchronously inside pauseAll,
       // so the engine can idle in this same runloop turn — don't sleep.
@@ -215,13 +215,28 @@ extension AudioManager {
     // any such request to paused. In-app buttons already gate on this; remote
     // commands (lock screen / Control Center / CarPlay) did not, which let the
     // app advertise rate 1.0 over silence and read as "playing" with no sound.
-    let shouldPlay = playing && (soloModeSound != nil || hasSelectedSounds)
+    let shouldPlay = playing && hasPlayableSelection
     if playing && !shouldPlay {
       Logger.audio.debug("AudioManager: Ignoring play request with no selected sounds")
     }
 
     // Update state first
     isGloballyPlaying = shouldPlay
+    if shouldPlay {
+      // Playback is underway, so the macOS open-time autoplay must not fire later.
+      launchAutoPlayHandled = true
+      #if os(iOS) || os(visionOS)
+        // A play during an interruption supersedes it, so its end can't resume over a later pause.
+        wasPlayingWhenInterrupted = false
+      #endif
+    }
+
+    // Play/pause from anywhere (remote, CarPlay, intents, timer) ends a sound-editor
+    // preview. A play ignored for an empty mix leaves it alone. Playback below
+    // restarts or pauses the mix itself.
+    if !playing || shouldPlay {
+      exitPreviewMode(resuming: false)
+    }
 
     // Then handle playback
     if shouldPlay {
@@ -248,6 +263,14 @@ extension AudioManager {
         isPlaying: isGloballyPlaying
       )
     }
+  }
+
+  /// Whether a play request has anything to play: a solo sound or any selected
+  /// sound. Scans the live selection rather than `hasSelectedSounds`, which
+  /// only updates on a coalesced pass — intents and preset application ask to
+  /// play right after selecting and would otherwise see an empty mix.
+  var hasPlayableSelection: Bool {
+    soloModeSound != nil || sounds.contains { $0.isSelected }
   }
 
   // MARK: - Music Exclusivity

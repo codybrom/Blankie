@@ -70,6 +70,18 @@ struct AudioManagerTests {
       !audioManager.isGloballyPlaying, "A play request with no selected sounds must stay paused")
   }
 
+  /// A play request right after selecting must see the selection even though
+  /// the coalesced `hasSelectedSounds` hasn't caught up yet — Siri "play
+  /// preset"/"play sound" and preset application hit exactly that window.
+  @Test func playGateSeesSelectionBeforeCoalescedFlag() {
+    audioManager.sounds[0].isSelected = true
+
+    #expect(!audioManager.hasSelectedSounds)
+    #expect(audioManager.hasPlayableSelection)
+
+    audioManager.sounds[0].isSelected = false
+  }
+
   /// Turning off the LAST selected sound pauses global playback — silence must
   /// never read as a silent "playing" state (the lock-screen/CarPlay stuck
   /// transport bug). The pause is dispatched to the main actor, so we await it.
@@ -102,5 +114,13 @@ struct AudioManagerTests {
 
     audioManager.isGloballyPlaying = false
     audioManager.sounds[1].isSelected = false
+  }
+
+  /// An imported archive can repeat a name in `soundOrder`. Ordering must not
+  /// trap. The preset is saved before it renders, so it crashed every launch.
+  @Test func orderingToleratesDuplicateSoundOrder() {
+    let preset = PresetFactory.makePreset(soundOrder: ["rain", "waves", "rain"])
+    #expect(audioManager.orderedVisibleSounds(for: preset).map(\.fileName) == ["rain", "waves"])
+    #expect(audioManager.compositeSoundIcons(for: preset).count == 1)
   }
 }

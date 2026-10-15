@@ -10,7 +10,7 @@ import Accelerate
 import os
 
 /// Combined audio analysis results
-struct AudioAnalysisResult {
+struct AudioAnalysisResult: Sendable {
   let lufs: Float?
   let normalizationFactor: Float
   let peakLevel: Float?
@@ -29,8 +29,12 @@ struct AudioAnalysisResult {
   }
 }
 
-/// Utility class for analyzing audio files
-class AudioAnalyzer {
+/// Utility class for analyzing audio files.
+///
+/// `nonisolated` so its stateless DSP runs off the main actor under module-wide
+/// default main-actor isolation; the async entry points are `@concurrent` so they
+/// always offload to the background pool even when called from main-actor code.
+nonisolated class AudioAnalyzer {
   // MARK: - LUFS Configuration
 
   /// Target LUFS level for normalization
@@ -46,12 +50,13 @@ class AudioAnalyzer {
   /// Analyze an audio file and return its peak level
   /// - Parameter url: URL of the audio file to analyze
   /// - Returns: Peak level (0.0 to 1.0) or nil if analysis fails
-  static func analyzePeakLevel(at url: URL) async -> Float? {
+  @concurrent static func analyzePeakLevel(at url: URL) async -> Float? {
     do {
       // Create an audio file for reading
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
-      let frameCount = UInt32(file.length)
+      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz), and imports have no length cap.
+      guard let frameCount = AVAudioFrameCount(exactly: file.length) else { return nil }
 
       // Read the entire file into a buffer
       guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
@@ -130,11 +135,11 @@ class AudioAnalyzer {
   /// Analyze RMS (Root Mean Square) level for more perceptual loudness
   /// - Parameter url: URL of the audio file to analyze
   /// - Returns: RMS level (0.0 to 1.0) or nil if analysis fails
-  static func analyzeRMSLevel(at url: URL) async -> Float? {
+  @concurrent static func analyzeRMSLevel(at url: URL) async -> Float? {
     do {
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
-      let frameCount = UInt32(file.length)
+      guard let frameCount = AVAudioFrameCount(exactly: file.length) else { return nil }
 
       guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
         return nil
@@ -176,7 +181,7 @@ class AudioAnalyzer {
   /// Analyze true peak level with 4x oversampling for intersample peak detection
   /// - Parameter url: URL of the audio file to analyze
   /// - Returns: True peak level in dBTP or nil if analysis fails
-  static func analyzeTruePeak(at url: URL) async -> Float? {
+  @concurrent static func analyzeTruePeak(at url: URL) async -> Float? {
     do {
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
@@ -185,7 +190,9 @@ class AudioAnalyzer {
       var position: AVAudioFramePosition = 0
 
       while position < file.length {
-        let framesToRead = min(chunkSize, AVAudioFrameCount(file.length - position))
+        // Clamp before narrowing, since the remainder alone can exceed UInt32.
+        let framesToRead = AVAudioFrameCount(
+          min(AVAudioFramePosition(chunkSize), file.length - position))
 
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: framesToRead) else {
           position += AVAudioFramePosition(framesToRead)
@@ -222,7 +229,7 @@ class AudioAnalyzer {
   /// Perform comprehensive audio analysis including LUFS, peak, RMS, and true peak
   /// - Parameter url: URL of the audio file to analyze
   /// - Returns: Complete analysis results
-  static func comprehensiveAnalysis(at url: URL) async -> AudioAnalysisResult {
+  @concurrent static func comprehensiveAnalysis(at url: URL) async -> AudioAnalysisResult {
     Logger.app.debug("AudioAnalyzer: Starting comprehensive analysis for \(url.lastPathComponent)")
 
     // Get peak and RMS levels

@@ -60,7 +60,7 @@ import SwiftUI
         routeObserver = NotificationCenter.default.addObserver(
           forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in
-          self?.refreshRoute()
+          MainActor.assumeIsolated { self?.refreshRoute() }
         }
       #endif
       if manager.isDeviceMotionAvailable {
@@ -569,7 +569,7 @@ import SwiftUI
   /// Classic map-pin teardrop: circular head flowing into a tapered tail, as
   /// one filled path (the tip is the precise placement point). Arc direction
   /// verified: clockwise=false sweeps over the top in SwiftUI's flipped space.
-  private struct PinShape: Shape {
+  private nonisolated struct PinShape: Shape {
     func path(in rect: CGRect) -> Path {
       var path = Path()
       let headRadius = rect.width / 2
@@ -590,7 +590,7 @@ import SwiftUI
 
   /// A wide pie slice pointing "up" (the canonical forward direction); the
   /// grid rotates it to the live head yaw.
-  private struct FacingWedge: Shape {
+  private nonisolated struct FacingWedge: Shape {
     var spanDegrees: Double = 70
 
     func path(in rect: CGRect) -> Path {

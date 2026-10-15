@@ -13,7 +13,7 @@ import StoreKit
 #endif
 
 extension Bundle {
-  private static let probeAttempts = 3
+  nonisolated private static let probeAttempts = 3
 
   /// Whether beta-tester-only UI (such as the "Get Credited as a Tester" link
   /// in Settings) should be shown.
@@ -45,40 +45,42 @@ extension Bundle {
   /// beta UI). It never calls `AppTransaction.refresh()` — that's the
   /// documented recovery, but it shows an App Store sign-in prompt and so must
   /// only run on an explicit user action, not from this automatic gate.
-  var isTestFlightOrDebug: Bool {
-    get async {
-      #if DEBUG
-        return true
-      #else
-        #if canImport(MarketplaceKit)
-          if let distributor = try? await AppDistributor.current {
-            switch distributor {
-            case .testFlight:
-              return true
-            case .appStore:
-              return false
-            default:
-              break  // Unexpected source — fall through to the AppTransaction probe.
-            }
-          }
-        #endif
-        for attempt in 1...Bundle.probeAttempts {
-          do {
-            let result = try await AppTransaction.shared
-            let transaction: AppTransaction
-            switch result {
-            case .verified(let value), .unverified(let value, _):
-              transaction = value
-            }
-            return transaction.environment == .sandbox
-          } catch {
-            if attempt < Bundle.probeAttempts {
-              try? await Task.sleep(for: .seconds(2))
-            }
+  // @concurrent so the whole check runs off the main actor: it only calls
+  // StoreKit / MarketplaceKit (both nonisolated) and touches no app state, and
+  // staying off-main means the non-Sendable `AppDistributor` result is never sent
+  // into a main-actor-isolated caller.
+  @concurrent func isTestFlightOrDebug() async -> Bool {
+    #if DEBUG
+      return true
+    #else
+      #if canImport(MarketplaceKit)
+        if let distributor = try? await AppDistributor.current {
+          switch distributor {
+          case .testFlight:
+            return true
+          case .appStore:
+            return false
+          default:
+            break  // Unexpected source — fall through to the AppTransaction probe.
           }
         }
-        return false
       #endif
-    }
+      for attempt in 1...Bundle.probeAttempts {
+        do {
+          let result = try await AppTransaction.shared
+          let transaction: AppTransaction
+          switch result {
+          case .verified(let value), .unverified(let value, _):
+            transaction = value
+          }
+          return transaction.environment == .sandbox
+        } catch {
+          if attempt < Bundle.probeAttempts {
+            try? await Task.sleep(for: .seconds(2))
+          }
+        }
+      }
+      return false
+    #endif
   }
 }

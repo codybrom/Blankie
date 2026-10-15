@@ -18,7 +18,7 @@ import os
 /// orphaned the audio and lost everything else. This sidecar lets the row be
 /// reconstructed from disk. Mirrors the artwork file mirror in
 /// `PresetArtworkManager`. A value type, so it crosses actors safely.
-struct CustomSoundSnapshot: Codable, Sendable {
+nonisolated struct CustomSoundSnapshot: Codable, Sendable {
   var id: UUID
   var title: String
   var systemIconName: String
@@ -117,7 +117,7 @@ extension CustomSoundManager {
   /// Suffix for a sound's metadata sidecar. Audio files are `<uuid>.<ext>`, so a
   /// `.meta.json` sidecar can never collide with one. Not private so the
   /// reconcile logic is unit tested.
-  static let mirrorSuffix = ".meta.json"
+  nonisolated static let mirrorSuffix = ".meta.json"
 
   private func mirrorURL(for fileName: String) -> URL? {
     getCustomSoundsDirectoryURL()?.appendingPathComponent("\(fileName)\(Self.mirrorSuffix)")
@@ -163,9 +163,24 @@ extension CustomSoundManager {
     guard let dir = getCustomSoundsDirectoryURL() else { return }
     let existing = Set(getAllCustomSounds().map { $0.fileName })
 
-    let snapshotsToRestore = await Task.detached(priority: .utility) {
+    let scanned = await Task.detached(priority: .utility) {
       Self.restorableSnapshots(in: dir, excluding: existing)
     }.value
+    restoreScannedSnapshots(scanned, in: dir)
+  }
+
+  /// Inserts rows for the sidecars a reconcile scan found, skipping any whose
+  /// row now exists or whose audio is now gone.
+  @MainActor
+  func restoreScannedSnapshots(_ scanned: [CustomSoundSnapshot], in dir: URL) {
+    // Re-check against the live store. An import or delete can land during the
+    // scan, and restoring it again would duplicate the row or revive a deleted one.
+    let current = Set(getAllCustomSounds().map { $0.fileName })
+    let snapshotsToRestore = scanned.filter { snapshot in
+      !current.contains(snapshot.fileName)
+        && FileManager.default.fileExists(
+          atPath: dir.appendingPathComponent("\(snapshot.fileName).\(snapshot.fileExtension)").path)
+    }
     guard !snapshotsToRestore.isEmpty else { return }
 
     do {

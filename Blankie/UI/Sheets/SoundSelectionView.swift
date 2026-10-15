@@ -105,8 +105,16 @@ struct SoundSelectionView: View {
             .accessibilityHidden(true)
 
           Label {
-            Text(sound.localizedTitle)
-              .foregroundStyle(.primary)
+            VStack(alignment: .leading, spacing: 2) {
+              Text(sound.localizedTitle)
+                .foregroundStyle(.primary)
+              if let subtitle = sound.localizedSubtitle {
+                Text(subtitle)
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+                  .lineLimit(1)
+              }
+            }
           } icon: {
             Image(systemName: sound.systemIconName)
               .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
@@ -132,7 +140,15 @@ struct SoundSelectionView: View {
         let isRowSelected = selectedSounds.contains(sound.fileName)
 
         Label {
-          Text(sound.localizedTitle)
+          VStack(alignment: .leading, spacing: 2) {
+            Text(sound.localizedTitle)
+            if let subtitle = sound.localizedSubtitle {
+              Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            }
+          }
         } icon: {
           Image(systemName: sound.systemIconName)
             .foregroundStyle(isRowSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.white))

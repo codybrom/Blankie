@@ -30,24 +30,29 @@ enum IconCategory: String, CaseIterable {
 
   var localizedName: String {
     switch self {
-    case .popular: return String(localized: "Popular")
-    case .nature: return String(localized: "Nature")
-    case .audio: return String(localized: "Audio")
-    case .education: return String(localized: "Education")
-    case .sports: return String(localized: "Sports")
-    case .tools: return String(localized: "Tools")
-    case .objects: return String(localized: "Objects")
-    case .home: return String(localized: "Home")
-    case .transport: return String(localized: "Transport")
-    case .communication: return String(localized: "Communication")
-    case .shopping: return String(localized: "Shopping")
-    case .foodAndDrink: return String(localized: "Food & Drink")
-    case .entertainment: return String(localized: "Entertainment")
-    case .medical: return String(localized: "Medical")
-    case .clothing: return String(localized: "Clothing")
-    case .miscellaneous: return String(localized: "Miscellaneous")
-    case .symbols: return String(localized: "Symbols")
-    case .peopleAndActivity: return String(localized: "People & Activity")
+    case .popular: return String(localized: "iconCategory.popular", defaultValue: "Popular")
+    case .nature: return String(localized: "iconCategory.nature", defaultValue: "Nature")
+    case .audio: return String(localized: "iconCategory.audio", defaultValue: "Audio")
+    case .education: return String(localized: "iconCategory.education", defaultValue: "Education")
+    case .sports: return String(localized: "iconCategory.sports", defaultValue: "Sports")
+    case .tools: return String(localized: "iconCategory.tools", defaultValue: "Tools")
+    case .objects: return String(localized: "iconCategory.objects", defaultValue: "Objects")
+    case .home: return String(localized: "iconCategory.home", defaultValue: "Home")
+    case .transport: return String(localized: "iconCategory.transport", defaultValue: "Transport")
+    case .communication:
+      return String(localized: "iconCategory.communication", defaultValue: "Communication")
+    case .shopping: return String(localized: "iconCategory.shopping", defaultValue: "Shopping")
+    case .foodAndDrink:
+      return String(localized: "iconCategory.foodAndDrink", defaultValue: "Food & Drink")
+    case .entertainment:
+      return String(localized: "iconCategory.entertainment", defaultValue: "Entertainment")
+    case .medical: return String(localized: "iconCategory.medical", defaultValue: "Medical")
+    case .clothing: return String(localized: "iconCategory.clothing", defaultValue: "Clothing")
+    case .miscellaneous:
+      return String(localized: "iconCategory.miscellaneous", defaultValue: "Miscellaneous")
+    case .symbols: return String(localized: "iconCategory.symbols", defaultValue: "Symbols")
+    case .peopleAndActivity:
+      return String(localized: "iconCategory.peopleAndActivity", defaultValue: "People & Activity")
     }
   }
 

@@ -1,0 +1,744 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Pause ${applicationName}" : {
+      "comment" : "Siri phrases to pause or stop playback. Keep the ${applicationName} token in every phrase.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Pausiere ${applicationName}",
+              "Stoppe ${applicationName}"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Pause ${applicationName}",
+              "Stop ${applicationName}"
+            ]
+          }
+        },
+        "en-GB" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Pause ${applicationName}",
+              "Stop ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Pausa ${applicationName}",
+              "Detén ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Mets ${applicationName} en pause",
+              "Arrête ${applicationName}"
+            ]
+          }
+        },
+        "hu" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Szüneteltesd a ${applicationName}-t",
+              "Állítsd le a ${applicationName}-t"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Metti in pausa ${applicationName}",
+              "Ferma ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}を一時停止して",
+              "${applicationName}を停止して"
+            ]
+          }
+        },
+        "ko" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName} 일시정지",
+              "${applicationName} 정지"
+            ]
+          }
+        },
+        "pl" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Wstrzymaj ${applicationName}",
+              "Zatrzymaj ${applicationName}"
+            ]
+          }
+        },
+        "pt-PT" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Pausar ${applicationName}",
+              "Parar ${applicationName}"
+            ]
+          }
+        },
+        "tr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}'i duraklat",
+              "${applicationName}'i durdur"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "暂停${applicationName}",
+              "停止${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Play ${applicationName}" : {
+      "comment" : "Siri phrases to start or resume playback. ${applicationName} is the app name. Keep the ${applicationName} token in every phrase.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Starte ${applicationName}",
+              "Setze ${applicationName} fort"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Play ${applicationName}",
+              "Resume ${applicationName}"
+            ]
+          }
+        },
+        "en-GB" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Play ${applicationName}",
+              "Resume ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Reproduce ${applicationName}",
+              "Reanuda ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Lance ${applicationName}",
+              "Reprends ${applicationName}"
+            ]
+          }
+        },
+        "hu" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Indítsd el a ${applicationName}-t",
+              "Folytasd a ${applicationName}-t"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Avvia ${applicationName}",
+              "Riprendi ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}を再生して",
+              "${applicationName}を再開して"
+            ]
+          }
+        },
+        "ko" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName} 재생",
+              "${applicationName} 다시 재생"
+            ]
+          }
+        },
+        "pl" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Włącz ${applicationName}",
+              "Wznów ${applicationName}"
+            ]
+          }
+        },
+        "pt-PT" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Reproduzir ${applicationName}",
+              "Retomar ${applicationName}"
+            ]
+          }
+        },
+        "tr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName} çal",
+              "${applicationName}'i devam ettir"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "播放${applicationName}",
+              "继续播放${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Play ${preset} in ${applicationName}" : {
+      "comment" : "Siri phrases to play a saved preset by name. ${preset} is the preset name and ${applicationName} the app name. Keep both tokens in every phrase.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Starte ${preset} in ${applicationName}",
+              "Spiele ${preset} mit ${applicationName} ab"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Play ${preset} in ${applicationName}",
+              "Play ${preset} on ${applicationName}"
+            ]
+          }
+        },
+        "en-GB" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Play ${preset} in ${applicationName}",
+              "Play ${preset} on ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Reproduce ${preset} en ${applicationName}",
+              "Pon ${preset} en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Lance ${preset} dans ${applicationName}",
+              "Lance ${preset} sur ${applicationName}"
+            ]
+          }
+        },
+        "hu" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Játszd le a ${preset}-et a ${applicationName}-ben",
+              "Kapcsold be a ${preset}-et a ${applicationName}-ben"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Riproduci ${preset} in ${applicationName}",
+              "Riproduci ${preset} su ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}で${preset}を再生して",
+              "${applicationName}で${preset}を流して"
+            ]
+          }
+        },
+        "ko" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}에서 ${preset} 재생",
+              "${applicationName}에서 ${preset} 틀어줘"
+            ]
+          }
+        },
+        "pl" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Włącz ${preset} w ${applicationName}",
+              "Odtwórz ${preset} w ${applicationName}"
+            ]
+          }
+        },
+        "pt-PT" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Reproduzir ${preset} no ${applicationName}",
+              "Reproduzir ${preset} com o ${applicationName}"
+            ]
+          }
+        },
+        "tr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}'de ${preset} çal",
+              "${applicationName} üzerinde ${preset} çal"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "在${applicationName}里播放${preset}",
+              "用${applicationName}播放${preset}"
+            ]
+          }
+        }
+      }
+    },
+    "Play ${sound} sounds in ${applicationName}" : {
+      "comment" : "Siri phrases to play a single sound by name. ${sound} is the sound name and ${applicationName} the app name. Keep both tokens in every phrase.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Spiele ${sound}-Geräusche in ${applicationName} ab",
+              "Spiele ${sound} in ${applicationName} ab"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Play ${sound} sounds in ${applicationName}",
+              "Play ${sound} in ${applicationName}"
+            ]
+          }
+        },
+        "en-GB" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Play ${sound} sounds in ${applicationName}",
+              "Play ${sound} in ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Reproduce sonidos de ${sound} en ${applicationName}",
+              "Reproduce ${sound} en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Lance les sons ${sound} dans ${applicationName}",
+              "Lance ${sound} dans ${applicationName}"
+            ]
+          }
+        },
+        "hu" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Játszd le a ${sound} hangokat a ${applicationName}-ben",
+              "Játszd le a ${sound} hangot a ${applicationName}-ben"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Riproduci i suoni ${sound} in ${applicationName}",
+              "Riproduci ${sound} in ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}で${sound}の音を流して",
+              "${applicationName}で${sound}を再生して"
+            ]
+          }
+        },
+        "ko" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}에서 ${sound} 소리 재생",
+              "${applicationName}에서 ${sound} 재생"
+            ]
+          }
+        },
+        "pl" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Włącz dźwięki ${sound} w ${applicationName}",
+              "Włącz ${sound} w ${applicationName}"
+            ]
+          }
+        },
+        "pt-PT" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Reproduzir sons de ${sound} no ${applicationName}",
+              "Reproduzir ${sound} no ${applicationName}"
+            ]
+          }
+        },
+        "tr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}'de ${sound} seslerini çal",
+              "${applicationName}'de ${sound} çal"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "在${applicationName}里播放${sound}声音",
+              "在${applicationName}里播放${sound}"
+            ]
+          }
+        }
+      }
+    },
+    "Start a sleep timer in ${applicationName}" : {
+      "comment" : "Siri phrases to start a sleep timer. Keep the ${applicationName} token in every phrase.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Starte einen Einschlaf-Timer in ${applicationName}",
+              "Stelle einen Einschlaf-Timer in ${applicationName} ein"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Start a sleep timer in ${applicationName}",
+              "Set a ${applicationName} sleep timer"
+            ]
+          }
+        },
+        "en-GB" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Start a sleep timer in ${applicationName}",
+              "Set a ${applicationName} sleep timer"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Inicia un temporizador de reposo en ${applicationName}",
+              "Programa un temporizador de reposo en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Lance une minuterie de veille dans ${applicationName}",
+              "Règle une minuterie de veille ${applicationName}"
+            ]
+          }
+        },
+        "hu" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Indíts elalvási időzítőt a ${applicationName}-ben",
+              "Állíts be egy ${applicationName} elalvási időzítőt"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Avvia un timer di spegnimento in ${applicationName}",
+              "Imposta un timer di spegnimento di ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}でスリープタイマーを開始して",
+              "${applicationName}のスリープタイマーを設定して"
+            ]
+          }
+        },
+        "ko" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}에서 취침 타이머 시작",
+              "${applicationName} 취침 타이머 설정"
+            ]
+          }
+        },
+        "pl" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Uruchom wyłącznik czasowy w ${applicationName}",
+              "Ustaw wyłącznik czasowy w ${applicationName}"
+            ]
+          }
+        },
+        "pt-PT" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Iniciar um temporizador para dormir no ${applicationName}",
+              "Definir um temporizador para dormir do ${applicationName}"
+            ]
+          }
+        },
+        "tr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}'de uyku zamanlayıcısı başlat",
+              "${applicationName} uyku zamanlayıcısı kur"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "在${applicationName}里开启睡眠定时器",
+              "设置${applicationName}睡眠定时器"
+            ]
+          }
+        }
+      }
+    },
+    "Stop the ${applicationName} sleep timer" : {
+      "comment" : "Siri phrases to stop or cancel the running sleep timer. Keep the ${applicationName} token in every phrase.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "de" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Stoppe den Einschlaf-Timer in ${applicationName}",
+              "Breche den Einschlaf-Timer in ${applicationName} ab"
+            ]
+          }
+        },
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Stop the ${applicationName} sleep timer",
+              "Cancel ${applicationName} sleep timer"
+            ]
+          }
+        },
+        "en-GB" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Stop the ${applicationName} sleep timer",
+              "Cancel ${applicationName} sleep timer"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Detén el temporizador de reposo de ${applicationName}",
+              "Cancela el temporizador de reposo de ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Arrête la minuterie de veille ${applicationName}",
+              "Annule la minuterie de veille de ${applicationName}"
+            ]
+          }
+        },
+        "hu" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Állítsd le a ${applicationName} elalvási időzítőt",
+              "Töröld a ${applicationName} elalvási időzítőt"
+            ]
+          }
+        },
+        "it" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Ferma il timer di spegnimento di ${applicationName}",
+              "Annulla il timer di spegnimento di ${applicationName}"
+            ]
+          }
+        },
+        "ja" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName}のスリープタイマーを止めて",
+              "${applicationName}のスリープタイマーをキャンセル"
+            ]
+          }
+        },
+        "ko" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName} 취침 타이머 정지",
+              "${applicationName} 취침 타이머 취소"
+            ]
+          }
+        },
+        "pl" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Zatrzymaj wyłącznik czasowy w ${applicationName}",
+              "Anuluj wyłącznik czasowy w ${applicationName}"
+            ]
+          }
+        },
+        "pt-PT" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "Parar o temporizador para dormir do ${applicationName}",
+              "Cancelar o temporizador para dormir do ${applicationName}"
+            ]
+          }
+        },
+        "tr" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "${applicationName} uyku zamanlayıcısını durdur",
+              "${applicationName} uyku zamanlayıcısını iptal et"
+            ]
+          }
+        },
+        "zh-Hans" : {
+          "stringSet" : {
+            "state" : "needs_review",
+            "values" : [
+              "停止${applicationName}睡眠定时器",
+              "取消${applicationName}睡眠定时器"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

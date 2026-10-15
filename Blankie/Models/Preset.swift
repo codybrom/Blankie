@@ -9,7 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import os
 
-struct AnimatedArtworkRef: Codable, Equatable, Hashable {
+nonisolated struct AnimatedArtworkRef: Codable, Equatable, Hashable {
   enum Source: String, Codable, CaseIterable {
     case auto
     case bundled
@@ -47,7 +47,7 @@ enum PresetViewMode: String, Codable, CaseIterable {
   case list
 }
 
-struct Preset: Codable, Identifiable, Equatable {
+nonisolated struct Preset: Codable, Identifiable, Equatable {
   let id: UUID
   var name: String
   var soundStates: [PresetState]
@@ -115,7 +115,7 @@ struct Preset: Codable, Identifiable, Equatable {
       && lhs.backgroundBlurRadius == rhs.backgroundBlurRadius
   }
 
-  func validate() -> Bool {
+  @MainActor func validate() -> Bool {
     // Preset must have at least one sound
     guard !soundStates.isEmpty else {
       Logger.presets.debug("Preset: Must contain at least one sound")
@@ -156,7 +156,7 @@ struct Preset: Codable, Identifiable, Equatable {
 // MARK: - Transferable
 
 extension UTType {
-  static let blankiePreset = UTType(exportedAs: "com.codybrom.blankie.preset")
+  nonisolated static let blankiePreset = UTType(exportedAs: "com.codybrom.blankie.preset")
 }
 
 // Wrapper for the exported file with proper metadata

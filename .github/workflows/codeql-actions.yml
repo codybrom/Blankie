@@ -15,6 +15,12 @@ on:
   schedule:
     - cron: "15 14 * * 1"
 
+# One run per ref: a newer push cancels the superseded run instead of
+# queueing behind it on the shared runners.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze (actions)

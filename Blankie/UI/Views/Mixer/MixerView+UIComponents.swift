@@ -15,8 +15,11 @@ import SwiftUI
     // MARK: - Navigation Elements
 
     var navigationTitle: String {
-      if let soloSound = audioManager.soloModeSound {
-        return soloSound.localizedTitle
+      // Solo renders the full inline now-playing player, which shows the sound
+      // name under the artwork — leave the nav heading empty so it isn't shown
+      // twice.
+      if audioManager.soloModeSound != nil {
+        return ""
       }
 
       if audioManager.isQuickMix {

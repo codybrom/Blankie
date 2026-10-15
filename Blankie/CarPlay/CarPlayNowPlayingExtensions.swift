@@ -88,7 +88,11 @@ import os
         image: UIImage(systemName: isFavorite ? "star.fill" : "star")!
       ) { _ in
         Task { @MainActor in
-          GlobalSettings.shared.toggleStarred(token)
+          // If the star changed elsewhere since this glyph was drawn, redraw instead
+          // of toggling, so the tap never does the opposite of what it showed.
+          if GlobalSettings.shared.isStarred(token) == isFavorite {
+            GlobalSettings.shared.toggleStarred(token)
+          }
           onToggle()
         }
       }

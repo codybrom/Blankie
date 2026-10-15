@@ -41,7 +41,7 @@ extension AudioManager {
       // A media-services reset invalidates every node bound to the dead
       // engine; tear down players (keeping selection) for lazy rebuild.
       AudioEngineManager.shared.onEngineReset = { [weak self] in
-        self?.sounds.forEach { $0.unload() }
+        for sound in self?.sounds ?? [] { sound.unload() }
       }
 
       audioSessionObserversSetup = true
@@ -68,7 +68,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { _ in
-        self.handleAppTermination()
+        MainActor.assumeIsolated { self.handleAppTermination() }
       }
     }
 
@@ -78,7 +78,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] _ in
-        self?.handleDidEnterBackground()
+        MainActor.assumeIsolated { self?.handleDidEnterBackground() }
       }
 
       NotificationCenter.default.addObserver(
@@ -86,7 +86,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] _ in
-        self?.handleWillEnterForeground()
+        MainActor.assumeIsolated { self?.handleWillEnterForeground() }
       }
     }
 
@@ -111,6 +111,7 @@ extension AudioManager {
 
       AudioSessionManager.shared.reactivateForForeground(
         mixWithOthers: GlobalSettings.shared.mixWithOthers,
+        isCarPlayConnected: isCarPlayConnected,
         isPlaying: isGloballyPlaying
       )
 
@@ -138,7 +139,9 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        self?.handleAudioInterruption(notification)
+        // Delivered on the main queue; the notification never leaves it.
+        nonisolated(unsafe) let note = notification
+        MainActor.assumeIsolated { self?.handleAudioInterruption(note) }
       }
     }
 
@@ -166,20 +169,11 @@ extension AudioManager {
       // active while paused, so the interruption can end with .shouldResume even
       // though the user had nothing going.
       wasPlayingWhenInterrupted = isGloballyPlaying
+      // An interruption ends a sound-editor preview, even while globally paused.
+      exitPreviewMode(resuming: false)
       if isGloballyPlaying {
         Task { @MainActor in
-          // Update Now Playing info to show paused state with current position
-          // Use active (selected) sounds to ensure we have position even when pausing
-          let activeSounds = self.sounds.filter { $0.isSelected }
-          if let longestSound = activeSounds.max(by: {
-            $0.playbackDuration < $1.playbackDuration
-          }), longestSound.isLoaded {
-            self.nowPlayingManager.updateProgress(
-              currentTime: longestSound.playbackPosition,
-              duration: longestSound.playbackDuration
-            )
-          }
-
+          // The paused publish applies the progress anchor (timer > solo > longest loop).
           self.setGlobalPlaybackState(false)
         }
       }
@@ -211,7 +205,9 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        self?.handleAudioRouteChange(notification)
+        // Delivered on the main queue; the notification never leaves it.
+        nonisolated(unsafe) let note = notification
+        MainActor.assumeIsolated { self?.handleAudioRouteChange(note) }
       }
     }
 
@@ -253,11 +249,13 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { _ in
-        self.handleAppTermination()
+        // willTerminate fires on the main queue; recover isolation synchronously
+        // (a Task would defer past app exit and lose the state save).
+        MainActor.assumeIsolated { self.handleAppTermination() }
       }
 
       Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
-        self?.saveState()
+        MainActor.assumeIsolated { self?.saveState() }
       }
     }
   #endif

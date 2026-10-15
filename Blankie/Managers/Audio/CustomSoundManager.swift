@@ -214,7 +214,12 @@ class CustomSoundManager {
     // Hash the stored file so re-importing the same audio is deduped and the
     // durable mirror persists a real integrity hash (was previously only set on
     // the preset-import path, so picker imports persisted a nil hash).
-    customSound.sha256Hash = try? FileHashUtility.sha256Hash(for: importData.copiedURL)
+    do {
+      customSound.sha256Hash = try FileHashUtility.sha256Hash(for: importData.copiedURL)
+    } catch {
+      Logger.sounds.error(
+        "CustomSoundManager: Failed to hash imported file for dedup: \(error, privacy: .public)")
+    }
 
     // Store ID3 metadata
     customSound.id3Title = metadata.title

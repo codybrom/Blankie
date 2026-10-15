@@ -126,6 +126,9 @@ import os
 
     private static func handleSoundToggle(_ sound: Sound, button _: CPGridButton) {
       Task { @MainActor in
+        // The car may have gone away before this tap ran. Never start on the phone.
+        guard CarPlayInterfaceController.shared.isConnected else { return }
+
         // Exit solo mode if active
         if AudioManager.shared.soloModeSound != nil {
           AudioManager.shared.exitSoloModeWithoutResuming()

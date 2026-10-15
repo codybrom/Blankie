@@ -21,11 +21,11 @@
   import Foundation
   import os
 
-  enum StorageMaintenance {
+  nonisolated enum StorageMaintenance {
     private static let logger = Logger(subsystem: "com.codybrom.blankie", category: "Storage")
 
     /// Removes leftover staging in `tmp` and `Documents/Inbox` older than `maxAge`.
-    static func clean(olderThan maxAge: TimeInterval = 3600) {
+    nonisolated static func clean(olderThan maxAge: TimeInterval = 3600) {
       let fm = FileManager.default
       var roots = [URL(fileURLWithPath: NSTemporaryDirectory())]
       if let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first {

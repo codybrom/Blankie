@@ -9,7 +9,7 @@ import AVFoundation
 import Accelerate
 import os
 
-struct KWeightingCoefficients {
+nonisolated struct KWeightingCoefficients: Sendable {
   let preFilterA: [Float]
   let preFilterB: [Float]
   let rlbFilterA: [Float]
@@ -18,7 +18,7 @@ struct KWeightingCoefficients {
 
 extension AudioAnalyzer {
 
-  static func getKWeightingCoefficients() -> KWeightingCoefficients {
+  nonisolated static func getKWeightingCoefficients() -> KWeightingCoefficients {
     // ITU-R BS.1770-4 K-weighting filter coefficients
     // Pre-filter (shelving filter)
     let preFilterB: [Float] = [1.53512485958697, -2.69169618940638, 1.19839281085285]
@@ -33,7 +33,7 @@ extension AudioAnalyzer {
       rlbFilterA: rlbFilterA, rlbFilterB: rlbFilterB)
   }
 
-  static func processChannel(
+  nonisolated static func processChannel(
     _ channelData: UnsafeMutablePointer<Float>,
     frameLength: AVAudioFrameCount,
     filterCoefficients: KWeightingCoefficients,
@@ -76,7 +76,9 @@ extension AudioAnalyzer {
     return power * channelWeight
   }
 
-  static func applyBiquadFilter(input: [Float], filterB: [Float], filterA: [Float]) -> [Float] {
+  nonisolated static func applyBiquadFilter(input: [Float], filterB: [Float], filterA: [Float])
+    -> [Float]
+  {
     var output = [Float](repeating: 0, count: input.count)
 
     // State variables for the filter

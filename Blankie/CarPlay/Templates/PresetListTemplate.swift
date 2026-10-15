@@ -68,42 +68,12 @@ import os
         image: getPresetArtwork(preset)
       )
 
-      // Leading "now playing" indicator marks the active item.
+      // Leading "now playing" indicator marks the active item while it plays.
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
-        Task {
-          do {
-            await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
-            }
-
-            // Allow audio system to process mode exits before applying new preset
-            await Task.yield()
-
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              // Ensure playback starts
-              AudioManager.shared.setGlobalPlaybackState(true)
-              CarPlayInterfaceController.shared.updateAllTemplates()
-              // Navigate to Now Playing screen
-              CarPlayInterfaceController.shared.showNowPlaying()
-            }
-          } catch {
-            Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
-          }
-          completion()
-        }
+        playPresetFromCar(preset, completion: completion)
       }
 
       return item
@@ -120,42 +90,42 @@ import os
       )
 
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
-        Task {
-          do {
-            await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
-            }
-
-            // Allow audio system to process mode exits before applying new preset
-            await Task.yield()
-
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              AudioManager.shared.setGlobalPlaybackState(true)
-              CarPlayInterfaceController.shared.updateAllTemplates()
-              // Navigate to Now Playing screen
-              CarPlayInterfaceController.shared.showNowPlaying()
-            }
-          } catch {
-            Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
-          }
-          completion()
-        }
+        playPresetFromCar(preset, completion: completion)
       }
 
       return item
+    }
+
+    /// Applies a preset row tapped in the car. Drops the tap if the car went away
+    /// before it ran, and re-reads the preset by id since the row may predate a
+    /// phone-side edit or delete.
+    private static func playPresetFromCar(_ preset: Preset, completion: @escaping () -> Void) {
+      Task {
+        do {
+          let livePreset = await MainActor.run { () -> Preset? in
+            guard CarPlayInterfaceController.shared.isConnected else { return nil }
+            return PresetManager.shared.presets.first { $0.id == preset.id }
+          }
+          guard let livePreset else {
+            Logger.carPlay.debug("CarPlay: Dropped a preset tap (car gone or preset deleted)")
+            await MainActor.run { CarPlayInterfaceController.shared.updateAllTemplates() }
+            return completion()
+          }
+
+          try await MainActor.run {
+            try PresetManager.shared.playPreset(livePreset)
+            CarPlayInterfaceController.shared.updateAllTemplates()
+            // Navigate to Now Playing screen
+            CarPlayInterfaceController.shared.showNowPlaying()
+          }
+        } catch {
+          Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
+        }
+        completion()
+      }
     }
 
     private static func getPresetDetailText(_ preset: Preset) -> String {
@@ -224,16 +194,18 @@ import os
         glyphFraction = 0.44
       }
 
-      // 44pt is the CarPlay list image footprint; render at 2x for crisp glyphs.
+      // Fill the list image slot (per car, read at runtime) at the car
+      // display's scale, matching how the system scales cached thumbnails.
+      let slot = CPListItem.maximumImageSize
       let view = FallbackArtwork(
         glyph: glyph,
         accent: accent,
-        size: 44,
+        size: min(slot.width, slot.height),
         cornerRadius: 0,
         glyphFraction: glyphFraction
       )
       let renderer = ImageRenderer(content: view)
-      renderer.scale = 2
+      renderer.scale = CarPlayInterfaceController.shared.carDisplayScale
       renderer.isOpaque = true
       return renderer.uiImage
     }
@@ -323,15 +295,11 @@ import os
       )
 
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
         Task {
-          await MainActor.run {
-            AudioManager.shared.enterSoloMode(for: sound)
-            CarPlayInterfaceController.shared.updateAllTemplates()
-            CarPlayInterfaceController.shared.showNowPlaying()
-          }
+          await MainActor.run { SoundsListTemplate.playSoundInSoloMode(sound) }
           completion()
         }
       }
@@ -352,41 +320,10 @@ import os
       )
 
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
-        Task {
-          do {
-            await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
-            }
-
-            // Allow audio system to process mode exits before applying new preset
-            await Task.yield()
-
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              // Ensure playback starts
-              AudioManager.shared.setGlobalPlaybackState(true)
-              CarPlayInterfaceController.shared.updateAllTemplates()
-              // Navigate to Now Playing screen
-              CarPlayInterfaceController.shared.showNowPlaying()
-            }
-          } catch {
-            Logger.carPlay.error(
-              "CarPlay: Error applying All Sounds preset: \(error, privacy: .public)")
-          }
-          completion()
-        }
+        playPresetFromCar(preset, completion: completion)
       }
 
       return item

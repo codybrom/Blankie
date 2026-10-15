@@ -5,7 +5,6 @@
 //  Created by Cody Bromley on 12/30/24.
 //
 
-import MediaPlayer
 import SwiftUI
 import os
 
@@ -21,101 +20,64 @@ extension AudioManager {
   func setupMediaControls() {
     Logger.audio.debug("AudioManager: Setting up media controls")
 
-    let commandCenter = MPRemoteCommandCenter.shared()
-    configureMediaCommands(commandCenter)
-    removeExistingCommandHandlers(commandCenter)
-    addPlaybackCommandHandlers(commandCenter)
-    addNavigationCommandHandlers(commandCenter)
-  }
-
-  private func configureMediaCommands(_ commandCenter: MPRemoteCommandCenter) {
-    // Enable the commands
-    commandCenter.playCommand.isEnabled = true
-    commandCenter.pauseCommand.isEnabled = true
-    commandCenter.togglePlayPauseCommand.isEnabled = true
+    nowPlayingManager.installRemoteCommands(makeRemoteCommandHandlers())
 
     // Enable next/previous only when not in solo mode or quick mix
     updateNextPreviousCommandState()
   }
 
-  private func removeExistingCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
-    // Remove all previous handlers
-    commandCenter.playCommand.removeTarget(nil)
-    commandCenter.pauseCommand.removeTarget(nil)
-    commandCenter.togglePlayPauseCommand.removeTarget(nil)
-    commandCenter.nextTrackCommand.removeTarget(nil)
-    commandCenter.previousTrackCommand.removeTarget(nil)
-  }
-
-  private func addPlaybackCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
-    commandCenter.playCommand.addTarget { [weak self] _ in
-      Logger.audio.debug("AudioManager: Media key play command received")
-      Task { @MainActor in
+  /// What the Now Playing backend runs when a remote command arrives.
+  private func makeRemoteCommandHandlers() -> RemoteCommandHandlers {
+    RemoteCommandHandlers(
+      play: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote play received")
         // Only play if we're currently paused
         if !(self?.isGloballyPlaying ?? false) {
           self?.setGlobalPlaybackState(true)
         }
-      }
-      return .success
-    }
-
-    commandCenter.pauseCommand.addTarget { [weak self] _ in
-      Logger.audio.debug("AudioManager: Media key pause command received")
-      Task { @MainActor in
+      },
+      pause: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote pause received")
         // Only pause if we're currently playing; remote pauses cut instantly
         // (see Sound.remotePauseFadeDuration).
         if self?.isGloballyPlaying ?? false {
           self?.setGlobalPlaybackState(false, pauseFadeDuration: Sound.remotePauseFadeDuration)
         }
-      }
-      return .success
-    }
-
-    commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
-      Logger.audio.debug("AudioManager: Media key toggle command received")
-      Task { @MainActor in
+      },
+      togglePlayPause: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote toggle play/pause received")
         // Same instant remote pause as pauseCommand (ignored when resuming).
         self?.togglePlayback(pauseFadeDuration: Sound.remotePauseFadeDuration)
-      }
-      return .success
-    }
-  }
+      },
+      next: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote next received")
+        guard let self = self else { return false }
 
-  private func addNavigationCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
-    // Next/Previous track commands for preset navigation
-    commandCenter.nextTrackCommand.addTarget { [weak self] _ in
-      Logger.audio.debug("AudioManager: Next track command received")
-      guard let self = self else { return .commandFailed }
-
-      Task { @MainActor in
         // Quick Mix isn't part of the favorites cycle; solo sounds can be (when
         // favorited), so navigation handles solo itself.
         guard !self.isQuickMix else {
           Logger.audio.debug("AudioManager: Skipping next - in quick mix")
-          return
+          return true
         }
 
         self.navigateToNextPreset()
-      }
-      return .success
-    }
+        return true
+      },
+      previous: { [weak self] in
+        Logger.nowPlaying.debug("AudioManager: remote previous received")
+        guard let self = self else { return false }
 
-    commandCenter.previousTrackCommand.addTarget { [weak self] _ in
-      Logger.audio.debug("AudioManager: Previous track command received")
-      guard let self = self else { return .commandFailed }
-
-      Task { @MainActor in
         // Quick Mix isn't part of the favorites cycle; solo sounds can be (when
         // favorited), so navigation handles solo itself.
         guard !self.isQuickMix else {
           Logger.audio.debug("AudioManager: Skipping previous - in quick mix")
-          return
+          return true
         }
 
         self.navigateToPreviousPreset()
+        return true
       }
-      return .success
-    }
+    )
   }
 
   /// Destinations the lock-screen / CarPlay next & previous commands cycle
@@ -123,16 +85,18 @@ extension AudioManager {
   private var navigableItems: [NavigableItem] {
     let presets = PresetManager.shared.presets
     return GlobalSettings.shared.starredItems.compactMap { token in
-      if GlobalSettings.soloFileName(fromToken: token) != nil {
-        return sound(forSoloToken: token).map { NavigableItem.solo($0) }
-      }
-      switch token {
-      case GlobalSettings.allSoundsToken:
+      switch PlayableItem(token: token) {
+      case .solo(let fileName):
+        return sound(fileName: fileName).map { NavigableItem.solo($0) }
+      case .allSounds:
         return presets.first { $0.isDefault }.map { NavigableItem.preset($0) }
-      case GlobalSettings.quickMixToken:
+      case .quickMix:
+        // Quick Mix isn't part of the favorites navigation cycle.
         return nil
-      default:
-        return presets.first { $0.id.uuidString == token }.map { NavigableItem.preset($0) }
+      case .preset(let id):
+        return presets.first { $0.id == id }.map { NavigableItem.preset($0) }
+      case nil:
+        return nil
       }
     }
   }
@@ -166,8 +130,12 @@ extension AudioManager {
       }
       Logger.audio.debug("AudioManager: Navigating to preset: \(preset.name)")
       do {
-        try PresetManager.shared.applyPreset(preset)
-        if isGloballyPlaying {
+        // Respect the current play/pause state, so skipping onto a preset while
+        // paused doesn't start playback (matches solo navigation below).
+        // An application starts the new mix itself. Playing here would start the old one.
+        let wasPlaying = isGloballyPlaying
+        let started = try PresetManager.shared.applyPreset(preset, autoPlay: wasPlaying)
+        if wasPlaying, !started {
           setGlobalPlaybackState(true)
         }
       } catch {
@@ -177,8 +145,7 @@ extension AudioManager {
       }
     case .solo(let sound):
       Logger.audio.debug("AudioManager: Navigating to solo sound: \(sound.title)")
-      // Respect the current play/pause state, matching preset navigation —
-      // skipping onto a solo favorite while paused shouldn't start playback.
+      // Respect the current play/pause state, matching preset navigation.
       enterSoloMode(for: sound, startPlaying: isGloballyPlaying)
     }
   }
@@ -219,13 +186,9 @@ extension AudioManager {
   /// one favorite; otherwise any favorite is a valid destination. Quick Mix is
   /// never part of the cycle.
   func updateNextPreviousCommandState() {
-    let commandCenter = MPRemoteCommandCenter.shared()
-    let enableNextPrev = canNavigateNextPrevious
-
-    commandCenter.nextTrackCommand.isEnabled = enableNextPrev
-    commandCenter.previousTrackCommand.isEnabled = enableNextPrev
-
-    Logger.audio.debug(
-      "AudioManager: Next/Previous commands \(enableNextPrev ? "enabled" : "disabled")")
+    // Optional-chained: before the launch bootstrap installs the backend there
+    // is nothing to enable, and `setupMediaControls()` recomputes this the
+    // moment it arrives.
+    nowPlayingManager?.setNavigationCommandsEnabled(canNavigateNextPrevious)
   }
 }

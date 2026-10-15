@@ -27,7 +27,7 @@ import Testing
     timer.stopTimer()
     audioManager.isGloballyPlaying = false
   }
-  deinit {
+  isolated deinit {
     timer.stopTimer()
     timer.now = { Date() }  // restore the real clock for other suites
     audioManager.isGloballyPlaying = false
@@ -138,5 +138,24 @@ import Testing
     #expect(timer.isTimerActive, "the re-armed timer stays active")
     #expect(
       audioManager.isGloballyPlaying, "the stale expiry task must not pause the new session")
+  }
+
+  /// "+ time" pressed at the instant of expiry (after the deferred pause was
+  /// queued) must cancel that pause, like a re-arm does.
+  @Test func addTimeBeforeDeferredPauseIsNotCancelled() async {
+    let t0 = Date(timeIntervalSince1970: 9000)
+    timer.now = { t0 }
+    audioManager.isGloballyPlaying = true
+
+    timer.startTimer(duration: 600)
+    timer.now = { t0.addingTimeInterval(601) }
+    timer.tick()  // dispatches the expiry task
+    timer.addTime(minutes: 5)
+
+    for _ in 0..<100 { await Task.yield() }
+
+    #expect(timer.isTimerActive, "the extended timer stays active")
+    #expect(isClose(timer.remainingTime, 299, tol: 1.0))
+    #expect(audioManager.isGloballyPlaying, "the queued expiry must not pause the extension")
   }
 }

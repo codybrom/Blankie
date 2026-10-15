@@ -18,7 +18,7 @@ import os
 
 extension CustomSoundManager {
   /// AAC bit rate for runtime conversion, matching the built-in library.
-  static let conversionBitRate = 192_000
+  nonisolated static let conversionBitRate = 192_000
 
   /// Lossy formats we never re-encode. Re-encoding already-compressed audio
   /// loses quality for little or no space saving, so conversion is only offered
@@ -44,7 +44,11 @@ extension CustomSoundManager {
     guard !Self.lossyExtensions.contains(ext.lowercased()) else { return nil }
     guard let currentBytes, currentBytes > 5 * 1024 * 1024 else { return nil }
     guard let duration, duration > 0 else { return nil }
-    let projected = Int64(Double(Self.conversionBitRate) / 8.0 * duration)
+    // A malformed file's duration can be infinite, and Int64(_:) traps on it.
+    guard
+      let projected = Int64(
+        exactly: (Double(Self.conversionBitRate) / 8.0 * duration).rounded(.down))
+    else { return nil }
     let estimate = CompressionEstimate(currentBytes: currentBytes, projectedBytes: projected)
     guard estimate.savedFraction > 0.5 else { return nil }
     return estimate
@@ -82,8 +86,9 @@ extension CustomSoundManager {
     }
 
     let beforeBytes = fileSize(at: sourceURL)
-    let tempURL = dir.appendingPathComponent("\(data.fileName)-aac-tmp.m4a")
-    try? FileManager.default.removeItem(at: tempURL)
+    // Unique per run, so a second conversion of the same sound can never unlink (or
+    // swap in) this run's half-written file.
+    let tempURL = dir.appendingPathComponent("\(data.fileName)-aac-\(UUID().uuidString).m4a")
 
     do {
       try await Self.transcodeToAAC(source: sourceURL, destination: tempURL)
@@ -100,6 +105,13 @@ extension CustomSoundManager {
     guard afterBytes > 0, afterBytes < beforeBytes else {
       try? FileManager.default.removeItem(at: tempURL)
       return .failure(.noSavings)
+    }
+
+    // The sound may have been deleted during the transcode. If so, don't move an
+    // orphan file into place or save the deleted model.
+    guard getCustomSound(by: soundDataID) != nil else {
+      try? FileManager.default.removeItem(at: tempURL)
+      return .failure(.soundNotFound)
     }
 
     // Release the live player before replacing the file so its handle is dropped
@@ -148,9 +160,8 @@ extension CustomSoundManager {
       // (keyed by the unchanged file name).
       await liveSound.reanalyzeAudio()
     } else {
-      // Not currently loaded — fall back to a full reload so the record's new
-      // extension is picked up.
-      AudioManager.shared.loadCustomSounds()
+      // No instance yet. Load just this one so the others aren't rebuilt.
+      AudioManager.shared.loadCustomSoundsByIds([soundDataID])
     }
 
     Logger.sounds.debug(
@@ -168,7 +179,7 @@ extension CustomSoundManager {
   /// Streaming keeps memory bounded for long files. Stateless (no instance use)
   /// so it can run off the main actor without sending `self` across the boundary.
   /// Reused by importSound to force oversized imports to AAC.
-  static func transcodeToAAC(source: URL, destination: URL) async throws {
+  @concurrent static func transcodeToAAC(source: URL, destination: URL) async throws {
     let asset = AVURLAsset(url: source)
     guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
       throw ConversionError.noAudioTrack

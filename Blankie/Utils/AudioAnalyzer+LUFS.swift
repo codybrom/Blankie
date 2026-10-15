@@ -11,7 +11,9 @@ import os
 
 extension AudioAnalyzer {
 
-  static func analyzeLUFS(at url: URL) async -> (lufs: Float, normalizationFactor: Float)? {
+  @concurrent static func analyzeLUFS(at url: URL) async -> (
+    lufs: Float, normalizationFactor: Float
+  )? {
     do {
       // First run basic audio analysis for debugging
       Logger.app.debug("AudioAnalyzer: Starting LUFS analysis for \(url.lastPathComponent)")
@@ -45,7 +47,7 @@ extension AudioAnalyzer {
     }
   }
 
-  static func processAudioFileForLUFS(_ file: AVAudioFile) async throws -> [Float] {
+  nonisolated static func processAudioFileForLUFS(_ file: AVAudioFile) async throws -> [Float] {
     let format = file.processingFormat
     let channelCount = format.channelCount
     let chunkSize: AVAudioFrameCount = 48000
@@ -59,7 +61,9 @@ extension AudioAnalyzer {
     let filterCoefficients = getKWeightingCoefficients()
 
     while position < file.length {
-      let framesToRead = min(chunkSize, AVAudioFrameCount(file.length - position))
+      // Clamp before narrowing, since the remainder alone can exceed UInt32.
+      let framesToRead = AVAudioFrameCount(
+        min(AVAudioFramePosition(chunkSize), file.length - position))
 
       guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: framesToRead) else {
         position += AVAudioFramePosition(framesToRead)
@@ -85,7 +89,7 @@ extension AudioAnalyzer {
     return measurements
   }
 
-  static func processAudioChunk(
+  nonisolated static func processAudioChunk(
     _ buffer: AVAudioPCMBuffer,
     channelCount: UInt32,
     filterCoefficients: KWeightingCoefficients
@@ -119,7 +123,7 @@ extension AudioAnalyzer {
     return loudness
   }
 
-  static func calculateIntegratedLUFS(from measurements: [Float]) -> Float? {
+  nonisolated static func calculateIntegratedLUFS(from measurements: [Float]) -> Float? {
     // Debug: Log measurement statistics
     if !measurements.isEmpty {
       let minMeasurement = measurements.min() ?? -999

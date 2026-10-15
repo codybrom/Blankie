@@ -81,7 +81,8 @@ private enum IPhonePage: Hashable {
         ) {
           NowPlayingSheet(
             onDismiss: { showingNowPlaying = false },
-            backgroundImage: backgroundImage
+            backgroundImage: backgroundImage,
+            onNavigateToSolo: { swapNowPlaying(showSheet: false) }
           )
         }
       )
@@ -240,7 +241,9 @@ private enum IPhonePage: Hashable {
         // this, iPad at regular horizontal size shows no play/pause at all
         // (compact width falls back to iPhoneLayout, which does include it).
         .nowPlayingBottomBar {
-          nowPlayingBar
+          if !hidesNowPlayingBarForSolo {
+            nowPlayingBar
+          }
         }
       }
       .navigationSplitViewStyle(.balanced)
@@ -267,7 +270,9 @@ private enum IPhonePage: Hashable {
       // Attached to the stack, not a page, so the bar persists across the
       // Library root and the pushed mixer.
       .nowPlayingBottomBar {
-        nowPlayingBar
+        if !hidesNowPlayingBarForSolo {
+          nowPlayingBar
+        }
       }
     }
 
@@ -277,6 +282,28 @@ private enum IPhonePage: Hashable {
     /// detail — it expands Now Playing.
     private var barShowsMixer: Bool {
       !isLargeDevice && iPhonePath.isEmpty
+    }
+
+    /// Hide the bottom mini player while the mixer is showing the big solo card
+    /// — the card already is the now-playing surface, so the bar would just echo
+    /// the same sound. It stays everywhere else: the iPhone Library root
+    /// (`barShowsMixer`), Quick Mix, and normal preset playback.
+    private var hidesNowPlayingBarForSolo: Bool {
+      soloLayoutSound != nil && !barShowsMixer
+    }
+
+    /// Cross between a solo sound (inline player) and a preset (modal sheet) via
+    /// next/previous. The two layouts are lined up, so swap instantly (no zoom or
+    /// slide) — it reads as the content simply changing rather than a full sheet
+    /// present/dismiss. When returning to a solo sound, make the mixer the page
+    /// behind the sheet so it lands on the solo sound's inline page.
+    private func swapNowPlaying(showSheet: Bool) {
+      var transaction = Transaction()
+      transaction.disablesAnimations = true
+      withTransaction(transaction) {
+        if !showSheet { iPhonePath = [.mixer] }
+        showingNowPlaying = showSheet
+      }
     }
 
     /// Mini player pinned above the bottom safe area; the zoom transition into
@@ -411,19 +438,19 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     func soloModeView(for soloSound: Sound) -> some View {
-      VStack {
-        Spacer()
-        SoloSoundIcon(sound: soloSound)
-          .transition(
-            .asymmetric(
-              insertion: .scale.combined(with: .opacity),
-              removal: .scale.combined(with: .opacity)
-            )
-          )
-        Spacer()
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .padding()
+      // The solo sound IS the now-playing surface: render the full Now Playing
+      // player inline (square artwork, name, caption, transport, volume,
+      // actions) instead of a separate sheet. If next/previous navigates onto a
+      // preset (leaving solo), open the full Now Playing sheet for it rather than
+      // dropping back to the grid.
+      NowPlayingSheet(inline: true, onNavigateToPreset: { swapNowPlaying(showSheet: true) })
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Source the sheet's zoom transition from the inline solo player (the
+        // mini-player, the usual source, is hidden during solo). Presenting or
+        // dismissing the preset sheet then morphs to/from this player instead of
+        // sliding. The two are never on screen together, so the id is unambiguous.
+        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+        .transition(.opacity)
     }
 
     // MARK: - List View

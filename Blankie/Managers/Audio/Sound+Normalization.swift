@@ -132,6 +132,7 @@ extension Sound {
         Logger.sounds.error(
           "Sound: Failed to save re-analysis for '\(self.fileName, privacy: .public)': \(error, privacy: .public)"
         )
+        ErrorReporter.shared.report(error)
       }
     }
 
@@ -212,6 +213,7 @@ extension Sound {
           Logger.sounds.error(
             "Sound: Failed to save LUFS data for '\(soundFileName, privacy: .public)': \(error, privacy: .public)"
           )
+          ErrorReporter.shared.report(error)
         }
       }
     } else {

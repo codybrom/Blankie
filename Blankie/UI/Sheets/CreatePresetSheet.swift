@@ -298,12 +298,7 @@ extension CreatePresetSheet {
 
         // Leave solo/Quick Mix first, like a Library row tap, so the prior
         // mix doesn't linger as the current selection.
-        if audioManager.soloModeSound != nil {
-          audioManager.exitSoloModeWithoutResuming()
-        }
-        if audioManager.isQuickMix {
-          audioManager.exitQuickMix()
-        }
+        audioManager.leaveTransientModes()
         try presetManager.applyPreset(newPreset)
         await MainActor.run {
           didCreatePreset = true

@@ -393,7 +393,7 @@ func cmdFix(_ args: [String]) {
   var fadeIn = [Float](repeating: 0, count: xf)
   var fadeOut = [Float](repeating: 0, count: xf)
   for i in 0..<xf {
-    let t = Double(i) / Double(xf - 1) * (.pi / 2)
+    let t = Double(i) / Double(max(xf - 1, 1)) * (.pi / 2)  // xf == 1 would be 0/0
     fadeIn[i] = Float(sin(t))
     fadeOut[i] = Float(cos(t))
   }

@@ -22,6 +22,16 @@ enum PresetPreviewReader {
     let creator: String?
     let soundCount: Int
     let artworkData: Data?
+    /// The preset's accent-color token (`"teal"`, `"indigo"`, …) or `nil` to
+    /// follow the app default. Resolved to a `Color` in the view.
+    let accentColorName: String?
+    /// SF Symbols for the preset's selected sounds, in order, so the no-artwork
+    /// fallback can render the same sound montage the app shows. Empty falls
+    /// back to the Blankie mark.
+    let iconNames: [String]
+    /// The exported default preset ("All Blankie Sounds"), which always shows
+    /// the brand mark rather than a montage.
+    let isDefault: Bool
   }
 
   /// Cap on a single decompressed *entry* — not the whole archive. The preview
@@ -64,13 +74,61 @@ enum PresetPreviewReader {
       }
     }
 
+    let selected = preset.soundStates.filter(\.isSelected)
     let creator = preset.creatorName?.trimmingCharacters(in: .whitespacesAndNewlines)
     return PresetInfo(
       name: preset.name,
       creator: (creator?.isEmpty == false) ? creator : nil,
-      soundCount: preset.soundStates.filter(\.isSelected).count,
-      artworkData: artworkData
+      soundCount: selected.count,
+      artworkData: artworkData,
+      accentColorName: preset.accentColorName,
+      iconNames: resolveIcons(for: selected, in: archive),
+      isDefault: preset.isDefault ?? false
     )
+  }
+
+  /// Resolve each selected sound to its SF Symbol, in preset order, so the
+  /// no-artwork fallback shows the preset's own sounds. Mirrors the app's icon
+  /// precedence: a per-preset icon override wins, then a custom sound's own
+  /// icon, then the built-in catalog. Sounds we can't map are dropped rather
+  /// than shown as a generic placeholder.
+  private static func resolveIcons(
+    for selected: [ArchivedSoundState], in archive: Archive
+  ) -> [String] {
+    var overrides: [String: String] = [:]  // baseName -> customIconName
+    var customIcons: [String: String] = [:]  // baseName -> systemIconName
+    if let data = entryData(in: archive, path: "sounds/metadata.json"),
+      let manifest = try? JSONDecoder().decode(ArchivedSoundsManifest.self, from: data)
+    {
+      for sound in manifest.customSounds {
+        if let icon = sound.systemIconName { customIcons[baseName(sound.fileName)] = icon }
+      }
+      for custom in manifest.builtInCustomizations {
+        if let icon = custom.customIconName { overrides[baseName(custom.fileName)] = icon }
+      }
+    }
+
+    return selected.compactMap { state in
+      let key = baseName(state.fileName)
+      return overrides[key]
+        ?? customIcons[key]
+        ?? BuiltInSoundIcons.icon(for: key)
+    }
+  }
+
+  /// A sound's file name reaches the fallback in two forms: a preset's
+  /// `soundStates` reference both built-ins and custom sounds by their base name
+  /// (no extension), while `sounds/metadata.json` stores custom sounds *with*
+  /// the extension (and legacy presets may carry a built-in's extension). Strip
+  /// a known audio extension so both sides key on the same base name.
+  private static let audioExtensions: Set<String> = [
+    "m4a", "mp3", "wav", "aif", "aiff", "flac", "ogg", "opus", "caf", "aac", "au",
+  ]
+
+  private static func baseName(_ fileName: String) -> String {
+    let ext = (fileName as NSString).pathExtension.lowercased()
+    guard !ext.isEmpty, audioExtensions.contains(ext) else { return fileName }
+    return (fileName as NSString).deletingPathExtension
   }
 
   /// Extract a single archive entry into memory without unpacking the whole zip,
@@ -95,8 +153,28 @@ private struct ArchivedPreset: Decodable {
   let name: String
   let creatorName: String?
   let soundStates: [ArchivedSoundState]
+  let accentColorName: String?
+  let isDefault: Bool?
 }
 
 private struct ArchivedSoundState: Decodable {
+  let fileName: String
   let isSelected: Bool
+}
+
+/// A subset of the app's `SoundsManifest` (`sounds/metadata.json`), read only
+/// for the sounds' icons.
+private struct ArchivedSoundsManifest: Decodable {
+  let customSounds: [ArchivedCustomSound]
+  let builtInCustomizations: [ArchivedCustomization]
+
+  struct ArchivedCustomSound: Decodable {
+    let fileName: String
+    let systemIconName: String?
+  }
+
+  struct ArchivedCustomization: Decodable {
+    let fileName: String
+    let customIconName: String?
+  }
 }

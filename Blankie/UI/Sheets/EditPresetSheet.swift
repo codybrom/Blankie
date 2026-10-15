@@ -644,13 +644,7 @@ extension EditPresetSheet {
     // Get existing sound states for this preset
     let existingSoundStates = preset.soundStates
 
-    // Use soundOrder state variable, filtering to only include currently selected sounds
-    let validOrder = soundOrder.filter { selectedSounds.contains($0) }
-    // Add any newly selected sounds that aren't in the order yet
-    let newSounds = selectedSounds.filter { !validOrder.contains($0) }
-    let orderedFileNames = validOrder + newSounds.sorted()
-
-    let states: [PresetState] = orderedFileNames.compactMap { fileName -> PresetState? in
+    let states: [PresetState] = orderedSelectedFileNames.compactMap { fileName -> PresetState? in
       guard let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) else {
         return nil
       }
@@ -717,6 +711,9 @@ extension EditPresetSheet {
     }
     PresetStorage.saveCustomPresets(customPresets)
     Logger.ui.debug("EditPresetSheet: Presets saved directly without state override")
+    // This bypasses savePresets, so refresh the Siri/Spotlight names and widgets it would.
+    presetManager.refreshDiscoverableEntitiesIfNeeded()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   private func deletePreset(_ preset: Preset) {
