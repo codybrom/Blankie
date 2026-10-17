@@ -3,7 +3,7 @@ title: "Create and Theme Presets"
 description: "Save your favorite ambient sound mixes as presets in Blankie, then give each one its own artwork and accent color. Create, edit, theme, favorite, and switch soundscapes for focus and sleep."
 category: "presets"
 order: 20
-updated: 2026-06-20
+updated: 2026-10-17
 platforms: "All Platforms"
 ---
 
@@ -35,17 +35,18 @@ The built-in default preset can't be renamed or deleted, but it'll still take cu
 
 ## Add artwork
 
-Open the preset's edit sheet (right-click → **Edit Preset** on Mac, touch and hold on iPhone and iPad) and use the **Artwork** row to pick an image.
+Open the preset's edit sheet (right-click → **Edit Preset** on Mac, touch and hold on iPhone and iPad). In **Artwork**, select the **Background** tile labeled **Add Image** to choose a photo. To replace it, select the tile again; use its remove button to clear the photo.
 
-That image follows the preset wherever it goes:
+The background image follows the preset wherever it goes:
 
-- The **Now Playing** screen and your **lock screen** while the preset is playing
+- The **Now Playing** screen and **Lock Screen** still artwork while the preset is playing
+- The backdrop behind the mixer on Mac, iPhone and iPad
 - The preset's thumbnail in your Library
 - **CarPlay**, where artwork makes a preset easy to spot at a glance
 
-On iPhone and iPad you can choose **animated artwork** instead, a gently moving scene that plays on your lock screen in place of a still image.
+On iPhone and iPad, the separate **Lock Screen** tile lets you browse animated artwork. You can keep both a background photo and an animation. If you choose an animation without a background photo, its still preview also supplies the mixer backdrop. Remove the animation with the Lock Screen tile's remove button.
 
-<!-- image-todo: iPhone frame, dark mode. Open the edit sheet for a preset named "Rainy Night" (touch and hold the preset, then Edit Preset). Show the Artwork row near the top with a custom image set (a dim rain-on-window photo), and the Customize Theme section below with the Accent Color swatch set to a deep blue, the View Mode control, and the Background Blur toggle visible. Include the animated artwork option if it fits. Crop to the sheet; no home indicator clutter. -->
+<!-- image-todo: iPhone frame, dark mode. Open the edit sheet for a preset named "Rainy Night" (touch and hold the preset, then Edit Preset). Show the Background and Lock Screen tiles near the top with a custom background image set (a dim rain-on-window photo), and the Customize Theme section below with the Accent Color swatch set to a deep blue and the View Mode control visible. Include the animated artwork option if it fits. Crop to the sheet; no home indicator clutter. -->
 
 ## Customize Theme
 
@@ -53,9 +54,10 @@ The **Customize Theme** section takes over from your default theme whenever the 
 
 - **Accent Color**: a color that tints the whole app while this preset plays (all platforms)
 - **View Mode**: lock the preset to a Grid or List layout (iPhone and iPad)
-- **Background Blur**: decide whether the artwork backdrop is blurred (iPhone and iPad)
 
 Leave a toggle off and the preset just follows your app-wide settings.
+
+On iPhone and iPad, **Blur Background Images** is an app-wide setting in **Settings**, rather than a per-preset control. The Mac also displays a dimmed artwork backdrop, but has no blur toggle in Settings.
 
 <!-- image-todo: iPhone frame, dark mode. Now Playing screen for the "Rainy Night" preset, playing rain and ocean waves. The preset's custom artwork fills the blurred background, and the accent color is a deep blue so the play controls, sliders, and active sound tints clearly read blue (distinct from the default app accent). Show the preset name. Crop to the Now Playing view. -->
 
@@ -64,6 +66,8 @@ Leave a toggle off and the preset just follows your app-wide settings.
 Tap the **star** {{icon:star}} on any preset row to drop it into the **Favorites** section, which lives at the top of your Library. You can reorder favorites in Edit mode, and they're also the presets that come up first in [CarPlay](https://support.apple.com/guide/iphone/intro-to-carplay-iphf33a514c9/ios).
 
 <!-- image-todo: iPad app, dark mode, showing the sidebar Library. A section header reading Favorites sits at the top containing two starred presets (Ocean Sleep, Rain Focus), each row showing a filled star icon. Below it, the Presets section header holds the remaining presets (Coffee Shop plus the built-in default preset labeled All Blankie Sounds), each with an outline (unfilled) star. Show both section headers so the Favorites grouping is clearly separate from the Presets list. No sheet open. -->
+
+Use a preset from a [Home Screen widget, Siri or Shortcuts](/guides/control-blankie-anywhere/) when you want it within reach outside the app.
 
 ## Related guides
 

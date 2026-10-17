@@ -497,8 +497,8 @@ struct SettingsView: View {
           }
 
           // App-wide blur for the preset background artwork. All-or-nothing: on
-          // applies `defaultBackgroundBlurRadius`, off is no blur. (The macOS
-          // window doesn't use a blurred backdrop, so it's iOS-only.)
+          // applies `defaultBackgroundBlurRadius`, off is no blur. This toggle
+          // is iOS-only. The Mac backdrop also reads the saved blur radius.
           Toggle(
             isOn: Binding(
               get: { globalSettings.backgroundBlurRadius > 0 },

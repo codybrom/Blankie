@@ -64,13 +64,25 @@ To rename or delete a preset, right-click it on Mac (or touch and hold on iPhone
 **Play/Pause:** The main play/pause button at the bottom center controls all selected sounds simultaneously. You can also:
 
 - Use media keys on your keyboard
-- Control from the Now Playing widget in your menubar
+- Use the system Now Playing control in the macOS menu bar
 - Control directly from AirPods and other compatible headphones
+- Use Blankie's Home Screen widgets on iPhone and iPad
+- Say "Play Blankie" or "Pause Blankie" to Siri on iPhone and iPad, or use Blankie actions in Shortcuts
 
 **Volume:**
 
 - Use individual sliders for each sound
 - Access the "All Sounds" volume slider from the controls bar (speaker icon) to blend with other apps
+
+### What widgets does Blankie have?
+
+On iPhone and iPad, add **Now Playing**, **Favorites**, **Pinned Sound** or **Quick Mix** from the Home Screen widget gallery. Favorites and Quick Mix offer medium and large sizes; Now Playing and Pinned Sound are small. Edit the Pinned Sound widget to choose either a preset or a sound.
+
+### Can I use Blankie with Siri and Shortcuts?
+
+Yes. On iPhone and iPad, try "Play Blankie," "Play [preset name] in Blankie," or "Start a sleep timer in Blankie." Play Sound adds the sound to the current mix, including the saved preset when one is active.
+
+Blankie's actions are also available in Shortcuts on Mac, iPhone and iPad. You can control playback, choose presets and sounds, set a sleep timer, and adjust volume. On iPhone and iPad, the overall Set Volume action requires **Mix with Other Audio** in Settings; individual sound volumes can be set separately. Spotlight can find your presets and sounds on all three platforms.
 
 ### Where can I find keyboard shortcuts for Mac?
 

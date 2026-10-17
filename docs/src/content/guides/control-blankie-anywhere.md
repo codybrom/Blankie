@@ -1,9 +1,9 @@
 ---
 title: "Control Blankie from Anywhere"
-description: "Play and pause Blankie without opening the app. Media keys, AirPods, the lock screen, Control Center, the macOS menu bar, and CarPlay all work."
+description: "Control Blankie with widgets, Siri, Shortcuts, Spotlight, headphones, media keys, the Lock Screen, Control Center and CarPlay."
 category: "basics"
 order: 41
-updated: 2026-06-28
+updated: 2026-10-17
 platforms: "All Platforms"
 ---
 
@@ -23,6 +23,44 @@ Blankie hooks into the system's Now Playing controls. Once your soundscape is go
 - **Control Center**: the [Now Playing tile](https://support.apple.com/guide/iphone/use-the-music-player-controls-iph676daac9b/ios) plays and pauses your mix from anywhere.
 
 <!-- image-todo: iPhone, dark mode, in an iPhone device frame. Show the iOS lock screen with Blankie as the active Now Playing source at a late hour: preset name shown as the track title (use a real preset name like 'Rainy Day'), the preset's calm artwork filling the media area, and the standard lock-screen transport controls (play/pause, skip). Blankie should be playing a calm mix (rain plus crackling fireplace). Show the full lock screen including clock and date for context; the time should read late (after 10 p.m.) so the same shot also reads as an overnight sleep scene. No personal notifications visible. -->
+
+## Home Screen widgets on iPhone and iPad
+
+Touch and hold an empty area of your Home Screen, open the widget gallery, and search for **Blankie**. Choose from four widgets:
+
+| Widget | What it does | Sizes |
+| --- | --- | --- |
+| **Now Playing** | Shows the current sound or mix, with play/pause controls | Small |
+| **Favorites** | Plays your starred presets and sounds | Medium, large |
+| **Pinned Sound** | Keeps one preset or sound ready to play | Small |
+| **Quick Mix** | Toggles your Quick Mix sounds on and off | Medium, large |
+
+After adding **Pinned Sound**, touch and hold it, choose **Edit Widget**, and select a preset or sound. For Favorites, star the items you want in Blankie; for Quick Mix, choose your Quick Mix sounds in the app.
+
+## Siri on iPhone and iPad
+
+Try these English phrases:
+
+- "Play Blankie" or "Resume Blankie"
+- "Pause Blankie" or "Stop Blankie"
+- "Play [preset name] in Blankie"
+- "Play Rain sounds in Blankie"
+- "Start a sleep timer in Blankie"
+- "Cancel Blankie sleep timer"
+
+**Play Sound** adds a sound to your current mix and starts playback. If a custom preset is active, the sound becomes part of that saved preset. **Play Preset** switches to the preset you name. To pause without clearing your mix, say "Pause Blankie."
+
+The [sleep timer guide](/guides/sleep-timer/) covers the timer actions.
+
+## Shortcuts on Mac, iPhone and iPad
+
+In the **Shortcuts** app, add an action and search for **Blankie**. Actions include Play, Pause, Toggle Playback, Play Preset, Play Sound, Start/Stop Sleep Timer, Set Volume and Set Sound Volume. Choose a preset or sound in the action's picker, then combine it with other steps in your shortcut.
+
+On iPhone and iPad, **Set Volume** requires **Mix with Other Audio** to be enabled in Blankie's Settings. Otherwise, use your device's volume buttons. **Set Sound Volume** adjusts an individual sound's mix level.
+
+## Spotlight on Mac, iPhone and iPad
+
+Search Spotlight for the name of a preset or sound to find Blankie results. Sounds marked for preset use only are excluded. To start a specific preset or sound, use its widget, Siri phrase or Shortcuts action.
 
 ## From your headphones
 

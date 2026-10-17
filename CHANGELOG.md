@@ -14,8 +14,8 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 ### Added
 
 - **Home Screen widgets (iPhone and iPad)** - Put Blankie on your Home Screen. Now Playing shows what's on with play controls, Favorites and Quick Mix start a mix in a tap, and a Pinned Sound widget plays a preset or sound you choose.
-- **Siri, Shortcuts, and Spotlight** - Ask Siri to play a preset or sound, build your own Shortcuts around Blankie's actions (play, pause, toggle playback, presets, sounds, sleep timers, and volume), and find your presets and sounds in Spotlight search. Siri phrases are localized for supported languages.
-- **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description. The subtitle shows when you play a sound by itself and when you select sounds for a preset. Descriptions and subtitles are translated into supported languages.
+- **Siri, Shortcuts, and Spotlight** - Ask Siri on iPhone and iPad to play a preset or sound. On Mac, iPhone and iPad, build your own Shortcuts around Blankie's actions (play, pause, toggle playback, presets, sounds, sleep timers, and volume), and find your presets and sounds in Spotlight search. Siri phrases are localized for supported languages.
+- **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description. The subtitle shows when you play a sound by itself, select sounds for a preset, or browse Manage Sounds. Descriptions and subtitles are translated into supported languages.
 - **Preset artwork behind the mixer (Mac)** - A preset's background artwork now shows behind your sounds on the Mac, dimmed so the tiles stay readable, the same way it does on iPhone and iPad.
 - **Now Playing on iOS 27, iPadOS 27 and macOS 27** - On the new systems Blankie publishes through Apple's Now Playing framework. The Lock Screen, Control Center, AirPods and CarPlay show the state Blankie declares (paused means paused, the moment you pause it), a countdown bar while a sleep timer runs, and animated Lock Screen artwork, tall on iPhone and square on iPad. On iOS 26 and macOS 26 nothing changes.
 

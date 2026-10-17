@@ -66,7 +66,7 @@ export function softwareAppLd(opts?: { withRating?: boolean }) {
     "@type": "SoftwareApplication",
     name: "Blankie",
     operatingSystem:
-      "iOS 26.0 or later, macOS 26.0 or later, iPadOS 26.0 or later",
+      "iOS 26.4 or later, macOS 26.0 or later, iPadOS 26.4 or later",
     applicationCategory: "Ambient sound mixer",
     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
     ...(opts?.withRating

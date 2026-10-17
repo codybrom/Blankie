@@ -108,6 +108,12 @@ The downloader extension has to be added in Xcode, since it can't be scripted:
 
 `EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE` stays on for local testing. App Store builds pull the packs from App Store Connect, not the bundle. To try packs on device before uploading, build them with `scripts/package_animated_artwork.sh` and follow Apple's [Testing asset packs locally](https://developer.apple.com/documentation/backgroundassets/testing-asset-packs-locally).
 
+## Widget signing and App Group
+
+The `BlankieWidgetExtension` target is embedded in both the iOS and macOS app. It reads the playback snapshot and cached thumbnails from the same App Group as the app; it does not have a separate group.
+
+In Signing & Capabilities, enable the App Group configured by `APP_GROUP_IDENTIFIER` for both the app and the widget's bundle ID, `$(PRODUCT_BUNDLE_IDENTIFIER).BlankieWidget`. Register that widget bundle ID for both platforms. When preparing distribution, check its App Store profiles and the Developer ID profile used for the GitHub/Homebrew Mac build. A correctly signed app alone does not verify the embedded widget's profile.
+
 ## Code Style
 
 - We *try* to follow the [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/)
