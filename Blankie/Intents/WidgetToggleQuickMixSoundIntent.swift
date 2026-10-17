@@ -12,6 +12,8 @@ import AppIntents
 /// Quick Mix with the tapped sound if it isn't already active, or toggles
 /// that sound within an already-active mix.
 struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
+  static var isDiscoverable: Bool { false }
+
   static var title: LocalizedStringResource { "Toggle Quick Mix Sound" }
   static var description: IntentDescription {
     IntentDescription("Adds or removes a sound from Blankie's Quick Mix.")

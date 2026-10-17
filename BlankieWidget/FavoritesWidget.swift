@@ -65,6 +65,7 @@ private struct FavoriteStripItemView: View {
         if isActive {
           RoundedRectangle(cornerRadius: 10, style: .continuous)
             .strokeBorder(.white, lineWidth: 2)
+            .widgetAccentable()
         }
       }
     }
@@ -95,6 +96,7 @@ private struct FavoriteTileView: View {
         if isActive {
           RoundedRectangle(cornerRadius: 12, style: .continuous)
             .strokeBorder(.white, lineWidth: 2)
+            .widgetAccentable()
         }
       }
     }
@@ -107,6 +109,7 @@ private struct FavoriteTileView: View {
 /// the bottom of the widget rather than up top, so the grid above gets the
 /// space instead of splitting it with a second card.
 private struct NowPlayingFooterView: View {
+  @Environment(\.widgetRenderingMode) private var renderingMode
   let playback: WidgetPlaybackState
 
   var body: some View {
@@ -136,9 +139,9 @@ private struct NowPlayingFooterView: View {
       Button(intent: ToggleBlankiePlaybackIntent()) {
         Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
           .font(.system(size: 11, weight: .bold))
-          .foregroundStyle(.black)
+          .foregroundStyle(renderingMode == .accented ? .white : .black)
           .frame(width: 26, height: 26)
-          .background(.white, in: Circle())
+          .background(.white.opacity(renderingMode == .accented ? 0.2 : 1), in: Circle())
       }
       .buttonStyle(.plain)
     }

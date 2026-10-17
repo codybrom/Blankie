@@ -88,6 +88,7 @@ struct BlankieBadge: View {
       .scaledToFit()
       .frame(width: 16, height: 16)
       .foregroundStyle(.white)
+      .widgetAccentable()
   }
 }
 
@@ -205,6 +206,7 @@ struct WidgetArtwork: View {
     if let thumbnailKey, let image = thumbnailImage(forKey: thumbnailKey) {
       image
         .resizable()
+        .widgetAccentedRenderingMode(.fullColor)
         .aspectRatio(contentMode: .fill)
     } else {
       GeometryReader { geometry in

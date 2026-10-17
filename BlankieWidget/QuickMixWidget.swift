@@ -53,6 +53,7 @@ struct QuickMixProvider: TimelineProvider {
 }
 
 private struct QuickMixTileView: View {
+  @Environment(\.widgetRenderingMode) private var renderingMode
   let sound: WidgetQuickMixSound
   let size: CGFloat
   /// The user's real accent (resolved from the entry), so a selected tile
@@ -63,7 +64,12 @@ private struct QuickMixTileView: View {
     Button(intent: WidgetToggleQuickMixSoundIntent(fileName: sound.fileName)) {
       ZStack {
         Circle()
-          .fill(sound.isSelected ? accent : Color.white.opacity(0.08))
+          .fill(
+            sound.isSelected
+              ? (renderingMode == .accented ? Color.white.opacity(0.3) : accent)
+              : Color.white.opacity(0.08)
+          )
+          .widgetAccentable(sound.isSelected)
         Image(systemName: sound.systemIconName)
           .font(.system(size: size * 0.35, weight: .medium))
           .foregroundStyle(.white)
@@ -86,6 +92,7 @@ private struct QuickMixTileView: View {
 /// and the global toggle would pause whatever other preset was playing.
 /// Until then, tapping a sound circle is the way in.
 private struct QuickMixSideControlView: View {
+  @Environment(\.widgetRenderingMode) private var renderingMode
   let showsTransport: Bool
   let isPlaying: Bool
 
@@ -97,9 +104,9 @@ private struct QuickMixSideControlView: View {
         Button(intent: WidgetPlayFavoriteIntent(favoriteToken: GlobalSettings.quickMixToken)) {
           Image(systemName: isPlaying ? "pause.fill" : "play.fill")
             .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(.black)
+            .foregroundStyle(renderingMode == .accented ? .white : .black)
             .frame(width: 26, height: 26)
-            .background(.white, in: Circle())
+            .background(.white.opacity(renderingMode == .accented ? 0.2 : 1), in: Circle())
         }
         .buttonStyle(.plain)
       }
