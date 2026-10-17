@@ -33,7 +33,7 @@ enum NowPlayingDisplay {
     } else if AudioManager.shared.isQuickMix {
       // Quick Mix has no preset of its own; name it explicitly rather than
       // letting it fall through to the generic "Custom Mix".
-      let artistInfo = getArtistInfo(creatorName: creatorName)
+      let artistInfo = soundNameSummary(currentMixSoundTitles())
       return (title: String(localized: "Quick Mix"), artist: artistInfo)
     } else if let name = presetName {
       // Handle special presets
@@ -66,9 +66,11 @@ enum NowPlayingDisplay {
   /// keeps rendering through its fade-out, so filtering on `isPlaying` would
   /// leave it listed after the user turned it off.
   static func currentMixSoundTitles() -> [String] {
-    AudioManager.shared.orderedVisibleSounds(for: PresetManager.shared.currentPreset)
-      .filter { $0.isSelected }
-      .map { $0.localizedTitle }
+    AudioManager.shared.orderedVisibleSounds(
+      for: AudioManager.shared.isQuickMix ? nil : PresetManager.shared.currentPreset
+    )
+    .filter { $0.isSelected }
+    .map { $0.localizedTitle }
   }
 
   /// The one subtitle rule for the lock screen, CarPlay and the widget: the mix's
@@ -112,9 +114,7 @@ enum NowPlayingDisplay {
   static func widgetSubtitle(resolvedCreatorName: String?) -> String? {
     if let soloSound = AudioManager.shared.soloModeSound {
       return soloSound.isCustom ? soloSound.creditedAuthor : nil
-    } else if AudioManager.shared.isQuickMix {
-      return resolvedCreatorName
-    } else if let creator = resolvedCreatorName {
+    } else if let creator = resolvedCreatorName, !AudioManager.shared.isQuickMix {
       return creator
     } else {
       let titles = currentMixSoundTitles()

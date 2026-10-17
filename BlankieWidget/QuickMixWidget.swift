@@ -31,15 +31,22 @@ struct QuickMixEntry: TimelineEntry {
 
 struct QuickMixProvider: TimelineProvider {
   func placeholder(in context: Context) -> QuickMixEntry {
-    QuickMixEntry(date: .now, sounds: [], isActive: false, isPlaying: false, accentColorName: nil)
+    galleryEntry
   }
 
   func getSnapshot(in context: Context, completion: @escaping (QuickMixEntry) -> Void) {
-    completion(entry())
+    completion(context.isPreview ? galleryEntry : entry())
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<QuickMixEntry>) -> Void) {
     completion(Timeline(entries: [entry()], policy: .never))
+  }
+
+  private var galleryEntry: QuickMixEntry {
+    let snapshot = WidgetSnapshot.galleryPreview
+    return QuickMixEntry(
+      date: .now, sounds: snapshot.quickMixSounds, isActive: true, isPlaying: false,
+      accentColorName: snapshot.defaultAccentColorName)
   }
 
   private func entry() -> QuickMixEntry {
@@ -119,31 +126,31 @@ struct QuickMixWidgetEntryView: View {
   @Environment(\.colorScheme) private var colorScheme
   var entry: QuickMixProvider.Entry
 
-  private let columnCount = 4
+  private var columnCount: Int { family == .systemLarge ? 3 : 4 }
   private let gridSpacing: CGFloat = 12
   private let sideControlWidth: CGFloat = 26
   private let hstackSpacing: CGFloat = 10
 
   private var accent: Color { widgetAccentColor(entry.accentColorName) }
 
-  // Largest tile we'd like per family — bigger on large to use its extra
-  // vertical room, since with just 2 rows of sounds a `.systemLarge` canvas
-  // would otherwise leave a dead zone below the grid.
-  private var preferredTileSize: CGFloat { family == .systemLarge ? 108 : 60 }
-
-  // …but clamped to what four columns actually fit in the available width. A
-  // `.systemLarge` widget is no wider than a medium one on iPhone, so a fixed
-  // 108 overflowed and clipped the right column; deriving from the real width
-  // keeps the grid inside the canvas on every device.
-  private func tileSize(fitting width: CGFloat) -> CGFloat {
-    let available =
-      width - sideControlWidth - hstackSpacing - CGFloat(columnCount - 1) * gridSpacing
-    return max(0, min(preferredTileSize, available / CGFloat(columnCount)))
+  /// Fit both dimensions: medium has two rows; large uses three columns
+  /// and up to three rows so its extra height makes the controls larger.
+  private func tileSize(fitting size: CGSize) -> CGFloat {
+    let rows = max(1, (min(entry.sounds.count, 8) + columnCount - 1) / columnCount)
+    let width =
+      size.width - sideControlWidth - hstackSpacing
+      - CGFloat(columnCount - 1) * gridSpacing
+    let height = size.height - CGFloat(rows - 1) * gridSpacing
+    return max(
+      0,
+      min(
+        family == .systemLarge ? 108 : 60,
+        width / CGFloat(columnCount), height / CGFloat(rows)))
   }
 
   var body: some View {
     GeometryReader { geo in
-      let tile = tileSize(fitting: geo.size.width)
+      let tile = tileSize(fitting: geo.size)
       HStack(alignment: .center, spacing: hstackSpacing) {
         if entry.sounds.isEmpty {
           VStack(spacing: 4) {
@@ -162,7 +169,7 @@ struct QuickMixWidgetEntryView: View {
               repeating: GridItem(.fixed(tile), spacing: gridSpacing), count: columnCount),
             spacing: gridSpacing
           ) {
-            ForEach(entry.sounds) { sound in
+            ForEach(Array(entry.sounds.prefix(8))) { sound in
               QuickMixTileView(sound: sound, size: tile, accent: accent)
             }
           }

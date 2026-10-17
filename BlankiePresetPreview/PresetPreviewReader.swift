@@ -67,7 +67,7 @@ enum PresetPreviewReader {
     let preset = try JSONDecoder().decode(ArchivedPreset.self, from: presetData)
 
     var artworkData: Data?
-    for name in ["animatedPreview.jpg", "artwork.jpg"] {
+    for name in ["artwork.jpg", "animatedPreview.jpg"] {
       if let data = entryData(in: archive, path: name) {
         artworkData = data
         break

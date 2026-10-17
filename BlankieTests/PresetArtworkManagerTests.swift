@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import SwiftUI
 import Testing
 
 @testable import Blankie
@@ -40,4 +41,39 @@ struct PresetArtworkManagerTests {
     #expect(rows.first?.id == newId)
     #expect(rows.first?.imageData == newData)
   }
+  /// Animation-only presets must have a still background on both platforms.
+  /// A square preview wins over portrait, while an explicit photo wins over both.
+  @Test func backgroundUsesAnimationStillUnlessPhotoIsSet() async throws {
+    let renderer = ImageRenderer(content: Color.red.frame(width: 8, height: 8))
+    #if canImport(UIKit)
+      let image = try #require(renderer.uiImage)
+      let data = try #require(image.pngData())
+    #else
+      let image = try #require(renderer.nsImage)
+      let data = try #require(image.tiffRepresentation)
+    #endif
+    let path = AnimatedArtworkFileStore.makeRelativePreviewPath(for: UUID(), fileExtension: "png")
+    try AnimatedArtworkFileStore.writeData(data, to: path)
+    defer { AnimatedArtworkFileStore.removeItemIfExists(relativePath: path) }
+    let manager = PresetArtworkManager.shared
+    var preset = PresetFactory.makePreset(
+      animatedArtwork: AnimatedArtworkRef(
+        source: .custom, previewPath: "missing-preview.jpg", squarePreviewPath: path))
+    #expect(await manager.loadBackgroundImageAsync(for: preset) != nil)
+
+    // With no square preview, the saved portrait is still a valid fallback.
+    preset.animatedArtwork?.squarePreviewPath = nil
+    preset.animatedArtwork?.previewPath = path
+    #expect(await manager.loadBackgroundImageAsync(for: preset) != nil)
+
+    let artworkId = UUID()
+    manager.cacheImage(image, for: artworkId)
+    preset.artworkId = artworkId
+    #expect(await manager.loadBackgroundImageAsync(for: preset) === image)
+
+    preset.artworkId = nil
+    preset.animatedArtwork = nil
+    #expect(await manager.loadBackgroundImageAsync(for: preset) == nil)
+  }
+
 }

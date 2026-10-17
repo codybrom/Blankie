@@ -67,9 +67,7 @@ class PresetArtworkManager: ObservableObject {
 
     // Fallback: If no artwork is set, try to use animated artwork's preview image
     if preset.artworkId == nil, let animatedArtwork = preset.animatedArtwork {
-      #if canImport(UIKit)
-        return await loadAnimatedArtworkPreview(animatedArtwork: animatedArtwork, preset: preset)
-      #endif
+      return await loadAnimatedArtworkPreview(animatedArtwork: animatedArtwork, preset: preset)
     }
 
     return nil
@@ -379,52 +377,49 @@ class PresetArtworkManager: ObservableObject {
     }
   }
 
-  #if canImport(UIKit)
-    /// Load preview image from animated artwork as fallback
-    /// Uses square preview for now playing artwork, or falls back to 3:4 preview
-    private func loadAnimatedArtworkPreview(animatedArtwork: AnimatedArtworkRef, preset: Preset)
-      async -> PlatformImage?
-    {
-      // Try square preview first (for now playing artwork)
-      if let squarePath = animatedArtwork.squarePreviewPath {
-        let squareURL = AnimatedArtworkFileStore.absoluteURL(for: squarePath)
-        if FileManager.default.fileExists(atPath: squareURL.path) {
-          if let image = UIImage(contentsOfFile: squareURL.path) {
-            Logger.presets.debug(
-              "PresetArtworkManager: Loaded square preview from Documents: \(squarePath)")
-            return image
-          }
+  /// Load preview image from animated artwork as fallback
+  /// Uses square preview for now playing artwork, or falls back to 3:4 preview
+  private func loadAnimatedArtworkPreview(animatedArtwork: AnimatedArtworkRef, preset: Preset)
+    async -> PlatformImage?
+  {
+    // Try square preview first (for now playing artwork)
+    if let squarePath = animatedArtwork.squarePreviewPath {
+      let squareURL = AnimatedArtworkFileStore.absoluteURL(for: squarePath)
+      if FileManager.default.fileExists(atPath: squareURL.path) {
+        if let image = PlatformImage(contentsOfFile: squareURL.path) {
+          Logger.presets.debug(
+            "PresetArtworkManager: Loaded square preview from Documents: \(squarePath)")
+          return image
         }
       }
-
-      // Check Documents directory for 3:4 preview
-      if let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath {
-        let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
-        if FileManager.default.fileExists(atPath: previewURL.path) {
-          if let image = UIImage(contentsOfFile: previewURL.path) {
-            Logger.presets.debug(
-              "PresetArtworkManager: Loaded 3:4 preview from Documents: \(previewPath)")
-            return image
-          }
-        }
-      }
-
-      // If not cached, try loading from bundle for bundled resources
-      if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
-        let previewName = bundledId
-        if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg") {
-          if let image = UIImage(contentsOfFile: previewURL.path) {
-            Logger.presets.debug(
-              "PresetArtworkManager: Loaded preview from bundle: \(previewName).jpg")
-            return image
-          }
-        }
-      }
-
-      Logger.presets.debug("PresetArtworkManager: No preview image found for animated artwork")
-      return nil
     }
-  #endif
+
+    // Check Documents directory for 3:4 preview
+    if let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath {
+      let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
+      if FileManager.default.fileExists(atPath: previewURL.path) {
+        if let image = PlatformImage(contentsOfFile: previewURL.path) {
+          Logger.presets.debug(
+            "PresetArtworkManager: Loaded 3:4 preview from Documents: \(previewPath)")
+          return image
+        }
+      }
+    }
+
+    // If not cached, try loading from bundle for bundled resources
+    if animatedArtwork.source == .bundled, let bundledId = animatedArtwork.bundledIdentifier {
+      for previewName in ["\(bundledId)Square", bundledId] {
+        if let previewURL = Bundle.main.url(forResource: previewName, withExtension: "jpg"),
+          let image = PlatformImage(contentsOfFile: previewURL.path)
+        {
+          return image
+        }
+      }
+    }
+
+    Logger.presets.debug("PresetArtworkManager: No preview image found for animated artwork")
+    return nil
+  }
 
   // MARK: - App-group file mirror
 

@@ -70,13 +70,18 @@ struct PinnedItemEntry: TimelineEntry {
 
 struct PinnedItemProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> PinnedItemEntry {
-    PinnedItemEntry(date: .now, item: nil, isActive: false, isPlaying: false)
+    PinnedItemEntry(
+      date: .now, item: WidgetSnapshot.galleryPreview.pinnableItems.first,
+      isActive: false, isPlaying: false)
   }
 
   func snapshot(for configuration: PinnedItemConfigurationIntent, in context: Context) async
     -> PinnedItemEntry
   {
-    entry(for: configuration)
+    if context.isPreview, configuration.item == nil {
+      return placeholder(in: context)
+    }
+    return entry(for: configuration)
   }
 
   func timeline(for configuration: PinnedItemConfigurationIntent, in context: Context) async

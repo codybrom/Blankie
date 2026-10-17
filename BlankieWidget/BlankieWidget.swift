@@ -16,11 +16,13 @@ struct NowPlayingEntry: TimelineEntry {
 
 struct NowPlayingProvider: TimelineProvider {
   func placeholder(in context: Context) -> NowPlayingEntry {
-    NowPlayingEntry(date: .now, snapshot: .empty)
+    NowPlayingEntry(date: .now, snapshot: .galleryPreview)
   }
 
   func getSnapshot(in context: Context, completion: @escaping (NowPlayingEntry) -> Void) {
-    completion(NowPlayingEntry(date: .now, snapshot: WidgetStateStore.current()))
+    completion(
+      NowPlayingEntry(
+        date: .now, snapshot: context.isPreview ? .galleryPreview : WidgetStateStore.current()))
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<NowPlayingEntry>) -> Void) {
@@ -29,6 +31,37 @@ struct NowPlayingProvider: TimelineProvider {
     // playback/preset/favorites change (`WidgetStateStore.publish`), so this
     // widget doesn't need a scheduled refresh of its own.
     completion(Timeline(entries: [entry], policy: .never))
+  }
+}
+
+/// Built-in examples for the gallery and redacted placeholders only. Installed
+/// widgets always render the saved snapshot, including genuine empty states.
+extension WidgetSnapshot {
+  static var galleryPreview: WidgetSnapshot {
+    let sounds: [(String, String)] = [
+      ("rain", "cloud.rain"), ("storm", "cloud.bolt.rain"),
+      ("wind", "wind"), ("waves", "water.waves"),
+      ("stream", "humidity"), ("birds", "bird"),
+      ("summer-night", "moon.stars.fill"), ("train", "tram.fill"),
+    ]
+    let favorites = sounds.map { name, icon in
+      WidgetFavorite(
+        token: "solo:\(name)",
+        displayName: NSLocalizedString("sound.\(name)", comment: "Built-in sound name"),
+        systemIconName: icon, thumbnailKey: nil, accentColorName: "blue", subtitle: nil)
+    }
+    return WidgetSnapshot(
+      playback: WidgetPlaybackState(
+        isPlaying: false, title: favorites[0].displayName, subtitle: nil,
+        soundSystemIconNames: [favorites[0].systemIconName], thumbnailKey: nil,
+        activeToken: favorites[0].token, accentColorName: "blue"),
+      favorites: favorites,
+      quickMixSounds: sounds.enumerated().map { index, sound in
+        WidgetQuickMixSound(
+          fileName: sound.0, displayName: favorites[index].displayName,
+          systemIconName: sound.1, isSelected: index < 3)
+      },
+      pinnableItems: favorites, defaultAccentColorName: "blue")
   }
 }
 

@@ -16,11 +16,13 @@ struct FavoritesEntry: TimelineEntry {
 
 struct FavoritesProvider: TimelineProvider {
   func placeholder(in context: Context) -> FavoritesEntry {
-    FavoritesEntry(date: .now, snapshot: .empty)
+    FavoritesEntry(date: .now, snapshot: .galleryPreview)
   }
 
   func getSnapshot(in context: Context, completion: @escaping (FavoritesEntry) -> Void) {
-    completion(FavoritesEntry(date: .now, snapshot: WidgetStateStore.current()))
+    completion(
+      FavoritesEntry(
+        date: .now, snapshot: context.isPreview ? .galleryPreview : WidgetStateStore.current()))
   }
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<FavoritesEntry>) -> Void) {
@@ -181,51 +183,66 @@ struct FavoritesWidgetEntryView: View {
     }
   }
 
-  // `.systemMedium` has roughly 155pt of height total — not enough for a
-  // grid plus a separate now-playing row, which is what made this size look
-  // broken before. Artwork only, single row, no text at all: the active tile
-  // (if any) is marked directly, so there's nothing else to make room for.
   private var mediumBody: some View {
     let shown = Array(entry.snapshot.favorites.prefix(4))
-    return Group {
+    return GeometryReader { geometry in
       if shown.isEmpty {
         EmptyFavoritesView()
       } else {
+        let side = max(
+          0,
+          min(
+            geometry.size.height,
+            (geometry.size.width - CGFloat(shown.count - 1) * 8) / CGFloat(shown.count)))
         HStack(spacing: 8) {
           ForEach(shown) { favorite in
             FavoriteStripItemView(
               favorite: favorite,
               isActive: favorite.token == entry.snapshot.playback.activeToken,
-              isPlaying: entry.snapshot.playback.isPlaying)
+              isPlaying: entry.snapshot.playback.isPlaying
+            )
+            .frame(width: side, height: side)
           }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
     }
-    .padding(10)
   }
 
   private var largeBody: some View {
     let shown = Array(entry.snapshot.favorites.prefix(9))
     return VStack(spacing: 8) {
-      if shown.isEmpty {
-        EmptyFavoritesView()
-      } else {
-        LazyVGrid(
-          columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
-          spacing: 8
-        ) {
-          ForEach(shown) { favorite in
-            FavoriteTileView(
-              favorite: favorite,
-              isActive: favorite.token == entry.snapshot.playback.activeToken,
-              isPlaying: entry.snapshot.playback.isPlaying)
+      GeometryReader { geometry in
+        if shown.isEmpty {
+          EmptyFavoritesView()
+        } else {
+          // Reserve three rows even with fewer favorites, keeping sparse grids
+          // at the top and tile sizes stable as favorites are added. The footer
+          // takes its intrinsic height before this remaining space is measured.
+          let side = max(
+            0,
+            min(
+              (geometry.size.width - 16) / 3, (geometry.size.height - 16) / 3))
+          LazyVGrid(
+            columns: Array(repeating: GridItem(.fixed(side), spacing: 8), count: 3),
+            spacing: 8
+          ) {
+            ForEach(shown) { favorite in
+              FavoriteTileView(
+                favorite: favorite,
+                isActive: favorite.token == entry.snapshot.playback.activeToken,
+                isPlaying: entry.snapshot.playback.isPlaying
+              )
+              .frame(width: side, height: side)
+            }
           }
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
       }
 
       NowPlayingFooterView(playback: entry.snapshot.playback)
+        .fixedSize(horizontal: false, vertical: true)
     }
-    .padding(10)
   }
 }
 

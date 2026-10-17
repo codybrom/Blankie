@@ -161,6 +161,31 @@ import Testing
         == String(localized: "Quick Mix"))
   }
 
+  /// Entering Quick Mix keeps the last preset loaded, but none of its creator
+  /// or membership metadata belongs to the new mix.
+  @Test func quickMixIgnoresPreviousPresetMetadata() {
+    selectTwoSoundsInOrder()
+    let preset = PresetFactory.makePreset(
+      soundStates: [PresetState(fileName: "test-rain", isSelected: true, volume: 0.5)],
+      creatorName: "Ada")
+    PresetManager.shared.setCurrentPreset(preset)
+    audioManager.isQuickMix = true
+
+    #expect(NowPlayingDisplay.currentMixSoundTitles().count == 2)
+    #expect(
+      NowPlayingDisplay.getDisplayInfo(presetName: preset.name, creatorName: "Ada").artist
+        == NowPlayingDisplay.soundNameSummary(NowPlayingDisplay.currentMixSoundTitles()))
+    #expect(
+      NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: "Ada")
+        == NowPlayingDisplay.soundNameSummary(NowPlayingDisplay.currentMixSoundTitles()))
+
+    audioManager.sounds = []
+    #expect(
+      NowPlayingDisplay.getDisplayInfo(presetName: preset.name, creatorName: "Ada").artist
+        == "Blankie")
+    #expect(NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: "Ada") == nil)
+  }
+
   // MARK: - Widget subtitle
 
   /// A creator is a real second line.
