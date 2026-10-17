@@ -19,7 +19,9 @@ enum NowPlayingDisplay {
 
   // MARK: - Title and artist
 
-  static func getDisplayInfo(presetName: String?, creatorName: String? = nil) -> (
+  static func getDisplayInfo(
+    presetName: String?, creatorName: String? = nil, preset: Preset? = nil
+  ) -> (
     title: String, artist: String
   ) {
     // Check if we're in solo mode
@@ -35,10 +37,15 @@ enum NowPlayingDisplay {
       // letting it fall through to the generic "Custom Mix".
       let artistInfo = soundNameSummary(currentMixSoundTitles())
       return (title: String(localized: "Quick Mix"), artist: artistInfo)
+    } else if let preset {
+      return (title: preset.displayName, artist: getArtistInfo(creatorName: creatorName))
     } else if let name = presetName {
-      // Handle special presets
+      // A name-only legacy call has no preset identity; handle its internal
+      // default name while preserving the existing fallback for generated names.
       let displayTitle: String
-      if name != "Default" && !name.starts(with: "Preset ") {
+      if name == "Default" {
+        displayTitle = String(localized: "All Blankie Sounds")
+      } else if !name.starts(with: "Preset ") {
         displayTitle = name
       } else {
         displayTitle = String(localized: "Custom Mix")

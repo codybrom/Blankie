@@ -142,18 +142,34 @@ struct NowPlayingSmallCard<PlayIntent: AppIntent>: View {
   let playIntent: PlayIntent
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
-      HStack(alignment: .top) {
-        WidgetArtwork(
-          thumbnailKey: thumbnailKey, fallbackIcon: fallbackIcon, accentColor: accentColor
-        )
-        .frame(width: 56, height: 56)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
+    // Keep typography and transport readable: reduce decorative artwork first,
+    // then omit the optional second line if the larger text needs the space.
+    ViewThatFits(in: .vertical) {
+      cardContent(artworkSize: 56, spacing: 8, showsSubtitle: true)
+      cardContent(artworkSize: 36, spacing: 6, showsSubtitle: true)
+      cardContent(artworkSize: nil, spacing: 6, showsSubtitle: false)
+    }
+    // WidgetKit supplies the content margins; candidates measure their natural
+    // height before this outer frame fills the widget's available space.
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+  }
 
-        Spacer()
+  private func cardContent(artworkSize: CGFloat?, spacing: CGFloat, showsSubtitle: Bool)
+    -> some View
+  {
+    VStack(alignment: .leading, spacing: spacing) {
+      if let artworkSize {
+        HStack(alignment: .top) {
+          WidgetArtwork(
+            thumbnailKey: thumbnailKey, fallbackIcon: fallbackIcon, accentColor: accentColor
+          )
+          .frame(width: artworkSize, height: artworkSize)
+          .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+          .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
 
-        BlankieBadge()
+          Spacer()
+          BlankieBadge()
+        }
       }
 
       VStack(alignment: .leading, spacing: 0) {
@@ -161,7 +177,7 @@ struct NowPlayingSmallCard<PlayIntent: AppIntent>: View {
           .font(.footnote.weight(.bold))
           .foregroundStyle(.white)
           .lineLimit(1)
-        if let subtitle {
+        if showsSubtitle, let subtitle {
           Text(subtitle)
             .font(.caption2)
             .foregroundStyle(.white.opacity(0.8))
@@ -170,12 +186,15 @@ struct NowPlayingSmallCard<PlayIntent: AppIntent>: View {
       }
 
       Button(intent: playIntent) {
-        HStack(spacing: 5) {
+        ViewThatFits(in: .horizontal) {
+          HStack(spacing: 5) {
+            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+            Text(isPlaying ? "Pause" : "Play")
+              .lineLimit(1)
+          }
           Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-            .font(.system(size: 10, weight: .bold))
-          Text(isPlaying ? "Pause" : "Play")
-            .font(.caption.weight(.bold))
         }
+        .font(.caption.weight(.bold))
         .foregroundStyle(.white)
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
@@ -185,18 +204,9 @@ struct NowPlayingSmallCard<PlayIntent: AppIntent>: View {
         }
       }
       .buttonStyle(.plain)
+      .accessibilityLabel(isPlaying ? Text("Pause") : Text("Play"))
     }
-    // No manual padding: WidgetKit already applies its own default content
-    // margins around every widget's view (system-standard ~16pt) unless the
-    // configuration opts out via `.contentMarginsDisabled()`, which this
-    // doesn't. Adding padding here on top of that stacked two margins,
-    // which is what was pushing the art and badge in from their true edges.
-    //
-    // The frame is still needed: without it the VStack sizes to its own
-    // content (narrower than the widget) and gets centered in the canvas —
-    // the `Spacer()` between art and badge above has nothing to expand into
-    // otherwise.
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    .fixedSize(horizontal: false, vertical: true)
   }
 }
 

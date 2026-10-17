@@ -4654,6 +4654,17 @@
         }
       }
     },
+    "Artwork set" : {
+      "comment" : "Accessibility value for an artwork tile that has a selected image or animation.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artwork set"
+          }
+        }
+      }
+    },
     "Audio engine failed to start" : {
       "comment" : "An error message shown when the audio engine fails to start.",
       "localizations" : {
@@ -17612,6 +17623,17 @@
         }
       }
     },
+    "How many minutes should Blankie play?" : {
+      "comment" : "Spoken prompt asking for the sleep timer duration in minutes.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How many minutes should Blankie play?"
+          }
+        }
+      }
+    },
     "Icon" : {
       "comment" : "Label for the selected icon.",
       "localizations" : {
@@ -23115,6 +23137,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "无广告、无跟踪器、无订阅"
+          }
+        }
+      }
+    },
+    "No artwork" : {
+      "comment" : "Accessibility value for an artwork tile with no selected image or animation.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No artwork"
           }
         }
       }

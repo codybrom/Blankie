@@ -13,7 +13,10 @@ struct StartSleepTimerIntent: AppIntent {
     IntentDescription("Starts a sleep timer that pauses Blankie when it ends.")
   }
 
-  @Parameter(title: "Minutes", description: "Minutes from now", inclusiveRange: (1, 480))
+  @Parameter(
+    title: "Minutes", description: "Minutes from now", inclusiveRange: (1, 480),
+    requestValueDialog: IntentDialog("How many minutes should Blankie play?")
+  )
   var minutes: Int
 
   static var parameterSummary: some ParameterSummary {

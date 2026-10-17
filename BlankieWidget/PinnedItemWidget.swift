@@ -30,7 +30,7 @@ struct PinnableItemEntity: AppEntity {
   }
 }
 
-struct PinnableItemEntityQuery: EntityQuery {
+struct PinnableItemEntityQuery: EntityStringQuery {
   @MainActor
   func entities(for identifiers: [String]) async throws -> [PinnableItemEntity] {
     let items = WidgetStateStore.current().pinnableItems
@@ -40,6 +40,17 @@ struct PinnableItemEntityQuery: EntityQuery {
           id: $0.token, displayName: $0.displayName, systemIconName: $0.systemIconName)
       }
     }
+  }
+
+  @MainActor
+  func entities(matching string: String) async throws -> [PinnableItemEntity] {
+    let query = string.trimmingCharacters(in: .whitespacesAndNewlines)
+    return WidgetStateStore.current().pinnableItems
+      .filter { query.isEmpty || $0.displayName.localizedStandardContains(query) }
+      .map {
+        PinnableItemEntity(
+          id: $0.token, displayName: $0.displayName, systemIconName: $0.systemIconName)
+      }
   }
 
   @MainActor

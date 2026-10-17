@@ -150,7 +150,7 @@
       let resolvedCreatorName = preset?.creatorName ?? pending.creatorName
 
       let displayInfo = NowPlayingDisplay.getDisplayInfo(
-        presetName: resolvedPresetName, creatorName: resolvedCreatorName)
+        presetName: resolvedPresetName, creatorName: resolvedCreatorName, preset: preset)
       Logger.nowPlaying.debug(
         "MediaSessionNowPlaying: publishing title: \(displayInfo.title), subtitle: \(displayInfo.artist)"
       )

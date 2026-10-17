@@ -72,12 +72,25 @@ import Testing
 
   // MARK: - Title
 
-  /// "Default" is the internal name of the built-in preset, never a title.
-  @Test func defaultPresetNameShowsCustomMix() {
+  /// The legacy name-only path uses the same title as the default preset tile.
+  @Test func defaultPresetNameShowsAllBlankieSounds() {
     #expect(
       NowPlayingDisplay.getDisplayInfo(presetName: "Default").title
-        == String(localized: "Custom Mix")
+        == String(localized: "All Blankie Sounds")
     )
+  }
+
+  /// Preset identity determines its display title; a user's name that happens
+  /// to match a legacy placeholder must still be shown verbatim.
+  @Test func presetIdentityDeterminesTitle() {
+    let builtIn = PresetFactory.makePreset(name: "Default", isDefault: true)
+    #expect(
+      NowPlayingDisplay.getDisplayInfo(presetName: builtIn.name, preset: builtIn).title
+        == builtIn.displayName)
+    for name in ["Default", "Preset 3"] {
+      let custom = PresetFactory.makePreset(name: name)
+      #expect(NowPlayingDisplay.getDisplayInfo(presetName: name, preset: custom).title == name)
+    }
   }
 
   /// Auto-generated "Preset N" names are placeholders too.
