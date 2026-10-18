@@ -7,10 +7,9 @@
 
 import AppIntents
 
-/// Siri phrases and Shortcuts app tiles. Auto-discovered by the system at
-/// build time — no Info.plist entry required. PresetManager refreshes the
-/// parameter vocabulary after sounds and presets load, and when names change,
-/// on both iOS and macOS.
+/// Preconfigured Siri phrases and App Shortcut tiles for iOS. Apple does not
+/// support preconfigured App Shortcuts on macOS; the individual App Intent
+/// actions are still available when building custom shortcuts on the Mac.
 struct BlankieShortcuts: AppShortcutsProvider {
   @AppShortcutsBuilder
   nonisolated static var appShortcuts: [AppIntents.AppShortcut] {

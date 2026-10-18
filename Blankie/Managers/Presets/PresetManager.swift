@@ -1031,9 +1031,11 @@ extension PresetManager {
       let signature = (presetPart + ["~"] + soundPart).joined(separator: "|")
       guard signature != lastDiscoverableEntitiesSignature else { return }
       lastDiscoverableEntitiesSignature = signature
-      // App Shortcuts and their entity parameters are supported on both
-      // platforms. This also registers the initial vocabulary after loading.
-      BlankieShortcuts.updateAppShortcutParameters()
+      // Preconfigured App Shortcuts are iOS-only. Individual App Intent
+      // actions and Spotlight entities remain supported on macOS.
+      #if !os(macOS)
+        BlankieShortcuts.updateAppShortcutParameters()
+      #endif
       donateEntitiesToSpotlight()
     #endif
   }
