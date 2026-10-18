@@ -9,10 +9,30 @@ import Foundation
 import SwiftUI
 
 extension AudioManager {
-  /// Rebuilds and republishes the Home Screen widget snapshot. Called from
-  /// the same place `NowPlayingManager` republishes lock-screen info
-  /// (`performNowPlayingUpdate`), so widget state stays in lockstep with it
-  /// instead of drifting via a second set of call sites.
+  /// Publish the requested playback state before an intent returns and WidgetKit
+  /// reloads. System Now Playing backends may wait for a debounce or fade-out;
+  /// the widgets have no such engine requirement. Use the same display rules,
+  /// resolving all fields together so a new mix cannot inherit the old title.
+  @MainActor
+  func publishCurrentWidgetSnapshot() {
+    let preset = PresetManager.shared.currentPreset
+    let overridden = soloModeSound != nil || isQuickMix
+    let display = NowPlayingDisplay.getDisplayInfo(
+      presetName: preset?.name, creatorName: preset?.creatorName, preset: preset)
+    publishWidgetSnapshot(
+      title: display.title,
+      subtitle: NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: preset?.creatorName),
+      isPlaying: isGloballyPlaying,
+      thumbnailKey: overridden
+        ? nil
+        : preset.flatMap {
+          $0.isDefault ? nil : "preset_thumb_\($0.id.uuidString)"
+        },
+      accentColorName: overridden ? nil : preset?.accentColorName)
+  }
+
+  /// Build the shared snapshot for an immediate playback transition or a
+  /// backend metadata refresh. WidgetStateStore deduplicates identical writes.
   @MainActor
   func publishWidgetSnapshot(
     title: String, subtitle: String?, isPlaying: Bool, thumbnailKey: String?,

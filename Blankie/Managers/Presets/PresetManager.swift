@@ -1031,10 +1031,9 @@ extension PresetManager {
       let signature = (presetPart + ["~"] + soundPart).joined(separator: "|")
       guard signature != lastDiscoverableEntitiesSignature else { return }
       lastDiscoverableEntitiesSignature = signature
-      // App Shortcuts don't surface on macOS; Spotlight indexing works on both.
-      #if !os(macOS)
-        BlankieShortcuts.updateAppShortcutParameters()
-      #endif
+      // App Shortcuts and their entity parameters are supported on both
+      // platforms. This also registers the initial vocabulary after loading.
+      BlankieShortcuts.updateAppShortcutParameters()
       donateEntitiesToSpotlight()
     #endif
   }

@@ -245,6 +245,10 @@ extension AudioManager {
       pauseAll(fadeDuration: pauseFadeDuration)
     }
 
+    // WidgetKit can reload as soon as a widget intent returns. Its snapshot
+    // must not wait for the system card's debounce or the engine's pause fade.
+    publishCurrentWidgetSnapshot()
+
     // Always update Now Playing info with full preset details
     if let soloSound = soloModeSound {
       // In solo mode, just show the sound title

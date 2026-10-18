@@ -50,7 +50,7 @@ import Testing
   private let snapshot = DefaultsSnapshot([
     UserDefaultsKeys.starredItems, UserDefaultsKeys.soloModeSoundFileName,
     PresetStorage.customPresetsKey, PresetStorage.defaultPresetKey,
-    PresetStorage.lastActivePresetIDKey,
+    PresetStorage.lastActivePresetIDKey, "widgetSnapshot",
   ])
   nonisolated private static let testNames = ["test-a", "test-b"]
 
@@ -82,6 +82,37 @@ import Testing
       UserDefaults.shared.removeObject(forKey: "\(name)_isSelected")
       UserDefaults.shared.removeObject(forKey: "\(name)_volume")
     }
+  }
+
+  /// WidgetKit reloads as soon as an intent returns. Its snapshot must reflect
+  /// the transition even while the system Now Playing backend is still delayed.
+  @Test func widgetTransportSnapshotIsSynchronous() {
+    let sound = TestSound(fileName: "test-a")
+    audioManager.sounds = [sound]
+    sound.isSelected = true
+    let preset = PresetFactory.makePreset(
+      name: "Widget Transport Probe",
+      soundStates: [PresetState(fileName: sound.fileName, isSelected: true, volume: 0.5)],
+      soundOrder: [sound.fileName])
+    PresetManager.shared.setCurrentPreset(preset)
+    audioManager.isGloballyPlaying = true
+    audioManager.publishWidgetSnapshot(
+      title: "Stale title", subtitle: nil, isPlaying: true, thumbnailKey: nil,
+      accentColorName: nil)
+
+    audioManager.setGlobalPlaybackState(false, forceUpdate: true)
+    #expect(!WidgetStateStore.current().playback.isPlaying)
+    #expect(WidgetStateStore.current().playback.title == preset.displayName)
+
+    audioManager.setGlobalPlaybackState(true, forceUpdate: true)
+    #expect(WidgetStateStore.current().playback.isPlaying)
+    audioManager.setGlobalPlaybackState(false, forceUpdate: true)
+    audioManager.republishWidgetCatalog()
+    #expect(!WidgetStateStore.current().playback.isPlaying)
+
+    sound.isSelected = false
+    audioManager.setGlobalPlaybackState(true, forceUpdate: true)
+    #expect(!WidgetStateStore.current().playback.isPlaying)
   }
 
   /// Selects `sound` while paused and lets its deferred auto-play check pass.

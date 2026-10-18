@@ -8,10 +8,9 @@
 import AppIntents
 
 /// Siri phrases and Shortcuts app tiles. Auto-discovered by the system at
-/// build time — no manual registration or Info.plist entry required. Siri
-/// phrases/Spotlight tiles only surface on iOS/CarPlay (App Shortcuts aren't
-/// supported on macOS); the underlying `AppIntent`s remain available there
-/// as building blocks in Shortcuts.app for Mac.
+/// build time — no Info.plist entry required. PresetManager refreshes the
+/// parameter vocabulary after sounds and presets load, and when names change,
+/// on both iOS and macOS.
 struct BlankieShortcuts: AppShortcutsProvider {
   @AppShortcutsBuilder
   nonisolated static var appShortcuts: [AppIntents.AppShortcut] {
