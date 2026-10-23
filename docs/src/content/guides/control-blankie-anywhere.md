@@ -3,7 +3,7 @@ title: "Control Blankie from Anywhere"
 description: "Control Blankie with widgets, Siri, Shortcuts, Spotlight, headphones, media keys, the Lock Screen, Control Center and CarPlay."
 category: "basics"
 order: 41
-updated: 2026-10-17
+updated: 2026-10-23
 platforms: "All Platforms"
 ---
 
@@ -39,16 +39,14 @@ After adding **Pinned Sound**, touch and hold it, choose **Edit Widget**, and se
 
 ## Siri on iPhone and iPad
 
-Try these English phrases:
+Use these English commands, then give Siri the name when asked:
 
-- "Play Blankie" or "Resume Blankie"
-- "Pause Blankie" or "Stop Blankie"
-- "Play [preset name] in Blankie"
-- "Play Rain sounds in Blankie"
-- "Start a sleep timer in Blankie"
-- "Cancel Blankie sleep timer"
+- **Play a preset:** say "Start a preset in Blankie." When Siri asks which preset, say its name, such as "Lake Nights."
+- **Play a sound:** say "Start a sound in Blankie." When Siri asks which sound, say its name, such as "Rain."
 
-**Play Sound** adds a sound to your current mix and starts playback. If a custom preset is active, the sound becomes part of that saved preset. **Play Preset** switches to the preset you name. To pause without clearing your mix, say "Pause Blankie."
+**Play Sound** plays the named sound on its own in solo mode, just like choosing a sound from Favorites. Your saved preset stays unchanged. **Play Preset** switches to the preset you name.
+
+For a sleep timer, say "Start a sleep timer in Blankie," then give the duration when asked. To pause or resume playback, use the Lock Screen, Control Center or a Blankie widget. You can also create a shortcut with Blankie's Play or Pause action.
 
 The [sleep timer guide](/guides/sleep-timer/) covers the timer actions.
 

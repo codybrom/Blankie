@@ -203,27 +203,67 @@ import Testing
 
   // MARK: - Siri and solo
 
-  /// A custom preset shows and saves only its own sounds, so Play Sound adds the
-  /// sound to it. Otherwise it plays with no tile to stop it.
-  @Test func playSoundJoinsTheCurrentCustomPreset() async throws {
+  /// Siri plays a sound on its own, just like a sound in Favorites. It must not
+  /// add that sound to the active preset or save its temporary solo state.
+  @Test func playSoundSolosWithoutChangingTheCurrentCustomPreset() async throws {
     let (a, b) = makeSounds()
-    await install([preset("Entry Siri", selecting: [a.fileName], from: [a])])
+    let current = preset("Entry Siri", selecting: [a.fileName], from: [a])
+    await install([current])
 
     var intent = PlaySoundIntent()
     intent.sound = SoundEntity(sound: b)
     _ = try await intent.perform()
-    // The coalesced save can land well after the intent's manager setup, so
-    // poll for it rather than settling a fixed time.
-    func saved() -> PresetState? {
-      presetManager.currentPreset?.soundStates.first { $0.fileName == b.fileName }
-    }
-    for _ in 0..<40 where saved()?.isSelected != true {
-      try? await Task.sleep(for: .milliseconds(50))
-    }
+    await sandbox.settle()
 
+    #expect(audioManager.soloModeSound === b)
+    #expect(audioManager.isGloballyPlaying)
     #expect(b.isSelected)
-    #expect(audioManager.orderedVisibleSounds(for: presetManager.currentPreset).contains(b))
-    #expect(saved()?.isSelected == true)
+    #expect(presetManager.currentPreset?.id == current.id)
+    #expect(presetManager.currentPreset?.soundStates == current.soundStates)
+    #expect(presetManager.presets.first { $0.id == current.id }?.soundStates == current.soundStates)
+
+    audioManager.exitSoloModeWithoutResuming()
+    #expect(!b.isSelected)
+    #expect(a.isSelected)
+    audioManager.setGlobalPlaybackState(false)
+  }
+
+  /// Repeating a deterministic Play Sound command resumes a paused solo rather
+  /// than toggling it off or leaving it paused.
+  @Test func playSoundResumesTheSamePausedSolo() async throws {
+    let (a, b) = makeSounds()
+    await install([preset("Entry Siri Resume", selecting: [a.fileName], from: [a])])
+    audioManager.enterSoloMode(for: b, startPlaying: false)
+
+    var intent = PlaySoundIntent()
+    intent.sound = SoundEntity(sound: b)
+    _ = try await intent.perform()
+
+    #expect(audioManager.soloModeSound === b)
+    #expect(audioManager.isGloballyPlaying)
+    audioManager.exitSoloModeWithoutResuming()
+    #expect(!b.isSelected)
+    audioManager.setGlobalPlaybackState(false)
+  }
+
+  /// A sound command leaves Quick Mix through the normal solo transition,
+  /// retaining the saved preset rather than adding a sound to its membership.
+  @Test func playSoundLeavesQuickMixForSolo() async throws {
+    let (a, b) = makeSounds()
+    let current = preset("Entry Siri Quick Mix", selecting: [a.fileName], from: [a])
+    await install([current])
+    audioManager.enterQuickMix()
+
+    var intent = PlaySoundIntent()
+    intent.sound = SoundEntity(sound: b)
+    _ = try await intent.perform()
+
+    #expect(!audioManager.isQuickMix)
+    #expect(audioManager.soloModeSound === b)
+    #expect(audioManager.isGloballyPlaying)
+    #expect(presetManager.currentPreset?.id == current.id)
+    #expect(presetManager.presets.first { $0.id == current.id }?.soundStates == current.soundStates)
+    audioManager.exitSoloModeWithoutResuming()
     audioManager.setGlobalPlaybackState(false)
   }
 

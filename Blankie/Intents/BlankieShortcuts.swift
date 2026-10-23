@@ -36,6 +36,9 @@ struct BlankieShortcuts: AppShortcutsProvider {
       phrases: [
         "Play \(\.$preset) in \(.applicationName)",
         "Play \(\.$preset) on \(.applicationName)",
+        "Start \(.applicationName) preset \(\.$preset)",
+        "Play the preset \(\.$preset) in \(.applicationName)",
+        "Start a preset in \(.applicationName)",
       ],
       shortTitle: "Play a Preset",
       systemImageName: "square.stack.3d.up.fill"
@@ -44,7 +47,9 @@ struct BlankieShortcuts: AppShortcutsProvider {
       intent: PlaySoundIntent(),
       phrases: [
         "Play \(\.$sound) sounds in \(.applicationName)",
-        "Play \(\.$sound) in \(.applicationName)",
+        "Start \(.applicationName) sound \(\.$sound)",
+        "Play the sound \(\.$sound) in \(.applicationName)",
+        "Start a sound in \(.applicationName)",
       ],
       shortTitle: "Play a Sound",
       systemImageName: "waveform"
