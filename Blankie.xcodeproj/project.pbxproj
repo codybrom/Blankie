@@ -201,6 +201,7 @@
 				Utils/Logging.swift,
 				Utils/SpatialAudioCache.swift,
 				Widgets/WidgetStateStore.swift,
+				Widgets/WidgetArtworkCache.swift,
 			);
 			target = F91C1C822FF54C7F00C58FC6 /* BlankieWidgetExtension */;
 		};

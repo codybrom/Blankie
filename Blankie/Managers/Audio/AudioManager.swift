@@ -215,6 +215,7 @@ extension AudioManager {
       guard !Task.isCancelled else { return }
       updateHasSelectedSounds()
       PresetManager.shared.updateCurrentPresetState()
+      if isQuickMix { publishCurrentWidgetSnapshot() }
       refreshNowPlayingIfSelectionChanged()
     }
   }

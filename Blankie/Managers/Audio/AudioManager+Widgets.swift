@@ -119,7 +119,8 @@ extension AudioManager {
         fileName: fileName,
         displayName: quickMixSound.localizedTitle,
         systemIconName: quickMixSound.systemIconName,
-        isSelected: isQuickMix && quickMixSound.isSelected
+        isSelected: isQuickMix && quickMixSound.isSelected,
+        volume: isQuickMix ? quickMixSound.volume : 0.8
       )
     }
   }

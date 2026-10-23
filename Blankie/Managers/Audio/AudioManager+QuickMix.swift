@@ -182,6 +182,20 @@ extension AudioManager {
     nowPlayingManager.updateInfo(presetName: "Quick Mix", isPlaying: hasActiveSounds)
   }
 
+  /// Widget volume buttons operate only on the current Quick Mix, so stale
+  /// controls cannot alter a saved preset or start playback in another mode.
+  @MainActor
+  func adjustQuickMixSoundVolume(fileName: String, deltaPercent: Int) {
+    guard isQuickMix,
+      GlobalSettings.shared.quickMixSoundFileNames.contains(fileName),
+      let target = sound(fileName: fileName), !target.isCustom
+    else { return }
+    let current = Int((target.volume * 100).rounded())
+    let step = min(5, max(-5, deltaPercent))
+    target.volume = Float(min(100, max(0, current + step))) / 100
+    publishCurrentWidgetSnapshot()
+  }
+
   @MainActor
   func toggleQuickMixSound(_ sound: Sound) {
     guard isQuickMix else { return }

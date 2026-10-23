@@ -55,3 +55,26 @@ struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
     return .result()
   }
 }
+
+/// Small relative changes use the live value, so rapid widget taps accumulate
+/// correctly rather than writing an absolute level from an outdated timeline.
+struct WidgetAdjustQuickMixVolumeIntent: AppIntent, AudioPlaybackIntent {
+  static var isDiscoverable: Bool { false }
+  static var title: LocalizedStringResource { "Set Sound Volume" }
+
+  @Parameter(title: "Sound") var fileName: String
+  @Parameter(title: "Volume") var deltaPercent: Int
+
+  init() {}
+  init(fileName: String, deltaPercent: Int) {
+    self.fileName = fileName
+    self.deltaPercent = deltaPercent
+  }
+
+  @MainActor
+  func perform() async throws -> some IntentResult {
+    await AppSetup.ensureManagersReadyForIntents()
+    AudioManager.shared.adjustQuickMixSoundVolume(fileName: fileName, deltaPercent: deltaPercent)
+    return .result()
+  }
+}

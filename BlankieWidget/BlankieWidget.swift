@@ -114,13 +114,14 @@ func widgetAccentGradient(_ accent: Color, colorScheme: ColorScheme) -> LinearGr
 /// itself (an evenodd subpath), so it looks right with zero special-case
 /// rendering — a real vector fix, not a masking trick layered on top.
 struct BlankieBadge: View {
+  @Environment(\.widgetForeground) private var foreground
   var body: some View {
     Image("blankie.mark")
       .renderingMode(.template)
       .resizable()
       .scaledToFit()
       .frame(width: 16, height: 16)
-      .foregroundStyle(.white)
+      .foregroundStyle(foreground)
       .widgetAccentable()
   }
 }
@@ -241,27 +242,35 @@ struct NowPlayingWidgetEntryView: View {
 /// 2.5pt border reads fine at 74pt but is disproportionately thick — almost
 /// a solid blob — at 30pt.
 struct WidgetArtwork: View {
+  @Environment(\.displayScale) private var displayScale
   let thumbnailKey: String?
   let fallbackIcon: String?
   let accentColor: Color
+  var borderColor: Color? = nil
+  var showsFallbackIcon: Bool = true
 
   var body: some View {
-    if let thumbnailKey, let image = thumbnailImage(forKey: thumbnailKey) {
-      image
-        .resizable()
-        .widgetAccentedRenderingMode(.fullColor)
-        .aspectRatio(contentMode: .fill)
-    } else {
-      GeometryReader { geometry in
+    GeometryReader { geometry in
+      let pixels = Int(ceil(max(geometry.size.width, geometry.size.height) * displayScale))
+      if let thumbnailKey,
+        let image = thumbnailImage(forKey: thumbnailKey, maxPixelSize: pixels)
+      {
+        image
+          .resizable()
+          .widgetAccentedRenderingMode(.fullColor)
+          .aspectRatio(contentMode: .fill)
+      } else {
         let side = min(geometry.size.width, geometry.size.height)
         ZStack {
           Circle()
             .fill(accentColor.opacity(0.2))
           Circle()
-            .strokeBorder(accentColor, lineWidth: max(1.5, side * 0.045))
-          Image(systemName: fallbackIcon ?? "waveform")
-            .font(.system(size: side * 0.42, weight: .medium))
-            .foregroundStyle(accentColor)
+            .strokeBorder(borderColor ?? accentColor, lineWidth: max(1.5, side * 0.045))
+          if showsFallbackIcon {
+            Image(systemName: fallbackIcon ?? "waveform")
+              .font(.system(size: side * 0.42, weight: .medium))
+              .foregroundStyle(accentColor)
+          }
         }
       }
     }

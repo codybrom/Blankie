@@ -375,4 +375,50 @@ import Testing
       audioManager.setGlobalPlaybackState(false)
     }
   #endif
+  @Test func quickMixWidgetVolumeClampsPublishesAndKeepsPlaybackPaused() async {
+    let (a, b) = makeSounds()
+    let originalNames = GlobalSettings.shared.quickMixSoundFileNames
+    defer { GlobalSettings.shared.setQuickMixSoundFileNames(originalNames) }
+    GlobalSettings.shared.setQuickMixSoundFileNames([a.fileName, b.fileName])
+    let saved = preset("Before Quick Mix", selecting: [a.fileName], from: [a, b])
+    await install([saved])
+    let savedStates = saved.soundStates
+    audioManager.enterQuickMix(with: [a])
+    audioManager.setGlobalPlaybackState(false)
+    a.volume = 0.98
+    audioManager.adjustQuickMixSoundVolume(fileName: a.fileName, deltaPercent: 5)
+    #expect(a.volume == 1)
+    audioManager.adjustQuickMixSoundVolume(fileName: a.fileName, deltaPercent: -5)
+    #expect(a.volume == 0.95)
+    #expect(
+      WidgetStateStore.current().quickMixSounds.first { $0.fileName == a.fileName }?.volume == 0.95)
+    #expect(!audioManager.isGloballyPlaying)
+    #expect(audioManager.isQuickMix)
+    a.volume = 0.02
+    audioManager.adjustQuickMixSoundVolume(fileName: a.fileName, deltaPercent: -5)
+    #expect(a.volume == 0)
+    #expect(b.volume == 0.8)
+    #expect(saved.soundStates == savedStates)
+    audioManager.exitQuickMix(restoring: true, resuming: false)
+    #expect(a.volume == 0.5)
+  }
+
+  @Test func quickMixWidgetVolumeIgnoresAnotherModeOrRemovedSound() async {
+    let (a, b) = makeSounds()
+    let originalNames = GlobalSettings.shared.quickMixSoundFileNames
+    defer { GlobalSettings.shared.setQuickMixSoundFileNames(originalNames) }
+    GlobalSettings.shared.setQuickMixSoundFileNames([a.fileName])
+    let originalVolume = a.volume
+    audioManager.adjustQuickMixSoundVolume(fileName: a.fileName, deltaPercent: 5)
+    #expect(a.volume == originalVolume)
+    audioManager.enterQuickMix(with: [a])
+    let otherVolume = b.volume
+    audioManager.adjustQuickMixSoundVolume(fileName: b.fileName, deltaPercent: -5)
+    #expect(b.volume == otherVolume)
+    GlobalSettings.shared.setQuickMixSoundFileNames([])
+    audioManager.adjustQuickMixSoundVolume(fileName: a.fileName, deltaPercent: -5)
+    #expect(a.volume == 0.8)
+    audioManager.exitQuickMix(restoring: true, resuming: false)
+  }
+
 }

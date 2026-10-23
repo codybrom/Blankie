@@ -13,7 +13,7 @@ Blankie 2.1 puts your sounds on the Home Screen and a Siri phrase away.
 
 ### Added
 
-- **Home Screen widgets (iPhone and iPad)** - Put Blankie on your Home Screen. Now Playing shows what's on with play controls, Favorites and Quick Mix start a mix in a tap, and a Pinned Sound widget plays a preset or sound you choose.
+- **Home Screen widgets (iPhone and iPad)** - Put Blankie on your Home Screen. Now Playing shows what's on with play controls, Favorites and Quick Mix start a mix in a tap, and a Pinned Sound widget plays a preset or sound you choose. Favorites and Quick Mix offer per-widget colors and portrait XL layouts on iOS 27, with per-sound volume controls in XL Quick Mix.
 - **Siri, Shortcuts, and Spotlight** - Ask Siri on iPhone and iPad to play a preset or sound. On Mac, iPhone and iPad, build your own Shortcuts around Blankie's actions (play, pause, toggle playback, presets, sounds, sleep timers, and volume), and find your presets and sounds in Spotlight search. Siri phrases are localized for supported languages.
 - **Sound descriptions and subtitles** - Every built-in sound now carries a short subtitle and a description. The subtitle shows when you play a sound by itself, select sounds for a preset, or browse Manage Sounds. Descriptions and subtitles are translated into supported languages.
 - **Preset artwork behind the mixer (Mac)** - A preset's background artwork now shows behind your sounds on the Mac, dimmed so the tiles stay readable, the same way it does on iPhone and iPad.

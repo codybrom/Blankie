@@ -31,11 +31,17 @@ Touch and hold an empty area of your Home Screen, open the widget gallery, and s
 | Widget | What it does | Sizes |
 | --- | --- | --- |
 | **Now Playing** | Shows the current sound or mix, with play/pause controls | Small |
-| **Favorites** | Plays your starred presets and sounds | Medium, large |
+| **Favorites** | Plays your starred presets and sounds | Medium, large, XL (iOS 27) |
 | **Pinned Sound** | Keeps one preset or sound ready to play | Small |
-| **Quick Mix** | Toggles your Quick Mix sounds on and off | Medium, large |
+| **Quick Mix** | Toggles your Quick Mix sounds on and off | Medium, large, XL (iOS 27) |
 
 After adding **Pinned Sound**, touch and hold it, choose **Edit Widget**, and select a preset or sound. For Favorites, star the items you want in Blankie; for Quick Mix, choose your Quick Mix sounds in the app.
+
+For Favorites and Quick Mix, touch and hold the widget and choose **Edit Widget** to set its **Color**. Choose **Default** to use the accent saved in Blankie's Settings, or choose a named color. Each widget keeps its own choice. iOS applies your Home Screen's Tinted or Clear treatment when enabled.
+
+Pinned Sound and Now Playing use the artwork and accent of the preset or sound they display.
+
+On iOS 27, the portrait **XL Favorites** widget shows up to 12 favorites with names. **XL Quick Mix** gives each sound its own row with volume controls. Tap a sound to enter Quick Mix, then use **−** and **+** to adjust its level in five-percentage-point steps. Adjusting volume keeps playback paused if it was paused, and leaves your saved preset unchanged.
 
 ## Siri on iPhone and iPad
 
