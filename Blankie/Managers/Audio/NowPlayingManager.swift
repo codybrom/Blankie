@@ -155,7 +155,7 @@ final class NowPlayingManager: NowPlayingPublishing {
     let resolvedCreatorName = preset?.creatorName ?? creatorName
 
     let displayInfo = NowPlayingDisplay.getDisplayInfo(
-      presetName: resolvedPresetName, creatorName: resolvedCreatorName)
+      presetName: resolvedPresetName, creatorName: resolvedCreatorName, preset: preset)
     Logger.nowPlaying.debug(
       "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )

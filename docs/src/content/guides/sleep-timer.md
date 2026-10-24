@@ -3,7 +3,7 @@ title: "Fall Asleep with the Sleep Timer"
 description: "Drift off to rain, waves or white noise and let Blankie pause for you. Set the sleep timer on Mac, iPhone or iPad and it stops on its own."
 category: "basics"
 order: 40
-updated: 2026-06-06
+updated: 2026-10-17
 platforms: "All Platforms"
 ---
 
@@ -30,6 +30,12 @@ Now Playing shows the countdown and **"Pausing at [time]"** while it runs. From 
 - **Cancel Timer**: stop the countdown and keep the sound going
 
 <!-- image-todo: iOS, dark mode, iPhone frame. Rain and crickets playing. Open the Now Playing screen, then open the Timer sheet with a countdown already running so it shows "Pausing at [time]" and a counting-down time. The sheet must show the +1 min and +5 min add-time buttons and the Cancel Timer button. Crop to the iPhone screen. -->
+
+## With Siri or Shortcuts
+
+On iPhone and iPad, say **"Start a sleep timer in Blankie"**, then tell Siri how many minutes you want. Say **"Cancel Blankie sleep timer"** to cancel the countdown while keeping your sounds playing.
+
+In Shortcuts on Mac, iPhone or iPad, add Blankie's **Start Sleep Timer** action and set **Minutes** to a value from 1 to 480. Use **Stop Sleep Timer** to cancel it. Starting a timer sets when playback will pause; use a Play or Play Preset action first if you also want the shortcut to start your sounds.
 
 ## What happens when time's up
 

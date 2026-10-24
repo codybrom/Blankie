@@ -291,6 +291,7 @@ struct ArtworkTile<Thumbnail: View>: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(caption)
+        .accessibilityValue(isSet ? Text("Artwork set") : Text("No artwork"))
 
         if let onRemove, isSet {
           Button(action: onRemove) {
@@ -308,6 +309,7 @@ struct ArtworkTile<Thumbnail: View>: View {
       }
 
       Text(caption)
+        .accessibilityHidden(true)
         .font(.subheadline)
         .fontWeight(.medium)
         .multilineTextAlignment(.center)

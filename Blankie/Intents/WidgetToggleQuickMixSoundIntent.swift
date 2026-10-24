@@ -12,6 +12,8 @@ import AppIntents
 /// Quick Mix with the tapped sound if it isn't already active, or toggles
 /// that sound within an already-active mix.
 struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
+  static var isDiscoverable: Bool { false }
+
   static var title: LocalizedStringResource { "Toggle Quick Mix Sound" }
   static var description: IntentDescription {
     IntentDescription("Adds or removes a sound from Blankie's Quick Mix.")
@@ -50,6 +52,29 @@ struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
     }
 
     audio.toggleQuickMixSound(target)
+    return .result()
+  }
+}
+
+/// Small relative changes use the live value, so rapid widget taps accumulate
+/// correctly rather than writing an absolute level from an outdated timeline.
+struct WidgetAdjustQuickMixVolumeIntent: AppIntent, AudioPlaybackIntent {
+  static var isDiscoverable: Bool { false }
+  static var title: LocalizedStringResource { "Set Sound Volume" }
+
+  @Parameter(title: "Sound") var fileName: String
+  @Parameter(title: "Volume") var deltaPercent: Int
+
+  init() {}
+  init(fileName: String, deltaPercent: Int) {
+    self.fileName = fileName
+    self.deltaPercent = deltaPercent
+  }
+
+  @MainActor
+  func perform() async throws -> some IntentResult {
+    await AppSetup.ensureManagersReadyForIntents()
+    AudioManager.shared.adjustQuickMixSoundVolume(fileName: fileName, deltaPercent: deltaPercent)
     return .result()
   }
 }

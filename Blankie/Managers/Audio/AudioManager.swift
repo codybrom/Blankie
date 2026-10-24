@@ -39,9 +39,10 @@ class AudioManager {
     let isPlaying: Bool
   }
 
-  // CarPlay connection state, pushed in by `CarPlayAudioBridge`. Stays `false`
-  // on platforms that don't build CarPlay support. Read by
-  // `setupAudioSessionForPlayback` to configure the audio session appropriately.
+  // A connected CarPlay scene or a car-audio output owns volume control.
+  // Route detection also works in builds without the CarPlay scene entitlement.
+  @ObservationIgnored private var carPlaySceneConnected = false
+  @ObservationIgnored private var carAudioRouteActive = false
   private(set) var isCarPlayConnected: Bool = false
 
   /// Called by `CarPlayAudioBridge` when CarPlay connects or disconnects.
@@ -49,12 +50,25 @@ class AudioManager {
   /// the audio session so it picks up the new routing policy.
   @MainActor
   func setCarPlayConnected(_ connected: Bool) {
+    carPlaySceneConnected = connected
+    updateCarAudioConnection()
+  }
+
+  @MainActor
+  func setCarAudioRouteActive(_ active: Bool, reconfigureSession: Bool = true) {
+    carAudioRouteActive = active
+    updateCarAudioConnection(reconfigureSession: reconfigureSession)
+  }
+
+  @MainActor
+  private func updateCarAudioConnection(reconfigureSession: Bool = true) {
+    let connected = carPlaySceneConnected || carAudioRouteActive
     guard isCarPlayConnected != connected else { return }
     Logger.audio.debug("AudioManager: CarPlay connection changed to: \(connected)")
     isCarPlayConnected = connected
 
     #if os(iOS) || os(visionOS)
-      if isGloballyPlaying {
+      if reconfigureSession, isGloballyPlaying || previewModeSound != nil {
         setupAudioSessionForPlayback()
       }
     #endif
@@ -215,6 +229,7 @@ extension AudioManager {
       guard !Task.isCancelled else { return }
       updateHasSelectedSounds()
       PresetManager.shared.updateCurrentPresetState()
+      if isQuickMix { publishCurrentWidgetSnapshot() }
       refreshNowPlayingIfSelectionChanged()
     }
   }
@@ -275,6 +290,11 @@ extension AudioManager {
 
   #if os(iOS) || os(visionOS)
     func setupAudioSessionForPlayback() {
+      // Previews activate this session too; observe before activation on every
+      // playback path so even the first preview handles interruptions/routes.
+      setupAudioSessionObservers()
+      setCarAudioRouteActive(
+        SpatialSessionManager.isCarAudioRouteActive, reconfigureSession: false)
       AudioSessionManager.shared.setupForPlayback(
         mixWithOthers: GlobalSettings.shared.mixWithOthers,
         isCarPlayConnected: isCarPlayConnected

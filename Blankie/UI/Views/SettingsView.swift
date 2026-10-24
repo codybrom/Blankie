@@ -497,8 +497,8 @@ struct SettingsView: View {
           }
 
           // App-wide blur for the preset background artwork. All-or-nothing: on
-          // applies `defaultBackgroundBlurRadius`, off is no blur. (The macOS
-          // window doesn't use a blurred backdrop, so it's iOS-only.)
+          // applies `defaultBackgroundBlurRadius`, off is no blur. This toggle
+          // is iOS-only. The Mac backdrop also reads the saved blur radius.
           Toggle(
             isOn: Binding(
               get: { globalSettings.backgroundBlurRadius > 0 },
@@ -650,6 +650,24 @@ private struct PlaybackSettingsSection: View {
         )
         .tint(globalSettings.customAccentColor ?? .accentColor)
       #endif
+
+      if #available(iOS 27, macOS 27, visionOS 27, *) {
+        VStack(alignment: .leading, spacing: 6) {
+          Toggle(
+            "Show Playback as Continuous",
+            isOn: Binding(
+              get: { globalSettings.showPlaybackAsContinuous },
+              set: { globalSettings.setShowPlaybackAsContinuous($0) }
+            )
+          )
+          .tint(globalSettings.customAccentColor ?? .accentColor)
+          Text(
+            "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible."
+          )
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+        }
+      }
 
       // Mix with Other Audio is AVAudioSession-based, so it has no macOS form.
       #if os(iOS) || os(visionOS)

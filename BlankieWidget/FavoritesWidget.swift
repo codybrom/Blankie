@@ -12,71 +12,186 @@ import WidgetKit
 struct FavoritesEntry: TimelineEntry {
   let date: Date
   let snapshot: WidgetSnapshot
+  var color: WidgetColorChoice = .defaultAccent
 }
 
-struct FavoritesProvider: TimelineProvider {
+struct FavoritesProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> FavoritesEntry {
-    FavoritesEntry(date: .now, snapshot: .empty)
+    FavoritesEntry(date: .now, snapshot: .galleryPreview)
   }
 
-  func getSnapshot(in context: Context, completion: @escaping (FavoritesEntry) -> Void) {
-    completion(FavoritesEntry(date: .now, snapshot: WidgetStateStore.current()))
+  func snapshot(for configuration: WidgetAppearanceIntent, in context: Context) async
+    -> FavoritesEntry
+  {
+    FavoritesEntry(
+      date: .now, snapshot: context.isPreview ? .galleryPreview : WidgetStateStore.current(),
+      color: configuration.color)
   }
 
-  func getTimeline(in context: Context, completion: @escaping (Timeline<FavoritesEntry>) -> Void) {
-    let entry = FavoritesEntry(date: .now, snapshot: WidgetStateStore.current())
-    completion(Timeline(entries: [entry], policy: .never))
+  func timeline(for configuration: WidgetAppearanceIntent, in context: Context) async
+    -> Timeline<FavoritesEntry>
+  {
+    let entry = FavoritesEntry(
+      date: .now, snapshot: WidgetStateStore.current(), color: configuration.color)
+    return Timeline(entries: [entry], policy: .never)
   }
 }
 
-/// Ring + play/pause glyph shown on whichever tile matches the currently
+/// Shaded play/pause glyph shown on whichever tile matches the currently
 /// active token, so tapping it is obviously "pause this" rather than
 /// "restart this" — the same tile, no separate now-playing row needed.
 private struct ActiveIndicator: View {
   let isPlaying: Bool
+  var isSound: Bool = false
 
   var body: some View {
-    ZStack {
-      Color.black.opacity(0.35)
-      Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-        .font(.system(size: 13, weight: .bold))
-        .foregroundStyle(.white)
+    GeometryReader { geometry in
+      ZStack {
+        Color.black.opacity(0.35)
+        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+          .font(.system(size: 13, weight: .bold))
+          .foregroundStyle(.white)
+        if isSound {
+          Circle()
+            .strokeBorder(
+              .white,
+              lineWidth: max(1.5, min(geometry.size.width, geometry.size.height) * 0.045))
+        }
+      }
     }
   }
 }
 
-/// Small, label-less square used in the `.systemMedium` strip — artwork
-/// only, with the active tile ringed and showing a play/pause glyph.
-private struct FavoriteStripItemView: View {
+/// Labeled buttons for medium Favorites, matching large Quick Mix's rows.
+private struct FavoriteRowView: View {
+  @Environment(\.widgetForeground) private var foreground
+  @Environment(\.widgetRenderingMode) private var renderingMode
+  let favorite: WidgetFavorite
+  let accent: Color
+  let isActive: Bool
+  let isPlaying: Bool
+  var artworkSize: CGFloat = 36
+  var showsSubtitle: Bool = false
+  var usesSelectionBorder: Bool = true
+
+  var body: some View {
+    Button(intent: WidgetPlayFavoriteIntent(favoriteToken: favorite.token)) {
+      HStack(spacing: 8) {
+        WidgetArtwork(
+          thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
+          accentColor: widgetAccentColor(favorite.accentColorName),
+          borderColor: isActive && usesSelectionBorder && favorite.token.hasPrefix("solo:")
+            ? .white : nil,
+          showsFallbackIcon: !(isActive && usesSelectionBorder && favorite.token.hasPrefix("solo:"))
+        )
+        .frame(width: artworkSize, height: artworkSize)
+        .overlay {
+          if isActive {
+            ActiveIndicator(
+              isPlaying: isPlaying,
+              isSound: usesSelectionBorder && favorite.token.hasPrefix("solo:"))
+          }
+        }
+        .clipShape(
+          favorite.thumbnailKey == nil
+            ? AnyShape(Circle())
+            : AnyShape(RoundedRectangle(cornerRadius: 8, style: .continuous)))
+
+        VStack(alignment: .leading, spacing: 3) {
+          Text(favorite.displayName)
+            .font(showsSubtitle ? .subheadline.weight(.semibold) : .caption.weight(.semibold))
+            .lineLimit(2)
+          if showsSubtitle, let subtitle = favorite.subtitle, !subtitle.isEmpty {
+            Text(subtitle)
+              .font(.caption2)
+              .opacity(0.65)
+              .lineLimit(2)
+          }
+        }
+        .foregroundStyle(
+          isActive
+            ? (renderingMode == .accented ? .white : accent.contrastingLabel) : foreground
+        )
+        .multilineTextAlignment(.leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      .padding(.horizontal, 10)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(
+        isActive
+          ? (renderingMode == .accented
+            ? Color.white.opacity(0.3) : accent)
+          : foreground.opacity(0.10),
+        in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+      )
+      .widgetAccentable(isActive)
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(favorite.displayName)
+    .accessibilityAddTraits(isActive ? .isSelected : [])
+  }
+}
+
+/// A single favorite gets an artwork-led card instead of an oversized list row.
+private struct SingleFavoriteView: View {
+  @Environment(\.widgetForeground) private var foreground
   let favorite: WidgetFavorite
   let isActive: Bool
   let isPlaying: Bool
 
   var body: some View {
-    Button(intent: WidgetPlayFavoriteIntent(favoriteToken: favorite.token)) {
-      WidgetArtwork(
-        thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
-        accentColor: widgetAccentColor(favorite.accentColorName)
-      )
-      .aspectRatio(1, contentMode: .fit)
-      .overlay { if isActive { ActiveIndicator(isPlaying: isPlaying) } }
-      .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-      .overlay {
-        if isActive {
-          RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .strokeBorder(.white, lineWidth: 2)
+    GeometryReader { geometry in
+      let side = min(geometry.size.height, geometry.size.width * 0.38)
+      Button(intent: WidgetPlayFavoriteIntent(favoriteToken: favorite.token)) {
+        HStack(spacing: 14) {
+          WidgetArtwork(
+            thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
+            accentColor: widgetAccentColor(favorite.accentColorName),
+            borderColor: isActive && favorite.token.hasPrefix("solo:") ? .white : nil,
+            showsFallbackIcon: !(isActive && favorite.token.hasPrefix("solo:"))
+          )
+          .frame(width: side, height: side)
+          .overlay {
+            if isActive && favorite.token.hasPrefix("solo:") {
+              ActiveIndicator(isPlaying: isPlaying, isSound: true)
+            }
+          }
+          .clipShape(
+            favorite.thumbnailKey == nil
+              ? AnyShape(Circle())
+              : AnyShape(RoundedRectangle(cornerRadius: 18, style: .continuous)))
+
+          VStack(alignment: .leading, spacing: 5) {
+            Text(favorite.displayName)
+              .font(.headline)
+              .foregroundStyle(foreground)
+              .lineLimit(2)
+            if let subtitle = favorite.subtitle, !subtitle.isEmpty {
+              Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(foreground.opacity(0.65))
+                .lineLimit(2)
+            }
+            if !(isActive && favorite.token.hasPrefix("solo:")) {
+              Image(systemName: isActive && isPlaying ? "pause.fill" : "play.fill")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(foreground)
+                .padding(.top, 3)
+            }
+          }
+          .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(width: geometry.size.width, height: geometry.size.height)
+        .contentShape(Rectangle())
       }
+      .buttonStyle(.plain)
+      .accessibilityLabel(favorite.displayName)
+      .accessibilityAddTraits(isActive ? .isSelected : [])
     }
-    .buttonStyle(.plain)
-    .accessibilityLabel(favorite.displayName)
   }
 }
 
-/// Grid tile used in `.systemLarge` — artwork only, same active-tile
-/// treatment as the strip. There's no room for a name label at this size
-/// once the grid holds enough tiles to be useful, so the name only appears
-/// for whichever one is actually playing, in the footer below.
+/// Artwork tiles fill balanced rows in the large widget.
 private struct FavoriteTileView: View {
   let favorite: WidgetFavorite
   let isActive: Bool
@@ -84,18 +199,27 @@ private struct FavoriteTileView: View {
 
   var body: some View {
     Button(intent: WidgetPlayFavoriteIntent(favoriteToken: favorite.token)) {
-      WidgetArtwork(
-        thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
-        accentColor: widgetAccentColor(favorite.accentColorName)
-      )
-      .aspectRatio(1, contentMode: .fit)
-      .overlay { if isActive { ActiveIndicator(isPlaying: isPlaying) } }
-      .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-      .overlay {
-        if isActive {
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .strokeBorder(.white, lineWidth: 2)
+      GeometryReader { geometry in
+        let shape =
+          favorite.thumbnailKey == nil
+          ? AnyShape(Circle())
+          : AnyShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        let width =
+          favorite.thumbnailKey == nil
+          ? min(geometry.size.width, geometry.size.height) : geometry.size.width
+        let height = favorite.thumbnailKey == nil ? width : geometry.size.height
+        WidgetArtwork(
+          thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
+          accentColor: widgetAccentColor(favorite.accentColorName)
+        )
+        .frame(width: width, height: height)
+        .overlay {
+          if isActive {
+            ActiveIndicator(isPlaying: isPlaying)
+          }
         }
+        .clipShape(shape)
+        .frame(width: geometry.size.width, height: geometry.size.height)
       }
     }
     .buttonStyle(.plain)
@@ -107,6 +231,8 @@ private struct FavoriteTileView: View {
 /// the bottom of the widget rather than up top, so the grid above gets the
 /// space instead of splitting it with a second card.
 private struct NowPlayingFooterView: View {
+  @Environment(\.widgetForeground) private var foreground
+  @Environment(\.widgetRenderingMode) private var renderingMode
   let playback: WidgetPlaybackState
 
   var body: some View {
@@ -121,12 +247,12 @@ private struct NowPlayingFooterView: View {
       VStack(alignment: .leading, spacing: 0) {
         Text(playback.title)
           .font(.caption.weight(.bold))
-          .foregroundStyle(.white)
+          .foregroundStyle(foreground)
           .lineLimit(1)
         if let subtitle = playback.subtitle {
           Text(subtitle)
             .font(.caption2)
-            .foregroundStyle(.white.opacity(0.6))
+            .foregroundStyle(foreground.opacity(0.6))
             .lineLimit(1)
         }
       }
@@ -136,9 +262,9 @@ private struct NowPlayingFooterView: View {
       Button(intent: ToggleBlankiePlaybackIntent()) {
         Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
           .font(.system(size: 11, weight: .bold))
-          .foregroundStyle(.black)
+          .foregroundStyle(renderingMode == .accented ? .white : .black)
           .frame(width: 26, height: 26)
-          .background(.white, in: Circle())
+          .background(.white.opacity(renderingMode == .accented ? 0.2 : 1), in: Circle())
       }
       .buttonStyle(.plain)
     }
@@ -146,14 +272,15 @@ private struct NowPlayingFooterView: View {
 }
 
 private struct EmptyFavoritesView: View {
+  @Environment(\.widgetForeground) private var foreground
   var body: some View {
     VStack(spacing: 4) {
       Image(systemName: "star")
         .font(.title2)
-        .foregroundStyle(.white.opacity(0.6))
+        .foregroundStyle(foreground.opacity(0.6))
       Text("Star presets and sounds in Blankie to see them here.")
         .font(.caption)
-        .foregroundStyle(.white.opacity(0.6))
+        .foregroundStyle(foreground.opacity(0.6))
         .multilineTextAlignment(.center)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -166,63 +293,157 @@ struct FavoritesWidgetEntryView: View {
 
   var body: some View {
     Group {
-      switch family {
-      case .systemLarge:
+      if family.isExtraLargePortrait {
+        extraLargeBody
+      } else if family == .systemLarge {
         largeBody
-      default:
+      } else {
         mediumBody
       }
     }
+    .environment(\.widgetForeground, .white)
     .containerBackground(for: .widget) {
-      Color("WidgetBackground")
+      WidgetAppearanceBackground(
+        choice: entry.color, defaultAccentName: entry.snapshot.defaultAccentColorName)
     }
   }
 
-  // `.systemMedium` has roughly 155pt of height total — not enough for a
-  // grid plus a separate now-playing row, which is what made this size look
-  // broken before. Artwork only, single row, no text at all: the active tile
-  // (if any) is marked directly, so there's nothing else to make room for.
   private var mediumBody: some View {
     let shown = Array(entry.snapshot.favorites.prefix(4))
-    return Group {
+    return GeometryReader { geometry in
       if shown.isEmpty {
         EmptyFavoritesView()
+      } else if shown.count == 1, let favorite = shown.first {
+        SingleFavoriteView(
+          favorite: favorite,
+          isActive: favorite.token == entry.snapshot.playback.activeToken,
+          isPlaying: entry.snapshot.playback.isPlaying)
       } else {
-        HStack(spacing: 8) {
-          ForEach(shown) { favorite in
-            FavoriteStripItemView(
-              favorite: favorite,
-              isActive: favorite.token == entry.snapshot.playback.activeToken,
-              isPlaying: entry.snapshot.playback.isPlaying)
+        let rows = (shown.count + 1) / 2
+        let height = max(0, (geometry.size.height - CGFloat(rows - 1) * 8) / CGFloat(rows))
+        VStack(spacing: 8) {
+          ForEach(0..<rows, id: \.self) { row in
+            HStack(spacing: 8) {
+              ForEach(Array(shown.dropFirst(row * 2).prefix(2))) { favorite in
+                FavoriteRowView(
+                  favorite: favorite,
+                  accent: entry.color.accent(defaultName: entry.snapshot.defaultAccentColorName),
+                  isActive: favorite.token == entry.snapshot.playback.activeToken,
+                  isPlaying: entry.snapshot.playback.isPlaying
+                )
+              }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
           }
         }
       }
     }
-    .padding(10)
+  }
+
+  /// Avoid orphan tiles and keep partial rows as deliberate full-width bands.
+  private func favoriteRowCounts(for count: Int) -> [Int] {
+    switch count {
+    case 1...3: [count]
+    case 4: [2, 2]
+    case 5: [3, 2]
+    case 6: [3, 3]
+    case 7: [2, 3, 2]
+    case 8: [3, 2, 3]
+    default: [3, 3, 3]
+    }
+  }
+
+  private var extraLargeBody: some View {
+    let shown = Array(entry.snapshot.favorites.prefix(12))
+    return VStack(spacing: 12) {
+      HStack(spacing: 8) {
+        BlankieBadge()
+        Text("Favorites")
+          .font(.headline)
+          .foregroundStyle(.white)
+        Spacer(minLength: 0)
+      }
+      .fixedSize(horizontal: false, vertical: true)
+
+      GeometryReader { geometry in
+        if shown.isEmpty {
+          EmptyFavoritesView()
+        } else if shown.count == 1, let favorite = shown.first {
+          VStack(spacing: 10) {
+            FavoriteTileView(
+              favorite: favorite,
+              isActive: favorite.token == entry.snapshot.playback.activeToken,
+              isPlaying: entry.snapshot.playback.isPlaying)
+            Text(favorite.displayName)
+              .font(.headline)
+              .foregroundStyle(.white)
+              .lineLimit(2)
+          }
+        } else {
+          let columns = shown.count <= 6 ? 1 : 2
+          let rows = (shown.count + columns - 1) / columns
+          let height = max(0, (geometry.size.height - CGFloat(rows - 1) * 8) / CGFloat(rows))
+          let artworkSize = min(columns == 1 ? 88.0 : 44.0, max(30, height - 16))
+          VStack(spacing: 8) {
+            ForEach(0..<rows, id: \.self) { row in
+              HStack(spacing: 8) {
+                ForEach(Array(shown.dropFirst(row * columns).prefix(columns))) { favorite in
+                  FavoriteRowView(
+                    favorite: favorite,
+                    accent: entry.color.accent(defaultName: entry.snapshot.defaultAccentColorName),
+                    isActive: favorite.token == entry.snapshot.playback.activeToken,
+                    isPlaying: entry.snapshot.playback.isPlaying,
+                    artworkSize: artworkSize, showsSubtitle: columns == 1,
+                    usesSelectionBorder: false)
+                }
+              }
+              .frame(maxWidth: .infinity)
+              .frame(height: height)
+            }
+          }
+        }
+      }
+      NowPlayingFooterView(playback: entry.snapshot.playback)
+        .fixedSize(horizontal: false, vertical: true)
+    }
   }
 
   private var largeBody: some View {
     let shown = Array(entry.snapshot.favorites.prefix(9))
     return VStack(spacing: 8) {
-      if shown.isEmpty {
-        EmptyFavoritesView()
-      } else {
-        LazyVGrid(
-          columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3),
-          spacing: 8
-        ) {
-          ForEach(shown) { favorite in
-            FavoriteTileView(
-              favorite: favorite,
-              isActive: favorite.token == entry.snapshot.playback.activeToken,
-              isPlaying: entry.snapshot.playback.isPlaying)
+      GeometryReader { geometry in
+        if shown.isEmpty {
+          EmptyFavoritesView()
+        } else {
+          let rowCounts = favoriteRowCounts(for: shown.count)
+          let height = max(
+            0, (geometry.size.height - CGFloat(rowCounts.count - 1) * 8) / CGFloat(rowCounts.count))
+          VStack(spacing: 8) {
+            ForEach(rowCounts.indices, id: \.self) { row in
+              let count = rowCounts[row]
+              let start = rowCounts.prefix(row).reduce(0, +)
+              let width = max(0, (geometry.size.width - CGFloat(count - 1) * 8) / CGFloat(count))
+              HStack(spacing: 8) {
+                ForEach(Array(shown.dropFirst(start).prefix(count))) { favorite in
+                  FavoriteTileView(
+                    favorite: favorite,
+                    isActive: favorite.token == entry.snapshot.playback.activeToken,
+                    isPlaying: entry.snapshot.playback.isPlaying
+                  )
+                  .frame(width: width, height: height)
+                }
+              }
+              .frame(width: geometry.size.width, height: height)
+            }
           }
+          .frame(width: geometry.size.width, height: geometry.size.height, alignment: .top)
         }
       }
 
       NowPlayingFooterView(playback: entry.snapshot.playback)
+        .fixedSize(horizontal: false, vertical: true)
     }
-    .padding(10)
   }
 }
 
@@ -230,12 +451,14 @@ struct FavoritesWidget: Widget {
   let kind: String = "FavoritesWidget"
 
   var body: some WidgetConfiguration {
-    StaticConfiguration(kind: kind, provider: FavoritesProvider()) { entry in
+    AppIntentConfiguration(
+      kind: kind, intent: WidgetAppearanceIntent.self, provider: FavoritesProvider()
+    ) { entry in
       FavoritesWidgetEntryView(entry: entry)
     }
     .configurationDisplayName("Favorites")
     .description("Your favorited presets and sounds, plus a mini player.")
-    .supportedFamilies([.systemMedium, .systemLarge])
+    .supportedFamilies(interactiveWidgetFamilies)
   }
 }
 

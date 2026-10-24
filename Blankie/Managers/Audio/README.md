@@ -35,6 +35,12 @@ Four cooperating mechanisms. All of them are required. Mechanisms 2 and 3 are th
 - **Shorter audible ramps**: 0.5s and 0.15s remote-pause fades both danced in Control Center. Only a zero-length cut is stable.
 - **A rate-only "reassert" write after the engine idles**: not enough on its own while other writes still go out per-key.
 
+## Interruptions and route changes (iOS / visionOS)
+
+Every playback activation, including a sound-editor preview, installs the session observers before activating audio. Interruption begin pauses synchronously without a fade and remembers whether global playback was active. Interruption end consumes that remembered state exactly once and resumes only with the system's `shouldResume` hint. Explicit play or pause requests supersede that recovery, so Siri pause, sleep-timer expiry and headphone removal cannot be undone by a later interruption-end notification. Headphone removal stops previews too, even when global playback was already paused.
+
+A media-services reset rebuilds the engine, unloads the old players, restores session category/options without activating it, and clears pending recovery while staying paused. The next explicit play activates the restored session. Now Playing publishes the ordinary paused/playing states on both backends. There is not a separate iOS/iPadOS/macOS 27 interrupted state.
+
 ## Now Playing on OS 27
 
 OS 27's NowPlaying framework replaces rate derivation with declared, typed state read from an `@Observable` model, so none of the mechanisms above are needed there. Both paths ship: the deployment targets stay on iOS 26.4 / macOS 26, and the 26 backend is unchanged. (`MPNowPlayingSession`, iOS 16+, is not an alternative: it is `AVPlayer`-centric and publishes through the same dictionary mechanism.)
@@ -56,7 +62,9 @@ The `MediaSession` is built on the first publish while playing, then `requestToB
 
 ### Declared state
 
-`MediaPlaybackSnapshot` carries `.playing()` or `.paused`; the state is declared, not inferred from hardware I/O. Duration is `MediaDuration.continuous` for an ambient mix and `.finite` only while a sleep timer runs, where the snapshot also carries `elapsedTime` and `timestamp` captured at the same instant so the system extrapolates between publishes. Timer changes arrive through `Observations` on `isTimerActive` and `selectedDuration`, not a poll. There is no loop progress on 27 by decision: `updateProgress` is a no-op and only the sleep timer moves the scrubber. While a sleep timer runs the id carries a `:timed:<seconds>` suffix. The system reads an item's duration once per id, so the timed card has to arrive as a new item for the finite length (and the scrubber) to appear. Adding time changes the length and so the id, and the id reverts when the timer ends.
+`MediaPlaybackSnapshot` carries `.playing()` or `.paused`; the state is declared, not inferred from hardware I/O. **Show Playback as Continuous** defaults on for OS 27, publishing `MediaDuration.continuous` and hiding loop progress in system Now Playing and the app's solo/preset player. Turning it off publishes the solo sound's loop or the longest selected loop as finite content. A 0.25-second poll detects wraps and duration changes; only those events re-anchor the elapsed time, while the system extrapolates between anchors. Pausing captures the current position and stops the poll.
+
+A sleep timer always takes priority and remains visible in either mode. Timer changes arrive through `Observations` on `isTimerActive` and `selectedDuration`, not a poll. Both timer and loop snapshots carry `elapsedTime` and `timestamp` captured together. Timed content uses a `:timed:<seconds>` id suffix; loop progress uses `:loop:<duration>`. The system reads duration once per content id, so switching between continuous, loop and timer modes must change the id, while loop wraps retain it. Changing the preference refreshes timing immediately. OS 26 keeps the MediaPlayer behavior.
 
 ### Publish cadence
 
@@ -74,13 +82,13 @@ Animated artwork is declared per aspect ratio: the ratios this device reports th
 
 Every 27-only file is wrapped whole in `#if canImport(NowPlaying)`, because no generally available CI runner ships the 27 SDK (a file that also serves 26, like `BlankieAnimatedArtwork.swift`, guards just its import and its use sites). Use sites add `if #available(iOS 27, macOS 27, visionOS 27, *)`, because the deployment target stays on 26 and the choice is a runtime one. Files with no framework import — the protocol, the mappings, the shared display rules — stay unconditional. Linking needs nothing: NowPlaying weak-links automatically.
 
-Weak linking has a cost. On an OS without NowPlaying.framework the symbols resolve to null, and a stored property whose type is a framework struct makes the enclosing type's metadata crash whenever something realizes every Objective-C class (XCTest does at startup). So no framework struct is ever stored: `NowPlayingSessionModel` keeps `artwork` and `animatedArtwork` in type-erased `Any?` boxes behind computed accessors, everything else is stored as Blankie's own value types (`SessionPlayback`, `SessionTimer`, `SessionAspectRatio`), and framework values are built inside computed properties or local scope. A class reference such as `MediaSession<Model>?` is a plain pointer and is safe.
+Weak linking has a cost. On an OS without NowPlaying.framework the symbols resolve to null, and a stored property whose type is a framework struct makes the enclosing type's metadata crash whenever something realizes every Objective-C class (XCTest does at startup). So no framework struct is ever stored: `NowPlayingSessionModel` keeps `artwork` and `animatedArtwork` in type-erased `Any?` boxes behind computed accessors, everything else is stored as Blankie's own value types (`SessionPlayback`, `SessionProgress`, `SessionAspectRatio`), and framework values are built inside computed properties or local scope. A class reference such as `MediaSession<Model>?` is a plain pointer and is safe.
 
 The widget extension never compiles the 27 backend — `MediaSession` is unavailable in app extensions — so the backend choice is also behind `!WIDGET_EXTENSION` and the widget always gets `NowPlayingManager`.
 
 ### What the 27 path drops
 
-The fade hold, the atomic dictionary merge, the rate reassert after `pauseIfIdle`, and the 0.25 s progress timer are all MediaPlayer-backend answers to rate derivation and per-key publishing; none of them exists on 27. `AudioEngineManager.pauseIfIdle()` itself stays. Idling the hardware once nothing renders is an engine concern, not a Now Playing one.
+The fade hold, the atomic dictionary merge and the rate reassert after `pauseIfIdle` are MediaPlayer-backend answers to rate derivation and per-key publishing; none of them exists on 27. Continuous mode also needs no loop-progress poll; opting out enables the wrap-detection poll described above. `AudioEngineManager.pauseIfIdle()` itself stays. Idling the hardware once nothing renders is an engine concern, not a Now Playing one.
 
 ### Verification
 

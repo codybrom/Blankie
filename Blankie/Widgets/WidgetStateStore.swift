@@ -64,6 +64,13 @@ struct WidgetQuickMixSound: Codable, Equatable, Identifiable {
   /// just "selected" (a sound can be selected via a regular preset without
   /// Quick Mix being active at all).
   var isSelected: Bool
+  /// Optional so snapshots written before XL volume controls remain decodable.
+  var volume: Float? = nil
+
+  var volumePercent: Int {
+    let value = volume ?? 0.8
+    return value.isFinite ? Int((min(1, max(0, value)) * 100).rounded()) : 80
+  }
 }
 
 struct WidgetSnapshot: Codable, Equatable {

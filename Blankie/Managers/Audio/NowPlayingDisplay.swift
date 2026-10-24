@@ -19,7 +19,9 @@ enum NowPlayingDisplay {
 
   // MARK: - Title and artist
 
-  static func getDisplayInfo(presetName: String?, creatorName: String? = nil) -> (
+  static func getDisplayInfo(
+    presetName: String?, creatorName: String? = nil, preset: Preset? = nil
+  ) -> (
     title: String, artist: String
   ) {
     // Check if we're in solo mode
@@ -29,16 +31,21 @@ enum NowPlayingDisplay {
       let artist =
         soloSound.localizedSubtitle ?? (soloSound.isCustom ? soloSound.creditedAuthor : nil)
         ?? "Blankie"
-      return (title: soloSound.title, artist: artist)
+      return (title: soloSound.localizedTitle, artist: artist)
     } else if AudioManager.shared.isQuickMix {
       // Quick Mix has no preset of its own; name it explicitly rather than
       // letting it fall through to the generic "Custom Mix".
-      let artistInfo = getArtistInfo(creatorName: creatorName)
+      let artistInfo = soundNameSummary(currentMixSoundTitles())
       return (title: String(localized: "Quick Mix"), artist: artistInfo)
+    } else if let preset {
+      return (title: preset.displayName, artist: getArtistInfo(creatorName: creatorName))
     } else if let name = presetName {
-      // Handle special presets
+      // A name-only legacy call has no preset identity; handle its internal
+      // default name while preserving the existing fallback for generated names.
       let displayTitle: String
-      if name != "Default" && !name.starts(with: "Preset ") {
+      if name == "Default" {
+        displayTitle = String(localized: "All Blankie Sounds")
+      } else if !name.starts(with: "Preset ") {
         displayTitle = name
       } else {
         displayTitle = String(localized: "Custom Mix")
@@ -66,9 +73,11 @@ enum NowPlayingDisplay {
   /// keeps rendering through its fade-out, so filtering on `isPlaying` would
   /// leave it listed after the user turned it off.
   static func currentMixSoundTitles() -> [String] {
-    AudioManager.shared.orderedVisibleSounds(for: PresetManager.shared.currentPreset)
-      .filter { $0.isSelected }
-      .map { $0.title }
+    AudioManager.shared.orderedVisibleSounds(
+      for: AudioManager.shared.isQuickMix ? nil : PresetManager.shared.currentPreset
+    )
+    .filter { $0.isSelected }
+    .map { $0.localizedTitle }
   }
 
   /// The one subtitle rule for the lock screen, CarPlay and the widget: the mix's
@@ -112,9 +121,7 @@ enum NowPlayingDisplay {
   static func widgetSubtitle(resolvedCreatorName: String?) -> String? {
     if let soloSound = AudioManager.shared.soloModeSound {
       return soloSound.isCustom ? soloSound.creditedAuthor : nil
-    } else if AudioManager.shared.isQuickMix {
-      return resolvedCreatorName
-    } else if let creator = resolvedCreatorName {
+    } else if let creator = resolvedCreatorName, !AudioManager.shared.isQuickMix {
       return creator
     } else {
       let titles = currentMixSoundTitles()

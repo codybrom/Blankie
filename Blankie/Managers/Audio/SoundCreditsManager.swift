@@ -84,8 +84,8 @@ struct ResolvedSoundCredit {
 }
 
 extension Sound {
-  /// A short character caption for this sound (e.g. "Brown noise, deep and
-  /// rumbling"), localized through the string catalog. Built-in sounds only;
+  /// A short character caption for this sound (e.g. "Soft, steady rainfall"),
+  /// localized through the string catalog. Built-in sounds only;
   /// custom sounds carry no subtitle. Looked up by original title so a renamed
   /// built-in still resolves.
   @MainActor var localizedSubtitle: String? {

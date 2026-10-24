@@ -108,6 +108,24 @@ The downloader extension has to be added in Xcode, since it can't be scripted:
 
 `EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE` stays on for local testing. App Store builds pull the packs from App Store Connect, not the bundle. To try packs on device before uploading, build them with `scripts/package_animated_artwork.sh` and follow Apple's [Testing asset packs locally](https://developer.apple.com/documentation/backgroundassets/testing-asset-packs-locally).
 
+## Testing Shortcuts on Mac
+
+Mac supports individual App Intent actions in the Shortcuts editor. Preconfigured App Shortcuts and their Siri phrase registration are not supported on macOS; see [Apple's platform guidance](https://developer.apple.com/design/human-interface-guidelines/app-shortcuts).
+
+Build and run the Mac app, then create or open a shortcut and search for **Blankie** in the editor's Action Library. The main library search finds saved shortcuts, rather than available actions.
+
+With **Show When Run** enabled, an action's confirmation appears in a separate Shortcuts result window. Click **Done** there to finish the workflow; the editor continues to show Stop until the result is dismissed. For UI automation, that window belongs to `com.apple.WorkflowKit.ShortcutsViewService`, separately from the editor. Disable Show When Run when testing unattended execution.
+
+If an older installed copy shares the development build's bundle identifier, macOS can resolve the older copy even after Xcode runs the new one. A copy without App Intents metadata can hide the development build's actions. Prefer a distinct development bundle identifier when keeping both installed, following the bundle ID and App Group setup above.
+
+For a temporary test with the same identifier, use Launch Services to unregister the older copy and force-register the exact development build. This changes registration without deleting either app. Quit and reopen Shortcuts after the new metadata is indexed. Re-register the installed copy when returning to it; another launch or installation of that copy can also change which build the system resolves.
+
+## Widget signing and App Group
+
+The `BlankieWidgetExtension` target is embedded in both the iOS and macOS app. It reads the playback snapshot and cached thumbnails from the same App Group as the app; it does not have a separate group.
+
+In Signing & Capabilities, enable the App Group configured by `APP_GROUP_IDENTIFIER` for both the app and the widget's bundle ID, `$(PRODUCT_BUNDLE_IDENTIFIER).BlankieWidget`. Register that widget bundle ID for both platforms. When preparing distribution, check its App Store profiles and the Developer ID profile used for the GitHub/Homebrew Mac build. A correctly signed app alone does not verify the embedded widget's profile.
+
 ## Code Style
 
 - We *try* to follow the [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/)

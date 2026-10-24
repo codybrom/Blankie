@@ -13,17 +13,21 @@ import SwiftUI
   import AppKit
 #endif
 
-/// Reads a preset thumbnail cached by the app under `preset_thumb_<uuid>`
-/// (the same App Group key CarPlay already uses), so widgets show real
-/// artwork with no widget-specific asset pipeline.
-func thumbnailImage(forKey key: String) -> Image? {
-  guard let data = UserDefaults.shared.data(forKey: key) else { return nil }
+/// Prefer widget-resolution artwork, with the legacy CarPlay cache as a
+/// migration fallback. Downsample before decoding to bound widget memory.
+func thumbnailImage(forKey key: String, maxPixelSize: Int) -> Image? {
+  let image =
+    WidgetArtworkCache.fileURL(for: key).flatMap {
+      WidgetArtworkCache.image(at: $0, maxPixelSize: maxPixelSize)
+    }
+    ?? UserDefaults.shared.data(forKey: key).flatMap {
+      WidgetArtworkCache.image(from: $0, maxPixelSize: maxPixelSize)
+    }
+  guard let image else { return nil }
   #if canImport(UIKit)
-    guard let platformImage = UIImage(data: data) else { return nil }
-    return Image(uiImage: platformImage)
+    return Image(uiImage: UIImage(cgImage: image))
   #elseif canImport(AppKit)
-    guard let platformImage = NSImage(data: data) else { return nil }
-    return Image(nsImage: platformImage)
+    return Image(nsImage: NSImage(cgImage: image, size: .zero))
   #else
     return nil
   #endif

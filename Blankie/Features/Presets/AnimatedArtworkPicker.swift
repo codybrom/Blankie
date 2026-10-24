@@ -103,6 +103,9 @@ import os
           if let asset = selectedAsset {
             Text(asset.displayName)
               .foregroundColor(.secondary)
+          } else if artwork != nil {
+            Text("Custom")
+              .foregroundColor(.secondary)
           } else {
             Text("None")
               .foregroundColor(.secondary)
@@ -119,14 +122,15 @@ import os
     private var tileLabel: some View {
       ArtworkTile(
         caption: "Lock Screen",
-        isSet: selectedAsset != nil,
+        isSet: artwork != nil,
         placeholderIcon: "play.rectangle",
         placeholderLabel: "Browse",
         accent: accent,
         onTap: { showingGallery = true },
-        onRemove: selectedBundledIdentifier == nil ? nil : { removeAnimatedArtwork() },
+        onRemove: artwork == nil ? nil : { removeAnimatedArtwork() },
         thumbnail: {
-          LockScreenTileThumbnail(asset: selectedAsset)
+          LockScreenTileThumbnail(
+            asset: selectedAsset, artwork: artwork, staticArtworkPath: staticArtworkPath)
         }
       )
     }
@@ -146,6 +150,9 @@ import os
       }
       if let previewPath = artwork?.previewPath, previewPath != staticArtworkPath {
         AnimatedArtworkFileStore.removeItemIfExists(relativePath: previewPath)
+      }
+      if let squarePath = artwork?.squarePreviewPath, squarePath != staticArtworkPath {
+        AnimatedArtworkFileStore.removeItemIfExists(relativePath: squarePath)
       }
       artwork = nil
       selectedBundledIdentifier = nil
@@ -225,24 +232,25 @@ import os
 
   // MARK: - Lock Screen Tile Thumbnail
 
-  /// The Lock Screen tile's fill: the selected loop's still square preview,
-  /// with the muted looping video layered on top once it is confirmed on the
-  /// device. It never triggers a download for a thumbnail — a selected asset is
-  /// already downloaded, so this animates in practice; if the download was
-  /// evicted it stays a still until the user re-picks it.
+  /// The Lock Screen tile's still preview, including imported custom loops.
+  /// A local video can play muted over it unless Reduce Motion is enabled.
+  /// Thumbnail rendering never downloads a missing artwork pack.
   private struct LockScreenTileThumbnail: View {
     let asset: BundledAnimatedLoop?
+    let artwork: AnimatedArtworkRef?
+    let staticArtworkPath: String?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var videoURL: URL?
 
     var body: some View {
       ZStack {
         stillPreview
-        if let videoURL {
+        if !reduceMotion, let videoURL {
           LoopingPlayerView(url: videoURL)
         }
       }
-      .task(id: asset?.id) {
+      .task(id: artwork) {
         await loadVideoIfAvailable()
       }
     }
@@ -257,13 +265,25 @@ import os
         Image(uiImage: uiImage)
           .resizable()
           .aspectRatio(contentMode: .fill)
+      } else if let image = PresetArtworkManager.shared.loadLocalAnimatedArtworkPreview(
+        animatedArtwork: artwork, staticArtworkPath: staticArtworkPath)
+      {
+        Image(uiImage: image)
+          .resizable()
+          .aspectRatio(contentMode: .fill)
       } else {
-        Color.secondary.opacity(0.12)
+        Image(systemName: "play.rectangle")
+          .font(.largeTitle)
+          .foregroundStyle(.secondary)
       }
     }
 
     private func loadVideoIfAvailable() async {
       videoURL = nil
+      if let path = artwork?.loopPath, AnimatedArtworkFileStore.fileExists(at: path) {
+        videoURL = AnimatedArtworkFileStore.absoluteURL(for: path)
+        return
+      }
       guard let asset else { return }
       // Play only what is already on the device; don't fetch a pack for a tile.
       guard case .available = BackgroundResourceManager.shared.state(for: asset.preferredPackID)

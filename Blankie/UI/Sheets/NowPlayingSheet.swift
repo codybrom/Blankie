@@ -45,7 +45,7 @@ import SwiftUI
 
     /// CarPlay routes audio (and volume) to the car, so the in-app volume bar
     /// has nothing to control there — hide the whole row when connected.
-    /// Reads AudioManager's published flag (fed by CarPlayAudioBridge).
+    /// Reads the combined CarPlay scene and car-audio route state.
     private var isCarPlayConnected: Bool {
       audioManager.isCarPlayConnected
     }
@@ -407,15 +407,17 @@ import SwiftUI
 
     @ViewBuilder
     private var playbackProgressBar: some View {
-      let anchor = currentProgressAnchor
-      let duration = anchor?.duration ?? 0
+      if globalSettings.showsPlaybackProgress(timerActive: timerManager.isTimerActive) {
+        let anchor = currentProgressAnchor
+        let duration = anchor?.duration ?? 0
 
-      if audioManager.isGloballyPlaying && duration > 0 {
-        TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
+        if audioManager.isGloballyPlaying && duration > 0 {
+          TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
+            playbackBar(duration: duration)
+          }
+        } else {
           playbackBar(duration: duration)
         }
-      } else {
-        playbackBar(duration: duration)
       }
     }
 
@@ -886,6 +888,16 @@ import SwiftUI
   // MARK: - System Volume Slider
 
   final class CenteredVolumeView: MPVolumeView {
+    override func layoutSubviews() {
+      super.layoutSubviews()
+      // MPVolumeView creates/replaces its slider lazily, including after route
+      // changes. Apply appearance during layout rather than one SwiftUI update.
+      if let slider = subviews.first(where: { $0 is UISlider }) as? UISlider {
+        slider.minimumTrackTintColor = UIColor.white.withAlphaComponent(0.7)
+        slider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.2)
+      }
+    }
+
     override func volumeSliderRect(forBounds bounds: CGRect) -> CGRect {
       let rect = super.volumeSliderRect(forBounds: bounds)
       return CGRect(
@@ -894,7 +906,23 @@ import SwiftUI
     }
   }
 
-  struct SystemVolumeSlider: UIViewRepresentable {
+  struct SystemVolumeSlider: View {
+    var body: some View {
+      #if targetEnvironment(simulator)
+        // Simulator cannot provide the hardware-volume slider. A read-only bar
+        // keeps player layouts visible without pretending to control device audio.
+        Slider(value: .constant(0.5), in: 0...1)
+          .tint(.white.opacity(0.7))
+          .sliderThumbVisibility(.hidden)
+          .disabled(true)
+          .accessibilityHidden(true)
+      #else
+        NativeSystemVolumeSlider()
+      #endif
+    }
+  }
+
+  private struct NativeSystemVolumeSlider: UIViewRepresentable {
     func makeUIView(context: Context) -> MPVolumeView {
       let volumeView = CenteredVolumeView(frame: .zero)
       // Hide the thumb for a clean bar look. This is a method on MPVolumeView
@@ -905,13 +933,7 @@ import SwiftUI
     }
 
     func updateUIView(_ uiView: MPVolumeView, context: Context) {
-      // The UISlider subview is built lazily, so apply the track tints here —
-      // updateUIView runs after the view is in the hierarchy and laid out,
-      // whereas in makeUIView `subviews` is typically still empty.
-      if let slider = uiView.subviews.first(where: { $0 is UISlider }) as? UISlider {
-        slider.minimumTrackTintColor = UIColor.white.withAlphaComponent(0.7)
-        slider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.2)
-      }
+      uiView.setNeedsLayout()
     }
   }
 

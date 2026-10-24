@@ -68,7 +68,8 @@ import Testing
       ],
       quickMixSounds: [
         WidgetQuickMixSound(
-          fileName: "rain", displayName: "Rain", systemIconName: "cloud.rain", isSelected: true)
+          fileName: "rain", displayName: "Rain", systemIconName: "cloud.rain", isSelected: true,
+          volume: 0.35)
       ],
       pinnableItems: [
         WidgetFavorite(
@@ -78,6 +79,21 @@ import Testing
       ],
       defaultAccentColorName: "purple"
     )
+  }
+
+  @Test func quickMixVolumeDecodesLegacySnapshotsAndShowsCurrentLevel() throws {
+    let legacy = Data(
+      #"{"fileName":"rain","displayName":"Rain","systemIconName":"cloud.rain","isSelected":true}"#
+        .utf8)
+    let sound = try JSONDecoder().decode(WidgetQuickMixSound.self, from: legacy)
+    #expect(sound.volume == nil)
+    #expect(sound.volumePercent == 80)
+    var updated = sound
+    updated.volume = 0.35
+    #expect(updated.volumePercent == 35)
+    #expect(
+      try JSONDecoder().decode(WidgetQuickMixSound.self, from: JSONEncoder().encode(updated))
+        == updated)
   }
 
   // MARK: - Round-trip / corrupt fallback

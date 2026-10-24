@@ -73,8 +73,44 @@ import Testing
   }
 
   @Test func runningTimerIsFinite() {
-    let timer = NowPlayingSessionMapping.SessionTimer(duration: 1800, elapsed: 60, timestamp: now)
+    let timer = NowPlayingSessionMapping.SessionProgress(
+      duration: 1800, elapsed: 60, timestamp: now)
     #expect(NowPlayingSessionMapping.duration(timer: timer) == .finite(1800))
+  }
+
+  @Test func loopProgressIsOptionalClampedAndRejectsInvalidDurations() throws {
+    #expect(
+      NowPlayingSessionMapping.loopProgress(continuous: true, elapsed: 12, duration: 60, now: now)
+        == nil)
+    #expect(
+      NowPlayingSessionMapping.loopProgress(continuous: false, elapsed: 0, duration: 0.5, now: now)
+        == nil)
+    #expect(
+      NowPlayingSessionMapping.loopProgress(
+        continuous: false, elapsed: .nan, duration: 60, now: now) == nil)
+    #expect(
+      NowPlayingSessionMapping.loopProgress(
+        continuous: false, elapsed: 12, duration: .infinity, now: now) == nil)
+    let loop = try #require(
+      NowPlayingSessionMapping.loopProgress(continuous: false, elapsed: 80, duration: 60, now: now))
+    #expect(loop.elapsed == 60)
+    #expect(loop.timestamp == now)
+    #expect(NowPlayingSessionMapping.duration(timer: nil, loop: loop) == .finite(60))
+    let timer = NowPlayingSessionMapping.SessionProgress(duration: 600, elapsed: 20, timestamp: now)
+    #expect(NowPlayingSessionMapping.duration(timer: timer, loop: loop) == .finite(600))
+  }
+
+  @Test func loopAndContinuousLayoutsHaveDistinctContentIdentity() {
+    #expect(
+      NowPlayingSessionMapping.contentID("solo:rain", timerDuration: nil, loopDuration: 60)
+        == "solo:rain:loop:60.0")
+    #expect(
+      NowPlayingSessionMapping.contentID("solo:rain", timerDuration: nil, loopDuration: 60)
+        != NowPlayingSessionMapping.contentID("solo:rain", timerDuration: nil, loopDuration: 90))
+    #expect(NowPlayingSessionMapping.contentID("solo:rain", timerDuration: nil) == "solo:rain")
+    #expect(
+      NowPlayingSessionMapping.contentID("solo:rain", timerDuration: 600, loopDuration: 60)
+        == "solo:rain:timed:600")
   }
 
   // MARK: - Content identity

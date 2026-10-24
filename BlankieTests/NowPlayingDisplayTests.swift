@@ -72,12 +72,25 @@ import Testing
 
   // MARK: - Title
 
-  /// "Default" is the internal name of the built-in preset, never a title.
-  @Test func defaultPresetNameShowsCustomMix() {
+  /// The legacy name-only path uses the same title as the default preset tile.
+  @Test func defaultPresetNameShowsAllBlankieSounds() {
     #expect(
       NowPlayingDisplay.getDisplayInfo(presetName: "Default").title
-        == String(localized: "Custom Mix")
+        == String(localized: "All Blankie Sounds")
     )
+  }
+
+  /// Preset identity determines its display title; a user's name that happens
+  /// to match a legacy placeholder must still be shown verbatim.
+  @Test func presetIdentityDeterminesTitle() {
+    let builtIn = PresetFactory.makePreset(name: "Default", isDefault: true)
+    #expect(
+      NowPlayingDisplay.getDisplayInfo(presetName: builtIn.name, preset: builtIn).title
+        == builtIn.displayName)
+    for name in ["Default", "Preset 3"] {
+      let custom = PresetFactory.makePreset(name: name)
+      #expect(NowPlayingDisplay.getDisplayInfo(presetName: name, preset: custom).title == name)
+    }
   }
 
   /// Auto-generated "Preset N" names are placeholders too.
@@ -159,6 +172,31 @@ import Testing
     #expect(
       NowPlayingDisplay.getDisplayInfo(presetName: "Rainy Night").title
         == String(localized: "Quick Mix"))
+  }
+
+  /// Entering Quick Mix keeps the last preset loaded, but none of its creator
+  /// or membership metadata belongs to the new mix.
+  @Test func quickMixIgnoresPreviousPresetMetadata() {
+    selectTwoSoundsInOrder()
+    let preset = PresetFactory.makePreset(
+      soundStates: [PresetState(fileName: "test-rain", isSelected: true, volume: 0.5)],
+      creatorName: "Ada")
+    PresetManager.shared.setCurrentPreset(preset)
+    audioManager.isQuickMix = true
+
+    #expect(NowPlayingDisplay.currentMixSoundTitles().count == 2)
+    #expect(
+      NowPlayingDisplay.getDisplayInfo(presetName: preset.name, creatorName: "Ada").artist
+        == NowPlayingDisplay.soundNameSummary(NowPlayingDisplay.currentMixSoundTitles()))
+    #expect(
+      NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: "Ada")
+        == NowPlayingDisplay.soundNameSummary(NowPlayingDisplay.currentMixSoundTitles()))
+
+    audioManager.sounds = []
+    #expect(
+      NowPlayingDisplay.getDisplayInfo(presetName: preset.name, creatorName: "Ada").artist
+        == "Blankie")
+    #expect(NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: "Ada") == nil)
   }
 
   // MARK: - Widget subtitle

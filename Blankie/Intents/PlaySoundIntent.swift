@@ -10,7 +10,7 @@ import AppIntents
 struct PlaySoundIntent: AppIntent, AudioPlaybackIntent {
   static var title: LocalizedStringResource { "Play Sound" }
   static var description: IntentDescription {
-    IntentDescription("Adds a sound to the current mix and starts playing it.")
+    IntentDescription("Plays a sound on its own without changing your saved preset.")
   }
 
   @Parameter(
@@ -29,27 +29,14 @@ struct PlaySoundIntent: AppIntent, AudioPlaybackIntent {
     guard let target = AudioManager.shared.sound(fileName: sound.id) else {
       throw BlankieIntentError.soundNotFound
     }
-    // Preset-use-only sounds have no tile on the default grid, so playing one
-    // there would leave nothing to stop it — the state the sound sheet and
-    // preset application both prevent.
-    if target.isPresetUseOnly, PresetManager.shared.currentPreset?.isDefault ?? true {
+    // Saved shortcuts can still reference sounds excluded from solo discovery.
+    if target.isPresetUseOnly {
       return .result(dialog: IntentDialog("\(target.localizedTitle) is set to preset use only."))
     }
-    // Leave solo/Quick Mix so the sound is actually audible: solo suppresses a
-    // newly selected non-solo sound, and Quick Mix would otherwise stay active
-    // with its own sound set instead of the sound being added to the mix.
-    // The sound joins the restored pre-Quick-Mix mix, so keep it.
-    AudioManager.shared.leaveTransientModes(restoringQuickMix: true)
-    // A custom preset shows and saves only its own sounds, so add the sound to
-    // it first. Otherwise it plays with no tile to stop it.
-    if let preset = PresetManager.shared.currentPreset, !preset.isDefault {
-      PresetManager.shared.setSound(
-        target.fileName, member: true, ofPreset: preset.id, volume: target.volume)
-    }
-    if !target.isSelected {
-      target.isSelected = true
-    }
-    AudioManager.shared.setGlobalPlaybackState(true)
+    let audio = AudioManager.shared
+    audio.enterSoloMode(for: target)
+    // Entering the same solo is a no-op, so explicitly resume it if paused.
+    audio.setGlobalPlaybackState(true)
     return .result(dialog: IntentDialog("Playing \(target.localizedTitle)."))
   }
 }

@@ -78,6 +78,13 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setShowPlaybackAsContinuous(_ value: Bool) {
+    showPlaybackAsContinuous = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showPlaybackAsContinuous)
+    AudioManager.shared.nowPlayingManager?.republishCurrentPreset()
+  }
+
+  @MainActor
   func setShowMenuBarIcon(_ value: Bool) {
     showMenuBarIcon = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showMenuBarIcon)

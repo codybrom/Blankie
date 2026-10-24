@@ -61,6 +61,9 @@ extension GlobalSettings {
     showProgressBorder =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? true
 
+    showPlaybackAsContinuous =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showPlaybackAsContinuous) as? Bool ?? true
+
     // Lock portrait orientation on iOS preference (default to false)
     lockPortraitOrientationiOS =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockPortraitOrientationiOS) as? Bool

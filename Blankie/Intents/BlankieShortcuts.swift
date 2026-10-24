@@ -7,11 +7,9 @@
 
 import AppIntents
 
-/// Siri phrases and Shortcuts app tiles. Auto-discovered by the system at
-/// build time — no manual registration or Info.plist entry required. Siri
-/// phrases/Spotlight tiles only surface on iOS/CarPlay (App Shortcuts aren't
-/// supported on macOS); the underlying `AppIntent`s remain available there
-/// as building blocks in Shortcuts.app for Mac.
+/// Preconfigured Siri phrases and App Shortcut tiles for iOS. Apple does not
+/// support preconfigured App Shortcuts on macOS; the individual App Intent
+/// actions are still available when building custom shortcuts on the Mac.
 struct BlankieShortcuts: AppShortcutsProvider {
   @AppShortcutsBuilder
   nonisolated static var appShortcuts: [AppIntents.AppShortcut] {
@@ -38,6 +36,9 @@ struct BlankieShortcuts: AppShortcutsProvider {
       phrases: [
         "Play \(\.$preset) in \(.applicationName)",
         "Play \(\.$preset) on \(.applicationName)",
+        "Start \(.applicationName) preset \(\.$preset)",
+        "Play the preset \(\.$preset) in \(.applicationName)",
+        "Start a preset in \(.applicationName)",
       ],
       shortTitle: "Play a Preset",
       systemImageName: "square.stack.3d.up.fill"
@@ -46,7 +47,9 @@ struct BlankieShortcuts: AppShortcutsProvider {
       intent: PlaySoundIntent(),
       phrases: [
         "Play \(\.$sound) sounds in \(.applicationName)",
-        "Play \(\.$sound) in \(.applicationName)",
+        "Start \(.applicationName) sound \(\.$sound)",
+        "Play the sound \(\.$sound) in \(.applicationName)",
+        "Start a sound in \(.applicationName)",
       ],
       shortTitle: "Play a Sound",
       systemImageName: "waveform"

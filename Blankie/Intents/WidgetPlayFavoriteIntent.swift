@@ -13,6 +13,8 @@ import AppIntents
 /// just to resolve a parameter — the token is already known from the cached
 /// `WidgetSnapshot` the tile was built from.
 struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
+  static var isDiscoverable: Bool { false }
+
   static var title: LocalizedStringResource { "Play Favorite" }
   static var description: IntentDescription {
     IntentDescription("Plays a favorited preset, Quick Mix, or sound from Blankie.")

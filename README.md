@@ -50,6 +50,9 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 - **Customizable presets** with colors, artwork and layouts that you can export and share with friends
 - **Quick Mix and a sleep timer** for fast, focused listening
 - **Animated lock-screen artwork** on iPhone and iPad
+- **Home Screen widgets** on iPhone and iPad for Now Playing, Favorites, Pinned Sound and Quick Mix
+- **Siri and Shortcuts actions** for playback, presets, sounds, sleep timers and volume
+- **Spotlight search** for presets and sounds on Mac, iPhone and iPad
 - **System integration** with media keys, Control Center, AirPods and CarPlay
 - **12 languages supported** with more added by the community all the time
 

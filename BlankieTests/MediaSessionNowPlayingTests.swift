@@ -26,9 +26,12 @@
     private let originalQuickMix: Bool
     private let originalCurrentPreset: Preset?
     private let originalDefaultArtwork: AnimatedArtworkRef?
+    private let originalContinuous: Bool
     nonisolated private static let testName = "test-rain"
 
     init() {
+      originalContinuous = GlobalSettings.shared.showPlaybackAsContinuous
+      GlobalSettings.shared.showPlaybackAsContinuous = true
       originalAutoPlay = GlobalSettings.shared.autoPlayOnLaunch
       originalSounds = audioManager.sounds
       originalSolo = audioManager.soloModeSound
@@ -51,6 +54,7 @@
       // Nothing here starts a timer that outlives its test, so stopping is the
       // restore: the suite never runs with one already counting down.
       TimerManager.shared.stopTimer()
+      GlobalSettings.shared.showPlaybackAsContinuous = originalContinuous
       audioManager.soloModeSound = originalSolo
       audioManager.isQuickMix = originalQuickMix
       audioManager.sounds = originalSounds
@@ -260,10 +264,47 @@
       #expect(backend.model.contentID == "preset:\(preset.id.uuidString)")
     }
 
+    @Test func continuousPreferenceSwitchesThePublishedLoopAndPlayerProgress() {
+      guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
+      let sound = TestSound(fileName: Self.testName)
+      sound.stubbedDuration = 120
+      sound.isSelected = true
+      audioManager.sounds = [sound]
+      audioManager.soloModeSound = sound
+      let backend = MediaSessionNowPlaying()
+      backend.updateInfo(isPlaying: false)
+      backend.flushPendingPublish()
+      #expect(backend.model.loopProgress == nil)
+      #expect(!GlobalSettings.shared.showsPlaybackProgress(timerActive: false))
+
+      GlobalSettings.shared.showPlaybackAsContinuous = false
+      backend.updatePlaybackState(isPlaying: false)
+      #expect(backend.model.loopProgress?.duration == 120)
+      #expect(backend.model.content?.id == "solo:\(Self.testName):loop:120.0")
+      #expect(GlobalSettings.shared.showsPlaybackProgress(timerActive: false))
+      #expect(backend.model.playback == .paused)
+
+      TimerManager.shared.startTimer(duration: 600)
+      backend.updatePlaybackState(isPlaying: false)
+      #expect(backend.model.timer?.duration == 600)
+      #expect(backend.model.loopProgress == nil)
+      #expect(backend.model.content?.id == "solo:\(Self.testName):timed:600")
+      GlobalSettings.shared.showPlaybackAsContinuous = true
+      backend.updatePlaybackState(isPlaying: false)
+      #expect(backend.model.timer?.duration == 600)
+      #expect(GlobalSettings.shared.showsPlaybackProgress(timerActive: true))
+
+      TimerManager.shared.stopTimer()
+      backend.updatePlaybackState(isPlaying: false)
+      #expect(backend.model.timer == nil)
+      #expect(backend.model.loopProgress == nil)
+      #expect(backend.model.content?.id == "solo:\(Self.testName)")
+      backend.clear()
+    }
+
     // MARK: - Sleep timer
 
-    /// Only a sleep timer moves the scrubber on 27, so the model carries timing
-    /// exactly while one is counting down.
+    /// With continuous playback enabled, only a sleep timer moves the scrubber.
     @Test func timingFollowsTheSleepTimer() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
