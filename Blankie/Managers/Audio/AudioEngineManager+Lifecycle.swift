@@ -136,9 +136,9 @@ extension AudioEngineManager {
       onEngineReset?()
 
       state = .paused
-      Task { @MainActor in
-        AudioManager.shared.setGlobalPlaybackState(false)
-      }
+      // Clear pending interruption recovery too. A late interruption-ended
+      // notification must not restart playback after the media server reset.
+      AudioManager.shared.setGlobalPlaybackState(false, pauseFadeDuration: 0)
     }
   #endif
 }

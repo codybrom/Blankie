@@ -103,8 +103,6 @@ extension AudioManager {
     #if os(iOS) || os(visionOS)
       // Setup audio session when starting playback
       setupAudioSessionForPlayback()
-      // Setup audio session observers on first playback
-      setupAudioSessionObservers()
     #endif
 
     // If in solo mode, play only the solo sound
@@ -222,20 +220,21 @@ extension AudioManager {
 
     // Update state first
     isGloballyPlaying = shouldPlay
+    #if os(iOS) || os(visionOS)
+      // Explicit playback requests supersede automatic interruption recovery,
+      // including a pause from Siri, a sleep timer, or a disconnected route.
+      wasPlayingWhenInterrupted = false
+    #endif
     if shouldPlay {
       // Playback is underway, so the macOS open-time autoplay must not fire later.
       launchAutoPlayHandled = true
-      #if os(iOS) || os(visionOS)
-        // A play during an interruption supersedes it, so its end can't resume over a later pause.
-        wasPlayingWhenInterrupted = false
-      #endif
     }
 
     // Play/pause from anywhere (remote, CarPlay, intents, timer) ends a sound-editor
     // preview. A play ignored for an empty mix leaves it alone. Playback below
     // restarts or pauses the mix itself.
     if !playing || shouldPlay {
-      exitPreviewMode(resuming: false)
+      exitPreviewMode(resuming: false, pauseFadeDuration: pauseFadeDuration)
     }
 
     // Then handle playback

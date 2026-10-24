@@ -35,6 +35,12 @@ Four cooperating mechanisms. All of them are required. Mechanisms 2 and 3 are th
 - **Shorter audible ramps**: 0.5s and 0.15s remote-pause fades both danced in Control Center. Only a zero-length cut is stable.
 - **A rate-only "reassert" write after the engine idles**: not enough on its own while other writes still go out per-key.
 
+## Interruptions and route changes (iOS / visionOS)
+
+Every playback activation, including a sound-editor preview, installs the session observers before activating audio. Interruption begin pauses synchronously without a fade and remembers whether global playback was active. Interruption end consumes that remembered state exactly once and resumes only with the system's `shouldResume` hint. Explicit play or pause requests supersede that recovery, so Siri pause, sleep-timer expiry and headphone removal cannot be undone by a later interruption-end notification. Headphone removal stops previews too, even when global playback was already paused.
+
+A media-services reset rebuilds the engine, unloads the old players, restores session category/options without activating it, and clears pending recovery while staying paused. The next explicit play activates the restored session. Now Playing publishes the ordinary paused/playing states on both backends. There is not a separate iOS/iPadOS/macOS 27 interrupted state.
+
 ## Now Playing on OS 27
 
 OS 27's NowPlaying framework replaces rate derivation with declared, typed state read from an `@Observable` model, so none of the mechanisms above are needed there. Both paths ship: the deployment targets stay on iOS 26.4 / macOS 26, and the 26 backend is unchanged. (`MPNowPlayingSession`, iOS 16+, is not an alternative: it is `AVPlayer`-centric and publishes through the same dictionary mechanism.)

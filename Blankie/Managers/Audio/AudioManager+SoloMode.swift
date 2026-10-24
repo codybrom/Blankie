@@ -311,7 +311,7 @@ extension AudioManager {
   /// `resuming: false` restores volumes without restarting the pre-preview
   /// mix, for callers that start or replace playback right after.
   @MainActor
-  func exitPreviewMode(resuming: Bool = true) {
+  func exitPreviewMode(resuming: Bool = true, pauseFadeDuration: TimeInterval? = nil) {
     guard let previewSound = previewModeSound else { return }
     Logger.audio.debug("AudioManager: Exiting preview mode for '\(previewSound.title)'")
 
@@ -319,7 +319,7 @@ extension AudioManager {
     let previewSoundWasPlaying =
       previewModeOriginalStates[previewSound.fileName]?.isPlaying ?? false
     if !previewSoundWasPlaying {
-      previewSound.pause()
+      previewSound.pause(fadeDuration: pauseFadeDuration)
     }
     // If it was playing before, let it continue playing (it will be handled in the restoration loop)
 

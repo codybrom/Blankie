@@ -23,9 +23,16 @@ import Testing
 
 @testable import Blankie
 
+#if os(iOS) || os(visionOS)
+  import AVFoundation
+#endif
+
 @Suite(.serialized) @MainActor final class PresetEntryTests {
   private let sandbox: SingletonSandbox
   private let originalStarredItems: [String]
+  #if os(iOS) || os(visionOS)
+    private let originalInterrupted: Bool
+  #endif
   private var audioManager: AudioManager { sandbox.audioManager }
   private var presetManager: PresetManager { sandbox.presetManager }
 
@@ -33,11 +40,18 @@ import Testing
     sandbox = await SingletonSandbox.make(
       soundNames: ["test-entry-a", "test-entry-b", "test-entry-preview"])
     originalStarredItems = GlobalSettings.shared.starredItems
+    #if os(iOS) || os(visionOS)
+      originalInterrupted = AudioManager.shared.wasPlayingWhenInterrupted
+      audioManager.wasPlayingWhenInterrupted = false
+    #endif
   }
 
   isolated deinit {
     sandbox.restore()
     GlobalSettings.shared.setStarredItems(originalStarredItems)
+    #if os(iOS) || os(visionOS)
+      audioManager.wasPlayingWhenInterrupted = originalInterrupted
+    #endif
   }
 
   // MARK: - Helpers
@@ -364,6 +378,161 @@ import Testing
   // MARK: - Interruption resume (F4)
 
   #if os(iOS) || os(visionOS)
+    @Test(arguments: [false, true])
+    func carVolumeStaysHiddenUntilBothSceneAndRouteDisconnect(routeConnectsFirst: Bool) {
+      let originalConnected = audioManager.isCarPlayConnected
+      defer {
+        audioManager.setCarAudioRouteActive(false)
+        audioManager.setCarPlayConnected(originalConnected)
+      }
+      audioManager.setCarPlayConnected(false)
+      audioManager.setCarAudioRouteActive(false)
+      #expect(!audioManager.isCarPlayConnected)
+      if routeConnectsFirst {
+        audioManager.setCarAudioRouteActive(true)
+      } else {
+        audioManager.setCarPlayConnected(true)
+      }
+      #expect(audioManager.isCarPlayConnected)
+      audioManager.setCarAudioRouteActive(true)
+      audioManager.setCarPlayConnected(true)
+      if routeConnectsFirst {
+        audioManager.setCarAudioRouteActive(false)
+      } else {
+        audioManager.setCarPlayConnected(false)
+      }
+      #expect(audioManager.isCarPlayConnected)
+      audioManager.setCarAudioRouteActive(false)
+      audioManager.setCarPlayConnected(false)
+      #expect(!audioManager.isCarPlayConnected)
+    }
+
+    private func interrupt(_ type: AVAudioSession.InterruptionType, resume: Bool? = nil) {
+      var info: [String: Any] = [AVAudioSessionInterruptionTypeKey: type.rawValue]
+      if let resume {
+        info[AVAudioSessionInterruptionOptionKey] =
+          resume ? AVAudioSession.InterruptionOptions.shouldResume.rawValue : UInt(0)
+      }
+      audioManager.handleAudioInterruption(
+        Notification(name: AVAudioSession.interruptionNotification, userInfo: info))
+    }
+
+    @Test(arguments: [false, true])
+    func interruptionResumesOnlyIfPlaybackWasActive(wasPlaying: Bool) {
+      _ = makeSounds()
+      audioManager.setGlobalPlaybackState(wasPlaying)
+      interrupt(.began)
+      #expect(!audioManager.isGloballyPlaying)
+      interrupt(.ended, resume: true)
+      #expect(audioManager.isGloballyPlaying == wasPlaying)
+      #expect(!audioManager.wasPlayingWhenInterrupted)
+      audioManager.setGlobalPlaybackState(false)
+    }
+
+    @Test func pauseDuringInterruptionPreventsAutomaticResume() {
+      _ = makeSounds()
+      audioManager.setGlobalPlaybackState(true)
+      interrupt(.began)
+      #expect(audioManager.wasPlayingWhenInterrupted)
+      audioManager.setGlobalPlaybackState(false)
+      interrupt(.ended, resume: true)
+      #expect(!audioManager.isGloballyPlaying)
+    }
+
+    @Test func sleepTimerExpiryDuringInterruptionPreventsAutomaticResume() async {
+      _ = makeSounds()
+      let timer = TimerManager.shared
+      let now = Date(timeIntervalSince1970: 1000)
+      defer {
+        timer.stopTimer()
+        timer.now = { Date() }
+      }
+      audioManager.setGlobalPlaybackState(true)
+      timer.now = { now }
+      timer.startTimer(duration: 60)
+      interrupt(.began)
+      timer.now = { now.addingTimeInterval(61) }
+      timer.tick()
+      for _ in 0..<100 where timer.isTimerActive { await Task.yield() }
+      #expect(!timer.isTimerActive)
+      interrupt(.ended, resume: true)
+      #expect(!audioManager.isGloballyPlaying)
+    }
+
+    @Test(arguments: [false, true])
+    func interruptionEndWithoutResumeConsumesPendingRecovery(includeOptions: Bool) {
+      _ = makeSounds()
+      audioManager.setGlobalPlaybackState(true)
+      interrupt(.began)
+      interrupt(.ended, resume: includeOptions ? false : nil)
+      #expect(!audioManager.wasPlayingWhenInterrupted)
+      // A duplicate/stale end must not resurrect the consumed request.
+      interrupt(.ended, resume: true)
+      #expect(!audioManager.isGloballyPlaying)
+    }
+
+    @Test func headphoneDisconnectDuringInterruptionPreventsAutomaticResume() {
+      _ = makeSounds()
+      audioManager.setGlobalPlaybackState(true)
+      interrupt(.began)
+      audioManager.handleAudioRouteChange(
+        Notification(
+          name: AVAudioSession.routeChangeNotification,
+          userInfo: [
+            AVAudioSessionRouteChangeReasonKey:
+              AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue
+          ]))
+      interrupt(.ended, resume: true)
+      #expect(!audioManager.isGloballyPlaying)
+    }
+
+    @Test(arguments: [false, true])
+    func previewObservesAndStopsForInterruptionsAndHeadphoneRemoval(disconnect: Bool) {
+      let (_, preview) = makeSounds()
+      audioManager.enterPreviewMode(for: preview)
+      #expect(audioManager.audioSessionObserversSetup)
+      #expect(audioManager.previewModeSound === preview)
+      let note =
+        disconnect
+        ? Notification(
+          name: AVAudioSession.routeChangeNotification,
+          userInfo: [
+            AVAudioSessionRouteChangeReasonKey:
+              AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue
+          ])
+        : Notification(
+          name: AVAudioSession.interruptionNotification,
+          userInfo: [
+            AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue
+          ])
+      NotificationCenter.default.post(note)
+      #expect(audioManager.previewModeSound == nil)
+      #expect(!audioManager.isGloballyPlaying)
+      #expect(!audioManager.wasPlayingWhenInterrupted)
+    }
+
+    @Test func resetConfigurationDoesNotActivateUntilPlaybackIsRequested() {
+      var configurations: [AVAudioSession.CategoryOptions] = []
+      var activations: [Bool] = []
+      let session = AudioSessionManager(
+        setCategory: { category, mode, options in
+          #expect(category == .playback)
+          #expect(mode == .default)
+          configurations.append(options)
+        },
+        setActive: { active, _ in activations.append(active) })
+      session.reapplyConfiguration(mixWithOthers: true, isCarPlayConnected: false)
+      session.reapplyConfiguration(mixWithOthers: true, isCarPlayConnected: true)
+      #expect(configurations == [[.mixWithOthers], []])
+      #expect(activations.isEmpty)
+      session.reactivateForForeground(
+        mixWithOthers: false, isCarPlayConnected: false, isPlaying: false)
+      #expect(activations.isEmpty)
+      session.setupForPlayback(mixWithOthers: true, isCarPlayConnected: true)
+      #expect(configurations.last == [])
+      #expect(activations == [true])
+    }
+
     /// A play during an interruption supersedes it, so its end can't resume
     /// playback over a pause made after that play.
     @Test func playDuringInterruptionClearsTheResume() async {

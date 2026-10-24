@@ -25,9 +25,12 @@ extension AudioManager {
     private func setupIOSNotificationObservers() {
       setupTerminationObserver()
       setupBackgroundObservers()
-      // Delay audio session observers until first playback to avoid interrupting other apps
-      // setupAudioInterruptionObserver()
-      // setupAudioRouteChangeObserver()
+      // Route observation does not activate audio. Keep UI policy current even
+      // before the first play, including builds without a CarPlay scene.
+      setupAudioRouteChangeObserver()
+      setCarAudioRouteActive(SpatialSessionManager.isCarAudioRouteActive)
+      // Interruption/reset observers are installed before the first playback
+      // activation, including previews, by setupAudioSessionObservers().
     }
 
     // Call this when we first start playing to setup audio session observers
@@ -35,7 +38,6 @@ extension AudioManager {
       guard !audioSessionObserversSetup else { return }
       Logger.audio.debug("AudioManager: Setting up audio session observers on first playback")
       setupAudioInterruptionObserver()
-      setupAudioRouteChangeObserver()
       setupMediaServicesResetObserver()
 
       // A media-services reset invalidates every node bound to the dead
@@ -109,6 +111,8 @@ extension AudioManager {
         "AudioManager: handleWillEnterForeground called - isGloballyPlaying: \(self.isGloballyPlaying)"
       )
 
+      setCarAudioRouteActive(
+        SpatialSessionManager.isCarAudioRouteActive, reconfigureSession: false)
       AudioSessionManager.shared.reactivateForForeground(
         mixWithOthers: GlobalSettings.shared.mixWithOthers,
         isCarPlayConnected: isCarPlayConnected,
@@ -145,7 +149,7 @@ extension AudioManager {
       }
     }
 
-    private func handleAudioInterruption(_ notification: Notification) {
+    func handleAudioInterruption(_ notification: Notification) {
       guard let userInfo = notification.userInfo,
         let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
         let type = AVAudioSession.InterruptionType(rawValue: typeValue)
@@ -168,32 +172,30 @@ extension AudioManager {
       // Remember whether we were actually playing; Blankie keeps its session
       // active while paused, so the interruption can end with .shouldResume even
       // though the user had nothing going.
-      wasPlayingWhenInterrupted = isGloballyPlaying
-      // An interruption ends a sound-editor preview, even while globally paused.
-      exitPreviewMode(resuming: false)
-      if isGloballyPlaying {
-        Task { @MainActor in
-          // The paused publish applies the progress anchor (timer > solo > longest loop).
-          self.setGlobalPlaybackState(false)
-        }
-      }
+      let shouldResume = isGloballyPlaying
+      // Handle synchronously: a queued pause could otherwise arrive after a
+      // new play request. Stop previews even while globally paused, without a fade.
+      setGlobalPlaybackState(false, pauseFadeDuration: 0)
+      // The interruption's own pause is the sole pause that preserves recovery.
+      wasPlayingWhenInterrupted = shouldResume
     }
 
     private func handleInterruptionEnded(userInfo: [AnyHashable: Any]) {
+      let wasPlaying = wasPlayingWhenInterrupted
+      // Consume on every end, including missing options or a refusal to resume.
+      wasPlayingWhenInterrupted = false
       if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
         // Only resume if the system recommends it AND we were actually playing
         // when the interruption began — .shouldResume alone is just a hint, and
         // a call arriving while paused must not start the app playing on its own.
-        if options.contains(.shouldResume), wasPlayingWhenInterrupted {
+        if options.contains(.shouldResume), wasPlaying {
           Logger.audio.debug(
             "AudioManager: Audio interruption ended with shouldResume flag - resuming playback")
-          Task { @MainActor in
-            self.setGlobalPlaybackState(true)
-          }
+          setGlobalPlaybackState(true)
         } else {
           Logger.audio.debug(
-            "AudioManager: Audio interruption ended; not resuming (shouldResume: \(options.contains(.shouldResume)), wasPlaying: \(self.wasPlayingWhenInterrupted))"
+            "AudioManager: Audio interruption ended; not resuming (shouldResume: \(options.contains(.shouldResume)), wasPlaying: \(wasPlaying))"
           )
         }
       }
@@ -211,13 +213,19 @@ extension AudioManager {
       }
     }
 
-    private func handleAudioRouteChange(_ notification: Notification) {
+    func handleAudioRouteChange(_ notification: Notification) {
+      // Read the route for every notification, not only attach/detach reasons;
+      // category and configuration changes can expose the car output too.
       guard let userInfo = notification.userInfo,
         let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
         let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
       else {
         return
       }
+
+      setCarAudioRouteActive(
+        SpatialSessionManager.isCarAudioRouteActive,
+        reconfigureSession: reason != .oldDeviceUnavailable)
 
       // A car route ends any spatial session (rationale on the helper).
       if SpatialSessionManager.isCarAudioRouteActive {
@@ -229,11 +237,9 @@ extension AudioManager {
       switch reason {
       case .oldDeviceUnavailable:
         Logger.audio.debug("AudioManager: Audio route changed - old device unavailable")
-        if isGloballyPlaying {
-          Task { @MainActor in
-            self.setGlobalPlaybackState(false)
-          }
-        }
+        // Also stop a preview and cancel any pending interruption resume, even
+        // if the interruption has already made global playback appear paused.
+        setGlobalPlaybackState(false, pauseFadeDuration: 0)
       case .newDeviceAvailable:
         Logger.audio.debug("AudioManager: Audio route changed - new device available")
       default:
