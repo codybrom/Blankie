@@ -21,6 +21,8 @@ class PresetManager {
   /// Per-process only; reset each launch.
   @ObservationIgnored private var lastDiscoverableEntitiesSignature: String?
   @ObservationIgnored private var spotlightDonationTask: Task<Void, Never>?
+  /// Only the latest thumbnail request for a preset may commit its result.
+  @ObservationIgnored private var thumbnailRequests: [UUID: UUID] = [:]
   static let shared = PresetManager()
 
   private(set) var presets: [Preset] = []
@@ -1271,7 +1273,9 @@ extension PresetManager {
   @MainActor
   @discardableResult
   func cacheThumbnail(
-    for preset: Preset, force: Bool = false, reloadingWidgets: Bool = true
+    for preset: Preset, force: Bool = false, reloadingWidgets: Bool = true,
+    renderThumbnails: @Sendable (Data) async -> (carPlay: Data?, widget: Data?) =
+      PresetManager.renderThumbnailData
   ) async -> Bool {
     let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
     let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
@@ -1280,6 +1284,14 @@ extension PresetManager {
       let widgetURL, FileManager.default.fileExists(atPath: widgetURL.path)
     {
       return false
+    }
+
+    let request = UUID()
+    thumbnailRequests[preset.id] = request
+    defer {
+      if thumbnailRequests[preset.id] == request {
+        thumbnailRequests.removeValue(forKey: preset.id)
+      }
     }
 
     // Static artwork takes precedence over the animation preview, as in the app.
@@ -1291,12 +1303,10 @@ extension PresetManager {
       let sourceData = fullImage.tiffRepresentation
     #endif
     guard let sourceData else { return false }
-    let images = await Task.detached(priority: .utility) {
-      (
-        carPlay: WidgetArtworkCache.jpegThumbnail(from: sourceData, maxPixelSize: 132),
-        widget: WidgetArtworkCache.jpegThumbnail(from: sourceData)
-      )
-    }.value
+    let images = await renderThumbnails(sourceData)
+    // Loading and rendering both suspend. An edit or removal can invalidate
+    // this request in either interval; never let its old image return afterward.
+    guard !Task.isCancelled, thumbnailRequests[preset.id] == request else { return false }
     guard let thumbnailData = images.carPlay, let widgetData = images.widget else { return false }
 
     // Large artwork stays out of UserDefaults and is readable while locked.
@@ -1315,6 +1325,17 @@ extension PresetManager {
       WidgetStateStore.artworkDidChange()
     }
     return true
+  }
+
+  nonisolated private static func renderThumbnailData(_ sourceData: Data) async -> (
+    carPlay: Data?, widget: Data?
+  ) {
+    await Task.detached(priority: .utility) {
+      (
+        carPlay: WidgetArtworkCache.jpegThumbnail(from: sourceData, maxPixelSize: 132),
+        widget: WidgetArtworkCache.jpegThumbnail(from: sourceData)
+      )
+    }.value
   }
 
   /// Cache thumbnails for all presets, reloading widgets once if any were written.
@@ -1339,6 +1360,8 @@ extension PresetManager {
 
   /// Remove cached thumbnail when a preset is deleted or its artwork removed
   func removeThumbnail(for presetId: UUID) {
+    // Invalidate even when no files exist yet: a first render may be in flight.
+    thumbnailRequests.removeValue(forKey: presetId)
     let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
     let thumbnailKey = "preset_thumb_\(presetId.uuidString)"
     let widgetURL = WidgetArtworkCache.fileURL(for: thumbnailKey)

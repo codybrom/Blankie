@@ -265,8 +265,8 @@ import os
         Image(uiImage: uiImage)
           .resizable()
           .aspectRatio(contentMode: .fill)
-      } else if let path = artwork?.squarePreviewPath ?? artwork?.previewPath ?? staticArtworkPath,
-        let image = UIImage(contentsOfFile: AnimatedArtworkFileStore.absoluteURL(for: path).path)
+      } else if let image = PresetArtworkManager.shared.loadLocalAnimatedArtworkPreview(
+        animatedArtwork: artwork, staticArtworkPath: staticArtworkPath)
       {
         Image(uiImage: image)
           .resizable()

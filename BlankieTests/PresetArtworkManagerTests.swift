@@ -66,6 +66,19 @@ struct PresetArtworkManagerTests {
     preset.animatedArtwork?.previewPath = path
     #expect(await manager.loadBackgroundImageAsync(for: preset) != nil)
 
+    // Imported refs may retain a square path whose file is missing or corrupt.
+    let corruptPath = AnimatedArtworkFileStore.makeRelativePreviewPath(
+      for: UUID(), fileExtension: "png")
+    try AnimatedArtworkFileStore.writeData(Data([0x01]), to: corruptPath)
+    defer { AnimatedArtworkFileStore.removeItemIfExists(relativePath: corruptPath) }
+    preset.animatedArtwork?.squarePreviewPath = "missing-square.png"
+    #expect(await manager.loadBackgroundImageAsync(for: preset) != nil)
+    preset.animatedArtwork?.squarePreviewPath = corruptPath
+    #expect(await manager.loadBackgroundImageAsync(for: preset) != nil)
+    preset.animatedArtwork?.previewPath = corruptPath
+    preset.staticArtworkPath = path
+    #expect(await manager.loadBackgroundImageAsync(for: preset) != nil)
+
     let artworkId = UUID()
     manager.cacheImage(image, for: artworkId)
     preset.artworkId = artworkId
@@ -127,6 +140,64 @@ struct PresetArtworkManagerTests {
     PresetManager.shared.removeThumbnail(for: preset.id)
     #expect(defaults.data(forKey: key) == nil)
     #expect(!FileManager.default.fileExists(atPath: url.path))
+  }
+
+  /// Hold the old render at its suspension point, then remove or replace the
+  /// artwork before releasing it. The late result must never reach either cache.
+  @Test(arguments: [false, true])
+  func staleThumbnailCannotOverwriteRemovalOrReplacement(replace: Bool) async throws {
+    let renderer = ImageRenderer(content: Color.red.frame(width: 32, height: 32))
+    #if canImport(UIKit)
+      let image = try #require(renderer.uiImage)
+      let data = try #require(image.pngData())
+    #else
+      let image = try #require(renderer.nsImage)
+      let data = try #require(image.tiffRepresentation)
+    #endif
+    let artworkId = UUID()
+    let preset = PresetFactory.makePreset(artworkId: artworkId)
+    PresetArtworkManager.shared.cacheImage(image, for: artworkId)
+    let manager = PresetManager.shared
+    let key = "preset_thumb_\(preset.id.uuidString)"
+    let defaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
+    let url = try #require(WidgetArtworkCache.fileURL(for: key))
+    let started = AsyncStream<Void>.makeStream()
+    let release = AsyncStream<Void>.makeStream()
+    defer {
+      started.continuation.finish()
+      release.continuation.finish()
+      manager.removeThumbnail(for: preset.id)
+    }
+    let oldRender = Task {
+      await manager.cacheThumbnail(
+        for: preset, reloadingWidgets: false,
+        renderThumbnails: { _ in
+          started.continuation.yield(())
+          for await _ in release.stream { break }
+          return (carPlay: data, widget: data)
+        })
+    }
+    for await _ in started.stream { break }
+
+    let replacement = Data([0x02, 0x03])
+    if replace {
+      #expect(
+        await manager.cacheThumbnail(
+          for: preset, force: true, reloadingWidgets: false,
+          renderThumbnails: { _ in (carPlay: replacement, widget: replacement) }))
+    } else {
+      // No cache has been written yet; removal must still cancel the old write.
+      manager.removeThumbnail(for: preset.id)
+    }
+    release.continuation.yield(())
+    #expect(await !oldRender.value)
+    if replace {
+      #expect(defaults.data(forKey: key) == replacement)
+      #expect(try Data(contentsOf: url) == replacement)
+    } else {
+      #expect(defaults.data(forKey: key) == nil)
+      #expect(!FileManager.default.fileExists(atPath: url.path))
+    }
   }
 
 }

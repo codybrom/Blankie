@@ -80,7 +80,7 @@ On iPhone and iPad, add **Now Playing**, **Favorites**, **Pinned Sound** or **Qu
 
 ### Can I use Blankie with Siri and Shortcuts?
 
-Yes. On iPhone and iPad, try "Play Blankie," "Play [preset name] in Blankie," or "Start a sleep timer in Blankie." Play Sound adds the sound to the current mix, including the saved preset when one is active.
+Yes. On iPhone and iPad, try "Play Blankie" or "Start a sleep timer in Blankie." To choose a preset, say "Start a preset in Blankie," then give its name when Siri asks. For a sound, say "Start a sound in Blankie," then give its name. Play Sound plays that sound by itself and leaves your saved preset unchanged.
 
 Blankie's actions are also available in Shortcuts on Mac, iPhone and iPad. You can control playback, choose presets and sounds, set a sleep timer, and adjust volume. On iPhone and iPad, the overall Set Volume action requires **Mix with Other Audio** in Settings; individual sound volumes can be set separately. Spotlight can find your presets and sounds on all three platforms.
 

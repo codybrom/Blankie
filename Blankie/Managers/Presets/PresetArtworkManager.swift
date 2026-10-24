@@ -382,28 +382,10 @@ class PresetArtworkManager: ObservableObject {
   private func loadAnimatedArtworkPreview(animatedArtwork: AnimatedArtworkRef, preset: Preset)
     async -> PlatformImage?
   {
-    // Try square preview first (for now playing artwork)
-    if let squarePath = animatedArtwork.squarePreviewPath {
-      let squareURL = AnimatedArtworkFileStore.absoluteURL(for: squarePath)
-      if FileManager.default.fileExists(atPath: squareURL.path) {
-        if let image = PlatformImage(contentsOfFile: squareURL.path) {
-          Logger.presets.debug(
-            "PresetArtworkManager: Loaded square preview from Documents: \(squarePath)")
-          return image
-        }
-      }
-    }
-
-    // Check Documents directory for 3:4 preview
-    if let previewPath = animatedArtwork.previewPath ?? preset.staticArtworkPath {
-      let previewURL = AnimatedArtworkFileStore.absoluteURL(for: previewPath)
-      if FileManager.default.fileExists(atPath: previewURL.path) {
-        if let image = PlatformImage(contentsOfFile: previewURL.path) {
-          Logger.presets.debug(
-            "PresetArtworkManager: Loaded 3:4 preview from Documents: \(previewPath)")
-          return image
-        }
-      }
+    if let image = loadLocalAnimatedArtworkPreview(
+      animatedArtwork: animatedArtwork, staticArtworkPath: preset.staticArtworkPath)
+    {
+      return image
     }
 
     // If not cached, try loading from bundle for bundled resources
@@ -418,6 +400,23 @@ class PresetArtworkManager: ObservableObject {
     }
 
     Logger.presets.debug("PresetArtworkManager: No preview image found for animated artwork")
+    return nil
+  }
+
+  /// Imported artwork can retain obsolete paths. Try decoding every candidate
+  /// so a missing or corrupt square preview cannot hide a usable fallback.
+  func loadLocalAnimatedArtworkPreview(
+    animatedArtwork: AnimatedArtworkRef?, staticArtworkPath: String?
+  ) -> PlatformImage? {
+    for path in [
+      animatedArtwork?.squarePreviewPath, animatedArtwork?.previewPath, staticArtworkPath,
+    ].compactMap({ $0 }) {
+      if let image = PlatformImage(
+        contentsOfFile: AnimatedArtworkFileStore.absoluteURL(for: path).path)
+      {
+        return image
+      }
+    }
     return nil
   }
 
