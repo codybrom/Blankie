@@ -407,15 +407,17 @@ import SwiftUI
 
     @ViewBuilder
     private var playbackProgressBar: some View {
-      let anchor = currentProgressAnchor
-      let duration = anchor?.duration ?? 0
+      if globalSettings.showsPlaybackProgress(timerActive: timerManager.isTimerActive) {
+        let anchor = currentProgressAnchor
+        let duration = anchor?.duration ?? 0
 
-      if audioManager.isGloballyPlaying && duration > 0 {
-        TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
+        if audioManager.isGloballyPlaying && duration > 0 {
+          TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
+            playbackBar(duration: duration)
+          }
+        } else {
           playbackBar(duration: duration)
         }
-      } else {
-        playbackBar(duration: duration)
       }
     }
 

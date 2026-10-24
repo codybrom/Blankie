@@ -651,6 +651,24 @@ private struct PlaybackSettingsSection: View {
         .tint(globalSettings.customAccentColor ?? .accentColor)
       #endif
 
+      if #available(iOS 27, macOS 27, visionOS 27, *) {
+        VStack(alignment: .leading, spacing: 6) {
+          Toggle(
+            "Show Playback as Continuous",
+            isOn: Binding(
+              get: { globalSettings.showPlaybackAsContinuous },
+              set: { globalSettings.setShowPlaybackAsContinuous($0) }
+            )
+          )
+          .tint(globalSettings.customAccentColor ?? .accentColor)
+          Text(
+            "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible."
+          )
+          .font(.footnote)
+          .foregroundStyle(.secondary)
+        }
+      }
+
       // Mix with Other Audio is AVAudioSession-based, so it has no macOS form.
       #if os(iOS) || os(visionOS)
         mixWithOthersSection

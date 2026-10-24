@@ -22,18 +22,22 @@ import Testing
   private let settings = GlobalSettings.shared
   private let snapshot = DefaultsSnapshot([
     UserDefaultsKeys.volume, UserDefaultsKeys.backgroundBlurRadius,
+    UserDefaultsKeys.showPlaybackAsContinuous,
   ])
   private let originalVolume: Double
   private let originalBlur: Double
+  private let originalContinuous: Bool
 
   init() {
     originalVolume = settings.volume
     originalBlur = settings.backgroundBlurRadius
+    originalContinuous = settings.showPlaybackAsContinuous
     snapshot.clear()
   }
   isolated deinit {
     settings.volume = originalVolume
     settings.backgroundBlurRadius = originalBlur
+    settings.showPlaybackAsContinuous = originalContinuous
     snapshot.restore()
   }
 
@@ -71,4 +75,25 @@ import Testing
     settings.loadBasicSettings()
     #expect(isClose(settings.backgroundBlurRadius, 0))
   }
+  @Test func continuousPlaybackDefaultsOnAndPreservesSavedOptOut() {
+    UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.showPlaybackAsContinuous)
+    settings.loadBasicSettings()
+    #expect(settings.showPlaybackAsContinuous)
+    settings.setShowPlaybackAsContinuous(false)
+    #expect(
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showPlaybackAsContinuous) as? Bool
+        == false)
+    settings.showPlaybackAsContinuous = true
+    settings.loadBasicSettings()
+    #expect(!settings.showPlaybackAsContinuous)
+    #expect(settings.showsPlaybackProgress(timerActive: false))
+    settings.showPlaybackAsContinuous = true
+    #expect(settings.showsPlaybackProgress(timerActive: true))
+    if #available(iOS 27, macOS 27, visionOS 27, *) {
+      #expect(!settings.showsPlaybackProgress(timerActive: false))
+    } else {
+      #expect(settings.showsPlaybackProgress(timerActive: false))
+    }
+  }
+
 }

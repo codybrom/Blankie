@@ -26,9 +26,9 @@ enum NowPlayingSessionMapping {
     case finite(TimeInterval)
   }
 
-  /// A running sleep timer's progress, with elapsed and timestamp captured at the
-  /// same instant so the system can extrapolate between publishes.
-  nonisolated struct SessionTimer: Equatable {
+  /// Timing captured at one instant so the system can extrapolate between
+  /// publishes, whether the source is a sleep timer or an audio loop.
+  nonisolated struct SessionProgress: Equatable {
     let duration: TimeInterval
     let elapsed: TimeInterval
     let timestamp: Date
@@ -63,16 +63,27 @@ enum NowPlayingSessionMapping {
     selectedDuration: TimeInterval,
     remainingTime: TimeInterval,
     now: Date
-  ) -> SessionTimer? {
+  ) -> SessionProgress? {
     guard isActive, selectedDuration > 0 else { return nil }
     let elapsed = min(max(0, selectedDuration - remainingTime), selectedDuration)
-    return SessionTimer(duration: selectedDuration, elapsed: elapsed, timestamp: now)
+    return SessionProgress(duration: selectedDuration, elapsed: elapsed, timestamp: now)
   }
 
-  /// Ambient playback is continuous; only a sleep timer gives it an end.
-  nonisolated static func duration(timer: SessionTimer?) -> SessionDuration {
-    guard let timer else { return .continuous }
-    return .finite(timer.duration)
+  /// Loop progress is opt-in; very short or invalid loops remain indeterminate.
+  nonisolated static func loopProgress(
+    continuous: Bool, elapsed: TimeInterval, duration: TimeInterval, now: Date
+  ) -> SessionProgress? {
+    guard !continuous, elapsed.isFinite, duration.isFinite, duration >= 1 else { return nil }
+    return SessionProgress(
+      duration: duration, elapsed: min(duration, max(0, elapsed)), timestamp: now)
+  }
+
+  /// A sleep timer always wins over loop progress, including in continuous mode.
+  nonisolated static func duration(timer: SessionProgress?, loop: SessionProgress? = nil)
+    -> SessionDuration
+  {
+    guard let progress = timer ?? loop else { return .continuous }
+    return .finite(progress.duration)
   }
 
   // MARK: - Identity
@@ -98,9 +109,12 @@ enum NowPlayingSessionMapping {
   /// The system reads a content item's duration once per id, so a running sleep
   /// timer publishes under a distinct id and the card re-reads its finite length.
   /// The id carries the length, so adding time arrives as a new item too.
-  nonisolated static func contentID(_ base: String, timerDuration: TimeInterval?) -> String {
-    guard let timerDuration else { return base }
-    return "\(base):timed:\(Int(timerDuration.rounded()))"
+  nonisolated static func contentID(
+    _ base: String, timerDuration: TimeInterval?, loopDuration: TimeInterval? = nil
+  ) -> String {
+    if let timerDuration { return "\(base):timed:\(Int(timerDuration.rounded()))" }
+    if let loopDuration { return "\(base):loop:\(loopDuration)" }
+    return base
   }
 
   /// The artwork's identity. The system caches artwork by id and never asks for

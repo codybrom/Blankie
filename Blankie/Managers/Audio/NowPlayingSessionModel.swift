@@ -24,7 +24,8 @@
     var subtitle: String?
     var contentID = "default"
     var playback: NowPlayingSessionMapping.SessionPlayback = .paused
-    var timer: NowPlayingSessionMapping.SessionTimer?
+    var timer: NowPlayingSessionMapping.SessionProgress?
+    var loopProgress: NowPlayingSessionMapping.SessionProgress?
 
     // Artwork is held type-erased. A stored `Artwork?` would put a resilient
     // NowPlaying struct in this class's field layout, and completing that layout
@@ -60,9 +61,9 @@
         case .playing: .playing()
         case .paused: .paused
         }
-      guard let timer else { return MediaPlaybackSnapshot(state: state) }
+      guard let progress = timer ?? loopProgress else { return MediaPlaybackSnapshot(state: state) }
       return MediaPlaybackSnapshot(
-        state: state, elapsedTime: timer.elapsed, timestamp: timer.timestamp)
+        state: state, elapsedTime: progress.elapsed, timestamp: progress.timestamp)
     }
 
     /// The remote commands the session offers. Navigation is only enabled when
@@ -80,7 +81,8 @@
     }
 
     private func makeContent() -> GenericContent {
-      let id = NowPlayingSessionMapping.contentID(contentID, timerDuration: timer?.duration)
+      let id = NowPlayingSessionMapping.contentID(
+        contentID, timerDuration: timer?.duration, loopDuration: loopProgress?.duration)
       #if os(iOS)
         if let artwork, let animatedArtwork {
           return GenericContent(
@@ -94,7 +96,7 @@
     }
 
     private var mediaDuration: MediaDuration {
-      switch NowPlayingSessionMapping.duration(timer: timer) {
+      switch NowPlayingSessionMapping.duration(timer: timer, loop: loopProgress) {
       case .continuous: .continuous
       case .finite(let seconds): .finite(seconds)
       }

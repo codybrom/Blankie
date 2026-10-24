@@ -1,6 +1,28 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible." : {
+      "comment" : "Explanation below Show Playback as Continuous in Settings.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible."
+          }
+        }
+      }
+    },
+    "Show Playback as Continuous" : {
+      "comment" : "OS 27 playback setting. Hides loop progress while keeping sleep timer countdowns.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Playback as Continuous"
+          }
+        }
+      }
+    },
     "" : {
       "shouldTranslate" : false
     },

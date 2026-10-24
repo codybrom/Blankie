@@ -42,6 +42,7 @@ enum UserDefaultsKeys {
   static let soloModeSoundFileName = "soloModeSoundFileName"
   static let showingListView = "showingListView"
   static let showProgressBorder = "showProgressBorder"
+  static let showPlaybackAsContinuous = "showPlaybackAsContinuous"
   static let lockPortraitOrientationiOS = "lockPortraitOrientationiOS"
   static let quickMixSoundFileNames = "quickMixSoundFileNames"
   static let lockScreenBackgroundEnabled = "lockScreenBackgroundEnabled"
@@ -94,6 +95,20 @@ class GlobalSettings {
   var language: Language
   var showingListView: Bool
   var showProgressBorder: Bool
+  var showPlaybackAsContinuous: Bool
+
+  /// Continuous metadata is available only through the OS 27 backend.
+  var usesContinuousPlayback: Bool {
+    if #available(iOS 27, macOS 27, visionOS 27, *) {
+      return showPlaybackAsContinuous
+    }
+    return false
+  }
+
+  func showsPlaybackProgress(timerActive: Bool) -> Bool {
+    !usesContinuousPlayback || timerActive
+  }
+
   var lockPortraitOrientationiOS: Bool
   var quickMixSoundFileNames: [String]
   /// Ordered list of starred items shown in the iPad sidebar and CarPlay.
@@ -143,6 +158,7 @@ class GlobalSettings {
     language = .system
     showingListView = false
     showProgressBorder = true
+    showPlaybackAsContinuous = true
     lockPortraitOrientationiOS = false
     quickMixSoundFileNames = [
       "rain", "waves", "fireplace", "white-noise",

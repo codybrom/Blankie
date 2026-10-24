@@ -29,6 +29,10 @@
     private var timerActiveObservation: Task<Void, Never>?
     private var timerDurationObservation: Task<Void, Never>?
     private var lockScreenBgObservation: Task<Void, Never>?
+    private var continuousObservation: Task<Void, Never>?
+    private var loopProgressTimer: Timer?
+    private var lastLoopElapsed: TimeInterval?
+    private var lastLoopDuration: TimeInterval?
     /// Last preset / soloed sound the artwork was built for: the system caches
     /// artwork by id, so rebuilding it on every incremental publish is wasted
     /// work (and would restart the animated loop).
@@ -64,6 +68,12 @@
         }
       }
 
+      continuousObservation = Task { [weak self] in
+        for await _ in Observations({ GlobalSettings.shared.showPlaybackAsContinuous }) {
+          self?.refreshTiming()
+        }
+      }
+
       // Republish the lock-screen background when the user toggles the setting.
       lockScreenBgObservation = Task { [weak self] in
         for await _ in Observations({ GlobalSettings.shared.lockScreenBackgroundEnabled }) {
@@ -91,12 +101,14 @@
       #endif
     }
 
-    deinit {
+    isolated deinit {
       primaryRequest?.cancel()
       publishDebounce?.cancel()
       timerActiveObservation?.cancel()
       timerDurationObservation?.cancel()
       lockScreenBgObservation?.cancel()
+      continuousObservation?.cancel()
+      loopProgressTimer?.invalidate()
       #if os(iOS)
         reduceMotionObservation?.cancel()
         powerStateObservation?.cancel()
@@ -223,8 +235,10 @@
     }
 
     func updateProgress(currentTime: TimeInterval, duration: TimeInterval) {
-      // No-op: ambient playback publishes a continuous duration on 27, so there
-      // is no loop progress to anchor. Only the sleep timer moves the scrubber.
+      guard model.timer == nil else { return }
+      model.loopProgress = NowPlayingSessionMapping.loopProgress(
+        continuous: GlobalSettings.shared.usesContinuousPlayback,
+        elapsed: currentTime, duration: duration, now: .now)
     }
 
     func clear() {
@@ -237,6 +251,8 @@
       model.contentID = "default"
       model.playback = .paused
       model.timer = nil
+      model.loopProgress = nil
+      stopLoopProgressUpdates()
       model.artwork = nil
       #if os(iOS)
         model.animatedArtwork = nil
@@ -262,13 +278,56 @@
       model.navigationEnabled = enabled
     }
 
-    private func refreshTiming() {
+    private func refreshTiming(forceLoopAnchor: Bool = true) {
       let sleepTimer = TimerManager.shared
-      model.timer = NowPlayingSessionMapping.timer(
+      let timer = NowPlayingSessionMapping.timer(
         isActive: sleepTimer.isTimerActive,
         selectedDuration: sleepTimer.selectedDuration,
         remainingTime: sleepTimer.remainingTime,
         now: .now)
+      if model.timer != timer { model.timer = timer }
+
+      guard !GlobalSettings.shared.usesContinuousPlayback, timer == nil else {
+        model.loopProgress = nil
+        stopLoopProgressUpdates()
+        return
+      }
+
+      let anchor = NowPlayingDisplay.currentProgressAnchor()
+      let progress = NowPlayingSessionMapping.loopProgress(
+        continuous: false, elapsed: anchor?.elapsed ?? 0, duration: anchor?.duration ?? 0, now: .now
+      )
+      let wrapped = progress.map { $0.elapsed < (lastLoopElapsed ?? 0) - 0.5 } ?? false
+      let durationChanged = progress?.duration != lastLoopDuration
+      if forceLoopAnchor || wrapped || durationChanged {
+        model.loopProgress = progress
+      }
+      lastLoopElapsed = progress?.elapsed
+      lastLoopDuration = progress?.duration
+
+      if model.playback == .playing {
+        startLoopProgressUpdates()
+      } else {
+        stopLoopProgressUpdates()
+      }
+    }
+
+    /// The system extrapolates between anchors. Poll to catch loop wraps, but
+    /// publish only when the loop wraps or its source/duration changes.
+    private func startLoopProgressUpdates() {
+      guard loopProgressTimer == nil else { return }
+      let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in
+        Task { @MainActor in self?.refreshTiming(forceLoopAnchor: false) }
+      }
+      RunLoop.main.add(timer, forMode: .common)
+      loopProgressTimer = timer
+    }
+
+    private func stopLoopProgressUpdates() {
+      loopProgressTimer?.invalidate()
+      loopProgressTimer = nil
+      lastLoopElapsed = nil
+      lastLoopDuration = nil
     }
 
     /// The widget's own snapshot, published on every update. `preset` is the
