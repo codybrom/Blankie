@@ -481,7 +481,7 @@ struct LibraryView: View {
     audioManager.sounds
       .filter { !$0.isPresetUseOnly }
       .filter { !globalSettings.isStarred(GlobalSettings.singleToken(forFileName: $0.fileName)) }
-      .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+      .sortedByLocalizedTitle()
   }
 
   // MARK: - Favorites / Presets model

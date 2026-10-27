@@ -94,9 +94,7 @@ struct EditPresetSheet: View {
   }
 
   var orderedSounds: [Sound] {
-    audioManager.sounds.sorted {
-      $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
-    }
+    audioManager.sounds.sortedByLocalizedTitle()
   }
 
   var body: some View {

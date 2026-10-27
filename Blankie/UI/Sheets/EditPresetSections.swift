@@ -37,7 +37,7 @@ extension EditPresetSheet {
       staticArtworkPath: $staticArtworkPath,
       starToken: starToken,
       accent: activeAccentColor,
-      aiSoundTitles: orderedSelectedSounds.map(\.title),
+      aiSoundTitles: orderedSelectedSounds.map(\.localizedTitle),
       // A typed name is settled, so sparkles only fills an empty one here.
       sparklesOnlyWhenEmpty: true,
       onEdited: { applyChangesInstantly() },

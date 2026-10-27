@@ -37,6 +37,7 @@ class SoundCreditsManager: ObservableObject {
       credits = container.sounds.map { sound in
         SoundCredit(
           name: sound.title,
+          fileName: sound.fileName,
           soundName: sound.soundName,
           author: sound.author,
           license: License(rawValue: sound.license.lowercased()) ?? .cc0,

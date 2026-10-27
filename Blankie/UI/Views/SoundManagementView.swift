@@ -26,11 +26,11 @@ struct SoundManagementView: View {
   @State private var customSoundsExpanded = true
 
   private var builtInSounds: [Sound] {
-    audioManager.sounds.filter { !$0.isCustom }.sorted { $0.title < $1.title }
+    audioManager.sounds.filter { !$0.isCustom }.sortedByLocalizedTitle()
   }
 
   private var customSounds: [Sound] {
-    audioManager.sounds.filter { $0.isCustom }.sorted { $0.title < $1.title }
+    audioManager.sounds.filter { $0.isCustom }.sortedByLocalizedTitle()
   }
 
   var body: some View {

@@ -76,7 +76,8 @@ import Testing
 
   @Test func soundCreditAttribution() {
     let credit = SoundCredit(
-      name: "Rain", soundName: "Heavy Rain", author: "Jane Doe", license: .ccBy4, soundUrl: nil)
+      name: "Rain", fileName: "rain", soundName: "Heavy Rain", author: "Jane Doe", license: .ccBy4,
+      soundUrl: nil)
     #expect(credit.attributionText == "\"Heavy Rain\" by Jane Doe")
   }
 }

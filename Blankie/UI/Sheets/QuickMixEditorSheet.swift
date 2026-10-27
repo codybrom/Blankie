@@ -140,7 +140,7 @@ import SwiftUI
       // can't stand alone, so they're never eligible for Quick Mix.
       audioManager.sounds
         .filter { !$0.isPresetUseOnly }
-        .sorted { $0.title < $1.title }
+        .sortedByLocalizedTitle()
     }
 
     var body: some View {

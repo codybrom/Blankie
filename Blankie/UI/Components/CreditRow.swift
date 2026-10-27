@@ -21,12 +21,12 @@ struct CreditRow: View {
     // One navigable container per credit, named for the sound, so VoiceOver reads it
     // as a unit ("Rain, group") with the source and license links inside.
     .accessibilityElement(children: .contain)
-    .accessibilityLabel(Text(credit.name))
+    .accessibilityLabel(Text(credit.localizedName))
   }
 
   private var soundNameView: some View {
     HStack(spacing: 4) {
-      Text(credit.name)
+      Text(credit.localizedName)
         .fontWeight(.bold)
         // The container is labeled with the sound name and doesn't need re-announced
         .accessibilityHidden(true)

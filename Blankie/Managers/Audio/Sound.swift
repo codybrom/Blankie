@@ -56,8 +56,12 @@ open class Sound: NSObject, Identifiable {
   /// Custom and renamed sounds show the user's title verbatim.
   var localizedTitle: String {
     guard !isCustom, title == originalTitle else { return title }
-    return NSLocalizedString(
-      "sound.\(fileName)", value: originalTitle, comment: "Built-in sound name")
+    return Self.builtInName(fileName: fileName, englishTitle: originalTitle)
+  }
+
+  /// A built-in sound's name in the app's language, from the `sound.<fileName>` catalog key.
+  nonisolated static func builtInName(fileName: String, englishTitle: String) -> String {
+    NSLocalizedString("sound.\(fileName)", value: englishTitle, comment: "Built-in sound name")
   }
 
   var systemIconName: String {
@@ -507,5 +511,14 @@ open class Sound: NSObject, Identifiable {
       resetSoundPosition()
       isSelected = false
     }
+  }
+}
+
+extension Sequence<Sound> {
+  /// Sorted by the displayed (localized) name, resolving each name once.
+  func sortedByLocalizedTitle() -> [Sound] {
+    map { ($0, $0.localizedTitle) }
+      .sorted { $0.1.localizedStandardCompare($1.1) == .orderedAscending }
+      .map(\.0)
   }
 }

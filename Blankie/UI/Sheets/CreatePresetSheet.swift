@@ -45,9 +45,7 @@ struct CreatePresetSheet: View {
   @Environment(\.dismiss) private var dismiss
 
   var orderedSounds: [Sound] {
-    audioManager.sounds.sorted {
-      $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
-    }
+    audioManager.sounds.sortedByLocalizedTitle()
   }
 
   /// Live accent: the custom accent once enabled, else the app-wide one, so the
@@ -244,7 +242,7 @@ extension CreatePresetSheet {
 
   /// Titles of the currently selected sounds, for the name prompt.
   private var selectedSoundTitles: [String] {
-    orderedSounds.filter { selectedSounds.contains($0.fileName) }.map(\.title)
+    orderedSounds.filter { selectedSounds.contains($0.fileName) }.map(\.localizedTitle)
   }
 
   /// Fills the name on open when seeded from playing sounds. Taps on the
