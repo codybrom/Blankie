@@ -49,10 +49,7 @@
         return
       }
 
-      let sortedSounds = presetSounds.sorted {
-        CarPlaySoundNames.name(of: $0).localizedStandardCompare(CarPlaySoundNames.name(of: $1))
-          == .orderedAscending
-      }
+      let sortedSounds = CarPlaySoundNames.sorted(presetSounds)
 
       let items = sortedSounds.map { sound in
         createSoundEditItem(sound)

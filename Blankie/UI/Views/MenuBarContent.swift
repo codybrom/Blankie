@@ -223,7 +223,7 @@
     /// Mixer title: single sound, Quick Mix, or the preset name.
     private var mixerTitle: String {
       if let single = audioManager.singleSound {
-        return String(localized: String.LocalizationValue(single.title))
+        return single.localizedTitle
       }
       if audioManager.isQuickMix { return String(localized: "Quick Mix") }
       return presetManager.currentPreset?.displayName ?? "Blankie"
