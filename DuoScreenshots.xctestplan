@@ -1,0 +1,31 @@
+{
+  "configurations" : [
+    {
+      "id" : "55F2D906-F23A-43B5-9C9F-7A881EBA1422",
+      "name" : "Test Scheme Action",
+      "options" : {}
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Blankie.xcodeproj",
+      "identifier" : "F913505E2D233A43003C85BE",
+      "name" : "Blankie"
+    },
+    "testTimeoutsEnabled" : false
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "selectedTests" : [
+        "DuoScreenshotTests/testPlayPresetAndCaptureDisplays()"
+      ],
+      "target" : {
+        "containerPath" : "container:Blankie.xcodeproj",
+        "identifier" : "F9ED70DD2D3229AD00240F13",
+        "name" : "BlankieUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
