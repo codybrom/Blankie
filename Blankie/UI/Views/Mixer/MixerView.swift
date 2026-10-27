@@ -9,7 +9,7 @@ import SwiftUI
 import os
 
 private struct AnimationTrigger: Equatable {
-  let singleSound: UUID?
+  let singleSoundID: UUID?
   let quickMix: Bool
   let listView: Bool
   let isLoading: Bool
@@ -914,7 +914,7 @@ private enum IPhonePage: Hashable {
       .animation(
         .easeInOut(duration: 0.3),
         value: AnimationTrigger(
-          singleSound: singleLayoutSound?.id,
+          singleSoundID: singleLayoutSound?.id,
           quickMix: audioManager.isQuickMix,
           listView: showingListView,
           isLoading: presetManager.isLoading

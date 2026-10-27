@@ -47,7 +47,7 @@ extension AudioManager {
       // The sound was deleted, so launch falls back to the preset.
       Logger.audio.debug(
         "AudioManager: Saved single sound '\(savedSingleFileName)' is gone; clearing")
-      GlobalSettings.shared.saveSingleSoundSound(fileName: nil)
+      GlobalSettings.shared.saveSingleSound(fileName: nil)
       return false
     }
     Logger.audio.debug(
@@ -110,7 +110,7 @@ extension AudioManager {
     }
 
     singleSound = sound
-    GlobalSettings.shared.saveSingleSoundSound(fileName: sound.fileName)
+    GlobalSettings.shared.saveSingleSound(fileName: sound.fileName)
     updateNextPreviousCommandState()
     sound.volume = 1.0
     sound.isSelected = true
@@ -163,7 +163,7 @@ extension AudioManager {
 
     restoreSingleSoundState()
     singleSound = nil
-    GlobalSettings.shared.saveSingleSoundSound(fileName: nil)
+    GlobalSettings.shared.saveSingleSound(fileName: nil)
     setGlobalPlaybackState(false)
 
     // A single sound restored at launch skips applySoundStates, so presetStatesApplied is
@@ -190,7 +190,7 @@ extension AudioManager {
 
     restoreSingleSoundState()
     singleSound = nil
-    GlobalSettings.shared.saveSingleSoundSound(fileName: nil)
+    GlobalSettings.shared.saveSingleSound(fileName: nil)
 
     // Same re-sync as exitSingleSound. Skipped when applySoundStates is the caller,
     // so its isApplyingPresetStates window stays open.

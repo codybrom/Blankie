@@ -25,7 +25,8 @@ nonisolated enum PlayableItem: Equatable, Hashable {
   // Canonical token strings. These are persisted, so never change them.
   private static let allSoundsToken = "allSounds"
   private static let quickMixToken = "quickMix"
-  /// A single sound is stored as `"solo:<fileName>"`.
+  /// A single sound is stored as `"solo:<fileName>"`. Keep the "solo" spelling, or every
+  /// starred single sound is lost.
   static let singleTokenPrefix = "solo:"
 
   /// Decodes a persisted `starredItems` token, or nil if it isn't a valid one.

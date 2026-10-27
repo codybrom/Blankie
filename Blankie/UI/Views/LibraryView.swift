@@ -339,14 +339,14 @@ struct SingleSoundPickerRow: View {
       if settingsPaneShowing {
         // The pane's onDisappear resets the sub-page flags.
         appState.showingSettingsPane = false
-        if !isCurrent { singleSound() }
+        if !isCurrent { playOnItsOwn() }
         return
       }
     #endif
     if presentation == .sidebar && isCurrent {
       audioManager.togglePlayback()
     } else {
-      singleSound()
+      playOnItsOwn()
     }
   }
 
@@ -412,7 +412,7 @@ struct SingleSoundPickerRow: View {
     )
   }
 
-  private func singleSound() {
+  private func playOnItsOwn() {
     // Tapping the current single sound leaves playback alone.
     if isCurrent {
       if dismissOnSelect { dismiss() }

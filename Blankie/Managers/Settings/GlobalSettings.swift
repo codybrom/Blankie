@@ -38,6 +38,7 @@ enum UserDefaultsKeys {
   static let volumeWithOtherAudio = "volumeWithOtherAudio"
   static let showSoundNames = "showSoundNames"
   static let iconSize = "iconSize"
+  // Stored key. Keep the "solo" spelling, or every saved single sound is lost.
   static let singleSoundFileName = "soloModeSoundFileName"
   static let showingListView = "showingListView"
   static let showProgressBorder = "showProgressBorder"
@@ -219,7 +220,7 @@ extension GlobalSettings {
 
 extension GlobalSettings {
   @MainActor
-  func saveSingleSoundSound(fileName: String?) {
+  func saveSingleSound(fileName: String?) {
     if let fileName = fileName {
       UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.singleSoundFileName)
       Logger.settings.debug("GlobalSettings: Saved single sound: \(fileName)")
