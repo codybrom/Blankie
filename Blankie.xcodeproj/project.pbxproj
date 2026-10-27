@@ -535,6 +535,7 @@
 				Base,
 				de,
 				en,
+				"en-CA",
 				"en-GB",
 				es,
 				fr,

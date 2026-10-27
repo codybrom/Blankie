@@ -28,7 +28,8 @@ Blankie 2.1 adds Home Screen widgets on iPhone and iPad, Siri and Shortcuts acti
 - **Artwork selection UI** - The preset editor now separates background artwork (shown behind your sound tiles) and Lock Screen animated artwork into two preview tiles.
 - **Quick Look preset preview artwork (iOS)** - Shared `.blankie` files without custom artwork now display Blankie's default fallback artwork in Quick Look.
 - **Sound subtitles in Now Playing** - When playing a single sound on its own, its subtitle ("Soft, steady rainfall") now appears under the title on the Lock Screen, in Control Center and in CarPlay.
-- Improved translations across all 12 languages.
+- **Deep Noise is now called Brown Noise** - The built-in Deep Noise sound is called Brown Noise in English. Presets that use it keep working, and if you renamed it yourself, your name stays.
+- Improved translations across all 12 languages and added Canadian English.
 
 ### Fixed
 
