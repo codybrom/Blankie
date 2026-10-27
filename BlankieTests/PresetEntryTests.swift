@@ -152,6 +152,26 @@ import Testing
     audioManager.exitQuickMix()
   }
 
+  /// An empty preset still opens from the Library; its editor adds sounds.
+  @Test func emptyPresetIsValid() {
+    let empty = PresetFactory.makePreset(name: "Entry Empty", soundStates: [], soundOrder: [])
+    #expect(empty.validate())
+  }
+
+  /// Siri, widgets and CarPlay can't play an empty preset, and asking them to
+  /// keeps Quick Mix playing instead of going silent.
+  @Test func emptyPresetLeavesQuickMixAlone() async {
+    let (a, b) = makeSounds()
+    await install([preset("Entry QM Empty", selecting: [a.fileName], from: [a, b])])
+    let empty = PresetFactory.makePreset(name: "Entry Empty Play", soundStates: [], soundOrder: [])
+
+    audioManager.enterQuickMix()
+    #expect(throws: PresetError.self) { try self.presetManager.playPreset(empty) }
+
+    #expect(audioManager.isQuickMix)
+    audioManager.exitQuickMix()
+  }
+
   /// The default exit (Quick Mix's own close) still restores the earlier mix.
   @Test func exitingQuickMixRestoresThePreset() async {
     let (a, b) = makeSounds()
@@ -197,6 +217,52 @@ import Testing
 
     #expect(presetManager.currentPreset?.id == next.id)
     #expect(!audioManager.isGloballyPlaying)
+  }
+
+  private func defaultPreset(for sounds: [Sound]) -> Preset {
+    PresetFactory.makePreset(
+      name: "Default",
+      soundStates: sounds.map { PresetState(fileName: $0.fileName, isSelected: false, volume: 1) },
+      isDefault: true, soundOrder: sounds.map(\.fileName))
+  }
+
+  /// Deleting the last custom preset hands its mix to All Blankie Sounds, which
+  /// must still list every sound rather than only the deleted preset's.
+  @Test func deletingTheLastCustomPresetKeepsEverySoundInTheDefault() async {
+    let (a, b) = makeSounds()
+    let doomed = preset("Entry Doomed", selecting: [a.fileName], from: [a])
+    await install([doomed, defaultPreset(for: [a, b])])
+
+    presetManager.deletePreset(doomed)
+    await sandbox.waitForPresetApply()
+
+    #expect(presetManager.currentPreset?.isDefault == true)
+    let states = presetManager.presets.first { $0.isDefault }?.soundStates ?? []
+    #expect(Set(states.map(\.fileName)) == [a.fileName, b.fileName])
+    #expect(states.first { $0.fileName == a.fileName }?.isSelected == true)
+    #expect(states.first { $0.fileName == b.fileName }?.isSelected == false)
+  }
+
+  /// A deleted preset can name a sound that's gone (deleted along with it). The
+  /// default must still apply, or no preset is current and every launch comes up
+  /// on a bare "Blankie" with the old selection.
+  @Test func deletingTheLastCustomPresetWithAMissingSoundLeavesTheDefaultCurrent() async {
+    let (a, b) = makeSounds()
+    let doomed = PresetFactory.makePreset(
+      name: "Entry Doomed",
+      soundStates: [
+        PresetState(fileName: a.fileName, isSelected: true, volume: 0.5),
+        PresetState(fileName: "test-entry-gone", isSelected: true, volume: 0.5),
+      ],
+      soundOrder: [a.fileName, "test-entry-gone"])
+    await install([doomed, defaultPreset(for: [a, b])])
+
+    presetManager.deletePreset(doomed)
+    await sandbox.waitForPresetApply()
+
+    #expect(presetManager.currentPreset?.isDefault == true)
+    let states = presetManager.presets.first { $0.isDefault }?.soundStates ?? []
+    #expect(!states.contains { $0.fileName == "test-entry-gone" })
   }
 
   // MARK: - Stale widget tile (X2)

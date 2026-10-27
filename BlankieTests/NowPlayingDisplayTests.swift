@@ -80,6 +80,15 @@ import Testing
     )
   }
 
+  /// The default preset has one name everywhere (Library, bar, mixer, Now
+  /// Playing): its display name, never "Blankie" or "Custom Mix".
+  @Test func defaultPresetActiveTitleIsItsDisplayName() {
+    let builtIn = PresetFactory.makePreset(name: "Default", isDefault: true)
+    #expect(builtIn.activeTitle == builtIn.displayName)
+    let custom = PresetFactory.makePreset(name: "Rainy Night")
+    #expect(custom.activeTitle == "Rainy Night")
+  }
+
   /// Preset identity determines its display title; a user's name that happens
   /// to match a legacy placeholder must still be shown verbatim.
   @Test func presetIdentityDeterminesTitle() {

@@ -95,9 +95,10 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
     return isDefault ? String(localized: "All Blankie Sounds") : name
   }
 
-  /// Title to show when this preset is active (shows "Blankie" for default preset)
+  /// Title to show when this preset is active; the default preset keeps its
+  /// one name ("All Blankie Sounds") here too.
   var activeTitle: String {
-    return isDefault ? "Blankie" : name
+    displayName
   }
 
   static func == (lhs: Preset, rhs: Preset) -> Bool {
@@ -116,11 +117,8 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
   }
 
   @MainActor func validate() -> Bool {
-    // Preset must have at least one sound
-    guard !soundStates.isEmpty else {
-      Logger.presets.debug("Preset: Must contain at least one sound")
-      return false
-    }
+    // An empty preset is valid: it opens, and its editor is how it gets
+    // sounds. Playback coerces "play" over nothing to paused.
 
     // Check that all sounds referenced in the preset actually exist
     let availableSounds = Set(AudioManager.shared.sounds.map(\.fileName))
