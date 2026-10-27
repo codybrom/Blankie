@@ -154,15 +154,6 @@
     "editor.formatOnSave": false
   },
   "xml.format.enabled": false,
-  "markdownlint.config": {
-    "default": true,
-    "MD013": false,
-    "MD024": {
-      "siblings_only": true
-    },
-    "MD033": false,
-    "MD041": false
-  },
   "swift.outputChannelLogLevel": "info",
   "swift.sourcekit-lsp.disable": false,
   "swift.diagnosticsCollection": "onlySwiftc",
