@@ -138,13 +138,12 @@ import os
           return String(localized: "No active sounds")
         }
       } else {
-        let soundNames = activeSounds.compactMap { soundState in
-          AudioManager.shared.sounds.first { $0.fileName == soundState.fileName }?.title
+        let sounds = activeSounds.compactMap { soundState in
+          AudioManager.shared.sounds.first { $0.fileName == soundState.fileName }
         }
 
-        if !soundNames.isEmpty {
-          let soundsList = soundNames.joined(separator: ", ")
-          detailParts.append(soundsList)
+        if !sounds.isEmpty {
+          detailParts.append(CarPlaySoundNames.list(sounds))
         }
       }
 
@@ -279,7 +278,7 @@ import os
       // Caption only a custom sound that credits an artist. Built-in authors are
       // in the credits screens.
       let item = CPListItem(
-        text: sound.localizedTitle,
+        text: CarPlaySoundNames.name(of: sound),
         detailText: sound.isCustom ? sound.creditedAuthor : nil,
         image: SoundsListTemplate.getSoundImage(for: sound)
       )

@@ -292,7 +292,10 @@ import os
       playbackStateObservation = Task { @MainActor [weak self] in
         for await _ in Observations({
           AudioManager.shared.sounds.map {
-            ($0.playbackState == .playing, $0.isPresetUseOnly, $0.title, $0.systemIconName)
+            (
+              $0.playbackState == .playing, $0.isPresetUseOnly, CarPlaySoundNames.name(of: $0),
+              $0.systemIconName
+            )
           }
         }) {
           self?.updateSoundsTemplate()

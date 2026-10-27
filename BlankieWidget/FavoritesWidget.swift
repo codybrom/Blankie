@@ -78,16 +78,16 @@ private struct FavoriteRowView: View {
         WidgetArtwork(
           thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
           accentColor: widgetAccentColor(favorite.accentColorName),
-          borderColor: isActive && usesSelectionBorder && favorite.token.hasPrefix("solo:")
+          borderColor: isActive && usesSelectionBorder && favorite.isSingleSound
             ? .white : nil,
-          showsFallbackIcon: !(isActive && usesSelectionBorder && favorite.token.hasPrefix("solo:"))
+          showsFallbackIcon: !(isActive && usesSelectionBorder && favorite.isSingleSound)
         )
         .frame(width: artworkSize, height: artworkSize)
         .overlay {
           if isActive {
             ActiveIndicator(
               isPlaying: isPlaying,
-              isSound: usesSelectionBorder && favorite.token.hasPrefix("solo:"))
+              isSound: usesSelectionBorder && favorite.isSingleSound)
           }
         }
         .clipShape(
@@ -145,12 +145,12 @@ private struct SingleFavoriteView: View {
           WidgetArtwork(
             thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
             accentColor: widgetAccentColor(favorite.accentColorName),
-            borderColor: isActive && favorite.token.hasPrefix("solo:") ? .white : nil,
-            showsFallbackIcon: !(isActive && favorite.token.hasPrefix("solo:"))
+            borderColor: isActive && favorite.isSingleSound ? .white : nil,
+            showsFallbackIcon: !(isActive && favorite.isSingleSound)
           )
           .frame(width: side, height: side)
           .overlay {
-            if isActive && favorite.token.hasPrefix("solo:") {
+            if isActive && favorite.isSingleSound {
               ActiveIndicator(isPlaying: isPlaying, isSound: true)
             }
           }
@@ -170,7 +170,7 @@ private struct SingleFavoriteView: View {
                 .foregroundStyle(foreground.opacity(0.65))
                 .lineLimit(2)
             }
-            if !(isActive && favorite.token.hasPrefix("solo:")) {
+            if !(isActive && favorite.isSingleSound) {
               Image(systemName: isActive && isPlaying ? "pause.fill" : "play.fill")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(foreground)

@@ -39,8 +39,8 @@ import Testing
   }
 
   @Test func tokenShapesAreMutuallyExclusive() {
-    #expect(!GlobalSettings.allSoundsToken.hasPrefix(GlobalSettings.singleTokenPrefix))
-    #expect(!GlobalSettings.quickMixToken.hasPrefix(GlobalSettings.singleTokenPrefix))
+    #expect(!GlobalSettings.allSoundsToken.hasPrefix(PlayableItem.singleTokenPrefix))
+    #expect(!GlobalSettings.quickMixToken.hasPrefix(PlayableItem.singleTokenPrefix))
     #expect(UUID(uuidString: GlobalSettings.allSoundsToken) == nil)
     #expect(UUID(uuidString: GlobalSettings.quickMixToken) == nil)
     #expect(UUID(uuidString: GlobalSettings.singleToken(forFileName: "rain")) == nil)

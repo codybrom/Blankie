@@ -96,7 +96,7 @@ enum NowPlayingSessionMapping {
     presetID: UUID?
   ) -> String {
     if let singleFileName {
-      return "\(PlayableItem.singleTokenPrefix)\(singleFileName)"
+      return PlayableItem.single(fileName: singleFileName).token
     } else if isQuickMix {
       return "quickmix"
     } else if let presetID {

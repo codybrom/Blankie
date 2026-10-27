@@ -39,6 +39,11 @@ struct WidgetFavorite: Codable, Equatable, Identifiable {
   /// Creator name or sound list, using `NowPlayingManager`'s fallback so pinned
   /// and playing widgets match.
   var subtitle: String?
+
+  var isSingleSound: Bool {
+    if case .single = PlayableItem(token: token) { return true }
+    return false
+  }
 }
 
 /// A sound from `GlobalSettings.quickMixSoundFileNames`, for the Quick Mix widget.

@@ -44,7 +44,7 @@ extension WidgetSnapshot {
     ]
     let favorites = sounds.map { name, icon in
       WidgetFavorite(
-        token: "solo:\(name)",
+        token: PlayableItem.single(fileName: name).token,
         displayName: NSLocalizedString("sound.\(name)", comment: "Built-in sound name"),
         systemIconName: icon, thumbnailKey: nil, accentColorName: "blue", subtitle: nil)
     }

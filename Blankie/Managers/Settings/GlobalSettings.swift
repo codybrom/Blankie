@@ -72,10 +72,6 @@ class GlobalSettings {
   static let allSoundsToken = PlayableItem.allSounds.token
   static let quickMixToken = PlayableItem.quickMix.token
 
-  /// Prefix for single-sound tokens. A single sound is starred as
-  /// `"solo:<fileName>"`, using the sound's stable `fileName` as its identity.
-  static let singleTokenPrefix = PlayableItem.singleTokenPrefix
-
   /// The starred token for playing the given sound file on its own.
   static func singleToken(forFileName fileName: String) -> String {
     PlayableItem.single(fileName: fileName).token

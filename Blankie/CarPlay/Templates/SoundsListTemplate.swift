@@ -36,32 +36,16 @@ import os
         return
       }
 
-      var sections: [CPListSection] = []
-
       // Preset-use-only sounds (explicit, or implied by a non-looping one-shot)
       // can't play alone, so they're hidden here as in the app.
-      let allSounds =
-        AudioManager.shared.sounds
-        .filter { !$0.isPresetUseOnly }
-        .sorted { $0.localizedTitle < $1.localizedTitle }
+      let playableSounds = AudioManager.shared.sounds.filter { !$0.isPresetUseOnly }
 
-      // One section per first letter for CarPlay's index.
-      let groupedSounds = Dictionary(grouping: allSounds) { sound in
-        String(sound.localizedTitle.prefix(1).uppercased())
-      }
-
-      let sortedKeys = groupedSounds.keys.sorted()
-      for key in sortedKeys {
-        if let sounds = groupedSounds[key] {
-          let soundItems = sounds.map { createSoundListItem($0) }
-          sections.append(
-            CPListSection(
-              items: soundItems,
-              header: nil,
-              sectionIndexTitle: key
-            )
-          )
-        }
+      let sections = CarPlaySoundNames.indexedSections(playableSounds).map { section in
+        CPListSection(
+          items: section.sounds.map { createSoundListItem($0) },
+          header: nil,
+          sectionIndexTitle: section.indexTitle
+        )
       }
 
       template.updateSections(sections)
@@ -71,13 +55,13 @@ import os
       let isCurrentSingleSound = AudioManager.shared.singleSound?.id == sound.id
 
       let item = CPListItem(
-        text: sound.localizedTitle,
+        text: CarPlaySoundNames.name(of: sound),
         detailText: nil
       )
 
       if isCurrentSingleSound {
         item.accessoryType = .disclosureIndicator
-        item.setText("\(sound.localizedTitle) ✓")
+        item.setText("\(CarPlaySoundNames.name(of: sound)) ✓")
       }
 
       if let image = getSoundImage(for: sound) {

@@ -81,12 +81,10 @@ import os
 
     /// Quick Mix row for the Now Playing section. Tapping opens the Now Playing screen.
     private static func quickMixItem() -> CPListItem {
-      let titles = AudioManager.shared.sounds
-        .filter { $0.isSelected }
-        .map { $0.localizedTitle }
+      let selected = AudioManager.shared.sounds.filter { $0.isSelected }
       let item = CPListItem(
         text: String(localized: "Quick Mix"),
-        detailText: titles.isEmpty ? nil : titles.joined(separator: ", ")
+        detailText: selected.isEmpty ? nil : CarPlaySoundNames.list(selected)
       )
       item.playingIndicatorLocation = .leading
       item.isPlaying = AudioManager.shared.isGloballyPlaying
