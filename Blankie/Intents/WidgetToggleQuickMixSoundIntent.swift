@@ -7,10 +7,8 @@
 
 import AppIntents
 
-/// Toggles one sound in/out of Quick Mix from the dedicated Quick Mix
-/// widget's grid — mirrors CarPlay's `QuickMixGridTemplate`, which enters
-/// Quick Mix with the tapped sound if it isn't already active, or toggles
-/// that sound within an already-active mix.
+/// Toggles one sound in the Quick Mix widget. Like CarPlay's `QuickMixGridTemplate`,
+/// it enters Quick Mix with the tapped sound when Quick Mix isn't active.
 struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
   static var isDiscoverable: Bool { false }
 
@@ -43,9 +41,8 @@ struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
       return .result()
     }
 
-    // Paused: any tap should get sound going, never read as "deselect" — the
-    // same tap-to-resume rule regular sound tiles use. Without this, tapping
-    // an already-selected-but-paused sound would just toggle it off.
+    // While paused, a tap resumes playback and never deselects (the same rule
+    // regular sound tiles follow).
     guard audio.isGloballyPlaying else {
       audio.toggleOrResume(target)
       return .result()
@@ -56,8 +53,8 @@ struct WidgetToggleQuickMixSoundIntent: AppIntent, AudioPlaybackIntent {
   }
 }
 
-/// Small relative changes use the live value, so rapid widget taps accumulate
-/// correctly rather than writing an absolute level from an outdated timeline.
+/// Applies a relative change to the live value, so rapid widget taps accumulate
+/// even when the widget's timeline is out of date.
 struct WidgetAdjustQuickMixVolumeIntent: AppIntent, AudioPlaybackIntent {
   static var isDiscoverable: Bool { false }
   static var title: LocalizedStringResource { "Set Sound Volume" }

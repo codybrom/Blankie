@@ -17,7 +17,7 @@
   @Observable
   @MainActor
   final class NowPlayingSessionModel: @MainActor MediaSessionRepresentable {
-    /// One session per app; the bundle id keeps it distinct from other apps'.
+    /// One session per app. The bundle id keeps it distinct from other apps'.
     let id = (Bundle.main.bundleIdentifier ?? "com.codybrom.blankie") + ".nowplaying"
 
     var title = ""
@@ -27,12 +27,9 @@
     var timer: NowPlayingSessionMapping.SessionProgress?
     var loopProgress: NowPlayingSessionMapping.SessionProgress?
 
-    // Artwork is held type-erased. A stored `Artwork?` would put a resilient
-    // NowPlaying struct in this class's field layout, and completing that layout
-    // needs the framework's metadata — which macOS 26 doesn't ship. Anything
-    // that realizes every Objective-C class (XCTest does at startup) would then
-    // crash on a supported OS. An existential box is pointer-sized, so the
-    // framework types are only resolved when these accessors actually run.
+    // Artwork is type-erased: a stored `Artwork?` puts a resilient NowPlaying struct
+    // in the field layout, which needs framework metadata macOS 26 lacks (XCTest
+    // realizes every class at startup). A pointer-sized box defers that to the accessors.
     private var artworkBox: Any?
     var artwork: Artwork? {
       get { artworkBox as? Artwork }
@@ -66,9 +63,8 @@
         state: state, elapsedTime: progress.elapsed, timestamp: progress.timestamp)
     }
 
-    /// The remote commands the session offers. Navigation is only enabled when
-    /// there is somewhere to go, mirroring the 26 backend's command-center
-    /// enablement.
+    /// The remote commands the session offers. Navigation is enabled only when
+    /// there's somewhere to go.
     var commands: [MediaCommand] {
       guard let handlers else { return [] }
       return [

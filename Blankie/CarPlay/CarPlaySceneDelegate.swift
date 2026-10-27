@@ -37,7 +37,6 @@ import os
         SpatialSessionManager.shared.endSessionForCarAudio()
       }
 
-      // Set up CarPlay interface - the shared controller handles initialization
       CarPlayInterfaceController.shared.setInterfaceController(interfaceController)
     }
 
@@ -55,7 +54,7 @@ import os
       applyCarContentStyle(contentStyle)
     }
 
-    /// The app-wide Info.plist dark lock reaches the CarPlay scene too; pin the
+    /// The app-wide Info.plist dark lock reaches the CarPlay scene too. This pins the
     /// scene's window to the car's own light/dark so CarPlay follows the car.
     private func applyCarContentStyle(_ style: UIUserInterfaceStyle) {
       Logger.carPlay.debug("CarPlay: Applying car content style \(style.rawValue)")

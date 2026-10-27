@@ -4,8 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Cached loudness analysis used at playback. Codable drift here means a sound
-//  loads with the wrong gain; the targets must match the analyzer's constants.
+//  The cached loudness profile used at playback. Its gain math must match AudioAnalyzer.
 //
 
 import Foundation
@@ -32,7 +31,6 @@ import Testing
     #expect(p.analysisVersion == "1.0")
   }
 
-  /// Targets are fixed references the gain math depends on.
   @Test func targetsMatchAnalyzerConstants() {
     let p = makeProfile()
     #expect(isClose(p.targetTruePeak, -1.0))
@@ -54,7 +52,7 @@ import Testing
     #expect(decoded.analysisVersion == original.analysisVersion)
   }
 
-  // MARK: - Gain math (must mirror AudioAnalyzer exactly)
+  // MARK: - Gain math (mirrors AudioAnalyzer)
 
   private func analysis(lufs: Float, truePeak: Float = -30) -> AudioAnalysisResult {
     AudioAnalysisResult(
@@ -62,9 +60,8 @@ import Testing
       truePeakdBTP: truePeak, needsLimiter: false, duration: nil)
   }
 
-  /// A near-silent import (below the analyzer's minimumLUFS floor) must get
-  /// UNITY gain. Regression guard: `from` previously skipped the floor and
-  /// produced +18 dB, so a cached profile slammed amplified hiss at the user.
+  /// A near-silent import (below the analyzer's minimumLUFS floor) gets unity gain, so
+  /// its hiss isn't boosted.
   @Test func fromFloorsSubMinimumLUFSToUnityGain() throws {
     let profile = try #require(
       PlaybackProfile.from(analysis: analysis(lufs: -65, truePeak: -40), filename: "hiss.m4a"))
@@ -72,7 +69,7 @@ import Testing
     #expect(!profile.needsLimiter)
   }
 
-  /// The exact floor boundary: minimumLUFS itself is NOT boosted (guard is `>`).
+  /// minimumLUFS itself isn't boosted (the guard is `>`).
   @Test func fromFloorBoundaryMatchesAnalyzer() throws {
     let atFloor = try #require(
       PlaybackProfile.from(analysis: analysis(lufs: AudioAnalyzer.minimumLUFS), filename: "f.m4a"))
@@ -81,22 +78,20 @@ import Testing
       isClose(AudioAnalyzer.calculateLUFSNormalizationFactor(lufs: AudioAnalyzer.minimumLUFS), 1.0))
   }
 
-  /// Quiet (but real) sounds boost, capped at maxGainDB rather than the raw +23.
+  /// A -50 LUFS sound asks for +23 dB and gets maxGainDB.
   @Test func fromBoostsQuietCappedAtMaxGain() throws {
     let profile = try #require(
       PlaybackProfile.from(analysis: analysis(lufs: -50), filename: "quiet.m4a"))
     #expect(isClose(profile.gainDB, AudioAnalyzer.maxGainDB))
   }
 
-  /// Loud sounds attenuate (negative gain toward target).
   @Test func fromAttenuatesLoud() throws {
     let profile = try #require(
       PlaybackProfile.from(analysis: analysis(lufs: -10), filename: "loud.m4a"))
     #expect(isClose(profile.gainDB, AudioAnalyzer.targetLUFS - (-10)))  // -17 dB
   }
 
-  /// The profile's linear gain must equal the analyzer's factor at EVERY LUFS,
-  /// including across the sub-floor region where the two used to diverge.
+  /// Covers the sub-floor region too.
   @Test func fromLinearGainMatchesAnalyzerAcrossRange() throws {
     for lufs in [Float(-70), -61, -60, -59, -45, -27, -12] {
       let profile = try #require(

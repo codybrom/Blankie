@@ -11,11 +11,9 @@
   import SwiftData
   import SwiftUI
 
-  /// Owns the menu bar status item and its click-through popover directly via
-  /// AppKit. SwiftUI's `MenuBarExtra(isInserted:)` won't reliably re-insert a
-  /// removed item (it writes a spurious `false` back during re-insertion), so the
-  /// "Show in Menu Bar" toggle could never turn the icon back on. Managing the
-  /// `NSStatusItem` ourselves gives reliable add/remove plus Cmd-drag-out.
+  /// Owns the menu bar status item and its popover via AppKit. `MenuBarExtra(isInserted:)`
+  /// doesn't reliably re-insert a removed item (it writes `false` back during re-insertion).
+  /// A managed `NSStatusItem` supports add/remove and Cmd-drag-out.
   @MainActor
   final class MenuBarController {
     private var statusItem: NSStatusItem?
@@ -67,7 +65,7 @@
           button.target = self
           button.setAccessibilityLabel(String(localized: "Blankie"))
         }
-        // Cmd-dragging the item off the menu bar flips isVisible; mirror that to
+        // Cmd-dragging the item off the menu bar flips isVisible. Mirror that to
         // the setting so the two controls stay in sync and the choice persists.
         visibilityKVO = item.observe(\.isVisible, options: [.new]) { item, _ in
           guard !item.isVisible else { return }

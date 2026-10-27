@@ -29,14 +29,15 @@ class SoundCreditsManager: ObservableObject {
       let data = try Data(contentsOf: url)
       let container = try JSONDecoder().decode(SoundsContainer.self, from: data)
 
-      // Assign synchronously so credits are ready the moment the singleton
-      // exists — non-observing callers (e.g. resolvedCredit) read it directly.
+      // Assigned synchronously so credits are ready once the singleton exists
+      // (non-observing callers like resolvedCredit read them directly).
       soundDataMap = Dictionary(
         uniqueKeysWithValues: container.sounds.map { ($0.title, $0) })
 
       credits = container.sounds.map { sound in
         SoundCredit(
           name: sound.title,
+          fileName: sound.fileName,
           soundName: sound.soundName,
           author: sound.author,
           license: License(rawValue: sound.license.lowercased()) ?? .cc0,
@@ -68,8 +69,7 @@ class SoundCreditsManager: ObservableObject {
 
 /// A display-ready credit, resolved from sounds.json (built-in) or `CustomSoundData` (custom).
 struct ResolvedSoundCredit {
-  /// A sentence about the recording itself (built-in sounds only). Provenance
-  /// notes that pair with the source credit below them.
+  /// A sentence about the recording itself (built-in sounds only).
   let description: String?
   let workTitle: String?
   let workUrl: URL?
@@ -84,10 +84,8 @@ struct ResolvedSoundCredit {
 }
 
 extension Sound {
-  /// A short character caption for this sound (e.g. "Soft, steady rainfall"),
-  /// localized through the string catalog. Built-in sounds only;
-  /// custom sounds carry no subtitle. Looked up by original title so a renamed
-  /// built-in still resolves.
+  /// A short localized caption ("Soft, steady rainfall"), built-in sounds only.
+  /// Looked up by original title so a renamed built-in still resolves.
   @MainActor var localizedSubtitle: String? {
     guard !isCustom,
       let subtitle = SoundCreditsManager.shared.getSubtitle(for: originalTitle),
@@ -97,7 +95,7 @@ extension Sound {
   }
 
   /// The credited author to display for this sound, or `nil` when there isn't
-  /// one. Custom sounds use their stored credit; built-in sounds look the author
+  /// one. Custom sounds use their stored credit. Built-in sounds look the author
   /// up by their original title. Empty strings are treated as absent.
   @MainActor var creditedAuthor: String? {
     if isCustom {
@@ -124,7 +122,7 @@ extension Sound {
       let sourceUrl = nonEmpty(data.creditSourceUrl) ?? nonEmpty(data.id3Url)
       let license = License(rawValue: data.creditLicenseType)
 
-      // The original filename is only a fallback display title; alone it
+      // The original filename is only a fallback display title, and alone it
       // isn't a credit worth surfacing.
       guard id3Title != nil || author != nil || sourceUrl != nil || license != nil else {
         return nil

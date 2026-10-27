@@ -19,22 +19,19 @@ class TimerManager {
   var selectedHours: Int
   var selectedMinutes: Int
 
-  // Plumbing the UI never reads; kept out of observation tracking.
+  // Plumbing the UI never reads, so it stays out of observation tracking.
   @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
   // Read by getEndTime() in view bodies, so it stays observation-tracked.
   private var startTime: Date?
 
-  // Injectable clock. Production uses the wall clock; tests override it to drive
-  // expiry deterministically via tick() instead of waiting on the 1 Hz timer.
+  // Injectable clock. Tests override it and drive expiry through tick().
   @ObservationIgnored var now: () -> Date = { Date() }
 
-  // Bumped on every start/stop/extend. handleTimerExpired dispatches its stop+pause
-  // async (to batch them on the main actor); the generation lets that late task
-  // detect a cancel or re-arm in the meantime and skip pausing the new session.
+  // Bumped on every start/stop/extend. handleTimerExpired's async stop and pause
+  // checks it to skip a session that was cancelled or re-armed in the meantime.
   @ObservationIgnored private var expiryGeneration = 0
 
   private init() {
-    // Load saved duration or use defaults
     self.selectedHours = UserDefaults.shared.object(forKey: "timerLastSelectedHours") as? Int ?? 0
     self.selectedMinutes =
       UserDefaults.shared.object(forKey: "timerLastSelectedMinutes") as? Int ?? 30
@@ -48,7 +45,6 @@ class TimerManager {
     startTime = now()
     isTimerActive = true
 
-    // Save the user's selection for next time
     UserDefaults.shared.set(selectedHours, forKey: "timerLastSelectedHours")
     UserDefaults.shared.set(selectedMinutes, forKey: "timerLastSelectedMinutes")
 
@@ -71,9 +67,8 @@ class TimerManager {
     Logger.audio.debug("TimerManager: Timer stopped")
   }
 
-  /// Advances the countdown one step using the injected clock. Exposed so tests
-  /// can verify expiry (and the re-arm guard) deterministically without the
-  /// 1 Hz run-loop timer; production drives this from that timer.
+  /// Advances the countdown one step using the injected clock. Production calls
+  /// it from the 1 Hz timer. Tests call it directly.
   func tick() { updateTimer() }
 
   private func updateTimer() {
@@ -90,14 +85,12 @@ class TimerManager {
   private func handleTimerExpired() {
     Logger.audio.debug("TimerManager: Timer expired")
 
-    // Stop the countdown and pause together on the main actor. Doing the stop
-    // synchronously (before this) let a 0.25s progress tick observe the
-    // half-state — timer inactive but audio still "playing" — and re-anchor the
-    // lock-screen scrubber to the loop position, a brief jump at expiry.
+    // Stop the countdown and pause in one main-actor task, so a progress tick
+    // never sees the timer inactive while audio still plays (that re-anchors
+    // the lock screen scrubber).
     let generation = expiryGeneration
     Task { @MainActor in
-      // Skip if the timer was cancelled or re-armed between expiry and now,
-      // otherwise we'd pause a session the user just started.
+      // Skip if the timer was cancelled or re-armed since expiry.
       guard self.expiryGeneration == generation else { return }
       self.stopTimer()
       AudioManager.shared.setGlobalPlaybackState(false)
@@ -105,7 +98,6 @@ class TimerManager {
   }
 
   func handleScenePhaseChange() {
-    // Update the timer when scene phase changes
     if isTimerActive {
       updateTimer()
     }
@@ -122,10 +114,8 @@ class TimerManager {
 
   func getEndTime() -> Date? {
     guard isTimerActive, let startTime else { return nil }
-    // Anchor to the fixed stop instant (start + duration). Re-deriving
-    // `now + remainingTime` each render drifts by the sub-second gap between
-    // the 1 Hz tick and the render, so a stop time near a minute boundary makes
-    // the "Stops/Pausing at" label flash between adjacent minutes.
+    // Anchor to the fixed stop instant. `now + remainingTime` drifts with the
+    // 1 Hz tick, so the "Stops at" label could flip between adjacent minutes.
     return startTime.addingTimeInterval(selectedDuration)
   }
 

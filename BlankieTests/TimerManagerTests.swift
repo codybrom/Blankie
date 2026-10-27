@@ -4,13 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The sleep-timer state machine. Synchronous transitions and the fixed-anchor
-//  end time (guards the "Stops at HH:MM" minute-boundary flicker). The 1 Hz
-//  expiry tick is integration territory (no injectable clock) and is not driven.
-//
-//  Serialized + main-actor: drives the `TimerManager.shared` singleton and
-//  schedules a run-loop timer; each test stops it and restores the persisted
-//  selection in `deinit`.
+//  The sleep-timer state machine, with expiry driven through the injected clock and tick().
+//  Serialized: each test stops `TimerManager.shared` and restores the persisted selection.
 //
 
 import Foundation
@@ -41,8 +36,7 @@ import Testing
     #expect(isClose(timer.selectedDuration, 600, tol: 1.0))
   }
 
-  /// The end time anchors to start+duration (not now+remaining), so it doesn't
-  /// drift between render ticks.
+  /// Anchoring to start plus duration keeps the end time from drifting between render ticks.
   @Test func endTimeAnchorsToStartPlusDuration() {
     #expect(timer.getEndTime() == nil)  // inactive
 
@@ -58,7 +52,6 @@ import Testing
     #expect(isClose(timer.selectedDuration, 600, tol: 1.0))
   }
 
-  /// addTime is a no-op when no timer is running.
   @Test func addTimeIgnoredWhenInactive() {
     timer.addTime(minutes: 10)
     #expect(!timer.isTimerActive)
@@ -74,7 +67,6 @@ import Testing
     #expect(timer.getEndTime() == nil)
   }
 
-  /// Starting a timer persists the selection for next launch.
   @Test func startTimerPersistsSelection() {
     timer.selectedHours = 1
     timer.selectedMinutes = 15
@@ -83,11 +75,8 @@ import Testing
     #expect(UserDefaults.shared.integer(forKey: "timerLastSelectedMinutes") == 15)
   }
 
-  // MARK: - Expiry (deterministic via the injected clock + tick())
+  // MARK: - Expiry (injected clock and tick())
 
-  /// Reaching zero deactivates the timer AND pauses global playback — the sleep
-  /// timer's entire purpose. Driven via the injected clock so it's deterministic
-  /// instead of waiting on the 1 Hz run-loop timer.
   @Test func expiryStopsTimerAndPausesAudio() async {
     let t0 = Date(timeIntervalSince1970: 1000)
     timer.now = { t0 }
@@ -104,7 +93,6 @@ import Testing
     #expect(!audioManager.isGloballyPlaying, "expiry pauses playback")
   }
 
-  /// remainingTime tracks the clock and clamps to zero (never negative).
   @Test func tickCountsDownAndClampsAtZero() async {
     let t0 = Date(timeIntervalSince1970: 5000)
     timer.now = { t0 }
@@ -121,8 +109,7 @@ import Testing
     for _ in 0..<100 where timer.isTimerActive { await Task.yield() }  // drain expiry task
   }
 
-  /// A timer re-armed between expiry and the deferred pause task must NOT be
-  /// paused by that stale task (the generation guard).
+  /// The generation guard keeps a stale expiry task from pausing a re-armed timer.
   @Test func reArmBeforeDeferredPauseIsNotCancelled() async {
     let t0 = Date(timeIntervalSince1970: 8000)
     timer.now = { t0 }
@@ -140,8 +127,7 @@ import Testing
       audioManager.isGloballyPlaying, "the stale expiry task must not pause the new session")
   }
 
-  /// "+ time" pressed at the instant of expiry (after the deferred pause was
-  /// queued) must cancel that pause, like a re-arm does.
+  /// Adding time after the deferred pause is queued cancels it, like a re-arm.
   @Test func addTimeBeforeDeferredPauseIsNotCancelled() async {
     let t0 = Date(timeIntervalSince1970: 9000)
     timer.now = { t0 }

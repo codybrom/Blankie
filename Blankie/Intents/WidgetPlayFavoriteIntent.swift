@@ -7,11 +7,8 @@
 
 import AppIntents
 
-/// Plays a favorited item from a widget tap. Takes a plain
-/// `starredItems` token rather than an entity type (unlike `PlayPresetIntent`)
-/// so the widget extension never needs to query `PresetManager`/`AudioManager`
-/// just to resolve a parameter — the token is already known from the cached
-/// `WidgetSnapshot` the tile was built from.
+/// Plays a favorited item from a widget tap. Takes a plain `starredItems` token
+/// from the cached `WidgetSnapshot`, so the widget never queries the managers.
 struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
   static var isDiscoverable: Bool { false }
 
@@ -36,15 +33,14 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
     await AppSetup.ensureManagersReadyForIntents()
     let audio = AudioManager.shared
 
-    // Tapping the tile that's already active reads as "pause this", not
-    // "restart this" — matches the tile's own play/pause glyph in the widget.
+    // Tapping the active tile toggles playback, matching its play/pause glyph.
     if favoriteToken == audio.currentFavoriteToken {
       audio.togglePlayback()
       return .result()
     }
 
     // Resolve the token first so a stale tile throws without touching what's
-    // playing. `playPreset` leaves solo and Quick Mix itself.
+    // playing. `playPreset` leaves single sound and Quick Mix itself.
     switch PlayableItem(token: favoriteToken) {
     case .allSounds:
       if let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {
@@ -52,14 +48,14 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
       }
       return .result()
     case .quickMix:
-      // Entering Quick Mix or solo leaves the other mode itself.
+      // Entering Quick Mix or single sound leaves the other mode itself.
       audio.enterQuickMix()
       return .result()
-    case .solo(let fileName):
-      guard let soloSound = audio.sound(fileName: fileName) else {
+    case .single(let fileName):
+      guard let singleSound = audio.sound(fileName: fileName) else {
         throw BlankieIntentError.soundNotFound
       }
-      audio.enterSoloMode(for: soloSound)
+      audio.enterSingleSound(for: singleSound)
       return .result()
     case .preset(let id):
       guard let preset = PresetManager.shared.presets.first(where: { $0.id == id }) else {

@@ -8,7 +8,6 @@
 import AVFoundation
 import AudioToolbox
 
-/// Errors surfaced by the offline rendering harness.
 enum EngineRenderError: Error, CustomStringConvertible {
   case bufferAllocationFailed
   case limiterUnavailable(OSStatus)
@@ -27,13 +26,12 @@ enum EngineRenderError: Error, CustomStringConvertible {
   }
 }
 
-/// Offline manual-rendering harness mirroring the planned engine graph
-/// (player → EQ globalGain → [limiter] → mixer → output), so loudness/seam
-/// tests can measure rendered audio with the production AudioAnalyzer math.
+/// Offline render of the production graph (player, EQ globalGain, mixer, optional limiter,
+/// output) so loudness and seam tests can measure it with AudioAnalyzer.
 enum EngineRenderHarness {
 
-  /// Instantiates Apple's PeakLimiter AU, or throws so the loudness test can
-  /// skip (via `Test.cancel`) when the AU is unavailable in manual rendering.
+  /// Instantiates Apple's PeakLimiter AU, or throws so the caller can skip when manual
+  /// rendering lacks it.
   static func makeLimiter() throws -> AVAudioUnit {
     var description = AudioComponentDescription(
       componentType: kAudioUnitType_Effect,
@@ -47,7 +45,7 @@ enum EngineRenderHarness {
     }
 
     // nonisolated(unsafe): the completion handler writes `result` and signals the
-    // semaphore; the wait() below establishes happens-before before we read it.
+    // semaphore. The wait() below establishes happens-before before we read it.
     nonisolated(unsafe) var result: Result<AVAudioUnit, Error>?
     let semaphore = DispatchSemaphore(value: 0)
     AVAudioUnit.instantiate(with: description, options: []) { unit, error in
@@ -69,9 +67,8 @@ enum EngineRenderHarness {
     }
   }
 
-  /// Renders `fileURL` offline through the planned graph, returning exactly
-  /// `seconds` of audio in the file's processing format. Loops by scheduling
-  /// the file twice when `seconds` exceeds the file's own duration.
+  /// Returns exactly `seconds` of audio in the file's processing format. Loops by scheduling
+  /// the file twice when `seconds` exceeds its duration.
   static func render(
     fileURL: URL,
     boostDB: Float,
@@ -101,9 +98,7 @@ enum EngineRenderHarness {
       limiter = nil
     }
 
-    // Mirror production wiring (AudioEngineManager): per-sound chain feeds the
-    // main mixer, and the limiter sits on the mix bus after it — so the
-    // limiter sees post-pan-law levels, exactly as it does in the app.
+    // Matches AudioEngineManager: the limiter sits on the mix bus, so it sees post-pan-law levels.
     let mixer = engine.mainMixerNode
     engine.connect(player, to: eq, format: format)
     engine.connect(eq, to: mixer, format: format)
@@ -120,7 +115,7 @@ enum EngineRenderHarness {
     let fileDuration = Double(fileLength) / format.sampleRate
     player.scheduleFile(file, at: nil)
     if seconds > fileDuration {
-      // Re-open so the second pass reads from frame 0 independently; the loop
+      // Re-open so the second pass reads from frame 0 independently. The loop
       // seam frame is therefore exactly fileLength.
       let secondPass = try AVAudioFile(forReading: fileURL)
       player.scheduleFile(secondPass, at: nil)
@@ -148,7 +143,7 @@ enum EngineRenderHarness {
         appendFrames(from: renderBuffer, to: output)
         rendered += renderBuffer.frameLength
       case .insufficientDataFromInputNode:
-        // Player ran dry; zero-pad the tail so callers get the full length.
+        // Player ran dry. Zero-pad the tail so callers get the full length.
         appendFrames(from: renderBuffer, to: output)
         rendered += renderBuffer.frameLength
         if renderBuffer.frameLength == 0 {

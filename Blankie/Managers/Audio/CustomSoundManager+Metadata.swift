@@ -20,18 +20,16 @@ extension CustomSoundManager {
     var url: String?
   }
 
-  /// Extract comprehensive metadata from audio file including ID3 tags
+  /// Reads common and format-specific metadata, ID3 tags included.
   func extractAudioMetadata(from url: URL) async -> AudioMetadata {
     var metadata = AudioMetadata()
 
     do {
       let asset = AVURLAsset(url: url)
 
-      // Process common metadata
       let commonMetadata = try await asset.load(.commonMetadata)
       metadata = await processCommonMetadata(commonMetadata, metadata)
 
-      // Process format-specific metadata
       let formatMetadata = try await asset.load(.metadata)
       metadata = await processFormatMetadata(formatMetadata, metadata)
 

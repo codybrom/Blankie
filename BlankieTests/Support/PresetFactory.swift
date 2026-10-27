@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Builds `Preset` / `PresetState` values for tests. Every optional defaults to
-//  a NON-default value so a round-trip or remap that silently drops a field is
-//  detectable. Override any argument per test.
+//  Builds `Preset` and `PresetState` values for tests. Most optionals default to non-default
+//  values, so a round trip that drops a field is detectable.
 //
 
 import Foundation

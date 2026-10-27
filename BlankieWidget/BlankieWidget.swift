@@ -27,15 +27,13 @@ struct NowPlayingProvider: TimelineProvider {
 
   func getTimeline(in context: Context, completion: @escaping (Timeline<NowPlayingEntry>) -> Void) {
     let entry = NowPlayingEntry(date: .now, snapshot: WidgetStateStore.current())
-    // The app explicitly calls `WidgetCenter.reloadAllTimelines()` on every
-    // playback/preset/favorites change (`WidgetStateStore.publish`), so this
-    // widget doesn't need a scheduled refresh of its own.
+    // The app reloads timelines on every change (`WidgetStateStore.publish`).
     completion(Timeline(entries: [entry], policy: .never))
   }
 }
 
-/// Built-in examples for the gallery and redacted placeholders only. Installed
-/// widgets always render the saved snapshot, including genuine empty states.
+/// Gallery and placeholder content only. Installed widgets render the saved
+/// snapshot, including empty states.
 extension WidgetSnapshot {
   static var galleryPreview: WidgetSnapshot {
     let sounds: [(String, String)] = [
@@ -46,7 +44,7 @@ extension WidgetSnapshot {
     ]
     let favorites = sounds.map { name, icon in
       WidgetFavorite(
-        token: "solo:\(name)",
+        token: PlayableItem.single(fileName: name).token,
         displayName: NSLocalizedString("sound.\(name)", comment: "Built-in sound name"),
         systemIconName: icon, thumbnailKey: nil, accentColorName: "blue", subtitle: nil)
     }
@@ -65,26 +63,14 @@ extension WidgetSnapshot {
   }
 }
 
-/// Resolves a widget snapshot's `accentColorName` to a real color, falling
-/// back to Blankie's own accent asset for solo sounds/Quick Mix/unset presets.
+/// Resolves `accentColorName`, falling back to the app's AccentColor asset.
 func widgetAccentColor(_ name: String?) -> Color {
   name.flatMap { Color(fromString: $0) } ?? Color("AccentColor")
 }
 
-/// The darkened accent-tinted card background shared by `NowPlayingWidget`
-/// and `PinnedItemWidget`. Blends with real RGB interpolation (`Color.mix`),
-/// not `.opacity()` — partially transparent gradient stops let WidgetKit's
-/// own backdrop show through unpredictably (this is what made an earlier
-/// "darker" attempt render lighter instead), where a fully-opaque mixed
-/// color is exactly the color it looks like, regardless of what's behind it.
-///
-/// The Home Screen's own Light/Dark appearance is a system-level setting
-/// independent of Blankie's own forced-dark in-app mode, so the widget still
-/// has to respond to it: light appearance keeps the vivid accent-tinted
-/// card, dark appearance blends much further toward black, matching how
-/// Apple's own widgets go from a saturated card in light mode to a
-/// near-black one in dark mode rather than using the same fixed background
-/// in both.
+/// Accent card background. Stops are opaque `Color.mix` blends because WidgetKit
+/// shows its own backdrop through translucent stops. Follows the Home Screen's
+/// appearance, independent of the app's forced dark mode.
 func widgetAccentGradient(_ accent: Color, colorScheme: ColorScheme) -> LinearGradient {
   if colorScheme == .dark {
     return LinearGradient(
@@ -104,15 +90,8 @@ func widgetAccentGradient(_ accent: Color, colorScheme: ColorScheme) -> LinearGr
     startPoint: .topLeading, endPoint: .bottomTrailing)
 }
 
-/// Small badge carrying Blankie's own mark, for every widget that needs a
-/// corner brand mark. Uses `blankie.mark`, a flattened, hole-punched render
-/// of the same "B" used for the macOS menu bar icon (`blankie.symbol`) — that
-/// source asset's counter is authored as separate SF Symbols motion-group
-/// layers meant for animated/hierarchical rendering, which collapse into a
-/// solid blob under plain flat rendering (no visible hole) the way widgets
-/// render it. `blankie.mark` bakes the same hole into the path geometry
-/// itself (an evenodd subpath), so it looks right with zero special-case
-/// rendering — a real vector fix, not a masking trick layered on top.
+/// Corner brand mark. `blankie.mark` bakes the B's counter into an even-odd path, but
+/// `blankie.symbol`'s layered counter fills in under flat widget rendering.
 struct BlankieBadge: View {
   @Environment(\.widgetForeground) private var foreground
   var body: some View {
@@ -126,13 +105,8 @@ struct BlankieBadge: View {
   }
 }
 
-/// Framed icon top-left, brand badge top-right, title/subtitle below, a
-/// pill-shaped play/pause button below that — the same "Now Playing square"
-/// shape Apple's own Shortcuts widgets (e.g. its bundled "Ambient Sounds"
-/// tile) and Dark Noise's single-sound widget use: the artwork is a boxed
-/// object with its own margin, never the card's own edge-to-edge background.
-/// Shared by `NowPlayingWidget` and `PinnedItemWidget` so the two read as the
-/// same kind of object instead of two different competing shapes.
+/// Small card shared by `NowPlayingWidget` and `PinnedItemWidget`: framed
+/// artwork, badge, title and a play/pause pill.
 struct NowPlayingSmallCard<PlayIntent: AppIntent>: View {
   let title: String
   let subtitle: String?
@@ -143,15 +117,12 @@ struct NowPlayingSmallCard<PlayIntent: AppIntent>: View {
   let playIntent: PlayIntent
 
   var body: some View {
-    // Keep typography and transport readable: reduce decorative artwork first,
-    // then omit the optional second line if the larger text needs the space.
+    // At larger text sizes, shrink the artwork first, then drop the subtitle.
     ViewThatFits(in: .vertical) {
       cardContent(artworkSize: 56, spacing: 8, showsSubtitle: true)
       cardContent(artworkSize: 36, spacing: 6, showsSubtitle: true)
       cardContent(artworkSize: nil, spacing: 6, showsSubtitle: false)
     }
-    // WidgetKit supplies the content margins; candidates measure their natural
-    // height before this outer frame fills the widget's available space.
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }
 
@@ -230,17 +201,8 @@ struct NowPlayingWidgetEntryView: View {
   }
 }
 
-/// Preset artwork when a cached thumbnail exists; otherwise a bordered,
-/// accent-tinted circle with the sound's own icon — the same treatment
-/// `SoundIcon` uses in the app itself (`Circle().fill(accent.opacity(0.2))`
-/// + an accent-colored glyph), so a solo sound looks like the same object on
-/// the Home Screen as it does in the mixer, not a generic icon-on-square card.
-///
-/// Border width and glyph size scale off the view's own rendered size
-/// (`GeometryReader`) rather than fixed points: this same view renders
-/// anywhere from a 30pt footer thumbnail up to a 74pt card, and a fixed
-/// 2.5pt border reads fine at 74pt but is disproportionately thick — almost
-/// a solid blob — at 30pt.
+/// Cached thumbnail, or an accent circle with the sound's icon like the app's
+/// `SoundIcon`. Border and glyph scale with size (30 to 74 pt).
 struct WidgetArtwork: View {
   @Environment(\.displayScale) private var displayScale
   let thumbnailKey: String?

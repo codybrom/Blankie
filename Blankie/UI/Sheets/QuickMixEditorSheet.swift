@@ -17,7 +17,7 @@ import SwiftUI
     /// carried through Done so the editor never prunes them.
     @State private var unresolvedSounds: [String] = []
 
-    /// Still-loading members not since picked by name; they keep their slots.
+    /// Still-loading members not since picked by name. They keep their slots.
     private var pendingSounds: [String] {
       unresolvedSounds.filter { !selectedSounds.contains($0) }
     }
@@ -47,7 +47,6 @@ import SwiftUI
             }
           }
 
-          // Order section — drag to reorder
           Section {
             if selectedSounds.isEmpty {
               Text("No sounds selected")
@@ -98,9 +97,8 @@ import SwiftUI
         }
       }
       .onAppear {
-        // Drop entries that can't stand alone (preset-only), so the order list,
-        // the count, and what Done saves match what's selectable. Names that
-        // don't resolve yet are kept aside rather than dropped.
+        // Drop preset-only entries so the order list, count and saved set match
+        // what's selectable. Names that don't resolve yet are kept aside.
         let stored = globalSettings.quickMixSoundFileNames
         selectedSounds = stored.filter { fileName in
           audioManager.sounds.contains { $0.fileName == fileName && !$0.isPresetUseOnly }
@@ -142,7 +140,7 @@ import SwiftUI
       // can't stand alone, so they're never eligible for Quick Mix.
       audioManager.sounds
         .filter { !$0.isPresetUseOnly }
-        .sorted { $0.title < $1.title }
+        .sortedByLocalizedTitle()
     }
 
     var body: some View {

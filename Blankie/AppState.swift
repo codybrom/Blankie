@@ -18,17 +18,14 @@ class AppState: ObservableObject {
   @Published var showingOnboarding = false
   /// macOS: Settings takes over the detail pane (sidebar gear toggles it).
   @Published var showingSettingsPane = false
-  /// macOS: the Settings pane's About sub-page (the About row and the menu
-  /// bar's About Blankie both land here). Reset by the pane's onDisappear —
-  /// not when the pane flag flips — so Done doesn't flash the settings root
-  /// while the pane fades out.
+  /// macOS: the Settings pane's About sub-page (About row and menu bar both open it).
+  /// Reset in the pane's onDisappear so Done doesn't flash the settings root mid-fade.
   @Published var showingSettingsAboutPage = false
-  /// macOS: the Settings pane's Manage Sounds sub-page (in-pane swap like
-  /// About — a NavigationLink push escapes the pane). Same onDisappear reset.
+  /// macOS: the Settings pane's Manage Sounds sub-page, swapped in-pane like About
+  /// because a NavigationLink push escapes the pane. Same onDisappear reset.
   @Published var showingSettingsManageSoundsPage = false
-  /// Onboarding just created (and applied) a preset — each platform's root
-  /// navigates to it (iPhone pushes the mixer, macOS closes the Settings
-  /// pane) and resets the flag.
+  /// Set when onboarding creates and applies a preset. Each platform's root navigates
+  /// to it (iPhone pushes the mixer, macOS closes the Settings pane) and resets it.
   @Published var onboardingCreatedPreset = false
 
   private init() {}

@@ -16,10 +16,8 @@ import SwiftUI
     // Scales the large countdown with Dynamic Type while keeping its default size.
     @ScaledMetric(relativeTo: .largeTitle) private var countdownFontSize: CGFloat = 48
 
-    /// The accent driving the action buttons. Mirrors the precedence used by
-    /// the Now Playing sheet so the timer's button matches the surrounding UI.
-    /// `themingPreset` is nil during solo / Quick Mix, so those use the app
-    /// accent (the timer is reachable from solo mode's bottom toolbar).
+    /// The action buttons' accent, using Now Playing's precedence. `themingPreset`
+    /// is nil during single sound and Quick Mix, so those use the app accent.
     private var accentColor: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
@@ -36,9 +34,8 @@ import SwiftUI
         .navigationTitle("Timer")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          // The primary action ("Start Timer" / "Cancel Timer") lives in the
-          // content; this toolbar button only dismisses, so it's a leading
-          // Close rather than a trailing "Done".
+          // The primary action ("Start Timer", "Cancel Timer") lives in the content.
+          // This toolbar button only dismisses, so it's a leading Close.
           ToolbarItem(placement: .topBarLeading) {
             Button {
               dismiss()
@@ -130,7 +127,7 @@ import SwiftUI
     }
   }
 
-  /// Hours/minutes wheels and Start Timer — shared by the sheet and the panel.
+  /// Hours/minutes wheels and Start Timer, shared by the sheet and the panel.
   struct TimerSelectionContent: View {
     var onStart: () -> Void = {}
 
@@ -260,8 +257,8 @@ import SwiftUI
           .padding(28)
           .accessibilityElement(children: .combine)
         }
-        // Square, so in a short space (the Duo's flat half) the ring shrinks and
-        // the countdown scales down inside it instead of spilling past.
+        // Square, so in a short space (the Duo's flat half) the ring and its
+        // countdown shrink to fit.
         .aspectRatio(1, contentMode: .fit)
         .frame(maxWidth: 320, maxHeight: 320)
 

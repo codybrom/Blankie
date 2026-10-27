@@ -36,7 +36,7 @@ import os
     }
 
     private func configureWindowAppearance() {
-      // Blankie is dark-mode only. Lock the whole app to the dark appearance (the macOS counterpart to the iOS Info.plist UIUserInterfaceStyle = Dark key).
+      // Dark-only app (the macOS counterpart to the iOS UIUserInterfaceStyle = Dark key).
       NSApp.appearance = NSAppearance(named: .darkAqua)
       DispatchQueue.main.async {
         if let window = NSApplication.shared.windows.first {
@@ -63,9 +63,8 @@ import os
     }
 
     private func applySavedLanguagePreference() {
-      // The language preference lives in the shared app-group suite (AppDataMigrator
-      // moves it there and removes it from standard); read it from the same place
-      // GlobalSettings writes it, or this fallback is always nil post-migration.
+      // GlobalSettings stores the language in the app-group suite (AppDataMigrator
+      // moves it out of standard), so read it there.
       if let languageCode = UserDefaults.shared.string(forKey: UserDefaultsKeys.language),
         languageCode != "system"
       {
@@ -92,7 +91,6 @@ import os
             "AppDelegate: Set window frame for UI testing to \(String(describing: frame))")
         }
 
-        // Force playback to start for screenshots
         if ProcessInfo.processInfo.arguments.contains("-ScreenshotMode") {
           self.configureScreenshotMode()
         }
@@ -103,7 +101,6 @@ import os
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
         let audioManager = AudioManager.shared
 
-        // Configure specific sounds for screenshots
         let soundsToActivate = [
           ("rain", 0.8),
           ("storm", 0.6),
@@ -132,33 +129,26 @@ import os
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_: NSApplication) -> Bool {
-      return false  // Prevent app from quitting when last window closes
+      return false
     }
 
-    // Handle language change
     @objc private func languageDidChange(_: Notification) {
       Logger.app.debug("AppDelegate: Received language change notification")
-      // The language has already been changed in UserDefaults by the Language.applyLanguage method
-
-      // Try to refresh any localized strings throughout the app
+      // Language.applyLanguage has already written the new language to UserDefaults.
       refreshAppLocalization()
     }
 
-    // Handle locale change
     @objc private func localeDidChange(_: Notification) {
       Logger.app.debug("AppDelegate: Locale changed, refreshing localized content")
       refreshAppLocalization()
     }
 
     private func refreshAppLocalization() {
-      // Try to refresh UI elements with new language
       DispatchQueue.main.async {
-        // Force redraw of all windows
         for window in NSApplication.shared.windows {
           window.update()
           window.display()
 
-          // Try to refresh view controllers
           if let contentView = window.contentView {
             contentView.needsDisplay = true
             contentView.needsLayout = true
@@ -182,8 +172,7 @@ import os
       Logger.app.debug(
         "IOSAppDelegate: Protected data available: \(application.isProtectedDataAvailable)")
 
-      // Initialize core app systems synchronously for CarPlay compatibility
-      // This MUST complete before CarPlay can connect
+      // Runs synchronously so core systems are ready before CarPlay can connect.
       #if CARPLAY_ENABLED && canImport(CarPlay)
         Logger.app.debug("IOSAppDelegate: Performing synchronous CarPlay initialization...")
 
@@ -191,19 +180,17 @@ import os
         // CarPlay can connect so the first connect/disconnect is observed.
         CarPlayAudioBridge.shared.start()
 
-        // Use the shared model container (don't create a duplicate!)
         if !SharedModelContainer.shared.isInitialized {
           SharedModelContainer.shared.initialize()
         }
 
-        // Set model contexts synchronously - both are needed for CarPlay
+        // CarPlay needs both contexts.
         AudioManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
         PresetArtworkManager.shared.setModelContext(SharedModelContainer.shared.mainContext)
 
         Logger.app.debug("IOSAppDelegate: Model context initialized")
 
-        // Load sounds synchronously - this works even when device is locked
-        // because we've configured file protection appropriately
+        // Works while the device is locked (the files it reads have no file protection).
         if AudioManager.shared.sounds.isEmpty {
           AudioManager.shared.loadSounds()
           Logger.app.debug(
@@ -211,19 +198,16 @@ import os
           )
         }
 
-        // Async initialization for less critical components
         Task { @MainActor in
           await initializeAppCoreAsync()
         }
       #endif
 
-      // Reclaim leftover import/share staging in tmp + Documents/Inbox that
-      // iOS doesn't clean for us (accumulates across versions over time).
       // Detached so the FileManager work stays off the main thread.
       Task.detached {
         StorageMaintenance.clean()
         #if DEBUG
-          // Itemize on-disk usage (post-cleanup) so the Settings number is legible.
+          // After cleanup, so the report shows what's left.
           StorageReport.log()
         #endif
       }
@@ -245,17 +229,15 @@ import os
     #if CARPLAY_ENABLED && canImport(CarPlay)
       @MainActor
       private func initializeAppCoreAsync() async {
-        // Load custom sounds with proper SwiftData coordination
         Logger.app.debug("IOSAppDelegate: Loading custom sounds...")
         await AudioManager.shared.loadCustomSoundsWhenReady()
 
         Logger.app.debug("IOSAppDelegate: Async app core initialization complete")
       }
 
-      // Vend scenes explicitly — manifest-only connection is unreliable for a
-      // SwiftUI `@main` app hosting a CarPlay scene. The CarPlay role gets its
-      // delegate; the window role keeps SwiftUI's "Default Configuration". Role
-      // matched by raw value to avoid importing CarPlay into this file.
+      // Scenes are vended explicitly because manifest-only connection is unreliable
+      // for a SwiftUI `@main` app hosting a CarPlay scene. The role is matched by raw
+      // value to avoid importing CarPlay into this file.
       func application(
         _ application: UIApplication,
         configurationForConnecting connectingSceneSession: UISceneSession,
@@ -277,8 +259,7 @@ import os
 
     func applicationDidBecomeActive(_: UIApplication) {
       #if CARPLAY_ENABLED && canImport(CarPlay)
-        // Re-establish CarPlay connection if needed after app becomes active
-        // This is crucial for CarPlay apps that were force quit or when device was locked
+        // Covers CarPlay sessions that connected after a force quit or while locked.
         if CarPlayInterfaceController.shared.isConnected {
           Logger.app.debug(
             "IOSAppDelegate: App became active with CarPlay connected, checking interface state...")

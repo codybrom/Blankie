@@ -1,14 +1,13 @@
 ---
-// docs/src/components/GithubStars.astro
 const REPO = "codybrom/blankie";
 
-// Get stars at build time as a fallback
+// Build-time count, shown until the client script refreshes it.
 const getStarCount = async () => {
   try {
     const response = await fetch(`https://api.github.com/repos/${REPO}`, {
       headers: {
         Accept: "application/vnd.github.v3+json",
-        "User-Agent": "BlankeRESTwebsite",
+        "User-Agent": "BlankieRESTwebsite",
       },
     });
 
@@ -25,7 +24,6 @@ const getStarCount = async () => {
   }
 };
 
-// This execution happens at build time in Astro
 const initialStars = await getStarCount();
 const formattedInitialStars =
   initialStars !== null
@@ -66,8 +64,7 @@ const formattedInitialStars =
 </a>
 
 <script>
-  // Client-side script to update the star count
-  // Uses a local storage cache to reduce API calls
+  // Refresh the count client-side, cached in localStorage to limit API calls.
   (async function updateStarCount() {
     const REPO = "codybrom/blankie";
     const CACHE_KEY = "github_stars_count";
@@ -79,7 +76,6 @@ const formattedInitialStars =
     );
     if (!countElement && !countElementMedium) return;
 
-    // Check if we have a recent cached value
     const cachedData = localStorage.getItem(CACHE_KEY);
     if (cachedData) {
       try {
@@ -87,7 +83,6 @@ const formattedInitialStars =
         const age = Date.now() - timestamp;
 
         if (age < CACHE_DURATION) {
-          // Use cached data if it's less than 6 hours old
           const formattedStars = new Intl.NumberFormat("en-US").format(stars);
           if (countElement) countElement.textContent = formattedStars;
           if (countElementMedium)
@@ -95,18 +90,17 @@ const formattedInitialStars =
           return;
         }
       } catch (e) {
-        // If parsing fails, ignore and fetch fresh data
         console.error("Error parsing cached star count", e);
       }
     }
 
-    // Fetch fresh data with a slight delay to not block page load
+    // Delay the fetch so it doesn't compete with page load.
     setTimeout(async () => {
       try {
         const response = await fetch(`https://api.github.com/repos/${REPO}`, {
           headers: {
             Accept: "application/vnd.github.v3+json",
-            "User-Agent": "BlankeRESTwebsite",
+            "User-Agent": "BlankieRESTwebsite",
           },
         });
 
@@ -117,7 +111,6 @@ const formattedInitialStars =
         const data = await response.json();
         const stars = data.stargazers_count;
 
-        // Update the displayed count
         if (stars) {
           const formattedStars = new Intl.NumberFormat("en-US").format(stars);
           if (countElement) countElement.textContent = formattedStars;
@@ -125,7 +118,6 @@ const formattedInitialStars =
             countElementMedium.textContent = formattedStars;
         }
 
-        // Cache the result with a timestamp
         localStorage.setItem(
           CACHE_KEY,
           JSON.stringify({
@@ -137,6 +129,6 @@ const formattedInitialStars =
         console.error("Failed to update GitHub stars count", error);
         // Keep the build-time count on error
       }
-    }, 1000); // 1-second delay
+    }, 1000);
   })();
 </script>

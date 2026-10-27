@@ -25,25 +25,20 @@ struct Language: Hashable, Identifiable, Equatable {
   private static var _cachedSystemLanguage: Language?
 
   static var system: Language {
-    // Cache the system language to avoid repeated detection
     if let cached = _cachedSystemLanguage {
       return cached
     }
 
-    // Read the system's actual language preference
     let systemLanguageCode = Locale.preferredLanguages.first ?? "en"
 
-    // For display, we want just the base language code (e.g., "en" from "en-US")
     let languageCode =
       systemLanguageCode.split(separator: "-").first.map(String.init) ?? systemLanguageCode
 
-    // Create a locale for the system language to get its native name
     let systemLocale = Locale(identifier: languageCode)
 
-    // Get the language name in its own locale (e.g., "English" for en, "Español" for es)
+    // The language's name in its own language ("Español" for es).
     let languageName = systemLocale.localizedString(forLanguageCode: languageCode) ?? languageCode
 
-    // Show "System (Language)" where System is in the current app language
     let displayName =
       "\(String(localized:"System")) (\(languageName))"
 
@@ -67,26 +62,21 @@ struct Language: Hashable, Identifiable, Equatable {
 
     Logger.settings.debug("Detecting available app localizations using Bundle.main.localizations")
 
-    // Get all localizations from the app bundle
     let bundleLocalizations = Bundle.main.localizations
     Logger.settings.debug(
       "Found \(bundleLocalizations.count) localizations in bundle: \(bundleLocalizations.joined(separator: ", "))"
     )
 
-    // Parse the language codes and create Language objects
     for code in bundleLocalizations {
-      // Skip development language code (usually "Base")
       if code == "Base" {
         continue
       }
 
-      // Create and add Language object if not already present
       if !languages.contains(where: { $0.code == code }) {
         languages.append(createLanguage(for: code))
       }
     }
 
-    // If we still don't have any languages, try reading from Localizable.xcstrings
     if languages.count <= 1 {
       Logger.settings.debug("No localizations found in bundle, trying Localizable.xcstrings")
       tryReadXCStringsFile(into: &languages)
@@ -95,7 +85,6 @@ struct Language: Hashable, Identifiable, Equatable {
     let languageList = languages.map { "- \($0.code): \($0.displayName)" }.joined(separator: "\n")
     Logger.settings.debug("Final language list:\n\(languageList)")
 
-    // Sort languages by display name but keep system first
     languages.sort {
       if $0.code == "system" { return true }
       if $1.code == "system" { return false }
@@ -113,10 +102,8 @@ struct Language: Hashable, Identifiable, Equatable {
 
     Logger.settings.debug("Found Localizable.xcstrings at: \(url.path)")
 
-    // Extract and process language codes from the file
     let langCodes = extractLanguagesFromXCStrings(at: url)
 
-    // Add the language codes to our list
     addLanguagesToList(codes: langCodes, languages: &languages)
   }
 
@@ -132,15 +119,12 @@ struct Language: Hashable, Identifiable, Equatable {
         return languageCodes
       }
 
-      // Get source language
       if let sourceLanguage = json["sourceLanguage"] as? String {
         Logger.settings.debug("Source language: \(sourceLanguage)")
         languageCodes.insert(sourceLanguage)
       }
 
-      // Extract language codes from strings
       if let strings = json["strings"] as? [String: [String: Any]] {
-        // Look through strings to collect language codes
         for (_, stringData) in strings {
           if let localizations = stringData["localizations"] as? [String: Any],
             !localizations.isEmpty
@@ -162,14 +146,12 @@ struct Language: Hashable, Identifiable, Equatable {
   }
 
   private static func addLanguagesToList(codes: Set<String>, languages: inout [Language]) {
-    // Add each language code if not already in our list
     for code in codes where !languages.contains(where: { $0.code == code }) {
       languages.append(createLanguage(for: code))
     }
   }
 
   private static func createLanguage(for code: String) -> Language {
-    // Get the display name in the language's own locale
     let locale = Locale(identifier: code)
     let displayName = locale.localizedString(forIdentifier: code) ?? code
     return Language(code: code, displayName: displayName)
@@ -178,7 +160,6 @@ struct Language: Hashable, Identifiable, Equatable {
   static func applyLanguage(_ language: Language) {
     Logger.settings.debug("Changing language to: \(language.code)")
 
-    // Store the language preference
     if language.code == "system" {
       Logger.settings.debug("Removing AppleLanguages key to use system default")
       UserDefaults.standard.removeObject(forKey: "AppleLanguages")
@@ -194,15 +175,13 @@ struct Language: Hashable, Identifiable, Equatable {
   }
 
   private static func resetBundleLocalization() {
-    // This is a partial solution - it will refresh some text but not all UI elements
+    // Refreshes some text in place. The rest updates after a relaunch.
     let value = UserDefaults.standard.object(forKey: "AppleLanguages")
     let languages = value as? [String] ?? Locale.preferredLanguages
 
     Logger.settings.debug("Attempting to refresh localization with languages: \(languages)")
 
-    // Try to force UI refresh
-    // This is a hack and only works partially
-    _ = Bundle.main.localizations  // Use discard pattern to silence warning
+    _ = Bundle.main.localizations
     NotificationCenter.default.post(name: NSLocale.currentLocaleDidChangeNotification, object: nil)
   }
 
@@ -213,20 +192,18 @@ struct Language: Hashable, Identifiable, Equatable {
       task.launchPath = "/usr/bin/open"
       task.arguments = ["-n", url.path]
 
-      // Store a flag to indicate we're restarting
       UserDefaults.standard.set(true, forKey: "AppIsRestarting")
       UserDefaults.standard.synchronize()
 
-      // Allow some time for UserDefaults to sync before quitting
+      // Give UserDefaults time to sync before quitting.
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
         task.launch()
         NSApplication.shared.terminate(nil)
       }
     #else
-      // iOS doesn't support app restart - show message to user instead
+      // iOS can't relaunch itself, so the change applies on the next launch.
       UserDefaults.standard.set(true, forKey: "LanguageChangePending")
       UserDefaults.standard.synchronize()
-    // On iOS, the language change will take effect when the app is relaunched
     #endif
   }
 }

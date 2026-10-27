@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension SoundSheetForm {
-  /// Read-only credit rows (edit mode only); custom sounds add an Edit Credits
+  /// Read-only credit rows (edit mode only). Custom sounds add an Edit Credits
   /// row, built-in credits are never editable.
   @ViewBuilder
   var creditsSection: some View {
@@ -73,8 +73,8 @@ extension SoundSheetForm {
   private func editCreditsRow(for sound: Sound, hasCredit: Bool) -> some View {
     let label = hasCredit ? Text("Edit Credits") : Text("Add Credits")
     #if os(macOS)
-      // No NavigationStack wraps the macOS sheet, so present the editor as its
-      // own sheet rather than a (dead) NavigationLink.
+      // No NavigationStack wraps the macOS sheet, so a NavigationLink would do
+      // nothing. Present the editor as its own sheet.
       Button {
         showingCreditsEditor = true
       } label: {

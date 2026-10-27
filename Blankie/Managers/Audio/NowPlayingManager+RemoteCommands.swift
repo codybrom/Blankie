@@ -18,7 +18,6 @@ extension NowPlayingManager {
 
     let commandCenter = MPRemoteCommandCenter.shared()
 
-    // Enable the commands
     commandCenter.playCommand.isEnabled = true
     commandCenter.pauseCommand.isEnabled = true
     commandCenter.togglePlayPauseCommand.isEnabled = true
@@ -39,7 +38,6 @@ extension NowPlayingManager {
   }
 
   private func removeExistingCommandHandlers(_ commandCenter: MPRemoteCommandCenter) {
-    // Remove all previous handlers
     commandCenter.playCommand.removeTarget(nil)
     commandCenter.pauseCommand.removeTarget(nil)
     commandCenter.togglePlayPauseCommand.removeTarget(nil)

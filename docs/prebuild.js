@@ -1,6 +1,6 @@
 /**
- * Prebuild script to extract localization data
- * This runs automatically before building the Astro site
+ * Runs before each Astro build: extracts localization data from the app's
+ * string catalogs and builds the press kit zip.
  */
 
 import fs from "fs";
@@ -13,19 +13,17 @@ import { execSync } from "child_process";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Define paths
 const projectRoot = path.resolve(__dirname, "..");
 const outputDir = path.join(__dirname, "public", "i18n");
-// Every app target that ships translatable strings. Wildcards (not a hardcoded
-// "Localizable") so each target's InfoPlist.xcstrings is picked up too.
+// Every app target that ships translatable strings. The wildcard also picks up
+// each target's InfoPlist.xcstrings.
 const globsPatterns = [
   path.join(projectRoot, "Blankie", "*.xcstrings"),
   path.join(projectRoot, "BlankiePresetPreview", "*.xcstrings"),
 ];
 
-// Pull a { value, state } pair out of a localization node, supporting both flat
-// strings and pluralized strings. Plurals are represented by their "other" form
-// (the one translators edit on the site); without this they'd be dropped.
+// Returns { value, state } for a flat or plural localization node. Plurals use
+// their "other" form, the one translators edit on the site.
 function extractUnit(localization) {
   if (!localization) return null;
   if (localization.stringUnit?.value != null) {
@@ -45,14 +43,11 @@ function extractUnit(localization) {
   return null;
 }
 
-// Ensure output directory exists
 console.log(`\n✨ Prebuild: Ensuring i18n directory exists...`);
 fs.mkdirSync(outputDir, { recursive: true });
 
-// Extraction logic integrated directly
 console.log(`✨ Prebuild: Extracting localization data...`);
 try {
-  // Find all matching files
   console.log(`Looking for files matching: ${globsPatterns.join(", ")}`);
   const files = globSync(globsPatterns);
 
@@ -65,7 +60,6 @@ try {
 
   console.log(`Found ${files.length} file(s)`);
 
-  // Initialize result object
   const result = {
     metadata: {
       extractedAt: new Date().toISOString(),
@@ -75,40 +69,33 @@ try {
     strings: {},
   };
 
-  // Process each file
   files.forEach((file) => {
     console.log(`Processing ${file}`);
     try {
       const content = fs.readFileSync(file, "utf8");
       const json = JSON.parse(content);
 
-      // Extract strings and their metadata
       if (json.strings) {
         Object.keys(json.strings).forEach((key) => {
           const item = json.strings[key];
 
           if (item.shouldTranslate === false) {
-            return; // Skip strings that shouldn't be translated
+            return;
           }
 
-          // Initialize key in result if it doesn't exist
           if (!result.strings[key]) {
             result.strings[key] = {};
           }
 
-          // Record which catalog the string came from (first file wins). Read
-          // back via the `sourceFile` key — excluded from locale enumeration.
+          // First catalog wins. `sourceFile` is excluded from locale enumeration below.
           if (!result.strings[key].sourceFile) {
             result.strings[key].sourceFile = path.relative(projectRoot, file);
           }
 
-          // Extract comment if available
           if (item.comment) {
             result.strings[key].comment = item.comment;
           }
 
-          // Source (English) value + per-locale values. extractUnit handles
-          // both flat strings and plurals (via their "other" form).
           const enUnit = extractUnit(item.localizations?.en);
           if (enUnit) {
             result.strings[key].en = enUnit;
@@ -140,7 +127,6 @@ try {
     strings: {},
   };
 
-  // Add only English strings with comments
   Object.keys(result.strings).forEach((key) => {
     if (result.strings[key].en) {
       sourceJson.strings[key] = {
@@ -151,14 +137,12 @@ try {
     }
   });
 
-  // Save source.json
   fs.writeFileSync(
     path.join(outputDir, "source.json"),
     JSON.stringify(sourceJson, null, 2),
   );
   console.log(`Created source.json with English strings and comments`);
 
-  // Find all languages in the data
   const languages = new Set(["en"]);
   Object.keys(result.strings).forEach((key) => {
     Object.keys(result.strings[key]).forEach((lang) => {
@@ -190,11 +174,9 @@ try {
     let translatedStrings = 0;
     let needsReviewStrings = 0;
 
-    // Format each string for this language
     let needsTranslationStrings = 0;
 
     Object.keys(result.strings).forEach((key) => {
-      // Only count strings that have an English source
       if (result.strings[key].en) {
         totalStrings++;
 
@@ -218,7 +200,6 @@ try {
             needsTranslationStrings++;
           }
         } else {
-          // Include untranslated strings with empty target
           langData.strings[key] = {
             source: result.strings[key].en.value,
             target: "",
@@ -247,7 +228,6 @@ try {
         : 0,
     };
 
-    // Save language-specific file
     const langFileName = `${lang}.json`;
     fs.writeFileSync(
       path.join(outputDir, langFileName),
@@ -260,23 +240,18 @@ try {
 
   console.log(`\n✨ Prebuild: Generating CSV files...`);
 
-  // Generate source CSV template
   const sourceCSV = convertSourceToCSV(sourceJson);
   fs.writeFileSync(path.join(outputDir, "source.csv"), sourceCSV);
   console.log(`Created source.csv template`);
 
-  // Generate per-language CSV files
   languages.forEach((lang) => {
     if (lang === "en") return; // Skip English as it's the source language
 
-    // Read the language JSON file we just created
     const langJsonPath = path.join(outputDir, `${lang}.json`);
     const langData = JSON.parse(fs.readFileSync(langJsonPath, "utf8"));
 
-    // Convert to CSV
     const csvContent = convertTranslationToCSV(langData.strings);
 
-    // Save CSV file
     const csvFileName = `${lang}.csv`;
     fs.writeFileSync(path.join(outputDir, csvFileName), csvContent);
     console.log(`Created language CSV file: ${csvFileName}`);
@@ -291,7 +266,6 @@ try {
     statistics: {},
   };
 
-  // Calculate statistics for each language
   Array.from(languages).forEach((lang) => {
     if (lang === "en") return; // Skip English as it's the source language
 
@@ -343,7 +317,6 @@ try {
     JSON.stringify(langIndex, null, 2),
   );
 
-  // Print translation summary
   console.log("\n✨ Prebuild: Translation Progress Summary:");
   console.log("============================");
   Object.keys(langIndex.statistics)
@@ -357,7 +330,6 @@ try {
     });
   console.log("============================");
 
-  // Count the generated files
   const generatedFiles = fs.readdirSync(outputDir);
   console.log(
     `✨ Prebuild: Generated ${generatedFiles.length} localization files\n`,
@@ -375,7 +347,6 @@ export function convertTranslationToCSV(strings) {
 
   // Add each string as a row
   Object.entries(strings).forEach(([key, item]) => {
-    // Ensure all fields are strings and handle optional fields
     const escapedKey = escapeCSVField(key);
     const escapedSource = escapeCSVField(item.source || "");
     const escapedTarget = escapeCSVField(item.target || "");
@@ -397,8 +368,8 @@ export function convertSourceToCSV(sourceData) {
   Object.entries(sourceData.strings).forEach(([key, item]) => {
     const escapedKey = escapeCSVField(key);
     const escapedSource = escapeCSVField(item.value || "");
-    const escapedTarget = escapeCSVField(""); // Empty target for template
-    const escapedState = escapeCSVField("needs_translation"); // Default state
+    const escapedTarget = escapeCSVField("");
+    const escapedState = escapeCSVField("needs_translation");
     const escapedComment = escapeCSVField(item.comment || "");
 
     // Add row
@@ -408,15 +379,12 @@ export function convertSourceToCSV(sourceData) {
   return csv;
 }
 
-// Helper function to escape CSV fields properly
 function escapeCSVField(field) {
   if (!field) return '""';
 
-  // If the field contains commas, newlines, or quotes, wrap it in quotes and escape internal quotes
   const needsQuotes = /[,\r\n"]/g.test(field);
 
   if (needsQuotes) {
-    // Replace double quotes with two double quotes (CSV escaping)
     const escaped = field.replace(/"/g, '""');
     return `"${escaped}"`;
   }
@@ -424,9 +392,7 @@ function escapeCSVField(field) {
   return `"${field}"`; // Always wrap in quotes for consistency
 }
 
-// ---- Press kit "Download all" zip ----
-// Bundles the press assets into public/blankie-press-kit.zip (public/ is
-// gitignored build output, so the zip is regenerated each build, never committed).
+// Press kit "Download all" zip. public/ is gitignored, so it's rebuilt every build.
 try {
   const assetsDir = path.join(__dirname, "src", "assets");
   const publicDir = path.join(__dirname, "public");

@@ -420,9 +420,8 @@ const assetGroups: { title: string; items: Asset[] }[] = [
         </div>
         {
           assetGroups.map((group) => {
-            // A group whose tiles mix orientations (e.g. iPad: a landscape
-            // window shot plus portrait store images) packs cleaner as masonry;
-            // single-orientation groups lay out as an even grid.
+            // Mixed-orientation groups (iPad: landscape window shot plus portrait
+            // store images) pack better as masonry. The rest use an even grid.
             const mixed =
               group.items.some((i) => i.tall) &&
               group.items.some((i) => !i.tall);

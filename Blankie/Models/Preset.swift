@@ -58,31 +58,24 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
   var creatorName: String?
   var artworkId: UUID?  // Reference to PresetArtwork in SwiftData
 
-  // Animated artwork
   var animatedArtwork: AnimatedArtworkRef?
   var staticArtworkPath: String?
 
-  // Preset order for navigation
   var order: Int?
 
-  // Import metadata - tracks if this preset was imported
   var isImported: Bool?
   var originalId: UUID?  // Original ID from imported preset for duplicate detection
 
-  // Mood/category tags
   var moods: [SoundMood]?
 
-  // Custom accent color
   var accentColorName: String?
 
   /// Per-preset view-mode override (Grid vs List). `nil` = follow the
   /// app-wide `GlobalSettings.showingListView` setting.
   var viewMode: PresetViewMode?
 
-  /// Legacy per-preset blur override (in points), retained only so older
-  /// presets still decode. Blur is now an all-or-nothing global Display setting
-  /// (`GlobalSettings.backgroundBlurRadius`); this value is no longer applied
-  /// and is cleared when a preset is saved.
+  /// Legacy per-preset blur (in points), kept so older presets decode. Never
+  /// applied (blur is the global `GlobalSettings.backgroundBlurRadius`). Cleared on save.
   var backgroundBlurRadius: Double?
 
   var accentColor: Color? {
@@ -95,7 +88,7 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
     return isDefault ? String(localized: "All Blankie Sounds") : name
   }
 
-  /// Title to show when this preset is active; the default preset keeps its
+  /// Title to show when this preset is active. The default preset keeps its
   /// one name ("All Blankie Sounds") here too.
   var activeTitle: String {
     displayName
@@ -120,7 +113,6 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
     // An empty preset is valid: it opens, and its editor is how it gets
     // sounds. Playback coerces "play" over nothing to paused.
 
-    // Check that all sounds referenced in the preset actually exist
     let availableSounds = Set(AudioManager.shared.sounds.map(\.fileName))
     let presetSounds = soundStates.map(\.fileName)
 
@@ -129,23 +121,18 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
       return false
     }
 
-    // Validate volume ranges
     guard soundStates.allSatisfy({ $0.volume >= 0 && $0.volume <= 1 }) else {
       Logger.presets.error("Preset: Invalid volume range")
       return false
     }
 
-    // Validate name
     guard !name.isEmpty else {
       Logger.presets.debug("Preset: Empty name")
       return false
     }
 
-    // Note: Animated artwork validation is not included here because:
-    // - ODR resources may be purged by the system
-    // - Files can be re-downloaded on demand
-    // - Missing animated artwork should not prevent preset from being valid
-    // Instead, animated artwork availability is checked at presentation time
+    // Animated artwork isn't validated here: its asset pack can be purged and
+    // re-downloaded, so availability is checked at presentation time.
 
     return true
   }
@@ -157,7 +144,6 @@ extension UTType {
   nonisolated static let blankiePreset = UTType(exportedAs: "com.codybrom.blankie.preset")
 }
 
-// Wrapper for the exported file with proper metadata
 struct BlankiePresetFile: Transferable {
   let url: URL
   let presetName: String

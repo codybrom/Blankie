@@ -8,14 +8,12 @@
 import SwiftUI
 import os
 
-/// Shared view modifiers for all platforms
 struct SharedAppModifiers: ViewModifier {
   let appSetup: AppSetup
   var globalSettings: GlobalSettings
   @StateObject private var audioFileImporter = AudioFileImporter.shared
 
-  /// The degraded store state to show a one-time notice for this launch, or nil
-  /// when the store opened healthy (or the notice was already shown/dismissed).
+  /// Degraded store state awaiting its one-time notice, or nil when healthy or dismissed.
   @State private var degradedStoreNotice: AppSetup.StoreState?
   @State private var didEvaluateStoreNotice = false
 
@@ -27,9 +25,7 @@ struct SharedAppModifiers: ViewModifier {
         }
       }
       .task {
-        // Surface a one-time notice if the persistent store opened in a degraded
-        // mode this launch. Evaluate once per view lifetime so dismissing it
-        // doesn't re-trigger while the static state stays non-healthy.
+        // Once per view lifetime, so dismissing the notice doesn't bring it back.
         guard !didEvaluateStoreNotice else { return }
         didEvaluateStoreNotice = true
         if AppSetup.storeState != .healthy {
@@ -50,7 +46,6 @@ struct SharedAppModifiers: ViewModifier {
       .tint(globalSettings.customAccentColor ?? .accentColor)
       .onOpenURL { url in
         if url.pathExtension == "blankie" {
-          // Handle preset import
           Task { @MainActor in
             do {
               let importedPreset = try await PresetImporter.shared.importArchive(from: url)
@@ -61,7 +56,6 @@ struct SharedAppModifiers: ViewModifier {
             }
           }
         } else {
-          // Handle audio file import
           audioFileImporter.handleIncomingFile(url)
         }
       }
@@ -82,8 +76,7 @@ struct SharedAppModifiers: ViewModifier {
       #endif
   }
 
-  /// Title for the degraded-store notice. Built from string literals in `Text`
-  /// so both strings are picked up for localization.
+  /// Built from `Text` literals so both titles are extracted for localization.
   private func degradedStoreTitle() -> Text {
     switch degradedStoreNotice {
     case .recoveredFreshStore:

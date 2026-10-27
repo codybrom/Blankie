@@ -37,14 +37,11 @@ struct SoundSheetForm: View {
   @State var showingIconPicker = false
   @State var isGeneratingDetails = false
   @State var isGeneratingIcon = false
-  /// Import-time AAC conversion state for the picked file, refreshed on each file
-  /// change. `forced` is true over the raw-import ceiling (toggle locks on);
-  /// `estimate` is non-nil when conversion is worth offering (drives the savings
-  /// caption). Both internal so the Audio section (other file) can read them.
+  /// Import-time AAC conversion state, refreshed on each file change. `forced`
+  /// locks the toggle on over the raw-import ceiling. `estimate` is non-nil when
+  /// conversion is worth offering.
   @State var importConvertForced = false
   @State var importConvertEstimate: CustomSoundManager.CompressionEstimate?
-  /// The editor's preset-membership list starts folded; the row's trailing
-  /// summary shows the count (or "None") without expanding.
   @State private var presetMembershipExpanded = false
   /// Pre-AI values for one-tap undo of the last suggestion, per field.
   @State var aiNameUndo: String?
@@ -53,9 +50,8 @@ struct SoundSheetForm: View {
     @State var showingCreditsEditor = false
   #endif
 
-  /// The music tag is user-editable only for custom sounds. Built-ins take it
-  /// from sounds.json (`isMusicDefault`) and must not be overridable. `.add` is
-  /// always a new custom import, so its tag is editable.
+  /// The music tag is editable only for custom sounds (`.add` is always one).
+  /// Built-ins take it from sounds.json (`isMusicDefault`).
   var isCustomSound: Bool {
     if case .edit(let sound) = mode { return sound.isCustom }
     return true
@@ -63,7 +59,6 @@ struct SoundSheetForm: View {
 
   var body: some View {
     Form {
-      // File selection (only for add mode)
       if case .add = mode {
         Section {
           SoundFileSelector(
@@ -75,25 +70,18 @@ struct SoundSheetForm: View {
         }
       }
 
-      // Basic Information
       basicInformationSection
 
-      // Credits (read-only)
       creditsSection
 
-      // Audio Processing (includes preview)
       audioProcessingSection
 
-      // Add to Presets (import only)
       addToPresetsSection
 
-      // Preset membership (edit only)
       presetMembershipSection
 
-      // Technical Details (edit mode only)
       technicalDetailsSection
 
-      // Actions Section (Reset/Delete)
       actionSection
     }
     #if os(macOS)
@@ -104,8 +92,7 @@ struct SoundSheetForm: View {
         IconPickerView(selectedIcon: $selectedIcon)
       }
     }
-    // Suggest a clean name + icon as soon as an import lands a file (and
-    // again if the person swaps the file).
+    // Suggest a name and icon whenever an import picks a file.
     .task(id: selectedFile) {
       await autoSuggestDetailsIfNeeded()
     }
@@ -144,16 +131,15 @@ extension SoundSheetForm {
     presetManager.presets.filter { !$0.isDefault }
   }
 
-  /// Name the New Preset row creates, derived live from the sound name.
-  /// Format string so locales control the word order.
+  /// Name the New Preset row creates. A format string so locales control the
+  /// word order.
   private var mixPresetName: String {
     let name = soundName.trimmingCharacters(in: .whitespacesAndNewlines)
     return name.isEmpty ? String(localized: "Mix") : String(localized: "\(name) Mix")
   }
 
-  /// Imports often happen without a custom preset active, so the sheet offers
-  /// where the sound should live: any existing custom presets and/or a fresh
-  /// "<Name> Mix" preset. The active custom preset arrives pre-checked.
+  /// Offers existing custom presets and a fresh "<Name> Mix" preset for the
+  /// imported sound. The active custom preset arrives pre-checked.
   @ViewBuilder
   var addToPresetsSection: some View {
     if mode.isAdd {
@@ -203,11 +189,8 @@ extension SoundSheetForm {
       .accessibilityHidden(true)
   }
 
-  /// Edit mode: a folded list to view and toggle which custom presets this sound
-  /// belongs to. Membership changes apply live. The collapsed row's trailing
-  /// summary shows the membership count (or "None"), so unused sounds are easy to
-  /// spot without expanding. (The default preset always holds every sound, so it
-  /// isn't listed.)
+  /// Edit mode: a folded list of custom presets that toggles this sound's
+  /// membership live. The default preset holds every sound, so it isn't listed.
   @ViewBuilder
   var presetMembershipSection: some View {
     if case .edit(let sound) = mode {
@@ -240,17 +223,14 @@ extension SoundSheetForm {
     }
   }
 
-  /// Number of custom presets containing `sound` (0 reads as unused everywhere).
   private func presetMembershipCount(for sound: Sound) -> Int {
     customPresets.filter {
       $0.soundStates.contains { $0.fileName == sound.fileName }
     }.count
   }
 
-  /// Recomputes the import-conversion state for the picked file. Reads size and
-  /// duration under a brief security scope (the file may be outside the sandbox)
-  /// and resets the opt-in each time the file changes so a stale "on" from a
-  /// previous pick can't carry over to an ineligible one.
+  /// Recomputes the import-conversion state for the picked file under a brief
+  /// security scope. Resets the opt-in so a previous pick's choice can't carry over.
   func refreshImportConversion() async {
     convertToAACOnImport = false
     guard mode.isAdd, let url = selectedFile else {

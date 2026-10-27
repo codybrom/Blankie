@@ -1,9 +1,6 @@
 ---
-// A definition-list row: a small uppercase term beside its value, separated by
-// a hairline, collapsing to one column on narrow widths. Shared by the press
-// fact sheet and the credits assets/dependencies list. The parent <dl> sets the
-// <dd> text style via [&_dd]:… (it differs per page); pass `class` to tune the
-// row's vertical padding.
+// Definition-list row (uppercase term beside its value) that stacks on narrow widths.
+// The parent <dl> styles <dd> text via `[&_dd]:` classes, and `class` tunes vertical padding.
 import { cn } from "@/lib/utils";
 
 interface Props {

@@ -1,24 +1,22 @@
 //
-//  SoloSoundIcon.swift
+//  SingleSoundIcon.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 1/2/25.
 //
-//  The single large icon shown while solo mode is active. It is intentionally
-//  not draggable and has no context menu — reordering and per-sound actions
-//  live in the regular grid (`SoundGridView` / `GridSoundButton`). Tapping it
-//  toggles global playback; solo is left by choosing another sound or preset.
+//  The large icon shown in single-sound mode. It has no drag or context menu, and a
+//  tap toggles global playback.
 //
 
 import SwiftUI
 
-struct SoloSoundIcon: View {
+struct SingleSoundIcon: View {
   let sound: Sound
   var iconSize: CGFloat = 200
 
   private let globalSettings = GlobalSettings.shared
-  // Observe playback so the disc/icon/border react to play–pause; reading
-  // AudioManager.shared statically misses updates (SoundIcon does the same).
+  // Held as a property so the view observes playback. Reading
+  // AudioManager.shared statically misses updates.
   private let audioManager = AudioManager.shared
 
   private var accentColor: Color {
@@ -43,17 +41,14 @@ struct SoloSoundIcon: View {
 
   var body: some View {
     ZStack {
-      // Clear glass disc — interactive without heavy blur. (The paused state
-      // still reads through iconColor's gray-out on macOS.)
+      // Clear glass keeps the disc interactive without heavy blur.
       Circle()
         .fill(.clear)
         .frame(width: iconSize, height: iconSize)
         .glassEffect(.clear.interactive(), in: .circle)
 
-      // Render as a font glyph, not .resizable: SF Symbols keep their built-in
-      // optical centering this way (matching the grid/list/menu icons). With
-      // .resizable, the raw vector bounds get scaled and some glyphs — e.g.
-      // washer.fill's drum + basket — sit visibly off-center in the large disc.
+      // A font glyph keeps SF Symbols' optical centering, while .resizable scales the
+      // raw vector bounds and pushes some glyphs (washer.fill) off-center.
       Image(systemName: sound.systemIconName)
         .font(.system(size: iconSize * 0.58))
         .foregroundColor(iconColor)
@@ -81,33 +76,28 @@ struct SoloSoundIcon: View {
     .accessibilityValue(Text(audioManager.isGloballyPlaying ? "Playing" : "Paused"))
     .accessibilityHint(Text("Plays or pauses the sound"))
     #if os(macOS)
-      // macOS doesn't expose .onTapGesture as a VoiceOver activation; register
-      // the toggle explicitly (matches SoundIcon's grid tiles).
+      // macOS doesn't expose .onTapGesture as a VoiceOver activation.
       .accessibilityAction { audioManager.togglePlayback() }
     #endif
     .onTapGesture {
-      // This icon only ever shows the soloed sound, so a tap toggles
-      // playback rather than deselecting it.
+      // The icon only shows the single sound, so a tap toggles playback.
       audioManager.togglePlayback()
     }
     .sensoryFeedback(.selection, trigger: sound.isSelected)
   }
 }
 
-/// The solo sound presented as a Now Playing card: the large icon with the
-/// sound's name and its subtitle caption beneath, mirroring the system Now
-/// Playing layout. In solo mode the mixer view itself IS the now-playing
-/// surface, so this replaces the grid rather than living in a separate sheet.
-struct SoloSoundCard: View {
+/// The single sound as a Now Playing card: the large icon with the name and
+/// subtitle beneath. In single-sound mode it replaces the mixer's tiles.
+struct SingleSoundCard: View {
   let sound: Sound
   var iconSize: CGFloat = 200
 
   var body: some View {
     VStack(spacing: 16) {
-      SoloSoundIcon(sound: sound, iconSize: iconSize)
-        // The card's text below carries the name and subtitle to VoiceOver, so
-        // the icon is decorative here — hide it to avoid announcing the title
-        // twice while keeping the subtitle reachable.
+      SingleSoundIcon(sound: sound, iconSize: iconSize)
+        // The text below carries the name and subtitle to VoiceOver, so the
+        // icon is decorative here.
         .accessibilityHidden(true)
 
       VStack(spacing: 4) {
@@ -122,7 +112,7 @@ struct SoloSoundCard: View {
         }
       }
       .multilineTextAlignment(.center)
-      // Read the name and its subtitle caption as one VoiceOver announcement.
+      // VoiceOver reads the name and subtitle as one announcement.
       .accessibilityElement(children: .combine)
     }
   }

@@ -14,19 +14,15 @@ struct BlankieApp: App {
   let modelContainer: ModelContainer
   private let appSetup: AppSetup
 
-  // Shared state objects
   @State private var globalSettings = GlobalSettings.shared
   @Environment(\.scenePhase) private var scenePhase
 
-  // Initialize SwiftData
   init() {
-    // Reset defaults if running UI tests
     UITestingHelper.resetAllDefaults()
 
-    // Perform all data migrations (one-time operation)
+    // Migrations run first: they set `AppSetup.storeCopyPending`, which store setup reads.
     AppDataMigrator.performAllMigrations()
 
-    // Initialize the shared container once for the entire app process
     SharedModelContainer.shared.initialize()
     modelContainer = SharedModelContainer.shared.container
     appSetup = AppSetup(modelContainer: modelContainer)
@@ -61,19 +57,16 @@ struct BlankieApp: App {
         )
       }
 
-      // The scene must exist — with the Window scene's commands replaced, it's
-      // what contributes the standard app menu (Services/Hide/Quit; removing
-      // it gutted the menu). Its window is unreachable: the Settings item is
-      // replaced below to open the in-window pane instead. The replacement
-      // must attach HERE — a CommandGroup on the Window scene can't replace
-      // another scene's menu contribution (it duplicates the item instead).
+      // With the Window scene's commands replaced, this scene supplies the standard
+      // app menu (Services, Hide, Quit). Its window is never opened. The Settings item
+      // is replaced here because a CommandGroup on the Window scene duplicates it.
       Settings {
         SettingsView()
       }
       .commands {
         CommandGroup(replacing: .appSettings) {
           Button("Settings…") {
-            // The pane lives in the main window — reopen it if closed
+            // The pane lives in the main window, so reopen it if closed.
             AppState.shared.showingSettingsPane = true
             openWindow(id: "main")
           }
@@ -94,7 +87,7 @@ struct BlankieApp: App {
         MixerView()
           .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
           .withPresetOnboarding(showOnboarding: $showingOnboarding)
-          // iOS/iPadOS lock dark via Info.plist UIUserInterfaceStyle; that key
+          // iOS/iPadOS lock dark via Info.plist UIUserInterfaceStyle. That key
           // doesn't exist on visionOS, so force it here for that platform.
           #if os(visionOS)
             .preferredColorScheme(.dark)
@@ -113,19 +106,16 @@ struct BlankieApp: App {
   private func handleScenePhaseChange(oldPhase _: ScenePhase, newPhase: ScenePhase) {
     switch newPhase {
     case .background:
-      // Save state when app goes to background
       AudioManager.shared.saveState()
       Task { @MainActor in
         PresetManager.shared.savePresets()
       }
     case .inactive:
-      // Save state when app becomes inactive
       AudioManager.shared.saveState()
       Task { @MainActor in
         PresetManager.shared.savePresets()
       }
     case .active:
-      // App is active, no action needed
       break
     @unknown default:
       break

@@ -7,12 +7,9 @@
 
 import AppIntents
 
-/// Blankie's overall/app-wide volume. On iPhone and iPad this only has a UI
-/// (and a real effect distinct from the hardware volume) when "Mix with
-/// Other Audio" is on — otherwise the system volume buttons are the only
-/// volume control, matching `NowPlayingSheet.volumeSlider`. This intent
-/// mirrors that gate rather than silently changing a value with no on-screen
-/// slider to see or undo it.
+/// Blankie's app-wide volume. On iPhone and iPad it only applies with "Mix with
+/// Other Audio" on (matching `NowPlayingSheet.volumeSlider`). Otherwise the
+/// hardware buttons own volume and the intent declines.
 struct SetVolumeIntent: AppIntent {
   static var title: LocalizedStringResource { "Set Volume" }
   static var description: IntentDescription {
@@ -49,8 +46,7 @@ struct SetVolumeIntent: AppIntent {
   }
 }
 
-/// Per-sound volume, unrestricted by the "Mix with Other Audio" gate above —
-/// this adjusts the sound's own mix level, not the device/app-wide output.
+/// Per-sound mix level. The "Mix with Other Audio" gate above doesn't apply.
 struct SetSoundVolumeIntent: AppIntent {
   static var title: LocalizedStringResource { "Set Sound Volume" }
   static var description: IntentDescription {

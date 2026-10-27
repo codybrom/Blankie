@@ -11,7 +11,7 @@ import SwiftData
 import SwiftUI
 import os
 
-/// Manager responsible for importing, storing, and retrieving custom sounds
+/// Imports, stores and retrieves custom sounds.
 class CustomSoundManager {
   static let shared = CustomSoundManager()
 
@@ -65,13 +65,7 @@ class CustomSoundManager {
 
   // MARK: - Sound Import
 
-  /// Import a sound file into the app's storage and add it to the database
-  /// - Parameters:
-  ///   - sourceURL: URL of the sound file to import
-  ///   - title: Display name for the sound
-  ///   - iconName: SF Symbol name to use for the sound
-  ///   - randomizeStartPosition: Whether to randomize the start position when playing
-  /// - Returns: A Result with the created CustomSoundData or an error
+  /// Copies (or transcodes) a sound file into app storage and saves its record.
   @MainActor
   func importSound(
     from sourceURL: URL, title: String, iconName: String, randomizeStartPosition: Bool = true,
@@ -87,7 +81,6 @@ class CustomSoundManager {
     }
 
     Logger.sounds.debug("CustomSoundManager: Starting security-scoped resource access for import")
-    // Start security-scoped resource access at the beginning of import
     let didStartAccess = sourceURL.startAccessingSecurityScopedResource()
     defer {
       if didStartAccess {
@@ -111,10 +104,7 @@ class CustomSoundManager {
     do {
       try await validateImportableAudioFile(at: sourceURL)
 
-      // Stream-transcode to AAC instead of copying as-is when the user opted in
-      // (convertToAAC) or the file is over the raw-import ceiling: a raw copy
-      // loads the whole file into memory, and very large uncompressed audio
-      // strains playback. Otherwise import the file unchanged.
+      // Transcode when the user opted in or the file exceeds `maxRawImportBytes`.
       let sourceBytes =
         (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
       let copiedURL: URL
@@ -190,14 +180,12 @@ class CustomSoundManager {
       analysis.lufs != nil
       ? (lufs: analysis.lufs!, normalizationFactor: analysis.normalizationFactor) : nil
 
-    // Create and store playback profile for efficient runtime use
     if let profile = PlaybackProfile.from(analysis: analysis, filename: importData.uniqueFileName) {
       PlaybackProfileStore.shared.store(profile)
       Logger.sounds.debug(
         "CustomSoundManager: Stored playback profile for \(importData.uniqueFileName)")
     }
 
-    // Extract ID3 metadata
     let metadata = await extractAudioMetadata(from: importData.copiedURL)
 
     let customSound = CustomSoundData(
@@ -211,9 +199,8 @@ class CustomSoundManager {
       duration: analysis.duration
     )
 
-    // Hash the stored file so re-importing the same audio is deduped and the
-    // durable mirror persists a real integrity hash (was previously only set on
-    // the preset-import path, so picker imports persisted a nil hash).
+    // Hash the stored file so re-importing the same audio dedupes and the mirror
+    // persists a real integrity hash.
     do {
       customSound.sha256Hash = try FileHashUtility.sha256Hash(for: importData.copiedURL)
     } catch {
@@ -221,14 +208,13 @@ class CustomSoundManager {
         "CustomSoundManager: Failed to hash imported file for dedup: \(error, privacy: .public)")
     }
 
-    // Store ID3 metadata
     customSound.id3Title = metadata.title
     customSound.id3Artist = metadata.artist
     customSound.id3Album = metadata.album
     customSound.id3Comment = metadata.comment
     customSound.id3Url = metadata.url
 
-    // Pre-populate credits with ID3 data if available
+    // Seed credits from ID3 data.
     customSound.creditAuthor = metadata.artist
     customSound.creditSourceUrl = metadata.url
 
@@ -258,7 +244,6 @@ class CustomSoundManager {
     Logger.sounds.debug("CustomSoundManager: Target destination: \(destinationURL.path)")
 
     do {
-      // Check if source file exists and is accessible
       guard FileManager.default.fileExists(atPath: source.path) else {
         Logger.sounds.debug("CustomSoundManager: Source file does not exist at \(source.path)")
         throw CustomSoundError.invalidAudioFile(
@@ -269,17 +254,14 @@ class CustomSoundManager {
         )
       }
 
-      // Read the source file data instead of directly copying the file
       Logger.sounds.debug("CustomSoundManager: Reading source file data...")
       let data = try Data(contentsOf: source)
       Logger.sounds.debug("CustomSoundManager: Read \(data.count) bytes from source file")
 
-      // Write to destination (atomic: all-or-nothing so a disk-full mid-write
-      // can't leave a truncated audio file behind).
+      // Atomic, so a full disk mid-write can't leave a truncated file.
       try data.write(to: destinationURL, options: .atomic)
       Logger.sounds.debug("CustomSoundManager: Successfully copied file to \(destinationURL.path)")
 
-      // Verify the copied file exists
       if FileManager.default.fileExists(atPath: destinationURL.path) {
         Logger.sounds.debug("CustomSoundManager: Verified copied file exists at destination")
       } else {
@@ -298,8 +280,7 @@ class CustomSoundManager {
 
   // MARK: - Sound Retrieval
 
-  /// Get all custom sounds
-  /// - Returns: Array of CustomSoundData objects
+  /// All custom sounds, oldest first.
   @MainActor
   func getAllCustomSounds() -> [CustomSoundData] {
     guard let modelContext = modelContext else {
@@ -307,9 +288,6 @@ class CustomSoundManager {
       return []
     }
 
-    // Validate that SwiftData is ready before attempting query
-    // If SwiftData hits an internal assertion (EXC_BREAKPOINT), it means the container
-    // wasn't properly initialized or we have actor violations
     do {
       let descriptor = FetchDescriptor<CustomSoundData>(sortBy: [SortDescriptor(\.dateAdded)])
       let results = try modelContext.fetch(descriptor)
@@ -319,14 +297,10 @@ class CustomSoundManager {
       Logger.sounds.error("CustomSoundManager: SwiftData fetch failed: \(error, privacy: .public)")
       Logger.sounds.debug(
         "CustomSoundManager: This indicates SwiftData container issues or actor violations")
-      // Return empty array to allow app to continue functioning
       return []
     }
   }
 
-  /// Get a custom sound by its ID
-  /// - Parameter id: The UUID of the custom sound
-  /// - Returns: The CustomSoundData if found
   @MainActor
   func getCustomSound(by id: UUID) -> CustomSoundData? {
     guard let modelContext = modelContext else { return nil }
@@ -347,9 +321,6 @@ class CustomSoundManager {
 
   // MARK: - Sound Deletion
 
-  /// Delete a custom sound
-  /// - Parameter customSound: The CustomSoundData to delete
-  /// - Returns: Result indicating success or failure
   @MainActor
   func deleteCustomSound(_ customSound: CustomSoundData) -> Result<Void, Error> {
     guard let modelContext = modelContext else {
@@ -361,21 +332,18 @@ class CustomSoundManager {
     let fileExtension = customSound.fileExtension
 
     do {
-      // Delete the file, plus any rendered spatial mono variants of it
+      // Also remove any rendered spatial mono caches of the file.
       if let soundURL = getURLForCustomSound(customSound) {
         try FileManager.default.removeItem(at: soundURL)
         SpatialAudioCache.removeCaches(for: soundURL)
       }
 
-      // Delete from database
       modelContext.delete(customSound)
       try modelContext.save()
 
-      // Centralized cleanup so every delete path (sheet, Manage Sounds, grid
-      // swipe) leaves nothing behind for this sound.
+      // Shared cleanup so every delete path leaves nothing behind.
       cleanUpResidualState(fileName: fileName, fileExtension: fileExtension)
 
-      // Notify audio manager
       NotificationCenter.default.post(name: .customSoundDeleted, object: nil)
 
       return .success(())
@@ -386,36 +354,24 @@ class CustomSoundManager {
     }
   }
 
-  /// Removes every trace a deleted custom sound leaves behind beyond its file
-  /// and SwiftData row: its customization, playback profile, persisted per-sound
-  /// preferences, and any Quick Mix / solo-favorite references. Previously these were
-  /// cleaned (if at all) only on a deferred launch pass, so a deleted sound
-  /// could linger in Quick Mix or as a stale CarPlay favorite until next launch.
+  /// Removes what a deleted custom sound leaves beyond its file and SwiftData row:
+  /// customization, playback profile, preferences, and Quick Mix and favorite references.
   @MainActor
   private func cleanUpResidualState(fileName: String, fileExtension: String) {
-    // If this sound is the active solo or preview subject, leave those modes
-    // first. Otherwise soloModeSound/previewModeSound dangle on the removed
-    // instance — the app stays "in solo" against a ghost, suppressing the real
-    // mix and stalling preset persistence, and the persisted solo file name
-    // would point at a sound that no longer loads on next launch.
-    //
-    // Use the resuming variant (which stops global playback) rather than
-    // exitSoloModeWithoutResuming: there's nothing to resume into, so leaving
-    // isGloballyPlaying true would strand a rate-1.0 Now Playing over silence.
+    // Leave single sound or preview if this sound is the subject so neither points at a removed
+    // instance. exitSingleSound() also stops playback, since there's nothing to resume.
     let audioManager = AudioManager.shared
-    if audioManager.soloModeSound?.fileName == fileName {
-      audioManager.exitSoloMode()
+    if audioManager.singleSound?.fileName == fileName {
+      audioManager.exitSingleSound()
     }
     if audioManager.previewModeSound?.fileName == fileName {
       audioManager.exitPreviewMode()
     }
 
     SoundCustomizationManager.shared.removeCustomization(for: fileName)
-    // Custom profiles are keyed by the bare fileName (built-ins use
-    // fileName.extension), so delete by the bare key or the profile leaks.
+    // Custom profiles are keyed by the bare fileName (built-ins use fileName.extension).
     PlaybackProfileStore.shared.removeProfile(for: fileName)
-    // Drop the file mirror so a stranded sidecar can't resurrect the sound on
-    // the next launch reconcile.
+    // Drop the file mirror so the next launch reconcile doesn't restore the sound.
     removeMirror(fileName: fileName)
 
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isSelected")
@@ -427,9 +383,9 @@ class CustomSoundManager {
       settings.setQuickMixSoundFileNames(
         settings.quickMixSoundFileNames.filter { $0 != fileName })
     }
-    let soloToken = "solo:\(fileName)"
-    if settings.isStarred(soloToken) {
-      settings.toggleStarred(soloToken)
+    let singleToken = GlobalSettings.singleToken(forFileName: fileName)
+    if settings.isStarred(singleToken) {
+      settings.toggleStarred(singleToken)
     }
   }
 
@@ -444,7 +400,7 @@ class CustomSoundManager {
 
   // MARK: - Migration
 
-  /// Backfill durations for existing custom sounds that don't have duration set
+  /// Backfills durations for custom sounds that lack one.
   @MainActor
   func backfillDurations() async {
     Logger.sounds.debug("CustomSoundManager: Starting duration backfill for existing custom sounds")
@@ -455,7 +411,6 @@ class CustomSoundManager {
     }
 
     do {
-      // Fetch all custom sounds that don't have duration set
       let descriptor = FetchDescriptor<CustomSoundData>(
         predicate: #Predicate { $0.duration == nil }
       )
@@ -481,7 +436,6 @@ class CustomSoundManager {
           continue
         }
 
-        // Calculate duration
         if let duration = AudioAnalyzer.getDuration(at: fileURL) {
           customSound.duration = duration
           successCount += 1
@@ -496,7 +450,6 @@ class CustomSoundManager {
         }
       }
 
-      // Save changes
       if successCount > 0 {
         try modelContext.save()
         Logger.sounds.debug("CustomSoundManager: Backfilled \(successCount) durations")

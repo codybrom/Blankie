@@ -72,13 +72,11 @@ struct IconPickerView: View {
   @State private var selectedIconCategory: IconCategory
   @Environment(\.dismiss) private var dismiss
 
-  // Icon categories with curated selections
   private let iconCategories = IconData.iconCategories
 
   init(selectedIcon: Binding<String>) {
     self._selectedIcon = selectedIcon
 
-    // Find which category contains the selected icon
     let foundCategory =
       IconCategory.allCases.first { $0.icons.contains(selectedIcon.wrappedValue) } ?? .popular
 
@@ -90,7 +88,6 @@ struct IconPickerView: View {
       return selectedIconCategory.icons
     }
 
-    // Search across all categories
     let allIcons = iconCategories.values.flatMap { $0 }
     let uniqueIcons = Array(Set(allIcons))
 
@@ -101,7 +98,6 @@ struct IconPickerView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      // Search and category picker
       VStack(spacing: 0) {
         HStack(spacing: 12) {
           HStack {
@@ -154,7 +150,6 @@ struct IconPickerView: View {
         Divider()
       }
 
-      // Icon grid
       ScrollViewReader { proxy in
         ScrollView {
           if searchResults.isEmpty && !iconSearchText.isEmpty {
@@ -211,14 +206,13 @@ struct IconPickerView: View {
                 // Read the symbol name without VoiceOver speaking each "dot".
                 .accessibilityLabel(Text(iconName.replacingOccurrences(of: ".", with: " ")))
                 .accessibilityAddTraits(selectedIcon == iconName ? .isSelected : [])
-                .id(iconName)  // Add ID for scrolling
+                .id(iconName)
               }
             }
             .padding()
           }
         }
         .onAppear {
-          // Scroll to the selected icon when the view appears
           if searchResults.contains(selectedIcon) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
               withAnimation {
@@ -243,7 +237,6 @@ struct IconPickerView: View {
   }
 }
 
-// Extract icon data loading to a shared struct
 struct IconData {
   static let iconCategories: [String: [String]] = loadIconCategories()
 
@@ -255,7 +248,7 @@ struct IconData {
   static let categoryNames: [String] = iconCategories.keys.sorted()
 
   private static func loadIconCategories() -> [String: [String]] {
-    // Helper enum to decode JSON with nested categories
+    // A category is either a flat icon list or a map of subcategories.
     enum CategoryEntry: Decodable {
       case simple([String])
       case nested([String: [String]])
@@ -294,7 +287,6 @@ struct IconData {
       return [:]
     }
 
-    // Flatten nested categories
     var flatCategories: [String: [String]] = [:]
     for (key, value) in categories {
       assert(

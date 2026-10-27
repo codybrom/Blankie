@@ -15,10 +15,9 @@ extension AudioAnalyzer {
     lufs: Float, normalizationFactor: Float
   )? {
     do {
-      // First run basic audio analysis for debugging
       Logger.app.debug("AudioAnalyzer: Starting LUFS analysis for \(url.lastPathComponent)")
 
-      // Get peak and RMS levels for comparison
+      // Peak and RMS are logged for comparison only.
       if let peakLevel = await analyzePeakLevel(at: url) {
         Logger.app.debug("AudioAnalyzer: Peak level: \(peakLevel) (\(20 * log10(peakLevel)) dBFS)")
       }
@@ -77,7 +76,6 @@ extension AudioAnalyzer {
         buffer, channelCount: channelCount, filterCoefficients: filterCoefficients)
       {
         measurements.append(loudness)
-        // Debug: Log the first few measurements
         if measurements.count <= 5 {
           Logger.app.debug("AudioAnalyzer: Chunk \(measurements.count) loudness: \(loudness) LUFS")
         }
@@ -115,7 +113,6 @@ extension AudioAnalyzer {
 
     let loudness = -0.691 + 10.0 * log10(totalPower)
 
-    // Debug extremely low values
     if loudness < -70 {
       Logger.app.debug("AudioAnalyzer: Very low loudness: \(loudness) LUFS (power: \(totalPower))")
     }
@@ -124,7 +121,6 @@ extension AudioAnalyzer {
   }
 
   nonisolated static func calculateIntegratedLUFS(from measurements: [Float]) -> Float? {
-    // Debug: Log measurement statistics
     if !measurements.isEmpty {
       let minMeasurement = measurements.min() ?? -999
       let maxMeasurement = measurements.max() ?? -999
@@ -135,21 +131,20 @@ extension AudioAnalyzer {
     }
 
     // ITU-R BS.1770-4 two-stage gating
-    // Stage 1: Absolute threshold at -70 LUFS
+    // Stage 1: absolute threshold at -70 LUFS.
     let absoluteGated = measurements.filter { $0 > -70 }
     guard !absoluteGated.isEmpty else {
       Logger.app.debug(
         "AudioAnalyzer: All \(measurements.count) measurements below -70 LUFS gating threshold")
 
-      // If all measurements are below -70 LUFS, try without gating for very quiet sounds
+      // Ambient sounds can sit entirely below the gate, so fall back to the
+      // ungated mean (a deliberate deviation from BS.1770).
       if !measurements.isEmpty {
         let linearMeasurements = measurements.map { pow(10, $0 / 10) }
         let meanLinear = linearMeasurements.reduce(0, +) / Float(linearMeasurements.count)
         let ungatedLUFS = 10 * log10(meanLinear)
         Logger.app.debug("AudioAnalyzer: Ungated LUFS would be: \(ungatedLUFS)")
 
-        // For very quiet sounds, we might want to use ungated measurement
-        // This is a deviation from the standard but necessary for ambient sounds
         if ungatedLUFS > -100 {
           return ungatedLUFS
         }
@@ -157,21 +152,18 @@ extension AudioAnalyzer {
       return nil
     }
 
-    // Calculate mean of absolute gated measurements
     let linearMeasurements = absoluteGated.map { pow(10, $0 / 10) }
     let meanLinear = linearMeasurements.reduce(0, +) / Float(linearMeasurements.count)
     let absoluteGatedLUFS = 10 * log10(meanLinear)
 
-    // Stage 2: Relative threshold at -10 LU below the ungated mean
+    // Stage 2: relative threshold 10 LU below the absolute-gated mean.
     let relativeThreshold = absoluteGatedLUFS - 10
     let relativeGated = absoluteGated.filter { $0 > relativeThreshold }
 
     guard !relativeGated.isEmpty else {
-      // If relative gating removes all measurements, use absolute gated result
       return absoluteGatedLUFS
     }
 
-    // Calculate final integrated LUFS
     let finalLinearMeasurements = relativeGated.map { pow(10, $0 / 10) }
     let finalMeanLinear =
       finalLinearMeasurements.reduce(0, +) / Float(finalLinearMeasurements.count)

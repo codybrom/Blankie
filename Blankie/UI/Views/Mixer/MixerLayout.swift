@@ -4,10 +4,9 @@
 //
 //  Created by Cody Bromley on 10/24/26.
 //
-//  Which mixer layout the window gets. Size class decides compact vs regular;
-//  on iPhone Duo's open screen the fold splits it into two pages: Now Playing
-//  and the mixer side by side (fold down the middle) or stacked (fold across,
-//  the nightstand layout). Flat or bent alike, so bending moves nothing.
+//  Which mixer layout the window gets. On iPhone Duo's open screen the fold
+//  splits it into Now Playing and the mixer, side by side (vertical crease) or
+//  stacked (horizontal crease). Flat and bent poses resolve the same way.
 //
 
 import CoreGraphics

@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Drives per-locale font styling. Latin/Cyrillic/etc. stay standard; CJK gets
-//  thin weight; dense scripts get thin + larger. A misclassification ships the
-//  wrong weight/size for a whole language.
+//  Script categories drive per-locale font styling: CJK gets thin weight, dense scripts
+//  get thin weight and a larger size, everything else stays standard.
 //
 
 import Foundation
@@ -41,14 +40,11 @@ import Testing
     #expect(Locale(identifier: "th-Thai").needsLargerFontSize)
   }
 
-  /// A locale with no determinable script falls back to standard.
   @Test func unknownScriptFallsBackToStandard() {
     #expect(Locale(identifier: "und").scriptCategory == .standard)
   }
 
-  /// Shipped localizations are bare identifiers (no explicit script subtag), so
-  /// the real runtime path relies on implicit script resolution. Exercise it for
-  /// both standard and CJK languages.
+  /// Shipped localizations are bare identifiers, so runtime relies on implicit script resolution.
   @Test func bareIdentifiersResolveScriptCategory() {
     #expect(Locale(identifier: "en").scriptCategory == .standard)
     #expect(Locale(identifier: "de").scriptCategory == .standard)

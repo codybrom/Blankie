@@ -4,10 +4,8 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  Importing a preset that references a bundled animation must wire its static
-//  preview paths onto the preset synchronously — before importArchive re-IDs and
-//  stores it. A regression here leaves the imported preset showing placeholder
-//  art with the copied preview JPGs orphaned.
+//  Importing a preset that references a bundled animation sets its static preview paths
+//  synchronously, before importArchive re-IDs and stores it.
 //
 
 import Foundation
@@ -36,10 +34,7 @@ private nonisolated enum BundledArtworkProbe {
 
 @Suite struct PresetImporterBundledArtworkTests {
 
-  /// A preset whose `animatedArtwork` is a bundled reference gets both preview
-  /// paths set on the `inout` preset synchronously, backed by files on disk, and
-  /// keeps its bundled identifier with no loop path. The previews ship in the
-  /// app, so a lookup that finds none fails rather than skipping.
+  /// The previews ship in the app, so a lookup that finds none fails the test.
   @Test func importSetsBundledPreviewPathsSynchronously() async throws {
     let bundledId = try #require(BundledArtworkProbe.firstResolvableId)
 

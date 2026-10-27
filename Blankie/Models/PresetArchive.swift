@@ -49,7 +49,7 @@ nonisolated struct ArchiveCompatibility: Codable {
 
   func isCompatible(with currentVersion: String) -> Bool {
     // Numeric comparison so multi-digit version segments order correctly
-    // (e.g. "1.10.0" > "1.9.0"); plain String >= is lexicographic.
+    // (e.g. "1.10.0" > "1.9.0"). Plain String >= is lexicographic.
     return currentVersion.compare(minimumBlankieVersion, options: .numeric) != .orderedAscending
   }
 }
@@ -75,7 +75,6 @@ nonisolated struct CustomSoundMetadata: Codable, Identifiable {
       customSoundData.detectedLUFS != nil ? Double(customSoundData.detectedLUFS!) : nil
     sha256Hash = customSoundData.sha256Hash
 
-    // Create credits from custom sound data
     var credits: SoundCredits?
     if customSoundData.creditAuthor != nil || customSoundData.creditSourceUrl != nil {
       credits = SoundCredits(

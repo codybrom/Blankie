@@ -4,10 +4,8 @@
 //
 //  Created by Cody Bromley on 10/24/26.
 //
-//  Size class picks compact vs regular. On iPhone Duo's open screen a fold
-//  down the middle gives Now Playing and the mixer a page each; a fold across
-//  it stacks them (the nightstand layout). Flat or bent alike, so bending the
-//  device moves nothing.
+//  Size class picks compact or regular. On iPhone Duo a vertical fold gives Now Playing and
+//  the mixer a page each and a horizontal fold stacks them, whether flat or bent.
 //
 
 import CoreGraphics
@@ -32,7 +30,7 @@ import Testing
     #expect(MixerLayout.resolve(isRegularWidth: true, fold: fold) == .pages)
   }
 
-  /// A real flat Duo reports a zero-width fold; it still lays out like book.
+  /// A real flat Duo reports a zero-width fold but still lays out like a book.
   @Test func zeroWidthFlatFoldGetsFacingPages() {
     let fold = FoldInfo(frame: CGRect(x: 476, y: 0, width: 0, height: 669), isActive: false)
     #expect(fold.isPresent)

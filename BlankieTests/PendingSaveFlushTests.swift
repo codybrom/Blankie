@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Volume edits save on a 0.1 s debounce. Quitting or suspending inside that
-//  window used to drop the edit, so termination now fires the pending timers.
-//  It also writes a mix edit still waiting on the preset's coalesced refresh.
+//  Volume edits save on a 0.1 s debounce, so termination flushes pending saves, including a
+//  mix edit still waiting on the preset's coalesced refresh.
 //
 
 import Foundation

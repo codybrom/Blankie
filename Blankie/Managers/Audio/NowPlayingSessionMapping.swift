@@ -41,13 +41,13 @@ enum NowPlayingSessionMapping {
     case tall
   }
 
-  /// Where a piece of static artwork came from — everything that decides which
-  /// image gets rendered, and nothing about how it is drawn.
+  /// Where a piece of static artwork came from: everything that decides which
+  /// image renders, and nothing about how it's drawn.
   nonisolated enum ArtworkSource: Equatable {
     case stored(UUID)
     case file(String)
     case bundled(String)
-    case solo(fileName: String)
+    case single(fileName: String)
     case fallback(kind: String, icons: [String])
   }
 
@@ -69,7 +69,7 @@ enum NowPlayingSessionMapping {
     return SessionProgress(duration: selectedDuration, elapsed: elapsed, timestamp: now)
   }
 
-  /// Loop progress is opt-in; very short or invalid loops remain indeterminate.
+  /// Loop progress is opt-in. Very short or invalid loops remain indeterminate.
   nonisolated static func loopProgress(
     continuous: Bool, elapsed: TimeInterval, duration: TimeInterval, now: Date
   ) -> SessionProgress? {
@@ -91,12 +91,12 @@ enum NowPlayingSessionMapping {
   /// The published content's identity. Stable across incremental updates
   /// (volume, play/pause) so the system doesn't treat the card as a new item.
   nonisolated static func contentID(
-    soloFileName: String?,
+    singleFileName: String?,
     isQuickMix: Bool,
     presetID: UUID?
   ) -> String {
-    if let soloFileName {
-      return "solo:\(soloFileName)"
+    if let singleFileName {
+      return PlayableItem.single(fileName: singleFileName).token
     } else if isQuickMix {
       return "quickmix"
     } else if let presetID {
@@ -117,10 +117,8 @@ enum NowPlayingSessionMapping {
     return base
   }
 
-  /// The artwork's identity. The system caches artwork by id and never asks for
-  /// a cached one again, so this has to change whenever the rendered image
-  /// would — which for the drawn fallbacks means folding in the accent and the
-  /// icons they montage.
+  /// The artwork's identity. The system caches artwork by id and never re-requests
+  /// it, so the id changes whenever the image would (for fallbacks: accent and icons).
   nonisolated static func artworkID(source: ArtworkSource, accentColorName: String?) -> String {
     let accent = accentColorName ?? "default"
     switch source {
@@ -130,8 +128,8 @@ enum NowPlayingSessionMapping {
       return "static:\(path)"
     case .bundled(let id):
       return "bundled:\(id)"
-    case .solo(let fileName):
-      return "solo:\(fileName):\(accent)"
+    case .single(let fileName):
+      return "\(PlayableItem.singleTokenPrefix)\(fileName):\(accent)"
     case .fallback(let kind, let icons):
       return "fallback:\(kind):\(accent):\(icons.joined(separator: ","))"
     }
@@ -147,7 +145,7 @@ enum NowPlayingSessionMapping {
   }
 
   /// The animated artwork's identity. Bundled artwork has no Documents loop
-  /// path, so its bundled id stands in; a preset with neither falls back to its
+  /// path, so its bundled id stands in. A preset with neither falls back to its
   /// own id.
   nonisolated static func animatedArtworkID(loopKey: String?, presetID: UUID) -> String {
     loopKey ?? presetID.uuidString

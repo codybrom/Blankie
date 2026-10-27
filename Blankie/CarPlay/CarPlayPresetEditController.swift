@@ -15,19 +15,15 @@ import os
   extension CarPlayInterfaceController {
     // MARK: - Edit Interface Navigation
 
-    /// Show the edit sounds interface
     @MainActor
     func showEditSoundsInterface() {
       guard let interfaceController = currentInterfaceController else { return }
 
-      // Create the sounds editing template using PresetEditTemplate
       let editTemplate = PresetEditTemplate.createTemplate()
 
-      // Store reference to current edit template
       currentEditTemplate = editTemplate
       currentEditPresetID = PresetManager.shared.currentPreset?.id
 
-      // Push the edit template
       interfaceController.pushTemplate(editTemplate, animated: true) { success, error in
         if success {
           Logger.carPlay.debug("CarPlay: Successfully showed edit sounds interface")
@@ -39,7 +35,6 @@ import os
       }
     }
 
-    /// Show volume adjustment for a specific sound
     @MainActor
     func showVolumeAdjustment(for sound: Sound) {
       guard let interfaceController = currentInterfaceController else { return }
@@ -53,7 +48,6 @@ import os
       )
     }
 
-    /// Show options to turn on a sound with volume selection
     @MainActor
     func showTurnOnOptions(for sound: Sound) {
       guard let interfaceController = currentInterfaceController else { return }
@@ -68,10 +62,10 @@ import os
     }
 
     /// Whether the open edit stack still edits the live mix of the preset it was
-    /// opened for. A switch, solo or Quick Mix replaces that mix.
+    /// opened for. A switch, single sound or Quick Mix replaces that mix.
     @MainActor
     var editStackIsLive: Bool {
-      AudioManager.shared.soloModeSound == nil && !AudioManager.shared.isQuickMix
+      AudioManager.shared.singleSound == nil && !AudioManager.shared.isQuickMix
         && PresetManager.shared.currentPreset?.id == currentEditPresetID
     }
 
@@ -103,13 +97,11 @@ import os
         to: interfaceController.templates[index - 1], animated: true, completion: nil)
     }
 
-    /// Pop back and refresh the edit template
     @MainActor
     func popAndRefreshEditTemplate() {
       guard let interfaceController = currentInterfaceController else { return }
 
       interfaceController.popTemplate(animated: true) { [weak self] _, _ in
-        // After popping back, update the edit template to show new values
         if let editTemplate = self?.currentEditTemplate {
           PresetEditTemplate.updateTemplate(editTemplate)
         }

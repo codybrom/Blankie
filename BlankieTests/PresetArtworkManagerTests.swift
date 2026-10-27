@@ -15,8 +15,7 @@ import Testing
 @Suite(.serialized) @MainActor
 struct PresetArtworkManagerTests {
 
-  /// `saveArtwork` must delete EVERY existing row of the same type, not just the
-  /// first, so a legacy duplicate can't survive and shadow the new artwork.
+  /// A legacy duplicate row must not survive to shadow the new artwork.
   @Test func saveArtworkReplacesAllDuplicateRows() async throws {
     let container = try ModelContainer(
       for: PresetArtwork.self,
@@ -186,7 +185,7 @@ struct PresetArtworkManagerTests {
           for: preset, force: true, reloadingWidgets: false,
           renderThumbnails: { _ in (carPlay: replacement, widget: replacement) }))
     } else {
-      // No cache has been written yet; removal must still cancel the old write.
+      // No cache has been written yet. Removal must still cancel the old write.
       manager.removeThumbnail(for: preset.id)
     }
     release.continuation.yield(())

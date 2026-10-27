@@ -9,10 +9,10 @@ import SwiftUI
 import os
 
 /// A destination the lock-screen / CarPlay next & previous commands can cycle
-/// to: a preset, or a favorited solo sound.
+/// to: a preset, or a favorited single sound.
 private enum NavigableItem {
   case preset(Preset)
-  case solo(Sound)
+  case single(Sound)
 }
 
 // MARK: - Media Controls
@@ -21,8 +21,6 @@ extension AudioManager {
     Logger.audio.debug("AudioManager: Setting up media controls")
 
     nowPlayingManager.installRemoteCommands(makeRemoteCommandHandlers())
-
-    // Enable next/previous only when not in solo mode or quick mix
     updateNextPreviousCommandState()
   }
 
@@ -31,15 +29,13 @@ extension AudioManager {
     RemoteCommandHandlers(
       play: { [weak self] in
         Logger.nowPlaying.debug("AudioManager: remote play received")
-        // Only play if we're currently paused
         if !(self?.isGloballyPlaying ?? false) {
           self?.setGlobalPlaybackState(true)
         }
       },
       pause: { [weak self] in
         Logger.nowPlaying.debug("AudioManager: remote pause received")
-        // Only pause if we're currently playing; remote pauses cut instantly
-        // (see Sound.remotePauseFadeDuration).
+        // Remote pauses cut instantly (see Sound.remotePauseFadeDuration).
         if self?.isGloballyPlaying ?? false {
           self?.setGlobalPlaybackState(false, pauseFadeDuration: Sound.remotePauseFadeDuration)
         }
@@ -53,8 +49,7 @@ extension AudioManager {
         Logger.nowPlaying.debug("AudioManager: remote next received")
         guard let self = self else { return false }
 
-        // Quick Mix isn't part of the favorites cycle; solo sounds can be (when
-        // favorited), so navigation handles solo itself.
+        // Quick Mix isn't in the favorites cycle, but favorited single sounds are.
         guard !self.isQuickMix else {
           Logger.audio.debug("AudioManager: Skipping next - in quick mix")
           return true
@@ -67,8 +62,6 @@ extension AudioManager {
         Logger.nowPlaying.debug("AudioManager: remote previous received")
         guard let self = self else { return false }
 
-        // Quick Mix isn't part of the favorites cycle; solo sounds can be (when
-        // favorited), so navigation handles solo itself.
         guard !self.isQuickMix else {
           Logger.audio.debug("AudioManager: Skipping previous - in quick mix")
           return true
@@ -80,18 +73,16 @@ extension AudioManager {
     )
   }
 
-  /// Destinations the lock-screen / CarPlay next & previous commands cycle
-  /// through: exclusively favorited items in their saved order.
+  /// Favorited items, in saved order, that next and previous cycle through.
   private var navigableItems: [NavigableItem] {
     let presets = PresetManager.shared.presets
     return GlobalSettings.shared.starredItems.compactMap { token in
       switch PlayableItem(token: token) {
-      case .solo(let fileName):
-        return sound(fileName: fileName).map { NavigableItem.solo($0) }
+      case .single(let fileName):
+        return sound(fileName: fileName).map { NavigableItem.single($0) }
       case .allSounds:
         return presets.first { $0.isDefault }.map { NavigableItem.preset($0) }
       case .quickMix:
-        // Quick Mix isn't part of the favorites navigation cycle.
         return nil
       case .preset(let id):
         return presets.first { $0.id == id }.map { NavigableItem.preset($0) }
@@ -101,13 +92,12 @@ extension AudioManager {
     }
   }
 
-  /// Index of the currently-playing destination within `items`: the soloed
-  /// sound when in solo mode, otherwise the current preset. Nil when the active
-  /// item isn't in the list (e.g. soloing a sound that isn't favorited).
+  /// Index of the single sound, else the current preset, in `items`. Nil when it
+  /// isn't favorited.
   private func currentNavigableIndex(in items: [NavigableItem]) -> Int? {
-    if let solo = soloModeSound {
+    if let single = singleSound {
       return items.firstIndex {
-        if case .solo(let sound) = $0 { return sound.id == solo.id }
+        if case .single(let sound) = $0 { return sound.id == single.id }
         return false
       }
     }
@@ -124,15 +114,14 @@ extension AudioManager {
   private func apply(_ item: NavigableItem) {
     switch item {
     case .preset(let preset):
-      // Leave solo without resuming so the previous mix doesn't briefly play.
-      if soloModeSound != nil {
-        exitSoloModeWithoutResuming()
+      // Leave single sound without resuming so the previous mix doesn't briefly play.
+      if singleSound != nil {
+        exitSingleSoundWithoutResuming()
       }
       Logger.audio.debug("AudioManager: Navigating to preset: \(preset.name)")
       do {
-        // Respect the current play/pause state, so skipping onto a preset while
-        // paused doesn't start playback (matches solo navigation below).
-        // An application starts the new mix itself. Playing here would start the old one.
+        // Keep the current play/pause state. applyPreset starts the new mix
+        // itself. Playing here first would start the old one.
         let wasPlaying = isGloballyPlaying
         let started = try PresetManager.shared.applyPreset(preset, autoPlay: wasPlaying)
         if wasPlaying, !started {
@@ -143,10 +132,10 @@ extension AudioManager {
           "AudioManager: Failed to apply preset \(preset.name): \(error, privacy: .public)"
         )
       }
-    case .solo(let sound):
-      Logger.audio.debug("AudioManager: Navigating to solo sound: \(sound.title)")
-      // Respect the current play/pause state, matching preset navigation.
-      enterSoloMode(for: sound, startPlaying: isGloballyPlaying)
+    case .single(let sound):
+      Logger.audio.debug("AudioManager: Navigating to single sound: \(sound.title)")
+      // Keep the current play/pause state.
+      enterSingleSound(for: sound, startPlaying: isGloballyPlaying)
     }
   }
 
@@ -154,7 +143,7 @@ extension AudioManager {
   func navigateToNextPreset() {
     let items = navigableItems
     guard !items.isEmpty else { return }
-    // No locatable current item → start at the first.
+    // With no current item, start at the first.
     let nextIndex = currentNavigableIndex(in: items).map { ($0 + 1) % items.count } ?? 0
     apply(items[nextIndex])
   }
@@ -163,7 +152,7 @@ extension AudioManager {
   func navigateToPreviousPreset() {
     let items = navigableItems
     guard !items.isEmpty else { return }
-    // No locatable current item → start at the last.
+    // With no current item, start at the last.
     let previousIndex: Int
     if let index = currentNavigableIndex(in: items) {
       previousIndex = index > 0 ? index - 1 : items.count - 1
@@ -180,15 +169,10 @@ extension AudioManager {
     return !isQuickMix && canNavigate
   }
 
-  /// Update next/previous command availability. The cycle is favorites-only, so
-  /// this is enabled when there's somewhere to go: with a locatable current item
-  /// (a favorited preset, or in solo mode a favorited sound) we need more than
-  /// one favorite; otherwise any favorite is a valid destination. Quick Mix is
-  /// never part of the cycle.
+  /// Enables next/previous when there's somewhere to go: another favorite when the
+  /// current item is one, otherwise any favorite. Always off in Quick Mix.
   func updateNextPreviousCommandState() {
-    // Optional-chained: before the launch bootstrap installs the backend there
-    // is nothing to enable, and `setupMediaControls()` recomputes this the
-    // moment it arrives.
+    // Nil until launch installs the backend. `setupMediaControls()` recomputes this.
     nowPlayingManager?.setNavigationCommandsEnabled(canNavigateNextPrevious)
   }
 }

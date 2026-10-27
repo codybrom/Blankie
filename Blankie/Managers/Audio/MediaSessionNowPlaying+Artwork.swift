@@ -26,8 +26,8 @@
     /// What the card points at in Siri and Shortcuts. Quick Mix is not a preset
     /// and has no entity of its own, so it points at nothing.
     func entityIdentifiers(for preset: Preset?) -> [EntityIdentifier] {
-      if let soloSound = AudioManager.shared.soloModeSound {
-        return [EntityIdentifier(for: SoundEntity.self, identifier: soloSound.fileName)]
+      if let singleSound = AudioManager.shared.singleSound {
+        return [EntityIdentifier(for: SoundEntity.self, identifier: singleSound.fileName)]
       }
       guard !AudioManager.shared.isQuickMix, let preset else { return [] }
       return [EntityIdentifier(for: PresetEntity.self, identifier: preset.id)]
@@ -35,24 +35,23 @@
 
     // MARK: - Artwork
 
-    /// Rebuilds the card's artwork, but after the first pass only when the
-    /// preset or the soloed sound actually changed — the system caches artwork
-    /// by id, and a new animated artwork restarts the video.
+    /// Rebuilds the card's artwork, after the first pass only when the preset or
+    /// single sound changed: artwork is cached by id, and a new animation restarts the video.
     func refreshArtwork(preset: Preset?, fallbackArtworkId: UUID?) {
-      let soloSound = AudioManager.shared.soloModeSound
-      let soloSoundId = soloSound?.id
-      guard !hasBuiltArtwork || preset?.id != lastPresetId || soloSoundId != lastSoloSoundId
+      let singleSound = AudioManager.shared.singleSound
+      let singleSoundId = singleSound?.id
+      guard !hasBuiltArtwork || preset?.id != lastPresetId || singleSoundId != lastSingleSoundId
       else {
         refreshFallbackArtworkIfItsIdChanged()
         return
       }
       hasBuiltArtwork = true
       lastPresetId = preset?.id
-      lastSoloSoundId = soloSoundId
+      lastSingleSoundId = singleSoundId
 
-      if let soloSound {
-        // Solo mode: the sound's own icon, not the last preset's artwork.
-        applySoloArtwork(for: soloSound)
+      if let singleSound {
+        // Single-sound mode: the sound's own icon, not the last preset's artwork.
+        applySingleArtwork(for: singleSound)
         #if os(iOS)
           clearAnimatedArtwork()
         #endif
@@ -67,9 +66,8 @@
       #endif
     }
 
-    /// Presets without their own lock screen background inherit the app-wide
-    /// default (preset → default → Blankie icon). Substituted on a value copy so
-    /// the fallback is never persisted onto the preset.
+    /// Presets without a lock screen background inherit the app-wide default (then
+    /// the Blankie icon). Applied to a copy so it's never saved to the preset.
     private func effectiveArtworkPreset(for preset: Preset?) -> Preset? {
       var effectivePreset = preset
       if effectivePreset != nil, effectivePreset?.animatedArtwork == nil {
@@ -77,9 +75,8 @@
       } else if effectivePreset == nil, AudioManager.shared.isQuickMix,
         let defaultArtwork = GlobalSettings.shared.defaultLockScreenArtwork
       {
-        // Quick Mix has no preset of its own, so it never reaches the fallback
-        // above. Give it the app-wide default lock screen animation via a
-        // throwaway preset that only carries the artwork.
+        // Quick Mix has no preset, so carry the default lock screen animation on a
+        // throwaway preset.
         effectivePreset = Preset(
           id: UUID(),
           name: "Quick Mix",
@@ -155,13 +152,13 @@
       }
     #endif
 
-    /// A soloed sound's artwork: its SF Symbol on the accent-tinted card.
-    private func applySoloArtwork(for sound: Sound) {
-      guard let data = Self.jpegData(NowPlayingDisplay.soloFallbackImage(for: sound)) else {
+    /// A single sound's artwork: its SF Symbol on the accent-tinted card.
+    private func applySingleArtwork(for sound: Sound) {
+      guard let data = Self.jpegData(NowPlayingDisplay.singleFallbackImage(for: sound)) else {
         applyFallbackArtwork()
         return
       }
-      setArtwork(data: data, source: .solo(fileName: sound.fileName))
+      setArtwork(data: data, source: .single(fileName: sound.fileName))
     }
 
     /// The drawn fallback encodes the selected sounds' icons and the accent, so
@@ -174,10 +171,9 @@
       if id != current { applyFallbackArtwork() }
     }
 
-    /// The drawn fallback a mix without artwork of its own shows. A render can
-    /// fail while the app is in the background; then the last good render for
-    /// the same id stands in, and the next publish tries again rather than
-    /// leaving the card bare (the system never re-reads a bare item).
+    /// The drawn fallback for a mix without its own artwork. A render can fail in the
+    /// background. The last good render for the same id stands in, and with none the
+    /// next publish retries (the system never re-reads a bare item).
     private func applyFallbackArtwork() {
       let source = Self.fallbackArtworkSource()
       let id = NowPlayingSessionMapping.artworkID(
@@ -205,8 +201,8 @@
       model.artwork = Artwork(id: id) { _ in try ArtworkRepresentation(data: data) }
     }
 
-    /// The accent the drawn fallbacks render in, as a stable id component —
-    /// the same two reads `NowPlayingDisplay.fallbackArtworkImage` makes.
+    /// The fallback's accent as a stable id component (the same two reads
+    /// `NowPlayingDisplay.fallbackArtworkImage` makes).
     private var artworkAccentName: String? {
       PresetManager.shared.themingPreset?.accentColorName
         ?? GlobalSettings.shared.customAccentColor?.toString
@@ -257,7 +253,7 @@
           compatible: AnimatedArtwork.compatibleAspectRatios.map(Self.sessionRatio),
           available: Set(found.keys))
         // Nothing playable yet (a pack still downloading, or a missing loop).
-        // Clear the previous loop so it can't sit under this preset's title;
+        // Clear the previous loop so it can't sit under this preset's title.
         // `onDownloaded` comes back once a pack lands.
         guard !ratios.isEmpty else {
           clearAnimatedArtwork()

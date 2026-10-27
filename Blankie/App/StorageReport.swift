@@ -4,12 +4,9 @@
 //
 //  Created by Cody Bromley on 6/14/26.
 //
-//  DEBUG-only on-disk storage breakdown, logged once at launch. Settings shows a
-//  single opaque "Documents & Data" number; this itemizes what Blankie actually
-//  uses so a 600 MB mystery becomes legible. Not compiled into release builds.
-//
-//  Runs off the main thread (FileManager walks + AssetPackManager.url(for:) are
-//  both flagged as main-thread hazards).
+//  DEBUG-only launch log that itemizes the single "Documents & Data" total in
+//  Settings. Runs off the main thread because FileManager walks and
+//  `AssetPackManager.url(for:)` are flagged as main-thread hazards.
 //
 
 #if DEBUG && os(iOS)
@@ -50,9 +47,8 @@
       logger.debug("────────────────────────────────")
     }
 
-    /// Sizes the downloaded Background Assets video packs (system-managed storage).
-    /// Calls `AssetPackManager` directly (its accessors are nonisolated) so this
-    /// stays off the main thread.
+    /// Sizes downloaded Background Assets packs. `AssetPackManager`'s accessors are
+    /// nonisolated, so this stays off the main thread.
     private static func logBackgroundAssets() {
       var total: Int64 = 0
       var ids: [String] = []

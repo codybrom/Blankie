@@ -4,14 +4,9 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Engine start retries, the mid-fade rescue and the post-preview idle pass,
-//  each driven through the interleaving the engine model found. These need the
-//  real shared engine and a bundled sound, and cancel where the host has no
-//  audio output.
-//
-//  Serialized and main-actor because it drives AudioEngineManager.shared and
-//  AudioManager.shared. Preset saves are switched off for the suite (no current
-//  preset, states not applied) so a probe sound never lands in a real preset.
+//  Engine start retries, the mid-fade rescue and the post-preview idle pass. Needs the real
+//  shared engine and a bundled sound. Cancels where the host has no audio output.
+//  Serialized: preset saves are off for the suite so the probe never lands in a real preset.
 //
 
 import AVFoundation
@@ -38,7 +33,7 @@ import Testing
     originalStatesApplied = PresetManager.shared.presetStatesApplied
     PresetManager.shared.setCurrentPreset(nil)
     PresetManager.shared.presetStatesApplied = false
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isGloballyPlaying = false
     engineManager.pause()
   }
@@ -71,10 +66,9 @@ import Testing
     return sound
   }
 
-  // MARK: - Start retry (E1, E2)
+  // MARK: - Start retry
 
-  /// E1: a pause between a failed start and its retry must keep the engine
-  /// down. Restarting it over silence makes iOS report the app as playing.
+  /// Restarting the engine over silence makes iOS report the app as playing.
   @Test func startRetryAfterPauseLeavesEngineIdle() async throws {
     _ = try makeProbe()
     engineManager.startEngine = { _ in throw StartFailure() }
@@ -93,9 +87,7 @@ import Testing
     #expect(!engineManager.engine.isRunning, "the retry must not restart a paused engine")
   }
 
-  /// E2: a sound whose start failed stays silent until something replays it.
-  /// When a configuration rebuild restarts the engine before the retry, the
-  /// retry still has to resume that sound.
+  /// When a configuration rebuild restarts the engine first, the retry still resumes the sound.
   @Test func startRetryResumesSoundAfterRebuildRestartedEngine() async throws {
     let sound = try makeProbe()
     audioManager.sounds = [sound]
@@ -119,10 +111,8 @@ import Testing
     sound.pause(immediate: true)
   }
 
-  /// E5: each sound's play() reaches ensureRunning, so one failed start with
-  /// six selected sounds used to exhaust the five-retry budget in a single
-  /// pass and pause playback with the error alert before any backoff ran.
-  /// Six calls here stand in for playSelected over six selected sounds.
+  /// Each sound's play() reaches ensureRunning, so one failed pass over six sounds must not
+  /// spend the five-retry budget. Six calls stand in for playSelected.
   @Test func oneFailedStartAcrossManySoundsKeepsTheRetryBudget() async throws {
     _ = try makeProbe()  // a successful start resets the retry count
     let rain = TestSound(fileName: "test-a")
@@ -142,11 +132,10 @@ import Testing
     UserDefaults.shared.removeObject(forKey: "test-a_isSelected")
   }
 
-  // MARK: - Mid-fade rescue (E3)
+  // MARK: - Mid-fade rescue
 
-  /// E3: the idle-pause safety net can pause the engine under a node that is
-  /// still fading out. Replaying then takes the rescue branch, which has to
-  /// bring the engine back or the sound stays silent while "playing".
+  /// The idle-pause safety net can pause the engine under a node that is still fading
+  /// out. Replaying then takes the rescue branch.
   @Test func rescuingAMidFadePauseRestartsTheEngine() async throws {
     let sound = try makeProbe()
     #expect(engineManager.ensureRunning())
@@ -171,11 +160,8 @@ import Testing
     sound.pause(immediate: true)
   }
 
-  // MARK: - Preview while paused (N1)
+  // MARK: - Preview while paused
 
-  /// N1: previewing a sound while paused starts the engine. Leaving the
-  /// preview has to idle it again once the fade-out lands, or the system keeps
-  /// showing Blankie as playing over silence.
   @Test func leavingAPreviewWhilePausedIdlesTheEngine() async throws {
     let sound = try makeProbe()
     audioManager.sounds = [sound]

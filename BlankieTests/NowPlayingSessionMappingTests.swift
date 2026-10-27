@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 9/15/26.
 //
-//  The OS 27 session's pure mappings: playback state, sleep-timer progress,
-//  duration, and the content identity that has to stay stable across
-//  incremental updates so the system doesn't restart the card.
+//  Pure OS 27 session mappings. Content ids stay stable across incremental updates so the
+//  system doesn't restart the card.
 //
 
 import Foundation
@@ -115,34 +114,33 @@ import Testing
 
   // MARK: - Content identity
 
-  @Test func soloWinsOverEverything() {
+  @Test func singleWinsOverEverything() {
     #expect(
       NowPlayingSessionMapping.contentID(
-        soloFileName: "rain", isQuickMix: true, presetID: UUID()) == "solo:rain")
+        singleFileName: "rain", isQuickMix: true, presetID: UUID()) == "solo:rain")
   }
 
   @Test func quickMixWinsOverPreset() {
     #expect(
       NowPlayingSessionMapping.contentID(
-        soloFileName: nil, isQuickMix: true, presetID: UUID()) == "quickmix")
+        singleFileName: nil, isQuickMix: true, presetID: UUID()) == "quickmix")
   }
 
   @Test func presetUsesItsIdentifier() {
     let id = UUID()
     #expect(
-      NowPlayingSessionMapping.contentID(soloFileName: nil, isQuickMix: false, presetID: id)
+      NowPlayingSessionMapping.contentID(singleFileName: nil, isQuickMix: false, presetID: id)
         == "preset:\(id.uuidString)")
   }
 
   @Test func nothingActiveFallsBackToDefault() {
     #expect(
-      NowPlayingSessionMapping.contentID(soloFileName: nil, isQuickMix: false, presetID: nil)
+      NowPlayingSessionMapping.contentID(singleFileName: nil, isQuickMix: false, presetID: nil)
         == "default")
   }
 
-  /// A running sleep timer publishes under its own id, and the base id comes
-  /// back untouched when it ends. Adding time changes the id, since the system
-  /// reads a duration once per id and would keep the old end.
+  /// The system reads a duration once per id, so a running timer (and each added time) gets
+  /// its own id.
   @Test func timedContentIDIsSuffixedOnlyWhileATimerRuns() {
     #expect(
       NowPlayingSessionMapping.contentID("quickmix", timerDuration: 600) == "quickmix:timed:600")
@@ -173,17 +171,16 @@ import Testing
         == "bundled:OceanWaves")
   }
 
-  @Test func soloArtworkFoldsInTheAccent() {
-    // The soloed sound's card is drawn in the accent, so two accents have to be
-    // two ids — the system never re-requests an id it already cached.
+  @Test func singleArtworkFoldsInTheAccent() {
+    // The single sound card is drawn in the accent, and the system caches artwork by id.
     #expect(
-      NowPlayingSessionMapping.artworkID(source: .solo(fileName: "rain"), accentColorName: "teal")
+      NowPlayingSessionMapping.artworkID(source: .single(fileName: "rain"), accentColorName: "teal")
         == "solo:rain:teal")
   }
 
   @Test func missingAccentFallsBackToDefault() {
     #expect(
-      NowPlayingSessionMapping.artworkID(source: .solo(fileName: "rain"), accentColorName: nil)
+      NowPlayingSessionMapping.artworkID(source: .single(fileName: "rain"), accentColorName: nil)
         == "solo:rain:default")
   }
 

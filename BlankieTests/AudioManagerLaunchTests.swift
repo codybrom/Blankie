@@ -4,13 +4,9 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  The single-flight launch bootstrap: concurrent callers (scene setup, App
-//  Intents, CarPlay) must coalesce into one custom-sound load, and a run that
-//  finished before a model context existed must retry once one arrives — the two
-//  guarantees that fix the double-load race and the late-arrival tile flash.
-//
-//  Serialized + main-actor: mutates the AudioManager.shared singleton; each test
-//  snapshots and restores the touched singleton fields and UserDefaults keys.
+//  The single-flight launch bootstrap: concurrent callers share one custom-sound load,
+//  and a run without a model context retries once one arrives.
+//  Serialized: mutates AudioManager.shared. Each test restores its fields and defaults keys.
 //
 
 import Foundation
@@ -23,7 +19,7 @@ import Testing
   private let audioManager = AudioManager.shared
   private let snapshot = DefaultsSnapshot([
     "soundState",
-    UserDefaultsKeys.soloModeSoundFileName,
+    UserDefaultsKeys.singleSoundFileName,
     UserDefaultsKeys.starredItems,
     "defaultPreset",
     "savedPresets",
@@ -61,8 +57,6 @@ import Testing
     return ModelContext(container)
   }
 
-  /// Two callers arriving at once (e.g. a Siri intent cold-launching while the
-  /// scene also boots) join the one in-flight bootstrap instead of both loading.
   @Test func concurrentCallersCoalesceToOneLoad() async throws {
     audioManager.setModelContext(try makeInMemoryContext())
 
@@ -74,8 +68,6 @@ import Testing
     #expect(audioManager.hasLoadedCustomSounds)
   }
 
-  /// A run with no model context takes the built-ins-only early path and never
-  /// loads custom sounds; a later call retries once a context exists.
   @Test func noContextRunRetriesOnceContextArrives() async throws {
     audioManager.modelContext = nil
     await audioManager.loadCustomSoundsWhenReady()

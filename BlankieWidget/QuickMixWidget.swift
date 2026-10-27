@@ -9,24 +9,17 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-/// Quick Mix on the Home Screen the same way CarPlay's `QuickMixGridTemplate`
-/// does it: a grid of individual sounds you tap in and out of the mix, not a
-/// single "play Quick Mix" button — Dark Noise's "Multi Noise" widget uses
-/// the same clean icon-grid shape for the same reason (a mix of interchangeable
-/// generic sounds, not curated artwork worth showing).
+/// Quick Mix as a grid of sounds to tap in and out of the mix, like CarPlay's
+/// `QuickMixGridTemplate`.
 struct QuickMixEntry: TimelineEntry {
   let date: Date
   var color: WidgetColorChoice = .defaultAccent
   let sounds: [WidgetQuickMixSound]
-  /// Whether Quick Mix (not some other preset/solo sound) is the mode
-  /// actually driving playback right now — the side control's play/pause
-  /// button only appears when this is true and a sound is selected.
+  /// Whether Quick Mix is the active playback mode. Gates the play/pause control.
   let isActive: Bool
   let isPlaying: Bool
-  /// The app's own accent (`GlobalSettings.customAccentColor`) — Quick Mix
-  /// has no preset/sound of its own to theme with, so it uses this instead
-  /// of the widget target's static `Color("AccentColor")` asset, which isn't
-  /// necessarily the same color as the user's actual chosen accent.
+  /// The user's app accent (`GlobalSettings.customAccentColor`), which can differ
+  /// from the widget target's static AccentColor asset.
   let accentColorName: String?
 }
 
@@ -73,8 +66,7 @@ private struct QuickMixTileView: View {
   @Environment(\.widgetRenderingMode) private var renderingMode
   let sound: WidgetQuickMixSound
   let size: CGFloat
-  /// The user's real accent (resolved from the entry), so a selected tile
-  /// matches the widget background instead of the target's static asset color.
+  /// The user's accent from the entry, matching the widget background.
   let accent: Color
 
   var body: some View {
@@ -377,9 +369,7 @@ struct QuickMixWidgetEntryView: View {
           .frame(width: sideControlWidth)
         }
       }
-      // Fill the geometry so `QuickMixSideControlView`'s Spacer can span the
-      // widget's full height instead of the HStack collapsing to its content.
-      // (No manual padding — WidgetKit applies its own default content margins.)
+      // Full height so the side control's Spacer can span the widget.
       .frame(width: geo.size.width, height: geo.size.height)
     }
 

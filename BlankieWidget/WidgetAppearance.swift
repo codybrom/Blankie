@@ -65,8 +65,7 @@ struct WidgetAppearanceBackground: View {
   }
 }
 
-/// The portrait XL family is new in iOS/macOS 27; retain both existing sizes
-/// on older supported systems.
+/// The portrait XL family needs iOS/macOS 27, so older systems get medium and large.
 var interactiveWidgetFamilies: [WidgetFamily] {
   if #available(iOS 27.0, macOS 27.0, *) {
     return [.systemMedium, .systemLarge, .systemExtraLargePortrait]

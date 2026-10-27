@@ -4,18 +4,9 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Pins the ways lock screen artwork fell out of step with the preset. A preset
-//  with no animation (or a loop not on the device yet) kept the previous loop,
-//  a forced refresh dropped the preset's own still, a failed still read was
-//  never retried, a new preset's fallback kept the previous selection, and a
-//  finished download never reached the 26 card.
-//
-//  The 26 (MediaPlayer) cases call the backend's artwork steps directly and
-//  never publish, so they are safe next to the 27 backend. The one that does
-//  publish runs below OS 27 only.
-//
-//  Serialized and main-actor because it drives the PresetManager and
-//  GlobalSettings singletons. Every touched value is restored in deinit.
+//  Lock screen artwork follows the preset across loops, stills, fallbacks and downloads.
+//  The 26 cases call artwork steps without publishing, except one that runs below OS 27.
+//  Serialized: deinit restores the PresetManager and GlobalSettings values it touches.
 //
 
 import Foundation
@@ -56,11 +47,9 @@ import Testing
     return preset
   }
 
-  // MARK: - Preset without animation (N3)
+  // MARK: - Preset without animation
 
   #if os(iOS)
-    /// N3 on 26: switching to a preset with no animation (and no app-wide
-    /// default) clears the previous preset's loop instead of keeping it.
     @Test func mediaPlayerPresetWithoutAnimationClearsTheLoop() {
       let backend = NowPlayingManager()
       backend.currentAnimatedLoopPath = "previous-preset-loop"
@@ -74,7 +63,6 @@ import Testing
   #endif
 
   #if canImport(NowPlaying) && os(iOS)
-    /// N3 on 27: the same switch through the MediaSession backend.
     @Test func mediaSessionPresetWithoutAnimationClearsTheLoop() throws {
       guard #available(iOS 27, *) else { return }
       guard NowPlayingDisplay.shouldPublishAnimatedArtwork() else {
@@ -92,8 +80,6 @@ import Testing
       #expect(backend.model.animatedArtwork == nil)
     }
 
-    /// On 27, a preset whose loop isn't on the device yet clears the previous
-    /// preset's loop rather than keeping it under the new title.
     @Test func mediaSessionPresetWithAnUnavailableLoopClearsTheOldOne() throws {
       guard #available(iOS 27, *) else { return }
       guard NowPlayingDisplay.shouldPublishAnimatedArtwork() else {
@@ -135,10 +121,8 @@ import Testing
     }
   #endif
 
-  // MARK: - Forced refresh of the same preset (N7)
+  // MARK: - Forced refresh of the same preset
 
-  /// N7 on 26: a forced refresh of a preset whose stored still is already
-  /// showing keeps that still. It used to fall through to the fallback.
   @Test func forcedRefreshOfTheSamePresetKeepsItsStill() async {
     let backend = NowPlayingManager()
     let artworkId = UUID()
@@ -153,8 +137,7 @@ import Testing
     #expect(backend.nowPlayingInfo[MPMediaItemPropertyArtwork] as? String == "this preset's still")
   }
 
-  /// On 26, a still that fails to load leaves its id unrecorded, so the next
-  /// update reads it again instead of treating it as already showing.
+  /// The next update then reads the still again.
   @Test func failedStillReadLeavesTheIdUnrecorded() async {
     let backend = NowPlayingManager()
     var preset = makePresetWithoutAnimation()
@@ -165,9 +148,7 @@ import Testing
     #expect(backend.currentArtworkId == nil)
   }
 
-  /// On 26, a new preset's first publish draws the fallback before its sounds
-  /// are selected, so it showed the Blankie mark. The next publish redraws it
-  /// once the selection lands, and leaves it alone after that.
+  /// A new preset's first publish can draw the fallback before its sounds are selected.
   @Test func fallbackRedrawsWhenTheSelectionLandsLater() {
     let originalSounds = AudioManager.shared.sounds
     let sound = TestSound(fileName: "test-fallback-redraw")
@@ -188,13 +169,11 @@ import Testing
     #expect(!backend.redrawFallbackIfStale(), "an up-to-date fallback isn't redrawn")
   }
 
-  // MARK: - Finished download (N5)
+  // MARK: - Finished download
 
   #if os(iOS)
-    /// N5 on 26: a finished animation download has to rebuild artwork on the
-    /// next publish even though the preset didn't change. Incremental
-    /// publishes never carry artwork keys. Publishes through
-    /// MPNowPlayingInfoCenter, so it runs below OS 27 only.
+    /// Incremental publishes carry no artwork keys. Publishes through MPNowPlayingInfoCenter,
+    /// so it runs below OS 27 only.
     @Test func finishedDownloadRebuildsArtworkForTheSamePreset() async {
       if #available(iOS 27, *) { return }
       AudioEngineManager.shared.pause()  // a running engine holds paused publishes

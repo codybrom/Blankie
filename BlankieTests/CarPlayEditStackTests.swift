@@ -4,12 +4,8 @@
 //
 //  Created by Cody Bromley on 10/13/26.
 //
-//  Pins the CarPlay checks that keep car taps off the wrong mix. The edit stack
-//  edits only the live mix of the preset it opened for, and a solo row tapped
-//  after the car disconnects starts nothing on the phone.
-//
-//  Builds only under the CarPlay scheme. Engine-free (TestSounds), on an
-//  isolated preset list (SingletonSandbox).
+//  The CarPlay edit stack edits only its own preset's live mix, and a single sound tap after
+//  disconnect starts nothing. Builds only under the CarPlay scheme and uses SingletonSandbox.
 //
 
 #if CARPLAY_ENABLED && canImport(CarPlay)
@@ -49,23 +45,23 @@
       #expect(!controller.editStackIsLive, "a switch on the phone")
       sandbox.presetManager.setCurrentPreset(first)
 
-      sandbox.audioManager.soloModeSound = b
-      #expect(!controller.editStackIsLive, "solo")
-      sandbox.audioManager.soloModeSound = nil
+      sandbox.audioManager.singleSound = b
+      #expect(!controller.editStackIsLive, "single sound")
+      sandbox.audioManager.singleSound = nil
 
       sandbox.audioManager.isQuickMix = true
       #expect(!controller.editStackIsLive, "Quick Mix")
       sandbox.audioManager.isQuickMix = false
     }
 
-    @Test func soloTapAfterDisconnectStartsNothing() {
+    @Test func singleTapAfterDisconnectStartsNothing() {
       let a = TestSound(fileName: "test-car-a")
       sandbox.audioManager.sounds = [a]
       #expect(!controller.isConnected)
 
-      SoundsListTemplate.playSoundInSoloMode(a)
+      SoundsListTemplate.playSingleSound(a)
 
-      #expect(sandbox.audioManager.soloModeSound == nil)
+      #expect(sandbox.audioManager.singleSound == nil)
     }
   }
 

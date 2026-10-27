@@ -12,10 +12,8 @@ import os
   import CarPlay
   import SwiftUI
 
-  /// CarPlay landing tab: the live mix (or the most recent preset) up top,
-  /// followed by the user's favorites. Browsing all presets and sounds lives in
-  /// the Presets and Sounds tabs — Home is the fast path back to a current or
-  /// pinned mix. Rows reuse PresetListTemplate's shared builders.
+  /// CarPlay landing tab: the live mix (or the most recent preset), then favorites.
+  /// Rows reuse PresetListTemplate's shared builders.
   enum HomeListTemplate {
     @MainActor
     static func createTemplate() -> CPListTemplate {
@@ -53,9 +51,8 @@ import os
       template.updateSections(sections)
     }
 
-    /// The current mix — a soloed sound, Quick Mix, or a preset/Custom Mix — or
-    /// the most recent preset when nothing is active. The header reads "Now
-    /// Playing" while audio runs and "Recent" once it's paused.
+    /// The current mix (single sound, Quick Mix or a preset), or the most recent preset when
+    /// nothing is active. The header reads "Now Playing" while playing, else "Recent".
     @MainActor
     private static func nowPlayingSection() -> CPListSection? {
       let header =
@@ -63,14 +60,13 @@ import os
         ? String(localized: "Now Playing") : String(localized: "Recent")
 
       let item: CPListItem
-      if let solo = AudioManager.shared.soloModeSound {
-        item = PresetListTemplate.createSoloItem(solo)
+      if let single = AudioManager.shared.singleSound {
+        item = PresetListTemplate.createSingleItem(single)
       } else if AudioManager.shared.isQuickMix {
         item = quickMixItem()
       } else if let preset = PresetManager.shared.currentPreset {
         if preset.isDefault {
-          // The default "All Sounds" mix is only worth showing once something is
-          // actually selected in it; otherwise fall through to the empty state.
+          // Show the default mix only when something in it is selected.
           guard AudioManager.shared.hasSelectedSounds else { return nil }
           item = PresetListTemplate.createAllSoundsItem(preset)
         } else {
@@ -83,15 +79,12 @@ import os
       return CPListSection(items: [item], header: header, sectionIndexTitle: nil)
     }
 
-    /// Quick Mix row for the Now Playing section — taps jump straight to the
-    /// Now Playing screen (the mix is already assembled in the Quick Mix tab).
+    /// Quick Mix row for the Now Playing section. Tapping opens the Now Playing screen.
     private static func quickMixItem() -> CPListItem {
-      let titles = AudioManager.shared.sounds
-        .filter { $0.isSelected }
-        .map { $0.title }
+      let selected = AudioManager.shared.sounds.filter { $0.isSelected }
       let item = CPListItem(
         text: String(localized: "Quick Mix"),
-        detailText: titles.isEmpty ? nil : titles.joined(separator: ", ")
+        detailText: selected.isEmpty ? nil : CarPlaySoundNames.list(selected)
       )
       item.playingIndicatorLocation = .leading
       item.isPlaying = AudioManager.shared.isGloballyPlaying
@@ -104,17 +97,16 @@ import os
       return item
     }
 
-    /// Favorited (starred) items in the user's saved order, sharing the
-    /// `GlobalSettings.starredItems` token list with the iPad sidebar. Quick Mix
-    /// has its own tab, so its token is skipped.
+    /// Starred items in saved order, from the `GlobalSettings.starredItems` list the
+    /// iPad sidebar also uses.
     @MainActor
     private static func favoritesSection() -> CPListSection? {
       let presets = PresetManager.shared.presets
       let items: [CPListItem] = GlobalSettings.shared.starredItems.compactMap { token in
         switch PlayableItem(token: token) {
-        case .solo(let fileName):
+        case .single(let fileName):
           guard let sound = AudioManager.shared.sound(fileName: fileName) else { return nil }
-          return PresetListTemplate.createSoloItem(sound)
+          return PresetListTemplate.createSingleItem(sound)
         case .allSounds:
           guard let defaultPreset = presets.first(where: { $0.isDefault }) else { return nil }
           return PresetListTemplate.createAllSoundsItem(defaultPreset)

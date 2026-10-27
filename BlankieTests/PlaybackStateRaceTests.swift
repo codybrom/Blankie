@@ -4,14 +4,9 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Pins the play-state races the modes and Now Playing models found. They cover
-//  launch autoplay, the empty-mix pause, remote navigation while paused,
-//  deferred "playing" publishes, and the foreground session under CarPlay.
-//  Engine-free (TestSounds), with a recording Now Playing backend so nothing
-//  reaches the system card.
-//
-//  Serialized and main-actor because it drives the AudioManager, PresetManager
-//  and GlobalSettings singletons. Every touched value and key is restored in deinit.
+//  Play-state races: launch autoplay, the empty-mix pause, remote navigation while paused,
+//  deferred "playing" publishes and the foreground session under CarPlay. Engine-free, with a
+//  recording Now Playing backend. Serialized: deinit restores every touched value and key.
 //
 
 import AVFoundation
@@ -20,7 +15,7 @@ import Testing
 
 @testable import Blankie
 
-/// Records what AudioManager publishes instead of publishing it.
+/// Records what AudioManager publishes without reaching the system card.
 @MainActor private final class RecordingNowPlaying: NowPlayingPublishing {
   private(set) var publishedStates: [Bool] = []
 
@@ -48,7 +43,7 @@ import Testing
   private let originalCurrentPreset: Preset?
   private let originalStatesApplied: Bool
   private let snapshot = DefaultsSnapshot([
-    UserDefaultsKeys.starredItems, UserDefaultsKeys.soloModeSoundFileName,
+    UserDefaultsKeys.starredItems, UserDefaultsKeys.singleSoundFileName,
     PresetStorage.customPresetsKey, PresetStorage.defaultPresetKey,
     PresetStorage.lastActivePresetIDKey, "widgetSnapshot",
   ])
@@ -62,7 +57,7 @@ import Testing
     originalCurrentPreset = PresetManager.shared.currentPreset
     originalStatesApplied = PresetManager.shared.presetStatesApplied
     audioManager.nowPlayingManager = recorder
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     audioManager.isGloballyPlaying = false
     PresetManager.shared.setCurrentPreset(nil)
@@ -71,7 +66,7 @@ import Testing
 
   isolated deinit {
     audioManager.isGloballyPlaying = false
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.sounds = originalSounds
     audioManager.nowPlayingManager = originalNowPlaying
     PresetManager.shared.setPresets(originalPresets)
@@ -121,7 +116,7 @@ import Testing
     await spinMainLoop(timeout: 0.05)
   }
 
-  // MARK: - Launch autoplay (F7)
+  // MARK: - Launch autoplay
 
   /// Autoplay on Open fires once per launch. After a play, selecting a sound
   /// into an emptied mix while paused leaves it paused.
@@ -149,11 +144,10 @@ import Testing
     #expect(!audioManager.isGloballyPlaying)
   }
 
-  // MARK: - Empty mix (F5)
+  // MARK: - Empty mix
 
-  /// F5: playback can start while the coalesced `hasSelectedSounds` is still
-  /// false (the live gate already sees the selection). Clearing the mix before
-  /// that pass lands leaves the flag unchanged, and the pause has to fire anyway.
+  /// Playback can start before the coalesced `hasSelectedSounds` flips, so clearing the mix
+  /// leaves the flag unchanged and the pause still has to fire.
   @Test func emptyMixPausesEvenWhenTheFlagNeverFlipped() async {
     let a = TestSound(fileName: "test-a")
     audioManager.sounds = [a]
@@ -171,10 +165,9 @@ import Testing
     #expect(!audioManager.isGloballyPlaying, "an empty mix must never stay playing")
   }
 
-  // MARK: - Remote navigation while paused (F6)
+  // MARK: - Remote navigation while paused
 
-  /// F6: skipping to the next favorite from the lock screen, Control Center
-  /// or CarPlay while paused applies that preset's mix and stays paused.
+  /// Covers next from the lock screen, Control Center and CarPlay.
   @Test func remoteNextWhilePausedStaysPaused() async throws {
     let a = TestSound(fileName: "test-a")
     let b = TestSound(fileName: "test-b")
@@ -199,10 +192,10 @@ import Testing
     #expect(!audioManager.isGloballyPlaying, "skipping while paused must not start playback")
   }
 
-  // MARK: - Deferred publishes (N2)
+  // MARK: - Deferred publishes
 
-  /// N2: playSelected defers its Now Playing update to a Task. A pause that
-  /// lands first must not be overwritten by that Task's "playing".
+  /// playSelected defers its Now Playing update to a Task, which must not overwrite an
+  /// earlier pause.
   @Test func pauseBeforeTheDeferredPublishLeavesTheCardPaused() async {
     let a = TestSound(fileName: "test-a")
     audioManager.sounds = [a]
@@ -216,12 +209,12 @@ import Testing
     #expect(recorder.publishedStates.last == false, "the last publish must be the pause")
   }
 
-  /// N2's solo branch, with the same ordering while a sound plays by itself.
-  @Test func pauseBeforeTheDeferredSoloPublishLeavesTheCardPaused() async {
+  /// The same ordering through the single sound branch.
+  @Test func pauseBeforeTheDeferredSinglePublishLeavesTheCardPaused() async {
     let a = TestSound(fileName: "test-a")
     audioManager.sounds = [a]
     await selectWhilePaused(a)
-    audioManager.soloModeSound = a
+    audioManager.singleSound = a
 
     audioManager.setGlobalPlaybackState(true)
     audioManager.setGlobalPlaybackState(false)
@@ -230,11 +223,11 @@ import Testing
     #expect(recorder.publishedStates.last == false, "the last publish must be the pause")
   }
 
-  // MARK: - Foreground session under CarPlay (P8)
+  // MARK: - Foreground session under CarPlay
 
   #if os(iOS)
-    /// P8: coming back to the foreground re-applies the session rules, so Mix
-    /// with Other Audio stays off while CarPlay is connected.
+    /// Returning to the foreground re-applies the session rules, which keep Mix with Other
+    /// Audio off under CarPlay.
     @Test func foregroundUnderCarPlayKeepsExclusiveAudio() throws {
       let session = AVAudioSession.sharedInstance()
       let originalMix = GlobalSettings.shared.mixWithOthers

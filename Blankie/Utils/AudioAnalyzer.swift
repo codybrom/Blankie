@@ -9,7 +9,6 @@ import AVFoundation
 import Accelerate
 import os
 
-/// Combined audio analysis results
 struct AudioAnalysisResult: Sendable {
   let lufs: Float?
   let normalizationFactor: Float
@@ -29,36 +28,29 @@ struct AudioAnalysisResult: Sendable {
   }
 }
 
-/// Utility class for analyzing audio files.
-///
-/// `nonisolated` so its stateless DSP runs off the main actor under module-wide
-/// default main-actor isolation; the async entry points are `@concurrent` so they
-/// always offload to the background pool even when called from main-actor code.
+/// Stateless audio analysis. `nonisolated` keeps the DSP off the main actor, and
+/// the `@concurrent` async entry points run on the background pool from any caller.
 nonisolated class AudioAnalyzer {
   // MARK: - LUFS Configuration
 
-  /// Target LUFS level for normalization
   static let targetLUFS: Float = -27.0
 
   /// Below this LUFS a sound is left un-normalized (treated as silence/noise).
-  /// Kept under the quietest real sound (boat ≈ -49.85) so none sit on the cliff.
+  /// Kept well under the quietest built-in sound (boat, about -49.85 LUFS).
   static let minimumLUFS: Float = -60.0
 
-  /// Maximum gain to apply (in dB) to prevent excessive amplification
+  /// Caps the normalization boost. Attenuation is uncapped.
   static let maxGainDB: Float = 18.0
 
-  /// Analyze an audio file and return its peak level
-  /// - Parameter url: URL of the audio file to analyze
-  /// - Returns: Peak level (0.0 to 1.0) or nil if analysis fails
+  /// Peak sample magnitude (0 to 1), or nil if the file can't be read.
   @concurrent static func analyzePeakLevel(at url: URL) async -> Float? {
     do {
-      // Create an audio file for reading
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
-      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz), and imports have no length cap.
+      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz), and imports have no
+      // length cap.
       guard let frameCount = AVAudioFrameCount(exactly: file.length) else { return nil }
 
-      // Read the entire file into a buffer
       guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
         Logger.app.error("AudioAnalyzer: Failed to create buffer")
         return nil
@@ -67,17 +59,14 @@ nonisolated class AudioAnalyzer {
       try file.read(into: buffer)
       buffer.frameLength = frameCount
 
-      // Find the peak level across all channels
       var peakLevel: Float = 0.0
 
       for channel in 0..<Int(format.channelCount) {
         guard let channelData = buffer.floatChannelData?[channel] else { continue }
 
-        // Use Accelerate framework for efficient peak detection
         var peak: Float = 0
         vDSP_maxv(channelData, 1, &peak, vDSP_Length(frameCount))
 
-        // Also check for negative peaks
         var minPeak: Float = 0
         vDSP_minv(channelData, 1, &minPeak, vDSP_Length(frameCount))
 
@@ -94,19 +83,13 @@ nonisolated class AudioAnalyzer {
     }
   }
 
-  /// Calculate normalization factor based on peak level
-  /// - Parameters:
-  ///   - peakLevel: The detected peak level (0.0 to 1.0)
-  ///   - targetLevel: The desired target level (default 0.8 for headroom)
-  /// - Returns: Normalization factor to apply
+  /// Peak-based normalization factor toward `targetLevel` (0.8 leaves headroom).
   static func calculateNormalizationFactor(peakLevel: Float, targetLevel: Float = 0.8) -> Float {
     guard peakLevel > 0 else { return 1.0 }
 
-    // Calculate the factor needed to reach target level
     let factor = targetLevel / peakLevel
 
-    // Limit the factor to prevent excessive amplification
-    // Max 3x gain (9.5 dB) to avoid amplifying noise in quiet files
+    // Max 3x gain (9.5 dB) so quiet files don't amplify noise.
     let limitedFactor = min(factor, 3.0)
 
     Logger.app.debug(
@@ -115,26 +98,21 @@ nonisolated class AudioAnalyzer {
     return limitedFactor
   }
 
-  /// Calculate normalization factor based on LUFS measurement
-  /// - Parameter lufs: The measured integrated LUFS
-  /// - Returns: Linear gain factor to apply
+  /// Linear gain that moves integrated `lufs` toward `targetLUFS`.
   static func calculateLUFSNormalizationFactor(lufs: Float) -> Float {
-    // Don't touch sounds too quiet to be real signal (avoid amplifying noise/silence)
+    // Leave sounds too quiet to be real signal untouched.
     guard lufs > minimumLUFS else { return 1.0 }
 
-    // Two-way loudness match toward the target: positive gain boosts quiet
-    // sounds, negative gain attenuates loud ones, so built-in and custom sounds
-    // land at the same perceived level. Cap only the boost (attenuation is always
-    // safe); the soft limiter guards any residual clipping when boosting.
+    // Two-way match: quiet sounds are boosted and loud ones attenuated, so built-in
+    // and custom sounds land at the same level. Only the boost is capped. The soft
+    // limiter catches residual clipping.
     let requiredGainDB = targetLUFS - lufs
     let limitedGainDB = min(requiredGainDB, maxGainDB)
 
     return pow(10, limitedGainDB / 20)
   }
 
-  /// Analyze RMS (Root Mean Square) level for more perceptual loudness
-  /// - Parameter url: URL of the audio file to analyze
-  /// - Returns: RMS level (0.0 to 1.0) or nil if analysis fails
+  /// Mean per-channel RMS level (0 to 1), or nil if the file can't be read.
   @concurrent static func analyzeRMSLevel(at url: URL) async -> Float? {
     do {
       let file = try AVAudioFile(forReading: url)
@@ -154,7 +132,6 @@ nonisolated class AudioAnalyzer {
       for channel in 0..<channelCount {
         guard let channelData = buffer.floatChannelData?[channel] else { continue }
 
-        // Calculate RMS for this channel
         var squaredSum: Float = 0
         vDSP_svesq(channelData, 1, &squaredSum, vDSP_Length(frameCount))
 
@@ -164,7 +141,6 @@ nonisolated class AudioAnalyzer {
         totalRMS += rms
       }
 
-      // Average RMS across channels
       let averageRMS = totalRMS / Float(channelCount)
 
       Logger.app.debug("AudioAnalyzer: RMS level for \(url.lastPathComponent): \(averageRMS)")
@@ -178,9 +154,7 @@ nonisolated class AudioAnalyzer {
 
   // MARK: - True Peak Analysis
 
-  /// Analyze true peak level with 4x oversampling for intersample peak detection
-  /// - Parameter url: URL of the audio file to analyze
-  /// - Returns: True peak level in dBTP or nil if analysis fails
+  /// True peak in dBTP, with 4x oversampling to catch intersample peaks.
   @concurrent static func analyzeTruePeak(at url: URL) async -> Float? {
     do {
       let file = try AVAudioFile(forReading: url)
@@ -202,7 +176,6 @@ nonisolated class AudioAnalyzer {
         file.framePosition = position
         try file.read(into: buffer)
 
-        // Process each channel with 4x oversampling (shared with buffer overload)
         for channel in 0..<Int(format.channelCount) {
           guard let channelData = buffer.floatChannelData?[channel] else { continue }
           let peak = oversampledPeak(channelData: channelData, frameLength: buffer.frameLength)
@@ -212,7 +185,6 @@ nonisolated class AudioAnalyzer {
         position += AVAudioFramePosition(framesToRead)
       }
 
-      // Convert to dBTP (dB True Peak)
       let truePeakdBTP = globalTruePeak > 0 ? 20 * log10(globalTruePeak) : -Float.infinity
       Logger.app.debug(
         "AudioAnalyzer: True peak for \(url.lastPathComponent): \(truePeakdBTP) dBTP")
@@ -226,35 +198,28 @@ nonisolated class AudioAnalyzer {
 
   // MARK: - Comprehensive Analysis
 
-  /// Perform comprehensive audio analysis including LUFS, peak, RMS, and true peak
-  /// - Parameter url: URL of the audio file to analyze
-  /// - Returns: Complete analysis results
+  /// Runs LUFS, peak, RMS, true peak and duration analysis and picks the
+  /// normalization factor (LUFS first, peak as the fallback).
   @concurrent static func comprehensiveAnalysis(at url: URL) async -> AudioAnalysisResult {
     Logger.app.debug("AudioAnalyzer: Starting comprehensive analysis for \(url.lastPathComponent)")
 
-    // Get peak and RMS levels
     let peakLevel = await analyzePeakLevel(at: url)
     let rmsLevel = await analyzeRMSLevel(at: url)
 
-    // Get true peak level
     let truePeakdBTP = await analyzeTruePeak(at: url)
 
-    // Get LUFS analysis
     let lufsResult = await analyzeLUFS(at: url)
 
-    // Get duration
     let duration = getDuration(at: url)
 
-    // Calculate normalization and check if limiter is needed
     let normalizationFactor: Float
     var needsLimiter = false
 
     if let lufsData = lufsResult {
       normalizationFactor = lufsData.normalizationFactor
 
-      // Check if the gain we actually apply (after caps) would push true peak
-      // above -1 dBTP. Attenuated (loud) sounds get a factor < 1, so this stays
-      // safe; only boosted sounds can trip the limiter.
+      // The limiter is needed when the applied gain (after caps) would push true
+      // peak above -1 dBTP, which only a boost can do.
       if let truePeak = truePeakdBTP {
         let appliedGainDB = 20 * log10(normalizationFactor)
         let predictedTruePeak = truePeak + appliedGainDB
@@ -266,7 +231,6 @@ nonisolated class AudioAnalyzer {
         }
       }
     } else if let peak = peakLevel {
-      // Fallback to peak-based normalization
       normalizationFactor = calculateNormalizationFactor(peakLevel: peak)
       Logger.app.debug("AudioAnalyzer: Using peak-based normalization as fallback")
     } else {
@@ -287,7 +251,7 @@ nonisolated class AudioAnalyzer {
   // MARK: - Buffer-Based Analysis
 
   /// Per-channel 4x linear-oversampled magnitude peak, shared by the URL and
-  /// buffer true-peak paths so there is one implementation of the computation.
+  /// buffer true-peak paths.
   static func oversampledPeak(
     channelData: UnsafeMutablePointer<Float>,
     frameLength: AVAudioFrameCount
@@ -311,7 +275,7 @@ nonisolated class AudioAnalyzer {
       oversampledData[index * 4 + 2] = sample1 + delta * 2
       oversampledData[index * 4 + 3] = sample1 + delta * 3
     }
-    // The loop stops one sample short; write the final source sample so a
+    // The loop stops one sample short. Write the final source sample so a
     // peak on the last frame isn't missed.
     oversampledData[(Int(frameLength) - 1) * 4] = channelData[Int(frameLength) - 1]
 
@@ -380,9 +344,7 @@ nonisolated class AudioAnalyzer {
 
   // MARK: - Duration Analysis
 
-  /// Get the duration of an audio file
-  /// - Parameter url: URL of the audio file
-  /// - Returns: Duration in seconds, or nil if unable to determine
+  /// Duration in seconds, or nil if the file can't be read.
   static func getDuration(at url: URL) -> TimeInterval? {
     do {
       let file = try AVAudioFile(forReading: url)

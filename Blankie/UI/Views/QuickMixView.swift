@@ -10,7 +10,7 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
   struct QuickMixView: View {
     /// Regular width: Quick Mix has no playback bar, so its controls sit in a
-    /// column beside the tiles; tapping the artwork opens Now Playing.
+    /// column beside the tiles. Tapping the artwork opens Now Playing.
     var onOpenNowPlaying: (() -> Void)?
     /// Where Now Playing zooms from: the column's artwork, or the bar.
     var nowPlayingZoom: Namespace.ID?
@@ -27,7 +27,7 @@ import SwiftUI
     }
 
     /// The column needs room both ways (a large iPhone in landscape is wide but
-    /// short); otherwise the same bare bar as a preset page.
+    /// short). Otherwise it's the same bare bar as a preset page.
     private var showsColumn: Bool { size.width >= 640 && size.height >= 520 }
 
     let audioManager = AudioManager.shared
@@ -41,8 +41,7 @@ import SwiftUI
 
     var body: some View {
       ZStack {
-        // Shared accent surface — same gradient used by the main grid so
-        // Quick Mix reads as a variant of the same visual system.
+        // The same accent gradient as the main mixer, so Quick Mix matches it.
         SoundSurfaceBackground(
           accent: globalSettings.customAccentColor ?? .accentColor
         )
@@ -58,7 +57,7 @@ import SwiftUI
           grid
         }
         // No room for the column (iPad portrait beside the sidebar, a large
-        // iPhone in landscape): the same bare bar as a preset page instead.
+        // iPhone in landscape): the same bare bar as a preset page.
         .safeAreaInset(edge: .bottom) {
           if let onOpenNowPlaying, size.width > 0, !showsColumn {
             NowPlayingBar(style: .bare, onTap: onOpenNowPlaying)

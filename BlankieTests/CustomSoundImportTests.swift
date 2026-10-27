@@ -4,10 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The picker import path must stamp a SHA-256 hash on the record so re-imports
-//  dedup and the durable mirror persists a real integrity hash. Regression
-//  guard: createCustomSoundRecord previously never set sha256Hash (only the
-//  preset-import path did), so picker imports persisted a nil hash.
+//  Picker imports stamp a SHA-256 hash on the record, so re-imports dedup and the
+//  mirror keeps a real integrity hash.
 //
 
 import Foundation
@@ -22,8 +20,7 @@ struct CustomSoundImportTests {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
 
-    // Any bytes are enough — the file only needs to exist to be hashed; audio
-    // analysis returns gracefully (nil LUFS) on a non-audio file.
+    // Any bytes work: hashing needs only a file, and analysis returns nil LUFS for non-audio.
     let copied = dir.appendingPathComponent("imported.m4a")
     try Data("synthetic bytes for hashing".utf8).write(to: copied)
     let source = dir.appendingPathComponent("original.m4a")

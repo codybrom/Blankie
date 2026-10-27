@@ -3,8 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: ["main"]
-    # Only the Xcode/app build surface — not docs, notes, apple_docs, scripts
-    # (incl. scripts/*.swift), or top-level markdown.
+    # App build surface only (skips docs, notes, apple_docs, scripts and top-level markdown).
     paths:
       - "Blankie/**"
       - "BlankieTests/**"
@@ -17,16 +16,13 @@ on:
       - ".github/workflows/codeql-swift.yml"
   pull_request:
     branches: ["main"]
-    # ready_for_review so flipping a draft to ready kicks off a scan.
-    # No path filter here: the PR's "Code scanning results" check expects
-    # every category main has, and a filtered-out run reads as
-    # "configuration not found".
+    # ready_for_review scans a draft once it's marked ready. No path filter: the PR's code
+    # scanning check needs every category main has, or it reports "configuration not found".
     types: [opened, synchronize, reopened, ready_for_review]
   schedule:
     - cron: "15 14 * * 1"
 
-# One run per ref: a newer push cancels the superseded run instead of
-# queueing behind it on the shared runners.
+# One run per ref, so a newer push cancels the older run on the shared runners.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -57,9 +53,8 @@ jobs:
           ls -d /Applications/Xcode*.app 2>/dev/null || true
           LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
           if [ -z "$LATEST" ]; then LATEST=/Applications/Xcode.app; fi
-          # macos-26's default Xcode is 26.4.1, which can't open the project's
-          # objectVersion=100. Selecting the newest installed Xcode (26.5, the
-          # same build as local) is required so xcodebuild can read it.
+          # The image's default Xcode (26.4.1) can't open objectVersion=100, so
+          # select the newest installed Xcode.
           echo "Selecting $LATEST"
           sudo xcode-select -s "$LATEST"
           xcodebuild -version
@@ -71,12 +66,9 @@ jobs:
             sed -i '' 's/YOUR_TEAM_ID_HERE/DUMMY_TEAM/' Configuration.xcconfig
             sed -i '' 's/com.yournamehere.blankie/com.example.blankie/' Configuration.xcconfig
           fi
-          # CodeQL only needs the Swift source compiled, so build the iOS
-          # Simulator variant unsigned.
-          # The extractor traces every compiler invocation, and the shared
-          # runner keeps losing communication under that load. Build one
-          # architecture, one job at a time, with no debug info or preview
-          # dylib, which CodeQL doesn't need.
+          # CodeQL only needs the Swift compiled, so build the simulator variant unsigned.
+          # The runner drops its connection under the extractor's tracing load, so
+          # build one arch, one job at a time, with no debug info or preview dylib.
           xcodebuild clean build \
             -project Blankie.xcodeproj \
             -scheme "Blankie (Universal)" \

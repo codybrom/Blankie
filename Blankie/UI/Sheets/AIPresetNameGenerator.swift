@@ -31,17 +31,15 @@ public enum AIPresetNameGenerator {
   #endif
 
   #if canImport(FoundationModels)
-    /// Locale guidance per Apple's "Supporting languages and locales" article:
-    /// the exact trained locale phrase (skipped for U.S. English) plus an
-    /// explicit output-language directive.
+    /// Locale phrase plus output-language directive, per Apple's "Supporting
+    /// languages and locales" guidance. Empty for U.S. English.
     private static var localeInstructions: String {
       let locale = Locale.current
       guard !Locale.Language(identifier: "en_US").isEquivalent(to: locale.language) else {
         return ""
       }
-      // Keep the script for Chinese ("Chinese, Simplified" vs "Chinese,
-      // Traditional" — the bare language name lets the model emit the wrong
-      // glyphs); every other shipping language reads fine without it.
+      // Chinese needs the script ("Chinese, Simplified") or the model can emit
+      // the wrong glyphs.
       let script = locale.language.script?.identifier
       let languageID =
         (script == "Hans" || script == "Hant")
@@ -57,7 +55,6 @@ public enum AIPresetNameGenerator {
     }
   #endif
 
-  /// Checks if Foundation Models are available on this device.
   public static var isAvailable: Bool {
     #if canImport(FoundationModels)
       let model = SystemLanguageModel(useCase: .general)
@@ -67,11 +64,8 @@ public enum AIPresetNameGenerator {
     #endif
   }
 
-  /// Generates a preset name using Foundation Models, or returns empty string.
-  /// - Parameters:
-  ///   - selectedSounds: Array of sound names that are selected
-  ///   - allowVariation: If true, generates a varied/creative name
-  /// - Returns: AI-generated preset name or empty string
+  /// Generates a preset name from the selected sound names, or "" on failure.
+  /// `allowVariation` asks for a more creative name.
   public static func generateName(from selectedSounds: [String], allowVariation: Bool = false) async
     -> String
   {
@@ -80,15 +74,12 @@ public enum AIPresetNameGenerator {
     }
 
     #if canImport(FoundationModels)
-      // Initialize model for general content generation
       let model = SystemLanguageModel(useCase: .general)
 
-      // Check if Foundation Models are available on this device
       guard model.isAvailable, case .available = model.availability else {
         return ""
       }
 
-      // Verify locale is supported
       let currentLocale = Locale.current
       guard model.supportsLocale(currentLocale) else {
         Logger.ui.debug("AIPresetNameGenerator: Locale \(currentLocale.identifier) not supported")
@@ -96,7 +87,6 @@ public enum AIPresetNameGenerator {
       }
 
       do {
-        // Create session with instructions including locale
         let session = LanguageModelSession(
           model: model,
           instructions: Instructions {
@@ -108,17 +98,14 @@ public enum AIPresetNameGenerator {
           }
         )
 
-        // Build prompt
         let soundList = selectedSounds.joined(separator: ", ")
         let prompt = "Generate a\(allowVariation ? " creative" : "") preset name for: \(soundList)"
 
-        // Generate structured response with default settings
         let response = try await session.respond(
           to: prompt,
           generating: AIPresetName.self
         )
 
-        // Validate and return
         let name = response.content.name
         guard !name.isEmpty, name.count <= 40 else {
           return ""
@@ -126,12 +113,11 @@ public enum AIPresetNameGenerator {
 
         return name
       } catch let error as LanguageModelSession.GenerationError {
-        // Handle specific Foundation Models errors
         switch error {
         case .refusal(let refusal, _):
           Logger.ui.debug("AIPresetNameGenerator: Model refused request")
-          // The model's explanation is a non-Sendable Response; fetch and log it
-          // off the main actor so it never crosses back (debug diagnostics only).
+          // The explanation is a non-Sendable Response, so it's fetched and logged
+          // off the main actor.
           Task.detached {
             if let explanation = try? await refusal.explanation {
               Logger.ui.debug("   Reason: \(String(describing: explanation))")
@@ -173,11 +159,8 @@ public enum AIPresetNameGenerator {
     #endif
   }
 
-  /// Clean display name (+ optionally an icon) for an imported sound, derived
-  /// from its raw file name ("WoodThrushinMorningShawneeForestMay272012.wav" →
-  /// ("Wood Thrush", "bird.fill")). `includingIcon: false` skips the icon
-  /// passes entirely (edit mode renames without touching a deliberately
-  /// chosen icon). Returns ("", nil) on failure.
+  /// Display name and optional icon from an imported sound's file name, or ("", nil)
+  /// on failure. Edit mode passes `includingIcon: false` to keep a chosen icon.
   public static func generateSoundDetails(
     fromFileName fileName: String, includingIcon: Bool = true
   ) async -> (name: String, icon: String?) {
@@ -220,8 +203,6 @@ public enum AIPresetNameGenerator {
 
         return (name, includingIcon ? try await pickIcon(for: name) : nil)
       } catch {
-        // Secondary nicety — a debug line beats the preset path's full error
-        // taxonomy here.
         Logger.ui.debug(
           "AIPresetNameGenerator: Sound detail generation failed: \(error, privacy: .public)")
         return ("", nil)
@@ -255,27 +236,13 @@ public enum AIPresetNameGenerator {
   }
 
   #if canImport(FoundationModels)
-    /// Two constrained picks — category (18 options), then a symbol from that
-    /// category's icons (staged because all 1,440 symbols at once would blow
-    /// the context window). Each pick uses Apple's documented runtime-choice
-    /// pattern: a DynamicGenerationSchema property whose anyOf lists the
-    /// options, serialized into the prompt by the framework in the canonical
-    /// format the model is trained on. (Hand-rolled variants both failed:
-    /// hiding the schema picked the alphabetically-first option, and a bare
-    /// top-level string enum sent "Fire" to Tools symbols.) Default sampling
-    /// on purpose — the re-roll button should offer a different take, not
-    /// the same answer forever.
-    ///
-    /// Context budget: each stage runs in a FRESH session (transcripts
-    /// accumulate — the carried-over session blew the 4,096-token window at
-    /// 5,238 once Nature's 278-symbol enum was injected; dotted symbol names
-    /// tokenize expensively), and ".fill" twins are deduped from the choices
-    /// to roughly halve the enum.
+    /// Picks a category, then a symbol within it, so the full catalog never has to
+    /// fit the 4,096-token context window. Each pick is a DynamicGenerationSchema
+    /// `anyOf` property. Each stage gets a fresh session because transcripts
+    /// accumulate. Default sampling, so re-roll gives a different answer.
     private static func pickIcon(for name: String) async throws -> String? {
       let model = SystemLanguageModel(useCase: .general)
-      // Deliberately no localeInstructions: the choices are English SF Symbol
-      // and category names, so steering output toward another language would
-      // fight the constrained pick.
+      // No localeInstructions: the choices are English symbol and category names.
       func freshSession() -> LanguageModelSession {
         LanguageModelSession(
           model: model,
@@ -319,8 +286,7 @@ public enum AIPresetNameGenerator {
         return nil
       }
 
-      // Drop ".fill" variants whose base glyph is also offered — same picture,
-      // half the tokens. A lone ".fill" (no base in the category) stays.
+      // Drop ".fill" variants whose base glyph is also offered, to save tokens.
       let bases = Set(categoryIcons.filter { !$0.hasSuffix(".fill") })
       let choices = categoryIcons.filter {
         !$0.hasSuffix(".fill") || !bases.contains(String($0.dropLast(5)))
@@ -338,7 +304,7 @@ public enum AIPresetNameGenerator {
         "AIPresetNameGenerator: symbol for '\(name)' = '\(symbol, privacy: .public)'"
       )
 
-      // The constraint guarantees catalog membership; verify anyway.
+      // Verify anyway, though the constraint guarantees catalog membership.
       return IconData.allIcons.contains(symbol) ? symbol : nil
     }
   #endif

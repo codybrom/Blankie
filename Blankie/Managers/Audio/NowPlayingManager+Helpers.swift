@@ -32,10 +32,8 @@ extension NowPlayingManager {
     return nil
   }
 
-  /// Wraps a pre-rendered image in `MPMediaItemArtwork`. Declared `nonisolated`
-  /// so the request handler closure does NOT inherit `NowPlayingManager`'s
-  /// `@MainActor` isolation — MediaPlayer invokes that handler from a background
-  /// queue, and an isolated closure would force an `unsafeForcedSync` hop.
+  /// Wraps a pre-rendered image in `MPMediaItemArtwork`. `nonisolated` so the handler
+  /// doesn't inherit `@MainActor`. MediaPlayer calls it from a background queue.
   #if os(iOS) || os(visionOS)
     nonisolated static func makeArtwork(from image: UIImage) -> MPMediaItemArtwork {
       MPMediaItemArtwork(boundsSize: image.size) { _ in image }
@@ -46,10 +44,10 @@ extension NowPlayingManager {
     }
   #endif
 
-  /// A soloed sound's lock-screen artwork: the shared fallback image wrapped for
+  /// A single sound's lock-screen artwork: the shared fallback image wrapped for
   /// MediaPlayer.
-  func soloArtwork(for sound: Sound) -> MPMediaItemArtwork? {
-    guard let image = NowPlayingDisplay.soloFallbackImage(for: sound) else { return nil }
+  func singleArtwork(for sound: Sound) -> MPMediaItemArtwork? {
+    guard let image = NowPlayingDisplay.singleFallbackImage(for: sound) else { return nil }
     return Self.makeArtwork(from: image)
   }
 

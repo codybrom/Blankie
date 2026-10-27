@@ -4,12 +4,8 @@
 //
 //  Created by Cody Bromley on 9/15/26.
 //
-//  The OS 27 backend's published model: content identity, when artwork is
-//  rebuilt, the state clear() leaves behind, and sleep-timer timing.
-//
-//  Serialized + main-actor: drives the AudioManager / PresetManager /
-//  GlobalSettings / TimerManager singletons; every touched value is restored in
-//  deinit. Every test is a no-op below OS 27, where the backend doesn't exist.
+//  The OS 27 Now Playing backend's model: content identity, artwork rebuilds, clear() and
+//  sleep-timer timing. Serialized: deinit restores every touched singleton value.
 //
 
 #if canImport(NowPlaying)
@@ -22,7 +18,7 @@
     private let audioManager = AudioManager.shared
     private let originalAutoPlay: Bool
     private let originalSounds: [Sound]
-    private let originalSolo: Sound?
+    private let originalSingle: Sound?
     private let originalQuickMix: Bool
     private let originalCurrentPreset: Preset?
     private let originalDefaultArtwork: AnimatedArtworkRef?
@@ -34,28 +30,25 @@
       GlobalSettings.shared.showPlaybackAsContinuous = true
       originalAutoPlay = GlobalSettings.shared.autoPlayOnLaunch
       originalSounds = audioManager.sounds
-      originalSolo = audioManager.soloModeSound
+      originalSingle = audioManager.singleSound
       originalQuickMix = audioManager.isQuickMix
       originalCurrentPreset = PresetManager.shared.currentPreset
       originalDefaultArtwork = GlobalSettings.shared.defaultLockScreenArtwork
       GlobalSettings.shared.setAutoPlayOnLaunch(false)
-      // Not `resetSounds()`: its debounced global-volume save lands on the main
-      // run loop after this suite ends and races the migration suite that runs
-      // next. Every test sets the sounds, solo and Quick Mix state it needs.
-      audioManager.soloModeSound = nil
+      // Skips `resetSounds()`: its debounced volume save would land after this suite ends
+      // and race the next suite.
+      audioManager.singleSound = nil
       audioManager.isQuickMix = false
-      // With no app-wide lock screen animation, a preset that carries no artwork
-      // of its own lands on the drawn fallback — the one source whose artwork id
-      // folds in the accent.
+      // With no app-wide animation, an artwork-less preset gets the drawn fallback, whose
+      // id includes the accent.
       GlobalSettings.shared.setDefaultLockScreenArtwork(nil)
     }
 
     isolated deinit {
-      // Nothing here starts a timer that outlives its test, so stopping is the
-      // restore: the suite never runs with one already counting down.
+      // No timer runs when the suite starts, so stopping it is the restore.
       TimerManager.shared.stopTimer()
       GlobalSettings.shared.showPlaybackAsContinuous = originalContinuous
-      audioManager.soloModeSound = originalSolo
+      audioManager.singleSound = originalSingle
       audioManager.isQuickMix = originalQuickMix
       audioManager.sounds = originalSounds
       PresetManager.shared.setCurrentPreset(originalCurrentPreset)
@@ -75,10 +68,8 @@
 
     // MARK: - Publishing
 
-    /// Publishes are debounced 0.1 s as on the 26 backend: nothing lands
-    /// synchronously, and a burst lands once, as its last state. Flushed here
-    /// rather than slept through: the test host's main actor does not reliably
-    /// run other main-actor tasks while a test sleeps.
+    /// Publishes debounce 0.1 s. The tests flush because the host's main actor doesn't
+    /// reliably run other tasks while a test sleeps.
     @Test func publishesLandOnceAsTheirLastState() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
@@ -103,7 +94,7 @@
 
     // MARK: - Content identity
 
-    /// `exitSoloMode` publishes a name with no preset; the system reads a
+    /// `exitSingleSound` publishes a name with no preset. The system reads a
     /// changed id as a different item, so the current preset has to stand in.
     @Test func presetContentIDSurvivesANameOnlyPublish() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
@@ -119,14 +110,13 @@
       #expect(backend.model.contentID == "preset:\(preset.id.uuidString)")
     }
 
-    /// A soloed sound is its own item, even while a preset is still current.
-    @Test func soloedSoundOwnsTheContentID() {
+    @Test func singleSoundOwnsTheContentID() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
       _ = makeCurrentPreset()
       let rain = TestSound(fileName: Self.testName)
       audioManager.sounds = [rain]
-      audioManager.soloModeSound = rain
+      audioManager.singleSound = rain
 
       backend.updateInfo(presetName: "Blankie", isPlaying: false)
       backend.flushPendingPublish()
@@ -135,8 +125,7 @@
 
     // MARK: - Artwork
 
-    /// Both artwork ids start nil, which is also a valid identity, so the first
-    /// pass has to be forced or a card with no preset would never get artwork.
+    /// Both artwork ids start nil, which is also a valid identity, so the first pass is forced.
     @Test func firstPublishWithoutAPresetStillBuildsArtwork() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
@@ -147,9 +136,8 @@
       #expect(backend.model.artwork != nil)
     }
 
-    /// Stored artwork is decided in the same pass as the title. With no row for
-    /// the id, the drawn fallback is published at once instead of leaving the
-    /// card bare while a load runs — the system never re-reads a bare item.
+    /// With no stored row for the id, the drawn fallback publishes in the same pass as the
+    /// title. The system doesn't re-read a bare item.
     @Test func presetWithStoredArtworkIDPublishesArtworkSynchronously() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
@@ -163,9 +151,7 @@
       #expect(backend.model.artwork?.id.hasPrefix("fallback:") == true)
     }
 
-    /// The drawn fallback is a montage of the selected sounds, so selecting a
-    /// sound inside the same preset must change the still even though the
-    /// preset itself did not.
+    /// The drawn fallback is a montage of the selected sounds, so it changes with the selection.
     @Test func fallbackArtworkFollowsTheSelectionWithinAPreset() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
@@ -190,7 +176,7 @@
 
     #if os(iOS)
       /// A preset's own still beats the preview of the app-wide default animation
-      /// it inherits for the lock screen; without one, the inherited preview wins.
+      /// it inherits for the lock screen. Without one, the inherited preview wins.
       @Test func ownStillBeatsTheInheritedDefaultAnimation() throws {
         guard #available(iOS 27, *) else { return }
         guard let defaultLoop = BundledAnimatedLoop.allCases.first else { return }
@@ -219,9 +205,8 @@
       }
     #endif
 
-    /// Rebuilding artwork restarts the animated loop, so an incremental publish
-    /// of the same preset keeps the id; a new accent through `forceRefresh`
-    /// changes it, because the drawn fallback renders in that accent.
+    /// Rebuilding artwork restarts the animated loop, so only a new accent (the fallback's
+    /// color) changes the id.
     @Test func artworkIDHoldsUntilTheAccentChanges() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
@@ -244,8 +229,6 @@
 
     // MARK: - Clearing
 
-    /// `clear()` is not terminal: it empties the card and the next publish
-    /// builds a full one again.
     @Test func clearEmptiesTheCardAndTheNextPublishRefillsIt() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
@@ -270,7 +253,7 @@
       sound.stubbedDuration = 120
       sound.isSelected = true
       audioManager.sounds = [sound]
-      audioManager.soloModeSound = sound
+      audioManager.singleSound = sound
       let backend = MediaSessionNowPlaying()
       backend.updateInfo(isPlaying: false)
       backend.flushPendingPublish()
@@ -318,11 +301,10 @@
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
       backend.flushPendingPublish()
       #expect(backend.model.timer?.duration == 600)
-      // A timed card publishes under its own id so the system re-reads the
-      // finite duration instead of keeping the continuous layout.
+      // A timed card publishes under its own id so the system re-reads the finite duration.
       #expect(backend.model.content?.id == "\(backend.model.contentID):timed:600")
 
-      // Adding time arrives as a new item too, or the card keeps the old end.
+      // Adding time publishes a new item too, so the card picks up the new end.
       TimerManager.shared.addTime(minutes: 5)
       backend.updateInfo(preset: preset, presetName: preset.name, isPlaying: false)
       backend.flushPendingPublish()

@@ -20,22 +20,17 @@ import Foundation
     case square = "MPNowPlayingInfoProperty1x1AnimatedArtwork"
     case portrait = "MPNowPlayingInfoProperty3x4AnimatedArtwork"
 
-    /// The variant this device's lock screen actually displays: iPad advertises
-    /// only the 1x1 key, iPhone the 3x4 key. The gallery and in-app preview key
-    /// off this (not the device idiom) so they match what the lock screen shows
-    /// and so iPad downloads only the square pack, never both variants.
-    /// On 27 the NowPlaying framework answers the same question, and mixing it
-    /// with MediaPlayer for local playback is undefined — so ask whichever
-    /// framework owns the card. A device that takes both crops still prefetches
-    /// and previews one, by idiom: the outcome the 26 keys already produced.
+    /// The variant this device's lock screen shows (iPad advertises only 1x1,
+    /// iPhone 3x4), so previews match it and each device fetches one pack. On
+    /// iOS 27 the NowPlaying framework answers, since it must not be mixed with
+    /// MediaPlayer. A device that accepts both crops picks one by idiom.
     nonisolated static var preferredForDevice: AnimatedArtworkKey {
       #if canImport(NowPlaying)
         if #available(iOS 27, *) {
           let compatible = AnimatedArtwork.compatibleAspectRatios
           let square = compatible.contains(.square)
           if square, compatible.contains(.tall) {
-            // The idiom is main-actor API and every caller reaches this from the
-            // main actor (the prefetch mapping runs inside a main-actor task).
+            // The idiom is main-actor API. Every caller runs on the main actor.
             return MainActor.assumeIsolated {
               UIDevice.current.userInterfaceIdiom == .pad ? .square : .portrait
             }

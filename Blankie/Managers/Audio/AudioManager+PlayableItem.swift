@@ -4,12 +4,9 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  The single resolution service for a PlayableItem's display fields — the
-//  name / icon / subtitle / accent / thumbnail every favorites surface (widget,
-//  CarPlay) used to re-derive by hand from a raw token. Domain-object surfaces
-//  (the in-app Library, media-control navigation) parse with `PlayableItem`
-//  directly and resolve to the Preset/Sound they need, so they don't route
-//  through here.
+//  Resolves a PlayableItem's display fields (name, icon, subtitle, accent,
+//  thumbnail) for favorites surfaces such as widgets and CarPlay. In-app
+//  surfaces resolve `PlayableItem` to a Preset or Sound directly.
 //
 
 import Foundation
@@ -24,14 +21,12 @@ struct PlayableItemDisplay {
 }
 
 extension AudioManager {
-  /// What is currently driving the mixer, as one identity: solo outranks Quick
-  /// Mix, which outranks the current preset (the default preset reads as
-  /// `.allSounds`). Nil when nothing is active. This is the single precedence
-  /// `currentFavoriteToken` and `PresetManager.themingPreset` both derive from.
+  /// What drives the mixer: single sound, then Quick Mix, then the current preset (the
+  /// default reads as `.allSounds`). `PresetManager.themingPreset` uses the same order.
   @MainActor
   var activeItem: PlayableItem? {
-    if let soloSound = soloModeSound {
-      return .solo(fileName: soloSound.fileName)
+    if let singleSound = singleSound {
+      return .single(fileName: singleSound.fileName)
     }
     if isQuickMix {
       return .quickMix
@@ -42,10 +37,8 @@ extension AudioManager {
     return nil
   }
 
-  /// Resolves a `PlayableItem` to its display fields, or nil when it points at a
-  /// sound/preset that no longer exists (a dead token). Non-preset items have no
-  /// accent of their own, so they use the app's `customAccentColor` — the same
-  /// fallback the live playback accent resolves to (see `widgetFavorite`).
+  /// Display fields for an item, or nil when its sound or preset is gone. Non-preset
+  /// items use the app's `customAccentColor`, matching the live playback accent.
   @MainActor
   func display(for item: PlayableItem) -> PlayableItemDisplay? {
     let appAccent = GlobalSettings.shared.customAccentColor?.toString
@@ -64,12 +57,12 @@ extension AudioManager {
         subtitle: nil,
         accentColorName: appAccent,
         thumbnailKey: nil)
-    case .solo(let fileName):
-      guard let soloSound = sound(fileName: fileName) else { return nil }
+    case .single(let fileName):
+      guard let singleSound = sound(fileName: fileName) else { return nil }
       return PlayableItemDisplay(
-        displayName: soloSound.localizedTitle,
-        systemIconName: soloSound.systemIconName,
-        subtitle: soloSound.isCustom ? soloSound.creditedAuthor : nil,
+        displayName: singleSound.localizedTitle,
+        systemIconName: singleSound.systemIconName,
+        subtitle: singleSound.isCustom ? singleSound.creditedAuthor : nil,
         accentColorName: appAccent,
         thumbnailKey: nil)
     case .preset(let id):

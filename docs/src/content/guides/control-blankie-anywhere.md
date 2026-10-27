@@ -50,7 +50,7 @@ Use these English commands, then give Siri the name when asked:
 - **Play a preset:** say "Start a preset in Blankie." When Siri asks which preset, say its name, such as "Lake Nights."
 - **Play a sound:** say "Start a sound in Blankie." When Siri asks which sound, say its name, such as "Rain."
 
-**Play Sound** plays the named sound on its own in solo mode, just like choosing a sound from Favorites. Your saved preset stays unchanged. **Play Preset** switches to the preset you name.
+**Play Sound** plays the named sound on its own, just like choosing a sound from Favorites. Your saved preset stays unchanged. **Play Preset** switches to the preset you name.
 
 For a sleep timer, say "Start a sleep timer in Blankie," then give the duration when asked. To pause or resume playback, use the Lock Screen, Control Center or a Blankie widget. You can also create a shortcut with Blankie's Play or Pause action.
 

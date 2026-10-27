@@ -4,14 +4,9 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Mix edits reach the current preset through a 100 ms coalesced refresh, and
-//  solo, preview, and an unapplied preset all switch that refresh off. These pin
-//  the two ways an edit was dropped. One is a mode or preset change inside the
-//  refresh window. The other is leaving solo without the re-sync that switches
-//  saving back on.
-//
-//  Engine-free (TestSounds), serialized and main-actor, on an isolated preset
-//  list (SingletonSandbox).
+//  Mix edits reach the current preset through a 100 ms coalesced refresh, which single sound,
+//  preview and an unapplied preset switch off. Edits survive a mode or preset change inside that
+//  window, and leaving single sound switches saving back on. Engine-free, on SingletonSandbox.
 //
 
 import Foundation
@@ -26,7 +21,7 @@ import Testing
 
   init() async {
     sandbox = await SingletonSandbox.make(
-      soundNames: ["test-edit-a", "test-edit-b", "test-edit-solo"])
+      soundNames: ["test-edit-a", "test-edit-b", "test-edit-single"])
   }
 
   isolated deinit {
@@ -58,7 +53,7 @@ import Testing
     let edited = TestSound(fileName: "test-edit-a")
     edited.isSelected = true
     edited.volume = 0.5
-    let other = TestSound(fileName: "test-edit-solo")
+    let other = TestSound(fileName: "test-edit-single")
     audioManager.sounds = [edited, other]
     return (edited, other)
   }
@@ -69,17 +64,16 @@ import Testing
       soundOrder: sounds.map(\.fileName))
   }
 
-  // MARK: - Pending edit inside the coalescing window (R1)
+  // MARK: - Pending edit inside the coalescing window
 
-  /// Entering solo saves the edit still waiting on the refresh. Solo turns the
-  /// refresh off, so it used to skip the edit.
-  @Test func editJustBeforeSoloIsSaved() async {
-    let (edited, solo) = makeMix()
-    let target = preset(for: [edited, solo])
+  /// Single sound turns the refresh off, so entering it saves the pending edit first.
+  @Test func editJustBeforeSingleIsSaved() async {
+    let (edited, single) = makeMix()
+    let target = preset(for: [edited, single])
     await install([target])
 
     edited.volume = 0.3
-    audioManager.enterSoloMode(for: solo, startPlaying: false)
+    audioManager.enterSingleSound(for: single, startPlaying: false)
 
     #expect(savedVolume(of: edited.fileName, in: target.id) == 0.3)
     await sandbox.settle()
@@ -101,8 +95,8 @@ import Testing
     #expect(persistedVolume(of: edited.fileName, in: target.id) == 0.3)
   }
 
-  /// Switching presets saves the pending edit into the outgoing preset. After the
-  /// switch, the refresh targets the incoming one, so the edit was never saved.
+  /// After a switch the refresh targets the incoming preset, so the pending edit is saved into
+  /// the outgoing one first.
   @Test func editJustBeforePresetSwitchStaysWithTheOutgoingPreset() async throws {
     let (edited, other) = makeMix()
     let outgoing = preset(for: [edited, other], name: "Outgoing")
@@ -121,20 +115,19 @@ import Testing
     #expect(savedVolume(of: edited.fileName, in: incoming.id) == nil)
   }
 
-  // MARK: - Leaving solo without resuming (R2)
+  // MARK: - Leaving single sound without resuming
 
-  /// A relaunch into solo skips the preset's apply, so saving stays off. Leaving
-  /// solo the way Siri, widgets, and CarPlay do must re-sync and switch it back
-  /// on, or every later mix edit is silently dropped.
-  @Test func leavingSoloWithoutResumingTurnsSavingBackOn() async {
-    let (edited, solo) = makeMix()
-    let target = preset(for: [edited, solo])
+  /// A relaunch into single sound skips the preset's apply, so saving stays off. Leaving single
+  /// sound the way Siri, widgets and CarPlay do must re-sync and switch saving back on.
+  @Test func leavingSingleWithoutResumingTurnsSavingBackOn() async {
+    let (edited, single) = makeMix()
+    let target = preset(for: [edited, single])
     await install([target])
-    presetManager.presetStatesApplied = false  // as after a relaunch into solo
-    audioManager.enterSoloMode(for: solo, startPlaying: false)
+    presetManager.presetStatesApplied = false  // as after a relaunch into single sound
+    audioManager.enterSingleSound(for: single, startPlaying: false)
 
     audioManager.leaveTransientModes()
-    #expect(audioManager.soloModeSound == nil)
+    #expect(audioManager.singleSound == nil)
     #expect(presetManager.presetStatesApplied)
 
     edited.volume = 0.25

@@ -37,9 +37,7 @@ struct FavoritesProvider: AppIntentTimelineProvider {
   }
 }
 
-/// Shaded play/pause glyph shown on whichever tile matches the currently
-/// active token, so tapping it is obviously "pause this" rather than
-/// "restart this" — the same tile, no separate now-playing row needed.
+/// Play/pause glyph on the tile matching the active token, so a tap reads as pause.
 private struct ActiveIndicator: View {
   let isPlaying: Bool
   var isSound: Bool = false
@@ -80,16 +78,16 @@ private struct FavoriteRowView: View {
         WidgetArtwork(
           thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
           accentColor: widgetAccentColor(favorite.accentColorName),
-          borderColor: isActive && usesSelectionBorder && favorite.token.hasPrefix("solo:")
+          borderColor: isActive && usesSelectionBorder && favorite.isSingleSound
             ? .white : nil,
-          showsFallbackIcon: !(isActive && usesSelectionBorder && favorite.token.hasPrefix("solo:"))
+          showsFallbackIcon: !(isActive && usesSelectionBorder && favorite.isSingleSound)
         )
         .frame(width: artworkSize, height: artworkSize)
         .overlay {
           if isActive {
             ActiveIndicator(
               isPlaying: isPlaying,
-              isSound: usesSelectionBorder && favorite.token.hasPrefix("solo:"))
+              isSound: usesSelectionBorder && favorite.isSingleSound)
           }
         }
         .clipShape(
@@ -132,7 +130,7 @@ private struct FavoriteRowView: View {
   }
 }
 
-/// A single favorite gets an artwork-led card instead of an oversized list row.
+/// Artwork-led card for a single favorite.
 private struct SingleFavoriteView: View {
   @Environment(\.widgetForeground) private var foreground
   let favorite: WidgetFavorite
@@ -147,12 +145,12 @@ private struct SingleFavoriteView: View {
           WidgetArtwork(
             thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
             accentColor: widgetAccentColor(favorite.accentColorName),
-            borderColor: isActive && favorite.token.hasPrefix("solo:") ? .white : nil,
-            showsFallbackIcon: !(isActive && favorite.token.hasPrefix("solo:"))
+            borderColor: isActive && favorite.isSingleSound ? .white : nil,
+            showsFallbackIcon: !(isActive && favorite.isSingleSound)
           )
           .frame(width: side, height: side)
           .overlay {
-            if isActive && favorite.token.hasPrefix("solo:") {
+            if isActive && favorite.isSingleSound {
               ActiveIndicator(isPlaying: isPlaying, isSound: true)
             }
           }
@@ -172,7 +170,7 @@ private struct SingleFavoriteView: View {
                 .foregroundStyle(foreground.opacity(0.65))
                 .lineLimit(2)
             }
-            if !(isActive && favorite.token.hasPrefix("solo:")) {
+            if !(isActive && favorite.isSingleSound) {
               Image(systemName: isActive && isPlaying ? "pause.fill" : "play.fill")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(foreground)
@@ -227,9 +225,7 @@ private struct FavoriteTileView: View {
   }
 }
 
-/// Footer mini-player: the one thing that still gets a text label, docked at
-/// the bottom of the widget rather than up top, so the grid above gets the
-/// space instead of splitting it with a second card.
+/// Footer mini-player, docked at the bottom so the tiles get the space above.
 private struct NowPlayingFooterView: View {
   @Environment(\.widgetForeground) private var foreground
   @Environment(\.widgetRenderingMode) private var renderingMode
@@ -341,7 +337,7 @@ struct FavoritesWidgetEntryView: View {
     }
   }
 
-  /// Avoid orphan tiles and keep partial rows as deliberate full-width bands.
+  /// Row sizes that avoid a lone tile on the last row.
   private func favoriteRowCounts(for count: Int) -> [Int] {
     switch count {
     case 1...3: [count]

@@ -12,8 +12,8 @@ import SwiftUI
 struct SoundCreditInfoButton: View {
   let sound: Sound
   /// Popovers are their own presentation context and don't inherit the
-  /// presenting hierarchy's tint, so callers with a preset accent pass it;
-  /// nil follows the app-wide accent.
+  /// presenting hierarchy's tint, so callers with a preset accent pass it.
+  /// Nil follows the app-wide accent.
   var accent: Color?
 
   @State private var showingCredit = false
@@ -33,7 +33,7 @@ struct SoundCreditInfoButton: View {
         SoundCreditPopoverContent(credit: credit)
           .tint(accent ?? GlobalSettings.shared.customAccentColor ?? .accentColor)
           #if !os(macOS)
-            // Stay a popover on iPhone instead of expanding into a sheet.
+            // Keep the popover on iPhone, since compact width would make it a sheet.
             .presentationCompactAdaptation(.popover)
           #endif
       }
@@ -86,7 +86,7 @@ private struct SoundCreditPopoverContent: View {
         }
       }
     }
-    // Fixed width keeps popovers a consistent size; text wraps instead of truncating.
+    // Fixed width keeps popovers a consistent size, and long text wraps.
     .fixedSize(horizontal: false, vertical: true)
     .padding(12)
     .frame(width: 280, alignment: .leading)
@@ -104,8 +104,7 @@ private struct SoundCreditPopoverContent: View {
             .accessibilityHidden(true)
         }
       }
-      // .tint, not the default link blue, which ignores the ambient tint
-      // on macOS.
+      // The default link blue ignores the ambient tint on macOS.
       .foregroundStyle(.tint)
       .accessibilityHint(hint ?? Text(verbatim: ""))
     } else {

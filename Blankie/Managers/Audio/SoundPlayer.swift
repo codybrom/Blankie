@@ -10,20 +10,18 @@ import Accelerate
 import Foundation
 import os
 
-/// Per-sound engine playback unit (replaces `AVAudioPlayer`). Wraps an
-/// `AVAudioPlayerNode` plus a gain stage and handles scheduling, looping, and
-/// frame-accurate position tracking for one sound.
+/// Engine playback for one sound: an `AVAudioPlayerNode` plus a gain stage, with
+/// scheduling, looping and frame-accurate position tracking.
 ///
-/// Threading: call public methods from the main thread. Node completion
-/// handlers arrive on internal queues and hop to `DispatchQueue.main` before
-/// touching mutable state; stale completions are fenced by `generation`.
+/// Call public methods on the main thread. Node completions hop to main before
+/// touching state, and `generation` fences stale ones.
 final class SoundPlayer {
 
-  /// Files at or below this duration decode fully into a looping buffer;
-  /// longer files stream in chunks to bound memory.
+  /// Files at or below this duration decode fully into a looping buffer.
+  /// Longer files stream in chunks to bound memory.
   static let bufferThreshold: TimeInterval = 90.0
 
-  /// Streaming chunk length; the queue keeps roughly two of these scheduled.
+  /// Streaming chunk length. The queue keeps roughly two of these scheduled.
   static let streamChunkSeconds: TimeInterval = 30.0
 
   enum Mode {
@@ -38,9 +36,8 @@ final class SoundPlayer {
   let sampleRate: Double
   let mode: Mode
   let loops: Bool
-  /// Experimental: mono-folded for the 3D environment chain (the environment
-  /// node only spatializes mono inputs). Normalization boost is baked into
-  /// the fold since the EQ stage isn't in the spatial chain.
+  /// Experimental: mono-folded for the 3D environment chain (it only spatializes
+  /// mono). The normalization boost is baked into the fold. The EQ isn't in that chain.
   let isSpatial: Bool
   /// Stable identifier used to derive this sound's 3D position.
   let sourceName: String
@@ -53,30 +50,26 @@ final class SoundPlayer {
 
   // Absolute file frame at which the current schedule started.
   private var segmentBaseFrame: AVAudioFramePosition = 0
-  // Continuously memoized position: refreshed by every live currentFrame read
-  // (UI polls at 30fps), so it survives the engine dying out from under us
-  // (interruption/config change kill playerTime before we can react).
+  // Memoized by every live currentFrame read (the UI polls at 30 fps), so the position
+  // survives an interruption or config change that invalidates playerTime.
   private var lastKnownFrame: AVAudioFramePosition?
   // Next file frame the streaming path will schedule.
   private var streamNextFrame: AVAudioFramePosition = 0
-  // Bumped on stop() to invalidate in-flight completion handlers. NOT bumped on
-  // pause(): queued streaming chunks survive a pause and must keep their
-  // completions valid so the chain resumes.
+  // Bumped on stop() to invalidate in-flight completions. Not bumped on pause():
+  // queued streaming chunks keep valid completions so the chain resumes.
   private var generation: Int = 0
   // Fade layer: node.volume = baseVolume × fadeLevel. updateVolume() owns the
-  // base; play/pause transitions animate the fade.
+  // base. Play/pause transitions animate the fade.
   private var baseVolume: Float = 1
   private(set) var fadeLevel: Float = 1
   private var fadeTimer: Timer?
-  // Fade progress + completion live on the instance (not captured in the timer's
-  // @Sendable closure). `fadeCompletion` is nil'd on every path that invalidates
-  // the timer so a superseded fade's completion never fires.
+  // Fade progress and completion live on the instance, outside the timer's @Sendable
+  // closure. Every path that invalidates the timer clears `fadeCompletion`.
   private var fadeStep = 0
   private var fadeCompletion: (() -> Void)?
 
-  /// True while a fade is ramping toward silence (pause/stop intent). Lets
-  /// the engine rebuild skip resurrecting a node that is audibly fading out
-  /// but already logically paused.
+  /// True while a fade ramps toward silence. The engine rebuild skips restarting a
+  /// node that is fading out but already logically paused.
   private(set) var isFadingToSilence = false
 
   // MARK: - Init
@@ -98,7 +91,7 @@ final class SoundPlayer {
       let cacheURL = SpatialAudioCache.existingCache(for: fileURL, boostDB: spatialBoostDB),
       let cacheFile = try? AVAudioFile(forReading: cacheURL)
     {
-      // Stream the rendered mono variant; its segments feed the environment
+      // Stream the rendered mono variant. Its segments feed the environment
       // node directly (boost is baked into the render).
       chosenFile = cacheFile
       chosenMode = .streaming
@@ -125,8 +118,8 @@ final class SoundPlayer {
           "SoundPlayer: Buffered '\(fileURL.lastPathComponent)' (\(sourceDuration)s)")
       }
     } else {
-      // Long without a mono cache (or buffer alloc failed): stream flat. The
-      // spatial mixer offers "prepare" to render the cache.
+      // Long without a mono cache (or buffer allocation failed): stream unspatialized.
+      // The spatial mixer offers "prepare" to render the cache.
       chosenFile = sourceFile
       chosenMode = .streaming
       chosenSpatial = false
@@ -146,7 +139,7 @@ final class SoundPlayer {
   }
 
   /// Averages all channels into a mono buffer with the normalization boost
-  /// baked in (hard-capped at full scale; the fold is for the spatial chain).
+  /// baked in, hard-capped at full scale. The fold is for the spatial chain.
   /// Shared with SpatialAudioCache's chunked offline render.
   nonisolated static func monoFold(of buffer: AVAudioPCMBuffer, gainDB: Float) -> AVAudioPCMBuffer?
   {
@@ -205,7 +198,7 @@ final class SoundPlayer {
     return lastKnownFrame ?? segmentBaseFrame
   }
 
-  /// Whether the source is mono (the mixer pans mono inputs ≈3 dB down;
+  /// Whether the source is mono (the mixer pans mono inputs ≈3 dB down, so
   /// updateVolume compensates).
   var isMonoSource: Bool { file.processingFormat.channelCount == 1 }
 
@@ -219,7 +212,7 @@ final class SoundPlayer {
     }
   }
 
-  /// Boost gain in dB (≥ 0; attenuation lives in `volume`).
+  /// Boost gain in dB (≥ 0). Attenuation lives in `volume`.
   func setBoostDB(_ db: Float) {
     gain.globalGain = max(0, db)
   }
@@ -239,8 +232,8 @@ final class SoundPlayer {
     applyVolume()
   }
 
-  /// Linearly ramps the fade layer at 30 steps/sec. Starting a new fade (or a
-  /// stop/seek) cancels the previous one — its completion never fires.
+  /// Linearly ramps the fade layer at 30 steps/sec. A new fade, stop or seek cancels
+  /// the previous fade, and its completion never fires.
   func fade(to target: Float, duration: TimeInterval, completion: (() -> Void)? = nil) {
     fadeTimer?.invalidate()
     fadeCompletion = nil
@@ -266,7 +259,7 @@ final class SoundPlayer {
         timer.invalidate()
         return
       }
-      // The fade timer fires on the main run loop; recover that isolation.
+      // The fade timer fires on the main run loop, so recover that isolation.
       let isFinalStep = MainActor.assumeIsolated { () -> Bool in
         self.fadeStep += 1
         let progress = Float(self.fadeStep) / Float(steps)
@@ -275,10 +268,8 @@ final class SoundPlayer {
         return self.fadeStep >= steps
       }
       guard isFinalStep else { return }
-      // Invalidate the timer instance that is actually firing rather than
-      // `self.fadeTimer` — a completion that chains a new fade synchronously
-      // would have already replaced it, and invalidating that would cancel
-      // the wrong fade.
+      // Invalidate the firing timer, not `self.fadeTimer`: a completion that chains a
+      // new fade has already replaced that one.
       timer.invalidate()
       MainActor.assumeIsolated {
         self.isFadingToSilence = false
@@ -297,16 +288,12 @@ final class SoundPlayer {
 
   // MARK: - Playback
 
-  /// Starts playback from `fromFrame`, flushing any prior schedule first so
-  /// resume-from-pause is a deterministic reschedule (robust to the engine
-  /// having been stopped/rebuilt in between). Call while attached to a
-  /// running engine.
+  /// Starts playback from `fromFrame`, flushing any prior schedule so a resume is a
+  /// clean reschedule even after an engine stop or rebuild. Needs a running engine.
   func play(fromFrame: AVAudioFramePosition, completion: (() -> Void)? = nil) {
-    // -[AVAudioPlayerNode play] raises an Obj-C exception — uncatchable in Swift,
-    // so a hard crash — when the node isn't attached to a running engine. Callers
-    // attach() + ensureRunning() first; this is the last-line guard so a stale or
-    // torn-down graph degrades to "didn't start" instead of aborting the app. The
-    // next play() reschedules cleanly once the engine is back.
+    // -[AVAudioPlayerNode play] raises an Obj-C exception (uncatchable in Swift) when
+    // the node isn't attached to a running engine. Callers attach() and ensureRunning()
+    // first. This guard turns a stale graph into a no-op.
     guard let nodeEngine = node.engine, nodeEngine.isRunning else {
       Logger.sounds.error(
         "SoundPlayer: play(fromFrame:) skipped — node not attached to a running engine")
@@ -340,7 +327,7 @@ final class SoundPlayer {
       }
     case .streaming:
       streamNextFrame = start
-      // Prime two chunks; subsequent chunks self-schedule on .dataConsumed.
+      // Prime two chunks. Subsequent chunks self-schedule on .dataConsumed.
       scheduleNextStreamChunk(generation: scheduleGeneration)
       scheduleNextStreamChunk(generation: scheduleGeneration)
     }
@@ -349,13 +336,13 @@ final class SoundPlayer {
     Logger.sounds.debug("SoundPlayer: play(fromFrame: \(start)) loops=\(self.loops)")
   }
 
-  /// Buffered + looping: play the tail from `fromFrame` once, then loop the
-  /// whole buffer gaplessly forever.
+  /// Buffered and looping: plays the tail from `fromFrame` once, then loops the
+  /// whole buffer gaplessly.
   private func scheduleBufferedLoop(_ buffer: AVAudioPCMBuffer, fromFrame: AVAudioFramePosition) {
     if fromFrame > 0 {
       if isSpatial {
-        // File segments carry the source channel count and can't feed the
-        // mono chain; slice the tail out of the mono fold instead.
+        // File segments carry the source channel count and can't feed the mono
+        // chain, so slice the tail from the mono fold.
         if let tail = Self.slice(of: buffer, from: fromFrame) {
           node.scheduleBuffer(tail, at: nil, completionHandler: nil)
         }
@@ -401,7 +388,7 @@ final class SoundPlayer {
   }
 
   /// Streaming: schedule one chunk from `streamNextFrame`. `.dataConsumed`
-  /// completion queues the next chunk (wrapping for loops); the final
+  /// completion queues the next chunk (wrapping for loops). The final
   /// non-looping chunk fires the finished callback on `.dataPlayedBack`.
   /// Never calls `node.stop()` here (documented completion-handler deadlock).
   private func scheduleNextStreamChunk(generation: Int) {
@@ -437,8 +424,7 @@ final class SoundPlayer {
     }
   }
 
-  /// Captures position, then pauses. Order matters: read the timeline before
-  /// pausing so a later resume continues from here.
+  /// Reads the position before pausing so a later resume continues from here.
   func pause() {
     lastKnownFrame = currentFrame
     if node.engine != nil {
@@ -448,8 +434,7 @@ final class SoundPlayer {
   }
 
   /// Stops playback and clears position. Bumps `generation` first so in-flight
-  /// completions no-op before the reset; cancels any fade (its completion
-  /// must not fire after a hard stop).
+  /// completions no-op, and cancels any fade so its completion can't fire.
   func stop() {
     generation += 1
     fadeTimer?.invalidate()
@@ -477,8 +462,8 @@ final class SoundPlayer {
     lastKnownFrame = clamped
   }
 
-  /// Captures position for an engine rebuild. Safe while the engine is dying
-  /// (playerTime nil falls back to the last memoized position).
+  /// Captures position for an engine rebuild. Safe during teardown (a nil
+  /// playerTime falls back to the memoized position).
   func freeze() {
     lastKnownFrame = currentFrame
   }

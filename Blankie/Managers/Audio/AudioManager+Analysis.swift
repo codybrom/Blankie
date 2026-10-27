@@ -27,11 +27,8 @@ extension AudioManager {
 
       await withTaskGroup(of: Void.self) { group in
         for sound in batch {
-          // Read main-actor `Sound` state here (on the main actor) before handing
-          // the work to a background task — `Sound` is main-actor and non-Sendable,
-          // so only these Sendable values cross into the task.
-          // Custom profiles are keyed by the bare fileName; built-ins by
-          // fileName.extension (matches soundsNeedingAnalysis and delete-cleanup).
+          // `Sound` is main-actor and non-Sendable, so read these values here.
+          // Custom profiles are keyed by bare fileName, built-ins by fileName.extension.
           let isCustom = sound.isCustom
           let fileName = sound.fileName
           let fileExtension = sound.fileExtension
@@ -42,7 +39,6 @@ extension AudioManager {
             let existingProfile = PlaybackProfileStore.shared.profile(for: profileKey)
 
             if forceReanalysis || existingProfile == nil {
-              // Get the sound URL
               let url: URL?
               if isCustom, let customURL {
                 url = customURL
@@ -56,10 +52,8 @@ extension AudioManager {
                 return
               }
 
-              // Perform comprehensive analysis
               let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: soundURL)
 
-              // Create and store playback profile
               if let profile = PlaybackProfile.from(analysis: analysis, filename: profileKey) {
                 PlaybackProfileStore.shared.store(profile)
                 Logger.audio.debug(
@@ -77,7 +71,7 @@ extension AudioManager {
     return analyzedCount
   }
 
-  /// Check if any sounds need analysis
+  /// Sounds with no stored playback profile.
   @MainActor
   func soundsNeedingAnalysis() -> [Sound] {
     return sounds.filter { sound in
@@ -86,7 +80,7 @@ extension AudioManager {
     }
   }
 
-  /// Analyze all custom sounds missing profiles (useful for migration)
+  /// Analyzes custom sounds that have no playback profile yet.
   @MainActor
   func analyzeCustomSoundsIfNeeded() async {
     let customSoundsNeedingAnalysis = sounds.filter { sound in

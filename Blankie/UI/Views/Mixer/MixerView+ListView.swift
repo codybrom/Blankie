@@ -9,7 +9,7 @@ import SwiftUI
 import os
 
 #if os(iOS) || os(visionOS)
-  // Separate view struct to properly observe Sound changes
+  // Separate struct so each row observes its own Sound.
   struct SoundRowView: View {
     let sound: Sound
     var globalSettings: GlobalSettings
@@ -29,26 +29,22 @@ import os
         audioManager.toggleOrResume(sound)
       }
       .glassEffect(.regular, in: .rect(cornerRadius: 12))
-      // Match the grid: fire on the user's own selection toggle, not on global
-      // play state, so feedback fires when toggling while paused and never
-      // batch-fires on global play/pause. See GridSoundButton.
+      // Keyed to the sound's own selection (as in GridSoundButton), so global play/pause
+      // stays quiet.
       .sensoryFeedback(.selection, trigger: sound.isSelected)
     }
 
     private var accentColor: Color {
-      // If we are in a custom preset that has a specific color, use it to override sound colors
       if let preset = presetManager.currentPreset, !preset.isDefault,
         let presetColor = preset.accentColor
       {
         return presetColor
       }
-      // Otherwise (Default preset, or custom preset with no color), respect sound's custom color
       return globalSettings.customAccentColor ?? .accentColor
     }
 
     private var soundRowIcon: some View {
       ZStack {
-        // Progress border if enabled
         if globalSettings.showProgressBorder && audioManager.isGloballyPlaying && sound.isSelected {
           ProgressBorderView(
             iconSize: 50,
@@ -76,7 +72,7 @@ import os
         in: .circle
       )
       .opacity(sound.isSelected ? 1.0 : 0.4)
-      // VoiceOver focuses this to toggle the sound in/out of the mix and the volume slider below stays a separate adjustable element.
+      // VoiceOver toggle. The volume slider stays a separate adjustable element.
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(Text(sound.localizedTitle))
       .accessibilityAddTraits(.isButton)
@@ -99,7 +95,7 @@ import os
                   Locale.current.scriptCategory == .standard ? .regular : .thin)
               )
               .foregroundColor(.primary)
-              // The row already exposes the title as its accessibility label so we hide the visible copy to prevent VoiceOver reading it twice
+              // The icon's accessibility label already reads the title.
               .accessibilityHidden(true)
 
             if sound.isMusic {
@@ -114,12 +110,11 @@ import os
               .font(.caption)
               .foregroundColor(.secondary)
               .monospacedDigit()
-              // The slider already announces this percentage as its value so  we hide the visible text to prevent VoiceOver from reading it twice
+              // The slider already announces this as its value.
               .accessibilityHidden(true)
           }
         }
 
-        // Volume slider
         Slider(
           value: Binding(
             get: { Double(sound.volume) },
@@ -144,7 +139,6 @@ import os
   }
 
   extension MixerView {
-    // List view for small devices
     var soundListView: some View {
       List {
         ForEach(filteredSounds) { sound in
@@ -158,8 +152,7 @@ import os
       }
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
-      // The Now Playing mini player floats over the bottom edge and its
-      // safe-area-bar inset doesn't reach this nested List
+      // The floating mini player's safe-area inset doesn't reach this nested List.
       .contentMargins(.bottom, 72, for: .scrollContent)
       .transition(.opacity)
       .id("\(globalSettings.showSoundNames)")
@@ -169,33 +162,26 @@ import os
     func moveItems(from source: IndexSet, to destination: Int) {
       Logger.ui.debug("ListView: moveItems called - source: \(source), destination: \(destination)")
 
-      // Check if we have a current preset (not default)
       if let preset = presetManager.currentPreset, !preset.isDefault {
         Logger.ui.debug("ListView: Moving sounds in preset '\(preset.name)'")
 
-        // Get the actual filtered sounds array that the list is displaying
         let displayedSounds = filteredSounds
         Logger.ui.debug("ListView: Displayed sounds count: \(displayedSounds.count)")
         Logger.ui.debug("ListView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
 
-        // Create a mutable copy of the current order
         var newOrder = displayedSounds.map { $0.fileName }
 
-        // Debug: Show what's being moved
         for index in source where index < newOrder.count {
           Logger.ui.debug(
             "ListView: Moving '\(newOrder[index])' from index \(index) to \(destination)")
         }
 
-        // Apply the move operation
         newOrder.move(fromOffsets: source, toOffset: destination)
         Logger.ui.debug("ListView: New order after move: \(newOrder)")
 
-        // Build the complete sound order for the preset
-        // Start with the new order of displayed sounds
         var completeOrder = newOrder
 
-        // Add any sounds from the preset that aren't currently displayed (e.g., hidden sounds)
+        // Append the preset's hidden sounds so they keep a place in the order.
         let displayedSet = Set(newOrder)
         for state in preset.soundStates where !displayedSet.contains(state.fileName) {
           completeOrder.append(state.fileName)
@@ -203,36 +189,26 @@ import os
 
         Logger.ui.debug("ListView: Complete order being sent: \(completeOrder)")
 
-        // Update the preset with the new order. The grid re-sorts from the
-        // persisted order automatically (@Observable preset/sounds reads).
         presetManager.updateCurrentPresetWithOrder(completeOrder)
       } else {
-        // We're reordering the main sound grid (default preset or no preset)
         Logger.ui.debug("ListView: Moving sounds in default view")
 
-        // Get the actual filtered sounds array that the list is displaying
         let displayedSounds = filteredSounds
         Logger.ui.debug("ListView: Displayed sounds count: \(displayedSounds.count)")
         Logger.ui.debug("ListView: Displayed sounds order: \(displayedSounds.map { $0.fileName })")
 
-        // Create a mutable copy of the current order
         var newOrder = displayedSounds.map { $0.fileName }
 
-        // Debug: Show what's being moved
         for index in source where index < newOrder.count {
           Logger.ui.debug(
             "ListView: Moving '\(newOrder[index])' from index \(index) to \(destination)")
         }
 
-        // Apply the move operation
         newOrder.move(fromOffsets: source, toOffset: destination)
         Logger.ui.debug("ListView: New order after move: \(newOrder)")
 
-        // Build the complete default order
-        // Start with the new order of displayed sounds
         var completeOrder = newOrder
 
-        // Add any sounds that aren't currently displayed
         let displayedSet = Set(newOrder)
         for fileName in audioManager.defaultSoundOrder where !displayedSet.contains(fileName) {
           completeOrder.append(fileName)
@@ -240,11 +216,8 @@ import os
 
         Logger.ui.debug("ListView: Complete default order being saved: \(completeOrder)")
 
-        // Update the default order. Assigning the @Observable array re-sorts
-        // the grid automatically; no manual refresh needed.
         audioManager.defaultSoundOrder = completeOrder
-        // Must match the suite the order is read back from at launch
-        // (UserDefaults.shared / app group); .standard silently reverts.
+        // Launch reads the order back from the app group suite.
         UserDefaults.shared.set(completeOrder, forKey: "defaultSoundOrder")
       }
     }

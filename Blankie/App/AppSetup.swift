@@ -10,7 +10,7 @@ import SwiftData
 import SwiftUI
 import os
 
-/// Shared SwiftData container management to ensure single container per process
+/// Owns the one SwiftData container for the process.
 class SharedModelContainer {
   static let shared = SharedModelContainer()
   private var containerInstance: ModelContainer?
@@ -39,7 +39,6 @@ class SharedModelContainer {
     Logger.app.debug("SharedModelContainer: Creating SwiftData model container...")
     containerInstance = AppSetup.createModelContainer()
 
-    // Validate that the container is properly initialized
     guard containerInstance != nil else {
       fatalError("SharedModelContainer: Container creation returned nil")
     }
@@ -52,28 +51,21 @@ class SharedModelContainer {
   }
 }
 
-/// Handles shared app initialization and setup
 struct AppSetup {
   let modelContainer: ModelContainer
 
-  /// Outcome of opening the persistent store, for optional UI signalling.
-  /// Always set once during launch; the degraded cases are also logged.
+  /// Outcome of opening the persistent store at launch.
   enum StoreState: Equatable {
-    /// On-disk store opened normally.
     case healthy
-    /// Couldn't open this launch (likely transient). Running in-memory for this
-    /// session only — the on-disk data is untouched and is retried next launch.
+    /// Running in memory this session. The on-disk store is untouched and retried next launch.
     case temporaryInMemory
-    /// A store that failed to open across launches was moved aside and replaced
-    /// with a fresh one. Saved artwork rehydrates from the app-group file
-    /// mirror, and custom sounds reconcile from their file mirror; the
-    /// quarantined store is kept for salvage.
+    /// The unreadable store was quarantined and replaced. Artwork and custom sounds
+    /// restore from their app-group file mirrors.
     case recoveredFreshStore
   }
 
-  /// Set once during launch by `createModelContainer()`; read-only afterwards.
-  /// Main-actor isolated because the UI reads it (see `SharedAppModifiers`); the
-  /// launch writes go through `recordStoreState`.
+  /// Set once at launch by `createModelContainer()`. Main-actor because
+  /// `SharedAppModifiers` reads it.
   @MainActor static var storeState: StoreState = .healthy
 
   /// Whether this launch found a legacy store it couldn't copy into the app group.
@@ -82,18 +74,14 @@ struct AppSetup {
 
   private static let storeFailureCountKey = "swiftDataStoreOpenFailureCount"
 
-  /// Record the launch store state. `createModelContainer()` always runs on the
-  /// main thread at launch (App init / app-delegate launch / CarPlay connect), so
-  /// it's safe to assert main-actor isolation here rather than hop actors during
-  /// container creation.
+  /// `createModelContainer()` always runs on the main thread at launch (App init,
+  /// app delegate or CarPlay connect), so main-actor isolation can be assumed.
   private static func recordStoreState(_ state: StoreState) {
     MainActor.assumeIsolated { storeState = state }
   }
 
-  /// What to do after a store-open failure, by how many launches in a row it has
-  /// failed. The first failure gets the benefit of the doubt (likely transient);
-  /// a failure that recurs is treated as corruption. Pure so the policy is unit
-  /// tested without forcing a real container failure.
+  /// Recovery step after a store-open failure, by consecutive failed launches.
+  /// Pure so the policy is unit tested without a real container failure.
   enum StoreRecoveryAction: Equatable {
     case retryInMemory
     case quarantineAndRebuild
@@ -103,19 +91,10 @@ struct AppSetup {
     failures >= 2 ? .quarantineAndRebuild : .retryInMemory
   }
 
-  /// Initialize the SwiftData container.
-  ///
-  /// Uses an explicit versioned schema + migration plan so schema changes
-  /// migrate deterministically instead of via SwiftData's silent auto-inference
-  /// (the documented cause of the prior artwork wipe).
-  ///
-  /// Recovery policy (so a store failure never silently looks like permanent
-  /// data loss forever): a *single* open failure is given the benefit of the
-  /// doubt as transient and degrades to in-memory for the session, leaving the
-  /// on-disk store untouched to retry next launch. A failure that *recurs*
-  /// across launches is treated as corruption — the store is moved aside (never
-  /// deleted) and rebuilt, so the app self-heals instead of showing an empty
-  /// library every launch.
+  /// Opens the shared SwiftData store. A first failure falls back to an in-memory
+  /// container for the session. A second consecutive failure quarantines the
+  /// unreadable store to `CorruptedStore/` and creates a fresh on-disk store.
+  /// The versioned schema and migration plan keep SwiftData from inferring migrations.
   static func createModelContainer() -> ModelContainer {
     let schema = Schema(versionedSchema: BlankieSchemaV1.self)
     AppGroupConfiguration.setupDirectories()
@@ -141,9 +120,8 @@ struct AppSetup {
         "AppSetup: Failed to open SwiftData store (consecutive failure #\(failures)): \(error.localizedDescription, privacy: .public)"
       )
 
-      // Recurring failure ⇒ the on-disk store is persistently unreadable. Move
-      // it aside and rebuild. Presets/settings (UserDefaults) are unaffected and
-      // saved artwork rehydrates from the app-group file mirror.
+      // Presets and settings live in UserDefaults, and saved artwork restores
+      // from the app-group file mirror.
       if recoveryAction(forConsecutiveFailures: failures) == .quarantineAndRebuild,
         let storeURL = AppGroupConfiguration.dataStoreURL
       {
@@ -158,9 +136,8 @@ struct AppSetup {
         }
       }
 
-      // First failure (likely transient), or even the rebuild failed: degrade to
-      // in-memory for this session only. The on-disk store is left in place and
-      // retried next launch — never crash-loop the launch.
+      // First failure, or the rebuild failed. The on-disk store stays in place
+      // for the next launch.
       recordStoreState(.temporaryInMemory)
       Logger.app.error(
         "AppSetup: Running in-memory this session — on-disk data is preserved and retried next launch"
@@ -189,8 +166,7 @@ struct AppSetup {
       for: schema, migrationPlan: BlankieMigrationPlan.self, configurations: modelConfiguration)
   }
 
-  /// Last-resort in-memory container. If even this fails the runtime itself is
-  /// broken and there is nothing to recover.
+  /// Last-resort container. A failure here is unrecoverable.
   private static func makeInMemoryContainer(schema: Schema) -> ModelContainer {
     do {
       return try ModelContainer(
@@ -201,9 +177,8 @@ struct AppSetup {
     }
   }
 
-  /// Move a persistently-unreadable store (and its `-wal`/`-shm` sidecars) into
-  /// a `CorruptedStore` folder beside it. Moved, never deleted, so a future
-  /// build or manual tool can still salvage it. Keeps only the most recent copy.
+  /// Moves an unreadable store and its `-wal`/`-shm` sidecars into `CorruptedStore/`
+  /// beside it for salvage. Keeps only the most recent copy.
   static func quarantineStore(at storeURL: URL) {
     let fileManager = FileManager.default
     let quarantineDir = storeURL.deletingLastPathComponent()
@@ -225,9 +200,8 @@ struct AppSetup {
     }
   }
 
-  /// Consecutive on-disk store-open failures across launches (app-group
-  /// UserDefaults, so it survives in-place updates). Reset on a successful open.
-  /// Not private so the persistence is unit tested.
+  /// Consecutive store-open failures across launches, kept in app-group UserDefaults.
+  /// Internal so the persistence is unit tested.
   static func incrementStoreFailureCount() -> Int {
     let count = UserDefaults.shared.integer(forKey: storeFailureCountKey) + 1
     UserDefaults.shared.set(count, forKey: storeFailureCountKey)
@@ -240,17 +214,11 @@ struct AppSetup {
     }
   }
 
-  /// Setup all managers with model context from the shared container
   @MainActor
   func setupManagers() {
-    // Use the shared model container from the app initialization
-    // This ensures we have only ONE container for the entire process
     AudioManager.shared.setModelContext(modelContainer.mainContext)
-
-    // Pass model context to PresetArtworkManager
     PresetArtworkManager.shared.setModelContext(modelContainer.mainContext)
 
-    // Warm artwork cache
     Task {
       await PresetArtworkManager.shared.warmCache()
     }
@@ -262,20 +230,7 @@ struct AppSetup {
       }
     #endif
 
-    // Load custom sounds and initialize PresetManager. This runs on every
-    // platform/scheme: it fires when a UI scene appears, which is the only
-    // trigger for macOS and the iOS *Universal* build. The CarPlay build also
-    // calls loadCustomSoundsWhenReady() from its AppDelegate to cover a
-    // headless CarPlay cold-start (no UI scene), so on that build a normal
-    // launch reaches this point twice. That overlap is safe because
-    // loadCustomSoundsWhenReady() is single-flight: concurrent callers join the
-    // one in-flight bootstrap task rather than each re-instantiating custom
-    // Sound objects (re-creating them would orphan the originals the active
-    // preset/UI still holds, leaving them playing with no way to stop them). A
-    // completed run that had no model context retries once one exists. Without
-    // this call, PresetManager.isLoading never clears and the preset picker is
-    // stuck on "Loading Presets…". The model context was set just above, so the
-    // load can proceed immediately.
+    // Safe to overlap other callers (see `loadCustomSoundsWhenReady()`).
     Task { @MainActor in
       await AudioManager.shared.loadCustomSoundsWhenReady()
     }
@@ -283,16 +238,8 @@ struct AppSetup {
 }
 
 extension AppSetup {
-  /// Bootstraps the data managers App Intents depend on (custom sounds,
-  /// presets) for a Siri/Shortcuts invocation that reaches the app before its
-  /// SwiftUI scene ever appears. Apple documents background-mode intent
-  /// execution as running "quietly", with no guarantee the scene (and thus
-  /// `.onAppear` → `setupManagers()`) is ever instantiated — mirrors the same
-  /// bootstrap `IOSAppDelegate` already does for a headless CarPlay cold
-  /// start. Safe to call unconditionally, including redundantly alongside the
-  /// normal launch path: the contexts are only set when nothing has set them
-  /// yet, and `loadCustomSoundsWhenReady()` is single-flight, so this call
-  /// joins any bootstrap already in progress instead of starting a second load.
+  /// Loads custom sounds and presets for an App Intent that runs before any scene
+  /// appears. Safe to call redundantly (see `loadCustomSoundsWhenReady()`).
   @MainActor
   static func ensureManagersReadyForIntents() async {
     if !SharedModelContainer.shared.isInitialized {

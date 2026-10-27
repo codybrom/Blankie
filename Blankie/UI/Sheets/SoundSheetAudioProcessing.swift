@@ -18,7 +18,6 @@ extension SoundSheetForm {
     ) {
       // Preview with waveform
       HStack(spacing: 12) {
-        // Play/Stop button
         Button(action: {
           togglePreview()
         }) {
@@ -41,7 +40,6 @@ extension SoundSheetForm {
         .scaleEffect(isPreviewing ? 1.1 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isPreviewing)
 
-        // Waveform
         if let fileURL = selectedFile {
           // For add mode with selected file
           SoundWaveformView(
@@ -57,7 +55,7 @@ extension SoundSheetForm {
             let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID),
             let fileURL = CustomSoundManager.shared.fileURL(for: customSoundData)
           {
-            // Custom sound - use file URL
+            // Custom sound: use the file URL
             SoundWaveformView(
               sound: nil,
               fileURL: fileURL,
@@ -66,7 +64,7 @@ extension SoundSheetForm {
             )
             .accessibilityHidden(true)
           } else {
-            // Built-in sound - use sound directly
+            // Built-in sound: use the sound directly
             SoundWaveformView(
               sound: sound,
               fileURL: nil,
@@ -110,9 +108,8 @@ extension SoundSheetForm {
       }
       .disabled(!loopSound)
 
-      // A random start only makes sense when the loop wraps; on a one-shot it
-      // would cut off the beginning, so playback ignores it and the toggle
-      // explains itself while disabled.
+      // Random start only applies to loops (on a one-shot it would cut off the start),
+      // so playback ignores it there and the disabled toggle explains why.
       Toggle(isOn: $randomizeStartPosition) {
         Text(
           "Randomize Start"
@@ -123,10 +120,8 @@ extension SoundSheetForm {
       }
       .disabled(!loopSound)
 
-      // Music sounds are mutually exclusive: a preset plays at most one at a
-      // time, so starting another music sound stops this one. Built-ins take
-      // their music tag from sounds.json, so the toggle is shown but disabled
-      // for them — editable only on custom sounds.
+      // A preset plays at most one music sound, so starting another stops this one.
+      // Built-ins take their music tag from sounds.json, so the toggle is disabled for them.
       Toggle(isOn: $isMusic) {
         Text("Music")
         if isCustomSound {
@@ -137,9 +132,8 @@ extension SoundSheetForm {
       }
       .disabled(!isCustomSound)
 
-      // Import only: offer (or, for large files, require) re-encoding to AAC to
-      // save space. Hidden when there's nothing to gain. Locked on over the
-      // size ceiling, since the raw import would otherwise strain memory.
+      // Import only: offer re-encoding to AAC to save space. Hidden when there's
+      // nothing to gain. Locked on over the size ceiling to bound memory use.
       if mode.isAdd, importConvertForced || importConvertEstimate != nil {
         Toggle(isOn: importConvertForced ? .constant(true) : $convertToAACOnImport) {
           Text("Convert to AAC")
@@ -161,7 +155,7 @@ extension SoundSheetForm {
         )
       }
 
-      // Volume Adjustment (only visible when normalization is OFF)
+      // Volume Adjustment, shown only when normalization is off
       if !normalizeAudio {
         volumeAdjustmentView
       }

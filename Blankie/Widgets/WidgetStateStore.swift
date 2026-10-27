@@ -8,28 +8,20 @@
 import Foundation
 import WidgetKit
 
-/// What the Home Screen widgets render. The widget extension process never
-/// touches `AudioManager`/`PresetManager` (AVFoundation, SwiftData) directly
-/// for rendering — it reads this cached snapshot from the App Group instead.
-/// The app rebuilds and republishes it whenever playback or favorites change.
+/// Playback state the widgets render. The extension reads this App Group snapshot
+/// and never touches `AudioManager` or `PresetManager`.
 struct WidgetPlaybackState: Codable, Equatable {
   var isPlaying: Bool
   var title: String
   var subtitle: String?
   var soundSystemIconNames: [String]
-  /// Key into the App Group's cached `preset_thumb_<uuid>` artwork for the
-  /// current preset. Nil for solo/Quick Mix/the default preset; the widget
-  /// falls back to the icon when nothing is cached under the key.
+  /// Cached `preset_thumb_<uuid>` artwork key. Nil for single sound, Quick Mix and the
+  /// default preset. The widget falls back to the icon.
   var thumbnailKey: String?
-  /// The `starredItems` token (if any) matching what's currently active —
-  /// preset UUID string, `allSoundsToken`, `quickMixToken`, or a
-  /// `solo:<fileName>` token — so a favorites tile can tell it's the one
-  /// that's playing (or paused-but-loaded) without comparing titles.
+  /// The `starredItems` token for what's active, so a favorites tile can tell
+  /// it's the one playing (or paused).
   var activeToken: String?
-  /// `Color.toString` name (see `Color+Extension`) of the current preset's
-  /// accent, or the app-wide accent when the preset has none. Widgets theme
-  /// their background with this instead of a fixed color, matching how the
-  /// app itself tints per preset.
+  /// `Color.toString` name of the preset's accent, or the app accent when it has none.
   var accentColorName: String?
 }
 
@@ -40,29 +32,27 @@ struct WidgetFavorite: Codable, Equatable, Identifiable {
   var token: String
   var displayName: String
   var systemIconName: String
-  /// Key into the App Group's cached `preset_thumb_<uuid>` artwork, when this
-  /// favorite is backed by a preset with cached artwork.
+  /// Cached `preset_thumb_<uuid>` artwork key, for presets with artwork.
   var thumbnailKey: String?
-  /// `Color.toString` name of this favorite's own accent, when it's a preset
-  /// with one set.
+  /// `Color.toString` name of the preset's own accent, if set.
   var accentColorName: String?
-  /// Creator name, or the preset's own sound list, matching the same
-  /// fallback chain `NowPlayingManager` resolves for the currently-playing
-  /// widget — so a pinned preset and that same preset actually playing show
-  /// the same secondary line instead of one having it and the other not.
+  /// Creator name or sound list, using `NowPlayingManager`'s fallback so pinned
+  /// and playing widgets match.
   var subtitle: String?
+
+  var isSingleSound: Bool {
+    if case .single = PlayableItem(token: token) { return true }
+    return false
+  }
 }
 
-/// One of the sounds in `GlobalSettings.quickMixSoundFileNames`, for the
-/// dedicated Quick Mix widget's toggle grid.
+/// A sound from `GlobalSettings.quickMixSoundFileNames`, for the Quick Mix widget.
 struct WidgetQuickMixSound: Codable, Equatable, Identifiable {
   var id: String { fileName }
   var fileName: String
   var displayName: String
   var systemIconName: String
-  /// True when this sound is currently part of an active Quick Mix — not
-  /// just "selected" (a sound can be selected via a regular preset without
-  /// Quick Mix being active at all).
+  /// True only while Quick Mix is active and includes this sound.
   var isSelected: Bool
   /// Optional so snapshots written before XL volume controls remain decodable.
   var volume: Float? = nil
@@ -77,17 +67,11 @@ struct WidgetSnapshot: Codable, Equatable {
   var playback: WidgetPlaybackState
   var favorites: [WidgetFavorite]
   var quickMixSounds: [WidgetQuickMixSound]
-  /// Every preset (not just starred ones) plus every solo-able sound, for
-  /// the Pinned Sound widget's configuration picker — pinning one specific
-  /// thing to the Home Screen shouldn't require starring it first, unlike
-  /// the Favorites widget, which is intentionally starred-only.
+  /// Every preset and every sound that can play on its own for the Pinned Sound picker, starred
+  /// or not.
   var pinnableItems: [WidgetFavorite]
-  /// The app's own accent (`GlobalSettings.customAccentColor`), for widgets
-  /// with no preset/sound of their own to theme with — the Quick Mix widget.
-  /// Not the same as the widget target's static `Color("AccentColor")` asset:
-  /// that's a fixed fallback color baked into the widget bundle, while this
-  /// is the user's actual chosen accent, the same one `playback.accentColorName`
-  /// falls back to for the currently-playing widget.
+  /// The user's app accent (`GlobalSettings.customAccentColor`), for the Quick Mix
+  /// widget. Can differ from the widget bundle's static AccentColor asset.
   var defaultAccentColorName: String?
 
   static let empty = WidgetSnapshot(
@@ -104,15 +88,10 @@ struct WidgetSnapshot: Codable, Equatable {
 enum WidgetStateStore {
   private static let key = "widgetSnapshot"
 
-  /// The last snapshot `publish` actually wrote, so a byte-identical republish
-  /// (the debounced Now Playing tick fires far more often than the data
-  /// changes) skips the write and the timeline reload. App-side only.
+  /// Lets `publish` skip unchanged snapshots (the Now Playing tick republishes often).
   @MainActor private static var lastPublished: WidgetSnapshot?
 
-  /// Called by the app whenever playback or favorites change. Reloads every
-  /// widget timeline so the new snapshot renders immediately — the
-  /// single choke point, so callers never forget the reload half of the pair.
-  /// No-ops when the snapshot is unchanged from the last publish.
+  /// Writes the snapshot and reloads every widget timeline. No-op when unchanged.
   @MainActor
   static func publish(_ snapshot: WidgetSnapshot) {
     guard snapshot != lastPublished else { return }
@@ -122,9 +101,7 @@ enum WidgetStateStore {
     WidgetCenter.shared.reloadAllTimelines()
   }
 
-  /// Called when the artwork cached under a `preset_thumb_<uuid>` key is
-  /// rewritten or removed. The snapshot carries only the key, so an
-  /// artwork-only change looks unchanged to `publish`; reload directly.
+  /// Reloads directly: the snapshot holds only the artwork key, so `publish` sees no change.
   static func artworkDidChange() {
     WidgetCenter.shared.reloadAllTimelines()
   }

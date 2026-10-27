@@ -4,14 +4,9 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  The cached snapshot the Home Screen widgets render off the App Group.
-//  Covers the encode round-trip and corrupt-data
-//  fallback, the publish dedup (identical snapshots skip the write + timeline
-//  reload), the shared subtitle rule, and that a favorites change or a preset
-//  save republishes the catalog immediately.
-//
-//  Serialized + main-actor: mutates the GlobalSettings.shared singleton and the
-//  shared "widgetSnapshot" default; each test restores the touched values.
+//  The App Group snapshot the Home Screen widgets render: round trips, corrupt-data fallback,
+//  publish dedup, the subtitle rule and immediate catalog republishes.
+//  Serialized: each test restores GlobalSettings.shared and the "widgetSnapshot" default.
 //
 
 import Foundation
@@ -50,9 +45,7 @@ import Testing
     )
   }
 
-  /// Every field of every nested type populated (the `.empty`/`makeSnapshot`
-  /// paths leave most optionals nil), so a dropped CodingKey or optionality
-  /// change on any of them is detectable on a round-trip.
+  /// Every nested field is set, so a dropped CodingKey shows up on a round trip.
   private func makeFullyPopulatedSnapshot() -> WidgetSnapshot {
     WidgetSnapshot(
       playback: WidgetPlaybackState(
@@ -73,7 +66,7 @@ import Testing
       ],
       pinnableItems: [
         WidgetFavorite(
-          token: GlobalSettings.soloToken(forFileName: "rain"), displayName: "Rain",
+          token: GlobalSettings.singleToken(forFileName: "rain"), displayName: "Rain",
           systemIconName: "cloud.rain", thumbnailKey: "preset_thumb_xyz",
           accentColorName: "orange", subtitle: "Nature")
       ],
@@ -131,9 +124,7 @@ import Testing
     #expect(WidgetStateStore.current() == .empty)
   }
 
-  /// Forward compatibility: a payload missing an optional field still decodes
-  /// (the field comes back nil), so an older cached snapshot survives a schema
-  /// that adds optional fields. Strip a key from the encoded JSON to simulate it.
+  /// An older cached snapshot must survive a schema that adds optional fields.
   @Test func decodeSucceedsWhenOptionalFieldMissing() throws {
     let original = makeFullyPopulatedSnapshot()
     let data = try JSONEncoder().encode(original)
@@ -149,14 +140,11 @@ import Testing
 
   // MARK: - Publish dedup
 
-  /// An identical republish must skip the write. Prove it behaviorally: publish
-  /// `a`, corrupt the stored default, publish `a` again — the second call must
-  /// early-return, leaving the corruption in place, so `current()` is `.empty`.
+  /// A skipped write leaves the corrupted default in place, so `current()` reads `.empty`.
   @Test func identicalPublishSkipsWrite() {
     let a = makeSnapshot(title: "A")
     let b = makeSnapshot(title: "B")
-    // Ensure the last-published value is `b` (≠ a) so the following publish(a)
-    // actually writes regardless of what earlier tests left behind.
+    // Publish `b` first so publish(a) writes whatever earlier tests left behind.
     WidgetStateStore.publish(b)
     WidgetStateStore.publish(a)
     #expect(WidgetStateStore.current() == a)
@@ -166,7 +154,6 @@ import Testing
     #expect(WidgetStateStore.current() == .empty)
   }
 
-  /// A changed snapshot writes through.
   @Test func changedPublishWritesThrough() {
     let a = makeSnapshot(title: "A")
     let b = makeSnapshot(title: "B")
@@ -208,8 +195,6 @@ import Testing
 
   // MARK: - Freshness
 
-  /// Setting the starred list republishes the catalog immediately, so the
-  /// widget snapshot's favorites reflect the new list without any playback event.
   @Test func setStarredItemsRepublishesFavorites() {
     let tokens = [GlobalSettings.allSoundsToken, GlobalSettings.quickMixToken]
     // First set an empty list, then the target, so the target snapshot differs

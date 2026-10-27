@@ -8,9 +8,8 @@
 #if os(macOS)
   import SwiftUI
 
-  /// Popover content — a custom-header navigator (Library ← Mixer → Timer,
-  /// opening on Mixer). A system `NavigationStack` wouldn't self-size in a
-  /// `MenuBarExtra` window; the owned fixed-height header sizes to content.
+  /// Popover content: a custom-header navigator across Library, Mixer and Timer,
+  /// opening on Mixer. A system `NavigationStack` doesn't self-size in the popover.
   struct MenuBarContent: View {
     private let audioManager = AudioManager.shared
     private let globalSettings = GlobalSettings.shared
@@ -39,7 +38,7 @@
     }
 
     /// Identity of the visible screen. The timer's active state is folded in so
-    /// the popover re-sizes for the taller running layout instead of clipping.
+    /// the popover re-sizes for the taller running layout.
     private var contentID: String {
       screen == .timer ? "timer-\(timerManager.isTimerActive)" : "\(screen)"
     }
@@ -79,7 +78,7 @@
     @ViewBuilder private var leadingButton: some View {
       switch screen {
       case .library:
-        // Root — no back; actions live in the trailing "⋯" menu.
+        // Root has no back button. Actions live in the trailing "⋯" menu.
         EmptyView()
       case .mixer:
         circleButton("chevron.backward") { go(to: .library) }
@@ -90,8 +89,8 @@
       }
     }
 
-    /// Trailing "⋯" menu — a menu-bar app's actions live in the click-through UI
-    /// (no right-click menu). Hidden on the focused timer screen.
+    /// Trailing "⋯" menu. A menu bar app's actions live in its click-through UI
+    /// (no right-click menu). Hidden on the timer screen.
     private var optionsMenu: some View {
       Menu {
         Button("Open Blankie", action: openMainWindow)
@@ -152,7 +151,7 @@
     @ViewBuilder private var screenContent: some View {
       switch screen {
       case .library:
-        // Real library list; selecting a row moves to the mixer. The greedy
+        // Real library list. Selecting a row moves to the mixer. The greedy
         // List needs a definite height.
         LibraryView(presentation: .menuBar, onSelection: { go(to: .mixer) })
           .frame(height: 460)
@@ -160,18 +159,18 @@
         mixerContent
       case .timer:
         // Claim the timer's full height (fixedSize) so a short preceding screen
-        // (small preset / solo) can't squeeze the popover and clip it.
-        // Start/cancel navigates back, not dismiss (which closes the popover).
+        // (small preset / single sound) can't squeeze the popover and clip it.
+        // Start and cancel go back to the mixer. Dismiss would close the popover.
         TimerView(onFinish: { go(to: .mixer) })
           .fixedSize(horizontal: false, vertical: true)
       }
     }
 
-    /// The mixer: the solo icon or the iOS-style sound list, plus the control bar.
+    /// The mixer: the single sound icon or the iOS-style sound list, plus the control bar.
     private var mixerContent: some View {
       VStack(spacing: 0) {
-        if let solo = audioManager.soloModeSound {
-          SoloSoundCard(sound: solo, iconSize: 120)
+        if let single = audioManager.singleSound {
+          SingleSoundCard(sound: single, iconSize: 120)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
         } else {
@@ -221,16 +220,16 @@
       audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
-    /// Mixer title: solo sound, Quick Mix, or the preset name.
+    /// Mixer title: single sound, Quick Mix, or the preset name.
     private var mixerTitle: String {
-      if let solo = audioManager.soloModeSound {
-        return String(localized: String.LocalizationValue(solo.title))
+      if let single = audioManager.singleSound {
+        return single.localizedTitle
       }
       if audioManager.isQuickMix { return String(localized: "Quick Mix") }
       return presetManager.currentPreset?.displayName ?? "Blankie"
     }
 
-    /// Active accent: a theming preset's color wins; app accent in solo/Quick Mix.
+    /// Active accent: a theming preset's color wins. Single sound/Quick Mix use the app accent.
     private var activeAccent: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
@@ -277,7 +276,7 @@
         .accessibilityValue(
           Text(globalSettings.volume.formatted(.percent.precision(.fractionLength(0)))))
 
-        // Sleep timer screen; tinted when active.
+        // Sleep timer screen, tinted when active.
         Button {
           go(to: .timer)
         } label: {
@@ -304,9 +303,8 @@
     let isGloballyPlaying: Bool
     let showSoundNames: Bool
 
-    /// Toggle the sound, or — when paused — select this sound (if it isn't
-    /// already) and start playing instead of deselecting it (matching the grid
-    /// tile).
+    /// Toggles the sound. While paused, a tap selects it (if needed) and starts
+    /// playback, matching the sound tile.
     private func activate() {
       AudioManager.shared.toggleOrResume(sound)
     }

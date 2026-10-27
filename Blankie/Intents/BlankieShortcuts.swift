@@ -8,7 +8,7 @@
 import AppIntents
 
 /// Preconfigured Siri phrases and App Shortcut tiles for iOS. Apple does not
-/// support preconfigured App Shortcuts on macOS; the individual App Intent
+/// support preconfigured App Shortcuts on macOS, but the individual App Intent
 /// actions are still available when building custom shortcuts on the Mac.
 struct BlankieShortcuts: AppShortcutsProvider {
   @AppShortcutsBuilder

@@ -9,9 +9,7 @@ import CryptoKit
 import Foundation
 
 enum FileHashUtility {
-  /// Calculate SHA-256 hash of a file at the given URL
-  /// - Parameter url: URL of the file to hash
-  /// - Returns: Hexadecimal string representation of the SHA-256 hash
+  /// Hex-encoded SHA-256 of the file at `url`, read in chunks.
   static func sha256Hash(for url: URL) throws -> String {
     let bufferSize = 1024 * 1024  // 1MB buffer for streaming
 
@@ -39,9 +37,7 @@ enum FileHashUtility {
     return digest.map { String(format: "%02hhx", $0) }.joined()
   }
 
-  /// Calculate SHA-256 hash of data
-  /// - Parameter data: Data to hash
-  /// - Returns: Hexadecimal string representation of the SHA-256 hash
+  /// Hex-encoded SHA-256 of `data`.
   static func sha256Hash(for data: Data) -> String {
     let digest = SHA256.hash(data: data)
     return digest.map { String(format: "%02hhx", $0) }.joined()

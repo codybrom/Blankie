@@ -29,13 +29,13 @@ struct PlaySoundIntent: AppIntent, AudioPlaybackIntent {
     guard let target = AudioManager.shared.sound(fileName: sound.id) else {
       throw BlankieIntentError.soundNotFound
     }
-    // Saved shortcuts can still reference sounds excluded from solo discovery.
+    // Saved shortcuts can still reference sounds excluded from Siri discovery.
     if target.isPresetUseOnly {
       return .result(dialog: IntentDialog("\(target.localizedTitle) is set to preset use only."))
     }
     let audio = AudioManager.shared
-    audio.enterSoloMode(for: target)
-    // Entering the same solo is a no-op, so explicitly resume it if paused.
+    audio.enterSingleSound(for: target)
+    // Entering the same single sound is a no-op, so explicitly resume it if paused.
     audio.setGlobalPlaybackState(true)
     return .result(dialog: IntentDialog("Playing \(target.localizedTitle)."))
   }

@@ -12,25 +12,21 @@ struct CreditRow: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
-      // First row with name and sound name
       soundNameView
 
-      // Attribution line
       attributionView
     }
     .font(.aboutCaption)
     .padding(.vertical, 4)
-    // Make each credit one navigable container named for the sound, so VoiceOver
-    // announces it as a unit ("Rain, group") with the source/license links as
-    // items inside rather than loose siblings that bleed into the next credit.
+    // One navigable container per credit, named for the sound, so VoiceOver reads it
+    // as a unit ("Rain, group") with the source and license links inside.
     .accessibilityElement(children: .contain)
-    .accessibilityLabel(Text(credit.name))
+    .accessibilityLabel(Text(credit.localizedName))
   }
 
-  // Extracted view for the sound name line
   private var soundNameView: some View {
     HStack(spacing: 4) {
-      Text(credit.name)
+      Text(credit.localizedName)
         .fontWeight(.bold)
         // The container is labeled with the sound name and doesn't need re-announced
         .accessibilityHidden(true)
@@ -40,22 +36,20 @@ struct CreditRow: View {
         .accessibilityHidden(true)
 
       if let soundUrl = credit.soundUrl {
-        // With link case (.tint, not Color.accentColor, so it follows the
-        // app accent — accentColor ignores the .tint environment on macOS)
+        // `.tint` follows the app accent, but `Color.accentColor` ignores the .tint
+        // environment on macOS.
         Link(credit.soundName, destination: soundUrl)
           .foregroundStyle(.tint)
           .underline()
           .handCursor()
           .accessibilityHint(Text("Opens the sound source"))
       } else {
-        // Without link case
         Text(credit.soundName)
           .foregroundStyle(.secondary)
       }
     }
   }
 
-  // Extracted view for the attribution line
   private var attributionView: some View {
     HStack(spacing: 4) {
       // Group "By <author>" into a single VoiceOver element

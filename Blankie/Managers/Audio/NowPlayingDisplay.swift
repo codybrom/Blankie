@@ -4,8 +4,8 @@
 //
 //  Created by Cody Bromley on 9/15/26.
 //
-//  What Now Playing shows, with nothing about how it is published — so both the
-//  MediaPlayer backend and its OS 27 replacement read the same rules.
+//  What Now Playing shows, independent of how it's published, so the MediaPlayer
+//  backend and the OS 27 one share the same rules.
 
 import SwiftUI
 
@@ -24,23 +24,21 @@ enum NowPlayingDisplay {
   ) -> (
     title: String, artist: String
   ) {
-    // Check if we're in solo mode
-    if let soloSound = AudioManager.shared.soloModeSound {
+    if let singleSound = AudioManager.shared.singleSound {
       // A built-in sound's caption is the best second line. Custom sounds have no
-      // caption, so they show their creator; the app name is the last resort.
+      // caption, so they show their creator. The app name is the last resort.
       let artist =
-        soloSound.localizedSubtitle ?? (soloSound.isCustom ? soloSound.creditedAuthor : nil)
+        singleSound.localizedSubtitle ?? (singleSound.isCustom ? singleSound.creditedAuthor : nil)
         ?? "Blankie"
-      return (title: soloSound.localizedTitle, artist: artist)
+      return (title: singleSound.localizedTitle, artist: artist)
     } else if AudioManager.shared.isQuickMix {
-      // Quick Mix has no preset of its own; name it explicitly rather than
-      // letting it fall through to the generic "Custom Mix".
+      // Quick Mix has no preset, so name it explicitly (not "Custom Mix").
       let artistInfo = soundNameSummary(currentMixSoundTitles())
       return (title: String(localized: "Quick Mix"), artist: artistInfo)
     } else if let preset {
       return (title: preset.displayName, artist: getArtistInfo(creatorName: creatorName))
     } else if let name = presetName {
-      // A name-only legacy call has no preset identity; handle its internal
+      // A name-only legacy call has no preset identity, so handle its internal
       // default name while preserving the existing fallback for generated names.
       let displayTitle: String
       if name == "Default" {
@@ -60,18 +58,15 @@ enum NowPlayingDisplay {
   }
 
   private static func getArtistInfo(creatorName: String? = nil) -> String {
-    // Creator name wins; otherwise list the sounds currently in the mix.
+    // Creator name wins. Otherwise, list the sounds currently in the mix.
     if let creator = creatorName {
       return creator
     }
     return soundNameSummary(currentMixSoundTitles())
   }
 
-  /// Titles of the sounds currently in the mix, in the preset's display order
-  /// (the same `orderedVisibleSounds` order as the mixer grid), filtered to the
-  /// ones switched on. Selection is the on/off truth — a just-deselected sound
-  /// keeps rendering through its fade-out, so filtering on `isPlaying` would
-  /// leave it listed after the user turned it off.
+  /// Titles of the switched-on sounds in the preset's display order (as in the mixer).
+  /// Filters on selection, not `isPlaying`: a deselected sound renders through its fade-out.
   static func currentMixSoundTitles() -> [String] {
     AudioManager.shared.orderedVisibleSounds(
       for: AudioManager.shared.isQuickMix ? nil : PresetManager.shared.currentPreset
@@ -113,14 +108,11 @@ enum NowPlayingDisplay {
     }
   }
 
-  /// The widget's second line. `getDisplayInfo`'s artist synthesizes "Blankie"
-  /// as a fallback in several places (solo built-in sounds, an empty sound list)
-  /// so the lock screen never shows a blank artist line — the widget should
-  /// never repeat that synthesized text as a second line; no real info means no
-  /// second line.
+  /// The widget's second line. Where `getDisplayInfo` falls back to "Blankie" for
+  /// the lock screen, the widget shows no second line.
   static func widgetSubtitle(resolvedCreatorName: String?) -> String? {
-    if let soloSound = AudioManager.shared.soloModeSound {
-      return soloSound.isCustom ? soloSound.creditedAuthor : nil
+    if let singleSound = AudioManager.shared.singleSound {
+      return singleSound.isCustom ? singleSound.creditedAuthor : nil
     } else if let creator = resolvedCreatorName, !AudioManager.shared.isQuickMix {
       return creator
     } else {
@@ -134,7 +126,7 @@ enum NowPlayingDisplay {
   /// The elapsed/duration the scrubber should represent right now, or `nil` for
   /// an indeterminate bar. Priority: an active sleep timer (real, slow,
   /// meaningful progress that ends where playback stops) wins over the looping
-  /// audio, then the solo sound, then the longest selected sound's loop.
+  /// audio, then the single sound, then the longest selected sound's loop.
   static func currentProgressAnchor() -> (elapsed: TimeInterval, duration: TimeInterval)? {
     let sleepTimer = TimerManager.shared
     if sleepTimer.isTimerActive, sleepTimer.selectedDuration > 0 {
@@ -143,11 +135,11 @@ enum NowPlayingDisplay {
     }
 
     let anchorSound: Sound?
-    if let soloSound = AudioManager.shared.soloModeSound {
-      anchorSound = soloSound
+    if let singleSound = AudioManager.shared.singleSound {
+      anchorSound = singleSound
     } else {
-      // Use active (selected) sounds, not only playing ones, so we still track
-      // time when paused; mirror the "longest selected sound" choice.
+      // The longest selected sound (not only playing ones), so time still tracks
+      // while paused.
       anchorSound =
         AudioManager.shared.sounds
         .filter { $0.isSelected }
@@ -174,16 +166,14 @@ enum NowPlayingDisplay {
 
   // MARK: - Fallback artwork
 
-  /// Rasterize the shared `FallbackArtwork` fallback into lock-screen / CarPlay
-  /// artwork. Rendered full-bleed (cornerRadius 0) since the system rounds the
-  /// corners itself.
+  /// Rasterizes `FallbackArtwork` for the lock screen and CarPlay. Full-bleed
+  /// (cornerRadius 0) because the system rounds the corners itself.
   private static func fallbackArtworkImage(glyph: FallbackArtwork.Glyph, fraction: CGFloat)
     -> PlatformImage?
   {
     let side: CGFloat = 512
-    // Match the library / Now Playing artwork tint: the active preset's accent,
-    // falling back to the app accent (themingPreset is nil during solo / Quick
-    // Mix, so those correctly use the app accent).
+    // The active preset's accent, else the app accent (themingPreset is nil during
+    // single sound and Quick Mix), matching the in-app artwork tint.
     let accent =
       PresetManager.shared.themingPreset?.accentColor
       ?? GlobalSettings.shared.customAccentColor ?? .accentColor
@@ -206,15 +196,15 @@ enum NowPlayingDisplay {
     #endif
   }
 
-  /// A soloed sound's lock-screen artwork: its SF Symbol in the accent on the
+  /// A single sound's lock-screen artwork: its SF Symbol in the accent on the
   /// dark tinted card, mirroring the in-app placeholder.
-  static func soloFallbackImage(for sound: Sound) -> PlatformImage? {
+  static func singleFallbackImage(for sound: Sound) -> PlatformImage? {
     fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
   }
 
-  /// The fallback shown when a preset/mix has no custom or animated artwork:
-  /// Quick Mix → grid, "All Blankie Sounds" → the Blankie mark, a custom preset
-  /// → a montage of its playing sounds — matching the preset's library tile.
+  /// The fallback for a mix without custom or animated artwork, matching its library
+  /// tile: the Quick Mix glyph, the Blankie mark for "All Blankie Sounds", or a
+  /// montage of a custom preset's playing sounds.
   static func mixFallbackImage(_ glyph: FallbackArtwork.Glyph = mixFallbackGlyph())
     -> PlatformImage?
   {

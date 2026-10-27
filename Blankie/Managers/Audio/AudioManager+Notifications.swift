@@ -33,7 +33,7 @@ extension AudioManager {
       // activation, including previews, by setupAudioSessionObservers().
     }
 
-    // Call this when we first start playing to setup audio session observers
+    /// Runs before every playback activation and installs the observers once.
     func setupAudioSessionObservers() {
       guard !audioSessionObserversSetup else { return }
       Logger.audio.debug("AudioManager: Setting up audio session observers on first playback")
@@ -41,7 +41,7 @@ extension AudioManager {
       setupMediaServicesResetObserver()
 
       // A media-services reset invalidates every node bound to the dead
-      // engine; tear down players (keeping selection) for lazy rebuild.
+      // engine. Tear down players (keeping selection) for lazy rebuild.
       AudioEngineManager.shared.onEngineReset = { [weak self] in
         for sound in self?.sounds ?? [] { sound.unload() }
       }
@@ -49,8 +49,8 @@ extension AudioManager {
       audioSessionObserversSetup = true
     }
 
-    /// The media daemon can restart out from under us; Apple requires
-    /// rebuilding all audio objects and never auto-resuming playback.
+    /// The media daemon can restart at any time. Apple requires rebuilding every
+    /// audio object and not resuming playback automatically.
     private func setupMediaServicesResetObserver() {
       NotificationCenter.default.addObserver(
         forName: AVAudioSession.mediaServicesWereResetNotification,
@@ -99,8 +99,7 @@ extension AudioManager {
 
       saveState()
 
-      // Only deactivate audio session if we're not playing
-      // This allows other apps to play when Blankie is paused in background
+      // Deactivate only while paused, so other apps can play.
       if !isGloballyPlaying {
         AudioSessionManager.shared.deactivate()
       }
@@ -119,7 +118,7 @@ extension AudioManager {
         isPlaying: isGloballyPlaying
       )
 
-      // Refresh media controls to ensure iOS hasn't disconnected them
+      // Reinstall media controls in case iOS disconnected them in the background.
       Task { @MainActor in
         if isGloballyPlaying {
           Logger.audio.debug("AudioManager: Refreshing media controls after foreground")
@@ -143,7 +142,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        // Delivered on the main queue; the notification never leaves it.
+        // Delivered on the main queue. The notification never leaves it.
         nonisolated(unsafe) let note = notification
         MainActor.assumeIsolated { self?.handleAudioInterruption(note) }
       }
@@ -169,14 +168,13 @@ extension AudioManager {
 
     private func handleInterruptionBegan() {
       Logger.audio.debug("AudioManager: Audio interruption began - pausing playback")
-      // Remember whether we were actually playing; Blankie keeps its session
-      // active while paused, so the interruption can end with .shouldResume even
-      // though the user had nothing going.
+      // The session stays active while paused, so .shouldResume can arrive when
+      // nothing was playing. Record the real state.
       let shouldResume = isGloballyPlaying
-      // Handle synchronously: a queued pause could otherwise arrive after a
-      // new play request. Stop previews even while globally paused, without a fade.
+      // Synchronous so the pause can't land after a new play request. Also stops
+      // previews while globally paused, with no fade.
       setGlobalPlaybackState(false, pauseFadeDuration: 0)
-      // The interruption's own pause is the sole pause that preserves recovery.
+      // Set after the pause, which clears it.
       wasPlayingWhenInterrupted = shouldResume
     }
 
@@ -186,9 +184,7 @@ extension AudioManager {
       wasPlayingWhenInterrupted = false
       if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-        // Only resume if the system recommends it AND we were actually playing
-        // when the interruption began — .shouldResume alone is just a hint, and
-        // a call arriving while paused must not start the app playing on its own.
+        // .shouldResume is only a hint, so resume only if audio was playing.
         if options.contains(.shouldResume), wasPlaying {
           Logger.audio.debug(
             "AudioManager: Audio interruption ended with shouldResume flag - resuming playback")
@@ -207,15 +203,15 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        // Delivered on the main queue; the notification never leaves it.
+        // Delivered on the main queue. The notification never leaves it.
         nonisolated(unsafe) let note = notification
         MainActor.assumeIsolated { self?.handleAudioRouteChange(note) }
       }
     }
 
     func handleAudioRouteChange(_ notification: Notification) {
-      // Read the route for every notification, not only attach/detach reasons;
-      // category and configuration changes can expose the car output too.
+      // Every reason re-reads the route because category and configuration changes
+      // can expose the car output too.
       guard let userInfo = notification.userInfo,
         let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
         let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
@@ -255,7 +251,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { _ in
-        // willTerminate fires on the main queue; recover isolation synchronously
+        // willTerminate fires on the main queue, so recover isolation synchronously
         // (a Task would defer past app exit and lose the state save).
         MainActor.assumeIsolated { self.handleAppTermination() }
       }
@@ -275,7 +271,6 @@ extension AudioManager {
     saveState()
 
     #if os(iOS) || os(visionOS)
-      // Deactivate audio session on cleanup/termination
       AudioSessionManager.shared.deactivate()
     #endif
 

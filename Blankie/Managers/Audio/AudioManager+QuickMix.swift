@@ -11,15 +11,11 @@ import os
 extension AudioManager {
   // MARK: - Quick Mix Mode
 
-  /// Leave any active transient mode — solo first, then Quick Mix — before
-  /// switching to a preset. Both exits self-guard, so this no-ops when neither
-  /// is active. Centralizes the exit-both ritual that preset-switch call sites
-  /// (Library, CreatePreset, CarPlay, widget intents) previously open-coded.
-  /// The preset about to be applied replaces the mix, so Quick Mix doesn't
-  /// restore the pre-Quick-Mix mix unless `restoringQuickMix` is set.
+  /// Exits single sound, then Quick Mix, before a preset switch. The pre-Quick-Mix mix
+  /// is dropped unless `restoringQuickMix` is set, since the preset replaces it.
   @MainActor
   func leaveTransientModes(restoringQuickMix: Bool = false) {
-    exitSoloModeWithoutResuming()
+    exitSingleSoundWithoutResuming()
     exitQuickMix(restoring: restoringQuickMix)
   }
 
@@ -32,40 +28,31 @@ extension AudioManager {
     // Persist a pending (coalesced) mix edit before Quick Mix clears the preset.
     PresetManager.shared.updateCurrentPresetState()
 
-    // Exit solo mode if active
-    if soloModeSound != nil {
-      exitSoloModeWithoutResuming()
+    if singleSound != nil {
+      exitSingleSoundWithoutResuming()
     }
 
-    // Save current preset before clearing
     preQuickMixPreset = PresetManager.shared.currentPreset
-
-    // Clear any current preset
     PresetManager.shared.clearCurrentPreset()
 
-    // Spatial sessions are bound to the preset mix; Quick Mix ends them.
+    // Spatial sessions are bound to the preset mix, so Quick Mix ends them.
     if SpatialSessionManager.shared.isActive {
       SpatialSessionManager.shared.setMode(.off)
     }
 
-    // Save original states of all sounds
     quickMixOriginalStates = sounds.map { sound in
       QuickMixState(sound: sound, isSelected: sound.isSelected, volume: sound.volume)
     }
 
-    // Fade all sounds out first (entering Quick Mix reads as a crossfade)
+    // Fading everything out first makes entering Quick Mix a crossfade.
     for sound in sounds {
       sound.pause()
       sound.isSelected = false
     }
 
-    // Set Quick Mix mode
     isQuickMix = true
-
-    // Update media control command state
     updateNextPreviousCommandState()
 
-    // Filter initial sounds to only include Quick Mix sounds
     let quickMixSounds = GlobalSettings.shared.quickMixSoundFileNames
     let validInitialSounds = initialSounds.filter { sound in
       quickMixSounds.contains(sound.fileName)
@@ -75,23 +62,19 @@ extension AudioManager {
       "AudioManager: Filtered \(initialSounds.count) initial sounds to \(validInitialSounds.count) valid Quick Mix sounds"
     )
 
-    // Reset all Quick Mix sounds to 80% volume
     for sound in sounds where quickMixSounds.contains(sound.fileName) {
       sound.volume = 0.8
       Logger.audio.debug("AudioManager: Reset \(sound.fileName) volume to 80%")
     }
 
-    // Enable only the valid initial sounds
     for sound in validInitialSounds {
       sound.isSelected = true
       sound.play()
     }
 
-    // Update playback state
     let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
     setGlobalPlaybackState(hasActiveSounds)
 
-    // Update Now Playing info
     nowPlayingManager.updateInfo(
       presetName: "Quick Mix",
       isPlaying: hasActiveSounds
@@ -105,12 +88,10 @@ extension AudioManager {
     guard isQuickMix else { return }
     Logger.audio.debug("AudioManager: Exiting Quick Mix mode")
 
-    // Pause all current sounds
     for sound in sounds {
       sound.pause()
     }
 
-    // Restore original states
     for state in quickMixOriginalStates {
       state.sound.volume = state.volume
       guard restoring else {
@@ -119,27 +100,19 @@ extension AudioManager {
       }
       state.sound.isSelected = state.isSelected
 
-      // Resume playing if it was selected before
       if state.isSelected, isGloballyPlaying, resuming {
         state.sound.play()
       }
     }
 
-    // Clear the saved states
     quickMixOriginalStates = []
-
-    // Exit Quick Mix mode
     isQuickMix = false
-
-    // Update media control command state
     updateNextPreviousCommandState()
 
-    // Restore the previous preset if it exists
     if restoring, let savedPreset = preQuickMixPreset {
       Logger.audio.debug("AudioManager: Restoring previous preset: '\(savedPreset.name)'")
       PresetManager.shared.setCurrentPreset(savedPreset)
 
-      // Update Now Playing info with restored preset
       nowPlayingManager.updateInfo(
         preset: savedPreset,
         presetName: savedPreset.name,
@@ -148,7 +121,6 @@ extension AudioManager {
         isPlaying: isGloballyPlaying
       )
     } else {
-      // No previous preset, just update with current state
       nowPlayingManager.updateInfo(
         presetName: nil,
         creatorName: nil,
@@ -156,15 +128,11 @@ extension AudioManager {
       )
     }
 
-    // Clear the saved preset
     preQuickMixPreset = nil
   }
 
-  /// After the Quick Mix membership changes (the editor's Done), stop and
-  /// deselect any sound that's still playing but is no longer part of the mix.
-  /// Without this a removed sound keeps sounding — and a removed *music* sound
-  /// only stops once the next music sound claims the slot. No-op outside an
-  /// active Quick Mix session.
+  /// After the Quick Mix editor's Done, stops and deselects any sound no longer
+  /// in the mix. No-op outside an active Quick Mix session.
   @MainActor
   func reconcileQuickMixMembership() {
     guard isQuickMix else { return }
@@ -175,7 +143,7 @@ extension AudioManager {
       sound.pause()
     }
 
-    // The mix may now be empty; reflect that in the global play state.
+    // The mix may now be empty.
     let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
     setGlobalPlaybackState(hasActiveSounds)
 
@@ -208,11 +176,9 @@ extension AudioManager {
       sound.play()
     }
 
-    // Update playback state
     let hasActiveSounds = sounds.contains { $0.isSelected && $0.isPlaying }
     setGlobalPlaybackState(hasActiveSounds)
 
-    // Update Now Playing info
     nowPlayingManager.updateInfo(
       presetName: "Quick Mix",
       isPlaying: hasActiveSounds

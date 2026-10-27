@@ -27,7 +27,6 @@ struct SoundWaveformView: View {
     GeometryReader { geometry in
       ZStack {
         if isLoading {
-          // Loading state
           HStack(spacing: barSpacing) {
             ForEach(0..<20, id: \.self) { index in
               RoundedRectangle(cornerRadius: 1)
@@ -44,7 +43,6 @@ struct SoundWaveformView: View {
           }
           .frame(height: height)
         } else if !waveformSamples.isEmpty {
-          // Waveform display
           HStack(spacing: barSpacing) {
             ForEach(Array(waveformSamples.enumerated()), id: \.offset) { index, sample in
               WaveformBar(
@@ -59,7 +57,6 @@ struct SoundWaveformView: View {
           }
           .frame(height: height)
         } else {
-          // Empty state
           Text("No waveform data")
             .font(.caption)
             .foregroundColor(.secondary)
@@ -72,7 +69,6 @@ struct SoundWaveformView: View {
       }
     }
     .frame(height: height)
-    // Decorative waveform visualization has no interactive controls
     .accessibilityHidden(true)
   }
 
@@ -83,13 +79,13 @@ struct SoundWaveformView: View {
 
     do {
       let samples = try await extractAndDownsampleAudio(from: url, targetWidth: width)
-      // Bail if the width changed mid-load (this task was cancelled) so a stale
-      // result can't overwrite the one the newer task is producing.
+      // A width change cancels this task. A stale result must not overwrite
+      // the newer task's.
       try Task.checkCancellation()
       waveformSamples = samples
       isLoading = false
     } catch is CancellationError {
-      // Superseded by a newer width; leave state for that task to settle.
+      // Superseded by a newer width. Leave state for that task to settle.
     } catch {
       Logger.ui.error("Failed to load waveform: \(error, privacy: .public)")
       isLoading = false
@@ -126,10 +122,8 @@ struct SoundWaveformView: View {
 
     let samples = Array(UnsafeBufferPointer(start: channelData[0], count: Int(buffer.frameLength)))
 
-    // Calculate number of bars that can fit
     let barCount = Int((targetWidth + barSpacing) / (barWidth + barSpacing))
 
-    // Downsample to target number of bars
     return Self.downsample(samples, to: barCount)
   }
 
@@ -148,9 +142,8 @@ struct SoundWaveformView: View {
       let end = min((index + 1) * chunkSize, samples.count)
       let chunk = samples[start..<end]
 
-      // Use RMS (Root Mean Square) for better visual representation
       let rms = sqrt(chunk.map { $0 * $0 }.reduce(0, +) / Float(chunk.count))
-      downsampled.append(min(rms * 3, 1.0))  // Scale and clamp
+      downsampled.append(min(rms * 3, 1.0))
     }
 
     return downsampled

@@ -20,7 +20,6 @@ nonisolated struct PlaybackProfile: Codable, Equatable, Sendable {
   let analysisDate: Date
   let analysisVersion: String  // Track which version of analysis was used
 
-  // Computed properties
   var targetLUFS: Float {
     AudioAnalyzer.targetLUFS
   }
@@ -58,29 +57,22 @@ nonisolated struct PlaybackProfile: Codable, Equatable, Sendable {
       return nil
     }
 
-    // Calculate gain to reach target LUFS, matching the analyzer EXACTLY:
-    // cap the boost (maxGainDB) AND floor at minimumLUFS. Without the floor a
-    // near-silent import (hiss/noise below minimumLUFS) gets the full +18 dB
-    // here, and because this cached profile overrides the analyzer's floored
-    // factor at load time, the user gets amplified hiss slammed at them.
+    // Match the analyzer: cap the boost at maxGainDB and apply no gain below
+    // minimumLUFS. This cached profile overrides the analyzer's factor at load.
     let targetLUFS = AudioAnalyzer.targetLUFS
     let gainDB =
       lufs > AudioAnalyzer.minimumLUFS
       ? min(targetLUFS - lufs, AudioAnalyzer.maxGainDB)
       : 0
 
-    // Check if applying gain would exceed true peak limit
     let predictedTruePeak = truePeak + gainDB
     let targetTruePeak: Float = -1.0  // -1 dBTP
 
-    // Adjust gain if needed to prevent clipping
+    // Over the true-peak limit, keep the full gain and flag the limiter.
     let finalGainDB: Float
     let needsLimiter: Bool
 
     if predictedTruePeak > targetTruePeak {
-      // Option 1: Reduce gain to stay under limit
-      // finalGainDB = targetTruePeak - truePeak
-      // Option 2: Apply full gain but flag for limiter
       finalGainDB = gainDB
       needsLimiter = true
     } else {
@@ -101,14 +93,9 @@ nonisolated struct PlaybackProfile: Codable, Equatable, Sendable {
 
 // MARK: - Profile Storage
 
-/// Manages persistence of playback profiles.
-///
-/// Its own concurrent `queue` (parallel reads, barrier writes) is the
-/// synchronization domain, so it stays `nonisolated` + `@unchecked Sendable`
-/// rather than main-actor: `profile(for:)` must be callable synchronously from
-/// off-main analysis and from non-async `.filter`s. All `profiles` access goes
-/// through `queue`; `loadProfiles()` runs in `init` before `shared` is published.
-/// The thread sanitizer guards this unchecked conformance.
+/// Persists playback profiles. A concurrent `queue` (barrier writes) guards all
+/// `profiles` access, so `profile(for:)` works synchronously off the main actor.
+/// `loadProfiles()` runs in `init`, before `shared` is published.
 nonisolated final class PlaybackProfileStore: @unchecked Sendable {
   static let shared = PlaybackProfileStore()
 
@@ -118,7 +105,6 @@ nonisolated final class PlaybackProfileStore: @unchecked Sendable {
     ).first!
     let blankieDir = appSupport.appendingPathComponent("Blankie", isDirectory: true)
 
-    // Create directory if needed
     try? FileManager.default.createDirectory(at: blankieDir, withIntermediateDirectories: true)
 
     return blankieDir.appendingPathComponent("playbackProfiles.json")
@@ -134,14 +120,12 @@ nonisolated final class PlaybackProfileStore: @unchecked Sendable {
 
   // MARK: - Public API
 
-  /// Get a profile for a filename
   func profile(for filename: String) -> PlaybackProfile? {
     queue.sync {
       profiles[filename]
     }
   }
 
-  /// Store a profile
   func store(_ profile: PlaybackProfile) {
     queue.async(flags: .barrier) {
       self.profiles[profile.filename] = profile
@@ -149,7 +133,6 @@ nonisolated final class PlaybackProfileStore: @unchecked Sendable {
     }
   }
 
-  /// Store multiple profiles at once
   func store(_ newProfiles: [PlaybackProfile]) {
     queue.async(flags: .barrier) {
       for profile in newProfiles {
@@ -159,7 +142,6 @@ nonisolated final class PlaybackProfileStore: @unchecked Sendable {
     }
   }
 
-  /// Remove a profile
   func removeProfile(for filename: String) {
     queue.async(flags: .barrier) {
       self.profiles.removeValue(forKey: filename)
@@ -167,20 +149,19 @@ nonisolated final class PlaybackProfileStore: @unchecked Sendable {
     }
   }
 
-  /// Check if a profile needs updating (file changed)
+  /// True when there's no profile or the stored file hash differs.
   func needsUpdate(filename: String, fileHash: String?) -> Bool {
     guard let existingProfile = profile(for: filename) else {
       return true  // No profile exists
     }
 
-    // If we have hashes, compare them
     if let existingHash = existingProfile.fileHash,
       let newHash = fileHash
     {
       return existingHash != newHash
     }
 
-    // Otherwise, can't determine if update is needed
+    // Without both hashes, assume the profile is current.
     return false
   }
 
@@ -193,7 +174,6 @@ nonisolated final class PlaybackProfileStore: @unchecked Sendable {
       let data = try Data(contentsOf: storageURL)
       let decodedProfiles = try JSONDecoder().decode([PlaybackProfile].self, from: data)
 
-      // Convert array to dictionary for fast lookup
       for profile in decodedProfiles {
         profiles[profile.filename] = profile
       }
@@ -211,8 +191,7 @@ nonisolated final class PlaybackProfileStore: @unchecked Sendable {
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       let data = try encoder.encode(profileArray)
-      // Atomic: this overwrites a known-good store in place, so a crash or
-      // disk-full mid-write must not leave a truncated, undecodable file.
+      // Atomic so a crash or full disk mid-write can't truncate the store.
       try data.write(to: storageURL, options: .atomic)
 
       Logger.presets.debug("PlaybackProfileStore: Saved \(profileArray.count) profiles")

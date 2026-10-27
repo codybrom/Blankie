@@ -4,11 +4,9 @@
 //
 //  Created by Cody Bromley on 10/13/26.
 //
-//  An import activates the imported preset right away. Solo used to skip that
-//  apply and a later Quick Mix exit threw it away, so the import leaves both
-//  first. An archive's volume adjustment is clamped to the editor's range.
-//
-//  Runs against an in-memory store and an isolated preset list (SingletonSandbox).
+//  An import leaves single sound and Quick Mix, activates the imported preset and clamps an
+//  archive's volume adjustments. Runs on an in-memory store and isolated presets
+//  (SingletonSandbox).
 //
 
 import Foundation
@@ -53,12 +51,12 @@ import Testing
     return imported
   }
 
-  @Test func importLeavesSoloForTheImportedPreset() async throws {
-    sandbox.audioManager.enterSoloMode(for: sandbox.audioManager.sounds[1], startPlaying: false)
+  @Test func importLeavesSingleForTheImportedPreset() async throws {
+    sandbox.audioManager.enterSingleSound(for: sandbox.audioManager.sounds[1], startPlaying: false)
 
     let imported = try await importPreset()
 
-    #expect(sandbox.audioManager.soloModeSound == nil)
+    #expect(sandbox.audioManager.singleSound == nil)
     #expect(sandbox.presetManager.currentPreset?.id == imported.id)
   }
 

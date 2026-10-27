@@ -42,17 +42,14 @@ import os
         return
       }
 
-      // Check if we should skip because artwork hasn't changed
       guard !shouldSkipAnimatedArtworkUpdate(for: preset) else {
         return
       }
 
-      // Try to load resources (may trigger a Background Assets download). The
-      // key decides which variant to serve: iPad's lock screen advertises only
-      // the 1x1 key, so it needs the square crop, not the 3:4 portrait master.
+      // May start a Background Assets download. The key picks the variant: iPad's
+      // lock screen advertises only the 1x1 key, so it gets the square crop.
       guard let resources = loadAnimatedArtworkResources(for: preset, key: artworkKey) else {
-        // Resources not available yet (downloading) - keep existing artwork, don't remove
-        // When download completes, updateAnimatedArtwork will be called again
+        // Still downloading: keep the current artwork. The download callback republishes.
         return
       }
 
@@ -110,10 +107,8 @@ import os
     }
 
     /// Wraps the preview image and loop URL in `MPMediaItemAnimatedArtwork`.
-    /// Declared `nonisolated` so the request handler closures do NOT inherit
-    /// `NowPlayingManager`'s `@MainActor` isolation — MediaRemote invokes them
-    /// from its own `NowPlayingInfo` serial queue, and an isolated closure traps
-    /// the runtime's executor check there (mirrors `makeArtwork`).
+    /// `nonisolated` so the handlers don't inherit `@MainActor`: MediaRemote calls
+    /// them on its own serial queue, where an isolated closure traps (as `makeArtwork`).
     nonisolated static func makeAnimatedArtwork(
       artworkID: String,
       previewImage: UIImage,

@@ -4,14 +4,9 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  The persisted token grammar wiring favorites to widgets, Siri, and
-//  CarPlay. A `starredItems` token is one of four mutually exclusive
-//  shapes (allSounds | quickMix | solo:<fileName> | preset-UUID); this pins the
-//  codec, the token→display resolution, and the active-token precedence so a
-//  format or precedence change can't silently break those surfaces.
-//
-//  The resolution suite is serialized + main-actor: it drives the shared
-//  AudioManager / PresetManager singletons and restores every touched field.
+//  The `starredItems` token grammar behind favorites, widgets, Siri and CarPlay: the codec,
+//  token-to-display resolution and active-token precedence. The resolution suite is
+//  serialized and restores the AudioManager and PresetManager fields it touches.
 //
 
 import Foundation
@@ -23,63 +18,59 @@ import Testing
 
 @Suite struct WidgetTokenGrammarTests {
 
-  @Test func soloTokenRoundTrips() {
-    let token = GlobalSettings.soloToken(forFileName: "rain")
+  @Test func singleTokenRoundTrips() {
+    let token = GlobalSettings.singleToken(forFileName: "rain")
     #expect(token == "solo:rain")
-    #expect(GlobalSettings.soloFileName(fromToken: token) == "rain")
+    #expect(GlobalSettings.singleFileName(fromToken: token) == "rain")
   }
 
-  /// Only a solo token decodes to a file name; the other three shapes don't.
-  @Test func soloFileNameRejectsNonSoloTokens() {
-    #expect(GlobalSettings.soloFileName(fromToken: GlobalSettings.allSoundsToken) == nil)
-    #expect(GlobalSettings.soloFileName(fromToken: GlobalSettings.quickMixToken) == nil)
-    #expect(GlobalSettings.soloFileName(fromToken: UUID().uuidString) == nil)
-    #expect(GlobalSettings.soloFileName(fromToken: "") == nil)
+  @Test func singleFileNameRejectsNonSingleTokens() {
+    #expect(GlobalSettings.singleFileName(fromToken: GlobalSettings.allSoundsToken) == nil)
+    #expect(GlobalSettings.singleFileName(fromToken: GlobalSettings.quickMixToken) == nil)
+    #expect(GlobalSettings.singleFileName(fromToken: UUID().uuidString) == nil)
+    #expect(GlobalSettings.singleFileName(fromToken: "") == nil)
   }
 
-  /// A file name containing the prefix delimiter survives the round-trip: only
-  /// the first `solo:` is stripped, so the rest is returned intact.
-  @Test func soloTokenPreservesColonInFileName() {
-    let token = GlobalSettings.soloToken(forFileName: "a:b")
+  /// Only the first `solo:` is stripped, so a delimiter in the file name survives.
+  @Test func singleTokenPreservesColonInFileName() {
+    let token = GlobalSettings.singleToken(forFileName: "a:b")
     #expect(token == "solo:a:b")
-    #expect(GlobalSettings.soloFileName(fromToken: token) == "a:b")
+    #expect(GlobalSettings.singleFileName(fromToken: token) == "a:b")
   }
 
-  /// The four shapes are mutually exclusive: neither special token carries the
-  /// solo prefix, and only a preset UUID string parses as a UUID.
   @Test func tokenShapesAreMutuallyExclusive() {
-    #expect(!GlobalSettings.allSoundsToken.hasPrefix(GlobalSettings.soloTokenPrefix))
-    #expect(!GlobalSettings.quickMixToken.hasPrefix(GlobalSettings.soloTokenPrefix))
+    #expect(!GlobalSettings.allSoundsToken.hasPrefix(PlayableItem.singleTokenPrefix))
+    #expect(!GlobalSettings.quickMixToken.hasPrefix(PlayableItem.singleTokenPrefix))
     #expect(UUID(uuidString: GlobalSettings.allSoundsToken) == nil)
     #expect(UUID(uuidString: GlobalSettings.quickMixToken) == nil)
-    #expect(UUID(uuidString: GlobalSettings.soloToken(forFileName: "rain")) == nil)
+    #expect(UUID(uuidString: GlobalSettings.singleToken(forFileName: "rain")) == nil)
     let uuid = UUID()
     #expect(UUID(uuidString: uuid.uuidString) == uuid)
   }
 }
 
-// MARK: - Token → display resolution + active-token precedence
+// MARK: - Token-to-display resolution and active-token precedence
 
 @Suite(.serialized) @MainActor final class WidgetFavoriteResolutionTests {
   private let audioManager = AudioManager.shared
   private let originalSounds: [Sound]
   private let originalPresets: [Preset]
   private let originalCurrentPreset: Preset?
-  private let originalSolo: Sound?
+  private let originalSingle: Sound?
   private let originalQuickMix: Bool
 
   init() {
     originalSounds = audioManager.sounds
     originalPresets = PresetManager.shared.presets
     originalCurrentPreset = PresetManager.shared.currentPreset
-    originalSolo = audioManager.soloModeSound
+    originalSingle = audioManager.singleSound
     originalQuickMix = audioManager.isQuickMix
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
   }
 
   isolated deinit {
-    audioManager.soloModeSound = originalSolo
+    audioManager.singleSound = originalSingle
     audioManager.isQuickMix = originalQuickMix
     audioManager.sounds = originalSounds
     PresetManager.shared.setPresets(originalPresets)
@@ -105,10 +96,10 @@ import Testing
     #expect(favorite?.thumbnailKey == nil)
   }
 
-  @Test func resolvesSoloTokenToItsSound() {
+  @Test func resolvesSingleTokenToItsSound() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]
-    let token = GlobalSettings.soloToken(forFileName: "test-rain")
+    let token = GlobalSettings.singleToken(forFileName: "test-rain")
 
     let favorite = audioManager.widgetFavorite(forToken: token)
     #expect(favorite?.token == token)
@@ -117,9 +108,9 @@ import Testing
     #expect(favorite?.thumbnailKey == nil)
   }
 
-  @Test func soloTokenForMissingSoundIsNil() {
+  @Test func singleTokenForMissingSoundIsNil() {
     audioManager.sounds = []
-    let token = GlobalSettings.soloToken(forFileName: "ghost")
+    let token = GlobalSettings.singleToken(forFileName: "ghost")
     #expect(audioManager.widgetFavorite(forToken: token) == nil)
   }
 
@@ -142,8 +133,7 @@ import Testing
 
   // MARK: widgetPinnableItems()
 
-  /// The Pinned widget's picker entry for the default preset must carry the
-  /// same identity as its Favorites tile: grid icon, no thumbnail, no subtitle.
+  /// The default preset's Pinned picker entry matches its Favorites tile.
   @Test func pinnableDefaultPresetMatchesFavoritesIdentity() throws {
     PresetManager.shared.setPresets([PresetFactory.makePreset(isDefault: true)])
 
@@ -172,7 +162,7 @@ import Testing
         PresetState(fileName: "test-waves", isSelected: false, volume: 0.5),
       ],
       soundOrder: ["test-rain", "test-waves"], creatorName: nil)
-    // Only the selected sound contributes; the deselected one is excluded.
+    // Only the selected sound contributes, and the deselected one is excluded.
     #expect(audioManager.presetSubtitle(for: preset) == "test-rain")
   }
 
@@ -204,29 +194,29 @@ import Testing
 
   // MARK: currentFavoriteToken precedence
 
-  /// Solo outranks Quick Mix and a current preset. Set the mode state directly
-  /// (the engine-free convention `PresetApplyStatesTests` uses) so the read
-  /// under test has no audio/session/media-remote side effects.
-  @Test func currentTokenPrefersSolo() {
+  /// Single sound outranks Quick Mix and a current preset. Mode state is set directly, so the read
+  /// has no audio or session side effects.
+  @Test func currentTokenPrefersSingle() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]
     let preset = PresetFactory.makePreset(isDefault: false)
     PresetManager.shared.setPresets([preset])
     PresetManager.shared.setCurrentPreset(preset)
     audioManager.isQuickMix = true
-    audioManager.soloModeSound = rain
+    audioManager.singleSound = rain
 
-    #expect(audioManager.currentFavoriteToken == GlobalSettings.soloToken(forFileName: "test-rain"))
+    #expect(
+      audioManager.currentFavoriteToken == GlobalSettings.singleToken(forFileName: "test-rain"))
   }
 
-  @Test func currentTokenIsQuickMixWithoutSolo() {
-    audioManager.soloModeSound = nil
+  @Test func currentTokenIsQuickMixWithoutSingle() {
+    audioManager.singleSound = nil
     audioManager.isQuickMix = true
     #expect(audioManager.currentFavoriteToken == GlobalSettings.quickMixToken)
   }
 
   @Test func currentTokenIsPresetUUID() {
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     let preset = PresetFactory.makePreset(isDefault: false)
     PresetManager.shared.setPresets([preset])
@@ -235,7 +225,7 @@ import Testing
   }
 
   @Test func currentTokenForDefaultPresetIsAllSounds() {
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     let preset = PresetFactory.makePreset(isDefault: true)
     PresetManager.shared.setPresets([preset])
@@ -244,7 +234,7 @@ import Testing
   }
 
   @Test func currentTokenIsNilWhenNothingActive() {
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     PresetManager.shared.setCurrentPreset(nil)
     #expect(audioManager.currentFavoriteToken == nil)

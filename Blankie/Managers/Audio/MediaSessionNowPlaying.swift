@@ -23,7 +23,7 @@
     let model = NowPlayingSessionModel()
     private var session: MediaSession<NowPlayingSessionModel>?
     private var primaryRequest: Task<Void, Never>?
-    /// The publish waiting out the debounce; the newest call replaces it.
+    /// The publish waiting out the debounce. The newest call replaces it.
     private var pendingPublish: PendingPublish?
     private var publishDebounce: Task<Void, Never>?
     private var timerActiveObservation: Task<Void, Never>?
@@ -33,14 +33,12 @@
     private var loopProgressTimer: Timer?
     private var lastLoopElapsed: TimeInterval?
     private var lastLoopDuration: TimeInterval?
-    /// Last preset / soloed sound the artwork was built for: the system caches
-    /// artwork by id, so rebuilding it on every incremental publish is wasted
-    /// work (and would restart the animated loop).
+    /// Last preset and single sound the artwork was built for. The system caches
+    /// artwork by id, and rebuilding on every publish would restart the animated loop.
     var lastPresetId: UUID?
-    var lastSoloSoundId: UUID?
-    /// Both ids start nil, which is also a valid identity (Quick Mix publishes
-    /// with no preset), so the first pass has to be forced or that card would
-    /// never get artwork at all.
+    var lastSingleSoundId: UUID?
+    /// Forces the first artwork build: both ids start nil, which is also Quick Mix's
+    /// identity (no preset).
     var hasBuiltArtwork = false
     /// The last good fallback render, keyed by its artwork id, for when a render
     /// fails. Only the current id is ever read, so it holds one entry.
@@ -54,9 +52,8 @@
     #endif
 
     init() {
-      // Re-anchor the scrubber when a sleep timer starts, ends, or is extended.
-      // Tracking only these two properties keeps the 1 Hz remainingTime tick
-      // from firing the loop. This backend is @MainActor, so the task runs there.
+      // Re-anchor the scrubber when a sleep timer starts, ends or is extended.
+      // Tracking only these properties keeps the 1 Hz remainingTime tick out.
       timerActiveObservation = Task { [weak self] in
         for await _ in Observations({ TimerManager.shared.isTimerActive }) {
           self?.refreshTiming()
@@ -122,11 +119,9 @@
       artworkId: UUID?,
       isPlaying: Bool
     ) {
-      // Debounced 0.1 s, exactly as the 26 backend: one preset switch publishes
-      // six times while its sounds settle, and MediaRemote throttles an app
-      // that pushes that often ("Application exceeded audio metadata throttle
-      // limit"), dropping updates, artwork included. Playback state is not
-      // debounced (`updatePlaybackState`), so a remote pause still lands at once.
+      // Debounced 0.1 s, like the 26 backend: a preset switch publishes about six
+      // times as its sounds settle, and MediaRemote throttles (and drops) that many.
+      // Playback state isn't debounced (`updatePlaybackState`), so a pause lands at once.
       pendingPublish = PendingPublish(
         preset: preset, presetName: presetName, creatorName: creatorName,
         artworkId: artworkId, isPlaying: isPlaying)
@@ -138,7 +133,7 @@
       }
     }
 
-    /// Publishes the pending state now rather than when the debounce fires.
+    /// Publishes the pending state now, without waiting for the debounce.
     func flushPendingPublish() {
       publishDebounce?.cancel()
       publishDebounce = nil
@@ -167,22 +162,19 @@
         "MediaSessionNowPlaying: publishing title: \(displayInfo.title), subtitle: \(displayInfo.artist)"
       )
 
-      let soloFileName = AudioManager.shared.soloModeSound?.fileName
+      let singleFileName = AudioManager.shared.singleSound?.fileName
       let isQuickMix = AudioManager.shared.isQuickMix
-      // Several call sites publish a name without the preset (`exitSoloMode` is
-      // one), and the system reads a changed id as a different item. In preset
-      // mode fall back to the current preset so one user action doesn't flip the
-      // id through `default` and back.
-      // Resolved once and used for the id, the entity and the artwork, so a
-      // publish can't claim a preset's content id while pointing at no entity.
+      // Some call sites publish a name without the preset (`exitSingleSound`), and the
+      // system reads a changed id as a different item, so preset mode falls back to
+      // the current preset. The id, entity and artwork all use this one value.
       let resolvedPreset =
         preset
-        ?? (soloFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset : nil)
+        ?? (singleFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset : nil)
 
       model.title = displayInfo.title
       model.subtitle = displayInfo.artist
       model.contentID = NowPlayingSessionMapping.contentID(
-        soloFileName: soloFileName, isQuickMix: isQuickMix, presetID: resolvedPreset?.id)
+        singleFileName: singleFileName, isQuickMix: isQuickMix, presetID: resolvedPreset?.id)
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)
       model.entityIdentifiers = entityIdentifiers(for: resolvedPreset)
       refreshTiming()
@@ -206,8 +198,8 @@
       )
     }
 
-    /// Republish after a gate that decides what the artwork shows flipped while
-    /// the preset itself did not, so the identity gate can't skip the rebuild.
+    /// Republishes after an artwork gate flips without a preset change, so the
+    /// identity check can't skip the rebuild.
     func republishForArtworkGateChange() {
       hasBuiltArtwork = false
       republishCurrentPreset()
@@ -217,7 +209,7 @@
       // Clear the artwork identity so the same preset's new artwork is rebuilt.
       // A nil id alone matches Quick Mix's identity, so also drop the built flag.
       lastPresetId = nil
-      lastSoloSoundId = nil
+      lastSingleSoundId = nil
       hasBuiltArtwork = false
       updateInfo(
         preset: preset,
@@ -259,15 +251,14 @@
       #endif
       model.entityIdentifiers = []
       lastPresetId = nil
-      lastSoloSoundId = nil
+      lastSingleSoundId = nil
       hasBuiltArtwork = false
       #if os(iOS)
         currentAnimatedLoopPath = nil
         currentAnimatedPreviewPath = nil
       #endif
-      // The installed handlers and navigation state survive: AudioManager
-      // installs them once at setup, exactly as the 26 backend keeps its
-      // command-center targets across a clear.
+      // Handlers and navigation state survive a clear. AudioManager installs them
+      // once at setup.
     }
 
     func installRemoteCommands(_ handlers: RemoteCommandHandlers) {
@@ -330,14 +321,13 @@
       lastLoopDuration = nil
     }
 
-    /// The widget's own snapshot, published on every update. `preset` is the
-    /// last active preset even during solo / Quick Mix, so its thumbnail and
-    /// accent are suppressed while either overrides the mix.
+    /// Publishes the widget snapshot. `preset` is the last active preset even during
+    /// single sound or Quick Mix, so its thumbnail and accent are skipped while either is active.
     private func publishWidgetSnapshot(
       preset: Preset?, resolvedCreatorName: String?, title: String, isPlaying: Bool
     ) {
       let presetIsOverridden =
-        AudioManager.shared.soloModeSound != nil || AudioManager.shared.isQuickMix
+        AudioManager.shared.singleSound != nil || AudioManager.shared.isQuickMix
       let widgetThumbnailKey =
         presetIsOverridden
         ? nil : preset.flatMap { $0.isDefault ? nil : "preset_thumb_\($0.id.uuidString)" }
@@ -349,11 +339,9 @@
         accentColorName: presetIsOverridden ? nil : preset?.accentColorName)
     }
 
-    /// Claims the Now Playing card, but only once playback has started: every
-    /// play path configures the audio session first, which is the ordering Apple
-    /// asks for before requesting primary — so the backend never touches the
-    /// session itself. Published once and kept: pausing must not drop the card,
-    /// only `clear()` does, and the next playing publish rebuilds it.
+    /// Claims the Now Playing card once playback starts. Every play path configures the
+    /// audio session first (the order Apple asks for before requesting primary). The
+    /// session persists through pauses. Only `clear()` drops it.
     private func publishSessionIfPlaying() {
       guard model.playback == .playing, session == nil else { return }
       let session = MediaSession(model)
@@ -363,9 +351,8 @@
           try await session.requestToBecomeApplicationPrimary()
           Logger.nowPlaying.debug("MediaSessionNowPlaying: session is application primary")
         } catch {
-          // Drop it so the next publish while playing retries; holding a session
-          // that never became primary would leave the app with no card at all.
-          // Only if it's still the current one — `clear()` may have replaced it.
+          // Drop it so the next playing publish retries (a session that never became
+          // primary shows no card), unless `clear()` already replaced it.
           if self?.session === session { self?.session = nil }
           Logger.nowPlaying.error(
             "MediaSessionNowPlaying: requestToBecomeApplicationPrimary failed: \(String(describing: error), privacy: .public)"

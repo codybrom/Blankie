@@ -37,8 +37,8 @@ extension EditPresetSheet {
       staticArtworkPath: $staticArtworkPath,
       starToken: starToken,
       accent: activeAccentColor,
-      aiSoundTitles: orderedSelectedSounds.map(\.title),
-      // A typed name is settled; sparkles only fills an empty one here.
+      aiSoundTitles: orderedSelectedSounds.map(\.localizedTitle),
+      // A typed name is settled, so sparkles only fills an empty one here.
       sparklesOnlyWhenEmpty: true,
       onEdited: { applyChangesInstantly() },
       onRemoveArtwork: { artworkId = nil },
@@ -74,7 +74,6 @@ extension EditPresetSheet {
 extension EditPresetSheet {
   var soundsSection: some View {
     Section {
-      // Add/Edit Sounds Button
       #if os(iOS)
         Button {
           showingSoundSelection = true
@@ -120,16 +119,15 @@ extension EditPresetSheet {
 
                 Spacer()
 
-                // Per-row reorder affordance (replaces the old header caption).
+                // Per-row reorder affordance.
                 Image(systemName: "line.3.horizontal")
                   .foregroundStyle(.tertiary)
                   .accessibilityHidden(true)
               }
             }
           #else
-            // macOS has no editMode, so `.onMove` below is inert. Make each row
-            // drag-reorderable with onDrag/onDrop instead, carrying the row's
-            // index and routing through `moveSound` (which also persists).
+            // macOS has no editMode, so `.onMove` below is inert. Rows reorder via
+            // onDrag/onDrop, carrying the row's index through `moveSound` (which persists).
             let rowIndex = orderedSelectedSounds.firstIndex(where: { $0.id == sound.id }) ?? 0
             HStack(spacing: 8) {
               Label {
@@ -188,10 +186,8 @@ extension EditPresetSheet {
     var currentOrder = orderedSelectedSounds.map { $0.fileName }
     currentOrder.move(fromOffsets: source, toOffset: destination)
 
-    // Update the soundOrder state
     soundOrder = currentOrder
 
-    // Trigger UI update to save changes
     applyChangesInstantly(skipRefresh: true)
   }
 
@@ -205,7 +201,7 @@ extension EditPresetSheet {
         guard let string = object as? String, let source = Int(string) else { return }
         DispatchQueue.main.async {
           guard source != destination else { return }
-          // toOffset inserts *before* the index, so dropping below the source
+          // toOffset inserts before the index, so dropping below the source
           // needs +1 to land after the target row.
           let target = source < destination ? destination + 1 : destination
           moveSound(from: IndexSet(integer: source), to: target)
@@ -231,7 +227,7 @@ extension EditPresetSheet {
           Spacer()
         }
         // The sheet's accent tint overrides the destructive role's color in
-        // macOS grouped forms; destructive reads red on both platforms.
+        // macOS grouped forms. Destructive reads red on both platforms.
         .foregroundStyle(.red)
       }
     }
