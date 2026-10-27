@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AudioErrorHandler: ViewModifier {
+  /// False while a sheet covers this view, so the copy inside the sheet shows it.
+  var hosts = true
   @ObservedObject private var errorReporter = ErrorReporter.shared
 
   func body(content: Content) -> some View {
@@ -15,7 +17,7 @@ struct AudioErrorHandler: ViewModifier {
       .alert(
         "Error",
         isPresented: .init(
-          get: { errorReporter.lastError != nil },
+          get: { hosts && errorReporter.lastError != nil },
           set: { if !$0 { errorReporter.lastError = nil } }
         )
       ) {

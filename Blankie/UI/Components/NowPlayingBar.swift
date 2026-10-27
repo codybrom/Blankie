@@ -16,9 +16,18 @@ import SwiftUI
   /// Library it shows the mixer, from the mixer it expands the full Now
   /// Playing cover. Play/pause stays inline.
   struct NowPlayingBar: View {
+    /// `.bare` drops the artwork and title for wide layouts where the sidebar
+    /// and page header already say what's playing.
+    enum Style { case full, bare }
+
+    var style: Style = .full
+    /// The nightstand layout already shows the player above; no expand button.
+    var showsExpand = true
     /// True when the tap shows the mixer rather than expanding the player —
     /// only affects the announced hint; the owner supplies the action itself.
     var showsMixer = false
+    /// Opens the timer as a popover over the bar instead of a sheet.
+    var timerAsPopover = false
     let onTap: () -> Void
 
     @State private var audioManager = AudioManager.shared
@@ -26,11 +35,136 @@ import SwiftUI
     @State private var timerManager = TimerManager.shared
     @State private var globalSettings = GlobalSettings.shared
     @State private var playPauseTrigger = 0
+    @State private var showingTimer = false
 
     var body: some View {
       GlassEffectContainer(spacing: 12) {
-        barContent
+        switch style {
+        case .full: barContent
+        case .bare: bareContent
+        }
       }
+      .sheet(isPresented: timerAsPopover ? .constant(false) : $showingTimer) {
+        TimerSheetView()
+          .presentationSizing(.form)
+      }
+    }
+
+    // MARK: - Bare bar (wide layouts)
+
+    private var bareContent: some View {
+      HStack(spacing: 4) {
+        if showsExpand {
+          Button(action: onTap) {
+            Image(systemName: "chevron.up")
+              .font(.system(size: 17, weight: .semibold))
+              .frame(width: 44, height: 44)
+              .contentShape(.rect)
+          }
+          .accessibilityLabel(Text("Now Playing"))
+          .accessibilityHint(Text("Opens the full player"))
+        }
+
+        if audioManager.canNavigateNextPrevious {
+          Button {
+            audioManager.navigateToPreviousPreset()
+          } label: {
+            Image(systemName: "backward.fill").frame(width: 44, height: 44).contentShape(.rect)
+          }
+          .accessibilityLabel(Text("Previous"))
+        }
+        barePlayPause
+        if audioManager.canNavigateNextPrevious {
+          Button {
+            audioManager.navigateToNextPreset()
+          } label: {
+            Image(systemName: "forward.fill").frame(width: 44, height: 44).contentShape(.rect)
+          }
+          .accessibilityLabel(Text("Next"))
+        }
+
+        bareVolume
+          .frame(minWidth: 80, maxWidth: 260)
+          .padding(.horizontal, 8)
+
+        Spacer(minLength: 0)
+
+        #if os(iOS)
+          AirPlayRouteButton(activeColor: accentColor, inactiveColor: Color(.secondaryLabel))
+            .frame(width: 44, height: 44)
+            .accessibilityLabel(Text("AirPlay"))
+        #endif
+        Button {
+          showingTimer = true
+        } label: {
+          Image(systemName: "timer")
+            .foregroundStyle(timerManager.isTimerActive ? accentColor : Color.primary)
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+        }
+        .accessibilityLabel(Text("Timer"))
+        .popover(
+          isPresented: timerAsPopover ? $showingTimer : .constant(false), arrowEdge: .bottom
+        ) {
+          TimerPanelView()
+            .padding(.vertical, 20)
+            .frame(width: 380, height: 330)
+            .presentationCompactAdaptation(.popover)
+        }
+      }
+      .buttonStyle(.plain)
+      .font(.system(size: 18))
+      .padding(.horizontal, 8)
+      .frame(height: 58)
+      .contentShape(.rect)
+      .modifier(NowPlayingBarGlass())
+      #if os(iOS)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+      #endif
+    }
+
+    private var barePlayPause: some View {
+      let isInteractive = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
+      return Button {
+        guard isInteractive else { return }
+        playPauseTrigger += 1
+        audioManager.togglePlayback()
+      } label: {
+        Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
+          .font(.system(size: 22))
+          .foregroundColor(isInteractive ? accentColor : .secondary)
+          .contentTransition(
+            .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating)
+          )
+          .frame(width: 48, height: 48)
+          .contentShape(Circle())
+      }
+      .disabled(!isInteractive)
+      .sensoryFeedback(.selection, trigger: playPauseTrigger)
+      .accessibilityLabel(audioManager.isGloballyPlaying ? Text("Pause") : Text("Play"))
+    }
+
+    /// Same source as Now Playing: Blankie's own level while mixing with other
+    /// audio, otherwise the system volume.
+    @ViewBuilder
+    private var bareVolume: some View {
+      #if os(iOS)
+        if globalSettings.mixWithOthers {
+          Slider(
+            value: Binding(
+              get: { globalSettings.volumeWithOtherAudio },
+              set: { globalSettings.setVolumeWithOtherAudio($0) }
+            ),
+            in: 0...1
+          )
+          .tint(accentColor)
+          .accessibilityLabel(Text("Blankie Volume with Media"))
+        } else {
+          SystemVolumeSlider()
+            .frame(height: 30)
+            .accessibilityLabel(Text("Volume"))
+        }
+      #endif
     }
 
     /// Capsule bar plus a standalone play/pause circle trailing it, so the two
@@ -167,6 +301,23 @@ import SwiftUI
     }
 
     private var playPauseButton: some View {
+      NowPlayingPlayPauseButton()
+    }
+  }
+
+  /// The standalone play/pause circle that trails the mini bar; the iPhone's
+  /// Sound Mixer sheet carries it too, since the player is covered there.
+  struct NowPlayingPlayPauseButton: View {
+    @State private var audioManager = AudioManager.shared
+    @State private var presetManager = PresetManager.shared
+    @State private var globalSettings = GlobalSettings.shared
+    @State private var playPauseTrigger = 0
+
+    private var accentColor: Color {
+      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    }
+
+    var body: some View {
       // Pause must always be reachable: enable whenever the app is playing OR
       // has sounds to start, matching every other surface's convention so the
       // bar can never get stuck in a "playing" state with no way to pause.
@@ -275,9 +426,11 @@ import SwiftUI
       }
       .frame(width: 36, height: 36)
       .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+      // Keyed on the guard's inputs too: at launch the preset arrives before its
+      // sounds are selected, and an id of the artwork alone never re-ran.
       .task(
         id:
-          "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")"
+          "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")-\(properties.soloSound == nil)-\(properties.hasSelectedSounds || properties.isQuickMix)"
       ) {
         // Only load artwork when not in solo/no sounds mode
         guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix

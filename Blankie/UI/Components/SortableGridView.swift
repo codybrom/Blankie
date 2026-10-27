@@ -106,7 +106,7 @@ where
   @ViewBuilder
   private var gridContent: some View {
     let columns: [GridItem] = Array(
-      repeating: GridItem(spacing: config.spacing), count: config.count)
+      repeating: GridItem(spacing: config.columnSpacing ?? config.spacing), count: config.count)
 
     LazyVGrid(columns: columns, spacing: config.spacing) {
       ForEach($items) { $item in
@@ -223,6 +223,8 @@ where
 struct SortableGridConfig {
   var spacing: CGFloat = 10
   var count: Int = 2
+  /// Gap between columns when it differs from the row gap (a crease band).
+  var columnSpacing: CGFloat? = nil
   var previewScale: CGFloat = 1.06
 }
 

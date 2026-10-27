@@ -41,6 +41,11 @@ import SwiftUI
     /// tiles omit the slider entirely.
     private var isQuickMix: Bool { isActiveOverride != nil }
 
+    /// The nightstand sizes tiles so exactly two rows fill its flat half.
+    @Environment(\.soundTileHeight) private var tileHeight
+    private var compact: Bool { tileHeight != nil }
+    private var iconSize: CGFloat { compact ? 60 : 80 }
+
     init(
       sound: Sound,
       isActive: Bool? = nil,
@@ -81,8 +86,8 @@ import SwiftUI
       // made the tile read as opaque rather than glassy. (The list view avoids
       // it implicitly: its 50pt icon is a tiny fraction of a short, wide row.)
       GlassEffectContainer(spacing: 0) {
-        VStack(spacing: 12) {
-          VStack(spacing: 12) {
+        VStack(spacing: compact ? 8 : 12) {
+          VStack(spacing: compact ? 8 : 12) {
             iconView
 
             if globalSettings.showSoundNames {
@@ -92,7 +97,10 @@ import SwiftUI
                   .fontWeight(.medium)
                   .foregroundColor(.primary)
                   .multilineTextAlignment(.center)
-                  .lineLimit(2)
+                  // The nightstand's tiles are a fixed height: large text
+                  // shrinks to one line there rather than spilling the row.
+                  .lineLimit(compact ? 1 : 2)
+                  .minimumScaleFactor(compact ? 0.5 : 1)
 
                 if sound.isMusic {
                   MusicTagBadge(isActive: isLit, accentColor: accentColor)
@@ -123,8 +131,9 @@ import SwiftUI
           }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, compact ? 10 : 16)
         .padding(.horizontal, 12)
+        .frame(height: tileHeight)
         // Use the `.clear` glass variant, not `.regular`: regular Liquid Glass
         // frosts its backing heavily, so at the tile's size the surface read as
         // an opaque panel even though the rim still looked glassy. Clear glass
@@ -168,7 +177,7 @@ import SwiftUI
       ZStack {
         if shouldShowProgressBorder {
           ProgressBorderView(
-            iconSize: 80,
+            iconSize: iconSize,
             borderWidth: 3,
             sound: sound,
             color: accentColor
@@ -178,10 +187,10 @@ import SwiftUI
         }
 
         Image(systemName: sound.systemIconName)
-          .font(.system(size: 32, weight: .medium))
+          .font(.system(size: compact ? 26 : 32, weight: .medium))
           .foregroundColor(iconForegroundColor)
       }
-      .frame(width: 80, height: 80)
+      .frame(width: iconSize, height: iconSize)
       // Glass icon circle matching the list view: accent-tinted when lit,
       // plain glass otherwise. Inactive icons dim to read as "off".
       .glassEffect(
@@ -245,4 +254,9 @@ import SwiftUI
       }
     }
   #endif
+
+  extension EnvironmentValues {
+    /// Fixed tile height (with tighter spacing) for the nightstand's two rows.
+    @Entry var soundTileHeight: CGFloat? = nil
+  }
 #endif
