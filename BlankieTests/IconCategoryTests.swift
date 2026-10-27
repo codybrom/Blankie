@@ -14,7 +14,6 @@ import Testing
 /// keys of icon-categories.json, and the string catalog.
 @Suite struct IconCategoryTests {
 
-  /// icon-categories.json top-level keys and IconCategory cases must match exactly.
   @Test func enumMatchesJSONKeys() {
     let jsonKeys = Set(IconData.iconCategories.keys)
     let enumKeys = Set(IconCategory.allCases.map(\.rawValue))
@@ -26,15 +25,12 @@ import Testing
       enumKeys.subtracting(jsonKeys) == [], "IconCategory cases missing from icon-categories.json")
   }
 
-  /// Every category must contribute at least one icon to the picker.
   @Test func everyCategoryHasIcons() {
     for category in IconCategory.allCases {
       #expect(!category.icons.isEmpty, "Category '\(category.rawValue)' has no icons")
     }
   }
 
-  /// Every category name must have an entry in the compiled string catalog for
-  /// every locale the app ships Localizable strings in.
   @Test func categoryNamesAreLocalized() {
     let appBundle = Bundle(for: AudioManager.self)
     let sentinel = "<<missing>>"
@@ -51,9 +47,13 @@ import Testing
       checkedLocales += 1
 
       for category in IconCategory.allCases {
+        // `localizedName` keys the catalog on `iconCategory.<case>`, not the
+        // English raw value.
+        let key = "iconCategory.\(category)"
         #expect(
-          lproj.localizedString(forKey: category.rawValue, value: sentinel, table: nil) != sentinel,
-          "Category '\(category.rawValue)' has no '\(locale)' entry in the string catalog")
+          lproj.localizedString(forKey: key, value: sentinel, table: nil) != sentinel,
+          "Category '\(category.rawValue)' has no '\(locale)' entry for '\(key)' in the string catalog"
+        )
       }
     }
 

@@ -10,12 +10,9 @@
   import Combine
   import Foundation
 
-  /// Keeps `AudioManager` in sync with CarPlay connection state without the
-  /// audio layer having to import or query CarPlay. Call `start()` once at app
-  /// launch; the bridge subscribes to
-  /// `CarPlayInterfaceController.shared.$isConnected` (the controller actually
-  /// driven by `CarPlaySceneDelegate`) and pushes changes into
-  /// `AudioManager.setCarPlayConnected(_:)`.
+  /// Forwards `CarPlayInterfaceController.shared.$isConnected` into
+  /// `AudioManager.setCarPlayConnected(_:)` so the audio layer never imports
+  /// CarPlay. Call `start()` once at launch.
   @MainActor
   final class CarPlayAudioBridge {
     static let shared = CarPlayAudioBridge()

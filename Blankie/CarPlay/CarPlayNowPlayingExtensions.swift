@@ -5,9 +5,8 @@
 //  Created by Cody Bromley on 9/20/25.
 //
 
-// `canImport(CarPlay)` keeps this out of the macOS build: CarPlay ships only on
-// iOS, so even when CARPLAY_ENABLED is defined the `import CarPlay` must not be
-// parsed where the framework doesn't exist.
+// `canImport(CarPlay)` keeps this out of the macOS build, where CARPLAY_ENABLED
+// can be defined but the CarPlay framework doesn't exist.
 import os
 
 #if CARPLAY_ENABLED && canImport(CarPlay)
@@ -17,13 +16,13 @@ import os
   import SwiftUI
 
   extension CarPlayInterfaceController {
-    /// Setup the Now Playing template: a favorite button for the current solo
+    /// Sets up the Now Playing template: a favorite button for the current single sound
     /// sound or preset (plus edit for presets), and the global sleep timer.
     @MainActor
     func setupNowPlayingTemplate() {
       let nowPlayingTemplate = CPNowPlayingTemplate.shared
 
-      // Global sleep-timer entry point. Idle = plain `timer`; running = a custom
+      // Global sleep-timer entry point. Idle shows plain `timer` and running shows a custom
       // "timer with a clock badge" (no such SF Symbol) mirroring globe.badge.clock.
       let timerImage =
         TimerManager.shared.isTimerActive
@@ -35,23 +34,20 @@ import os
         }
       }
 
-      // The album line only surfaces the timer ("N Minute Timer") while one is
-      // running, so make it a tappable shortcut to the timer picker only then.
-      // Without a timer it shows the sound names and shouldn't act as a button.
+      // The album line shows the timer ("N Minute Timer") only while one runs, so it's
+      // a shortcut to the timer picker only then. Otherwise it shows the sound names.
       nowPlayingTemplate.isAlbumArtistButtonEnabled = TimerManager.shared.isTimerActive
 
-      // A soloed sound is favoritable under its own `solo:` token, just like in
-      // the picker and sidebar — show a favorite button (no edit, since there's
-      // nothing to mix). Presets get favorite + edit. Quick Mix has its own
-      // CarPlay tab and isn't favoritable, so it falls through to timer-only.
-      if let soloSound = AudioManager.shared.soloModeSound {
+      // A single sound is favoritable under its `solo:` token (no edit, nothing to mix).
+      // Presets get favorite and edit. Quick Mix isn't favoritable, so it gets the timer only.
+      if let singleSound = AudioManager.shared.singleSound {
         let favoriteButton = Self.favoriteButton(
-          for: GlobalSettings.soloToken(forFileName: soloSound.fileName)
+          for: GlobalSettings.singleToken(forFileName: singleSound.fileName)
         ) { [weak self] in self?.updateNowPlayingButtons() }
 
         nowPlayingTemplate.updateNowPlayingButtons([favoriteButton, timerButton])
         Logger.carPlay.debug(
-          "CarPlay: Now Playing configured with favorite + timer buttons (solo mode)")
+          "CarPlay: Now Playing configured with favorite + timer buttons (single-sound mode)")
       } else if let preset = PresetManager.shared.currentPreset {
         let favoriteToken =
           preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
@@ -70,7 +66,6 @@ import os
         Logger.carPlay.debug(
           "CarPlay: Now Playing configured with favorite + timer + edit buttons (preset mode)")
       } else {
-        // Quick Mix (no preset): only the global timer button applies.
         nowPlayingTemplate.updateNowPlayingButtons([timerButton])
         Logger.carPlay.debug(
           "CarPlay: Now Playing configured with timer button only (Quick Mix)")
@@ -88,13 +83,16 @@ import os
         image: UIImage(systemName: isFavorite ? "star.fill" : "star")!
       ) { _ in
         Task { @MainActor in
-          GlobalSettings.shared.toggleStarred(token)
+          // If the star changed elsewhere since this glyph was drawn, redraw instead
+          // of toggling, so the tap never does the opposite of what it showed.
+          if GlobalSettings.shared.isStarred(token) == isFavorite {
+            GlobalSettings.shared.toggleStarred(token)
+          }
           onToggle()
         }
       }
     }
 
-    /// Update Now Playing buttons based on current playback state
     @MainActor
     func updateNowPlayingButtons() {
       setupNowPlayingTemplate()
@@ -145,7 +143,6 @@ import os
               width: fitted.width, height: fitted.height))
         }
 
-        // Base timer fills the canvas.
         draw("timer", in: CGRect(x: 0, y: 0, width: side, height: side), pointSize: side * 0.7)
 
         // Clock badge in the bottom-trailing corner, ringed by a clear knockout.

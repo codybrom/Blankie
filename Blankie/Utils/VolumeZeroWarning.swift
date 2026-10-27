@@ -12,7 +12,7 @@ import SwiftUI
 #endif
 
 /// Launch-time "volume is all the way down" warning, mirroring Music.app's.
-/// macOS warns when the app volume slider is at zero; iOS warns when Mix With
+/// macOS warns when the app volume slider is at zero. iOS warns when Mix With
 /// Other Audio is on but Blankie's volume with media is zero (both silent).
 enum VolumeZeroWarning {
   private static let suppressKey = "suppressVolumeZeroWarning"

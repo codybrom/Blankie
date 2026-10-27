@@ -37,7 +37,6 @@ extension Locale {
     .hanTraditional,
   ]
 
-  /// Get the script category for font styling
   var scriptCategory: ScriptCategory {
     guard let script = self.language.script else { return .standard }
 

@@ -19,9 +19,12 @@ Before creating a release, ensure:
 - [ ] All tests pass
 - [ ] Version numbers are updated:
   - `MARKETING_VERSION` in `Blankie.xcodeproj/project.pbxproj` (the target editor updates every target and configuration at once)
-  - `CURRENT_PROJECT_VERSION` (the build number) in `Configuration.xcconfig` — bump it for every uploaded build
+  - `CURRENT_PROJECT_VERSION` (the build number) in `Configuration.xcconfig` — the archive script increments it when `ACTION=install`, verify the archived app and embedded widget have matching `CFBundleVersion` values
 - [ ] `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/) format, with items moved from Unreleased into the new version section
 - [ ] All new features are documented
+- [ ] The widget bundle ID (`$(PRODUCT_BUNDLE_IDENTIFIER).BlankieWidget`) is registered with the same App Group as the app on iOS and macOS, verify the profiles for App Store and Developer ID distribution
+- [ ] Archived app and widget versions match, and the app's archived `Info.plist` includes `UIUserInterfaceStyle = Dark` for both schemes
+- [ ] What's New and screenshots reflect the shipping widget and Siri features
 - [ ] Credits are updated for any new contributors
 
 ## Scheme Selection
@@ -35,7 +38,7 @@ On iOS the app ships animated artwork as **Apple-hosted [Background Assets](http
 
 Each clip ships two variants because iPhone and iPad lock screens advertise different artwork keys: a **3:4 portrait** master (`<Name>`, for iPhone's 3x4 key) and a **1:1 square** crop (`<Name>Square`, for iPad's 1x1 key). Both `.mov` live in `ArtworkSources/<Name>/`, a directory kept **outside** the app's synced folder so the videos can never be bundled (their previews and metadata stay tracked under `Blankie/Resources/AnimatedArtwork/<Name>/`). Every source `.mov` (both variants, all listed in `scripts/animated-artwork.manifest`) lives together on a single GitHub Release: [`artwork-assets-v1`](https://github.com/codybrom/blankie/releases/tag/artwork-assets-v1).
 
-Each release, build and upload the asset packs:
+Build and upload asset packs when adding or changing artwork, or when the required packs are not yet available in App Store Connect. An app-only update can reuse existing available packs as long as it remains compatible with them; see [Apple's asset-pack versioning guide](https://developer.apple.com/documentation/appstoreconnectapi/managing-apple-hosted-background-assets). Unchanged artwork does not require re-uploading the packs or creating a new `artwork-assets-vN` tag.
 
 ```bash
 scripts/package_animated_artwork.sh        # → build/AssetPacks/<Name>.aar (42 packs: 21 portrait + 21 square)
@@ -53,8 +56,8 @@ Then upload the `.aar` files to App Store Connect (Transporter app, `xcrun altoo
 1. **Tag the Release**
 
    ```bash
-   git tag -a v2.0.0 -m "chore: bump marketing version to v2.0.0"
-   git push origin v2.0.0
+   git tag -a v2.1.0 -m "Release Blankie 2.1.0"
+   git push origin v2.1.0
    ```
 
 2. **Archive the builds**
@@ -98,7 +101,7 @@ After the GitHub release is published:
    brew bump-cask-pr --version [version] blankie
    ```
 
-   Replace `[version]` with the new version number (e.g., `2.0.0`)
+   Replace `[version]` with the new version number (e.g., `2.1.0`)
 
 3. The command will automatically:
    - Download the new release

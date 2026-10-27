@@ -15,13 +15,13 @@ struct PresetStorage {
   static let customPresetsKey = "savedPresets"
   static let lastActivePresetIDKey = "lastActivePresetID"
 
-  // Raw blobs are copied here when a decode fails, so a corrupt store never
-  // silently wipes the user's presets on the next save — they stay recoverable.
+  // Raw blobs are copied here when a decode fails, so the presets stay
+  // recoverable after the next save.
   static let defaultPresetBackupKey = "defaultPreset.corruptBackup"
   static let customPresetsBackupKey = "savedPresets.corruptBackup"
 
-  /// Wrapper that turns an undecodable element into `nil` instead of failing the
-  /// whole array, so one corrupt preset can't take the rest of the library down.
+  /// Decodes an undecodable element as `nil` so one corrupt preset doesn't fail
+  /// the whole array.
   private struct LossyPreset: Decodable {
     let preset: Preset?
     init(from decoder: Decoder) throws {
@@ -35,7 +35,7 @@ struct PresetStorage {
       let data = try JSONEncoder().encode(preset)
       defaults.set(data, forKey: defaultPresetKey)
     } catch {
-      // Don't overwrite a good stored preset with nothing — skip and log.
+      // Keep the stored preset.
       Logger.presets.error(
         "PresetStorage: Failed to encode default preset, keeping previous value: \(error.localizedDescription, privacy: .public)"
       )
@@ -49,8 +49,8 @@ struct PresetStorage {
     do {
       return try JSONDecoder().decode(Preset.self, from: data)
     } catch {
-      // Preserve the raw blob before anything overwrites it, then fall back to a
-      // freshly synthesized default rather than crashing or losing it for good.
+      // Back up the raw blob before anything overwrites it. The caller then
+      // creates a fresh default.
       Logger.presets.error(
         "PresetStorage: Failed to decode default preset, backing up raw data: \(error.localizedDescription, privacy: .public)"
       )
@@ -64,7 +64,6 @@ struct PresetStorage {
 
     do {
       let data = try JSONEncoder().encode(presets)
-      // Check data size
       let sizeInMB = Double(data.count) / 1024.0 / 1024.0
       if sizeInMB > 1.0 {
         Logger.presets.debug(
@@ -75,8 +74,7 @@ struct PresetStorage {
       Logger.presets.debug(
         "PresetStorage: Saved \(presets.count) custom presets (\(data.count) bytes)")
     } catch {
-      // Encoding the whole library should never fail; if it does, keep the
-      // previously stored presets rather than clobbering them with nothing.
+      // Keep the previously stored presets.
       Logger.presets.error(
         "PresetStorage: Failed to encode custom presets, keeping previous value: \(error.localizedDescription, privacy: .public)"
       )
@@ -92,24 +90,11 @@ struct PresetStorage {
 
     do {
       let presets = try JSONDecoder().decode([Preset].self, from: data)
-      let summary = presets.map { preset in
-        let sounds = preset.soundStates.filter { $0.isSelected }
-          .map { "      - \($0.fileName) (Volume: \($0.volume))" }
-        return
-          ([
-            "  - '\(preset.name)':",
-            "    * Order: \(preset.order ?? -1)",
-            "    * Artwork ID: \(preset.artworkId?.uuidString ?? "None")",
-            "    * Creator: \(preset.creatorName ?? "None")",
-            "    * Active sounds:",
-          ] + sounds).joined(separator: "\n")
-      }.joined(separator: "\n")
-      Logger.presets.debug("PresetStorage: Loaded \(presets.count) custom presets\n\(summary)")
+      Logger.presets.debug("PresetStorage: Loaded \(presets.count) custom presets")
       return presets
     } catch {
-      // The library failed to decode as a whole. Back up the raw blob so it's
-      // recoverable, then salvage every preset that still decodes on its own
-      // rather than returning an empty array that the next save would persist.
+      // Back up the raw blob, then salvage every preset that decodes on its own
+      // so the next save doesn't persist an empty library.
       Logger.presets.error(
         "PresetStorage: Failed to decode custom presets, backing up raw data: \(error.localizedDescription, privacy: .public)"
       )
@@ -123,12 +108,11 @@ struct PresetStorage {
   }
 
   static func saveLastActivePresetID(_ id: UUID) {
-    // Only save if the ID actually changed
     let currentId = defaults.string(forKey: lastActivePresetIDKey)
     let newIdString = id.uuidString
 
     guard currentId != newIdString else {
-      return  // No change, skip save
+      return
     }
 
     Logger.presets.debug("PresetStorage: Saving last active preset ID: \(id)")

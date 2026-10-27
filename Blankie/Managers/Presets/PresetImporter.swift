@@ -16,14 +16,13 @@ private enum DuplicateDetectionHelper {
     await MainActor.run {
       let existingPresets = PresetManager.shared.presets
 
-      // Check if we've already imported this exact preset (by original ID)
+      // A preset previously imported from this archive, by original ID.
       if let duplicate = existingPresets.first(where: { $0.originalId == preset.id }) {
         Logger.presets.debug(
           "Import: Found previously imported preset with original ID \(preset.id)")
         return duplicate
       }
 
-      // Check for same name to avoid confusion
       if let sameName = existingPresets.first(where: { $0.name == preset.name }) {
         Logger.presets.debug("Import: Found existing preset with same name '\(preset.name)'")
         return sameName
@@ -38,12 +37,10 @@ private enum DuplicateDetectionHelper {
       let existingPresets = PresetManager.shared.presets
       let existingNames = Set(existingPresets.map(\.name))
 
-      // If the base name is unique, use it
       if !existingNames.contains(baseName) {
         return baseName
       }
 
-      // Find the next available number
       var counter = 2
       while true {
         let candidateName = "\(baseName) (\(counter))"
@@ -63,16 +60,14 @@ private enum DuplicateDetectionHelper {
 
   static func checkIfSoundExists(_ soundMetadata: CustomSoundMetadata) async -> ExistingSoundInfo? {
     await MainActor.run {
-      // Check if a custom sound with the same ID already exists
       let customSoundManager = CustomSoundManager.shared
       let existingSounds = customSoundManager.getAllCustomSounds()
 
-      // Check by original ID first (most reliable)
       if let existingSound = existingSounds.first(where: { $0.id == soundMetadata.id }) {
         return ExistingSoundInfo(id: existingSound.id, sha256Hash: existingSound.sha256Hash)
       }
 
-      // Also check by original filename as backup (in case IDs changed)
+      // Fall back to the original filename and title in case the ID changed.
       if let existingByFilename = existingSounds.first(where: { existing in
         existing.originalFileName == soundMetadata.originalFileName
           && existing.title == soundMetadata.title
@@ -94,7 +89,6 @@ private enum SoundCustomizationImporter {
     let soundsDir = archiveURL.appendingPathComponent(PresetArchive.soundsDirectoryName)
     let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
 
-    // Check if metadata file exists
     guard FileManager.default.fileExists(atPath: metadataURL.path) else {
       Logger.presets.debug("Import: No sound metadata found in archive")
       return
@@ -109,7 +103,7 @@ private enum SoundCustomizationImporter {
     } catch {
       Logger.presets.error(
         "Import: Failed to import sound customizations: \(error, privacy: .public)")
-      // Don't throw error - customizations are optional
+      // Customizations are optional, so don't throw.
     }
   }
 
@@ -125,17 +119,14 @@ private enum SoundCustomizationImporter {
       var skippedCount = 0
 
       for customization in customizations {
-        // Check if this sound already has customizations - if so, skip to preserve user's settings
+        // Keep this device's existing customization for the sound.
         if customizationManager.getCustomization(for: customization.fileName) != nil {
           skippedCount += 1
           continue
         }
 
-        // Deliberately ignore a built-in sound's name and icon: those are the
-        // exporter's personal cosmetic overrides and must not replace this
-        // device's default (localized) built-in name/icon. Older archives may
-        // still carry them, so this guard — not just the export-side strip — is
-        // what guarantees they never apply. Behavioral settings below do apply.
+        // A built-in sound's name and icon are the exporter's personal overrides,
+        // and older archives may carry them. Apply only the behavioral settings.
         if let randomizeStart = customization.randomizeStartPosition {
           customizationManager.setRandomizeStartPosition(
             randomizeStart, for: customization.fileName
@@ -144,8 +135,10 @@ private enum SoundCustomizationImporter {
         if let normalizeAudio = customization.normalizeAudio {
           customizationManager.setNormalizeAudio(normalizeAudio, for: customization.fileName)
         }
-        if let volumeAdjustment = customization.volumeAdjustment {
-          customizationManager.setVolumeAdjustment(volumeAdjustment, for: customization.fileName)
+        if let volumeAdjustment = customization.volumeAdjustment, volumeAdjustment.isFinite {
+          // Clamp to the editor slider's range, since an archive can carry anything.
+          customizationManager.setVolumeAdjustment(
+            min(max(volumeAdjustment, 0.5), 8.0), for: customization.fileName)
         }
         if let loopSound = customization.loopSound {
           customizationManager.setLoopSound(loopSound, for: customization.fileName)
@@ -165,7 +158,6 @@ class PresetImporter {
 
   private init() {}
 
-  // Type aliases for helper structs
   fileprivate typealias ExistingSoundInfo = DuplicateDetectionHelper.ExistingSoundInfo
 
   enum ImportError: LocalizedError {
@@ -197,7 +189,6 @@ class PresetImporter {
   // MARK: - Import Logic
 
   func importArchive(from url: URL) async throws -> Preset {
-    // Ensure we have access to the security-scoped resource
     let accessing = url.startAccessingSecurityScopedResource()
     defer {
       if accessing {
@@ -205,16 +196,14 @@ class PresetImporter {
       }
     }
 
-    // Extract archive
-    let (archiveURL, tempExtractedURL) = try extractArchive(from: url)
+    let (archiveURL, tempExtractedURL) = try await extractArchive(from: url)
 
     defer {
-      // Clean up temporary files
       if let tempURL = tempExtractedURL {
         try? FileManager.default.removeItem(at: tempURL)
         Logger.presets.debug("Import: Cleaned up extracted files at \(tempURL.lastPathComponent)")
       }
-      // Clean up the imported file if it's in the tmp directory
+      // Remove the imported file if it's in a tmp directory.
       if url.path.contains("/tmp/") {
         try? FileManager.default.removeItem(at: url)
         Logger.presets.debug("Import: Cleaned up temporary file at \(url.lastPathComponent)")
@@ -233,47 +222,45 @@ class PresetImporter {
       preset.name = await DuplicateDetectionHelper.generateUniquePresetName(baseName: preset.name)
     }
 
+    // Re-ID the preset before anything is stored under its ID, so saving artwork
+    // can't replace the exporting preset's (or an earlier import's) artwork.
+    preset = createNewPresetInstance(from: preset)
+
     try await importArtwork(for: &preset, from: archiveURL)
 
-    // Apply the archive's sound customizations (custom titles, icons, etc.) before
-    // importing the sound files. Importing a sound posts .customSoundAdded, whose
-    // observer auto-creates a customization from the sound's base title — which would
-    // otherwise trip importFromManifest's skip-if-exists guard and drop the real names.
+    // Apply customizations before importing sounds. Each import posts .customSoundAdded,
+    // which creates a default customization that importFromManifest would then skip over.
     try await SoundCustomizationImporter.importFromManifest(from: archiveURL)
     let idMapping = try await importCustomSounds(for: preset, from: archiveURL)
 
-    // Imported custom sounds get fresh IDs, so remap the preset's sound states
+    // Imported custom sounds can get fresh IDs, so remap the preset's sound states.
     if !idMapping.isEmpty {
       preset = updatePresetSoundStates(preset, with: idMapping)
     }
-
-    // Re-ID the preset so it can't collide with an existing one
-    preset = createNewPresetInstance(from: preset)
 
     await addAndActivatePreset(preset)
 
     return preset
   }
 
-  private func extractArchive(from url: URL) throws -> (
+  // @concurrent so the CPU-heavy unzip runs off the main actor.
+  @concurrent private func extractArchive(from url: URL) async throws -> (
     archiveURL: URL, tempExtractedURL: URL?
   ) {
     var archiveURL = url
     var tempExtractedURL: URL?
 
-    // If it's a file (not a directory), we need to extract it
+    // A compressed .blankie is a file. An already-extracted archive is a directory.
     var isDirectory: ObjCBool = false
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
       !isDirectory.boolValue
     {
       Logger.presets.debug("Import: Detected compressed .blankie file, extracting...")
 
-      // Create a temporary directory for extraction
       let tempDir = FileManager.default.temporaryDirectory
       let extractionDir = tempDir.appendingPathComponent("blankie-import-\(UUID().uuidString)")
 
       do {
-        // Create extraction directory
         try FileManager.default.createDirectory(
           at: extractionDir, withIntermediateDirectories: true
         )
@@ -285,8 +272,8 @@ class PresetImporter {
         Logger.presets.debug("Import: Successfully extracted to \(extractionDir.lastPathComponent)")
 
       } catch {
-        // The success-path cleanup never sees this directory, so remove any
-        // partially extracted output (e.g. an aborted zip bomb) here.
+        // importArchive's cleanup never sees this directory, so remove partial
+        // output (say, from an aborted zip bomb) here.
         try? FileManager.default.removeItem(at: extractionDir)
         Logger.presets.error("Import: Failed to extract archive: \(error, privacy: .public)")
         throw ImportError.invalidArchive
@@ -334,16 +321,15 @@ extension PresetImporter {
       return [:]  // No custom sounds to import
     }
 
-    // Read sounds metadata and customizations
-    let customSounds = try readSoundsMetadata(from: soundsDir)
-    guard !customSounds.isEmpty else {
+    // The archive's sound metadata carries both the custom sounds and their customizations.
+    guard let soundsManifest = try readSoundsManifest(from: soundsDir),
+      !soundsManifest.customSounds.isEmpty
+    else {
       return [:]
     }
+    let customSounds = soundsManifest.customSounds
+    let customizations = soundsManifest.builtInCustomizations
 
-    // Also read customizations to get icon info
-    let customizations = try readCustomizations(from: soundsDir)
-
-    // Import each custom sound
     var importedCount = 0
     var idMapping: [UUID: UUID] = [:]  // Maps original IDs to actual IDs (existing or new)
 
@@ -371,31 +357,15 @@ extension PresetImporter {
     return idMapping
   }
 
-  private func readSoundsMetadata(from soundsDir: URL) throws -> [CustomSoundMetadata] {
+  /// The archive's `metadata.json`, decoded once, or `nil` when the file is absent.
+  private func readSoundsManifest(from soundsDir: URL) throws -> SoundsManifest? {
     let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
     guard FileManager.default.fileExists(atPath: metadataURL.path) else {
-      return []
+      return nil
     }
 
     let metadataData = try Data(contentsOf: metadataURL)
-    let soundsManifest = try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
-    return soundsManifest.customSounds
-  }
-
-  private func readCustomizations(from soundsDir: URL) throws -> [SoundCustomization] {
-    let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
-    guard FileManager.default.fileExists(atPath: metadataURL.path) else {
-      return []
-    }
-
-    do {
-      let metadataData = try Data(contentsOf: metadataURL)
-      let soundsManifest = try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
-      return soundsManifest.builtInCustomizations
-    } catch {
-      // Return empty array if no customizations found
-      return []
-    }
+    return try JSONDecoder().decode(SoundsManifest.self, from: metadataData)
   }
 
   @MainActor
@@ -407,7 +377,6 @@ extension PresetImporter {
     Logger.presets.debug(
       "Import: Sound '\(soundMetadata.title)' already exists with ID \(existingSound.id)")
 
-    // If we have SHA hashes, verify they match
     if let existingHash = existingSound.sha256Hash,
       let importHash = soundMetadata.sha256Hash,
       existingHash != importHash
@@ -417,7 +386,7 @@ extension PresetImporter {
       return nil  // Continue with import as it's a different file
     }
 
-    // Same file, skip import but record the ID mapping
+    // Same file: skip the import but record the ID mapping.
     Logger.presets.debug("Import: SHA hash matches or not available - skipping duplicate import")
     importedCount += 1
     return existingSound.id
@@ -435,9 +404,9 @@ extension PresetImporter {
       throw ImportError.soundImportFailed(soundMetadata.title)
     }
 
-    // Extract the UUID from the filename if it's different from metadata ID
+    // Prefer the UUID in the filename when it differs from the metadata ID.
     let fileNameWithoutExt = (soundFileURL.lastPathComponent as NSString).deletingPathExtension
-    let actualId: UUID
+    var actualId: UUID
     if let uuidFromFilename = UUID(uuidString: fileNameWithoutExt),
       uuidFromFilename != soundMetadata.id
     {
@@ -449,14 +418,20 @@ extension PresetImporter {
       actualId = soundMetadata.id
     }
 
+    // The ID names the stored file, so an ID already in use (say, a SHA mismatch)
+    // gets a fresh one, and idMapping remaps the preset.
+    if CustomSoundManager.shared.getCustomSound(by: actualId) != nil
+      || CustomSoundManager.shared.customAudioFileNamesOnDisk().contains(actualId.uuidString)
+    {
+      actualId = UUID()
+    }
+
     do {
-      // Find icon from customizations if available
       let fileNameWithoutExtension = (soundMetadata.fileName as NSString).deletingPathExtension
       let iconFromCustomization = customizations.first(where: {
         $0.fileName == fileNameWithoutExtension
       })?.customIconName
 
-      // Create a modified metadata with the correct ID
       let correctedMetadata = CustomSoundMetadata(
         id: actualId,
         fileName: soundMetadata.fileName,
@@ -468,7 +443,7 @@ extension PresetImporter {
         credits: soundMetadata.credits
       )
 
-      // Use the new import method that doesn't re-analyze LUFS
+      // Reuses the archive's LUFS value without re-analyzing.
       let result = await CustomSoundManager.shared.importSoundWithMetadata(
         from: soundFileURL,
         metadata: correctedMetadata,
@@ -484,10 +459,9 @@ extension PresetImporter {
         throw ImportError.soundImportFailed(soundMetadata.title)
       }
 
-      // Update progress
       importedCount += 1
 
-      return actualId  // Return the actual ID we used
+      return actualId
 
     } catch {
       throw ImportError.soundImportFailed(soundMetadata.title)
@@ -500,17 +474,14 @@ extension PresetImporter {
   )
     -> CustomSoundData
   {
-    // Extract file info from metadata
     let fileNameWithoutExtension = (soundMetadata.fileName as NSString).deletingPathExtension
     let fileExtension = (soundMetadata.fileName as NSString).pathExtension
 
-    // Try to find icon from customizations first
     let iconName =
       customizations.first(where: { $0.fileName == fileNameWithoutExtension })?.customIconName
       ?? soundMetadata.systemIconName
       ?? "waveform.circle"  // Default icon for older imports
 
-    // Create CustomSoundData from metadata - PRESERVING THE ORIGINAL ID
     let customSoundData = CustomSoundData(
       title: soundMetadata.title,
       systemIconName: iconName,
@@ -556,11 +527,17 @@ extension PresetImporter {
     )
     preset.artworkId = artworkId
 
-    // Ensure static artwork path mirrors the exported image
+    // Record the static artwork path only once the file is written. `artworkId`
+    // is stored separately, so the artwork survives a failed write.
     let staticId = UUID()
     let staticRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: staticId)
-    _ = try? AnimatedArtworkFileStore.writeData(artworkData, to: staticRel)
-    preset.staticArtworkPath = staticRel
+    do {
+      _ = try AnimatedArtworkFileStore.writeData(artworkData, to: staticRel)
+      preset.staticArtworkPath = staticRel
+    } catch {
+      Logger.presets.error(
+        "Import: Failed to write static artwork: \(error, privacy: .public)")
+    }
   }
 
   private func importAnimatedArtwork(for preset: inout Preset, from archiveURL: URL) async throws {
@@ -581,52 +558,47 @@ extension PresetImporter {
   ) throws {
     Logger.presets.debug("Import: Restoring bundled animation '\(bundledId)' from app bundle")
 
-    // Capture the preset ID to look it up later
-    let presetId = preset.id
+    var updatedAnimated = animated
+    updatedAnimated.loopPath = nil
+    updatedAnimated.bundledIdentifier = bundledId
 
-    // Restore the artwork reference + previews, then download the video pack.
-    Task { @MainActor in
-      // Preview images are bundled (not part of the asset pack). Copy the small
-      // ones into Documents as the static artwork fallback. The video itself is
-      // served from its Background Assets pack and is never copied to Documents.
-      guard
-        let previewURL = Bundle.main.url(
-          forResource: "\(bundledId)/\(bundledId)", withExtension: "jpg"),
-        let squarePreviewURL = Bundle.main.url(
-          forResource: "\(bundledId)/\(bundledId)Square", withExtension: "jpg")
-      else {
-        Logger.presets.error(
-          "Import: Failed to find preview images for '\(bundledId, privacy: .public)'")
-        return
-      }
-
+    // Preview images are bundled, not in the asset pack. Copy them synchronously so
+    // the paths are on the preset before importArchive stores it.
+    if let previewURL = Bundle.main.url(
+      forResource: bundledId, withExtension: "jpg"),
+      let squarePreviewURL = Bundle.main.url(
+        forResource: "\(bundledId)Square", withExtension: "jpg")
+    {
       let assetId = UUID()
       let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
         for: assetId, fileExtension: "jpg")
       let squarePreviewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(
         for: assetId, fileExtension: "jpg", suffix: "Square")
-
-      _ = try? AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
-      _ = try? AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
-
-      // Update the preset's animated artwork reference (bundled video resolves
-      // via bundledIdentifier at playback time, so loopPath stays nil).
-      var updatedAnimated = animated
-      updatedAnimated.loopPath = nil
-      updatedAnimated.previewPath = previewRel
-      updatedAnimated.squarePreviewPath = squarePreviewRel
-      updatedAnimated.bundledIdentifier = bundledId
-
-      if let index = PresetManager.shared.presets.firstIndex(where: { $0.id == presetId }) {
-        var updatedPreset = PresetManager.shared.presets[index]
-        updatedPreset.animatedArtwork = updatedAnimated
-        PresetManager.shared.updatePresetAtIndex(index, with: updatedPreset)
-        PresetManager.shared.savePresets()
-        Logger.presets.debug("Import: Successfully restored bundled animation '\(bundledId)'")
+      do {
+        _ = try AnimatedArtworkFileStore.copyItem(at: previewURL, to: previewRel)
+        updatedAnimated.previewPath = previewRel
+      } catch {
+        Logger.presets.error(
+          "Import: Failed to copy preview for '\(bundledId, privacy: .public)': \(error, privacy: .public)"
+        )
       }
+      do {
+        _ = try AnimatedArtworkFileStore.copyItem(at: squarePreviewURL, to: squarePreviewRel)
+        updatedAnimated.squarePreviewPath = squarePreviewRel
+      } catch {
+        Logger.presets.error(
+          "Import: Failed to copy square preview for '\(bundledId, privacy: .public)': \(error, privacy: .public)"
+        )
+      }
+    } else {
+      Logger.presets.error(
+        "Import: Failed to find preview images for '\(bundledId, privacy: .public)'")
+    }
 
-      // Best-effort: pull the video's asset pack so it's ready for playback (iOS).
-      // Fetch the variant this device uses (square on iPad), not the base id.
+    preset.animatedArtwork = updatedAnimated
+
+    // Best effort: download the asset pack variant this device plays (square on iPad).
+    Task { @MainActor in
       let packID = BackgroundResourceManager.preferredPackID(for: bundledId)
       do {
         _ = try await BackgroundResourceManager.shared.resourceURL(for: packID)
@@ -635,18 +607,9 @@ extension PresetImporter {
         Logger.presets.error(
           "Import: Failed to download artwork pack '\(bundledId, privacy: .public)': \(error, privacy: .public)"
         )
-        // Don't throw - preset can still be used without animated artwork
+        // The preset still works without animated artwork.
       }
     }
-
-    // Set up the animated artwork reference with the bundled identifier so the
-    // preset is usable immediately; previews + video arrive asynchronously above.
-    var updatedAnimated = animated
-    updatedAnimated.loopPath = nil
-    updatedAnimated.bundledIdentifier = bundledId
-    preset.animatedArtwork = updatedAnimated
-
-    Logger.presets.debug("Import: Scheduled download for bundled animation '\(bundledId)'")
   }
 
   private func importCustomAnimation(
@@ -704,9 +667,16 @@ extension PresetImporter {
     let previewSource = archiveURL.appendingPathComponent(PresetArchive.animatedPreviewFileName)
     if FileManager.default.fileExists(atPath: previewSource.path) {
       let previewRel = AnimatedArtworkFileStore.makeRelativePreviewPath(for: assetId)
-      _ = try? AnimatedArtworkFileStore.copyItem(at: previewSource, to: previewRel)
-      return previewRel
-    } else if let staticPath, AnimatedArtworkFileStore.fileExists(at: staticPath) {
+      do {
+        _ = try AnimatedArtworkFileStore.copyItem(at: previewSource, to: previewRel)
+        return previewRel
+      } catch {
+        Logger.presets.error(
+          "Import: Failed to copy animated preview: \(error, privacy: .public)")
+        // Fall through to the static preview so we never return an unwritten path.
+      }
+    }
+    if let staticPath, AnimatedArtworkFileStore.fileExists(at: staticPath) {
       return staticPath
     }
     return nil
@@ -732,14 +702,11 @@ extension PresetImporter {
   func updatePresetSoundStates(_ preset: Preset, with idMapping: [UUID: UUID]) -> Preset {
     var updatedPreset = preset
 
-    // Update sound states to use the correct IDs
     updatedPreset.soundStates = preset.soundStates.map { state in
-      // Check if this is a custom sound by looking for its ID in the mapping
-      // The fileName for custom sounds is typically the UUID string
+      // A custom sound's fileName is its UUID string.
       if let soundId = UUID(uuidString: state.fileName),
         let mappedId = idMapping[soundId]
       {
-        // Create a new PresetState with the mapped ID
         let updatedState = PresetState(
           fileName: mappedId.uuidString,
           isSelected: state.isSelected,
@@ -750,7 +717,6 @@ extension PresetImporter {
         return updatedState
       }
 
-      // Not a custom sound or not in mapping, keep as is
       return state
     }
 
@@ -758,22 +724,20 @@ extension PresetImporter {
   }
 
   func createNewPresetInstance(from preset: Preset) -> Preset {
-    // Create a new preset with a new ID to avoid conflicts
     let newPreset = Preset(
-      id: UUID(),  // Generate new ID
+      id: UUID(),
       name: preset.name,
       soundStates: preset.soundStates,
       isDefault: false,
       createdVersion: preset.createdVersion,
-      lastModifiedVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-        ?? "2.0.0",
+      lastModifiedVersion: Bundle.main.appVersion,
       soundOrder: preset.soundOrder,
       creatorName: preset.creatorName,
       artworkId: preset.artworkId,
       animatedArtwork: preset.animatedArtwork,
       staticArtworkPath: preset.staticArtworkPath,
       order: preset.order,
-      isImported: true,  // Mark as imported
+      isImported: true,
       originalId: preset.id,  // Store the original ID for duplicate detection
       // Carry the theme through import so shared presets keep their look.
       moods: preset.moods,
@@ -790,34 +754,35 @@ extension PresetImporter {
       let presetManager = PresetManager.shared
       let audioManager = AudioManager.shared
 
-      // Only load the custom sounds that are in this preset
       let customSoundIds = preset.soundStates
         .compactMap { state -> UUID? in
-          // Check if the fileName is a UUID (custom sound)
           return UUID(uuidString: state.fileName)
         }
 
-      if !customSoundIds.isEmpty {
-        audioManager.loadCustomSoundsByIds(Set(customSoundIds))
+      // Skip ids already loaded. Reloading them would orphan the instances
+      // single sound, preview, or Quick Mix still hold.
+      let loadedIds = Set(audioManager.sounds.compactMap(\.customSoundDataID))
+      let newIds = Set(customSoundIds).subtracting(loadedIds)
+      if !newIds.isEmpty {
+        audioManager.loadCustomSoundsByIds(newIds)
       }
 
-      // Add to presets
       var currentPresets = presetManager.presets
       currentPresets.append(preset)
       presetManager.setPresets(currentPresets)
 
-      // Cache thumbnail for CarPlay if artwork exists
       if preset.artworkId != nil {
         Task {
           await presetManager.cacheThumbnail(for: preset)
         }
       }
 
-      // Save presets to persist the import
       presetManager.savePresets()
 
-      // Activate the imported preset immediately
+      // Activate the imported preset immediately. Leave single sound/Quick Mix first, or
+      // single sound skips the apply and a Quick Mix exit would discard it.
       do {
+        audioManager.leaveTransientModes()
         try presetManager.applyPreset(preset)
       } catch {
         Logger.presets.error("Import: Failed to apply preset: \(error, privacy: .public)")
@@ -849,8 +814,7 @@ extension PresetImporter {
   }
 
   func validateCompatibility(_ manifest: ArchiveManifest) throws {
-    let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.0"
+    let currentVersion = Bundle.main.appVersion
 
     guard manifest.compatibility.isCompatible(with: currentVersion) else {
       throw ImportError.incompatibleVersion

@@ -14,7 +14,6 @@ import os
   /// Settings sub-page for choosing the app icon: a grid of icon tiles with
   /// an accent ring on the current selection.
   struct AppIconPickerView: View {
-    /// An available app icon (primary or alternate).
     private struct AppIconOption: Identifiable {
       let id = UUID()
       let name: String?  // nil for primary icon
@@ -57,8 +56,8 @@ import os
         setAppIcon(option.name)
       } label: {
         if let image = option.image {
-          // Fill the grid column; the ring radius tracks the system
-          // app-icon corner ratio (~22.5% of size) at any tile size.
+          // The ring radius tracks the system app-icon corner ratio (about
+          // 22.5% of size) at any tile size.
           GeometryReader { geo in
             let radius = geo.size.width * 0.225
             Image(uiImage: image)
@@ -106,27 +105,27 @@ import os
         ("BlankieDarkIcon", String(localized: "Dark")),
         ("BlankieSliderIcon", String(localized: "Slider")),
         ("BlankieAltIcon", String(localized: "Alternative")),
-        ("BlankieWavesIcon", String(localized: "Waves")),
+        ("BlankieWavesIcon", String(localized: "appIcon.waves", defaultValue: "Waves")),
         ("BlankieClassicIcon", String(localized: "Classic")),
         ("BlankiePatchworkIcon", String(localized: "Inspired by Blanket by Rafael Mardojai CM")),
       ]
 
-      // Leopard is a developer-only icon, surfaced only in local Debug builds.
+      // Leopard is a developer-only icon for local Debug builds.
       #if DEBUG
         knownAlternates.append(("BlankieLeopardIcon", String(localized: "Leopard")))
       #endif
 
       for alternate in knownAlternates {
         // Display assets only: UIImage(named:) on a .icon-compiled name throws
-        // NSInternalInconsistencyException rather than returning nil.
+        // NSInternalInconsistencyException.
         let image =
           UIImage(named: "\(alternate.key)Display") ?? UIImage(systemName: "app.fill")
         options.append(
           AppIconOption(name: alternate.key, displayName: alternate.displayName, image: image))
       }
 
-      // The display assets are 1024px; drawing them at tile size aliases badly
-      // (and holds ~70 MB of bitmaps). Downsample once with a proper filter.
+      // The 1024px display assets alias at tile size and hold about 70 MB of
+      // bitmaps, so downsample once with a proper filter.
       return options.map { option in
         AppIconOption(
           name: option.name,

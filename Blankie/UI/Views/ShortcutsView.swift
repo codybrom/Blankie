@@ -7,17 +7,14 @@
 
 import SwiftUI
 
-/// A keyboard shortcut definition shared by the menu bar (`AppCommands`) and
-/// the on-screen cheat sheet (`ShortcutsView`), so the two can't drift apart.
-///
-/// `KeyEquivalent` + `EventModifiers` are the source of truth: the displayed
-/// glyphs and the VoiceOver-spoken label are both derived from them.
+/// A keyboard shortcut shared by the menu bar (`AppCommands`) and the cheat sheet
+/// (`ShortcutsView`). The displayed glyphs and VoiceOver label derive from its keys.
 struct AppShortcut: Identifiable {
   let action: LocalizedStringKey
   let key: KeyEquivalent?
   let modifiers: EventModifiers
-  /// Glyph for actions triggered by a media key rather than a `KeyEquivalent`
-  /// (e.g. the Play/Pause key), which has no `KeyboardShortcut` representation.
+  /// Glyph for actions on a media key (e.g. Play/Pause), which has no
+  /// `KeyboardShortcut` representation.
   let mediaGlyph: String?
 
   init(
@@ -53,7 +50,7 @@ struct AppShortcut: Identifiable {
   }
 
   /// Name for keys whose `character` doesn't render legibly on its own
-  /// (Space is blank; the arrows are private-use glyphs). Letters and symbols
+  /// (Space is blank, and the arrows are private-use glyphs). Letters and symbols
   /// pass through uppercased.
   private static func displayName(for key: KeyEquivalent) -> String {
     switch key.character {
@@ -70,7 +67,7 @@ struct AppShortcut: Identifiable {
   var displayGlyphs: String { tokens.joined(separator: " ") }
 
   /// Spoken names for glyphs VoiceOver mispronounces or treats as punctuation.
-  /// Values are localizable; letters and digits are read verbatim.
+  /// Values are localizable. Letters and digits are read verbatim.
   private static let spokenNames: [String: LocalizedStringKey] = [
     "⌘": "Command",
     "⇧": "Shift",
@@ -102,7 +99,7 @@ struct AppShortcut: Identifiable {
 
 extension AppShortcut {
   // Canonical definitions. Bound entries are applied via `.keyboardShortcut(_:)`
-  // in AppCommands; display-only entries (`closeWindow`) are owned by the
+  // in AppCommands. Display-only entries (`closeWindow`) are owned by the
   // system and just shown in the cheat sheet.
   static let playPause = AppShortcut("Play/Pause Sounds", key: .space)
   static let nextFavorite = AppShortcut("Next Favorite", key: .rightArrow, modifiers: .command)

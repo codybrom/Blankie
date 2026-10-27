@@ -10,13 +10,11 @@ import Testing
 @testable import Blankie
 
 @Suite struct AppSetupRecoveryActionTests {
-  /// The first failure of a launch is treated as transient.
   @Test func firstFailureRetriesInMemory() {
     #expect(AppSetup.recoveryAction(forConsecutiveFailures: 0) == .retryInMemory)
     #expect(AppSetup.recoveryAction(forConsecutiveFailures: 1) == .retryInMemory)
   }
 
-  /// A failure that recurs across launches is treated as corruption.
   @Test func recurringFailureQuarantinesAndRebuilds() {
     #expect(AppSetup.recoveryAction(forConsecutiveFailures: 2) == .quarantineAndRebuild)
     #expect(AppSetup.recoveryAction(forConsecutiveFailures: 7) == .quarantineAndRebuild)

@@ -14,18 +14,9 @@
     // MARK: - Main Edit Template
 
     static func createTemplate() -> CPListTemplate {
-      // Title from the current preset, applying the app-wide display rule:
-      // the unnamed Default and auto-named "Preset N" mixes show as "Custom Mix"
-      // (matching Now Playing), while real preset names render verbatim.
-      let currentPreset = PresetManager.shared.currentPreset
-      let presetName: String
-      if let name = currentPreset?.name {
-        presetName =
-          (name == "Default" || name.starts(with: "Preset "))
-          ? String(localized: "Custom Mix") : name
-      } else {
-        presetName = String(localized: "Current Mix")
-      }
+      // The app's display name for the preset ("All Blankie Sounds" for the default).
+      let presetName =
+        PresetManager.shared.currentPreset?.displayName ?? String(localized: "Current Mix")
 
       let template = CPListTemplate(
         title: presetName,
@@ -37,7 +28,6 @@
     }
 
     static func updateTemplate(_ template: CPListTemplate) {
-      // Get the current preset to determine which sounds to show
       guard let currentPreset = PresetManager.shared.currentPreset else {
         let noPresetItem = CPListItem(
           text: String(localized: "No preset selected"), detailText: nil)
@@ -46,10 +36,8 @@
         return
       }
 
-      // Get only sounds that are part of the current preset
       let presetSounds = AudioManager.shared.sounds.filter { sound in
-        // Check if this sound is saved in the preset's sound states
-        // This includes sounds that might be turned off but are part of the preset
+        // Includes preset sounds that are turned off.
         currentPreset.soundStates.contains { $0.fileName == sound.fileName }
       }
 
@@ -61,10 +49,7 @@
         return
       }
 
-      // Sort sounds alphabetically
-      let sortedSounds = presetSounds.sorted {
-        $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
-      }
+      let sortedSounds = CarPlaySoundNames.sorted(presetSounds)
 
       let items = sortedSounds.map { sound in
         createSoundEditItem(sound)
@@ -79,32 +64,39 @@
       template.updateSections([section])
     }
 
+    /// Edits apply to the live mix of the preset the stack was opened for. A tap
+    /// that lands after a switch, single sound or Quick Mix dismisses the stack instead.
+    @MainActor
+    private static func editsLiveMix() -> Bool {
+      guard CarPlayInterfaceController.shared.editStackIsLive else {
+        CarPlayInterfaceController.shared.dismissEditStack()
+        return false
+      }
+      return true
+    }
+
     private static func createSoundEditItem(_ sound: Sound) -> CPListItem {
       let isSelected = sound.isSelected
       let percent = Double(sound.volume).formatted(.percent.precision(.fractionLength(0)))
       let volumeText = String(localized: "\(percent) Volume")
 
       let item = CPListItem(
-        text: sound.title,
+        text: CarPlaySoundNames.name(of: sound),
         detailText: isSelected
           ? String(localized: "Playing • \(volumeText)") : String(localized: "Stopped")
       )
 
-      // Set icon with playing/stopped state
       if let image = createSoundIcon(for: sound, isPlaying: isSelected) {
         item.setImage(image)
       }
 
-      // Always show disclosure indicator since we can adjust volume or turn on/off
       item.accessoryType = .disclosureIndicator
 
       item.handler = { _, completion in
         Task { @MainActor in
           if sound.isSelected {
-            // Sound is currently ON - show volume adjustment options
             CarPlayInterfaceController.shared.showVolumeAdjustment(for: sound)
           } else {
-            // Sound is currently OFF - show options to turn ON with volume selection
             CarPlayInterfaceController.shared.showTurnOnOptions(for: sound)
           }
 
@@ -123,18 +115,14 @@
         let soundColor = UIColor.carPlayIconTint
 
         if isPlaying {
-          // Draw colored circle background when playing
           soundColor.withAlphaComponent(0.3).setFill()
           let circle = UIBezierPath(ovalIn: CGRect(origin: .zero, size: size))
           circle.fill()
         }
-        // No background when stopped
 
-        // Draw icon
         let iconName = sound.systemIconName
         let icon = UIImage(systemName: iconName) ?? UIImage(systemName: "speaker.wave.2")!
 
-        // Configure icon size
         let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
         let configuredIcon = icon.withConfiguration(iconConfig)
 
@@ -146,17 +134,13 @@
           height: iconSize.height
         )
 
-        // Apply icon color
         let iconColor: UIColor
         if isPlaying {
-          // Use sound's color when playing
           iconColor = soundColor
         } else {
-          // Use disabled gray when stopped
           iconColor = UIColor.systemGray
         }
 
-        // Draw the icon with the proper color
         let coloredIcon = configuredIcon.withTintColor(iconColor, renderingMode: .alwaysOriginal)
         coloredIcon.draw(in: iconRect)
       }
@@ -166,19 +150,16 @@
 
     static func createVolumeAdjustmentTemplate(for sound: Sound) -> CPListTemplate {
       let template = CPListTemplate(
-        title: String(localized: "\(sound.title) Volume"),
+        title: String(localized: "\(CarPlaySoundNames.name(of: sound)) Volume"),
         sections: []
       )
 
       var items: [CPListItem] = []
 
-      // Current volume display
       items.append(createCurrentVolumeItem(for: sound))
 
-      // Option to turn OFF the sound
       items.append(createTurnOffItem(for: sound))
 
-      // Volume options (10% increments)
       items.append(contentsOf: createVolumeItems(for: sound))
 
       let section = CPListSection(items: items)
@@ -204,6 +185,7 @@
       )
       item.handler = { _, completion in
         Task { @MainActor in
+          guard editsLiveMix() else { return completion() }
           sound.isSelected = false
           sound.pause()
           AudioManager.shared.updateHasSelectedSounds()
@@ -226,13 +208,12 @@
         )
 
         if isCurrentVolume {
-          // Disable the current volume selection
           item.isEnabled = false
-          // Don't set a handler for disabled items
           item.handler = nil
         } else {
           item.handler = { _, completion in
             Task { @MainActor in
+              guard editsLiveMix() else { return completion() }
               sound.volume = volume
               AudioManager.shared.updateHasSelectedSounds()
               PresetManager.shared.savePresets()
@@ -256,15 +237,13 @@
 
       var items: [CPListItem] = []
 
-      // Header text
       let headerItem = CPListItem(
-        text: String(localized: "Choose a volume to start \(sound.title)"),
+        text: String(localized: "Choose a volume to start \(CarPlaySoundNames.name(of: sound))"),
         detailText: nil
       )
       headerItem.isEnabled = false
       items.append(headerItem)
 
-      // Volume options (10% increments, highest first)
       for percentage in stride(from: 100, through: 10, by: -10) {
         let volume = Float(percentage) / 100.0
 
@@ -275,22 +254,15 @@
 
         item.handler = { _, completion in
           Task { @MainActor in
-            // Turn on the sound with selected volume
-            sound.isSelected = true
+            guard editsLiveMix() else { return completion() }
+            // Selecting auto-plays while playback is active, so no direct play().
             sound.volume = volume
+            sound.isSelected = true
 
-            // If global playback is active, start playing this sound
-            if AudioManager.shared.isGloballyPlaying {
-              sound.play()
-            }
-
-            // Update AudioManager state
             AudioManager.shared.updateHasSelectedSounds()
 
-            // Save the change
             PresetManager.shared.savePresets()
 
-            // Pop back and refresh
             CarPlayInterfaceController.shared.popAndRefreshEditTemplate()
 
             completion()

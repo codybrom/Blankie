@@ -12,13 +12,7 @@ import os
 // MARK: - Import with Metadata
 
 extension CustomSoundManager {
-  /// Import a sound file with pre-analyzed metadata (used for preset imports)
-  /// - Parameters:
-  ///   - sourceURL: URL of the sound file to import
-  ///   - metadata: Pre-analyzed metadata including LUFS values
-  ///   - credits: Optional credits information
-  ///   - iconOverride: Optional icon to use instead of the one in metadata
-  /// - Returns: A Result with the created CustomSoundData or an error
+  /// Imports a sound with pre-analyzed metadata (preset imports), skipping LUFS analysis.
   @MainActor
   func importSoundWithMetadata(
     from sourceURL: URL,
@@ -26,7 +20,7 @@ extension CustomSoundManager {
     credits: SoundCredits? = nil,
     iconOverride: String? = nil
   ) async -> Result<CustomSoundData, CustomSoundError> {
-    // Use the ID from metadata as the filename to maintain preset references
+    // The metadata id doubles as the file name so preset references resolve.
     let uniqueFileName = metadata.id.uuidString
     let fileExtension = sourceURL.pathExtension.lowercased()
 
@@ -49,9 +43,8 @@ extension CustomSoundManager {
       }
     }
 
-    // If anything after the copy throws, remove the orphaned copy (and its stored
-    // playback profile) so a failed import leaves nothing behind. Cleared once the
-    // DB save commits. Mirrors the primary importSound path.
+    // If anything after the copy throws, remove the copy and its playback profile.
+    // Cleared once the database save commits (as in importSound).
     var copiedURLForCleanup: URL?
     defer {
       if let url = copiedURLForCleanup {
@@ -61,13 +54,11 @@ extension CustomSoundManager {
     }
 
     do {
-      // Still validate the file, but skip LUFS analysis
       let validationResult = try await validateAudioFile(at: sourceURL)
       if case .failure(let error) = validationResult {
         throw (error as? CustomSoundError) ?? CustomSoundError.invalidAudioFile(error)
       }
 
-      // Copy the file
       guard let directoryURL = getCustomSoundsDirectoryURL() else {
         throw CustomSoundError.fileCopyFailed
       }
@@ -79,7 +70,6 @@ extension CustomSoundManager {
 
       let copiedURL = destinationURL
 
-      // Create custom sound with pre-analyzed data
       let customSound = createCustomSoundFromMetadata(
         metadata: metadata,
         uniqueFileName: uniqueFileName,
@@ -87,16 +77,12 @@ extension CustomSoundManager {
         iconOverride: iconOverride
       )
 
-      // Set credits if provided
       applyCredits(to: customSound, from: credits ?? metadata.credits)
 
-      // Store playback profile if we have LUFS
       storePlaybackProfile(for: customSound, fileName: uniqueFileName)
 
-      // Extract ID3 metadata (still useful for additional info)
       await extractAndApplyID3Metadata(to: customSound, from: copiedURL)
 
-      // Save to database
       try withModelContext { context in
         context.insert(customSound)
         try context.save()
@@ -128,16 +114,14 @@ extension CustomSoundManager {
       randomizeStartPosition: true,
       normalizeAudio: true,
       volumeAdjustment: 1.0,
-      detectedPeakLevel: nil,  // We don't have peak level in metadata
+      detectedPeakLevel: nil,  // Not in metadata
       detectedLUFS: metadata.lufsValue != nil ? Float(metadata.lufsValue!) : nil,
       normalizationFactor: nil  // Will be calculated from LUFS
     )
 
-    // CRITICAL: Preserve the original ID so preset references work
+    // Keep the original id so preset references resolve.
     customSound.id = metadata.id
-    // Carry the archive's integrity hash through (the file is copied byte-for-byte
-    // here, so it stays valid); matches PresetImporter's direct-creation path,
-    // which previously was the only place that set it.
+    // The file is copied byte for byte, so the archive's integrity hash stays valid.
     customSound.sha256Hash = metadata.sha256Hash
 
     return customSound
@@ -156,19 +140,19 @@ extension CustomSoundManager {
   private func storePlaybackProfile(for customSound: CustomSoundData, fileName: String) {
     guard let lufs = customSound.detectedLUFS else { return }
 
-    // We don't have truePeak in metadata, so use a conservative estimate
-    let estimatedTruePeak: Float = -1.0  // Conservative default
+    // Metadata has no true peak, so use a conservative estimate.
+    let estimatedTruePeak: Float = -1.0
 
     let profile = PlaybackProfile(
       filename: fileName,
       integratedLUFS: lufs,
       truePeakdBTP: estimatedTruePeak,
-      // Floor at minimumLUFS like the analyzer, so a near-silent import is left
-      // at unity instead of being boosted by the full +18 dB.
+      // Floor at minimumLUFS like the analyzer, so a near-silent import stays at unity
+      // gain (no full +18 dB boost).
       gainDB: lufs > AudioAnalyzer.minimumLUFS
         ? min(AudioAnalyzer.targetLUFS - lufs, AudioAnalyzer.maxGainDB)
         : 0,
-      needsLimiter: lufs < -30.0  // Need limiter for very quiet sounds
+      needsLimiter: lufs < -30.0  // Very quiet sounds need the limiter
     )
     PlaybackProfileStore.shared.store(profile)
     Logger.sounds.debug("CustomSoundManager: Stored playback profile from metadata for \(fileName)")

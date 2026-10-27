@@ -13,7 +13,6 @@ extension SoundSheet {
   // MARK: - Actions
 
   func performAction() {
-    // Stop preview before performing action
     if isPreviewing {
       stopPreview()
     }
@@ -22,7 +21,7 @@ extension SoundSheet {
     case .add:
       importSound()
     case .edit:
-      // For edit mode, just dismiss - changes are already applied
+      // Edits apply live, so edit mode only dismisses.
       dismiss()
     }
   }
@@ -97,7 +96,6 @@ extension SoundSheet {
   func applyCustomizationInstantly(_ sound: Sound) {
     applyCustomizations(sound)
 
-    // Force an immediate volume update for the sound
     if sound.isLoaded {
       sound.updateVolume()
     }
@@ -106,13 +104,13 @@ extension SoundSheet {
   private func checkForCustomizations(_ sound: Sound) -> Bool {
     let hasCustomName = soundName != sound.originalTitle
     let hasCustomIcon = selectedIcon != sound.originalSystemIconName
-    let hasCustomRandomization = randomizeStartPosition != true  // Default is true
-    let hasCustomNormalization = normalizeAudio != true  // Default is true
-    let hasCustomVolume = volumeAdjustment != 1.0  // Default is 1.0
-    let hasCustomLoop = loopSound != true  // Default is true
-    let hasCustomFade = fadeSound != true  // Default is true
-    let hasCustomPresetOnly = isPresetUseOnly != false  // Default is false
-    let hasCustomMusic = isMusic != sound.isMusicDefault  // Default varies per sound
+    let hasCustomRandomization = randomizeStartPosition != true
+    let hasCustomNormalization = normalizeAudio != true
+    let hasCustomVolume = volumeAdjustment != 1.0
+    let hasCustomLoop = loopSound != true
+    let hasCustomFade = fadeSound != true
+    let hasCustomPresetOnly = isPresetUseOnly != false
+    let hasCustomMusic = isMusic != sound.isMusicDefault
 
     return hasCustomName || hasCustomIcon || hasCustomRandomization
       || hasCustomNormalization || hasCustomVolume || hasCustomLoop || hasCustomFade
@@ -122,57 +120,48 @@ extension SoundSheet {
   private func applyCustomizations(_ sound: Sound) {
     let manager = SoundCustomizationManager.shared
 
-    // Name customization
     manager.setCustomTitle(
       soundName != sound.originalTitle ? soundName : nil,
       for: sound.fileName
     )
 
-    // Icon customization
     manager.setCustomIcon(
       selectedIcon != sound.originalSystemIconName ? selectedIcon : nil,
       for: sound.fileName
     )
 
-    // Randomization customization
     manager.setRandomizeStartPosition(
       randomizeStartPosition != true ? randomizeStartPosition : nil,
       for: sound.fileName
     )
 
-    // Normalization customization
     manager.setNormalizeAudio(
       normalizeAudio != true ? normalizeAudio : nil,
       for: sound.fileName
     )
 
-    // Volume customization
     manager.setVolumeAdjustment(
       volumeAdjustment != 1.0 ? volumeAdjustment : nil,
       for: sound.fileName
     )
 
-    // Loop customization
     manager.setLoopSound(
       loopSound != true ? loopSound : nil,
       for: sound.fileName
     )
 
-    // Fade customization
     manager.setFadeSound(
       fadeSound != true ? fadeSound : nil,
       for: sound.fileName
     )
 
-    // Preset-use-only customization
     manager.setPresetUseOnly(
       isPresetUseOnly != false ? isPresetUseOnly : nil,
       for: sound.fileName
     )
 
-    // Music tag is user-editable only for custom sounds; built-ins keep their
-    // sounds.json default, so never write an override for them. (The default
-    // varies per sound, so diff against the sound's own default.)
+    // Only custom sounds take a music override. Built-ins keep their sounds.json
+    // default. The default varies per sound, so diff against the sound's own.
     if sound.isCustom {
       manager.setMusic(
         isMusic != sound.isMusicDefault ? isMusic : nil,
@@ -180,24 +169,19 @@ extension SoundSheet {
       )
     }
 
-    // Going preset-only (directly or via loop-off) hides the tile from the
-    // default grid; if the sound is selected there it would keep playing with
-    // no control to stop it. Deselect (fades out) — unless a custom preset is
-    // showing it, or it's the active solo sound.
+    // A preset-only sound (set directly or via loop-off) has no tile in the
+    // default preset, so deselect it unless a custom preset or single sound shows it.
     if sound.isPresetUseOnly, sound.isSelected,
       PresetManager.shared.currentPreset?.isDefault ?? true,
-      AudioManager.shared.soloModeSound?.id != sound.id
+      AudioManager.shared.singleSound?.id != sound.id
     {
       sound.isSelected = false
     }
 
-    // Force save all customizations
     manager.saveCustomizations()
 
-    // The loop flag is baked into the player at load time, so a live edit to
-    // the loop toggle needs the player rebuilt to take effect (runs after the
-    // deselect above so a default-preset sound that loop-off just removed isn't
-    // revived).
+    // The player bakes in the loop flag at load, so a loop edit rebuilds it.
+    // Runs after the deselect above so a sound loop-off just removed stays off.
     sound.reloadForLoopChange()
   }
 
@@ -213,7 +197,6 @@ extension SoundSheet {
 
     guard !presetIDs.isEmpty || creatingMix else { return }
 
-    // Find the newly imported sound
     guard let newSound = audioManager.sounds.first(where: { $0.fileName == fileName }) else {
       Logger.ui.error(
         "SoundSheet: Could not find imported sound with fileName: \(fileName, privacy: .public)")
@@ -290,7 +273,6 @@ extension SoundSheet {
       return
     }
 
-    // Stop preview before deleting
     if isPreviewing {
       stopPreview()
     }
@@ -299,9 +281,9 @@ extension SoundSheet {
 
     switch result {
     case .success:
-
-      // Reload custom sounds in AudioManager
-      AudioManager.shared.loadCustomSounds()
+      // Drop only the deleted sound, so single sound, preview and Quick Mix keep the
+      // Sound instances they hold.
+      AudioManager.shared.syncCustomSounds()
 
       dismiss()
     case .failure(let error):
@@ -322,12 +304,14 @@ extension SoundSheet {
     }
     PresetStorage.saveCustomPresets(customPresets)
     Logger.ui.debug("SoundSheet: Presets saved directly without state override")
+    // This bypasses savePresets, so refresh the Siri/Spotlight names and widgets it would.
+    presetManager.refreshDiscoverableEntitiesIfNeeded()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   // MARK: - Dismiss Action
 
   func handleDismiss() {
-    // Stop preview before dismissing
     if isPreviewing {
       stopPreview()
     }

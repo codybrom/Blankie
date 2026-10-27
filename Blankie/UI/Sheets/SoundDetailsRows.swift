@@ -20,25 +20,21 @@ struct SoundDetailsRows: View {
 
   var body: some View {
     Group {
-      // Added date for custom sounds
       if sound.isCustom {
         LabeledContent(
           "Added",
           value: (sound.dateAdded ?? Date()).formatted(date: .abbreviated, time: .omitted))
       }
 
-      // Duration
       if let duration = sound.duration {
         LabeledContent("Duration", value: duration.minuteSecondClock)
       }
 
-      // Channels
       if let channels = sound.channelCount {
         LabeledContent("Channels", value: getChannelsText(from: channels))
       }
 
-      // Format and File Size only for custom sounds. Long-press either to be
-      // offered AAC conversion when the file is worth shrinking (see offerCompression).
+      // Long-pressing Format or File Size offers AAC conversion (see offerCompression).
       if sound.isCustom {
         LabeledContent("Format", value: sound.fileExtension.uppercased())
           .contentShape(Rectangle())
@@ -58,7 +54,7 @@ struct SoundDetailsRows: View {
         .onLongPressGesture(minimumDuration: 0.5) { offerCompression() }
       }
 
-      // LUFS (long-press to force a fresh analysis; deliberately undiscoverable)
+      // Long-press forces a fresh analysis (a hidden gesture).
       if let lufs = sound.lufs {
         LabeledContent("LUFS") {
           if isReanalyzing {
@@ -79,7 +75,6 @@ struct SoundDetailsRows: View {
         }
       }
 
-      // Normalization Factor with Gain on same line
       if let normalizationFactor = sound.normalizationFactor {
         let gainDB = 20 * log10(normalizationFactor)
         LabeledContent(
@@ -144,8 +139,8 @@ struct SoundDetailsRows: View {
   }
 
   private func compressionMessage(for estimate: CustomSoundManager.CompressionEstimate) -> String {
-    // Formatted as a String (not a literal %) so it localizes and avoids a
-    // printf-style % pitfall in the localized format.
+    // Pre-formatted so the percent localizes and the format string has no
+    // printf-style %.
     let savings = estimate.savedFraction.formatted(.percent.precision(.fractionLength(0)))
     return String(
       localized:

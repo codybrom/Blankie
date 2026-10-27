@@ -14,7 +14,7 @@ struct CreatePresetSheet: View {
   /// the default preset). Empty = start with nothing selected.
   var initialSelectedSounds: Set<String> = []
   /// Fired after the new preset is created and applied so the owner can
-  /// navigate to it (iPhone Library pushes the mixer); nil at the mixer.
+  /// navigate to it (iPhone Library pushes the mixer). Nil at the mixer.
   var onCreated: (() -> Void)?
   private let presetManager = PresetManager.shared
   private let audioManager = AudioManager.shared
@@ -29,8 +29,7 @@ struct CreatePresetSheet: View {
   @State private var showingImageCropper = false
   @State private var animatedArtwork: AnimatedArtworkRef?
   @State private var staticArtworkPath: String?
-  // Theme overrides (same semantics as Edit Preset: toggled off = nil =
-  // follow the app-wide setting).
+  // Theme overrides, as in Edit Preset: toggled off is nil (follow the app-wide setting).
   @State private var useCustomTheme = false
   @State private var accentColor: Color?
   @State private var useCustomViewMode = false
@@ -46,13 +45,11 @@ struct CreatePresetSheet: View {
   @Environment(\.dismiss) private var dismiss
 
   var orderedSounds: [Sound] {
-    audioManager.sounds.sorted {
-      $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
-    }
+    audioManager.sounds.sortedByLocalizedTitle()
   }
 
-  /// Live accent: the in-flight custom accent once enabled, else app-wide —
-  /// mirrors Edit Preset so the sheet re-themes while you pick.
+  /// Live accent: the custom accent once enabled, else the app-wide one, so the
+  /// sheet re-themes while you pick (as Edit Preset does).
   private var activeAccentColor: Color {
     if useCustomTheme {
       return accentColor ?? globalSettings.customAccentColor ?? .accentColor
@@ -64,7 +61,7 @@ struct CreatePresetSheet: View {
     NavigationStack {
       Form {
         errorSection
-        // Same details card as Edit Preset (no Favorite — no preset yet).
+        // Same details card as Edit Preset, minus Favorite (no preset yet).
         PresetDetailsSection(
           presetName: $presetName,
           creatorName: $creatorName,
@@ -113,10 +110,9 @@ struct CreatePresetSheet: View {
       #endif
       .onAppear(perform: setupDefaultSelection)
       .onChange(of: presetName) { _, _ in
-        // The user touched the name field: abandon the auto-suggestion so it
-        // can't replace what they typed, and drop the spinner right away. The
-        // suggestion's own write nils the task first (in its defer), so this
-        // only fires for real edits, not the AI filling the name in.
+        // A user edit cancels the auto-suggestion so it can't replace their text, and
+        // drops the spinner. The suggestion nils the task (in its defer) before
+        // writing, so only user edits reach this.
         if let task = nameSuggestionTask {
           task.cancel()
           nameSuggestionTask = nil
@@ -160,9 +156,7 @@ struct CreatePresetSheet: View {
     // Edit Preset's root tint).
     .tint(activeAccentColor)
     #if os(iOS) || os(visionOS)
-      // A full preset editor, not a quick dialog — page-sized on iPad instead
-      // of the default small centered form sheet (no-op on iPhone). Matches
-      // EditPresetSheet so both editors present identically.
+      // Page-sized on iPad like EditPresetSheet (no-op on iPhone).
       .presentationSizing(.page)
     #endif
     .onDisappear {
@@ -182,20 +176,22 @@ extension CreatePresetSheet {
     }
   }
 
-  /// Mirrors Edit Preset's Sounds section (header, Choose Sounds row, then a
-  /// row per selected sound) minus reorder/edit — there's no preset to
-  /// persist against yet.
+  /// Mirrors Edit Preset's Sounds section (header, Choose Sounds row, a row per sound)
+  /// without reorder or edit, since there's no preset to persist against yet.
   var soundsSection: some View {
     Section {
       #if os(iOS)
         Button {
           showingSoundSelection = true
         } label: {
-          HStack {
+          // Reads as a navigation row: plain label, count, then a gray chevron
+          // (the button would otherwise tint all three with the accent).
+          HStack(spacing: 8) {
             LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
+              .foregroundStyle(.primary)
             Image(systemName: "chevron.right")
-              .foregroundStyle(.tertiary)
-              .imageScale(.small)
+              .font(.footnote.weight(.semibold))
+              .foregroundStyle(Color(.tertiaryLabel))
               .accessibilityHidden(true)
           }
         }
@@ -233,8 +229,7 @@ extension CreatePresetSheet {
   }
 
   func setupDefaultSelection() {
-    // Seed from the caller's pre-selection; otherwise start with no sounds
-    // selected - user can add sounds as needed
+    // Seed from the caller's pre-selection, or start with no sounds selected.
     if !initialSelectedSounds.isEmpty {
       selectedSounds = initialSelectedSounds
       // Offer an Apple Intelligence name for the seeded mix up front. Held in a
@@ -247,10 +242,10 @@ extension CreatePresetSheet {
 
   /// Titles of the currently selected sounds, for the name prompt.
   private var selectedSoundTitles: [String] {
-    orderedSounds.filter { selectedSounds.contains($0.fileName) }.map(\.title)
+    orderedSounds.filter { selectedSounds.contains($0.fileName) }.map(\.localizedTitle)
   }
 
-  /// Fills the name on open when seeded from playing sounds; taps on the
+  /// Fills the name on open when seeded from playing sounds. Taps on the
   /// details card's sparkles button regenerate from there.
   @MainActor
   private func generateInitialNameSuggestion() async {
@@ -296,23 +291,14 @@ extension CreatePresetSheet {
           await presetManager.cacheThumbnail(for: newPreset)
         }
 
-        // Leave solo/Quick Mix first, like a Library row tap, so the prior
+        // Leave single sound/Quick Mix first, like a Library row tap, so the prior
         // mix doesn't linger as the current selection.
-        if audioManager.soloModeSound != nil {
-          audioManager.exitSoloModeWithoutResuming()
-        }
-        if audioManager.isQuickMix {
-          audioManager.exitQuickMix()
-        }
+        audioManager.leaveTransientModes()
         try presetManager.applyPreset(newPreset)
         await MainActor.run {
           didCreatePreset = true
-          // Re-arm the remote command handlers and refresh Now Playing for the
-          // freshly created preset. Browsing the animated-artwork gallery while
-          // creating can make iOS disconnect the handlers, which otherwise
-          // leaves the new preset's lock-screen / Control Center transport dead
-          // (existing presets are fine because nothing tore their handlers
-          // down). Mirrors EditPresetSheet and the artwork picker's restore.
+          // Re-arm the remote command handlers and refresh Now Playing, since browsing
+          // the artwork gallery can make iOS drop them. Mirrors EditPresetSheet.
           audioManager.setupMediaControls()
           audioManager.nowPlayingManager.updateInfo(
             preset: newPreset,
@@ -349,7 +335,6 @@ extension CreatePresetSheet {
     let presetId = UUID()
     let artworkId = await saveArtworkIfPresent(for: presetId)
 
-    // Assign order based on existing custom presets count
     let customPresetsCount = presetManager.presets.filter { !$0.isDefault }.count
 
     var newPreset = Preset(
@@ -367,11 +352,10 @@ extension CreatePresetSheet {
       order: customPresetsCount
     )
 
-    // Theme overrides, persisted exactly like Edit Preset's save path
-    // (toggled off = nil = follow the app-wide setting).
+    // Theme overrides, persisted like Edit Preset's save path.
     newPreset.accentColorName = useCustomTheme ? accentColor?.toString : nil
     newPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
-    // Background blur is now a global Display setting, not a per-preset override.
+    // Background blur is a global Display setting.
 
     Logger.ui.debug(
       "CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "set" : "none")"

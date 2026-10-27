@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Builds `.blankie`-style archive directories and ZIP files for tests —
-//  including deliberately malicious archives (zip-slip, symlink, entry-count
-//  bomb) used to exercise `ArchiveUtility`'s untrusted-input defenses.
+//  Builds `.blankie` archive directories and ZIP files for tests, including malicious ones
+//  (zip-slip, symlink, entry count) for `ArchiveUtility`'s defenses.
 //
 
 import Foundation

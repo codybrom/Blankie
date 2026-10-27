@@ -4,9 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The `m:ss` formatter shared by sound-info and Now Playing duration labels
-//  and the sleep-timer countdown. Seconds must zero-pad and negatives must show
-//  a single leading minus (guards the "-3:5" style bug).
+//  The shared `m:ss` formatter for duration labels and the sleep-timer countdown.
 //
 
 import Foundation
@@ -29,8 +27,7 @@ import Testing
     #expect(TimeInterval(3661).minuteSecondClock == "61:01")
   }
 
-  /// Negative intervals (sleep-timer countdown) carry exactly one leading minus
-  /// and still zero-pad seconds.
+  /// Sleep-timer countdowns carry one leading minus and still zero-pad seconds.
   @Test func formatsNegativeIntervals() {
     #expect(TimeInterval(-5).minuteSecondClock == "-0:05")
     #expect(TimeInterval(-150).minuteSecondClock == "-2:30")

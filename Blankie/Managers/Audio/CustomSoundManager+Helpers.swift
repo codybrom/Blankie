@@ -13,11 +13,9 @@ import os
 // MARK: - Helper Methods
 
 extension CustomSoundManager {
-  /// Deletes an import source only if it lives in our own transient staging
-  /// (`tmp` or `Documents/Inbox`) — i.e. a copy iOS made for the file picker, or
-  /// an open-in/share drop. The user's original files elsewhere are security-
-  /// scoped and never touched. Pairs with the launch-time staging sweep so a
-  /// just-imported source doesn't linger until the next launch.
+  /// Deletes an import source only if it's in the app's transient staging (`tmp` or
+  /// `Documents/Inbox`): a file-picker copy or an open-in drop. The user's own files
+  /// are never touched. Complements the launch-time staging sweep.
   func removeStagedImportSource(_ url: URL) {
     let path = url.standardizedFileURL.path
     var roots = [URL(fileURLWithPath: NSTemporaryDirectory()).standardizedFileURL.path]
@@ -37,11 +35,9 @@ extension CustomSoundManager {
   }
 
   func getCustomSoundsDirectoryURL() -> URL? {
-    // Use app group container if available, otherwise fall back to documents directory
     if let appGroupURL = AppGroupConfiguration.documentsURL {
       return appGroupURL.appendingPathComponent(customSoundsDirectory)
     } else {
-      // Fallback to documents directory
       let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         .first
       return documentsPath?.appendingPathComponent(customSoundsDirectory)
@@ -56,15 +52,13 @@ extension CustomSoundManager {
     return type.conforms(to: .audio)
   }
 
-  /// Extract metadata title from audio file (ID3 tags, etc.)
+  /// The file's metadata title (ID3 and similar tags), if any.
   func extractMetadataTitle(from url: URL) async -> String? {
     do {
       let asset = AVURLAsset(url: url)
 
-      // Load common metadata which includes ID3 tags
       let metadata = try await asset.load(.commonMetadata)
 
-      // Look for title in metadata
       for item in metadata {
         if let key = item.commonKey, key == .commonKeyTitle {
           if let value = try await item.load(.value) as? String {
@@ -89,15 +83,10 @@ extension CustomSoundManager {
   func validateAudioFile(at url: URL) async throws -> Result<Void, Error> {
     Logger.sounds.debug("CustomSoundManager: Validating audio file at \(url.lastPathComponent)")
 
-    // No hard size cap: files over the raw-import ceiling are still accepted and
-    // stream-transcoded to AAC on import (see importSound). Duration is the real
-    // bound, checked below.
-
-    // Verify it's a valid audio file and check duration
+    // No size cap: oversized files are transcoded to AAC on import (see importSound).
     do {
       let asset = AVURLAsset(url: url)
 
-      // Check if the file has audio tracks
       let audioTracks = try await asset.loadTracks(withMediaType: .audio)
       if audioTracks.isEmpty {
         Logger.sounds.debug("CustomSoundManager: No audio tracks found in file")
@@ -134,7 +123,7 @@ extension CustomSoundManager {
 // MARK: - Sound File Management
 
 extension CustomSoundManager {
-  /// Get the URL for a custom sound file stored in the app's documents directory
+  /// The custom sound's file URL, or nil when the file is missing.
   func getURLForCustomSound(_ customSound: CustomSoundData) -> URL? {
     guard let documentsPath = getCustomSoundsDirectoryURL() else {
       Logger.sounds.error("CustomSoundManager: Could not get custom sounds directory URL")
@@ -144,7 +133,6 @@ extension CustomSoundManager {
     let fileName = "\(customSound.fileName).\(customSound.fileExtension)"
     let soundURL = documentsPath.appendingPathComponent(fileName)
 
-    // Verify the file exists (no verbose logging during startup)
     if FileManager.default.fileExists(atPath: soundURL.path) {
       return soundURL
     }
@@ -152,11 +140,10 @@ extension CustomSoundManager {
     Logger.sounds.debug(
       "CustomSoundManager: Custom sound file not found: \(fileName) at \(soundURL.path)")
 
-    // Debug: List files in the CustomSounds directory
     do {
       let files = try FileManager.default.contentsOfDirectory(atPath: documentsPath.path)
       Logger.sounds.debug("CustomSoundManager: Files in CustomSounds directory:")
-      files.forEach { file in
+      for file in files {
         Logger.sounds.debug("  - \(file)")
       }
     } catch {
@@ -168,14 +155,27 @@ extension CustomSoundManager {
     return nil
   }
 
-  /// Returns the file URL for a custom sound data object
+  /// File names (no extension) of the custom audio files on disk. Launch pruning
+  /// counts these as valid so a row lost to a store rebuild can't strip a
+  /// reference whose audio still exists.
+  func customAudioFileNamesOnDisk() -> Set<String> {
+    guard let dir = getCustomSoundsDirectoryURL(),
+      let entries = try? FileManager.default.contentsOfDirectory(atPath: dir.path)
+    else { return [] }
+    return Set(
+      entries
+        .filter { !$0.hasPrefix(".") && !$0.hasSuffix(Self.mirrorSuffix) }
+        .map { ($0 as NSString).deletingPathExtension })
+  }
+
+  /// The expected file URL, whether or not the file exists.
   func fileURL(for customSound: CustomSoundData) -> URL? {
     guard let customSoundsDir = getCustomSoundsDirectoryURL() else { return nil }
     let fileName = "\(customSound.fileName).\(customSound.fileExtension)"
     return customSoundsDir.appendingPathComponent(fileName)
   }
 
-  /// Re-analyze the peak level for a custom sound
+  /// Re-measures and saves a custom sound's peak level in dB.
   func reanalyzePeakLevel(for customSound: CustomSoundData) async -> Float? {
     guard let url = getURLForCustomSound(customSound) else {
       Logger.sounds.error("CustomSoundManager: Could not get URL for custom sound")
@@ -183,16 +183,12 @@ extension CustomSoundManager {
     }
 
     do {
-      // Calculate peak level from audio file
       let peakLevel = try await calculatePeakLevel(from: url)
 
-      // Convert to dB
       let peakDB = 20 * log10(max(peakLevel, 0.00001))
 
-      // Update the custom sound record
       customSound.detectedPeakLevel = peakDB
 
-      // Save on main actor
       try await MainActor.run {
         try saveContext()
       }
@@ -207,7 +203,6 @@ extension CustomSoundManager {
     }
   }
 
-  /// Calculate the peak level from an audio file
   private func calculatePeakLevel(from url: URL) async throws -> Float {
     let asset = AVURLAsset(url: url)
     let reader = try AVAssetReader(asset: asset)
@@ -242,7 +237,6 @@ extension CustomSoundManager {
     return peakLevel
   }
 
-  /// Process a sample buffer and return the peak level found
   private func processSampleBuffer(_ sampleBuffer: CMSampleBuffer) -> Float {
     guard let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else {
       return 0.0

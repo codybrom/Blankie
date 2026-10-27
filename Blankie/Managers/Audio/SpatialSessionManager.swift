@@ -6,6 +6,7 @@
 //
 
 import AVFAudio
+import Combine
 import Foundation
 import os
 
@@ -16,9 +17,8 @@ enum SpatialSessionMode: String, CaseIterable {
   case headTracked
 }
 
-/// Holds the live spatial session. Deliberately volatile while the feature is
-/// experimental: the mode resets to off on launch, and placements made in the
-/// mixer are discarded when the session ends — nothing is written to presets.
+/// Holds the live spatial session. The mode resets to off on launch, and
+/// placements are discarded when the session ends (nothing goes to presets).
 final class SpatialSessionManager: ObservableObject {
   static let shared = SpatialSessionManager()
 
@@ -36,7 +36,7 @@ final class SpatialSessionManager: ObservableObject {
   private init() {}
 
   /// Whether audio routes to a car (CarPlay or car Bluetooth). Spatial
-  /// sessions are headphone experiences — in a car the render broke silently.
+  /// sessions are headphone-only. The spatial render fails on a car route.
   static var isCarAudioRouteActive: Bool {
     #if os(iOS)
       return AVAudioSession.sharedInstance().currentRoute.outputs.contains {
@@ -47,7 +47,7 @@ final class SpatialSessionManager: ObservableObject {
     #endif
   }
 
-  /// Ends any live session when a car route/scene appears; no-op otherwise.
+  /// Ends any live session when a car route/scene appears. No-op otherwise.
   @MainActor
   func endSessionForCarAudio() {
     guard isActive else { return }
@@ -55,12 +55,11 @@ final class SpatialSessionManager: ObservableObject {
     setMode(.off)
   }
 
-  /// Switches mode. Entering/leaving a session rebuilds players (the spatial
-  /// chain is decided at load); fixed ↔ head-tracked is just the env-node flag.
+  /// Switches mode. Entering or leaving a session rebuilds players (the spatial
+  /// chain is decided at load). Fixed vs. head-tracked is only the env-node flag.
   @MainActor
   func setMode(_ newMode: SpatialSessionMode) {
     guard newMode != mode else { return }
-    // Never start a session while audio routes to a car (see above).
     if newMode != .off, Self.isCarAudioRouteActive { return }
     let wasActive = isActive
     mode = newMode
@@ -79,9 +78,8 @@ final class SpatialSessionManager: ObservableObject {
     }
   }
 
-  /// Seeds an even fan around the listener when a session starts (before the
-  /// rebuild, so players load straight into their spots) — the hash defaults
-  /// read as random clutter on first open.
+  /// Seeds an even fan around the listener when a session starts. Runs before
+  /// the rebuild so players load straight into their spots.
   @MainActor
   private func seedDefaultSpread() {
     let sounds = AudioManager.shared.sounds.filter { $0.isSelected && $0.isSpatialReady }
@@ -92,8 +90,8 @@ final class SpatialSessionManager: ObservableObject {
     }
   }
 
-  /// The even-fan slot for sound `index` of `count` — the single source of
-  /// truth for seeding, the mixer's Arrange action, and its no-op check.
+  /// The even-fan slot for sound `index` of `count`, shared by seeding, the
+  /// mixer's Arrange action and its no-op check.
   static func spreadSlot(index: Int, count: Int) -> Placement {
     Placement(angle: Float(index) * (360.0 / Float(count)), distance: 2.0)
   }

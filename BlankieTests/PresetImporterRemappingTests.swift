@@ -4,9 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Imported custom sounds receive fresh IDs, so the preset's sound-state
-//  references must be rewritten. A miss here silently drops sounds from an
-//  imported preset or lets it collide with an existing one.
+//  Imported custom sounds get fresh IDs, so the preset's sound-state references are rewritten.
 //
 
 import Foundation
@@ -16,8 +14,6 @@ import Testing
 
 @Suite struct PresetImporterRemappingTests {
 
-  /// A sound state whose fileName is an old custom-sound UUID is rewritten to
-  /// the mapped UUID, preserving selection and volume.
   @Test func remapsCustomSoundStates() {
     let oldId = UUID()
     let newId = UUID()
@@ -32,8 +28,6 @@ import Testing
     #expect(isClose(state.volume, 0.4))
   }
 
-  /// Built-in sounds (non-UUID fileNames) and UUIDs absent from the mapping are
-  /// left untouched.
   @Test func leavesUnmappedAndBuiltInStatesUntouched() {
     let mappedOld = UUID()
     let mappedNew = UUID()
@@ -51,7 +45,6 @@ import Testing
     #expect(result.soundStates[2].fileName == mappedNew.uuidString)
   }
 
-  /// An empty mapping is a no-op.
   @Test func emptyMappingIsNoOp() {
     let preset = PresetFactory.makePreset(
       soundStates: [PresetState(fileName: UUID().uuidString, isSelected: true, volume: 0.5)])
@@ -59,8 +52,7 @@ import Testing
     #expect(result.soundStates == preset.soundStates)
   }
 
-  /// A re-instanced preset gets a new identity, is marked imported, and records
-  /// the original ID for duplicate detection — but is never the default.
+  /// The original ID is kept for duplicate detection. An imported copy is never the default.
   @Test func createNewInstanceReIDsAndMarksImported() {
     let original = PresetFactory.makePreset(isDefault: true, isImported: false)
 
@@ -73,8 +65,6 @@ import Testing
     #expect(result.lastModifiedVersion != nil)
   }
 
-  /// Theme/customization fields survive re-instancing, so a shared preset keeps
-  /// its look after import.
   @Test func createNewInstanceCarriesThemeAndContent() {
     let original = PresetFactory.makePreset(
       soundStates: [PresetState(fileName: "rain", isSelected: true, volume: 0.7)],

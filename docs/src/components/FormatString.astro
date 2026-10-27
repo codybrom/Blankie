@@ -1,9 +1,7 @@
 ---
-// Renders a localizable string with its printf / iOS format specifiers
-// (%@, %lld, %1$@, %.2f …) shown as plain-language chips — "text", "number",
-// "decimal" — so translators can tell what each placeholder stands for. The raw
-// specifier is preserved in each chip's tooltip, and positional args (%1$, %2$)
-// carry a small index so their order is clear.
+// Renders a localizable string with its format specifiers (%@, %lld, %1$@,
+// %.2f) shown as plain-language chips ("text", "number", "decimal"). Each chip's
+// tooltip keeps the raw specifier. Positional args (%1$, %2$) show an index.
 interface Props {
   text: string;
   maxLength?: number;

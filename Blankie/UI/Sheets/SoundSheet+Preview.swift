@@ -16,7 +16,6 @@ extension SoundSheet {
     Logger.ui.debug(
       "SoundSheet: Starting preview for '\(soundName)' (isDisappearing: \(isDisappearing))")
 
-    // Don't start preview if sheet is disappearing
     guard !isDisappearing else {
       Logger.ui.debug("SoundSheet: Skipping preview start - sheet is disappearing")
       return
@@ -33,41 +32,38 @@ extension SoundSheet {
   }
 
   private func startPreviewProgressTimer() {
-    // Reset progress
     previewProgress = 0
 
-    // Cancel any existing timer
     previewTimer?.invalidate()
 
-    // Start a new timer to update progress
     previewTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-      guard let preview = self.previewSound,
-        preview.isPlaying
-      else {
-        self.previewTimer?.invalidate()
-        self.previewTimer = nil
-        return
-      }
+      MainActor.assumeIsolated {
+        guard let preview = self.previewSound,
+          preview.isPlaying
+        else {
+          self.previewTimer?.invalidate()
+          self.previewTimer = nil
+          return
+        }
 
-      let duration = preview.playbackDuration
-      let currentTime = preview.playbackPosition
+        let duration = preview.playbackDuration
+        let currentTime = preview.playbackPosition
 
-      if duration > 0 {
-        self.previewProgress = currentTime / duration
+        if duration > 0 {
+          self.previewProgress = currentTime / duration
+        }
       }
     }
   }
 
   private func prepareForPreview() {
-    // Save current solo mode sound if any (for restoration after preview)
-    previousSoloModeSound = AudioManager.shared.soloModeSound
+    // Save the current single sound, if any, to restore after the preview.
+    previousSingleSound = AudioManager.shared.singleSound
 
-    // Exit any existing solo mode first (but don't change global playback state)
-    if AudioManager.shared.soloModeSound != nil {
-      AudioManager.shared.exitSoloModeWithoutResuming()
+    // Exit any existing single-sound mode first (but don't change global playback state)
+    if AudioManager.shared.singleSound != nil {
+      AudioManager.shared.exitSingleSoundWithoutResuming()
     }
-
-    // Note: We don't change global playback state here since preview mode handles it
   }
 
   private func createPreviewSound() {
@@ -86,10 +82,8 @@ extension SoundSheet {
       return
     }
 
-    // Reset this flag for add mode
     wasPreviewSoundPlaying = false
 
-    // Create a temporary preview sound
     let fileName = fileURL.deletingPathExtension().lastPathComponent
     let preview = Sound(
       title: soundName.isEmpty ? fileName : soundName,
@@ -104,17 +98,14 @@ extension SoundSheet {
       customSoundDataID: nil
     )
 
-    // Set preview volume
     preview.volume = 1.0
     previewSound = preview
   }
 
   private func createEditPreview(_ sound: Sound) {
-    // Track if this sound was playing before preview
     wasPreviewSoundPlaying = sound.isPlaying && sound.isSelected
 
-    // For edit mode, the preview sound is just the actual sound
-    // Changes are already applied instantly, no need for temporary customization
+    // Edit mode previews the real sound, since its changes already apply instantly.
     previewSound = sound
   }
 
@@ -131,7 +122,6 @@ extension SoundSheet {
     let soundName = builtInSound?.title ?? sound?.title ?? "Unknown"
     Logger.ui.debug("SoundSheet: Stopping preview for '\(soundName)'")
 
-    // Stop the progress timer
     previewTimer?.invalidate()
     previewTimer = nil
     previewProgress = 0
@@ -143,25 +133,25 @@ extension SoundSheet {
         // Exit preview mode (this restores all original states)
         AudioManager.shared.exitPreviewMode()
 
-        if let previousSolo = previousSoloModeSound {
-          Logger.ui.debug("SoundSheet: Restoring previous solo mode for '\(previousSolo.title)'")
-          // Restore the solo session paused — auto-resuming read as the stop
-          // button doing nothing, since the solo sound is usually the very
-          // sound just previewed. Play/space resumes it. The explicit pause
-          // covers a mid-fade snapshot that exitPreviewMode left audible.
-          previousSolo.pause()
-          AudioManager.shared.enterSoloMode(for: previousSolo, startPlaying: false)
+        if let previousSingle = previousSingleSound {
+          Logger.ui.debug(
+            "SoundSheet: Restoring previous single-sound mode for '\(previousSingle.title)'")
+          // Restore the single sound session paused, since the single sound is usually the one
+          // just previewed (play/space resumes it). The explicit pause covers a
+          // mid-fade snapshot that exitPreviewMode left audible.
+          previousSingle.pause()
+          AudioManager.shared.enterSingleSound(for: previousSingle, startPlaying: false)
         }
 
-        // Tear down add mode's temp player; edit mode previews the real Sound,
-        // whose playback exitPreviewMode/enterSoloMode just restored.
+        // Tear down add mode's temp player. Edit mode previews the real Sound,
+        // whose playback exitPreviewMode/enterSingleSound just restored.
         if case .add = mode {
           preview.unload()
         }
       }
 
       previewSound = nil
-      previousSoloModeSound = nil
+      previousSingleSound = nil
       wasPreviewSoundPlaying = false
     }
   }
@@ -174,7 +164,6 @@ extension SoundSheet {
     )
 
     Task { @MainActor in
-      // Update the sound's volume based on the current customization
       preview.updateVolume()
 
       Logger.ui.debug("SoundSheet: Preview volume updated with current sheet settings")

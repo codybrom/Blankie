@@ -10,11 +10,9 @@ import Foundation
 import os
 
 /// Rendered mono variants of long sounds, so streamed playback can join the
-/// spatial field (the environment node only spatializes mono, and streamed
-/// segments otherwise carry the source channel count). Caches live in the
-/// system Caches directory keyed by source name + baked boost, so a
-/// re-analysis simply renders a fresh variant and the old one ages out.
-enum SpatialAudioCache {
+/// spatial field (the environment node spatializes only mono). Keyed by source
+/// name and baked boost, so a re-analysis renders a fresh variant in Caches.
+nonisolated enum SpatialAudioCache {
 
   private static var directory: URL {
     FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -32,8 +30,8 @@ enum SpatialAudioCache {
     return FileManager.default.fileExists(atPath: url.path) ? url : nil
   }
 
-  /// Removes every rendered variant of this source (any boost) — called when
-  /// a custom sound is deleted so its caches don't linger until purge.
+  /// Removes every rendered variant of this source (any boost). Called when a
+  /// custom sound is deleted.
   static func removeCaches(for sourceURL: URL) {
     let prefix = "\(sourceURL.lastPathComponent)-"
     guard
@@ -57,8 +55,7 @@ enum SpatialAudioCache {
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
       let inFile = try AVAudioFile(forReading: sourceURL)
-      // A zero-frame source would write an empty cache that then reads as
-      // valid forever; refuse it instead.
+      // Refuse a zero-frame source because its empty cache would read as valid.
       guard inFile.length > 0 else { throw CocoaError(.fileReadCorruptFile) }
       let inFormat = inFile.processingFormat
 
@@ -76,8 +73,9 @@ enum SpatialAudioCache {
 
       let chunkFrames: AVAudioFrameCount = 48_000
       while inFile.framePosition < inFile.length {
-        let remaining = AVAudioFrameCount(inFile.length - inFile.framePosition)
-        let frames = min(chunkFrames, remaining)
+        // Clamp before narrowing, since the remainder alone can exceed UInt32.
+        let frames = AVAudioFrameCount(
+          min(AVAudioFramePosition(chunkFrames), inFile.length - inFile.framePosition))
         guard
           let chunk = AVAudioPCMBuffer(pcmFormat: inFormat, frameCapacity: frames)
         else { throw CocoaError(.fileReadUnknown) }

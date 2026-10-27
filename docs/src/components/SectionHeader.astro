@@ -1,9 +1,7 @@
 ---
-// Section header used across the site in two forms:
-//  - default: an optional eyebrow + a large balanced heading (homepage sections)
-//  - rule: a smaller heading followed by a hairline that fills the row
-//    (editorial section headers on press / credits / guides)
-// `class` is applied to the outer element so callers control spacing/width.
+// Default: optional eyebrow and a large heading (homepage). `rule`: a smaller
+// heading and a hairline filling the row (press, credits, guides).
+// `class` goes on the outer element so callers set spacing and width.
 interface Props {
   eyebrow?: string;
   heading: string;

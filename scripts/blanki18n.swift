@@ -4,7 +4,7 @@
 /// By Cody Bromley
 /// MIT License
 ///
-/// This script is used to update the Localizable.xcstrings file with single-language translations in JSON or CSV format
+/// Updates Localizable.xcstrings with single-language translations in JSON or CSV format.
 /// To learn more, visit blankie.rest/i18n
 ///
 ///  Usage: ./blanki18n.swift path/to/translation.[json|csv] [language_code] [--preserve-states]
@@ -26,20 +26,17 @@ func parseCSV(data: String) -> [CSVRow] {
 
   guard !lines.isEmpty else { return rows }
 
-  // Detect delimiter by counting occurrences in the header line
   let header = lines[0]
   let semicolonCount = header.components(separatedBy: ";").count - 1
   let commaCount = header.components(separatedBy: ",").count - 1
   let delimiter = semicolonCount > commaCount ? ";" : ","
 
-  // Skip header
   for line in lines.dropFirst() where !line.isEmpty {
     let columns = line.components(separatedBy: delimiter)
       .map { $0.trimmingCharacters(in: .init(charactersIn: "\"")) }
 
     if columns.count >= 4 {
-      // For semicolon CSVs, check both source (index 1) and target (index 2) columns
-      // Use whichever is non-empty, preferring target if both exist
+      // Prefer the target column. Fall back to the source column when it's empty.
       let sourceValue = columns[1].trimmingCharacters(in: .whitespacesAndNewlines)
       let targetValue = columns[2].trimmingCharacters(in: .whitespacesAndNewlines)
       let translation = !targetValue.isEmpty ? targetValue : sourceValue
@@ -116,8 +113,7 @@ func readTranslationFile(at path: String) -> [CSVRow] {
     }
     return parseJSON(data: fileData)
   } else if path.hasSuffix(".csv") {
-    // Try multiple encodings (UTF-8, Mac Central European Roman, MacRoman, Windows-1252, ISO Latin-2)
-    // Mac Central European Roman is for Central/Eastern European languages like Hungarian
+    // Try UTF-8, then legacy encodings (Mac Central European Roman covers Hungarian).
     let encodings: [String.Encoding] = [
       .utf8,
       String.Encoding(
@@ -171,20 +167,16 @@ func updateTranslations(
       var localizations = entry["localizations"] as? [String: [String: Any]]
     {
 
-      // Check if the translation has a meaningful value
       let targetValue = translation.target.trimmingCharacters(in: .whitespacesAndNewlines)
       let hasValidTranslation = !targetValue.isEmpty && targetValue != translation.key
 
-      // Add or update the localization for this language
       let state: String
       if preserveStates {
         state = translation.state
       } else {
-        // Default behavior: valid translations are "translated", placeholders need review
         state = hasValidTranslation ? "translated" : "needs_review"
       }
 
-      // Check if this is actually a change
       let existingLocalization = localizations[langCode]
       let existingStringUnit = existingLocalization?["stringUnit"] as? [String: Any]
       let existingValue = existingStringUnit?["value"] as? String
@@ -200,7 +192,6 @@ func updateTranslations(
           ]
         ]
 
-        // Update the entry
         entry["localizations"] = localizations
         updatedStrings[translation.key] = entry
         updatedCount += 1

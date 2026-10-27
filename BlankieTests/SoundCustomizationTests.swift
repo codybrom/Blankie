@@ -4,8 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Per-built-in-sound overrides. A Codable round-trip that drops a field
-//  silently resets a user's per-sound setting; `hasCustomizations` decides
+//  Per-built-in-sound overrides: Codable round trips and `hasCustomizations`, which decides
 //  whether a row is kept or pruned.
 //
 
@@ -42,8 +41,6 @@ import Testing
     #expect(!SoundCustomization(fileName: "x").hasCustomizations)
   }
 
-  /// Every field survives a JSON round-trip; a regression here silently resets
-  /// per-sound settings on the next launch.
   @Test func codableRoundTripPreservesEveryField() throws {
     let original = SoundCustomization(
       fileName: "rain",

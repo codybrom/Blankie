@@ -4,9 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The shipped sound catalog and credit/license value types. Decoding the
-//  bundled sounds.json is the empty-grid-on-launch canary; License/Mood drift
-//  would mis-tag or mis-link every sound's credits.
+//  The shipped sound catalog (sounds.json) and the credit, license and mood value types.
 //
 
 import Foundation
@@ -16,7 +14,6 @@ import Testing
 
 @Suite struct SoundMetadataModelTests {
 
-  /// The bundled catalog decodes and still contains the full built-in library.
   @Test func shippedSoundsJSONDecodes() throws {
     let url = try #require(Bundle.main.url(forResource: "sounds", withExtension: "json"))
     let container = try JSONDecoder().decode(SoundsContainer.self, from: Data(contentsOf: url))
@@ -27,6 +24,32 @@ import Testing
       #expect(!sound.title.isEmpty)
       #expect(!sound.fileName.isEmpty)
       #expect(!sound.systemIconName.isEmpty)
+    }
+  }
+
+  /// The subtitle is the caption under the title in Now Playing and the sound pickers.
+  @Test func everyBuiltInSoundHasSubtitle() throws {
+    let url = try #require(Bundle.main.url(forResource: "sounds", withExtension: "json"))
+    let container = try JSONDecoder().decode(SoundsContainer.self, from: Data(contentsOf: url))
+    for sound in container.sounds {
+      #expect(
+        !(sound.subtitle ?? "").isEmpty,
+        "built-in sound '\(sound.fileName)' is missing a subtitle")
+    }
+  }
+
+  /// `localizedSubtitle` looks subtitles up with `NSLocalizedString`, so each one needs a
+  /// catalog key or it shows in English.
+  @Test func everySubtitleHasCatalogEntry() throws {
+    let url = try #require(Bundle.main.url(forResource: "sounds", withExtension: "json"))
+    let container = try JSONDecoder().decode(SoundsContainer.self, from: Data(contentsOf: url))
+    let sentinel = "\u{1}__missing__"
+    for sound in container.sounds {
+      guard let subtitle = sound.subtitle, !subtitle.isEmpty else { continue }
+      let resolved = Bundle.main.localizedString(forKey: subtitle, value: sentinel, table: nil)
+      #expect(
+        resolved != sentinel,
+        "subtitle for '\(sound.fileName)' has no string-catalog key: \(subtitle)")
     }
   }
 
@@ -44,7 +67,7 @@ import Testing
     #expect(License(rawValue: "cc0") == .cc0)
     #expect(License(rawValue: "nope") == nil)
     #expect(License.ccBy4.linkText == "CC BY 4.0")
-    // Creative Commons licenses link out; bespoke ones don't.
+    // Creative Commons licenses link out, but bespoke ones don't.
     #expect(License.cc0.url != nil)
     #expect(License.ccBy3.url != nil)
     #expect(License.custom.url == nil)
@@ -53,7 +76,8 @@ import Testing
 
   @Test func soundCreditAttribution() {
     let credit = SoundCredit(
-      name: "Rain", soundName: "Heavy Rain", author: "Jane Doe", license: .ccBy4, soundUrl: nil)
+      name: "Rain", fileName: "rain", soundName: "Heavy Rain", author: "Jane Doe", license: .ccBy4,
+      soundUrl: nil)
     #expect(credit.attributionText == "\"Heavy Rain\" by Jane Doe")
   }
 }

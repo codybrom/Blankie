@@ -2,29 +2,21 @@
 #
 # package_animated_artwork.sh
 #
-# Fetches the animated-artwork source videos and packages them into Apple-hosted
-# Managed Background Assets asset packs (.aar) — one pack per artwork. These
-# archives upload to App Store Connect (Transporter / altool / the App Store
-# Connect API) independently of the app build; they are NOT bundled into the app.
+# Downloads the animated-artwork .mov sources from the GitHub Release, verifies
+# them against scripts/animated-artwork.manifest (SHA-256), and packages each into
+# an Apple-hosted Managed Background Assets pack (.aar). The packs upload to App
+# Store Connect separately and aren't bundled into the app. Sources already on
+# disk with a matching checksum are reused.
 #
-# The .mov sources are NOT stored in git: they live on a GitHub Release (so
-# cloning stays cheap) and are downloaded here on demand, verified against
-# scripts/animated-artwork.manifest (SHA-256), then packaged. Fetching is
-# idempotent — a video already on disk with the expected checksum is reused.
-#
-# Each pack mirrors what the app expects at runtime (see BackgroundResourceManager):
+# Each pack matches what BackgroundResourceManager expects at runtime:
 #   assetPackID    = <Name>              the artwork id (e.g. "RainLoop")
 #   file           = <Name>/<Name>.mov   matches relativeVideoPath(for:)
 #   downloadPolicy = onDemand            downloaded only when a user picks it
-#   platforms      = iOS                 animated artwork is an iOS-only feature
+#   platforms      = iOS                 animated artwork is iOS only
 #
-# Each clip ships two variants because iPhone and iPad lock screens advertise
-# different artwork keys: a 3:4 portrait master (pack "<Name>", file
-# "<Name>/<Name>.mov") and a 1:1 square crop for iPad (pack "<Name>Square", file
-# "<Name>/<Name>Square.mov"). Both files live in the base clip's folder, which is
-# why a square pack maps to "<Name>/<Name>Square.mov" — matching
-# BackgroundResourceManager.relativeVideoPath(for:). All sources (both variants)
-# live together on one release, so there is no per-entry tag.
+# iPhone and iPad lock screens use different artwork keys, so each clip ships a
+# 3:4 portrait pack "<Name>" and a 1:1 square pack "<Name>Square", both read from
+# the base clip's folder ("<Name>/<Name>Square.mov").
 #
 # Output: build/AssetPacks/<Name>.aar  (git-ignored)
 #
@@ -129,7 +121,7 @@ JSON
   # re-runs and artwork updates idempotent).
   rm -f "$OUT_DIR/$name.aar"
   # File-selector paths resolve against the current directory, so package from
-  # the AnimatedArtwork root to get a "<Name>/<Name>.mov" pack entry.
+  # ARTWORK_DIR to get a "<Name>/<Name>.mov" pack entry.
   if (cd "$ARTWORK_DIR" && xcrun ba-package "$tmp_dir/$name.json" -o "$OUT_DIR/$name.aar"); then
     packaged=$((packaged + 1))
   else

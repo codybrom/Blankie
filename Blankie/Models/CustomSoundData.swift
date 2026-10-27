@@ -22,11 +22,10 @@ class CustomSoundData {
   // Audio normalization settings
   var normalizeAudio: Bool = true
   var volumeAdjustment: Float = 1.0  // 0.5 = -50%, 1.0 = normal, 3.0 = +200%
-  var detectedPeakLevel: Float?  // Legacy: Store the detected peak level for reference
-  var detectedLUFS: Float?  // Store the detected LUFS (Loudness Units relative to Full Scale)
-  var normalizationFactor: Float?  // Pre-calculated normalization factor
+  var detectedPeakLevel: Float?  // Legacy, kept for reference
+  var detectedLUFS: Float?  // Loudness Units relative to Full Scale
+  var normalizationFactor: Float?
 
-  // File integrity
   var sha256Hash: String?  // SHA-256 hash of the audio file for deduplication and integrity
 
   // Credit information for custom sounds
@@ -48,11 +47,9 @@ class CustomSoundData {
   var importedFromPresetId: UUID?  // Which preset this sound was imported with
   var importedFromPresetName: String?  // Name of the preset it was imported with
 
-  // Mood categorization
-  var moods: [SoundMood]?  // Mood tags for categorizing custom sounds
+  var moods: [SoundMood]?
 
-  // Duration
-  var duration: TimeInterval?  // Duration of the audio file in seconds
+  var duration: TimeInterval?
 
   init(
     title: String,
@@ -101,7 +98,6 @@ class CustomSoundData {
     self.duration = duration
   }
 
-  // Convert to SoundData for compatibility with existing system
   func toSoundData() -> SoundData {
     return SoundData(
       defaultOrder: 1000,  // Place custom sounds after built-in sounds
@@ -113,6 +109,7 @@ class CustomSoundData {
       license: "Custom",
       soundUrl: "",
       soundName: originalFileName ?? fileName,
+      subtitle: nil,
       description: nil,
       note: nil,
       lufs: detectedLUFS,

@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 import os
 
-/// Unified migration system for all app data (UserDefaults + SwiftData + App Group)
+/// Migrates app data (UserDefaults, the SwiftData store, custom sound files) into the App Group.
 enum AppDataMigrator {
   private static let migrationCompletedKey = "unifiedMigrationCompleted"
 
@@ -17,10 +17,10 @@ enum AppDataMigrator {
   private static var obsoleteKeys: [String] {
     var keys = [
       "hideInactiveSounds",  // "Hide Inactive Sounds" feature removed in 1.1
-      "appearanceMode",  // Appearance picker removed in 2.0 — app is now dark-only
+      "appearanceMode",  // Appearance picker removed in 2.0 (dark-only)
     ]
     #if os(iOS) || os(visionOS)
-      // Autoplay is macOS-only; sweep the legacy keys on iOS so no stale value
+      // Autoplay is macOS-only. Sweep the legacy keys on iOS so no stale value
       // can sync to a Mac. (macOS migrates them into autoPlayOnLaunchMac.)
       keys.append(UserDefaultsKeys.autoPlayOnLaunch)
       keys.append("alwaysStartPaused")
@@ -28,13 +28,12 @@ enum AppDataMigrator {
     return keys
   }
 
-  /// Perform one-time migration of all app data
+  /// Purges obsolete keys, then runs the one-time migration if it hasn't completed.
   static func performAllMigrations() {
     // Always purge obsolete keys, independent of the one-time migration below,
     // so users who already migrated on an earlier build still get cleaned up.
     removeObsoleteUserDefaults()
 
-    // Check if unified migration already completed
     guard !UserDefaults.shared.bool(forKey: migrationCompletedKey) else {
       return
     }
@@ -42,10 +41,18 @@ enum AppDataMigrator {
     Logger.app.debug("AppDataMigrator: Starting unified app data migration...")
 
     migrateToAppGroup()
-    migrateSwiftDataToAppGroup()
+    let storeMigrated = migrateSwiftDataToAppGroup()
     migrateUserDefaultsToShared()
 
-    // Mark all migrations as completed
+    // A failed store copy leaves the migration unmarked, so the next launch runs
+    // it again (every step is idempotent). Store setup stays in memory meanwhile,
+    // since any store at the destination would read as a finished copy.
+    guard storeMigrated else {
+      Logger.app.error("AppDataMigrator: Store migration failed; will retry next launch")
+      AppSetup.storeCopyPending = true
+      return
+    }
+
     UserDefaults.shared.set(true, forKey: migrationCompletedKey)
     Logger.app.debug("AppDataMigrator: All migrations completed successfully")
   }
@@ -68,7 +75,7 @@ enum AppDataMigrator {
     }
   }
 
-  /// Migrate UserDefaults to app group (from UserDefaults+AppGroup.swift)
+  /// Copies UserDefaults into the App Group suite.
   private static func migrateToAppGroup() {
     guard let groupDefaults = AppGroupConfiguration.sharedDefaults else {
       Logger.app.debug("AppDataMigrator: Unable to access app group defaults")
@@ -85,10 +92,11 @@ enum AppDataMigrator {
       UserDefaultsKeys.volumeWithOtherAudio,
       UserDefaultsKeys.showSoundNames,
       UserDefaultsKeys.iconSize,
-      UserDefaultsKeys.soloModeSoundFileName,
+      UserDefaultsKeys.singleSoundFileName,
       UserDefaultsKeys.showingListView,
       UserDefaultsKeys.showProgressBorder,
       UserDefaultsKeys.lockPortraitOrientationiOS,
+      UserDefaultsKeys.nowPlayingFirst,
       UserDefaultsKeys.quickMixSoundFileNames,
       UserDefaultsKeys.starredItems,
       "savedSoundStates",
@@ -126,11 +134,13 @@ enum AppDataMigrator {
     }
   }
 
-  /// Migrate SwiftData to app group (from SwiftDataMigration.swift)
-  private static func migrateSwiftDataToAppGroup() {
+  /// Copies the SwiftData store into the App Group. Returns false only when an
+  /// existing store was found but couldn't be copied.
+  @discardableResult
+  private static func migrateSwiftDataToAppGroup() -> Bool {
     guard let appGroupURL = AppGroupConfiguration.dataStoreURL else {
       Logger.app.debug("AppDataMigrator: No app group URL available")
-      return
+      return true
     }
 
     let fileManager = FileManager.default
@@ -139,36 +149,27 @@ enum AppDataMigrator {
     Logger.app.debug("AppDataMigrator: Checking SwiftData migration status...")
     Logger.app.debug("  - App group store exists: \(appGroupStoreExists) at \(appGroupURL.path)")
 
-    // If app group store already exists, no migration needed
     if appGroupStoreExists {
       Logger.app.debug("AppDataMigrator: App group store already exists, no migration needed")
-      return
+      // Still move the sound files, in case an earlier run stopped after the
+      // store copy and left rows pointing at unmoved files.
+      migrateCustomSoundFiles()
+      return true
     }
 
-    // Try to find and migrate existing store
     let possibleStoreLocations = getPossibleStoreLocations()
     var migrated = false
+    var foundStore = false
 
     for storeURL in possibleStoreLocations where fileManager.fileExists(atPath: storeURL.path) {
+      foundStore = true
       Logger.app.debug("AppDataMigrator: Found existing store at \(storeURL.path)")
 
       do {
-        // Create app group directory if needed
         let appGroupDir = appGroupURL.deletingLastPathComponent()
         try fileManager.createDirectory(at: appGroupDir, withIntermediateDirectories: true)
 
-        // Copy all related files (main db, wal, shm)
-        let extensions = ["", "-wal", "-shm"]
-
-        for ext in extensions {
-          let sourceFile = URL(fileURLWithPath: storeURL.path + ext)
-          let destFile = URL(fileURLWithPath: appGroupURL.path + ext)
-
-          if fileManager.fileExists(atPath: sourceFile.path) {
-            try fileManager.copyItem(at: sourceFile, to: destFile)
-            Logger.app.debug("  Copied: \(sourceFile.lastPathComponent)")
-          }
-        }
+        try copyStoreAtomically(from: storeURL, to: appGroupURL)
 
         migrated = true
         Logger.app.debug("AppDataMigrator: SwiftData migration completed successfully")
@@ -182,21 +183,44 @@ enum AppDataMigrator {
       Logger.app.debug("AppDataMigrator: No existing SwiftData store found to migrate")
     }
 
-    // Also migrate custom sound files
     migrateCustomSoundFiles()
+    return migrated || !foundStore
   }
 
-  /// Get possible locations for existing SwiftData stores
+  /// Copies a store's main, -wal, and -shm files as a set. Each is staged under a
+  /// temporary name, then renamed into place, so a failure never leaves a partial
+  /// store that the "store exists" check would accept.
+  static func copyStoreAtomically(from storeURL: URL, to appGroupURL: URL) throws {
+    let fileManager = FileManager.default
+    let extensions = ["", "-wal", "-shm"].filter {
+      fileManager.fileExists(atPath: storeURL.path + $0)
+    }
+    let staged = extensions.map { URL(fileURLWithPath: appGroupURL.path + $0 + ".migrating") }
+    defer {
+      for stagedFile in staged { try? fileManager.removeItem(at: stagedFile) }
+    }
+
+    for (ext, stagedFile) in zip(extensions, staged) {
+      try? fileManager.removeItem(at: stagedFile)
+      try fileManager.copyItem(at: URL(fileURLWithPath: storeURL.path + ext), to: stagedFile)
+    }
+    // The main file goes last because it's what the "store exists" check looks for.
+    for (ext, stagedFile) in zip(extensions, staged).reversed() {
+      let destFile = URL(fileURLWithPath: appGroupURL.path + ext)
+      try? fileManager.removeItem(at: destFile)  // stale -wal/-shm from a failed run
+      try fileManager.moveItem(at: stagedFile, to: destFile)
+      Logger.app.debug("  Copied: \(destFile.lastPathComponent)")
+    }
+  }
+
   private static func getPossibleStoreLocations() -> [URL] {
     let fileManager = FileManager.default
     var locations: [URL] = []
 
-    // Documents directory
     if let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
       locations.append(documentsURL.appendingPathComponent("Blankie.sqlite"))
     }
 
-    // Application Support directory
     if let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)
       .first
     {
@@ -208,7 +232,7 @@ enum AppDataMigrator {
     return locations
   }
 
-  /// Migrate custom sound files from documents directory to app group
+  /// Moves custom sound files from Documents/CustomSounds into the App Group.
   private static func migrateCustomSoundFiles() {
     guard let appGroupDocsURL = AppGroupConfiguration.documentsURL else {
       Logger.app.debug("AppDataMigrator: No app group documents URL available")
@@ -217,20 +241,16 @@ enum AppDataMigrator {
 
     let fileManager = FileManager.default
 
-    // Old location: Documents/CustomSounds
     let oldDocsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
     let oldCustomSoundsURL = oldDocsURL.appendingPathComponent("CustomSounds")
 
-    // New location: AppGroup/Documents/CustomSounds
     let newCustomSoundsURL = appGroupDocsURL.appendingPathComponent("CustomSounds")
 
-    // Check if old directory exists
     guard fileManager.fileExists(atPath: oldCustomSoundsURL.path) else {
       Logger.app.debug("AppDataMigrator: No custom sounds directory to migrate")
       return
     }
 
-    // Create new directory if needed
     do {
       try fileManager.createDirectory(at: newCustomSoundsURL, withIntermediateDirectories: true)
     } catch {
@@ -239,7 +259,6 @@ enum AppDataMigrator {
       return
     }
 
-    // Migrate all files
     do {
       let files = try fileManager.contentsOfDirectory(
         at: oldCustomSoundsURL, includingPropertiesForKeys: nil
@@ -248,7 +267,6 @@ enum AppDataMigrator {
       for file in files {
         let destination = newCustomSoundsURL.appendingPathComponent(file.lastPathComponent)
 
-        // Only migrate if destination doesn't exist
         if !fileManager.fileExists(atPath: destination.path) {
           try fileManager.copyItem(at: file, to: destination)
           Logger.app.debug("AppDataMigrator: Migrated custom sound: \(file.lastPathComponent)")
@@ -262,22 +280,18 @@ enum AppDataMigrator {
     }
   }
 
-  /// Migrate UserDefaults from standard to shared container
   private static func migrateUserDefaultsToShared() {
     let keysToMigrate = getUserDefaultsKeysToMigrate()
     var migratedCount = 0
 
-    // Migrate primary keys
     migratedCount += migrateKeys(keysToMigrate)
 
-    // Migrate individual sound settings
     migratedCount += migrateSoundSettings()
 
     Logger.app.debug(
       "AppDataMigrator: UserDefaults migration completed - migrated \(migratedCount) settings")
   }
 
-  /// Get list of keys that need to be migrated
   private static func getUserDefaultsKeysToMigrate() -> [String] {
     var keys = [
       // GlobalSettings keys
@@ -288,12 +302,13 @@ enum AppDataMigrator {
       UserDefaultsKeys.showingListView,
       UserDefaultsKeys.showProgressBorder,
       UserDefaultsKeys.lockPortraitOrientationiOS,
+      UserDefaultsKeys.nowPlayingFirst,
       UserDefaultsKeys.quickMixSoundFileNames,
       UserDefaultsKeys.enableSpatialAudio,
       UserDefaultsKeys.mixWithOthers,
       UserDefaultsKeys.volumeWithOtherAudio,
       UserDefaultsKeys.language,
-      UserDefaultsKeys.soloModeSoundFileName,
+      UserDefaultsKeys.singleSoundFileName,
 
       // Audio system keys
       "soundState",
@@ -320,13 +335,12 @@ enum AppDataMigrator {
     return keys
   }
 
-  /// Migrate a list of keys from standard to shared UserDefaults
   private static func migrateKeys(_ keys: [String]) -> Int {
     var migratedCount = 0
 
     for key in keys {
       if let value = UserDefaults.standard.object(forKey: key) {
-        // Only migrate if not already present in shared (preserve existing data)
+        // Never overwrite a value already in the shared suite.
         if UserDefaults.shared.object(forKey: key) == nil {
           UserDefaults.shared.set(value, forKey: key)
           migratedCount += 1
@@ -351,7 +365,7 @@ enum AppDataMigrator {
 
     for soundKey in soundKeys {
       if let value = UserDefaults.standard.object(forKey: soundKey) {
-        // Only migrate if not already present in shared (preserve existing data)
+        // Never overwrite a value already in the shared suite.
         if UserDefaults.shared.object(forKey: soundKey) == nil {
           UserDefaults.shared.set(value, forKey: soundKey)
           migratedCount += 1

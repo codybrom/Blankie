@@ -10,11 +10,8 @@ import Testing
 
 @testable import Blankie
 
-/// Verifies the planned engine graph drives sounds to the -27 LUFS target and
-/// the limiter holds true peak under the ceiling. Renders offline via
-/// EngineRenderHarness, measures with the production AudioAnalyzer overloads —
-/// the same math gates production and tests. Serialized: offline renders are
-/// memory-heavy and shouldn't run concurrently.
+/// The engine graph drives sounds to the -27 LUFS target and the limiter holds true peak,
+/// measured with the production AudioAnalyzer. Serialized: offline renders are memory-heavy.
 @Suite(.serialized) struct EngineLoudnessTests {
 
   private let targetLUFS = AudioAnalyzer.targetLUFS
@@ -28,10 +25,8 @@ import Testing
       "Missing bundled sound \(name).m4a")
   }
 
-  /// The shipped normalization data for a built-in sound, read from sounds.json
-  /// — the same source the app loads. Reading it (rather than hardcoding factors)
-  /// keeps these tests passing across recuts, and makes them fail loudly if a
-  /// sound is recut without regenerating its factor.
+  /// Reads shipped normalization data from sounds.json (the app's source), so the tests
+  /// follow recuts and fail when a recut skips regenerating its factor.
   private func soundData(_ fileName: String) throws -> SoundData {
     let url = try #require(
       Bundle.main.url(forResource: "sounds", withExtension: "json"),
@@ -43,8 +38,6 @@ import Testing
 
   // MARK: - Loudness convergence
 
-  /// The headline proof: applying fireplace's shipped normalization factor must
-  /// bring it out of the graph at the target loudness.
   @Test func fireplaceRendersAtTargetLUFS() async throws {
     let factor = try #require(soundData("fireplace").normalizationFactor)
 
@@ -59,7 +52,7 @@ import Testing
   }
 
   /// Boat is too quiet to reach the target within the gain cap, so it lands at
-  /// source + maxGainDB rather than the target. Values from sounds.json.
+  /// source + maxGainDB.
   @Test func boatRendersAtGainCappedTarget() async throws {
     let sound = try soundData("boat")
     let factor = try #require(sound.normalizationFactor)
@@ -76,8 +69,7 @@ import Testing
       "Boat (gain-capped) should render near \(cappedTarget) LUFS, got \(measured)")
   }
 
-  /// Attenuation path: storm's factor is < 1, applied as node-volume attenuation
-  /// (not EQ gain), and must land on target. Factor from sounds.json.
+  /// Storm's factor is below 1, so it applies as node-volume attenuation (no EQ gain).
   @Test func stormAttenuatesToTarget() async throws {
     let factor = try #require(soundData("storm").normalizationFactor)
 
@@ -107,9 +99,7 @@ import Testing
       )
     }
 
-    // The PeakLimiter AU's ceiling is 0 dBFS (no ceiling parameter exists); for
-    // live playback the requirement is no digital clipping, and without the
-    // limiter this signal would hit ≈ +14.8 dBTP.
+    // The PeakLimiter AU has a fixed 0 dBFS ceiling. Unlimited, this signal peaks near +14.8 dBTP.
     let truePeak = try #require(AudioAnalyzer.truePeakdBTP(buffer: buffer))
     #expect(
       truePeak <= 0.1,
@@ -118,8 +108,8 @@ import Testing
 
   // MARK: - Synthesized quiet tone (the quiet-custom-import case)
 
-  /// Self-referential: measure the synthesized file, derive the boost the app
-  /// would apply (clamped to maxGainDB), assert the render lands accordingly.
+  /// The expected level is the measured input plus the boost the app would apply
+  /// (clamped to maxGainDB).
   @Test func synthesizedQuietToneBoosts() async throws {
     let url = try Self.makeQuietToneURL(channels: 2)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -132,9 +122,8 @@ import Testing
       "Boosted synthesized tone should land near \(expected) LUFS, got \(measuredOut)")
   }
 
-  /// MONO sources lose ≈3 dB through the mixer (constant-power pan law on mono
-  /// inputs). This test documents that behavior so Stage 3 knows to compensate
-  /// mono customs (+3 dB or upmix at decode). Built-ins are stereo.
+  /// Mono sources lose about 3 dB through the mixer (constant-power pan law). Built-ins
+  /// are stereo.
   @Test func monoSourceRendersThreeDBLow() async throws {
     let url = try Self.makeQuietToneURL(channels: 1)
     defer { try? FileManager.default.removeItem(at: url) }
@@ -146,7 +135,7 @@ import Testing
       "Mono source should land ≈3 dB under \(expected + 3.0) LUFS, got \(measuredOut)")
   }
 
-  /// Shared probe → boost → render → measure round trip.
+  /// Measures the file, applies the clamped boost, renders and measures the output.
   private static func boostRoundTrip(
     _ url: URL, target: Float
   ) throws -> (measuredIn: Float, measuredOut: Float, boostDB: Float) {
@@ -171,8 +160,7 @@ import Testing
 
   // MARK: - Fixtures
 
-  /// Writes a short, deterministic low-level sine tone to a temp .m4a using the
-  /// same AAC settings blankifi's writeM4A uses. Ships nothing.
+  /// Writes a short, quiet sine tone to a temp .m4a with blankifi's writeM4A AAC settings.
   private static func makeQuietToneURL(channels: UInt32) throws -> URL {
     let sampleRate = 44_100.0
     let seconds = 4.0

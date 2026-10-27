@@ -21,20 +21,17 @@ import os
         gridButtons: gridButtons
       )
 
-      // Set tab image
       template.tabImage = UIImage(systemName: "square.grid.2x2")
 
       return template
     }
 
     static func updateTemplate(_ template: CPGridTemplate) {
-      // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
         Logger.carPlay.debug("QuickMixGridTemplate: No sounds loaded yet")
         return
       }
 
-      // Update grid buttons with current state
       let updatedButtons = createGridButtons()
       template.updateGridButtons(updatedButtons)
     }
@@ -43,8 +40,8 @@ import os
       let quickMixSounds = CarPlayInterfaceController.shared.quickMixSoundFileNames
 
       return quickMixSounds.compactMap { fileName in
-        // Preset-use-only sounds can't stand alone, so they never appear as a
-        // Quick Mix button even if an old saved set still lists them.
+        // Preset-use-only sounds can't play alone, so skip them even when an
+        // older saved set lists them.
         guard
           let sound = AudioManager.shared.sounds.first(where: {
             $0.fileName == fileName && !$0.isPresetUseOnly
@@ -58,17 +55,14 @@ import os
     }
 
     private static func createGridButton(for sound: Sound) -> CPGridButton {
-      // Check if sound is currently playing in QuickMix mode. Use logical
-      // playback state, not the node: a just-toggled-off sound is still
-      // rendering its fade-out when this template refreshes.
+      // Use the logical playback state. A sound just toggled off may still be
+      // rendering its fade-out when this refreshes.
       let isPlaying =
         sound.playbackState == .playing && AudioManager.shared.isQuickMix
-        && AudioManager.shared.soloModeSound == nil
+        && AudioManager.shared.singleSound == nil
 
-      // Create button titles
-      let titles = [sound.title]
+      let titles = [CarPlaySoundNames.name(of: sound)]
 
-      // Create button with system image for now
       let button = CPGridButton(
         titleVariants: titles,
         image: getButtonImage(for: sound, isPlaying: isPlaying)
@@ -80,8 +74,7 @@ import os
     }
 
     private static func getButtonImage(for sound: Sound, isPlaying: Bool) -> UIImage {
-      // Render at CarPlay's expected grid-button size and the car display's pixel
-      // scale, so the icon is crisp instead of being upscaled from a fixed bitmap.
+      // Render at CarPlay's grid-button size and the car display's scale so the icon is crisp.
       let size = CPGridTemplate.maximumGridButtonImageSize
       let format = UIGraphicsImageRendererFormat()
       format.scale = CarPlayInterfaceController.shared.carDisplayScale
@@ -90,12 +83,10 @@ import os
       return renderer.image { _ in
         let backgroundColor = getBackgroundColor(for: sound, isPlaying: isPlaying)
 
-        // Circle background filling the button (matching the Blankie app).
         backgroundColor.withAlphaComponent(isPlaying ? 0.3 : 0.2).setFill()
         UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
 
-        // Centered icon, proportions preserved from the previous 100pt button
-        // (50pt icon box, 36pt symbol).
+        // Centered icon at the 100pt button's proportions (50pt box, 36pt symbol).
         let icon =
           UIImage(systemName: sound.systemIconName) ?? UIImage(systemName: "speaker.wave.2")!
         let configuredIcon = icon.withConfiguration(
@@ -115,35 +106,30 @@ import os
     }
 
     private static func getBackgroundColor(for sound: Sound, isPlaying: Bool) -> UIColor {
-      // When not playing, use gray
       guard isPlaying else {
         return UIColor.systemGray
       }
 
-      // When playing, use the same color hierarchy
       return UIColor.carPlayIconTint
     }
 
     private static func handleSoundToggle(_ sound: Sound, button _: CPGridButton) {
       Task { @MainActor in
-        // Exit solo mode if active
-        if AudioManager.shared.soloModeSound != nil {
-          AudioManager.shared.exitSoloModeWithoutResuming()
+        // The car may have disconnected before this tap ran. Never start on the phone.
+        guard CarPlayInterfaceController.shared.isConnected else { return }
+
+        if AudioManager.shared.singleSound != nil {
+          AudioManager.shared.exitSingleSoundWithoutResuming()
         }
 
-        // Check if we're in CarPlay Quick Mix mode
         if !AudioManager.shared.isQuickMix {
-          // Enter Quick Mix mode with this sound
           AudioManager.shared.enterQuickMix(with: [sound])
         } else {
-          // We're already in Quick Mix, toggle this specific sound
           AudioManager.shared.toggleQuickMixSound(sound)
         }
 
-        // Update the interface
         CarPlayInterfaceController.shared.updateAllTemplates()
 
-        // Post notification for other parts of the app
         NotificationCenter.default.post(name: .soundStateChanged, object: sound)
       }
     }

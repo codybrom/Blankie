@@ -19,8 +19,7 @@ enum IconSize: String, CaseIterable {
 }
 
 extension UserDefaults {
-  /// Shared UserDefaults instance for app group
-  /// Falls back to standard UserDefaults if app group is not available
+  /// The app group's UserDefaults, or `.standard` when the group is unavailable.
   static var shared: UserDefaults {
     AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
   }
@@ -30,7 +29,7 @@ extension UserDefaults {
 enum UserDefaultsKeys {
   static let volume = "globalVolume"
   static let accentColor = "customAccentColor"
-  /// Legacy autoplay key (pre-2.0). Migrated to `autoPlayOnLaunchMac`
+  /// Legacy autoplay key (pre-2.0), migrated to `autoPlayOnLaunchMac`.
   static let autoPlayOnLaunch = "autoPlayOnLaunch"
   static let autoPlayOnLaunchMac = "autoPlayOnLaunchMac"
   static let enableSpatialAudio = "enableSpatialAudio"
@@ -39,10 +38,13 @@ enum UserDefaultsKeys {
   static let volumeWithOtherAudio = "volumeWithOtherAudio"
   static let showSoundNames = "showSoundNames"
   static let iconSize = "iconSize"
-  static let soloModeSoundFileName = "soloModeSoundFileName"
+  // Stored key. Keep the "solo" spelling, or every saved single sound is lost.
+  static let singleSoundFileName = "soloModeSoundFileName"
   static let showingListView = "showingListView"
   static let showProgressBorder = "showProgressBorder"
+  static let showPlaybackAsContinuous = "showPlaybackAsContinuous"
   static let lockPortraitOrientationiOS = "lockPortraitOrientationiOS"
+  static let nowPlayingFirst = "nowPlayingFirst"
   static let quickMixSoundFileNames = "quickMixSoundFileNames"
   static let lockScreenBackgroundEnabled = "lockScreenBackgroundEnabled"
   static let defaultLockScreenArtwork = "defaultLockScreenArtwork"
@@ -56,9 +58,8 @@ enum UserDefaultsKeys {
   static let libraryPresetsExpanded = "libraryPresetsExpanded"
 }
 
-/// Blur (in points) applied to a preset's background artwork behind the mixer
-/// when "Blur Background" is on. Blur is on/off and app-wide: any radius > 0
-/// means on, at this value. (Per-preset blur was removed; see `Preset`.)
+/// Blur (in points) behind the mixer when "Blur Background" is on. Blur is
+/// on/off and app-wide: any saved radius above 0 means on, at this value.
 let defaultBackgroundBlurRadius: Double = 7.5
 
 @Observable
@@ -67,21 +68,19 @@ class GlobalSettings {
   static let shared = GlobalSettings()
 
   /// Tokens for the non-preset starrable items. Presets use their UUID string.
-  static let allSoundsToken = "allSounds"
-  static let quickMixToken = "quickMix"
+  /// These forward to `PlayableItem`, the single codec for the token grammar.
+  static let allSoundsToken = PlayableItem.allSounds.token
+  static let quickMixToken = PlayableItem.quickMix.token
 
-  /// Prefix for solo-sound tokens. A soloed sound is starred as
-  /// `"solo:<fileName>"`, using the sound's stable `fileName` as its identity.
-  static let soloTokenPrefix = "solo:"
-
-  /// The starred token for soloing the given sound file.
-  static func soloToken(forFileName fileName: String) -> String {
-    soloTokenPrefix + fileName
+  /// The starred token for playing the given sound file on its own.
+  static func singleToken(forFileName fileName: String) -> String {
+    PlayableItem.single(fileName: fileName).token
   }
 
-  /// The sound file name encoded in a solo token, or nil if it isn't one.
-  static func soloFileName(fromToken token: String) -> String? {
-    token.hasPrefix(soloTokenPrefix) ? String(token.dropFirst(soloTokenPrefix.count)) : nil
+  /// The sound file name encoded in a single sound token, or nil if it isn't one.
+  static func singleFileName(fromToken token: String) -> String? {
+    if case .single(let fileName) = PlayableItem(token: token) { return fileName }
+    return nil
   }
 
   var volume: Double
@@ -92,37 +91,48 @@ class GlobalSettings {
   var language: Language
   var showingListView: Bool
   var showProgressBorder: Bool
+  var showPlaybackAsContinuous: Bool
+
+  /// Continuous metadata is available only through the OS 27 backend.
+  var usesContinuousPlayback: Bool {
+    if #available(iOS 27, macOS 27, visionOS 27, *) {
+      return showPlaybackAsContinuous
+    }
+    return false
+  }
+
+  func showsPlaybackProgress(timerActive: Bool) -> Bool {
+    !usesContinuousPlayback || timerActive
+  }
+
   var lockPortraitOrientationiOS: Bool
+  /// iPhone: choosing a preset or sound opens Now Playing, with the mixer one
+  /// tap away (on), or opens the mixer first (off).
+  var nowPlayingFirst: Bool
   var quickMixSoundFileNames: [String]
-  /// Ordered list of starred items shown in the iPad sidebar and CarPlay.
+  /// Starred items in display order, shown in the iPad sidebar and CarPlay.
   /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
-  /// solo-sound token (`soloToken(forFileName:)`).
-  /// Order = display order; membership = starred.
+  /// single-sound token (`singleToken(forFileName:)`).
   var starredItems: [String]
   var availableLanguages: [Language] = []
   var lockScreenBackgroundEnabled: Bool
   /// App-wide default lock screen animation. Used on the lock screen for any
   /// preset that doesn't set its own `animatedArtwork`.
   var defaultLockScreenArtwork: AnimatedArtworkRef?
-  /// App-wide default blur (in points) for preset background artwork. A preset's
-  /// own `backgroundBlurRadius` overrides this when set.
+  /// App-wide blur (in points) for preset background artwork, where 0 means off.
   var backgroundBlurRadius: Double
-  /// macOS only: badge the Dock icon with a pause glyph while the app is
-  /// silent. On by default.
+  /// macOS only: badge the Dock icon with a pause glyph while the app is silent.
   var showDockBadgeWhenPaused: Bool
-  /// macOS only: show Blankie's icon in the menu bar. On by default.
+  /// macOS only: show Blankie's icon in the menu bar.
   var showMenuBarIcon: Bool
-  /// macOS only: hide the Dock icon now (menu-bar-only mode). Off by default.
+  /// macOS only: hide the Dock icon now (menu-bar-only mode).
   var menuBarOnlyMode: Bool
-  /// macOS only: hide the Dock icon while the main window is closed. Off by
-  /// default.
+  /// macOS only: hide the Dock icon while the main window is closed.
   var hideDockWhenWindowClosed: Bool
-  /// Library: whether the Sounds / Presets sections are expanded. Persisted so
-  /// the collapse state survives launches. Both default to expanded.
+  /// Whether the Library's Sounds and Presets sections are expanded.
   var librarySoundsExpanded: Bool
   var libraryPresetsExpanded: Bool
 
-  // Platform-specific settings
   /// Availability gate for the experimental spatial feature: shows the
   /// Spatial Mix entry on presets. Sessions themselves are started in-sheet.
   var enableSpatialAudio: Bool = false
@@ -132,7 +142,6 @@ class GlobalSettings {
   var volumeDebounceTimer: Timer?
 
   private init() {
-    // Initialize required properties first
     volume = 1.0
     customAccentColor = nil
     autoPlayOnLaunch = false
@@ -141,7 +150,9 @@ class GlobalSettings {
     language = .system
     showingListView = false
     showProgressBorder = true
+    showPlaybackAsContinuous = true
     lockPortraitOrientationiOS = false
+    nowPlayingFirst = true
     quickMixSoundFileNames = [
       "rain", "waves", "fireplace", "white-noise",
       "wind", "stream", "birds", "coffee-shop",
@@ -157,13 +168,11 @@ class GlobalSettings {
     librarySoundsExpanded = true
     libraryPresetsExpanded = true
 
-    // Then load actual values from UserDefaults
     loadBasicSettings()
     loadPlatformSettings()
     loadLanguageSettings()
     migrateLegacySettings()
 
-    // After initialization, log current settings
     logCurrentSettings()
   }
 
@@ -187,8 +196,13 @@ extension GlobalSettings {
     volumeDebounceTimer?.invalidate()
     volumeDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
       [weak self] _ in
-      self?.saveVolume(newVolume)
+      MainActor.assumeIsolated { self?.saveVolume(newVolume) }
     }
+  }
+
+  /// Saves a pending debounced volume now (the app is quitting or suspending).
+  func flushPendingVolumeSave() {
+    volumeDebounceTimer?.fire()
   }
 
   private func saveVolume(_ newVolume: Double) {
@@ -198,22 +212,22 @@ extension GlobalSettings {
   }
 }
 
-// MARK: - Solo Mode
+// MARK: - Single Sound
 
 extension GlobalSettings {
   @MainActor
-  func saveSoloModeSound(fileName: String?) {
+  func saveSingleSound(fileName: String?) {
     if let fileName = fileName {
-      UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.soloModeSoundFileName)
-      Logger.settings.debug("GlobalSettings: Saved solo mode sound: \(fileName)")
+      UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.singleSoundFileName)
+      Logger.settings.debug("GlobalSettings: Saved single sound: \(fileName)")
     } else {
-      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.soloModeSoundFileName)
-      Logger.settings.debug("GlobalSettings: Cleared solo mode sound")
+      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.singleSoundFileName)
+      Logger.settings.debug("GlobalSettings: Cleared single sound")
     }
   }
 
-  func getSavedSoloModeFileName() -> String? {
-    return UserDefaults.shared.string(forKey: UserDefaultsKeys.soloModeSoundFileName)
+  func getSavedSingleSoundFileName() -> String? {
+    return UserDefaults.shared.string(forKey: UserDefaultsKeys.singleSoundFileName)
   }
 }
 
@@ -224,7 +238,7 @@ extension GlobalSettings {
   func setEnableSpatialAudio(_ value: Bool) {
     enableSpatialAudio = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.enableSpatialAudio)
-    // Availability gate only; turning it off ends any live session.
+    // Availability gate only. Turning it off ends any live session.
     if !value, SpatialSessionManager.shared.isActive {
       SpatialSessionManager.shared.setMode(.off)
     }
@@ -237,17 +251,14 @@ extension GlobalSettings {
       mixWithOthers = value
       UserDefaults.shared.set(value, forKey: UserDefaultsKeys.mixWithOthers)
 
-      // Reset volume to 100% when disabling mix with others
       if !value && volumeWithOtherAudio < 1.0 {
         volumeWithOtherAudio = 1.0
         UserDefaults.shared.set(
           volumeWithOtherAudio, forKey: UserDefaultsKeys.volumeWithOtherAudio)
       }
 
-      // Update audio session configuration
       updateAudioSession()
 
-      // Apply the new volume settings to currently playing sounds
       if AudioManager.shared.isGloballyPlaying {
         AudioManager.shared.applyVolumeSettings()
       }
@@ -261,9 +272,8 @@ extension GlobalSettings {
 
   @MainActor
   func setVolumeWithOtherAudio(_ level: Double) {
-    volumeWithOtherAudio = max(0.0, min(1.0, level))  // Clamp between 0.0 and 1.0
+    volumeWithOtherAudio = max(0.0, min(1.0, level))
     UserDefaults.shared.set(volumeWithOtherAudio, forKey: UserDefaultsKeys.volumeWithOtherAudio)
-    // Apply the new volume level to currently playing sounds
     if AudioManager.shared.isGloballyPlaying {
       AudioManager.shared.applyVolumeSettings()
     }
@@ -280,9 +290,8 @@ extension GlobalSettings {
       do {
         let wasPlaying = AudioManager.shared.isGloballyPlaying
 
-        // Configure the session based on mixWithOthers setting
         if mixWithOthers {
-          // Allow mixing with other apps - we handle volume manually
+          // Mixing with other apps. Blankie applies its own volume.
           let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
           Logger.settings.debug("GlobalSettings: Setting Mix mode with manual volume control")
 
@@ -292,7 +301,6 @@ extension GlobalSettings {
             options: options
           )
         } else {
-          // Exclusive playback mode - no mixing
           try AVAudioSession.sharedInstance().setCategory(
             .playback,
             mode: .default,
@@ -300,14 +308,11 @@ extension GlobalSettings {
           )
         }
 
-        // Always activate if we're currently playing to ensure we take over
+        // Reactivate while playing so the new category takes effect.
         if wasPlaying {
           try AVAudioSession.sharedInstance().setActive(true)
 
-          // Note: We don't call playSelected() here to preserve playback positions
-          // The audio players will automatically continue from their current positions
-
-          // Update Now Playing info
+          // No playSelected() here, so players keep their current positions.
           AudioManager.shared.updateNowPlayingState()
         }
 

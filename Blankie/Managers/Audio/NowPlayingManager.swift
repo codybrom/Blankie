@@ -15,40 +15,43 @@ import os
   import UIKit
 #endif
 
-/// Manages Now Playing info for media playback controls
+/// The MediaPlayer (`MPNowPlayingInfoCenter`) Now Playing backend, used below OS 27.
 @MainActor
-final class NowPlayingManager {
+final class NowPlayingManager: NowPlayingPublishing {
   var nowPlayingInfo: [String: Any] = [:]
+
+  /// The remote-command actions installed by `AudioManager`, invoked by the
+  /// `MPRemoteCommandCenter` targets.
+  var remoteCommandHandlers: RemoteCommandHandlers?
 
   private var isSetup = false
   var currentArtworkId: UUID?
   var currentStaticArtworkPath: String?
-  var staticArtworkTask: Task<Void, Never>?
+  nonisolated(unsafe) var staticArtworkTask: Task<Void, Never>?
   #if os(iOS)
     var currentAnimatedLoopPath: String?
     var currentAnimatedPreviewPath: String?
-    // ODR download + Documents-cache tasks in flight, keyed by bundled id.
-    // Lets duplicate triggers for the same animated artwork coalesce instead
-    // of spawning parallel downloads and cache-copy attempts.
-    var animatedArtworkDownloadTasks: [String: Task<Void, Never>] = [:]
+    let animatedArtworkResolver = AnimatedArtworkResolver()
   #endif
-  private var updateTimer: Timer?
-  // Drives elapsed-time republishing so the system scrubber (lock screen +
-  // CarPlay) snaps back to the start each time the longest sound loops.
-  // Independent of `updateTimer`.
-  private var progressTimer: Timer?
-  // Last elapsed/duration we anchored the scrubber to. The system extrapolates
-  // smoothly between writes, so we only re-anchor when the elapsed time jumps
-  // backward (a sound loop wrapped) or the duration changes (sleep timer
-  // started/extended/stopped, or the represented source changed) —
-  // re-anchoring every tick makes the bar stutter. `lastObservedElapsed < 0`
-  // forces the first tick after (re)start to anchor.
+  nonisolated(unsafe) private var updateTimer: Timer?
+  // Republishes elapsed time so the system scrubber (lock screen and CarPlay)
+  // snaps back to the start each time the longest sound loops.
+  nonisolated(unsafe) private var progressTimer: Timer?
+  // Last anchored elapsed/duration. The system extrapolates between writes, so
+  // re-anchor only on a loop wrap or a duration change (every tick makes the bar
+  // stutter). A negative `lastObservedElapsed` forces the next tick to anchor.
   private var lastObservedElapsed: TimeInterval = -1
   private var lastObservedDuration: TimeInterval = 0
-  private var timerActiveObservation: Task<Void, Never>?
-  private var lockScreenBgObservation: Task<Void, Never>?
+  nonisolated(unsafe) private var timerActiveObservation: Task<Void, Never>?
+  nonisolated(unsafe) private var lockScreenBgObservation: Task<Void, Never>?
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
-  private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
+  private var lastSingleSoundId: UUID?  // Track last single sound so its icon artwork refreshes
+  // Set when artwork changed without a preset/single sound change (an animation pack
+  // finished downloading), so the next update rebuilds and publishes it in full.
+  var needsArtworkRebuild = false
+  /// The drawn fallback's glyph while it's the artwork, so a later selection
+  /// change can redraw it. Nil while other artwork shows.
+  var shownFallbackGlyph: FallbackArtwork.Glyph?
 
   init() {
     // Republish the lock-screen background when the user toggles the setting.
@@ -58,11 +61,8 @@ final class NowPlayingManager {
       }
     }
 
-    // Refresh the album line when a sleep timer starts or ends so the
-    // "N Minute Timer" label appears/disappears (incremental update, no artwork
-    // restart). The observation tracks only `isTimerActive`, so the 1 Hz
-    // remainingTime tick never fires it. This manager is @MainActor, so the
-    // task runs on the main actor (replacing the old `.receive(on: .main)`).
+    // Refresh the "N Minute Timer" album line when a sleep timer starts or ends.
+    // Tracks only `isTimerActive`, so the 1 Hz remainingTime tick never fires it.
     timerActiveObservation = Task { [weak self] in
       for await _ in Observations({ TimerManager.shared.isTimerActive }) {
         self?.republishCurrentPreset()
@@ -101,21 +101,21 @@ final class NowPlayingManager {
 
     nowPlayingInfo[MPMediaItemPropertyTitle] = "Ambient Sounds"
     nowPlayingInfo[MPMediaItemPropertyArtist] = "Blankie"
-    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 0.0  // Start as paused
+    nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = 0.0
 
     if let artwork = loadArtwork() {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     }
   }
 
-  func updateInfo(
-    preset: Preset? = nil,
-    presetName: String? = nil,
-    creatorName: String? = nil,
-    artworkId: UUID? = nil,
+  func publishInfo(
+    preset: Preset?,
+    presetName: String?,
+    creatorName: String?,
+    artworkId: UUID?,
     isPlaying: Bool
   ) {
-    // Debounce rapid successive updates during initialization
+    // Coalesce bursts of updates into one publish (0.1 s debounce).
     updateTimer?.invalidate()
     updateTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
       Task { @MainActor in
@@ -134,9 +134,9 @@ final class NowPlayingManager {
     artworkId: UUID?,
     isPlaying: Bool
   ) async {
-    // Hold all publishing while a pause fade-out still renders: any write
-    // re-asserts "playing" (iOS re-derives it from live engine I/O). The
-    // engine-idle pause republishes once output is silent.
+    // Hold all publishing while a pause fade-out still renders: any write reasserts
+    // "playing" (iOS derives it from live engine I/O). The engine-idle pause
+    // republishes once output is silent.
     if !isPlaying, AudioEngineManager.shared.engine.isRunning {
       stopProgressUpdates()
       return
@@ -147,45 +147,59 @@ final class NowPlayingManager {
     let resolvedPresetName = preset?.name ?? presetName
     let resolvedCreatorName = preset?.creatorName ?? creatorName
 
-    let displayInfo = getDisplayInfo(
-      presetName: resolvedPresetName, creatorName: resolvedCreatorName)
+    let displayInfo = NowPlayingDisplay.getDisplayInfo(
+      presetName: resolvedPresetName, creatorName: resolvedCreatorName, preset: preset)
     Logger.nowPlaying.debug(
       "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )
 
-    // A full (artwork) update is needed when the preset OR the solo sound
-    // changes. Solo sounds have no preset, so tracking only the preset id would
-    // miss solo→solo transitions and leave the previous sound's icon up.
-    let soloSoundId = AudioManager.shared.soloModeSound?.id
+    // `preset` is the last active preset, which single-sound mode and Quick Mix don't clear.
+    // Skip its thumbnail and accent while either is active.
+    let isSingleSoundActive = AudioManager.shared.singleSound != nil
+    let presetIsOverridden = isSingleSoundActive || AudioManager.shared.isQuickMix
+    // Any non-default preset gets a key, artwork or not: the cache also covers
+    // animated-only presets, and the widget falls back to the icon (as `display(for:)`).
+    let widgetThumbnailKey =
+      presetIsOverridden
+      ? nil : preset.flatMap { $0.isDefault ? nil : "preset_thumb_\($0.id.uuidString)" }
+    let widgetSubtitle = NowPlayingDisplay.widgetSubtitle(
+      resolvedCreatorName: resolvedCreatorName)
+    AudioManager.shared.publishWidgetSnapshot(
+      title: displayInfo.title, subtitle: widgetSubtitle, isPlaying: isPlaying,
+      thumbnailKey: widgetThumbnailKey,
+      accentColorName: presetIsOverridden ? nil : preset?.accentColorName)
+
+    // Artwork rebuilds when the preset or the single sound changes. Single sounds have
+    // no preset, so a switch between single sounds shows up only in the single sound id.
+    let singleSoundId = AudioManager.shared.singleSound?.id
     let presetChanged = preset?.id != lastPresetId
-    let soloChanged = soloSoundId != lastSoloSoundId
+    let singleChanged = singleSoundId != lastSingleSoundId
 
     updateBasicInfo(displayInfo: displayInfo)
     updateAlbumAndDuration(creatorName: resolvedCreatorName)
     updatePlaybackRate(isPlaying: isPlaying)
 
-    // Only update artwork when the preset/solo sound changes, to avoid
-    // restarting animated artwork on every incremental tick.
-    if presetChanged || soloChanged {
-      if let soloSound = AudioManager.shared.soloModeSound {
-        // Solo mode: show the sound's own icon, not the last preset's artwork.
-        applySoloArtwork(for: soloSound)
+    // Touch artwork only on those changes so incremental updates don't restart
+    // animated artwork.
+    if presetChanged || singleChanged || needsArtworkRebuild {
+      needsArtworkRebuild = false
+      if let singleSound = AudioManager.shared.singleSound {
+        // Single-sound mode: show the sound's own icon, not the last preset's artwork.
+        applySingleArtwork(for: singleSound)
         #if os(iOS)
           removeAnimatedArtwork()
         #endif
       } else {
-        // Presets without their own lock screen background inherit the
-        // app-wide default (preset → default → Blankie icon). Substituted on a
-        // value copy so the fallback is never persisted onto the preset.
+        // Presets without a lock screen background inherit the app-wide default
+        // (then the Blankie icon). Applied to a copy so it's never saved to the preset.
         var effectivePreset = preset
         if effectivePreset != nil, effectivePreset?.animatedArtwork == nil {
           effectivePreset?.animatedArtwork = GlobalSettings.shared.defaultLockScreenArtwork
         } else if effectivePreset == nil, AudioManager.shared.isQuickMix,
           let defaultArtwork = GlobalSettings.shared.defaultLockScreenArtwork
         {
-          // Quick Mix has no preset of its own, so it never reaches the
-          // fallback above. Give it the app-wide default lock screen animation
-          // via a throwaway preset that only carries the artwork.
+          // Quick Mix has no preset, so carry the default lock screen animation on a
+          // throwaway preset.
           effectivePreset = Preset(
             id: UUID(),
             name: "Quick Mix",
@@ -195,29 +209,29 @@ final class NowPlayingManager {
             animatedArtwork: defaultArtwork
           )
         }
-        // CRITICAL: Load static artwork synchronously to avoid double-publishing
-        // If we load async, the artwork loads after we publish, triggering a second update that restarts animated artwork
+        // Load static artwork synchronously so there's one publish. An async load
+        // would publish again and restart animated artwork.
         await loadStaticArtworkSync(from: effectivePreset, fallbackArtworkId: artworkId)
         #if os(iOS)
           updateAnimatedArtwork(for: effectivePreset)
         #endif
       }
       lastPresetId = preset?.id
-      lastSoloSoundId = soloSoundId
+      lastSingleSoundId = singleSoundId
 
-      // Full update when preset changes (only published once, after both artworks are ready)
+      // One full publish, after both artworks are ready.
       MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     } else {
-      // Incremental update - only update specific keys to avoid restarting animated artwork
-      // CRITICAL: We update keys in-place on the existing dictionary to preserve artwork objects
+      // Incremental update: keep the published artwork objects so animated artwork
+      // doesn't restart.
       let center = MPNowPlayingInfoCenter.default()
+      let redrewFallback = redrawFallbackIfStale()
 
       if var updated = center.nowPlayingInfo {
         Logger.nowPlaying.debug(
           "NowPlayingManager: Incremental update (preserving animated artwork)")
-        // Merge the non-artwork keys and publish ONCE: each in-place key
-        // write is a full publish, and the early ones carry the stale rate
-        // (after a pause, that flicked Control Center back to "playing").
+        // Merge the non-artwork keys and publish once. Each in-place key write is a
+        // full publish, and early ones carry a stale rate ("playing" after a pause).
         for key in [
           MPMediaItemPropertyTitle,
           MPMediaItemPropertyArtist,
@@ -225,12 +239,12 @@ final class NowPlayingManager {
           MPNowPlayingInfoPropertyPlaybackRate,
           MPMediaItemPropertyPlaybackDuration,
           MPNowPlayingInfoPropertyElapsedPlaybackTime,
-        ] {
+        ] + (redrewFallback ? [MPMediaItemPropertyArtwork] : []) {
           updated[key] = nowPlayingInfo[key]
         }
         center.nowPlayingInfo = updated
       } else {
-        // No existing info (iOS cleared it), do full update
+        // iOS cleared the info, so publish in full.
         Logger.nowPlaying.debug("NowPlayingManager: Full update (iOS cleared nowPlayingInfo)")
         center.nowPlayingInfo = nowPlayingInfo
       }
@@ -244,12 +258,13 @@ final class NowPlayingManager {
     }
   }
 
-  /// Set the lock-screen artwork to the soloed sound's rendered icon. Clears
+  /// Sets the lock-screen artwork to the single sound's rendered icon. Clears
   /// the cached preset-artwork identity so returning to a preset reloads it.
-  private func applySoloArtwork(for sound: Sound) {
+  private func applySingleArtwork(for sound: Sound) {
     currentArtworkId = nil
     currentStaticArtworkPath = nil
-    if let artwork = soloArtwork(for: sound) {
+    shownFallbackGlyph = nil
+    if let artwork = singleArtwork(for: sound) {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     } else if let fallback = loadArtwork() {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = fallback
@@ -262,39 +277,19 @@ final class NowPlayingManager {
   }
 
   private func updateAlbumAndDuration(creatorName: String?) {
-    if let soloSound = AudioManager.shared.soloModeSound {
-      updateSoloModeInfo(soloSound: soloSound)
+    if let singleSound = AudioManager.shared.singleSound {
+      updateSingleSoundInfo(singleSound: singleSound)
     } else {
       updatePresetModeInfo(creatorName: creatorName)
     }
-    // A running timer takes over the album line ("20 Minute Timer") so it shows
-    // on the lock screen / CarPlay regardless of mode, replacing the sounds list.
+    // A running timer takes over the album line ("20 Minute Timer") in every mode.
     if TimerManager.shared.isTimerActive {
-      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = timerAlbumLabel()
+      nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = NowPlayingDisplay.timerAlbumLabel()
     }
   }
 
-  /// "20 Minute Timer" / "1 Hour Timer" / "1 Hour 30 Minute Timer" from the
-  /// timer's total duration (adjectival singular, matching the in-app phrasing).
-  private func timerAlbumLabel() -> String {
-    let total = Int(TimerManager.shared.selectedDuration.rounded())
-    let hours = total / 3600
-    let minutes = (total % 3600) / 60
-    // This shows on the lock screen of a multi-language app, so localize each
-    // shape (translators can reorder the placeholders / set plurals per locale).
-    if hours > 0, minutes > 0 {
-      return String(localized: "\(hours) Hour \(minutes) Minute Timer")
-    } else if hours > 0 {
-      return String(localized: "\(hours) Hour Timer")
-    } else if minutes > 0 {
-      return String(localized: "\(minutes) Minute Timer")
-    } else {
-      return String(localized: "Timer")
-    }
-  }
-
-  private func updateSoloModeInfo(soloSound: Sound) {
-    if soloSound.isCustom, soloSound.creditedAuthor != nil {
+  private func updateSingleSoundInfo(singleSound: Sound) {
+    if singleSound.isCustom, singleSound.creditedAuthor != nil {
       nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie"
     } else {
       nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyAlbumTitle)
@@ -315,7 +310,8 @@ final class NowPlayingManager {
       return
     }
     // Same preset-ordered, switched-on list as the artist line.
-    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = soundNameSummary(currentMixSoundTitles())
+    nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = NowPlayingDisplay.soundNameSummary(
+      NowPlayingDisplay.currentMixSoundTitles())
   }
 
   private func updateDurationFromPlayingSounds() {
@@ -323,42 +319,15 @@ final class NowPlayingManager {
   }
 
   /// Writes the current progress anchor into the local `nowPlayingInfo` snapshot
-  /// (falling back to indeterminate). Used by the initial publish; the periodic
+  /// (falling back to indeterminate). Used by the initial publish. The periodic
   /// tick re-anchors the live center afterward.
   private func applyProgressAnchorToInfo() {
-    if let anchor = currentProgressAnchor() {
+    if let anchor = NowPlayingDisplay.currentProgressAnchor() {
       nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = anchor.duration
       nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = anchor.elapsed
     } else {
       setInfiniteDuration()
     }
-  }
-
-  /// The elapsed/duration the scrubber should represent right now, or `nil` for
-  /// an indeterminate bar. Priority: an active sleep timer (real, slow,
-  /// meaningful progress that ends where playback stops) wins over the looping
-  /// audio, then the solo sound, then the longest selected sound's loop.
-  private func currentProgressAnchor() -> (elapsed: TimeInterval, duration: TimeInterval)? {
-    let sleepTimer = TimerManager.shared
-    if sleepTimer.isTimerActive, sleepTimer.selectedDuration > 0 {
-      let elapsed = sleepTimer.selectedDuration - sleepTimer.remainingTime
-      return (max(0, elapsed), sleepTimer.selectedDuration)
-    }
-
-    let anchorSound: Sound?
-    if let soloSound = AudioManager.shared.soloModeSound {
-      anchorSound = soloSound
-    } else {
-      // Use active (selected) sounds, not only playing ones, so we still track
-      // time when paused; mirror the "longest selected sound" choice.
-      anchorSound =
-        AudioManager.shared.sounds
-        .filter { $0.isSelected }
-        .max { $0.playbackDuration < $1.playbackDuration }
-    }
-
-    guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
-    return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
 
   private func setInfiniteDuration() {
@@ -381,13 +350,14 @@ final class NowPlayingManager {
     )
   }
 
-  /// Force a full refresh of Now Playing info including artwork
-  /// Used when artwork changes on the same preset
+  /// Forces a full refresh, including artwork (for artwork changes on the same preset).
   func forceRefresh(
     preset: Preset,
     isPlaying: Bool
   ) {
     lastPresetId = nil  // Clear cache to force full artwork update
+    // A nil id alone matches Quick Mix's identity, so flag the rebuild too.
+    needsArtworkRebuild = true
     updateInfo(
       preset: preset,
       presetName: preset.name,
@@ -398,21 +368,17 @@ final class NowPlayingManager {
   }
 
   func updatePlaybackState(isPlaying: Bool) {
-    setupNowPlaying()  // Ensure setup is done before updating
+    setupNowPlaying()
 
-    // Ensure nowPlayingInfo dictionary exists
     if nowPlayingInfo.isEmpty {
-      // Recreate basic info if needed
       nowPlayingInfo[MPMediaItemPropertyTitle] = "Ambient Sounds"
       nowPlayingInfo[MPMediaItemPropertyArtist] = "Blankie"
     }
 
-    // Update playback state
     nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
     nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = 0
-    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 0  // Infinite for ambient sounds
+    nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = 0  // Indeterminate
 
-    // Update the now playing info
     Logger.nowPlaying.debug(
       "NowPlayingManager: Updating now playing state to \(isPlaying), playbackRate: \(self.nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? -1)"
     )
@@ -428,7 +394,6 @@ final class NowPlayingManager {
   func updateProgress(currentTime: TimeInterval, duration: TimeInterval) {
     guard !nowPlayingInfo.isEmpty else { return }
 
-    // Ensure playback rate reflects current state
     let isPlaying = AudioManager.shared.isGloballyPlaying
 
     // Keep our local snapshot in sync so the next full publish is correct.
@@ -438,23 +403,20 @@ final class NowPlayingManager {
 
     let center = MPNowPlayingInfoCenter.default()
     if center.nowPlayingInfo != nil {
-      // Update only the timing/rate keys in-place. Replacing the whole dict
-      // (which carries the static/animated artwork objects) would restart the
-      // animated lock-screen artwork on every tick.
+      // Write only the timing and rate keys in place. Replacing the whole dictionary
+      // (with its artwork objects) restarts animated lock-screen artwork.
       center.nowPlayingInfo?[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
       center.nowPlayingInfo?[MPMediaItemPropertyPlaybackDuration] = duration
       center.nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
     } else {
-      // iOS cleared it — do a full publish to re-establish info + artwork.
+      // iOS cleared it, so republish info and artwork in full.
       center.nowPlayingInfo = nowPlayingInfo
     }
   }
 
-  /// Starts watching the active progress source (sleep timer or looping sound)
-  /// and re-anchors the system scrubber when it wraps or its duration changes.
-  /// The system extrapolates elapsed time smoothly from `playbackRate` between
-  /// writes, so we publish only at those moments (and once up front) to keep the
-  /// bar from stuttering.
+  /// Watches the active progress source (sleep timer or looping sound) and
+  /// re-anchors the scrubber when it wraps or its duration changes. The system
+  /// extrapolates from `playbackRate` between writes, so fewer writes keep it smooth.
   private func startProgressUpdates() {
     stopProgressUpdates()
     lastObservedElapsed = -1  // Force the first tick to anchor.
@@ -479,15 +441,15 @@ final class NowPlayingManager {
     lastObservedDuration = 0
   }
 
-  /// Re-anchors the system scrubber only on the first tick, a loop wrap, or a
-  /// duration change (sleep timer started/extended/stopped, source switched).
+  /// Re-anchors the system scrubber only on the first tick, a loop wrap, a duration
+  /// change, or each whole second of a sleep timer.
   private func publishProgressTick() {
     guard AudioManager.shared.isGloballyPlaying else {
       stopProgressUpdates()
       return
     }
 
-    guard let anchor = currentProgressAnchor() else { return }
+    guard let anchor = NowPlayingDisplay.currentProgressAnchor() else { return }
     let elapsed = anchor.elapsed
     let duration = anchor.duration
     defer {
@@ -497,10 +459,10 @@ final class NowPlayingManager {
 
     let isFirst = lastObservedElapsed < 0
     let wrapped = elapsed < lastObservedElapsed - 0.5  // sound loop restarted
-    let durationChanged = abs(duration - lastObservedDuration) > 0.5
-    // A timer never wraps and has constant duration, so it'd anchor once and rely
-    // on extrapolation — which CarPlay does unreliably, stalling the bar. Re-anchor
-    // each whole second (timing-only, in-place publish; artwork untouched).
+    // Each source's duration is an exact constant, so any change means a new source.
+    let durationChanged = abs(duration - lastObservedDuration) > 0.001
+    // CarPlay extrapolates a sleep timer's bar unreliably, so re-anchor each whole
+    // second (timing keys only, in place, with artwork untouched).
     let timerAdvanced =
       TimerManager.shared.isTimerActive && floor(elapsed) > floor(lastObservedElapsed)
     guard isFirst || wrapped || durationChanged || timerAdvanced else { return }
@@ -516,7 +478,8 @@ final class NowPlayingManager {
     currentArtworkId = nil
     currentStaticArtworkPath = nil
     lastPresetId = nil
-    lastSoloSoundId = nil
+    lastSingleSoundId = nil
+    shownFallbackGlyph = nil
     #if os(iOS)
       removeAnimatedArtwork()
     #endif

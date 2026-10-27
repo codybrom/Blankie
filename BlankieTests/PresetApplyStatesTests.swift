@@ -4,12 +4,9 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  applySoundStates suppresses per-sound music exclusivity while applying, so
-//  its final sanitize loop is the ONLY thing collapsing a legacy/imported preset
-//  that carries more than one selected music sound down to one. Without it an
-//  imported preset would play two music beds at once.
-//
-//  Serialized + main-actor: drives AudioManager.shared via synthetic test-* sounds.
+//  applySoundStates suppresses per-sound music exclusivity, so its final sanitize pass is what
+//  collapses an imported preset with several selected music sounds to one.
+//  Serialized: drives AudioManager.shared with synthetic test-* sounds.
 //
 
 import Foundation
@@ -24,11 +21,11 @@ import Testing
   init() {
     GlobalSettings.shared.setAutoPlayOnLaunch(false)
     originalSounds = audioManager.sounds
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
   }
-  deinit {
-    audioManager.soloModeSound = nil
+  isolated deinit {
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     audioManager.sounds = originalSounds
   }

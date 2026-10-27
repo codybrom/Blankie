@@ -5,20 +5,7 @@
 //  Created by Cody Bromley on 2/22/26.
 //
 //  Two-column tile grid with long-press-to-reorder, built on SortableGridView.
-//
-//  The dragged tile lifts into an overlay and the cells it passes over swap in
-//  real time; the move is committed to the host exactly once, on release.
-//
-//  Bridging details:
-//    • Sounds are wrapped in `SortableSound` so the `Sound` model needn't carry
-//      layout state (`position`).
-//    • A local `items` copy is reordered live during the drag. `onMove` is the
-//      same (IndexSet, Int) callback the List view uses, so the reorder handler
-//      in MixerView is shared unchanged. The single net move is recovered by
-//      diffing the original order against the dropped order (see commitReorder).
-//    • `onChange(of: sounds)` re-syncs `items` when the preset/order changes,
-//      but only while no drag is in flight, so an in-progress reorder is never
-//      yanked out from under the user.
+//  Reorders a local copy during the drag and commits one `onMove` on release.
 //
 
 import SwiftUI
@@ -28,25 +15,41 @@ import SwiftUI
     let sounds: [Sound]
     var onMove: (IndexSet, Int) -> Void
     var tile: (Sound) -> GridSoundButton
+    var columns = 2
 
     @State private var items: [SortableSound]
     @State private var isDragging = false
+    @State private var fold = FoldInfo.none
+    /// Set by the nightstand, whose bar sits below the tiles.
+    @Environment(\.soundTileHeight) private var tileHeight
+    @State private var width: CGFloat = 0
 
     init(
       sounds: [Sound],
       onMove: @escaping (IndexSet, Int) -> Void,
-      tile: @escaping (Sound) -> GridSoundButton = { GridSoundButton(sound: $0) }
+      tile: @escaping (Sound) -> GridSoundButton = { GridSoundButton(sound: $0) },
+      columns: Int = 2
     ) {
+      self.columns = columns
       self.sounds = sounds
       self.onMove = onMove
       self.tile = tile
       self._items = State(initialValue: sounds.map { SortableSound(sound: $0) })
     }
 
+    /// On a bent iPhone Duo the column gap becomes the crease band. The fold
+    /// frame and the measured width share this view's local space.
+    private var creaseInsets: (leading: CGFloat, trailing: CGFloat, columnSpacing: CGFloat) {
+      columns == 2
+        ? CreaseInsets.twoColumn(containerWidth: width, margin: 16, spacing: 16, fold: fold)
+        : (16, 16, 16)
+    }
+
     var body: some View {
+      let insets = creaseInsets
       SortableGridView(
         isScrollable: true,
-        config: .init(spacing: 16, count: 2),
+        config: .init(spacing: 16, count: columns, columnSpacing: insets.columnSpacing),
         items: $items
       ) { item in
         tile(item.sound)
@@ -58,45 +61,39 @@ import SwiftUI
         } else if isDragging {
           isDragging = false
           commitReorder()
-          // `onChange(of: sounds)` is gated by `isDragging`, so a membership
-          // change that arrived mid-drag (preset switch, import, add/remove)
-          // was skipped and won't be re-delivered. Reconcile now if the set of
-          // tiles differs — a pure reorder keeps the same set and is left for
-          // `commitReorder`/`onChange` to settle, avoiding a flicker back to
-          // the pre-commit order.
+          // `onChange(of: sounds)` skips changes during a drag, so reconcile
+          // membership changes now. A pure reorder is left to `commitReorder`.
           if Set(items.map(\.id)) != Set(sounds.map(\.id)) {
             let known = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.position) })
             items = sounds.map { SortableSound(sound: $0, position: known[$0.id] ?? .zero) }
           }
         }
       }
-      .safeAreaPadding(16)
-      // The Now Playing mini player floats over the bottom edge and its
-      // safe-area-bar inset doesn't reach this nested ScrollView — reserve
-      // room so the last row can scroll clear of the bar (58pt + breathing).
-      .contentMargins(.bottom, 72, for: .scrollContent)
+      .safeAreaPadding(.vertical, 16)
+      .safeAreaPadding(.leading, insets.leading)
+      .safeAreaPadding(.trailing, insets.trailing)
+      // The Now Playing bar's safe-area inset doesn't reach this nested
+      // ScrollView, so reserve room for it.
+      .contentMargins(.bottom, tileHeight == nil ? 72 : 0, for: .scrollContent)
+      .onFoldChange { fold = $0 }
+      .onGeometryChange(for: CGFloat.self) {
+        $0.size.width
+      } action: {
+        width = $0
+      }
       .onChange(of: sounds) { _, newSounds in
         guard !isDragging else { return }
-        // After our own move commits, `sounds` returns in the order `items`
-        // already holds. Rebuilding here would hand every tile a fresh struct
-        // with `position == .zero`, and `onGeometryChange` won't re-fire when
-        // nothing actually moves on screen — leaving the next drag with no
-        // valid origin. So skip when the order already matches.
+        // Skip when the order already matches: rebuilt tiles get a `.zero`
+        // position, and `onGeometryChange` doesn't re-fire if nothing moved.
         guard items.map(\.id) != newSounds.map(\.id) else { return }
-        // External change (preset switch, sound added/removed, reorder
-        // elsewhere): rebuild, but carry over the last-known position for any
-        // surviving tile so a cell whose geometry doesn't change still has a
-        // valid drag origin. Genuinely new tiles get `.zero` and are filled in
-        // by `onGeometryChange` as they lay out.
+        // Carry over known positions so unmoved cells keep a valid drag origin.
         let knownPositions = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0.position) })
         items = newSounds.map { SortableSound(sound: $0, position: knownPositions[$0.id] ?? .zero) }
       }
     }
 
-    /// SortableGridView reorders by repeatedly moving a single tile, so the net
-    /// change from start to drop is always one element's move. Recover that
-    /// (source, destination) by finding the one id whose removal reconciles the
-    /// two orders, then forward it through the shared `onMove` handler.
+    /// A drag moves one tile, so the net change is a single move: find the id
+    /// whose removal makes both orders match.
     private func commitReorder() {
       let originalIDs = sounds.map(\.id)
       let finalIDs = items.map(\.id)
@@ -110,15 +107,14 @@ import SwiftUI
         let to = finalIDs.firstIndex(of: movedID)
       else { return }
 
-      // `Array.move(fromOffsets:toOffset:)` (used by the host) inserts before
-      // the destination, so a forward move needs +1 to land past the target.
+      // `Array.move(fromOffsets:toOffset:)` inserts before the destination,
+      // so a forward move needs +1.
       onMove(IndexSet(integer: from), to > from ? to + 1 : to)
     }
   }
 
-  /// Lightweight wrapper that gives a `Sound` the mutable `position` the
-  /// sortable grid tracks, without touching the `Sound` model itself.
-  private struct SortableSound: Identifiable, SortableGridProtocol {
+  /// Gives a `Sound` the `position` the sortable grid tracks.
+  private nonisolated struct SortableSound: Identifiable, SortableGridProtocol {
     let sound: Sound
     var position: CGRect = .zero
     var id: Sound.ID { sound.id }

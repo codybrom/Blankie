@@ -19,19 +19,16 @@ class AudioFileImporter: ObservableObject {
   /// global indicator does). Audio imports are covered by the add-sound sheet.
   @Published var isProcessingImport = false
 
+  /// Entry point for files from the URL scheme or document picker.
   func handleIncomingFile(_ url: URL) {
-    // Handle direct file imports via URL scheme or document picker
-
     Logger.app.debug("AudioFileImporter: Received file: \(url.lastPathComponent)")
 
-    // Check if it's a .blankie preset file first
     if url.pathExtension.lowercased() == "blankie" {
       Logger.app.debug("AudioFileImporter: Detected .blankie preset file, importing as preset")
       handleBlankiePresetImport(url)
       return
     }
 
-    // Verify it's an audio file
     guard let type = UTType(filenameExtension: url.pathExtension),
       type.conforms(to: .audio)
     else {
@@ -49,11 +46,8 @@ class AudioFileImporter: ObservableObject {
     showingSoundSheet = true
   }
 
-  /// Copies a (possibly security-scoped) file into an app-owned temp location
-  /// and returns the new URL. A URL handed back by a document picker is only
-  /// readable while its security scope is held; copying gives a stable URL the
-  /// player can load later — e.g. when previewing a not-yet-saved imported
-  /// sound. Returns nil if the copy fails.
+  /// Copies a possibly security-scoped file into an app-owned temp location, since a
+  /// document picker's URL is only readable while its scope is held. Nil on failure.
   func stagedTempCopy(of url: URL) -> URL? {
     let didStartAccessing = url.startAccessingSecurityScopedResource()
     Logger.app.debug("AudioFileImporter: Security-scoped access started: \(didStartAccessing)")

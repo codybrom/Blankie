@@ -10,14 +10,8 @@ import Testing
 
 @testable import Blankie
 
-/// State-machine tests for AudioManager — selection, derived state, and the
-/// play gate. Deterministic and engine-free: autoplay is off and nothing is
-/// globally playing, so selecting a sound never starts the audio engine (see
-/// `Sound.isSelected.didSet`, which only plays while already playing). Real
-/// playback is integration/on-device territory.
-///
-/// Serialized + main-actor because it drives the `AudioManager.shared` singleton.
-/// Each test re-establishes its own baseline in `init`.
+/// AudioManager selection, derived state and the play gate. Autoplay is off, so selecting
+/// a sound never starts the engine. Serialized: drives the `AudioManager.shared` singleton.
 @Suite(.serialized) @MainActor
 struct AudioManagerTests {
   private let audioManager = AudioManager.shared
@@ -27,13 +21,11 @@ struct AudioManagerTests {
     audioManager.resetSounds()
   }
 
-  /// A freshly reset manager has its sounds loaded but nothing playing.
   @Test func resetBaselineHasSoundsButIsNotPlaying() {
     #expect(!audioManager.isGloballyPlaying)
     #expect(!audioManager.sounds.isEmpty)
   }
 
-  /// resetSounds clears every selection and restores the default per-sound volume.
   @Test func resetClearsSelectionAndVolume() {
     audioManager.sounds[0].isSelected = true
     audioManager.sounds[0].volume = 0.5
@@ -46,9 +38,8 @@ struct AudioManagerTests {
     }
   }
 
-  /// Selecting a sound flips the derived `hasSelectedSounds` once the manager
-  /// recomputes it — the precondition the play gate checks. (Selection alone
-  /// doesn't recompute it; the app calls `updateHasSelectedSounds` on change.)
+  /// Selection alone doesn't recompute `hasSelectedSounds`. The app calls
+  /// `updateHasSelectedSounds` on change.
   @Test func selectionUpdatesHasSelectedSounds() {
     #expect(!audioManager.hasSelectedSounds)
 
@@ -58,9 +49,8 @@ struct AudioManagerTests {
     #expect(audioManager.hasSelectedSounds)
   }
 
-  /// A play request with nothing selected must coerce to paused — silence must
-  /// never read as "playing". Regression guard for the remote-command path
-  /// (lock screen / Control Center / CarPlay) that bypassed the in-app check.
+  /// Remote commands (lock screen, Control Center, CarPlay) reach this path without
+  /// the in-app selection check.
   @Test func playRequestWithoutSelectionStaysPaused() {
     #expect(!audioManager.hasSelectedSounds)
 
@@ -70,9 +60,18 @@ struct AudioManagerTests {
       !audioManager.isGloballyPlaying, "A play request with no selected sounds must stay paused")
   }
 
-  /// Turning off the LAST selected sound pauses global playback — silence must
-  /// never read as a silent "playing" state (the lock-screen/CarPlay stuck
-  /// transport bug). The pause is dispatched to the main actor, so we await it.
+  /// Siri intents and preset application play before the coalesced
+  /// `hasSelectedSounds` updates.
+  @Test func playGateSeesSelectionBeforeCoalescedFlag() {
+    audioManager.sounds[0].isSelected = true
+
+    #expect(!audioManager.hasSelectedSounds)
+    #expect(audioManager.hasPlayableSelection)
+
+    audioManager.sounds[0].isSelected = false
+  }
+
+  /// The auto-pause is dispatched to the main actor, so the test awaits it.
   @Test func deselectingLastSoundPausesPlayback() async {
     audioManager.sounds[0].isSelected = true
     audioManager.updateHasSelectedSounds()
@@ -87,7 +86,6 @@ struct AudioManagerTests {
     audioManager.sounds[0].isSelected = false
   }
 
-  /// Deselecting one of several selected sounds keeps playback going.
   @Test func deselectingOneOfManyKeepsPlaying() async {
     audioManager.sounds[0].isSelected = true
     audioManager.sounds[1].isSelected = true
@@ -102,5 +100,12 @@ struct AudioManagerTests {
 
     audioManager.isGloballyPlaying = false
     audioManager.sounds[1].isSelected = false
+  }
+
+  /// An imported archive can repeat a name in `soundOrder`.
+  @Test func orderingToleratesDuplicateSoundOrder() {
+    let preset = PresetFactory.makePreset(soundOrder: ["rain", "waves", "rain"])
+    #expect(audioManager.orderedVisibleSounds(for: preset).map(\.fileName) == ["rain", "waves"])
+    #expect(audioManager.compositeSoundIcons(for: preset).count == 1)
   }
 }

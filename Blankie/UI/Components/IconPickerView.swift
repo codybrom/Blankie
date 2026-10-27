@@ -30,24 +30,29 @@ enum IconCategory: String, CaseIterable {
 
   var localizedName: String {
     switch self {
-    case .popular: return String(localized: "Popular")
-    case .nature: return String(localized: "Nature")
-    case .audio: return String(localized: "Audio")
-    case .education: return String(localized: "Education")
-    case .sports: return String(localized: "Sports")
-    case .tools: return String(localized: "Tools")
-    case .objects: return String(localized: "Objects")
-    case .home: return String(localized: "Home")
-    case .transport: return String(localized: "Transport")
-    case .communication: return String(localized: "Communication")
-    case .shopping: return String(localized: "Shopping")
-    case .foodAndDrink: return String(localized: "Food & Drink")
-    case .entertainment: return String(localized: "Entertainment")
-    case .medical: return String(localized: "Medical")
-    case .clothing: return String(localized: "Clothing")
-    case .miscellaneous: return String(localized: "Miscellaneous")
-    case .symbols: return String(localized: "Symbols")
-    case .peopleAndActivity: return String(localized: "People & Activity")
+    case .popular: return String(localized: "iconCategory.popular", defaultValue: "Popular")
+    case .nature: return String(localized: "iconCategory.nature", defaultValue: "Nature")
+    case .audio: return String(localized: "iconCategory.audio", defaultValue: "Audio")
+    case .education: return String(localized: "iconCategory.education", defaultValue: "Education")
+    case .sports: return String(localized: "iconCategory.sports", defaultValue: "Sports")
+    case .tools: return String(localized: "iconCategory.tools", defaultValue: "Tools")
+    case .objects: return String(localized: "iconCategory.objects", defaultValue: "Objects")
+    case .home: return String(localized: "iconCategory.home", defaultValue: "Home")
+    case .transport: return String(localized: "iconCategory.transport", defaultValue: "Transport")
+    case .communication:
+      return String(localized: "iconCategory.communication", defaultValue: "Communication")
+    case .shopping: return String(localized: "iconCategory.shopping", defaultValue: "Shopping")
+    case .foodAndDrink:
+      return String(localized: "iconCategory.foodAndDrink", defaultValue: "Food & Drink")
+    case .entertainment:
+      return String(localized: "iconCategory.entertainment", defaultValue: "Entertainment")
+    case .medical: return String(localized: "iconCategory.medical", defaultValue: "Medical")
+    case .clothing: return String(localized: "iconCategory.clothing", defaultValue: "Clothing")
+    case .miscellaneous:
+      return String(localized: "iconCategory.miscellaneous", defaultValue: "Miscellaneous")
+    case .symbols: return String(localized: "iconCategory.symbols", defaultValue: "Symbols")
+    case .peopleAndActivity:
+      return String(localized: "iconCategory.peopleAndActivity", defaultValue: "People & Activity")
     }
   }
 
@@ -67,13 +72,11 @@ struct IconPickerView: View {
   @State private var selectedIconCategory: IconCategory
   @Environment(\.dismiss) private var dismiss
 
-  // Icon categories with curated selections
   private let iconCategories = IconData.iconCategories
 
   init(selectedIcon: Binding<String>) {
     self._selectedIcon = selectedIcon
 
-    // Find which category contains the selected icon
     let foundCategory =
       IconCategory.allCases.first { $0.icons.contains(selectedIcon.wrappedValue) } ?? .popular
 
@@ -85,7 +88,6 @@ struct IconPickerView: View {
       return selectedIconCategory.icons
     }
 
-    // Search across all categories
     let allIcons = iconCategories.values.flatMap { $0 }
     let uniqueIcons = Array(Set(allIcons))
 
@@ -96,7 +98,6 @@ struct IconPickerView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      // Search and category picker
       VStack(spacing: 0) {
         HStack(spacing: 12) {
           HStack {
@@ -149,7 +150,6 @@ struct IconPickerView: View {
         Divider()
       }
 
-      // Icon grid
       ScrollViewReader { proxy in
         ScrollView {
           if searchResults.isEmpty && !iconSearchText.isEmpty {
@@ -206,14 +206,13 @@ struct IconPickerView: View {
                 // Read the symbol name without VoiceOver speaking each "dot".
                 .accessibilityLabel(Text(iconName.replacingOccurrences(of: ".", with: " ")))
                 .accessibilityAddTraits(selectedIcon == iconName ? .isSelected : [])
-                .id(iconName)  // Add ID for scrolling
+                .id(iconName)
               }
             }
             .padding()
           }
         }
         .onAppear {
-          // Scroll to the selected icon when the view appears
           if searchResults.contains(selectedIcon) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
               withAnimation {
@@ -238,7 +237,6 @@ struct IconPickerView: View {
   }
 }
 
-// Extract icon data loading to a shared struct
 struct IconData {
   static let iconCategories: [String: [String]] = loadIconCategories()
 
@@ -250,7 +248,7 @@ struct IconData {
   static let categoryNames: [String] = iconCategories.keys.sorted()
 
   private static func loadIconCategories() -> [String: [String]] {
-    // Helper enum to decode JSON with nested categories
+    // A category is either a flat icon list or a map of subcategories.
     enum CategoryEntry: Decodable {
       case simple([String])
       case nested([String: [String]])
@@ -289,7 +287,6 @@ struct IconData {
       return [:]
     }
 
-    // Flatten nested categories
     var flatCategories: [String: [String]] = [:]
     for (key, value) in categories {
       assert(

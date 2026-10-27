@@ -11,19 +11,17 @@ import os
 
 extension GlobalSettings {
   func loadBasicSettings() {
-    // object(forKey:) to distinguish "never saved" (default 1.0) from a saved
-    // zero — double(forKey:) returns 0 for both, which forced a zeroed volume
-    // back to full on every launch.
+    // object(forKey:) tells "never saved" (default 1.0) from a saved zero,
+    // since double(forKey:) returns 0 for both.
     volume = UserDefaults.shared.object(forKey: UserDefaultsKeys.volume) as? Double ?? 1.0
 
-    // Load saved accent color
     if let colorString = UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor) {
       customAccentColor = Color(fromString: colorString)
     } else {
       customAccentColor = nil
     }
 
-    // Autoplay is macOS-only (stored under autoPlayOnLaunchMac); on first launch
+    // Autoplay is macOS-only (stored under autoPlayOnLaunchMac). On first launch
     // after the rename, carry the legacy autoPlayOnLaunch value forward.
     #if os(macOS)
       if let mac = UserDefaults.shared.object(forKey: UserDefaultsKeys.autoPlayOnLaunchMac) as? Bool
@@ -41,11 +39,9 @@ extension GlobalSettings {
       autoPlayOnLaunch = false
     #endif
 
-    // Show labels preference (default to true)
     showSoundNames =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.showSoundNames) as? Bool ?? true
 
-    // Icon size preference (default to medium)
     if let savedSize = UserDefaults.shared.string(forKey: UserDefaultsKeys.iconSize),
       let size = IconSize(rawValue: savedSize)
     {
@@ -54,27 +50,27 @@ extension GlobalSettings {
       iconSize = .medium
     }
 
-    // Show list view preference (default to false - grid view)
     showingListView = UserDefaults.shared.bool(forKey: UserDefaultsKeys.showingListView)
 
-    // Show progress border preference (default to true)
     showProgressBorder =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.showProgressBorder) as? Bool ?? true
 
-    // Lock portrait orientation on iOS preference (default to false)
+    showPlaybackAsContinuous =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.showPlaybackAsContinuous) as? Bool ?? true
+
     lockPortraitOrientationiOS =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockPortraitOrientationiOS) as? Bool
       ?? false
 
-    // Load Quick Mix sound file names (default to original 8 sounds)
+    nowPlayingFirst =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.nowPlayingFirst) as? Bool ?? true
+
     if let savedQuickMixSounds = UserDefaults.shared.array(
       forKey: UserDefaultsKeys.quickMixSoundFileNames) as? [String]
     {
       quickMixSoundFileNames = savedQuickMixSounds
     }
 
-    // Load favorited presets (the `starredItems` token list). Nothing is
-    // favorited by default — the initializer seeds an empty array.
     if let savedStarred = UserDefaults.shared.array(
       forKey: UserDefaultsKeys.starredItems) as? [String]
     {
@@ -85,11 +81,9 @@ extension GlobalSettings {
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockScreenBackgroundEnabled) as? Bool
       ?? true
 
-    // Dock icon pause badge (macOS), default on.
     showDockBadgeWhenPaused =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.showDockBadgeWhenPaused) as? Bool ?? true
 
-    // Menu bar (macOS): show the icon (default on); the Dock-hiding modes off.
     showMenuBarIcon =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.showMenuBarIcon) as? Bool ?? true
     menuBarOnlyMode =
@@ -98,23 +92,19 @@ extension GlobalSettings {
       UserDefaults.shared.object(forKey: UserDefaultsKeys.hideDockWhenWindowClosed) as? Bool
       ?? false
 
-    // Library section collapse state (default expanded).
     librarySoundsExpanded =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.librarySoundsExpanded) as? Bool ?? true
     libraryPresetsExpanded =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.libraryPresetsExpanded) as? Bool ?? true
 
-    // App-wide default lock screen animation (used when a preset has none).
     if let data = UserDefaults.shared.data(forKey: UserDefaultsKeys.defaultLockScreenArtwork),
       let ref = try? JSONDecoder().decode(AnimatedArtworkRef.self, from: data)
     {
       defaultLockScreenArtwork = ref
     }
 
-    // Background blur (default on). Read via `object` rather than
-    // `double(forKey:)` so a deliberately-saved 0 ("no blur") isn't mistaken
-    // for "unset" and reset back to the default. Blur is now on/off, so
-    // migrate any legacy radius (e.g. the old "High" 15) to the single value.
+    // object(forKey:) keeps a saved 0 ("no blur") distinct from unset. Blur is
+    // on/off, so any legacy radius normalizes to the single default value.
     let loadedBlur =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.backgroundBlurRadius) as? Double
     let normalizedBlur =
@@ -127,7 +117,6 @@ extension GlobalSettings {
   }
 
   func loadPlatformSettings() {
-    // Load platform-specific preferences
     enableSpatialAudio =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.enableSpatialAudio) as? Bool ?? false
     mixWithOthers =
@@ -137,13 +126,10 @@ extension GlobalSettings {
   }
 
   func loadLanguageSettings() {
-    // First initialize language with default value
     language = Language.system
 
-    // Then load available languages
     availableLanguages = Language.getAvailableLanguages()
 
-    // Finally, try to set the saved language preference
     let savedLanguageCode = UserDefaults.shared.string(forKey: UserDefaultsKeys.language)
     if let code = savedLanguageCode,
       let savedLanguage = availableLanguages.first(where: { $0.code == code })
@@ -154,9 +140,8 @@ extension GlobalSettings {
 
   func migrateLegacySettings() {
     #if os(macOS)
-      // `alwaysStartPaused` is a legacy key that predates `autoPlayOnLaunch` and stores the opposite
-      // value. When present, its inverse overrides the value loadBasicSettings
-      // already carried forward.
+      // Legacy `alwaysStartPaused` stores the inverse of autoplay. When present,
+      // it overrides the value loadBasicSettings carried forward.
       if let oldValue = UserDefaults.shared.object(forKey: "alwaysStartPaused") as? Bool {
         autoPlayOnLaunch = !oldValue
         UserDefaults.shared.set(autoPlayOnLaunch, forKey: UserDefaultsKeys.autoPlayOnLaunchMac)

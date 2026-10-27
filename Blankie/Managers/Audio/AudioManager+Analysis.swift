@@ -27,38 +27,37 @@ extension AudioManager {
 
       await withTaskGroup(of: Void.self) { group in
         for sound in batch {
+          // `Sound` is main-actor and non-Sendable, so read these values here.
+          // Custom profiles are keyed by bare fileName, built-ins by fileName.extension.
+          let isCustom = sound.isCustom
+          let fileName = sound.fileName
+          let fileExtension = sound.fileExtension
+          let customURL = isCustom ? sound.fileURL : nil
+          let profileKey = isCustom ? fileName : "\(fileName).\(fileExtension)"
+
           group.addTask {
-            // Check if we need to analyze this sound. Custom profiles are keyed
-            // by the bare fileName; built-ins by fileName.extension (matches
-            // soundsNeedingAnalysis and the delete-cleanup key).
-            let profileKey =
-              sound.isCustom ? sound.fileName : "\(sound.fileName).\(sound.fileExtension)"
             let existingProfile = PlaybackProfileStore.shared.profile(for: profileKey)
 
             if forceReanalysis || existingProfile == nil {
-              // Get the sound URL
               let url: URL?
-              if sound.isCustom, let customURL = sound.fileURL {
+              if isCustom, let customURL {
                 url = customURL
               } else {
-                url = Bundle.main.url(
-                  forResource: sound.fileName, withExtension: sound.fileExtension)
+                url = Bundle.main.url(forResource: fileName, withExtension: fileExtension)
               }
 
               guard let soundURL = url else {
                 Logger.audio.error(
-                  "AudioManager: Could not find URL for \(sound.fileName, privacy: .public)")
+                  "AudioManager: Could not find URL for \(fileName, privacy: .public)")
                 return
               }
 
-              // Perform comprehensive analysis
               let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: soundURL)
 
-              // Create and store playback profile
               if let profile = PlaybackProfile.from(analysis: analysis, filename: profileKey) {
                 PlaybackProfileStore.shared.store(profile)
                 Logger.audio.debug(
-                  "AudioManager: Analyzed and stored profile for \(sound.fileName)")
+                  "AudioManager: Analyzed and stored profile for \(fileName)")
               }
             }
           }
@@ -72,7 +71,7 @@ extension AudioManager {
     return analyzedCount
   }
 
-  /// Check if any sounds need analysis
+  /// Sounds with no stored playback profile.
   @MainActor
   func soundsNeedingAnalysis() -> [Sound] {
     return sounds.filter { sound in
@@ -81,7 +80,7 @@ extension AudioManager {
     }
   }
 
-  /// Analyze all custom sounds missing profiles (useful for migration)
+  /// Analyzes custom sounds that have no playback profile yet.
   @MainActor
   func analyzeCustomSoundsIfNeeded() async {
     let customSoundsNeedingAnalysis = sounds.filter { sound in

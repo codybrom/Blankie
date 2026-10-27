@@ -11,14 +11,10 @@ import os
 
 // MARK: - App-group file mirror for custom-sound metadata
 
-/// Codable snapshot of a `CustomSoundData` row, written beside its audio file in
-/// the shared app-group container. The audio file already survives a SwiftData
-/// store rebuild on its own, but the row's metadata (title, icon, credits, loop
-/// flags, LUFS/normalization, moods…) lived only in the store — so a rebuild
-/// orphaned the audio and lost everything else. This sidecar lets the row be
-/// reconstructed from disk. Mirrors the artwork file mirror in
-/// `PresetArtworkManager`. A value type, so it crosses actors safely.
-struct CustomSoundSnapshot: Codable, Sendable {
+/// Codable snapshot of a `CustomSoundData` row, written beside its audio file in the
+/// app-group container so the row can be rebuilt after a SwiftData store rebuild
+/// (the audio survives on its own). Same approach as `PresetArtworkManager`'s mirror.
+nonisolated struct CustomSoundSnapshot: Codable, Sendable {
   var id: UUID
   var title: String
   var systemIconName: String
@@ -117,16 +113,14 @@ extension CustomSoundManager {
   /// Suffix for a sound's metadata sidecar. Audio files are `<uuid>.<ext>`, so a
   /// `.meta.json` sidecar can never collide with one. Not private so the
   /// reconcile logic is unit tested.
-  static let mirrorSuffix = ".meta.json"
+  nonisolated static let mirrorSuffix = ".meta.json"
 
   private func mirrorURL(for fileName: String) -> URL? {
     getCustomSoundsDirectoryURL()?.appendingPathComponent("\(fileName)\(Self.mirrorSuffix)")
   }
 
-  /// Write (or refresh) the sidecar for one sound. Cheap and idempotent — the
-  /// mirror actor skips the write when the on-disk copy already matches — so it's
-  /// safe to call from every save path. Encoding and the write run off the main
-  /// actor, serialized with every other mirror write.
+  /// Writes or refreshes one sound's sidecar. Idempotent (an unchanged copy is
+  /// skipped), and encoding and writing run off the main actor, serialized.
   @MainActor
   func writeMirror(for sound: CustomSoundData) {
     let snapshot = CustomSoundSnapshot(sound)
@@ -144,28 +138,39 @@ extension CustomSoundManager {
     }
   }
 
-  /// Remove a sound's sidecar when the sound is deleted, so a stranded mirror
-  /// can't resurrect it on the next reconcile.
+  /// Removes a deleted sound's sidecar so the next reconcile doesn't restore it.
   @MainActor
   func removeMirror(fileName: String) {
     guard let url = mirrorURL(for: fileName) else { return }
     Task { await AppGroupFileMirror.shared.remove(at: url) }
   }
 
-  /// Re-insert any custom-sound rows that exist on disk (audio + sidecar) but are
-  /// missing from the store — the recovery path after a SwiftData store rebuild.
-  /// A no-op on a healthy launch (every row is already present). Idempotent.
-  ///
-  /// The directory scan and sidecar decode run off the main actor; only the
-  /// insert/save (which must use the main context) hops back to the main actor.
+  /// Re-inserts rows that exist on disk (audio and sidecar) but not in the store,
+  /// after a store rebuild. Idempotent. The scan runs off the main actor. Only the
+  /// insert and save use the main context.
   @MainActor
   func reconcileCustomSoundsFromDisk() async {
     guard let dir = getCustomSoundsDirectoryURL() else { return }
     let existing = Set(getAllCustomSounds().map { $0.fileName })
 
-    let snapshotsToRestore = await Task.detached(priority: .utility) {
+    let scanned = await Task.detached(priority: .utility) {
       Self.restorableSnapshots(in: dir, excluding: existing)
     }.value
+    restoreScannedSnapshots(scanned, in: dir)
+  }
+
+  /// Inserts rows for the sidecars a reconcile scan found, skipping any whose
+  /// row now exists or whose audio is now gone.
+  @MainActor
+  func restoreScannedSnapshots(_ scanned: [CustomSoundSnapshot], in dir: URL) {
+    // Re-check against the live store. An import or delete can land during the
+    // scan, and restoring it again would duplicate the row or revive a deleted one.
+    let current = Set(getAllCustomSounds().map { $0.fileName })
+    let snapshotsToRestore = scanned.filter { snapshot in
+      !current.contains(snapshot.fileName)
+        && FileManager.default.fileExists(
+          atPath: dir.appendingPathComponent("\(snapshot.fileName).\(snapshot.fileExtension)").path)
+    }
     guard !snapshotsToRestore.isEmpty else { return }
 
     do {
@@ -186,9 +191,8 @@ extension CustomSoundManager {
     }
   }
 
-  /// Decode every sidecar in `dir` whose row is missing (not in `excluding`) and
-  /// whose audio file is still present. Pure file work — safe to run off-main,
-  /// and not private so the reconcile logic is unit tested directly.
+  /// Decodes every sidecar in `dir` whose row is missing and whose audio file still
+  /// exists. Pure file work, safe off the main actor, and not private so it's unit tested.
   nonisolated static func restorableSnapshots(in dir: URL, excluding existing: Set<String>)
     -> [CustomSoundSnapshot]
   {
@@ -205,7 +209,7 @@ extension CustomSoundManager {
         let snapshot = try? JSONDecoder().decode(CustomSoundSnapshot.self, from: data)
       else { continue }
 
-      // Only restore when the audio file is actually present; a row with no file
+      // Only restore when the audio file is actually present, since a row with no file
       // would just fail to load and clutter the library.
       let audioURL = dir.appendingPathComponent("\(snapshot.fileName).\(snapshot.fileExtension)")
       guard fileManager.fileExists(atPath: audioURL.path) else { continue }

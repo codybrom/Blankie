@@ -8,7 +8,7 @@
 import SwiftUI
 import os
 
-// The About content is shared with the compact iOS sheet; macOS resolves text
+// The About content is shared with the compact iOS sheet. macOS resolves text
 // styles smaller (footnote/caption are 10pt), so each role steps up there.
 extension Font {
   static var aboutHeading: Font {
@@ -40,8 +40,8 @@ struct DeveloperSection: View {
       Text("Developed By")
         .foregroundStyle(.secondary)
 
-      // .tint (not Color.accentColor, which ignores the .tint environment
-      // on macOS and stays system blue) so the link follows the app accent.
+      // Color.accentColor ignores the .tint environment on macOS, so .tint
+      // keeps the link on the app accent.
       Link(destination: URL(string: "https://www.codybrom.com")!) {
         Text(verbatim: "Cody Bromley")
       }
@@ -64,9 +64,7 @@ struct ContributorSection: View {
         .padding(.bottom, 4)
 
       CenteredFlowLayout(itemSpacing: 8, lineSpacing: 10) {
-        // Names and dot separators are interleaved as separate items: a name is
-        // fixed so it never breaks mid-word, and the layout drops any separator
-        // that lands at the end of a line so dots stay strictly interior.
+        // Names and dots are separate flow items (see CenteredFlowLayout).
         ForEach(contributors.indices, id: \.self) { index in
           Text(contributors[index])
             .font(.aboutBody)
@@ -86,7 +84,7 @@ struct ContributorSection: View {
       .padding(.horizontal, 40)
       // Clip the row-trailing separators the layout parks off-bounds.
       .clipped()
-      // Read the whole list as one phrase rather than name-by-name with dots.
+      // VoiceOver reads the whole list as one phrase.
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(Text(contributors.joined(separator: ", ")))
     }
@@ -97,7 +95,7 @@ struct ContributorSection: View {
 
 /// Marks a flow item as a separator: it glues to the preceding item's line and
 /// is dropped when it would land at a line's end, so separators stay interior.
-private struct FlowSeparatorKey: LayoutValueKey {
+private nonisolated struct FlowSeparatorKey: LayoutValueKey {
   static let defaultValue = false
 }
 
@@ -148,7 +146,7 @@ struct CenteredFlowLayout: Layout {
           )
           x += size.width + itemSpacing
         } else {
-          // Park the dropped separator off-bounds; the caller clips it away.
+          // Park the dropped separator off-bounds. The caller clips it away.
           subviews[itemIndex].place(
             at: CGPoint(x: bounds.minX, y: bounds.maxY + 1000),
             anchor: .topLeading,
@@ -177,7 +175,7 @@ struct CenteredFlowLayout: Layout {
     var x: CGFloat = 0
     for index in sizes.indices {
       let width = sizes[index].width
-      // Separators never wrap; they stay glued to the line of the preceding name.
+      // Separators never wrap and stay glued to the line of the preceding name.
       if !separators[index], !row.isEmpty, x + itemSpacing + width > maxWidth {
         rows.append(row)
         row = []
@@ -208,16 +206,13 @@ struct TranslatorSection: View {
         .font(.aboutHeading)
         .padding(.bottom, 4)
 
-      // Filter out languages without translators
       let translatedLanguages = translators.filter { !$0.value.isEmpty }.keys.sorted()
       let isOddCount = translatedLanguages.count % 2 != 0
 
-      // Split languages for grid and potential last item
       let gridLanguages = isOddCount ? Array(translatedLanguages.dropLast()) : translatedLanguages
       let lastLanguage = isOddCount ? translatedLanguages.last : nil
 
       VStack(spacing: 20) {
-        // Two-column grid for even items
         if !gridLanguages.isEmpty {
           LazyVGrid(
             columns: [GridItem(.fixed(columnWidth)), GridItem(.fixed(columnWidth))], spacing: 20
@@ -244,7 +239,6 @@ struct TranslatorSection: View {
           .frame(maxWidth: .infinity)
         }
 
-        // Centered last item if odd count
         if let lastLanguage = lastLanguage,
           let translatorList = translators[lastLanguage], !translatorList.isEmpty
         {

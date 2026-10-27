@@ -5,6 +5,7 @@
 //  Created by Cody Bromley on 1/1/25.
 //
 
+import CoreSpotlight
 import Foundation
 import Observation
 import SwiftUI
@@ -13,6 +14,12 @@ import os
 @Observable
 class PresetManager {
   @ObservationIgnored private var isInitializing = true
+  /// Sorted, order-independent signature of the names last published to Siri and
+  /// Spotlight, so repeat refreshes no-op until that set changes. Per-process.
+  @ObservationIgnored private var lastDiscoverableEntitiesSignature: String?
+  @ObservationIgnored private var spotlightDonationTask: Task<Void, Never>?
+  /// Only the latest thumbnail request for a preset may commit its result.
+  @ObservationIgnored private var thumbnailRequests: [UUID: UUID] = [:]
   static let shared = PresetManager()
 
   private(set) var presets: [Preset] = []
@@ -24,60 +31,69 @@ class PresetManager {
         creatorName: currentPreset?.creatorName,
         artworkId: currentPreset?.artworkId
       )
+      // Next/previous cycles favorites relative to the current preset, so
+      // recompute on every preset change, including the restore at launch.
+      AudioManager.shared.updateNextPreviousCommandState()
     }
   }
 
   private(set) var hasCustomPresets: Bool = false
   private(set) var isLoading: Bool = true
+  /// Launch couldn't restore the last active preset (deleted, or it failed to
+  /// apply) and fell back to the default, so the UI opens on the Library.
+  private(set) var lastPresetRestoreFailed = false
   private(set) var error: Error?
 
-  /// The preset whose theme (accent, blur, view mode) should drive the UI, or
-  /// nil when none should. Quick Mix already clears `currentPreset`, but solo
-  /// mode preserves it so the preset can be restored on exit — and during solo
-  /// the preset's theme must not apply (solo has its own app-accent identity).
-  /// Centralizing the rule here keeps accent resolution and the Settings
-  /// "Overridden by Preset" badges in agreement.
-  ///
-  /// Views reading this must also observe `AudioManager` so SwiftUI
-  /// re-evaluates when solo / Quick Mix state changes.
+  /// The preset whose theme (accent, blur, view mode) drives the UI. Nil in single sound
+  /// (which keeps `currentPreset` for restore) and Quick Mix. Views reading this
+  /// must also observe `AudioManager` to update when those modes change.
   @MainActor
   var themingPreset: Preset? {
-    let audio = AudioManager.shared
-    if audio.soloModeSound != nil || audio.isQuickMix { return nil }
-    return currentPreset
+    // Derived from activeItem so this agrees with currentFavoriteToken.
+    switch AudioManager.shared.activeItem {
+    case .preset, .allSounds:
+      return currentPreset
+    case .single, .quickMix, .none:
+      return nil
+    }
   }
 
-  /// Watches AudioManager's (now `@Observable`) sounds array for add/remove so a
-  /// freshly imported or deleted sound re-checks preset divergence. Per-sound
-  /// selection/volume changes arrive via `AudioManager.soundDidChange()`.
+  /// The active preset holds none of the loaded sounds, so only the editor
+  /// can give it something to play. Never true for the default preset.
+  @MainActor
+  var currentPresetHasNoSounds: Bool {
+    guard let preset = themingPreset, !preset.isDefault else { return false }
+    return !AudioManager.shared.sounds.contains { sound in
+      preset.soundStates.contains { $0.fileName == sound.fileName }
+    }
+  }
+
+  /// Watches the sounds array so an imported or deleted sound re-checks preset
+  /// divergence. Per-sound changes arrive via `AudioManager.soundDidChange()`.
   @ObservationIgnored private var soundsObservation: Task<Void, Never>?
   @ObservationIgnored private var isInitialLoad = true
 
-  /// Set by applySoundStates; until then the mixer may not match the preset.
+  /// Set by applySoundStates. Until then the mixer may not match the preset.
   @ObservationIgnored var presetStatesApplied = false
 
-  // In-flight prefetch for nearby preset animated artwork; cancelled when the
+  // In-flight prefetch for nearby preset animated artwork, cancelled when the
   // current preset changes so stale prefetches don't compete with the new one.
   @ObservationIgnored private var nearbyArtworkPrefetchTask: Task<Void, Never>?
 
   private init() {
     Logger.presets.debug("PresetManager: --- Begin Initialization ---")
 
-    // Re-evaluate preset divergence when the sound set changes (custom sound
-    // imported or deleted). `sounds.count` only emits on add/remove, not on the
-    // per-sound mutations already covered by AudioManager.soundDidChange().
     soundsObservation = Task { @MainActor [weak self] in
       for await _ in Observations({ AudioManager.shared.sounds.count }) {
         self?.updateCurrentPresetState()
       }
     }
 
-    // Don't load presets immediately - wait for custom sounds to be loaded
-    // This will be triggered by initializePresetManager() after AudioManager setup
+    // Presets load in initializePresetManager(), after custom sounds.
     Logger.presets.debug("PresetManager: --- End Initialization (deferred preset loading) ---")
   }
 
-  /// Initialize preset manager after AudioManager has loaded all sounds (including custom)
+  /// Loads presets. Call after AudioManager has loaded all sounds, including custom ones.
   @MainActor
   func initializePresetManager() async {
     guard isInitializing else {
@@ -90,7 +106,7 @@ class PresetManager {
 
     isInitializing = false
 
-    // Deferred so CarPlay thumbnail caching can't starve the preset-apply task.
+    // Deferred so CarPlay thumbnail caching doesn't delay applying the preset.
     Task(priority: .background) { @MainActor in
       try? await Task.sleep(for: .seconds(5))
       Logger.presets.debug("PresetManager: Caching thumbnails for CarPlay...")
@@ -149,10 +165,8 @@ extension PresetManager {
 
     var updatedPreset = preset
     updatedPreset.name = newName
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
-    // Validate the updated preset
     guard updatedPreset.validate() else {
       handleError(PresetError.invalidPreset)
       return
@@ -180,9 +194,8 @@ extension PresetManager {
 
     cleanupAnimatedArtworkFiles(for: preset)
 
-    // Delete the preset's stored artwork rows too — cleanupAnimatedArtworkFiles
-    // only removes the on-disk .mov/preview files, leaving the full-resolution
-    // PresetArtwork image blobs to accumulate in SwiftData forever otherwise.
+    // Delete the stored PresetArtwork rows too. cleanupAnimatedArtworkFiles only
+    // removes the on-disk .mov and preview files.
     let deletedPresetID = preset.id
     Task { try? await PresetArtworkManager.shared.deleteArtwork(for: deletedPresetID) }
 
@@ -197,35 +210,44 @@ extension PresetManager {
     GlobalSettings.shared.pruneStarredItems(
       validPresetIDs: Set(presets.map { $0.id.uuidString }))
 
-    // Remove cached thumbnail
     removeThumbnail(for: preset.id)
 
     if wasCurrentPreset {
       Logger.presets.debug("PresetManager: Deleted current preset, switching to default/next")
 
-      // Find next available CUSTOM preset
       if let nextCustomPreset = presets.first(where: { !$0.isDefault }) {
         do {
           Logger.presets.debug(
             "PresetManager: Applying next custom preset '\(nextCustomPreset.name)'")
-          try applyPreset(nextCustomPreset)
+          // Deleting while paused stays paused.
+          try applyPreset(nextCustomPreset, autoPlay: AudioManager.shared.isGloballyPlaying)
         } catch {
           handleError(error)
         }
       } else {
-        // If no other custom presets exist, copy the deleted preset's state to the default preset
+        // No other custom presets: the default takes over the deleted preset's mix.
+        // It still lists every sound that exists (the default always does), so it
+        // applies even when the deleted preset named a sound that's now gone.
         if let defaultPresetIndex = presets.firstIndex(where: { $0.isDefault }) {
-          // Copy current state
           var updatedDefaultPreset = presets[defaultPresetIndex]
-          updatedDefaultPreset.soundStates = preset.soundStates
+          let deletedStates = Dictionary(
+            preset.soundStates.map { ($0.fileName, $0) }, uniquingKeysWith: { first, _ in first })
+          let defaultStates = Dictionary(
+            updatedDefaultPreset.soundStates.map { ($0.fileName, $0) },
+            uniquingKeysWith: { first, _ in first })
+          updatedDefaultPreset.soundStates = AudioManager.shared.sounds.map { sound in
+            deletedStates[sound.fileName]
+              ?? PresetState(
+                fileName: sound.fileName, isSelected: false,
+                volume: defaultStates[sound.fileName]?.volume ?? sound.volume)
+          }
           presets[defaultPresetIndex] = updatedDefaultPreset
-          currentPreset = nil
 
           do {
             Logger.presets.debug(
               "PresetManager: No other custom presets. Updating default and setting current preset to nil."
             )
-            try applyPreset(updatedDefaultPreset)
+            try applyPreset(updatedDefaultPreset, autoPlay: AudioManager.shared.isGloballyPlaying)
           } catch {
             handleError(error)
           }
@@ -241,11 +263,9 @@ extension PresetManager {
     Logger.presets.debug("PresetManager: --- End Delete Preset ---")
   }
 
-  /// Custom sounds that deleting `preset` would leave orphaned: members of it,
-  /// in no *other* custom preset, and not currently selected. The default preset
-  /// always contains every sound, so it never counts as "another preset" here —
-  /// it only matters through the live-selection check. Built-ins are excluded
-  /// since they can't be deleted.
+  /// Custom sounds that deleting `preset` would orphan: members of it that are in
+  /// no other custom preset and not currently selected. The default preset holds
+  /// every sound, so it counts only through the selection check.
   @MainActor
   func orphanedCustomSounds(ifDeleting preset: Preset) -> [Sound] {
     guard !preset.isDefault else { return [] }
@@ -255,10 +275,9 @@ extension PresetManager {
       presets
         .filter { !$0.isDefault && $0.id != preset.id }
         .flatMap { $0.soundStates.map(\.fileName) })
-    // "Selected/playing on the default preset" — the live selection when the
-    // default is the active context, otherwise the default's saved selection.
-    // Deliberately NOT the live selection of the custom preset being deleted:
-    // its own playing sounds would otherwise be spared and undercounted.
+    // The default's live selection when it's active, otherwise its saved one.
+    // The deleted preset's live selection doesn't count, or its playing sounds
+    // would be spared.
     let defaultIsActive = currentPreset == nil || (currentPreset?.isDefault ?? false)
     let selectedOnDefault: Set<String>
     if defaultIsActive {
@@ -272,7 +291,7 @@ extension PresetManager {
         && presetMembers.contains(sound.fileName)
         && !otherCustomMembers.contains(sound.fileName)
         && !selectedOnDefault.contains(sound.fileName)
-        && audio.soloModeSound?.id != sound.id
+        && audio.singleSound?.id != sound.id
         && audio.previewModeSound?.id != sound.id
     }
   }
@@ -314,8 +333,7 @@ extension PresetManager {
     } else {
       return
     }
-    preset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    preset.lastModifiedVersion = Bundle.main.appVersion
     presets[index] = preset
     if currentPreset?.id == presetID {
       currentPreset = preset
@@ -336,10 +354,10 @@ extension PresetManager {
   func updateCurrentPresetState() {
     if isInitializing { return }
 
-    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // Skip while the mixer doesn't reflect the preset (single sound, preview, or none
     // applied yet). Preview forces the previewed sound to volume 1.0, which must
     // not bleed into the saved preset.
-    if AudioManager.shared.soloModeSound != nil || AudioManager.shared.previewModeSound != nil
+    if AudioManager.shared.singleSound != nil || AudioManager.shared.previewModeSound != nil
       || !presetStatesApplied
     {
       return
@@ -364,24 +382,12 @@ extension PresetManager {
       // The default preset tracks every available sound (matching
       // updateCurrentPresetBeforeSave), so a freshly imported sound the user
       // selects on the default grid is recorded and survives relaunch.
-      newStates = AudioManager.shared.sounds.map { sound in
-        PresetState(
-          fileName: sound.fileName,
-          isSelected: sound.isSelected,
-          volume: sound.volume
-        )
-      }
+      newStates = AudioManager.shared.sounds.map { $0.captureState() }
     } else {
       let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
       newStates = AudioManager.shared.sounds
         .filter { presetSoundFileNames.contains($0.fileName) }
-        .map { sound in
-          PresetState(
-            fileName: sound.fileName,
-            isSelected: sound.isSelected,
-            volume: sound.volume
-          )
-        }
+        .map { $0.captureState() }
     }
 
     // Preserve the preset's existing sound order, not the global customOrder
@@ -398,8 +404,7 @@ extension PresetManager {
       var updatedPreset = preset
       updatedPreset.soundStates = newStates
       updatedPreset.soundOrder = currentSoundOrder
-      updatedPreset.lastModifiedVersion =
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+      updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
       if let index = presets.firstIndex(where: { $0.id == preset.id }) {
         presets[index] = updatedPreset
@@ -417,47 +422,71 @@ extension PresetManager {
     AnimatedArtworkFileStore.removeItemIfExists(relativePath: preset.staticArtworkPath)
   }
 
+  /// Starts a preset from Siri, a widget or CarPlay. Leaves single sound and Quick Mix
+  /// first, since an application skips single sound and never exits Quick Mix itself.
+  /// An application plays the new mix, so only a current preset needs a play.
   @MainActor
-  func applyPreset(_ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false) throws
-  {
+  func playPreset(_ preset: Preset) throws {
+    // Validate before leaving Quick Mix, which drops the earlier mix. An empty
+    // preset opens in the app, but Siri, widgets and CarPlay can't play it.
+    guard preset.validate(), !preset.soundStates.isEmpty else {
+      throw PresetError.invalidPreset
+    }
+    AudioManager.shared.leaveTransientModes()
+    if try !applyPreset(preset) {
+      AudioManager.shared.setGlobalPlaybackState(true)
+    }
+  }
+
+  @MainActor
+  /// `autoPlay: false` applies the mix without starting playback (remote
+  /// next/previous while paused). Returns false when the preset was already
+  /// active and nothing was applied. Callers that want playback start it only
+  /// then, since an application starts playback itself once the new mix is in.
+  @discardableResult
+  func applyPreset(
+    _ preset: Preset, isInitialLoad: Bool = false, forceReapply: Bool = false,
+    autoPlay: Bool = true
+  ) throws -> Bool {
     logPresetApplication(preset)
 
     guard preset.validate() else {
       throw PresetError.invalidPreset
     }
 
+    // A preset command ends a sound-editor preview first. Resume the mix only
+    // when it stays, because an application replaces it.
     if preset.id == currentPreset?.id, !isInitialLoad, !forceReapply {
+      AudioManager.shared.exitPreviewMode()
       handleAlreadyActivePreset(preset)
-      return
+      return false
     }
+    AudioManager.shared.exitPreviewMode(resuming: false)
 
     preparePresetApplication(preset)
-    executePresetApplication(preset: preset, isInitialLoad: isInitialLoad)
-
+    executePresetApplication(preset: preset, isInitialLoad: isInitialLoad, autoPlay: autoPlay)
+    return true
   }
 
   /// Outcome of deciding which custom-sound states to keep. Pure and `Equatable`
   /// so the data-loss-critical guard can be unit tested without the singletons.
   enum CustomSoundCleanupDecision: Equatable {
-    /// No custom rows visible yet presets still reference customs — almost
-    /// certainly a transient load failure this launch, so keep everything.
+    /// No custom rows are visible but presets still reference customs, most
+    /// likely a transient load failure, so keep everything.
     case skipTransient
     /// The per-preset filtered states, in the same order as the input.
     case filtered([[PresetState]])
   }
 
-  /// Pure decision core for `cleanupDeletedCustomSounds`: the transient-failure
-  /// guard and the "loaded UNION rows" valid-set, isolated from the singletons
-  /// so the irreversible-data-loss edges are testable.
+  /// Decision core for `cleanupDeletedCustomSounds`, kept free of singletons so
+  /// the transient-failure guard and the valid set are testable.
   static func customSoundCleanupDecision(
     presetStates: [[PresetState]],
     loadedSoundFileNames: Set<String>,
     customRowFileNames: Set<String>
   ) -> CustomSoundCleanupDecision {
-    // getAllCustomSounds() returns [] both for genuinely-empty and for a
-    // transient fetch/container failure. If no customs are visible yet presets
-    // still reference some, that's almost certainly a load failure, not a
-    // deletion — bail rather than strip every custom state irreversibly.
+    // getAllCustomSounds() returns [] both when empty and on a transient fetch
+    // failure. Presets that still reference customs mean a failure, so keep all.
     let presetsReferenceCustoms = presetStates.contains { states in
       states.contains { !loadedSoundFileNames.contains($0.fileName) }
     }
@@ -465,8 +494,8 @@ extension PresetManager {
       return .skipTransient
     }
 
-    // Valid = loaded sounds UNION the SwiftData rows, so a row that exists but
-    // failed to load as a Sound this launch is still kept.
+    // Valid is loaded sounds plus SwiftData rows, so a row that failed to load
+    // as a Sound this launch is still kept.
     let valid = loadedSoundFileNames.union(customRowFileNames)
     return .filtered(presetStates.map { states in states.filter { valid.contains($0.fileName) } })
   }
@@ -480,7 +509,10 @@ extension PresetManager {
     let decision = Self.customSoundCleanupDecision(
       presetStates: presets.map(\.soundStates),
       loadedSoundFileNames: Set(AudioManager.shared.sounds.map(\.fileName)),
+      // Audio still on disk counts too: a row can vanish in a store rebuild while
+      // its file survives, and pruning here is irreversible.
       customRowFileNames: Set(customRows.map(\.fileName))
+        .union(CustomSoundManager.shared.customAudioFileNamesOnDisk())
     )
     guard case .filtered(let filteredStates) = decision else {
       Logger.presets.debug(
@@ -489,19 +521,16 @@ extension PresetManager {
       return
     }
 
-    // Update each preset to remove invalid sound states
     var didChange = false
     for (index, validSoundStates) in filteredStates.enumerated() {
       let preset = presets[index]
 
-      // Only update if there were changes
       if validSoundStates.count != preset.soundStates.count {
         var updatedPreset = preset
         updatedPreset.soundStates = validSoundStates
         presets[index] = updatedPreset
         didChange = true
 
-        // Update current preset if needed
         if currentPreset?.id == preset.id {
           currentPreset = updatedPreset
         }
@@ -527,14 +556,11 @@ extension PresetManager {
     Logger.presets.debug("PresetManager: Updating sound order for preset '\(preset.name)'")
     Logger.presets.debug("  - Moving from indices: \(source) to destination: \(destination)")
 
-    // Get the current order of sounds in the preset
     var soundOrder = preset.soundOrder ?? preset.soundStates.map(\.fileName)
 
-    // Filter to only include sounds that are actually in the preset
     let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
     soundOrder = soundOrder.filter { presetSoundFileNames.contains($0) }
 
-    // Debug: Print the sound being moved
     for index in source {
       if index < soundOrder.count {
         Logger.presets.debug("  - Moving sound: '\(soundOrder[index])' from index \(index)")
@@ -544,16 +570,12 @@ extension PresetManager {
       }
     }
 
-    // Apply the move
     soundOrder.move(fromOffsets: source, toOffset: destination)
 
-    // Update the preset
     var updatedPreset = preset
     updatedPreset.soundOrder = soundOrder
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
-    // Update in the presets array
     if let index = presets.firstIndex(where: { $0.id == preset.id }) {
       presets[index] = updatedPreset
       currentPreset = updatedPreset
@@ -574,13 +596,10 @@ extension PresetManager {
     Logger.presets.debug("PresetManager: Updating sound order for preset '\(preset.name)'")
     Logger.presets.debug("  - New order: \(newOrder)")
 
-    // Update the preset
     var updatedPreset = preset
     updatedPreset.soundOrder = newOrder
-    updatedPreset.lastModifiedVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    updatedPreset.lastModifiedVersion = Bundle.main.appVersion
 
-    // Update in the presets array
     if let index = presets.firstIndex(where: { $0.id == preset.id }) {
       presets[index] = updatedPreset
       currentPreset = updatedPreset
@@ -588,7 +607,6 @@ extension PresetManager {
 
       Logger.presets.debug("PresetManager: Successfully updated sound order")
 
-      // Verify the update
       if let verifyPreset = presets.first(where: { $0.id == preset.id }) {
         Logger.presets.debug(
           "PresetManager: Verified saved order: \(verifyPreset.soundOrder ?? [])")
@@ -616,11 +634,12 @@ extension PresetManager {
   }
 
   @MainActor func preparePresetApplication(_ preset: Preset) {
+    // Persist an edit still waiting on the 100 ms coalesced refresh into the
+    // outgoing preset. Once the switch lands, that refresh skips or targets the new one.
+    updateCurrentPresetState()
     currentPreset = preset
-    // The mixer no longer matches the (now-current) preset until executePreset-
-    // Application's async applySoundStates runs. Clear the flag so a debounced
-    // updateCurrentPresetState / pre-save landing in that window can't write the
-    // OLD preset's mixer state into the new one. applySoundStates sets it back.
+    // The mixer doesn't match the new preset until applySoundStates runs and
+    // sets this back, so a debounced save in between can't write the old mix.
     presetStatesApplied = false
     PresetStorage.saveLastActivePresetID(preset.id)
 
@@ -640,10 +659,9 @@ extension PresetManager {
     )
   }
 
-  func executePresetApplication(preset: Preset, isInitialLoad: Bool) {
-    // The default grid hides preset-use-only sounds, so never activate one
-    // from the default preset — a stale selection (e.g. marked preset-only
-    // while a custom preset was current) would play with no tile to stop it.
+  func executePresetApplication(preset: Preset, isInitialLoad: Bool, autoPlay: Bool = true) {
+    // The default preset hides preset-use-only sounds, so never activate one
+    // there. A stale selection would play with no tile to stop it.
     let targetStates: [PresetState]
     if preset.isDefault {
       targetStates = preset.soundStates.map { state in
@@ -661,12 +679,9 @@ extension PresetManager {
     let wasPlaying = AudioManager.shared.isGloballyPlaying
 
     Task { @MainActor in
-      // A solo sound owns playback (e.g. restored at launch). Don't let preset
-      // application start/stop sounds underneath it — the preset is already
-      // recorded as current (preparePresetApplication) for when solo is left.
-      // Applying sound states here would auto-start the preset's sounds via
-      // the isSelected didSet while the solo sound is playing.
-      guard AudioManager.shared.soloModeSound == nil else {
+      // A single sound owns playback (for example, restored at launch). The preset
+      // is already current for when single sound ends, so don't apply its states now.
+      guard AudioManager.shared.singleSound == nil else {
         prefetchNearbyAnimatedArtwork(currentPreset: preset)
         return
       }
@@ -682,12 +697,12 @@ extension PresetManager {
       // Allow sound states to be applied before autoplay
       await Task.yield()
 
-      let shouldAutoPlay = !isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch
+      let shouldAutoPlay = autoPlay && (!isInitialLoad || GlobalSettings.shared.autoPlayOnLaunch)
       if shouldAutoPlay, targetStates.contains(where: { $0.isSelected }) {
         AudioManager.shared.setGlobalPlaybackState(true)
       }
 
-      // Spatial sessions are bound to the mix they started on; switching
+      // Spatial sessions are bound to the mix they started on, so switching
       // presets ends them.
       if SpatialSessionManager.shared.isActive {
         SpatialSessionManager.shared.setMode(.off)
@@ -698,8 +713,8 @@ extension PresetManager {
     }
   }
 
-  /// Prefetch animated artwork ODR resources for next/previous presets
-  /// This ensures animated artwork is available when switching presets on lock screen
+  /// Prefetches animated artwork for the next and previous presets so it's ready
+  /// when switching from the lock screen.
   private func prefetchNearbyAnimatedArtwork(currentPreset: Preset) {
     #if os(iOS)
       // Get sorted list of custom presets (same logic as next/previous navigation)
@@ -714,7 +729,6 @@ extension PresetManager {
 
       guard !customPresets.isEmpty else { return }
 
-      // Find current preset index
       guard let currentIndex = customPresets.firstIndex(where: { $0.id == currentPreset.id }) else {
         return
       }
@@ -775,8 +789,7 @@ extension PresetManager {
 
   func createDefaultPreset() -> Preset {
     Logger.presets.debug("PresetManager: Creating new default preset")
-    let currentVersion =
-      Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    let currentVersion = Bundle.main.appVersion
     return Preset(
       id: UUID(),
       name: "Default",
@@ -828,20 +841,20 @@ extension PresetManager {
   @MainActor
   func applySoundStates(_ targetStates: [PresetState]) {
     // Suppress music-exclusivity enforcement while the preset restores its own
-    // selection set; we sanitize once at the end instead.
+    // selection set. We sanitize once at the end instead.
     AudioManager.shared.isApplyingPresetStates = true
     defer { AudioManager.shared.isApplyingPresetStates = false }
 
     let presetSoundFileNames = Set(targetStates.map(\.fileName))
 
-    // Leaving solo mode: a solo sound that's in the preset keeps playing
-    // without a restart; one that isn't must stop.
-    if let soloSound = AudioManager.shared.soloModeSound {
-      if !presetSoundFileNames.contains(soloSound.fileName) {
-        soloSound.isSelected = false
-        soloSound.pause()
+    // Leaving single-sound mode: a single sound that's in the preset keeps playing
+    // without a restart. One that isn't must stop.
+    if let singleSound = AudioManager.shared.singleSound {
+      if !presetSoundFileNames.contains(singleSound.fileName) {
+        singleSound.isSelected = false
+        singleSound.pause()
       }
-      AudioManager.shared.exitSoloModeWithoutResuming()
+      AudioManager.shared.exitSingleSoundWithoutResuming()
     }
 
     // Disable sounds that are not in this preset
@@ -852,7 +865,6 @@ extension PresetManager {
       }
     }
 
-    // Apply the preset's states
     for state in targetStates {
       if let sound = AudioManager.shared.sounds.first(where: { $0.fileName == state.fileName }) {
         let selectionChanged = sound.isSelected != state.isSelected
@@ -899,10 +911,9 @@ extension PresetManager {
     setLoading(true)
 
     do {
-      // Load or create default preset
       var defaultPreset = PresetStorage.loadDefaultPreset() ?? createDefaultPreset()
       // The default preset takes no theme overrides (its sheet doesn't offer
-      // them); strip any saved before this rule so they can't apply invisibly.
+      // them), so strip any saved ones.
       if defaultPreset.accentColorName != nil || defaultPreset.viewMode != nil
         || defaultPreset.backgroundBlurRadius != nil
       {
@@ -913,7 +924,6 @@ extension PresetManager {
       }
       setPresets([defaultPreset])
 
-      // Load custom presets
       let customPresets = PresetStorage.loadCustomPresets()
       if !customPresets.isEmpty {
         var allPresets = presets
@@ -924,35 +934,36 @@ extension PresetManager {
       // Migrate any presets that contain old sound names with file extensions
       migratePresetSoundNames()
 
-      // Ensure all custom presets have order values
       ensurePresetOrder()
 
       updateCustomPresetStatus()
 
-      // Load last active preset or default
-      if let lastID = PresetStorage.loadLastActivePresetID() {
-        Logger.presets.debug("PresetManager: Found last active preset ID: \(lastID)")
-        if let lastPreset = presets.first(where: { $0.id == lastID }) {
-          Logger.presets.debug("PresetManager: Found matching preset: '\(lastPreset.name)'")
-          Logger.presets.debug(
-            "PresetManager: Loading last active preset:\n\(self.presetSummary(lastPreset))")
-          try applyPreset(lastPreset, isInitialLoad: true)
-          Logger.presets.debug(
-            "PresetManager: Successfully applied last active preset '\(lastPreset.name)'")
-        } else {
-          Logger.presets.debug(
-            "PresetManager: Last active preset ID \(lastID) not found in loaded presets")
-          Logger.presets.debug(
-            "PresetManager: Available presets: \(self.presets.map { "\($0.name) (\($0.id))" })")
-          Logger.presets.debug("PresetManager: Falling back to default preset")
-          try applyPreset(presets[0], isInitialLoad: true)
-        }
-      } else {
-        Logger.presets.debug("PresetManager: No last active preset ID found, applying default")
+      // A last active preset that fails validation (say, a sound it uses is
+      // gone) falls back to the default.
+      let lastID = PresetStorage.loadLastActivePresetID()
+      let lastPreset = lastID.flatMap { id in presets.first { $0.id == id } }
+      if let lastID, lastPreset == nil {
+        Logger.presets.debug(
+          "PresetManager: Last active preset ID \(lastID) not found, applying default")
+        lastPresetRestoreFailed = true
+      }
+      do {
+        try applyPreset(lastPreset ?? presets[0], isInitialLoad: true)
+      } catch  where lastPreset != nil {
+        Logger.presets.error(
+          "PresetManager: Last active preset failed to apply (\(error, privacy: .public)); applying default"
+        )
+        lastPresetRestoreFailed = true
         try applyPreset(presets[0], isInitialLoad: true)
       }
     } catch {
       handleError(error)
+      lastPresetRestoreFailed = true
+      // Never finish loading without a preset: show the default even if its mix
+      // couldn't be applied.
+      if currentPreset == nil, let defaultPreset = presets.first {
+        setCurrentPreset(defaultPreset)
+      }
     }
 
     setLoading(false)
@@ -972,19 +983,79 @@ extension PresetManager {
 
     updateCurrentPresetBeforeSave()
     performActualSave()
+    refreshDiscoverableEntitiesIfNeeded()
+    // Names, accents, and membership feed the widgets. Publish skips identical snapshots.
+    AudioManager.shared.republishWidgetCatalog()
 
     Logger.presets.debug("PresetManager: --- End Saving Presets ---")
   }
 
+  /// Refreshes the Siri vocabulary for `PlayPresetIntent` and `PlaySoundIntent`
+  /// and the Spotlight index when the set of names changes. Cheap to call often.
+  /// Skipped in the widget extension, which also compiles this file.
+  func refreshDiscoverableEntitiesIfNeeded() {
+    #if !WIDGET_EXTENSION
+      // Deterministic, order-independent signature over exactly what's donated
+      // (presets + non-preset-only sounds, matching `donateEntitiesToSpotlight`
+      // and `SoundEntityQuery`), so reordering alone doesn't force a refresh.
+      let presetPart = presets.map { "\($0.id.uuidString):\($0.name)" }.sorted()
+      let soundPart =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .map { "\($0.fileName):\($0.localizedTitle)" }
+        .sorted()
+      let signature = (presetPart + ["~"] + soundPart).joined(separator: "|")
+      guard signature != lastDiscoverableEntitiesSignature else { return }
+      lastDiscoverableEntitiesSignature = signature
+      // App Shortcut parameters are only refreshed on iOS. Spotlight runs on both.
+      #if !os(macOS)
+        BlankieShortcuts.updateAppShortcutParameters()
+      #endif
+      donateEntitiesToSpotlight()
+    #endif
+  }
+
+  #if !WIDGET_EXTENSION
+    /// Replaces the named Spotlight indexes with the current presets and the sounds that can play
+    /// on their own. Indexing is additive, so each type is deleted first. Failures are non-fatal.
+    private func donateEntitiesToSpotlight() {
+      let presetEntities = presets.map(PresetEntity.init)
+      let soundEntities =
+        AudioManager.shared.sounds
+        .filter { !$0.isPresetUseOnly }
+        .map(SoundEntity.init)
+      // Named indexes keyed off the app's own bundle ID (so contributor builds
+      // don't collide), not the default index Apple reserves for dev/testing.
+      let bundleID = Bundle.main.bundleIdentifier ?? "com.codybrom.blankie"
+      // Chain on the previous donation so overlapping refreshes (an archive
+      // import posts one per custom sound) can't interleave delete and index.
+      let previous = spotlightDonationTask
+      spotlightDonationTask = Task {
+        await previous?.value
+        do {
+          let presetIndex = CSSearchableIndex(name: "\(bundleID).presets")
+          try await presetIndex.deleteAppEntities(ofType: PresetEntity.self)
+          try await presetIndex.indexAppEntities(presetEntities)
+          let soundIndex = CSSearchableIndex(name: "\(bundleID).sounds")
+          try await soundIndex.deleteAppEntities(ofType: SoundEntity.self)
+          try await soundIndex.indexAppEntities(soundEntities)
+        } catch {
+          Logger.presets.error("Spotlight: entity indexing failed: \(error, privacy: .public)")
+          // Forget the signature so the next refresh retries.
+          lastDiscoverableEntitiesSignature = nil
+        }
+      }
+    }
+  #endif
+
   @MainActor
   private func updateCurrentPresetBeforeSave() {
-    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // Skip while the mixer doesn't reflect the preset (single sound, preview, or none
     // applied yet). Preview forces the previewed sound to volume 1.0.
-    guard AudioManager.shared.soloModeSound == nil, AudioManager.shared.previewModeSound == nil,
+    guard AudioManager.shared.singleSound == nil, AudioManager.shared.previewModeSound == nil,
       presetStatesApplied
     else { return }
 
-    // Update current preset's state before saving
     if let currentPreset = currentPreset,
       let index = presets.firstIndex(where: { $0.id == currentPreset.id })
     {
@@ -993,7 +1064,6 @@ extension PresetManager {
       // For custom presets, only update sounds that are already in the preset
       if !updatedPreset.isDefault {
         updatedPreset.soundStates = updatedPreset.soundStates.map { existingState in
-          // Find the current sound state
           if let sound = AudioManager.shared.sounds.first(where: {
             $0.fileName == existingState.fileName
           }) {
@@ -1007,24 +1077,14 @@ extension PresetManager {
         }
       } else {
         // For default preset, include all sounds
-        updatedPreset.soundStates = AudioManager.shared.sounds.map { sound in
-          PresetState(
-            fileName: sound.fileName,
-            isSelected: sound.isSelected,
-            volume: sound.volume
-          )
-        }
+        updatedPreset.soundStates = AudioManager.shared.sounds.map { $0.captureState() }
       }
       updatePresetAtIndex(index, with: updatedPreset)
       setCurrentPreset(updatedPreset)
 
-      Logger.presets.debug("Saving current preset state for '\(updatedPreset.name)':")
-      Logger.presets.debug("  - Active sounds:")
-      updatedPreset.soundStates
-        .filter { $0.isSelected }
-        .forEach { state in
-          Logger.presets.debug("    * \(state.fileName) (Volume: \(state.volume))")
-        }
+      let activeCount = updatedPreset.soundStates.filter { $0.isSelected }.count
+      Logger.presets.debug(
+        "Saving current preset state for '\(updatedPreset.name)' (\(activeCount) active sounds)")
     }
   }
 
@@ -1033,9 +1093,8 @@ extension PresetManager {
     let defaultPreset = presets.first { $0.isDefault }
     let customPresets = presets.filter { !$0.isDefault }
 
-    // Write synchronously on the main actor. Encoding a handful of presets into
-    // UserDefaults is cheap, and the previous Task.detached produced unordered
-    // writes where two rapid saves could land the older snapshot last.
+    // Write synchronously on the main actor so rapid saves land in order.
+    // Encoding a handful of presets into UserDefaults is cheap.
     if let defaultPreset = defaultPreset {
       PresetStorage.saveDefaultPreset(defaultPreset)
     }
@@ -1047,7 +1106,7 @@ extension PresetManager {
     }
   }
 
-  /// Migrates preset sound names from old format (with file extensions) to new format (without extensions)
+  /// Strips file extensions from preset sound names saved in the old format.
   private func migratePresetSoundNames() {
     let legacyExtensions = ["mp3", "m4a", "wav", "aiff"]
     var migratedPresets = [Preset]()
@@ -1060,7 +1119,6 @@ extension PresetManager {
       for soundState in preset.soundStates {
         var migratedFileName = soundState.fileName
 
-        // Check if this fileName has a legacy extension
         for ext in legacyExtensions where soundState.fileName.hasSuffix(".\(ext)") {
           migratedFileName = soundState.fileName.replacingOccurrences(of: ".\(ext)", with: "")
           presetHasMigrations = true
@@ -1109,10 +1167,8 @@ extension PresetManager {
     var needsSave = false
     var updatedPresets = presets
 
-    // Get custom presets
     let customPresets = updatedPresets.filter { !$0.isDefault }
 
-    // Check for duplicates or nil order values
     var orderValues = Set<Int>()
     var hasDuplicates = false
 
@@ -1127,7 +1183,6 @@ extension PresetManager {
       }
     }
 
-    // Check if any custom preset is missing order or has duplicates
     let hasUnorderedPresets = customPresets.contains { $0.order == nil } || hasDuplicates
 
     if hasUnorderedPresets {
@@ -1135,22 +1190,18 @@ extension PresetManager {
 
       // Sort custom presets by current order (if exists) then by name
       let sortedCustomPresets = customPresets.sorted { preset1, preset2 in
-        // First sort by existing order if both have it
         if let order1 = preset1.order, let order2 = preset2.order {
           return order1 < order2
         }
-        // Put presets with order before those without
         if preset1.order != nil, preset2.order == nil {
           return true
         }
         if preset1.order == nil, preset2.order != nil {
           return false
         }
-        // Fall back to name comparison
         return preset1.name < preset2.name
       }
 
-      // Assign sequential order values to all custom presets
       for (index, preset) in sortedCustomPresets.enumerated() where preset.order != index {
         var updatedPreset = preset
         updatedPreset.order = index
@@ -1175,62 +1226,109 @@ extension PresetManager {
 // MARK: - Thumbnails
 
 extension PresetManager {
-  /// Cache a small thumbnail for quick access. Pass `force: true` after an
-  /// artwork edit to regenerate an already-cached thumbnail.
+  /// Cache a small CarPlay thumbnail and higher-resolution widget artwork.
+  /// Existing small thumbnails are upgraded on the next normal cache pass.
   @MainActor
-  func cacheThumbnail(for preset: Preset, force: Bool = false) async {
-    #if os(iOS)
-      // Check if thumbnail is already cached
-      let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
-      let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
-      if !force, userDefaults.data(forKey: thumbnailKey) != nil {
-        return  // Already cached
+  @discardableResult
+  func cacheThumbnail(
+    for preset: Preset, force: Bool = false, reloadingWidgets: Bool = true,
+    renderThumbnails: @Sendable (Data) async -> (carPlay: Data?, widget: Data?) =
+      PresetManager.renderThumbnailData
+  ) async -> Bool {
+    let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
+    let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
+    let widgetURL = WidgetArtworkCache.fileURL(for: thumbnailKey)
+    if !force, userDefaults.data(forKey: thumbnailKey) != nil,
+      let widgetURL, FileManager.default.fileExists(atPath: widgetURL.path)
+    {
+      return false
+    }
+
+    let request = UUID()
+    thumbnailRequests[preset.id] = request
+    defer {
+      if thumbnailRequests[preset.id] == request {
+        thumbnailRequests.removeValue(forKey: preset.id)
       }
+    }
 
-      // Source image: static artwork if present, else the animated artwork's
-      // preview — so presets with only animated artwork still get a CarPlay
-      // thumbnail (matching the mixer / Now Playing / library picker).
-      guard let fullImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
-      else { return }
-
-      // Generate a thumbnail for CarPlay (44x44 points)
-      let thumbnailSize = CGSize(width: 44, height: 44)
-
-      UIGraphicsBeginImageContextWithOptions(thumbnailSize, false, 0)
-      fullImage.draw(in: CGRect(origin: .zero, size: thumbnailSize))
-      let thumbnail = UIGraphicsGetImageFromCurrentImageContext()
-      UIGraphicsEndImageContext()
-
-      // Cache the thumbnail in app group UserDefaults for CarPlay access
-      if let thumbnail = thumbnail,
-        let thumbnailData = thumbnail.pngData()
-      {
-        userDefaults.set(thumbnailData, forKey: thumbnailKey)
-        Logger.presets.debug("PresetManager: Cached thumbnail for preset '\(preset.displayName)'")
-        NotificationCenter.default.post(name: .presetThumbnailUpdated, object: preset.id)
-      }
+    // Static artwork takes precedence over the animation preview, as in the app.
+    guard let fullImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+    else { return false }
+    #if canImport(UIKit)
+      let sourceData = fullImage.pngData()
+    #else
+      let sourceData = fullImage.tiffRepresentation
     #endif
+    guard let sourceData else { return false }
+    let images = await renderThumbnails(sourceData)
+    // Loading and rendering both suspend. An edit or removal can invalidate
+    // this request in either interval, so never let its old image return afterward.
+    guard !Task.isCancelled, thumbnailRequests[preset.id] == request else { return false }
+    guard let thumbnailData = images.carPlay, let widgetData = images.widget else { return false }
+
+    // Large artwork stays out of UserDefaults and is readable while locked.
+    if let widgetURL {
+      do {
+        try AppGroupConfiguration.writeProtectionlessFile(widgetData, to: widgetURL)
+      } catch {
+        Logger.presets.error(
+          "PresetManager: Could not cache widget artwork: \(error.localizedDescription)")
+      }
+    }
+    userDefaults.set(thumbnailData, forKey: thumbnailKey)
+    Logger.presets.debug("PresetManager: Cached artwork for preset '\(preset.displayName)'")
+    NotificationCenter.default.post(name: .presetThumbnailUpdated, object: preset.id)
+    if reloadingWidgets {
+      WidgetStateStore.artworkDidChange()
+    }
+    return true
   }
 
-  /// Cache thumbnails for all presets
+  nonisolated private static func renderThumbnailData(_ sourceData: Data) async -> (
+    carPlay: Data?, widget: Data?
+  ) {
+    await Task.detached(priority: .utility) {
+      (
+        carPlay: WidgetArtworkCache.jpegThumbnail(from: sourceData, maxPixelSize: 132),
+        widget: WidgetArtworkCache.jpegThumbnail(from: sourceData)
+      )
+    }.value
+  }
+
+  /// Cache thumbnails for all presets, reloading widgets once if any were written.
   @MainActor
   func cacheAllThumbnails() async {
-    // Don't cache if we're still loading
     guard !isLoading else {
       Logger.presets.debug("PresetManager: Skipping thumbnail cache - still loading")
       return
     }
 
+    var wroteAny = false
     for preset in presets {
-      await cacheThumbnail(for: preset)
+      if await cacheThumbnail(for: preset, reloadingWidgets: false) {
+        wroteAny = true
+      }
+    }
+    if wroteAny {
+      WidgetStateStore.artworkDidChange()
     }
   }
 
   /// Remove cached thumbnail when a preset is deleted or its artwork removed
   func removeThumbnail(for presetId: UUID) {
+    // Invalidate even when no files exist yet: a first render may be in flight.
+    thumbnailRequests.removeValue(forKey: presetId)
     let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
-    userDefaults.removeObject(forKey: "preset_thumb_\(presetId.uuidString)")
+    let thumbnailKey = "preset_thumb_\(presetId.uuidString)"
+    let widgetURL = WidgetArtworkCache.fileURL(for: thumbnailKey)
+    let hasWidgetArtwork =
+      widgetURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+    guard userDefaults.data(forKey: thumbnailKey) != nil || hasWidgetArtwork else { return }
+    userDefaults.removeObject(forKey: thumbnailKey)
+    if let widgetURL { try? FileManager.default.removeItem(at: widgetURL) }
     NotificationCenter.default.post(name: .presetThumbnailUpdated, object: presetId)
+    WidgetStateStore.artworkDidChange()
   }
 }
 

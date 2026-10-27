@@ -10,12 +10,8 @@ import Testing
 
 @testable import Blankie
 
-/// Stage-1 tests for the Sound playback facade. Real playback (live position
-/// read-back during playback and loop completion) needs a running engine and
-/// audio hardware, so it stays on the on-device soak checklist rather than here.
-///
-/// Serialized + main-actor: these drive the shared audio engine and run-loop
-/// timers, which XCTest ran on the main thread — `@MainActor` preserves that.
+/// The Sound playback facade. Live position and loop completion need audio hardware, so they
+/// are tested on device. Serialized and main-actor: drives the shared engine and run-loop timers.
 @Suite(.serialized) @MainActor
 struct PlaybackPositionTests {
 
@@ -33,8 +29,7 @@ struct PlaybackPositionTests {
 
   // MARK: - Random-start range math
 
-  /// The randomization rule (Sound+Loading/Sound+Playback) is
-  /// start ∈ 0..<duration*0.75; assert the bound semantics directly.
+  /// Random starts fall in 0..<duration * 0.75 (Sound+Loading, Sound+Playback).
   @Test func randomStartStaysWithinFirst75Percent() {
     let duration: Double = 120.0
     let maxPosition = duration * 0.75
@@ -60,8 +55,6 @@ struct PlaybackPositionTests {
 
   // MARK: - State transitions without a player
 
-  /// pause()/stop() early-return when no player exists: they must not crash,
-  /// flip selection, or leave playbackState anything but .stopped.
   @Test func pauseAndStopAreSafeWithoutPlayer() {
     let sound = HeadlessSound(fileName: "headless-transition")
     #expect(sound.player == nil)
@@ -90,8 +83,8 @@ struct PlaybackPositionTests {
 
   // MARK: - Engine graph hygiene
 
-  /// Repeated load/unload (the preview sheet pattern) must not accumulate nodes
-  /// in the engine — unload() detaches what loadSound() attached.
+  /// The preview sheet loads and unloads repeatedly, so unload() must detach what loadSound()
+  /// attached.
   @Test func engineRegistryReturnsToBaselineAfterUnload() {
     let sound = Sound(
       title: "Leak Probe", systemIconName: "speaker.wave.2",
@@ -113,8 +106,7 @@ struct PlaybackPositionTests {
 
   // MARK: - Fade layer math
 
-  /// node.volume must always be baseVolume × fadeLevel; a zero-duration fade
-  /// applies instantly and fires its completion synchronously.
+  /// node.volume is baseVolume times fadeLevel. A zero-duration fade completes synchronously.
   @Test func fadeLayerScalesNodeVolume() throws {
     let sound = Sound(
       title: "Fade Probe", systemIconName: "speaker.wave.2",
@@ -136,11 +128,10 @@ struct PlaybackPositionTests {
     #expect(abs(player.node.volume - 0) < 0.001)
   }
 
-  // MARK: - Fast toggle race (regression)
+  // MARK: - Fast toggle race
 
-  /// Toggling off then on during the fade-out must rescue the sound: play()
-  /// ramps it back up, and the superseded fade's completion must NOT pause it
-  /// after the original fade deadline passes.
+  /// Toggling off and on mid-fade: play() ramps back up, and the superseded fade's
+  /// completion must not pause the sound.
   @Test func fastPauseReplayRescuesFadeOut() throws {
     let sound = Sound(
       title: "Toggle Probe", systemIconName: "speaker.wave.2",
@@ -157,15 +148,13 @@ struct PlaybackPositionTests {
     #expect(sound.playbackState == .playing)
     #expect(sound.isPlaying)
 
-    // Let the fade-in progress (fades are run-loop timers); a pause at
-    // fadeLevel ≈ 0 short-circuits to an instant stop, which isn't this race.
-    // Spin until the level moves rather than a fixed wait (load-flake proof).
+    // Fades are run-loop timers, and a pause near fadeLevel 0 stops instantly, so spin
+    // until the fade-in has moved.
     let deadline = Date(timeIntervalSinceNow: 2.0)
     while (sound.player?.fadeLevel ?? 1) < 0.1, Date() < deadline {
       RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.05))
     }
-    // The rescue race only exists mid-fade; a starved run loop (heavy CI/host
-    // load) is an environment problem, not a regression.
+    // The race only exists mid-fade, so a stalled run loop (heavy host load) cancels the test.
     guard (sound.player?.fadeLevel ?? 0) >= 0.1 else {
       try Test.cancel("Fade-in timer didn't advance — run loop starved in this environment")
     }
@@ -178,19 +167,17 @@ struct PlaybackPositionTests {
     sound.play()
     #expect(sound.playbackState == .playing, "Rescue must restore intent")
 
-    // Let the original 0.5s fade deadline pass; its completion must not fire.
+    // Let the original 0.5s fade deadline pass. Its completion must not fire.
     RunLoop.current.run(until: Date(timeIntervalSinceNow: Sound.fadeDuration + 0.3))
     #expect(sound.isPlaying, "Superseded fade completion must not pause the sound")
     #expect(sound.playbackState == .playing)
     #expect(abs((sound.player?.fadeLevel ?? 0) - 1.0) < 0.01, "Fade should be back at full")
   }
 
-  // MARK: - Spatial placement persistence (regression: dots snapping back)
+  // MARK: - Spatial placement persistence
 
-  /// Drag-end remembers the spot synchronously in the session store and reads
-  /// back through the same path the grid dots use — an async hop (or a dropped
-  /// write) makes released dots snap to their old position. Ending the session
-  /// must discard placements (experimental: nothing persists between sessions).
+  /// Drag-end writes the placement synchronously, and dots read it back through the same
+  /// path. Nothing persists between sessions.
   @Test func sessionPlacementRoundTrip() throws {
     let session = SpatialSessionManager.shared
     defer { session.setMode(.off) }

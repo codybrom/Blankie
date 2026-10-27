@@ -1,5 +1,5 @@
 // Smooth-scroll behaviors for download links and the logo on the index page.
-// (The mobile/tablet menu is now the shadcn Sheet in MobileNav.tsx.)
+// The mobile/tablet menu lives in MobileNav.tsx.
 class SiteNavigation {
   private logoLink: HTMLElement | null;
   // Fixed header (80px) plus a little breathing room.
@@ -92,7 +92,6 @@ class SiteNavigation {
   }
 }
 
-// Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   new SiteNavigation();
 });

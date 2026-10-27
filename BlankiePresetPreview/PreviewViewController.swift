@@ -4,8 +4,7 @@
 //
 //  Created by Cody Bromley on 6/22/26.
 //
-//  Principal controller (from MainInterface.storyboard) for the Quick Look
-//  preview of a `.blankie` file. Registered for com.codybrom.blankie.preset.
+//  Quick Look preview controller for `.blankie` files (com.codybrom.blankie.preset).
 //
 
 import QuickLook
@@ -14,16 +13,13 @@ import UIKit
 
 class PreviewViewController: UIViewController, QLPreviewingController {
   func preparePreviewOfFile(at url: URL) async throws {
-    // Tear down any host from a prior preview so a reused controller doesn't
-    // stack views and duplicate constraints.
+    // A reused controller would otherwise stack hosts from earlier previews.
     for child in children {
       child.willMove(toParent: nil)
       child.view.removeFromSuperview()
       child.removeFromParent()
     }
 
-    // Read off the main actor; the zip read shouldn't block UI. `PresetInfo` is
-    // a plain Sendable value (artwork stays as Data) so it crosses back safely.
     let info = try await Task.detached(priority: .userInitiated) {
       try PresetPreviewReader.read(from: url)
     }.value

@@ -20,10 +20,9 @@ import UniformTypeIdentifiers
     @State private var showingTimerPopover = false
     @State private var showingSpatialMixer = false
     @State private var soundToEdit: Sound?
-    /// Keeps the solo backdrop up while sheet preview temporarily exits solo
-    /// mode (mirrors MixerView) — otherwise the preset grid pops in behind the
-    /// Edit Sound sheet, with paused tiles still styled as playing.
-    @State private var soloBackdropSound: Sound?
+    /// Keeps the single sound backdrop up while sheet preview temporarily exits single sound
+    /// mode (mirrors MixerView).
+    @State private var singleBackdropSound: Sound?
     @State private var presetToEdit: Preset?
     /// Confirm-then-create flow replacing Edit Preset on the default preset.
     @State private var showingNewPresetConfirmation = false
@@ -40,41 +39,42 @@ import UniformTypeIdentifiers
       audioManager.isGloballyPlaying ? .primary : .secondary
     }
 
-    /// Active accent: the theming preset's color takes precedence over the
-    /// global setting, matching the grid tiles and iOS behavior. `themingPreset`
-    /// is nil during solo / Quick Mix, so those use the app accent.
+    /// `themingPreset` is nil during single sound and Quick Mix, so those use the app accent.
     private var activeAccent: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
-    /// Whether the Spatial Mix toggle (and pane) is available: opted in via
-    /// Preferences, preset mode only — mirrors iOS's gating.
+    /// The preset whose artwork backs the tiles, while they're on screen.
+    private var backdropPreset: Preset? {
+      guard !presetManager.isLoading, !appState.showingSettingsPane,
+        !(showingSpatialMixer && spatialEntryAvailable), singleLayoutSound == nil
+      else { return nil }
+      return presetManager.themingPreset
+    }
+
+    /// Spatial Mix: opted in via Settings, preset mode only (same gating as iOS).
     private var spatialEntryAvailable: Bool {
       globalSettings.enableSpatialAudio
-        && audioManager.soloModeSound == nil && !audioManager.isQuickMix
+        && audioManager.singleSound == nil && !audioManager.isQuickMix
         && presetManager.currentPreset != nil
     }
 
-    /// The sound whose solo view should fill the detail pane: the real solo
-    /// (when not previewing), or the captured backdrop while the Edit Sound
-    /// sheet is up (mirrors MixerView's soloLayoutSound).
-    private var soloLayoutSound: Sound? {
-      if let solo = audioManager.soloModeSound, audioManager.previewModeSound == nil {
-        return solo
+    /// The real single sound, or the captured backdrop while Edit Sound is up
+    /// (mirrors MixerView).
+    private var singleLayoutSound: Sound? {
+      if let single = audioManager.singleSound, audioManager.previewModeSound == nil {
+        return single
       }
       if soundToEdit != nil {
-        return soloBackdropSound
+        return singleBackdropSound
       }
       return nil
     }
 
-    /// Window titlebar context, mirroring iOS MixerView: solo sound name, then
-    /// Quick Mix, then the current preset name (default preset shows "Blankie").
     private var navigationTitle: String {
-      // soloLayoutSound (not soloModeSound) so the title doesn't flip to the
-      // preset name while sheet preview temporarily exits solo mode.
-      if let soloSound = soloLayoutSound {
-        return soloSound.localizedTitle
+      // singleLayoutSound keeps the title steady while sheet preview exits single sound.
+      if let singleSound = singleLayoutSound {
+        return singleSound.localizedTitle
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")
@@ -85,23 +85,18 @@ import UniformTypeIdentifiers
       return "Blankie"
     }
 
-    /// Play would be silent: paused with nothing selected. Pause is never
-    /// blocked — a silent "playing" state still needs a way out.
+    /// Play would be silent: paused with nothing selected. Pause stays enabled.
     private var playButtonDisabled: Bool {
       !audioManager.isGloballyPlaying && !audioManager.hasSelectedSounds
     }
 
-    /// A status strip sized to the banner's natural height (a hidden banner
-    /// fixes it) so the visible banner can animate in/out without reflowing the
-    /// grid. Used at the top (with the banner overlaid) and bottom (empty, for
-    /// symmetry) — no magic-number height.
+    /// A hidden banner reserves the strip's height so the visible banner can
+    /// animate in and out without reflowing the tiles.
     private var reservedStatusStrip: some View {
       statusBanner("Playback Paused", systemImage: "pause.circle.fill")
         .hidden()
     }
 
-    /// Top-of-window strip explaining why nothing is audible; tint at the call
-    /// site.
     private func statusBanner(_ title: LocalizedStringKey, systemImage: String) -> some View {
       HStack {
         Image(systemName: systemImage)
@@ -118,20 +113,12 @@ import UniformTypeIdentifiers
 
     var body: some View {
       VStack(spacing: 0) {
-        // Status strip with reserved height so the banner animates in/out
-        // without reflowing the grid (an animated grid/ScrollView resize flashes
-        // a scrollbar, and shifts the sound icons). The banner is an overlay on
-        // a hidden sizing copy; the strip is mirrored at the bottom for balance.
-        //
-        // Silence explained: an empty selection wins over the paused state (play
-        // alone can't help there), accent-tinted to draw the eye. Both are
-        // suppressed while Settings holds the pane (the banner explains the grid,
-        // which isn't on screen) and while presets load (currentPreset is nil and
-        // nothing is selected yet, so it would briefly read "No Sounds Playing").
+        // An empty selection wins over paused. Both stay hidden while Settings
+        // holds the pane and while presets load (nothing is selected yet).
         reservedStatusStrip
           .overlay {
             if !appState.showingSettingsPane, !presetManager.isLoading {
-              if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds {
+              if audioManager.singleSound == nil && !audioManager.hasSelectedSounds {
                 statusBanner("No Sounds Playing", systemImage: "speaker.slash.circle.fill")
                   .foregroundStyle(activeAccent)
                   .transition(.opacity)
@@ -143,15 +130,8 @@ import UniformTypeIdentifiers
             }
           }
 
-        // Main content: Settings takes over the pane while the sidebar gear is
-        // active; the spatial mixer replaces the grid while toggled on
-        // (preset mode only); solo mode swaps the grid for one large icon with
-        // no volume slider (mirrors MixerView's soloModeView); otherwise the
-        // shared long-press lift-and-reorder grid with SoundIcon tiles.
         if presetManager.isLoading {
-          // Until the restore completes, currentPreset is nil and the grid would
-          // flash the full default sound set. Show nothing over the window
-          // material; the grid appears once the restored preset is applied.
+          // currentPreset is nil until the restore completes.
           Color.clear
         } else if appState.showingSettingsPane {
           SettingsView(isPane: true)
@@ -159,10 +139,10 @@ import UniformTypeIdentifiers
         } else if showingSpatialMixer, spatialEntryAvailable {
           SpatialMixerView()
             .transition(.opacity)
-        } else if let soloSound = soloLayoutSound {
+        } else if let singleSound = singleLayoutSound {
           VStack {
             Spacer()
-            SoloSoundIcon(sound: soloSound)
+            SingleSoundCard(sound: singleSound)
               .transition(.scale.combined(with: .opacity))
             Spacer()
           }
@@ -179,19 +159,15 @@ import UniformTypeIdentifiers
           .frame(maxHeight: .infinity)
         }
 
-        // Mirror of the top status strip so the grid stays vertically centered.
+        // Mirrors the top strip so the tiles stay vertically centered.
         reservedStatusStrip
 
-        // App bar
         VStack(spacing: 0) {
           Rectangle()
             .frame(height: 1)
             .foregroundColor(Color.gray.opacity(0.2))
 
           ZStack {
-            // Play/Pause button — visually centered in the bar. Disabled only
-            // when play would be silent (paused with nothing selected); pause
-            // stays available whenever global playback is on.
             Button(action: {
               audioManager.togglePlayback()
             }) {
@@ -209,9 +185,8 @@ import UniformTypeIdentifiers
             .disabled(playButtonDisabled)
             .help(audioManager.isGloballyPlaying ? "Pause" : "Play")
             .accessibilityLabel(audioManager.isGloballyPlaying ? "Pause" : "Play")
-            // Instant hover hint for the silent state — the system tooltip's
-            // fixed delay reads as unresponsive. Outside .disabled's scope so
-            // hover still tracks while the button is disabled.
+            // Instant hint for the silent state (the system tooltip has a fixed
+            // delay). Outside .disabled's scope so hover tracks while disabled.
             .onHover { isHoveringPlayButton = $0 }
             .overlay(alignment: .bottom) {
               if isHoveringPlayButton && !audioManager.hasSelectedSounds {
@@ -229,8 +204,7 @@ import UniformTypeIdentifiers
             .animation(.easeInOut(duration: 0.15), value: isHoveringPlayButton)
 
             HStack(spacing: 16) {
-              // Always-visible All Sounds volume (app-level, for multi-output
-              // setups — same idea as Music/Spotify's in-app volume).
+              // App-level volume, separate from the system output volume.
               HStack(spacing: 8) {
                 Image(systemName: "speaker.wave.2.fill")
                   .font(.system(size: 16))
@@ -254,11 +228,9 @@ import UniformTypeIdentifiers
 
               Spacer()
 
-              // Sleep timer
               SleepTimerButton(
                 activeAccent: activeAccent, showingPopover: $showingTimerPopover)
 
-              // Color picker menu
               Button(action: {
                 showingColorPicker.toggle()
               }) {
@@ -279,7 +251,12 @@ import UniformTypeIdentifiers
         }
         .frame(maxWidth: .infinity)
       }
-      .containerBackground(.ultraThinMaterial, for: .window)
+      .background {
+        PresetArtworkBackdrop(
+          preset: backdropPreset, blurRadius: globalSettings.backgroundBlurRadius)
+      }
+      // Opaque: materials wash out over a light desktop.
+      .containerBackground(Color(nsColor: .windowBackgroundColor), for: .window)
 
       .navigationTitle(navigationTitle)
       .modifier(
@@ -287,20 +264,13 @@ import UniformTypeIdentifiers
           spatialMixerActive: showingSpatialMixer && spatialEntryAvailable
             && !appState.showingSettingsPane)
       )
-      // Floating title: merge the detail's toolbar strip into the content,
-      // mirroring the iPad detail's hidden navigation-bar background. The
-      // Settings pane scrolls a form under the title, so it gets the standard
-      // backed toolbar instead.
+      // Hidden toolbar background like the iPad detail, except over the
+      // Settings form, which scrolls under the title.
       .toolbarBackground(
         appState.showingSettingsPane ? .visible : .hidden, for: .windowToolbar
       )
       .toolbar {
-        // Both mixer actions hide while Settings holds the pane — they act on
-        // the grid content, which isn't on screen (Settings brings its own
-        // Done button).
-        // Spatial mixer toggle — preset mode only, and only when the user has
-        // opted into the experimental feature. Swaps the grid for the mixer
-        // pane; accent tint marks the pane as showing.
+        // Mixer actions hide while Settings holds the pane.
         if spatialEntryAvailable, !appState.showingSettingsPane {
           ToolbarItem(placement: .primaryAction) {
             Button {
@@ -312,18 +282,15 @@ import UniformTypeIdentifiers
             .accessibilityLabel(Text("Spatial Mix"))
           }
         }
-        // Edit affordance for whatever is on screen — the solo sound's editor
-        // or the current preset (mirrors iOS's topTrailingToolbarButton). The
-        // default preset has no editor, so there the slot offers to start a
-        // new preset from the playing sounds (confirm, then the creator).
+        // Mirrors iOS's editToolbarItems, including New Preset on the default preset.
         if !appState.showingSettingsPane {
           ToolbarItem(placement: .primaryAction) {
             let onDefaultPreset =
-              audioManager.soloModeSound == nil
+              audioManager.singleSound == nil
               && presetManager.currentPreset?.isDefault == true
             Button {
-              if let soloSound = audioManager.soloModeSound {
-                soundToEdit = soloSound
+              if let singleSound = audioManager.singleSound {
+                soundToEdit = singleSound
               } else if let currentPreset = presetManager.currentPreset {
                 if currentPreset.isDefault {
                   showingNewPresetConfirmation = true
@@ -336,12 +303,12 @@ import UniformTypeIdentifiers
                 systemName: onDefaultPreset ? "rectangle.stack.badge.plus" : "slider.vertical.3")
             }
             .accessibilityLabel(
-              audioManager.soloModeSound != nil
+              audioManager.singleSound != nil
                 ? "Edit Sound" : onDefaultPreset ? "New Preset" : "Edit Preset"
             )
-            // New Preset also needs playing sounds — nothing to seed otherwise.
+            // New Preset needs playing sounds to seed it.
             .disabled(
-              audioManager.soloModeSound == nil
+              audioManager.singleSound == nil
                 && (presetManager.currentPreset == nil
                   || (onDefaultPreset && !audioManager.hasSelectedSounds))
             )
@@ -350,21 +317,19 @@ import UniformTypeIdentifiers
       }
       .sheet(item: $soundToEdit) { sound in
         SoundSheet(mode: .edit(sound))
-          .interactiveDismissDisabled()  // Prevent accidental dismissal
+          .interactiveDismissDisabled()
       }
-      // Capture the solo backdrop for the sheet's lifetime (mirrors MixerView).
+      // Capture the single sound backdrop for the sheet's lifetime (mirrors MixerView).
       .onChange(of: soundToEdit) { oldValue, newValue in
         if newValue != nil {
-          soloBackdropSound = audioManager.soloModeSound
+          singleBackdropSound = audioManager.singleSound
         } else if oldValue != nil {
-          soloBackdropSound = nil
+          singleBackdropSound = nil
         }
       }
       .sheet(item: $presetToEdit) { preset in
         EditPresetSheet(preset: preset, isPresented: $presetToEdit)
       }
-      // The default preset has no editor; its Edit slot offers to start a new
-      // preset from whatever is currently playing instead.
       .alert("Create a Preset from Playing Sounds?", isPresented: $showingNewPresetConfirmation) {
         Button("Cancel", role: .cancel) {}
         Button("Create") { showingNewPresetSheet = true }
@@ -378,7 +343,7 @@ import UniformTypeIdentifiers
         )
       }
       .animation(.easeInOut(duration: 0.2), value: audioManager.isGloballyPlaying)
-      .animation(.easeInOut(duration: 0.3), value: audioManager.soloModeSound?.id)
+      .animation(.easeInOut(duration: 0.3), value: audioManager.singleSound?.id)
       .animation(.easeInOut(duration: 0.2), value: showingSpatialMixer)
       .animation(.easeInOut(duration: 0.2), value: appState.showingSettingsPane)
       .sheet(isPresented: $showingShortcuts) {
@@ -386,7 +351,7 @@ import UniformTypeIdentifiers
           .background(.ultraThinMaterial)
           .presentationBackground(.ultraThinMaterial)
       }
-      // Debug menu's onboarding trigger (Debug ▸ Show Onboarding).
+      // Debug > Show Onboarding.
       .sheet(isPresented: $appState.showingOnboarding) {
         PresetOnboardingSheet(isPresented: $appState.showingOnboarding)
       }
@@ -400,9 +365,8 @@ import UniformTypeIdentifiers
             }
         }
       }
-      // Menu-bar import (File ▸ Import Sound or Preset). Accepts audio and
-      // .blankie files; AudioFileImporter routes audio → add-sound sheet
-      // (presented by SharedAppModifiers) and .blankie → preset import.
+      // File > Import Sound or Preset. AudioFileImporter routes audio to the
+      // add-sound sheet and .blankie files to preset import.
       .fileImporter(
         isPresented: $appState.showingImport,
         allowedContentTypes: [.audio, .mp3, .wav, .mpeg4Audio, .blankiePreset],
@@ -412,27 +376,22 @@ import UniformTypeIdentifiers
       }
       .onAppear {
         setupResetHandler()
-        // Launch nag when the app volume is zeroed (mirrors Music.app).
-        // Deferred so the window finishes drawing before the modal runs.
+        // Zero-volume warning, deferred so the window draws before the modal.
         DispatchQueue.main.async {
           VolumeZeroWarning.showIfNeeded()
         }
       }
-      // Leaving preset mode (solo, Quick Mix, setting off) hides the spatial
-      // pane; drop the toggle too so it doesn't silently reappear on return.
+      // Leaving preset mode also clears the toggle, so the pane stays closed on return.
       .onChange(of: spatialEntryAvailable) { _, available in
         if !available { showingSpatialMixer = false }
       }
-      // Onboarding just created (and applied) a preset — close the Settings
-      // pane if it hosted the onboarding so the grid shows the new preset.
+      // Onboarding created a preset: close Settings to show it.
       .onChange(of: appState.onboardingCreatedPreset) { _, created in
         guard created else { return }
         appState.onboardingCreatedPreset = false
         appState.showingSettingsPane = false
       }
-      // Manage Sounds (⌘O sheet) takes the window — drop the Settings pane
-      // underneath so closing the sheet lands on the preset grid. (Sub-page
-      // flags reset via the pane's onDisappear.)
+      // Manage Sounds (⌘O) closes the Settings pane so dismissing it lands on the preset.
       .onChange(of: appState.showingManageSounds) { _, showing in
         guard showing else { return }
         appState.showingSettingsPane = false
@@ -446,20 +405,15 @@ import UniformTypeIdentifiers
       }
     }
 
-    /// Persist a grid reorder. `source`/`destination` are indices into the
-    /// displayed (`filteredSounds`) order, so we reorder that list of file names
-    /// and write the complete order back — to the current custom preset, or to
-    /// the global default order. Mirrors iOS `MixerView.moveItems`; the grid then
-    /// re-sorts from the persisted order. (The old path moved the full `sounds`
-    /// array using filtered-subset indices and never persisted, so it moved the
-    /// wrong sound and was lost on relaunch.)
+    /// Persists a reorder. Indices are into `filteredSounds`. The complete order
+    /// goes to the custom preset or the default order (mirrors `MixerView.moveItems`).
     private func moveSounds(from source: IndexSet, to destination: Int) {
       var newOrder = filteredSounds.map(\.fileName)
       newOrder.move(fromOffsets: source, toOffset: destination)
       let displayed = Set(newOrder)
 
       if let preset = presetManager.currentPreset, !preset.isDefault {
-        // Keep any preset sounds not currently displayed (e.g. hidden) at the end.
+        // Hidden preset sounds keep a place at the end.
         var complete = newOrder
         for state in preset.soundStates where !displayed.contains(state.fileName) {
           complete.append(state.fileName)
@@ -471,8 +425,7 @@ import UniformTypeIdentifiers
           complete.append(fileName)
         }
         audioManager.defaultSoundOrder = complete
-        // Must match the suite the order is read back from at launch
-        // (UserDefaults.shared / app group); .standard silently reverts.
+        // Launch reads the order back from the app group suite.
         UserDefaults.shared.set(complete, forKey: "defaultSoundOrder")
       }
     }
@@ -483,12 +436,8 @@ import UniformTypeIdentifiers
     }
   }
 
-  /// Titlebar subtitle: a running sleep timer wins (same string as the iOS
-  /// Now Playing bar), then "Spatial Mix" while the pane replaces the grid
-  /// (its only label — the pane itself has no heading). Empty hides it.
-  /// Owns the TimerManager observation so its per-second tick invalidates only
-  /// this modifier, not the whole ContentView body (mirrors iOS, which scopes
-  /// the observation to NowPlayingBar).
+  /// Titlebar subtitle: the sleep timer, else "Spatial Mix" (the pane has no heading).
+  /// Owns the TimerManager observation so each tick invalidates only this modifier.
   private struct WindowSubtitleModifier: ViewModifier {
     private let timerManager = TimerManager.shared
     let spatialMixerActive: Bool
@@ -509,8 +458,7 @@ import UniformTypeIdentifiers
     }
   }
 
-  /// Bottom-bar sleep timer button. Owns the TimerManager observation so timer
-  /// ticks re-render just this button (for the active tint), not ContentView.
+  /// Owns the TimerManager observation so ticks re-render only this button.
   private struct SleepTimerButton: View {
     private let timerManager = TimerManager.shared
     let activeAccent: Color
@@ -537,5 +485,46 @@ import UniformTypeIdentifiers
       showingShortcuts: .constant(false)
     )
     .frame(width: 600, height: 400)
+  }
+  /// Blurred preset artwork behind the tiles (the Mac's `presetBackgroundView`).
+  /// Dimmer than iOS so the glass tiles stay legible at pane size.
+  private struct PresetArtworkBackdrop: View {
+    let preset: Preset?
+    let blurRadius: Double
+    @State private var image: NSImage?
+
+    var body: some View {
+      GeometryReader { geometry in
+        if let image {
+          Image(nsImage: image)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .blur(radius: blurRadius)
+            .opacity(0.35)
+            .clipped()
+            .overlay(Color.black.opacity(0.45))
+            // Distinct identity per image so artwork swaps crossfade.
+            .id(ObjectIdentifier(image))
+            .transition(.opacity)
+        }
+      }
+      .ignoresSafeArea()
+      .accessibilityHidden(true)
+      .task(
+        id:
+          "\(preset?.id.uuidString ?? "")-\(preset?.artworkId?.uuidString ?? "")-\(preset?.animatedArtwork?.previewPath ?? "")"
+      ) {
+        guard let preset else {
+          withAnimation(.easeInOut(duration: 0.35)) { image = nil }
+          return
+        }
+        // Keep the old image until the next loads, then crossfade to it.
+        let loaded = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
+        // Drop a load that finished after the preset changed.
+        guard !Task.isCancelled else { return }
+        withAnimation(.easeInOut(duration: 0.35)) { image = loaded }
+      }
+    }
   }
 #endif

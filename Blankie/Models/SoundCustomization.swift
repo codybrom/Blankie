@@ -11,7 +11,7 @@ import SwiftUI
 import os
 
 /// Represents customizations applied to built-in sounds
-struct SoundCustomization: Codable, Identifiable {
+nonisolated struct SoundCustomization: Codable, Identifiable, Sendable {
   let id: UUID
   let fileName: String
   var customTitle: String?
@@ -22,7 +22,6 @@ struct SoundCustomization: Codable, Identifiable {
   var isPresetUseOnly: Bool?  // nil = default (false), true = hidden outside presets
   var isMusic: Bool?  // nil = default (sound's JSON value), overrides the music tag
 
-  // Audio normalization settings
   var normalizeAudio: Bool?
   var volumeAdjustment: Float?  // 0.5 = -50%, 1.0 = normal, 1.5 = +50%
 
@@ -45,17 +44,14 @@ struct SoundCustomization: Codable, Identifiable {
     self.isMusic = isMusic
   }
 
-  /// Returns the effective title (custom or original)
   func effectiveTitle(originalTitle: String) -> String {
     return customTitle ?? originalTitle
   }
 
-  /// Returns the effective icon name (custom or original)
   func effectiveIconName(originalIconName: String) -> String {
     return customIconName ?? originalIconName
   }
 
-  /// Whether this customization has any custom values
   var hasCustomizations: Bool {
     return customTitle != nil || customIconName != nil
       || randomizeStartPosition != nil || normalizeAudio != nil || volumeAdjustment != nil
@@ -76,160 +72,81 @@ class SoundCustomizationManager {
     loadCustomizations()
   }
 
-  /// Get customization for a specific sound file name
   func getCustomization(for fileName: String) -> SoundCustomization? {
     return customizations[fileName]
   }
 
-  /// Set custom title for a sound
+  /// Gets or creates the customization, applies one field, prunes it if empty,
+  /// then saves. Every setter below goes through here.
+  private func mutate(for fileName: String, _ body: (inout SoundCustomization) -> Void) {
+    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
+    body(&customization)
+
+    if customization.hasCustomizations {
+      customizations[fileName] = customization
+    } else {
+      customizations.removeValue(forKey: fileName)
+    }
+
+    saveCustomizationsInternal()
+  }
+
   func setCustomTitle(_ title: String?, for fileName: String) {
     if title?.isEmpty == true {
       setCustomTitle(nil, for: fileName)
       return
     }
 
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.customTitle = title
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.customTitle = title }
   }
 
-  /// Set custom icon for a sound
   func setCustomIcon(_ iconName: String?, for fileName: String) {
     if iconName?.isEmpty == true {
       setCustomIcon(nil, for: fileName)
       return
     }
 
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.customIconName = iconName
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.customIconName = iconName }
   }
 
-  /// Set randomize start position for a sound
   func setRandomizeStartPosition(_ randomize: Bool?, for fileName: String) {
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.randomizeStartPosition = randomize
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.randomizeStartPosition = randomize }
   }
 
-  /// Set normalize audio for a sound
   func setNormalizeAudio(_ normalize: Bool?, for fileName: String) {
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.normalizeAudio = normalize
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.normalizeAudio = normalize }
   }
 
-  /// Set volume adjustment for a sound
   func setVolumeAdjustment(_ adjustment: Float?, for fileName: String) {
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.volumeAdjustment = adjustment
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.volumeAdjustment = adjustment }
   }
 
-  /// Set loop sound for a sound
   func setLoopSound(_ loop: Bool?, for fileName: String) {
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.loopSound = loop
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.loopSound = loop }
   }
 
-  /// Set fade in/out for a sound
   func setFadeSound(_ fade: Bool?, for fileName: String) {
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.fadeSound = fade
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.fadeSound = fade }
   }
 
-  /// Set preset-use-only for a sound
   func setPresetUseOnly(_ presetOnly: Bool?, for fileName: String) {
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.isPresetUseOnly = presetOnly
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.isPresetUseOnly = presetOnly }
   }
 
-  /// Set music tag for a sound
   func setMusic(_ music: Bool?, for fileName: String) {
-    var customization = customizations[fileName] ?? SoundCustomization(fileName: fileName)
-    customization.isMusic = music
-
-    if customization.hasCustomizations {
-      customizations[fileName] = customization
-    } else {
-      customizations.removeValue(forKey: fileName)
-    }
-
-    saveCustomizationsInternal()
+    mutate(for: fileName) { $0.isMusic = music }
   }
 
-  /// Reset all customizations for a specific sound
   func resetCustomizations(for fileName: String) {
     customizations.removeValue(forKey: fileName)
     saveCustomizationsInternal()
   }
 
-  /// Reset all customizations for all sounds
   func resetAllCustomizations() {
     customizations.removeAll()
     saveCustomizationsInternal()
   }
 
-  /// Get or create customization for a specific sound file name
   func getOrCreateCustomization(for fileName: String) -> SoundCustomization {
     if let existing = customizations[fileName] {
       return existing
@@ -240,28 +157,23 @@ class SoundCustomizationManager {
     }
   }
 
-  /// Remove customization for a specific sound
   func removeCustomization(for fileName: String) {
     customizations.removeValue(forKey: fileName)
     saveCustomizationsInternal()
   }
 
-  /// Save customizations manually (public version)
   func saveCustomizations() {
     saveCustomizationsInternal()
   }
 
-  /// Get all customized sound file names
   var customizedSounds: [String] {
     return Array(customizations.keys)
   }
 
-  /// Whether any sounds have customizations
   var hasAnyCustomizations: Bool {
     return !customizations.isEmpty
   }
 
-  /// Get all customizations
   func getAllCustomizations() -> [SoundCustomization] {
     return Array(customizations.values)
   }
@@ -271,11 +183,16 @@ class SoundCustomizationManager {
   @ObservationIgnored private var saveTimer: Timer?
 
   private func saveCustomizationsInternal() {
-    // Debounce saves to avoid excessive UserDefaults writes during initialization
+    // Debounced to avoid a burst of UserDefaults writes during initialization.
     saveTimer?.invalidate()
     saveTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
-      self?.performSave()
+      MainActor.assumeIsolated { self?.performSave() }
     }
+  }
+
+  /// Saves a pending debounced write now (the app is quitting or suspending).
+  func flushPendingSave() {
+    saveTimer?.fire()
   }
 
   private func performSave() {
@@ -299,8 +216,8 @@ class SoundCustomizationManager {
 
     do {
       let customizationArray = try JSONDecoder().decode([SoundCustomization].self, from: data)
-      // uniquingKeysWith (not uniqueKeysWithValues) so a duplicate fileName in
-      // the persisted array can't trap at launch - last entry wins.
+      // A duplicate fileName in the persisted array must not trap at launch.
+      // The last entry wins.
       customizations = Dictionary(
         customizationArray.map { ($0.fileName, $0) }, uniquingKeysWith: { $1 })
       Logger.sounds.debug(

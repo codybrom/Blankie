@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - Unreleased
+
+Blankie 2.1 adds Home Screen widgets on iPhone and iPad, Siri and Shortcuts actions, Spotlight search, a wider iPad layout and support for iPhone Duo.
+
+### Added
+
+- **Home Screen widgets (iPhone and iPad)** - Four widgets for your Home Screen: Now Playing shows what's on with playback controls, Favorites and Quick Mix start a mix in a tap, and Pinned Sound keeps a single preset or sound ready to go. Favorites and Quick Mix let you pick a custom widget color, and on iOS 27 they add a portrait XL size (including per-sound volume buttons in XL Quick Mix).
+- **Siri, Shortcuts and Spotlight** - Ask Siri on iPhone and iPad to start a preset, play a sound or set a sleep timer. On Mac, iPhone and iPad, Blankie's Shortcuts actions let you automate playback, presets, sounds, sleep timers and volume. Presets and sounds also show up in Spotlight search. Siri phrases are translated into all supported languages.
+- **Sound descriptions and subtitles** - Built-in sounds now have a short subtitle and description. The subtitle appears when you play a sound on its own, pick sounds for a preset or browse Manage Sounds.
+- **iPhone Duo support** - Layouts for every iPhone Duo posture. When unfolded, Now Playing and the Sound Mixer split across the two pages with the crease between them. Set the phone down half-folded on a nightstand and the upright screen shows your artwork and title while the flat half holds two rows of sound tiles and the playback bar. Folding or closing the phone never interrupts playback or open editors.
+- **Wider layout on iPad** - Preset headers with artwork, dedicated Quick Mix controls, a Now Playing view that can keep your sound tiles or sleep timer open beside it and side-docked preset and sound editors.
+- **Preset artwork behind the mixer (Mac)** - A preset's background artwork now appears dimmed behind the sound grid on Mac, matching iPhone and iPad.
+
+### Changed
+
+- **Now Playing opens first on iPhone** - Selecting a preset or sound on iPhone now opens Now Playing first, with buttons for the Sound Mixer, AirPlay and the sleep timer right below the volume slider. Previous and Next step between favorites without switching screens. Quick Mix still opens straight to its tiles. If you prefer presets to open directly to the sound grid, turn off **Open to Now Playing** in **Settings → Display**.
+- **Continuous playback in Now Playing (OS 27)** - On iOS 27, iPadOS 27 and macOS 27, Blankie uses Apple's updated Now Playing API to keep playback state in sync across the Lock Screen, Control Center, AirPods and CarPlay. Ambient mixes now report as continuous playback, which hides the looping progress bar unless a sleep timer is counting down. To bring the progress bar back, turn off **Show Playback as Continuous** in **Settings → Playback & Sounds**.
+- **Custom sounds in Quick Mix** - Imported sounds can now be added to Quick Mix in the app, in CarPlay and in the Quick Mix widget.
+- **Artwork selection UI** - The preset editor now separates background artwork (shown behind your sound tiles) and Lock Screen animated artwork into two preview tiles.
+- **Quick Look preset preview artwork (iOS)** - Shared `.blankie` files without custom artwork now display Blankie's default fallback artwork in Quick Look.
+- **Sound subtitles in Now Playing** - When playing a single sound on its own, its subtitle ("Soft, steady rainfall") now appears under the title on the Lock Screen, in Control Center and in CarPlay.
+- **Deep Noise is now called Brown Noise** - The built-in Deep Noise sound is called Brown Noise in English. Presets that use it keep working, and if you renamed it yourself, your name stays.
+- Improved translations across all 12 languages and added Canadian English.
+
+### Fixed
+
+- Fixed an issue where Blankie could report as playing while silent, resume unexpectedly or briefly play a previous mix when starting a preset from CarPlay, Siri or a widget.
+- Mix changes made right before switching presets, opening Quick Mix or playing a single sound are now saved before switching. Deleting your last custom preset no longer leaves Blankie without a selected preset, and if your last preset can't be restored at launch, Blankie opens to the Library instead of a stand-in preset.
+- Fixed Lock Screen state bugs where Blankie could still show as playing after pausing, display stale artwork or leave the Previous and Next buttons disabled after launch.
+- Presets with no sounds can be opened from the Library, and Now Playing now says when a preset has nothing to play and points you to the editor or Sound Mixer instead of silently disabling Play.
+- Now Playing at the largest text sizes shows titles and subtitles in full and keeps every control on screen, and iPhone landscape lines the artwork up with its controls.
+- Adding time to a sleep timer right as it expires no longer stops playback.
+- Fixed crashes and data loss when importing presets or custom sounds, including custom sounds disappearing from presets, continuing to play after removal or crashing when longer than 25 hours. Corrupted audio files no longer crash the sound editor.
+- Interrupted app data migrations now resume cleanly on the next launch.
+- Renamed or deleted presets and sounds now update immediately in widgets, Siri and Spotlight.
+- Credits shows built-in sound names in your language, and sound lists sort by the names you see.
+- CarPlay now matches the car's light or dark appearance, shows built-in sound names in your language, enables Previous and Next immediately on launch, syncs favorites and preset edits with iPhone and pauses "Mix with Other Audio" while connected so dashboard controls stay dedicated to Blankie.
+- On Mac, the main window uses a solid background again, Autoplay on Open only triggers at launch, re-enabling Show in Menu Bar restores the menu bar icon immediately, the menu bar shows built-in sound names in your language and the View menu no longer appears twice.
+
 ## [2.0.2] - 2026-06-28
 
 ### Added
@@ -287,7 +326,8 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v2.0.2...HEAD
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/codybrom/blankie/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/codybrom/blankie/compare/v1.0.13...v2.0.0

@@ -3,12 +3,12 @@
   
 # Blankie
 
-  Ambient sound mixer for Mac, iPad, and iPhone with CarPlay support
+  Ambient sound mixer for Mac, iPad and iPhone with CarPlay support
   
   <p align="center">
     <img src="https://img.shields.io/badge/macOS%2026+-111111?style=flat&logo=apple&logoColor=white" alt="macOS">
     <img src="https://img.shields.io/badge/iOS%2026+-111111?style=flat&logo=apple&logoColor=white" alt="iOS">
-    <img src="https://img.shields.io/badge/Swift%205-F05138?style=flat&logo=Swift&logoColor=white" alt="Swift">
+    <img src="https://img.shields.io/badge/Swift%206-F05138?style=flat&logo=Swift&logoColor=white" alt="Swift">
     <img src="https://img.shields.io/badge/SwiftUI-0071e3.svg?style=flat&logo=swift&logoColor=white" alt="SwiftUI">
     <a href="https://github.com/codybrom/blankie/blob/main/LICENSE"><img src="https://img.shields.io/github/license/codybrom/blankie.svg?style=flat" alt="License"></a>
     <a href="https://formulae.brew.sh/cask/blankie"><img src="https://img.shields.io/badge/Homebrew-Available-FBB040?style=flat&logo=homebrew&logoColor=white" alt="Homebrew"></a>
@@ -32,7 +32,7 @@
 
 ## About
 
-Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 24 high-quality sounds to create your ideal environment for work, study, or rest.
+Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 24 high-quality sounds to create your ideal environment for work, study or rest.
 
 **Why choose Blankie?**
 
@@ -43,13 +43,16 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 
 ## Features
 
-- **Universal app** for Mac, iPad, and iPhone with CarPlay support
-- **24 high-quality ambient sounds** including rain, waves, fireplace, and more
+- **Universal app** for Mac, iPad and iPhone with CarPlay support
+- **24 high-quality ambient sounds** including rain, waves, fireplace and more
 - **Import your own sounds** with automatic loudness matching
 - **Mix multiple sounds** with individual volume controls
 - **Customizable presets** with colors, artwork and layouts that you can export and share with friends
 - **Quick Mix and a sleep timer** for fast, focused listening
-- **Animated lock-screen artwork** on iPhone and iPad
+- **Animated Lock Screen artwork** on iPhone and iPad
+- **Home Screen widgets** on iPhone and iPad for Now Playing, Favorites, Pinned Sound and Quick Mix
+- **Siri and Shortcuts actions** for playback, presets, sounds, sleep timers and volume
+- **Spotlight search** for presets and sounds on Mac, iPhone and iPad
 - **System integration** with media keys, Control Center, AirPods and CarPlay
 - **12 languages supported** with more added by the community all the time
 
@@ -59,7 +62,7 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 
 <a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/app-store-badge.svg" alt="Download on the App Store" width="165"></a>
 
-Free for iPhone, iPad, and Mac, with automatic updates.
+Free for iPhone, iPad and Mac, with automatic updates.
 
 ### Homebrew (Mac)
 
@@ -99,12 +102,12 @@ See our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF
 © 2026 Cody Bromley and contributors. All rights reserved.
 
 - **Source code**: [MIT License](LICENSE)
-- **Name, logo, and app icons**: © Cody Bromley, all rights reserved. These are trademarks, are not covered by the MIT License, and may not be reused without permission (see [credits](https://blankie.rest/credits)).
+- **Name, logo and app icons**: © Cody Bromley, all rights reserved. These are trademarks, are not covered by the MIT License and may not be reused without permission (see [credits](https://blankie.rest/credits)).
 - **Sounds**: Various open licenses (see [credits](https://blankie.rest/credits))
 
 ## Support
 
-Blankie is free and open-source. Support development via:
+Blankie is free and open source. Support development via:
 
 - [GitHub Sponsors](https://github.com/sponsors/codybrom)
 - [Ko-fi](https://ko-fi.com/codybrom)

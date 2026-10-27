@@ -4,10 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Captures the current values of a set of UserDefaults keys (in BOTH the
-//  standard and the shared/app-group suites) and restores them afterward. Tests
-//  that exercise real app keys (presets, timer selection, settings) use this so
-//  they never corrupt the user's actual data.
+//  Captures UserDefaults keys in both the standard and app-group suites and restores them, so
+//  tests that touch real app keys leave the user's data intact.
 //
 
 import Foundation

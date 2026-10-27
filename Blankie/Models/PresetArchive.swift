@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Archive Models
 
-struct PresetArchive: Codable {
+nonisolated struct PresetArchive: Codable {
   let manifest: ArchiveManifest
   let preset: Preset
   let customSounds: [CustomSoundMetadata]
@@ -19,12 +19,12 @@ struct PresetArchive: Codable {
   }
 }
 
-struct SoundsManifest: Codable {
+nonisolated struct SoundsManifest: Codable {
   let customSounds: [CustomSoundMetadata]
   let builtInCustomizations: [SoundCustomization]
 }
 
-struct ArchiveManifest: Codable {
+nonisolated struct ArchiveManifest: Codable {
   let version: String
   let blankieVersion: String
   let createdDate: Date
@@ -38,7 +38,7 @@ struct ArchiveManifest: Codable {
   }
 }
 
-struct ArchiveCompatibility: Codable {
+nonisolated struct ArchiveCompatibility: Codable {
   let minimumBlankieVersion: String
   let requiredFeatures: [String]
 
@@ -49,12 +49,12 @@ struct ArchiveCompatibility: Codable {
 
   func isCompatible(with currentVersion: String) -> Bool {
     // Numeric comparison so multi-digit version segments order correctly
-    // (e.g. "1.10.0" > "1.9.0"); plain String >= is lexicographic.
+    // (e.g. "1.10.0" > "1.9.0"). Plain String >= is lexicographic.
     return currentVersion.compare(minimumBlankieVersion, options: .numeric) != .orderedAscending
   }
 }
 
-struct CustomSoundMetadata: Codable, Identifiable {
+nonisolated struct CustomSoundMetadata: Codable, Identifiable {
   let id: UUID
   let fileName: String
   let originalFileName: String
@@ -64,7 +64,7 @@ struct CustomSoundMetadata: Codable, Identifiable {
   let sha256Hash: String?
   let credits: SoundCredits?
 
-  init(from customSoundData: CustomSoundData) {
+  @MainActor init(from customSoundData: CustomSoundData) {
     id = customSoundData.id
     // Use the existing fileName to match what Sound objects reference
     fileName = "\(customSoundData.fileName).\(customSoundData.fileExtension)"
@@ -75,7 +75,6 @@ struct CustomSoundMetadata: Codable, Identifiable {
       customSoundData.detectedLUFS != nil ? Double(customSoundData.detectedLUFS!) : nil
     sha256Hash = customSoundData.sha256Hash
 
-    // Create credits from custom sound data
     var credits: SoundCredits?
     if customSoundData.creditAuthor != nil || customSoundData.creditSourceUrl != nil {
       credits = SoundCredits(
@@ -91,7 +90,7 @@ struct CustomSoundMetadata: Codable, Identifiable {
   }
 }
 
-struct SoundCredits: Codable {
+nonisolated struct SoundCredits: Codable {
   let soundName: String
   let author: String
   let sourceUrl: String?
@@ -103,14 +102,14 @@ struct SoundCredits: Codable {
 // MARK: - Archive File Paths
 
 extension PresetArchive {
-  static let manifestFileName = "manifest.json"
-  static let presetFileName = "preset.json"
-  static let soundsDirectoryName = "sounds"
-  static let soundsMetadataFileName = "metadata.json"
-  static let artworkFileName = "artwork.jpg"
-  static let backgroundFileName = "background.jpg"
-  static let animatedLoopBaseName = "animatedLoop"
-  static let animatedPreviewFileName = "animatedPreview.jpg"
+  nonisolated static let manifestFileName = "manifest.json"
+  nonisolated static let presetFileName = "preset.json"
+  nonisolated static let soundsDirectoryName = "sounds"
+  nonisolated static let soundsMetadataFileName = "metadata.json"
+  nonisolated static let artworkFileName = "artwork.jpg"
+  nonisolated static let backgroundFileName = "background.jpg"
+  nonisolated static let animatedLoopBaseName = "animatedLoop"
+  nonisolated static let animatedPreviewFileName = "animatedPreview.jpg"
 
   func soundFileName(for customSoundId: UUID) -> String {
     guard let sound = customSounds.first(where: { $0.id == customSoundId }) else {

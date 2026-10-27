@@ -4,10 +4,8 @@
 //
 //  Created by Cody Bromley on 6/22/26.
 //
-//  The Quick Look card shown when a `.blankie` is tapped in Messages/Files.
-//  Tapping can't open the app (iOS routes a tapped document to Quick Look), so
-//  this card identifies the preset and teaches the one path that does import it:
-//  tap Share, then tap the Blankie icon.
+//  Quick Look card for a tapped `.blankie`. A tap can't open the app, so the
+//  card explains how to import: tap Share, then tap the Blankie icon.
 //
 
 import SwiftUI
@@ -67,12 +65,13 @@ struct PresetPreviewView: View {
       if let data = preset.artworkData, let image = UIImage(data: data) {
         Image(uiImage: image).resizable().aspectRatio(contentMode: .fill)
       } else {
-        ZStack {
-          Color.white.opacity(0.08)
-          Image(systemName: "moon.stars.fill")
-            .font(.system(size: 40, weight: .medium))
-            .foregroundStyle(.white.opacity(0.85))
-        }
+        // Same no-artwork fallback as the app.
+        FallbackArtwork(
+          glyph: .playback(
+            isQuickMix: false, isDefaultPreset: preset.isDefault, icons: preset.iconNames),
+          accent: preset.accentColorName.flatMap(Color.init(fromString:)) ?? .accentColor,
+          size: 120,
+          cornerRadius: 22)
       }
     }
     .frame(width: 120, height: 120)
@@ -120,11 +119,8 @@ struct PresetPreviewView: View {
     }
   }
 
-  /// The actual Blankie app icon, from the SharedAssets catalog that both the
-  /// app and this extension build. The display asset already carries its shape.
-  /// Downsampled once to display size so this memory-constrained Quick Look
-  /// extension doesn't decode the full 1024px asset for a 30pt icon (mirrors
-  /// `AboutView.currentAppIcon`).
+  /// App icon from SharedAssets, downsampled once so this memory-limited
+  /// extension doesn't decode the 1024px asset.
   private static let appIcon: UIImage? =
     UIImage(named: "BlankieAppIconDisplay")?
     .preparingThumbnail(of: CGSize(width: 90, height: 90))
@@ -135,8 +131,7 @@ struct PresetPreviewView: View {
       .scaledToFit()
   }
 
-  // Single pluralized key so the string catalog picks the right form per
-  // language (e.g. Polish one/few/many), instead of a Swift singular/plural split.
+  // One pluralized key so the catalog handles per-language plural forms.
   private var soundCountText: LocalizedStringKey {
     "\(preset.soundCount) sounds"
   }
@@ -144,5 +139,7 @@ struct PresetPreviewView: View {
 
 #Preview {
   PresetPreviewView(
-    preset: .init(name: "Coquí Calling", creator: "Cody", soundCount: 1, artworkData: nil))
+    preset: .init(
+      name: "Coquí Calling", creator: "Cody", soundCount: 3, artworkData: nil,
+      accentColorName: "teal", iconNames: ["cloud.rain", "wind", "bird"], isDefault: false))
 }

@@ -4,7 +4,7 @@
 
 ### What devices can run Blankie?
 
-You can install Blankie on a **Mac running macOS 26 (Tahoe) or later**, an **iPhone running iOS 26 or later**, or an **iPad running iPadOS 26 or later**.
+Blankie runs on **Mac** (macOS 26 Tahoe or later), **iPhone** (iOS 26.4 or later) and **iPad** (iPadOS 26.4 or later).
 
 ### How do I install Blankie?
 
@@ -12,7 +12,7 @@ There are a few different ways to install Blankie depending on your platform:
 
 - **[App Store](https://apps.apple.com/us/app/blankie/id6740096581)** (***Recommended*** - All Platforms)
 
-  - Blankie is free to download for iPhone, iPad, and Mac and will receive automatic updates.
+  - Blankie is free to download for iPhone, iPad and Mac and will receive automatic updates.
   
 - **Homebrew** (Mac Only)
 
@@ -30,13 +30,19 @@ There are a few different ways to install Blankie depending on your platform:
 
 Yes. All sounds are bundled inside the app, so once Blankie is downloaded it plays entirely offline.
 
-The only time it connects to the internet is to fetch animated lock screen artwork (iOS Only), but these are fetched from Apple's servers, not Blankie's, and no identifiers are ever sent or stored.
+The only time it connects to the internet is to fetch animated Lock Screen artwork (iOS Only), but these are fetched from Apple's servers, not Blankie's, and no identifiers are ever sent or stored.
+
+### Can my school or organization deploy Blankie?
+
+Yes. Schools and organizations have already deployed Blankie to 1,000+ devices worldwide. Blankie is free in Apple School Manager and Apple Business Manager, so you can install it in bulk on managed Mac, iPad and iPhone devices. It works well on locked-down devices because there's no account to create, and the app never collects or sends personal or usage data.
+
+Interested in a custom version of Blankie with your organization's branding, sounds or presets? Email <info@blankie.rest>.
 
 ## Sounds and presets
 
 ### Can I add my own sounds?
 
-Yes! As of Blankie 2.0 you can import your own audio files (M4A, MP3, WAV, FLAC, OGG, and more) and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins, and you can give each one its own name, icon, and loop settings.
+Yes! As of Blankie 2.0 you can import your own audio files (M4A, MP3, WAV, FLAC, OGG and more) and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins, and you can give each one its own name, icon and loop settings.
 
 To import a sound, choose **File → Import** on Mac, or tap the **+** button in your Library on iPhone and iPad. For step-by-step instructions (including how to turn a Voice Memo into a Blankie sound), see our [import guides](https://blankie.rest/guides).
 
@@ -44,9 +50,9 @@ To import a sound, choose **File → Import** on Mac, or tap the **+** button in
 
 Yes! Presets store active sounds and their volume levels. You can save and load different combinations as presets. If you don't have any presets saved, Blankie will load whatever sounds were active when you last closed the app.
 
-To save a preset, click the **+** button at the top of the sidebar (Mac and iPad) or in your Library (iPhone), then choose "New Preset". Any changes you make to an active preset's sounds or volumes are saved immediately. There's no need to manually save your changes.
+To save a preset, click the **+** button at the top of the sidebar (Mac and iPad) or in your Library (iPhone), then choose "New Preset." Any changes you make to an active preset's sounds or volumes are saved immediately. There's no need to manually save your changes.
 
-To rename or delete a preset, right-click it on Mac (or touch and hold on iPhone and iPad) and choose "Edit Preset" or "Delete Preset".
+To rename or delete a preset, right-click it on Mac (or touch and hold on iPhone and iPad) and choose "Edit Preset" or "Delete Preset."
 
 ### What customization options are available?
 
@@ -64,13 +70,25 @@ To rename or delete a preset, right-click it on Mac (or touch and hold on iPhone
 **Play/Pause:** The main play/pause button at the bottom center controls all selected sounds simultaneously. You can also:
 
 - Use media keys on your keyboard
-- Control from the Now Playing widget in your menubar
+- Use the system Now Playing control in the macOS menu bar
 - Control directly from AirPods and other compatible headphones
+- Use Blankie's Home Screen widgets on iPhone and iPad
+- Ask Siri on iPhone and iPad to start a preset, a single sound or a sleep timer, or use Blankie actions in Shortcuts
 
 **Volume:**
 
 - Use individual sliders for each sound
 - Access the "All Sounds" volume slider from the controls bar (speaker icon) to blend with other apps
+
+### What widgets does Blankie have?
+
+On iPhone and iPad, add **Now Playing**, **Favorites**, **Pinned Sound** or **Quick Mix** from the Home Screen widget gallery. Favorites and Quick Mix offer medium, large and portrait XL (iOS 27) sizes, plus custom widget colors; Now Playing and Pinned Sound are small. Edit the Pinned Sound widget to choose either a preset or a sound.
+
+### Can I use Blankie with Siri and Shortcuts?
+
+Yes. On iPhone and iPad, say "Start a preset in Blankie" or "Start a sound in Blankie," then give its name when Siri asks, or say "Start a sleep timer in Blankie." Starting a single sound plays it on its own and leaves your saved presets unchanged.
+
+Blankie's actions are also available in Shortcuts on Mac, iPhone and iPad. You can control playback, choose presets and sounds, set a sleep timer and adjust volume. On iPhone and iPad, the overall Set Volume action requires **Mix with Other Audio** in Settings; individual sound volumes can be set separately. Spotlight can find your presets and sounds on all three platforms.
 
 ### Where can I find keyboard shortcuts for Mac?
 
@@ -96,19 +114,19 @@ While Blankie will always remain free, if you'd like to support development you 
 
 ### What does open source mean?
 
-Open source means that Blankie's source code (the raw programming instructions that make the app and this website work) is publicly available for anyone to view, modify, and even contribute to.
+Open source means that Blankie's source code (the raw programming instructions that make the app and this website work) is publicly available for anyone to view, modify and even contribute to.
 
 ***Why does this matter if you're not a programmer?***
 
 Even if you don't write code, Blankie being open source benefits you in several important ways:
 
-- **Transparency:** You can trust Blankie because nothing is hidden. Anyone can verify exactly how it works, what data it collects (or doesn't collect), and help identify and fix problems. Blankie can also be downloaded for use separate of the Mac App Store in an official version that is still scanned and signed by Apple to safely run as a trusted app.
+- **Transparency:** You can trust Blankie because nothing is hidden. Anyone can verify exactly how it works, what data it collects (or doesn't collect) and help identify and fix problems. Blankie can also be downloaded for use separate of the Mac App Store in an official version that is still scanned and signed by Apple to safely run as a trusted app.
 
 - **Community:** Blankie exists thanks to a collaborative ecosystem. From sounds, to translations, to developer resources and inspirations, Blankie builds upon contributions from creators around the world who've shared their work openly. By also being open source, Blankie honors this tradition and ensures it can continue to evolve even if the original developer moves on.
 
-- **Freedom:** The open source MIT license means Blankie is free to use without cost or restrictions, today and in the future. It also means you can make your own version of Blankie or reuse portions of its code in your own projects (as long as you follow the license terms).
+- **Freedom:** The open-source MIT license means Blankie is free to use without cost or restrictions, today and in the future. It also means you can make your own version of Blankie or reuse portions of its code in your own projects (as long as you follow the license terms).
 
-Blankie's complete source code, including both the Blankie app and this entire website, is available on [GitHub](https://github.com/codybrom/blankie) for anyone to explore, use, or contribute to.
+Blankie's complete source code, including both the Blankie app and this entire website, is available on [GitHub](https://github.com/codybrom/blankie) for anyone to explore, use or contribute to.
 
 ### How is Blankie different from Blanket?
 
@@ -168,7 +186,7 @@ The only time Blankie connects to the internet is to download animated artwork f
 
 ### Where is my data stored?
 
-All Blankie data is stored on your device. Your presets, settings, and any sounds you import are 100% local to the app. There's no Blankie account to sign into and nothing synced to a Blankie server. Your library is yours and yours alone.
+All Blankie data is stored on your device. Your presets, settings and any sounds you import are 100% local to the app. There's no Blankie account to sign into and nothing synced to a Blankie server. Your library is yours and yours alone.
 
 ### I found a bug. How do I report it?
 

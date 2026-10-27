@@ -4,9 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Pure loudness/gain math. A sign flip or a broken cap makes the whole library
-//  too loud or over-amplifies noise. (The file-decoding analysis paths are
-//  covered by EngineLoudnessTests; this covers the arithmetic directly.)
+//  AudioAnalyzer loudness and gain arithmetic. EngineLoudnessTests covers file decoding.
 //
 
 import Foundation
@@ -22,7 +20,7 @@ import Testing
     #expect(AudioAnalyzer.calculateNormalizationFactor(peakLevel: 0) == 1.0)  // silence untouched
     #expect(
       isClose(AudioAnalyzer.calculateNormalizationFactor(peakLevel: 0.4, targetLevel: 0.8), 2.0))
-    // A very quiet peak would need 8x; capped at 3x so noise isn't amplified.
+    // A very quiet peak would need 8x but is capped at 3x so noise isn't amplified.
     #expect(AudioAnalyzer.calculateNormalizationFactor(peakLevel: 0.1, targetLevel: 0.8) == 3.0)
   }
 
@@ -79,7 +77,7 @@ import Testing
   }
 
   @Test func profileSkipsLimiterWithHeadroomAndCapsGain() {
-    // Quiet enough to request >18 dB, but capped; peak stays well under ceiling.
+    // Quiet enough to request >18 dB, but capped. Peak stays well under ceiling.
     let p = PlaybackProfile.from(analysis: analysis(lufs: -50, truePeak: -30), filename: "x.m4a")
     let profile = try! #require(p)
     #expect(isClose(profile.gainDB, AudioAnalyzer.maxGainDB))

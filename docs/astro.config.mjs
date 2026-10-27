@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
 
-// Get current build time
 const buildTime = new Date().toISOString();
 
 // https://astro.build/config
@@ -12,7 +11,6 @@ export default defineConfig({
   integrations: [
     sitemap({
       serialize(item) {
-        // Add lastmod to all pages based on build time
         item.lastmod = buildTime;
         return item;
       },

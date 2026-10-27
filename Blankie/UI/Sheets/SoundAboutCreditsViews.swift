@@ -16,7 +16,7 @@ struct EditableCreditsView: View {
     Group {
       // Original Work Title.
       // prompt + labelsHidden: on macOS a bare titleKey renders as a visible
-      // label next to the value; this keeps it a placeholder only (no-op on iOS).
+      // label next to the value. This keeps it a placeholder only (no-op on iOS).
       HStack {
         Text("Original Work")
         Spacer()
@@ -55,7 +55,6 @@ struct EditableCreditsView: View {
           .accessibilityLabel("Source URL")
       }
 
-      // License
       Picker("License", selection: $selectedLicense) {
         Text("None").tag(nil as License?)
         ForEach(License.allCases, id: \.self) { license in
@@ -63,7 +62,6 @@ struct EditableCreditsView: View {
         }
       }
 
-      // Custom License Details
       if selectedLicense == .custom {
         VStack(alignment: .leading, spacing: 8) {
           Text("License Details")

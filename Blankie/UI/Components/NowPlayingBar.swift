@@ -11,14 +11,21 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
 
-  /// Compact glass bar pinned above the bottom safe area on iPhone and iPad.
-  /// Tapping the bar steps one level toward what's playing: from the iPhone
-  /// Library it shows the mixer, from the mixer it expands the full Now
-  /// Playing cover. Play/pause stays inline.
+  /// Compact glass bar above the bottom safe area on iPhone and iPad. A tap steps one
+  /// level toward what's playing (Library to mixer, mixer to the Now Playing cover).
   struct NowPlayingBar: View {
-    /// True when the tap shows the mixer rather than expanding the player —
-    /// only affects the announced hint; the owner supplies the action itself.
+    /// `.bare` drops the artwork and title for wide layouts where the sidebar
+    /// and page header already say what's playing.
+    enum Style { case full, bare }
+
+    var style: Style = .full
+    /// The nightstand layout already shows the player above, so there is no expand button.
+    var showsExpand = true
+    /// True when a tap shows the mixer. It only changes the announced hint. The owner
+    /// supplies the action.
     var showsMixer = false
+    /// Opens the timer as a popover over the bar.
+    var timerAsPopover = false
     let onTap: () -> Void
 
     @State private var audioManager = AudioManager.shared
@@ -26,15 +33,143 @@ import SwiftUI
     @State private var timerManager = TimerManager.shared
     @State private var globalSettings = GlobalSettings.shared
     @State private var playPauseTrigger = 0
+    @State private var showingTimer = false
 
     var body: some View {
       GlassEffectContainer(spacing: 12) {
-        barContent
+        switch style {
+        case .full: barContent
+        case .bare: bareContent
+        }
+      }
+      .sheet(isPresented: timerAsPopover ? .constant(false) : $showingTimer) {
+        TimerSheetView()
+          .presentationSizing(.form)
       }
     }
 
-    /// Capsule bar plus a standalone play/pause circle trailing it, so the two
-    /// glass shapes read as separate controls that share one glass tissue.
+    // MARK: - Bare bar (wide layouts)
+
+    private var bareContent: some View {
+      HStack(spacing: 4) {
+        if showsExpand {
+          Button(action: onTap) {
+            Image(systemName: "chevron.up")
+              .font(.system(size: 17, weight: .semibold))
+              .frame(width: 44, height: 44)
+              .contentShape(.rect)
+          }
+          .accessibilityLabel(Text("Now Playing"))
+          .accessibilityHint(Text("Opens the full player"))
+        }
+
+        if audioManager.canNavigateNextPrevious {
+          Button {
+            audioManager.navigateToPreviousPreset()
+          } label: {
+            Image(systemName: "backward.fill").frame(width: 44, height: 44).contentShape(.rect)
+          }
+          .accessibilityLabel(Text("Previous"))
+        }
+        barePlayPause
+        if audioManager.canNavigateNextPrevious {
+          Button {
+            audioManager.navigateToNextPreset()
+          } label: {
+            Image(systemName: "forward.fill").frame(width: 44, height: 44).contentShape(.rect)
+          }
+          .accessibilityLabel(Text("Next"))
+        }
+
+        // CarPlay owns the volume while connected, like Now Playing.
+        if !audioManager.isCarPlayConnected {
+          bareVolume
+            .frame(minWidth: 80, maxWidth: 260)
+            .padding(.horizontal, 8)
+        }
+
+        Spacer(minLength: 0)
+
+        #if os(iOS)
+          AirPlayRouteButton(activeColor: accentColor, inactiveColor: Color(.secondaryLabel))
+            .frame(width: 44, height: 44)
+            .accessibilityLabel(Text("AirPlay"))
+        #endif
+        Button {
+          showingTimer = true
+        } label: {
+          Image(systemName: "timer")
+            .foregroundStyle(timerManager.isTimerActive ? accentColor : Color.primary)
+            .frame(width: 44, height: 44)
+            .contentShape(.rect)
+        }
+        .accessibilityLabel(Text("Timer"))
+        .popover(
+          isPresented: timerAsPopover ? $showingTimer : .constant(false), arrowEdge: .bottom
+        ) {
+          TimerPanelView()
+            .padding(.vertical, 20)
+            .frame(width: 380, height: 330)
+            .presentationCompactAdaptation(.popover)
+        }
+      }
+      .buttonStyle(.plain)
+      .font(.system(size: 18))
+      .padding(.horizontal, 8)
+      .frame(height: 58)
+      .contentShape(.rect)
+      .modifier(NowPlayingBarGlass())
+      #if os(iOS)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility3)
+      #endif
+    }
+
+    private var barePlayPause: some View {
+      let isInteractive = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
+      return Button {
+        guard isInteractive else { return }
+        playPauseTrigger += 1
+        audioManager.togglePlayback()
+      } label: {
+        Image(systemName: audioManager.isGloballyPlaying ? "pause.fill" : "play.fill")
+          .font(.system(size: 22))
+          .foregroundColor(isInteractive ? accentColor : .secondary)
+          .contentTransition(
+            .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating)
+          )
+          .frame(width: 48, height: 48)
+          .contentShape(Circle())
+      }
+      .disabled(!isInteractive)
+      .sensoryFeedback(.selection, trigger: playPauseTrigger)
+      .accessibilityLabel(audioManager.isGloballyPlaying ? Text("Pause") : Text("Play"))
+    }
+
+    /// Same source as Now Playing: Blankie's own level while mixing with other
+    /// audio, otherwise the system volume.
+    @ViewBuilder
+    private var bareVolume: some View {
+      #if os(iOS)
+        if globalSettings.mixWithOthers {
+          Slider(
+            value: Binding(
+              get: { globalSettings.volumeWithOtherAudio },
+              set: { globalSettings.setVolumeWithOtherAudio($0) }
+            ),
+            in: 0...1
+          )
+          .tint(accentColor)
+          .accessibilityLabel(Text("Blankie Volume with Media"))
+        } else {
+          SystemVolumeSlider()
+            .frame(height: 30)
+            .accessibilityLabel(Text("Volume"))
+        }
+      #endif
+    }
+
+    /// Capsule bar plus a standalone play/pause circle trailing it, two glass shapes
+    /// that read as separate controls.
     private var barContent: some View {
       HStack(spacing: 12) {
         openButton
@@ -84,14 +219,13 @@ import SwiftUI
       PresetArtworkLoader(
         properties: ArtworkProperties(
           timerActive: timerManager.isTimerActive,
-          soloSound: audioManager.soloModeSound,
+          singleSound: audioManager.singleSound,
           hasSelectedSounds: audioManager.hasSelectedSounds,
           isQuickMix: audioManager.isQuickMix,
           presetArtworkId: presetManager.currentPreset?.artworkId,
           animatedArtwork: presetManager.currentPreset?.animatedArtwork,
-          // Match the library/Now Playing artwork tint: the active preset's
-          // accent, falling back to the app accent (themingPreset is nil during
-          // solo / Quick Mix, so those correctly use the app accent).
+          // Matches the library and Now Playing tint: the theming preset's accent, else
+          // the app accent (themingPreset is nil during single sound and Quick Mix).
           accentColor: presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor,
           playingIcons: audioManager.playingSoundIcons(),
           isDefaultPreset: presetManager.currentPreset?.isDefault ?? true
@@ -118,8 +252,8 @@ import SwiftUI
     }
 
     private var title: String {
-      if let soloSound = audioManager.soloModeSound {
-        return soloSound.localizedTitle
+      if let singleSound = audioManager.singleSound {
+        return singleSound.localizedTitle
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")
@@ -127,10 +261,10 @@ import SwiftUI
       return presetManager.currentPreset?.activeTitle ?? "Blankie"
     }
 
-    /// Status line under the title. Active playback shows no caption — the
-    /// title alone reads cleaner than announcing "Playing".
+    /// Status line under the title. Active playback shows no caption, since the title
+    /// alone reads cleaner.
     private var caption: String? {
-      if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds
+      if audioManager.singleSound == nil && !audioManager.hasSelectedSounds
         && !audioManager.isQuickMix
       {
         return String(localized: "No sounds selected")
@@ -167,9 +301,25 @@ import SwiftUI
     }
 
     private var playPauseButton: some View {
-      // Pause must always be reachable: enable whenever the app is playing OR
-      // has sounds to start, matching every other surface's convention so the
-      // bar can never get stuck in a "playing" state with no way to pause.
+      NowPlayingPlayPauseButton()
+    }
+  }
+
+  /// The standalone play/pause circle that trails the mini bar. The iPhone's
+  /// Sound Mixer sheet carries it too, since the player is covered there.
+  struct NowPlayingPlayPauseButton: View {
+    @State private var audioManager = AudioManager.shared
+    @State private var presetManager = PresetManager.shared
+    @State private var globalSettings = GlobalSettings.shared
+    @State private var playPauseTrigger = 0
+
+    private var accentColor: Color {
+      presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
+    }
+
+    var body: some View {
+      // Pause stays reachable: enabled while playing or when there are sounds to
+      // start, matching the other playback surfaces.
       let isInteractive = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
       return Button {
         guard isInteractive else { return }
@@ -215,7 +365,7 @@ import SwiftUI
   /// the async loader task only restarts when something it shows has changed.
   struct ArtworkProperties: Equatable {
     let timerActive: Bool
-    let soloSound: Sound?
+    let singleSound: Sound?
     let hasSelectedSounds: Bool
     let isQuickMix: Bool
     let presetArtworkId: UUID?
@@ -225,7 +375,7 @@ import SwiftUI
     let isDefaultPreset: Bool
 
     static func == (lhs: ArtworkProperties, rhs: ArtworkProperties) -> Bool {
-      lhs.timerActive == rhs.timerActive && lhs.soloSound?.id == rhs.soloSound?.id
+      lhs.timerActive == rhs.timerActive && lhs.singleSound?.id == rhs.singleSound?.id
         && lhs.hasSelectedSounds == rhs.hasSelectedSounds && lhs.isQuickMix == rhs.isQuickMix
         && lhs.presetArtworkId == rhs.presetArtworkId
         && lhs.animatedArtwork == rhs.animatedArtwork
@@ -244,9 +394,9 @@ import SwiftUI
 
     var body: some View {
       Group {
-        if let soloSound = properties.soloSound {
+        if let singleSound = properties.singleSound {
           FallbackArtwork(
-            glyph: .symbol(soloSound.systemIconName),
+            glyph: .symbol(singleSound.systemIconName),
             accent: properties.accentColor ?? .accentColor,
             size: 36, cornerRadius: 4, glyphFraction: 0.44)
         } else if !properties.hasSelectedSounds && !properties.isQuickMix {
@@ -262,8 +412,8 @@ import SwiftUI
             .resizable()
             .scaledToFill()
         } else {
-          // Quick Mix → grid, All Blankie Sounds → the Blankie mark, a custom
-          // preset → a montage of its sounds; matching the preset's library tile.
+          // Matches the preset's library tile: Quick Mix gets the grid, All Blankie
+          // Sounds the Blankie mark, a custom preset a montage of its sounds.
           FallbackArtwork(
             glyph: .playback(
               isQuickMix: properties.isQuickMix,
@@ -275,25 +425,25 @@ import SwiftUI
       }
       .frame(width: 36, height: 36)
       .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+      // Keyed on the guard's inputs too, since at launch the preset arrives before
+      // its sounds are selected.
       .task(
         id:
-          "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")"
+          "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")-\(properties.singleSound == nil)-\(properties.hasSelectedSounds || properties.isQuickMix)"
       ) {
-        // Only load artwork when not in solo/no sounds mode
-        guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix
+        guard properties.singleSound == nil, properties.hasSelectedSounds || properties.isQuickMix
         else {
           artworkImage = nil
           return
         }
 
-        // Try to load from artworkId first
         if let artworkId = properties.presetArtworkId,
           let data = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
           let image = UIImage(data: data)
         {
           artworkImage = image
         } else if let preset = presetManager.currentPreset {
-          // Fallback: Use animated artwork preview if available
+          // Fall back to the animated artwork preview.
           artworkImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
         } else {
           artworkImage = nil

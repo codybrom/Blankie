@@ -19,9 +19,10 @@ extension GlobalSettings {
       UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.accentColor)
     }
     logCurrentSettings()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
-  /// macOS-only; stored under the platform-scoped autoPlayOnLaunchMac key.
+  /// macOS-only and stored under the platform-scoped autoPlayOnLaunchMac key.
   @MainActor
   func setAutoPlayOnLaunch(_ value: Bool) {
     autoPlayOnLaunch = value
@@ -77,11 +78,18 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setShowPlaybackAsContinuous(_ value: Bool) {
+    showPlaybackAsContinuous = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showPlaybackAsContinuous)
+    AudioManager.shared.nowPlayingManager?.republishCurrentPreset()
+  }
+
+  @MainActor
   func setShowMenuBarIcon(_ value: Bool) {
     showMenuBarIcon = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showMenuBarIcon)
     // The Dock-hiding modes need the menu bar icon as the way back, so clear
-    // them when it's off — the app can never hide both the Dock and the icon.
+    // them when it's off.
     if !value {
       menuBarOnlyMode = false
       UserDefaults.shared.set(false, forKey: UserDefaultsKeys.menuBarOnlyMode)
@@ -106,6 +114,13 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setNowPlayingFirst(_ value: Bool) {
+    nowPlayingFirst = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.nowPlayingFirst)
+    logCurrentSettings()
+  }
+
+  @MainActor
   func setLockPortraitOrientationiOS(_ value: Bool) {
     lockPortraitOrientationiOS = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.lockPortraitOrientationiOS)
@@ -117,6 +132,7 @@ extension GlobalSettings {
     quickMixSoundFileNames = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.quickMixSoundFileNames)
     logCurrentSettings()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   // MARK: - Starred items (iPad sidebar + CarPlay)
@@ -125,9 +141,9 @@ extension GlobalSettings {
   func setStarredItems(_ value: [String]) {
     starredItems = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.starredItems)
-    // A favorited solo sound participates in lock-screen next/previous, so the
-    // command availability depends on the favorites list — refresh it here.
+    // Favorited single sounds take part in lock-screen next/previous.
     AudioManager.shared.updateNextPreviousCommandState()
+    AudioManager.shared.republishWidgetCatalog()
   }
 
   /// Whether the given token (`allSoundsToken`, `quickMixToken`, or a preset
@@ -139,9 +155,7 @@ extension GlobalSettings {
   /// Toggle a token's starred membership. Newly starred items append to the end.
   @MainActor
   func toggleStarred(_ token: String) {
-    // Mutate a local copy so `starredItems` publishes once (via setStarredItems),
-    // not twice — a double publish made the CarPlay observer rebuild its template
-    // twice, the first time reading the pre-mutation value.
+    // Mutate a local copy so `starredItems` publishes once, via setStarredItems.
     var items = starredItems
     if let index = items.firstIndex(of: token) {
       items.remove(at: index)
@@ -152,18 +166,22 @@ extension GlobalSettings {
   }
 
   /// Drop tokens for presets that no longer exist. `allSoundsToken` and
-  /// `quickMixToken` are always retained. Solo-sound tokens are retained when
+  /// `quickMixToken` are always retained. Single-sound tokens are retained when
   /// `validSoundFileNames` is nil (caller doesn't know the sound list) or when
   /// their file name is still present.
   @MainActor
   func pruneStarredItems(validPresetIDs: Set<String>, validSoundFileNames: Set<String>? = nil) {
     let pruned = starredItems.filter { token in
-      if let fileName = GlobalSettings.soloFileName(fromToken: token) {
+      switch PlayableItem(token: token) {
+      case .allSounds, .quickMix:
+        return true
+      case .single(let fileName):
         return validSoundFileNames?.contains(fileName) ?? true
+      case .preset(let id):
+        return validPresetIDs.contains(id.uuidString)
+      case nil:
+        return false
       }
-      return token == GlobalSettings.allSoundsToken
-        || token == GlobalSettings.quickMixToken
-        || validPresetIDs.contains(token)
     }
     if pruned != starredItems {
       setStarredItems(pruned)

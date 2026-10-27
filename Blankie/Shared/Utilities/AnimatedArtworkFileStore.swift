@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum AnimatedArtworkFileStore {
+nonisolated enum AnimatedArtworkFileStore {
   private static let directoryName = "Artwork"
 
   static func ensureBaseDirectory() throws {
@@ -26,11 +26,9 @@ enum AnimatedArtworkFileStore {
     return "\(directoryName)/\(fileName).\(fileExtension)"
   }
 
-  static func absoluteURL(for relativePath: String) -> URL {
-    // Artwork is always a flat file inside the Artwork directory. Reduce any
-    // incoming path to its final component so a traversal path decoded from an
-    // imported (untrusted) preset — e.g. "../../Documents/foo" — can't point a
-    // copy/remove/exists outside the directory.
+  nonisolated static func absoluteURL(for relativePath: String) -> URL {
+    // Artwork is a flat file in the Artwork directory. Keeping only the last
+    // component stops a traversal path from an imported preset escaping it.
     let fileName = (relativePath as NSString).lastPathComponent
     return documentsDirectoryURL().appendingPathComponent(directoryName).appendingPathComponent(
       fileName)

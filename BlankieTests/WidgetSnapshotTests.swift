@@ -1,0 +1,215 @@
+//
+//  WidgetSnapshotTests.swift
+//  BlankieTests
+//
+//  Created by Cody Bromley on 7/8/26.
+//
+//  The App Group snapshot the Home Screen widgets render: round trips, corrupt-data fallback,
+//  publish dedup, the subtitle rule and immediate catalog republishes.
+//  Serialized: each test restores GlobalSettings.shared and the "widgetSnapshot" default.
+//
+
+import Foundation
+import Testing
+
+@testable import Blankie
+
+@Suite(.serialized) @MainActor final class WidgetSnapshotTests {
+  private let settings = GlobalSettings.shared
+  private let snapshot = DefaultsSnapshot([
+    "widgetSnapshot",
+    UserDefaultsKeys.starredItems,
+  ])
+  private let originalStarred: [String]
+
+  init() {
+    originalStarred = settings.starredItems
+    settings.starredItems = []
+    snapshot.clear()
+  }
+
+  isolated deinit {
+    settings.starredItems = originalStarred
+    snapshot.restore()
+  }
+
+  private func makeSnapshot(title: String) -> WidgetSnapshot {
+    WidgetSnapshot(
+      playback: WidgetPlaybackState(
+        isPlaying: true, title: title, subtitle: "one, two", soundSystemIconNames: ["cloud"],
+        thumbnailKey: nil, activeToken: nil, accentColorName: nil),
+      favorites: [],
+      quickMixSounds: [],
+      pinnableItems: [],
+      defaultAccentColorName: nil
+    )
+  }
+
+  /// Every nested field is set, so a dropped CodingKey shows up on a round trip.
+  private func makeFullyPopulatedSnapshot() -> WidgetSnapshot {
+    WidgetSnapshot(
+      playback: WidgetPlaybackState(
+        isPlaying: true, title: "Rainforest", subtitle: "Rain, Birds",
+        soundSystemIconNames: ["cloud.rain", "bird"],
+        thumbnailKey: "preset_thumb_abc", activeToken: GlobalSettings.quickMixToken,
+        accentColorName: "teal"),
+      favorites: [
+        WidgetFavorite(
+          token: GlobalSettings.allSoundsToken, displayName: "All Blankie Sounds",
+          systemIconName: "square.grid.2x2", thumbnailKey: nil, accentColorName: "blue",
+          subtitle: "Ada")
+      ],
+      quickMixSounds: [
+        WidgetQuickMixSound(
+          fileName: "rain", displayName: "Rain", systemIconName: "cloud.rain", isSelected: true,
+          volume: 0.35)
+      ],
+      pinnableItems: [
+        WidgetFavorite(
+          token: GlobalSettings.singleToken(forFileName: "rain"), displayName: "Rain",
+          systemIconName: "cloud.rain", thumbnailKey: "preset_thumb_xyz",
+          accentColorName: "orange", subtitle: "Nature")
+      ],
+      defaultAccentColorName: "purple"
+    )
+  }
+
+  @Test func quickMixVolumeDecodesLegacySnapshotsAndShowsCurrentLevel() throws {
+    let legacy = Data(
+      #"{"fileName":"rain","displayName":"Rain","systemIconName":"cloud.rain","isSelected":true}"#
+        .utf8)
+    let sound = try JSONDecoder().decode(WidgetQuickMixSound.self, from: legacy)
+    #expect(sound.volume == nil)
+    #expect(sound.volumePercent == 80)
+    var updated = sound
+    updated.volume = 0.35
+    #expect(updated.volumePercent == 35)
+    #expect(
+      try JSONDecoder().decode(WidgetQuickMixSound.self, from: JSONEncoder().encode(updated))
+        == updated)
+  }
+
+  // MARK: - Round-trip / corrupt fallback
+
+  /// Saving presets republishes the catalog, so a rename reaches the Pinned
+  /// Sound picker without waiting for a playback change.
+  @Test func savingPresetsRepublishesTheirNames() async {
+    let sandbox = await SingletonSandbox.make()
+    defer { sandbox.restore() }
+    let preset = PresetFactory.makePreset(
+      name: "Widget Rename Probe \(UUID().uuidString.prefix(6))", soundStates: [], soundOrder: [])
+    sandbox.presetManager.setPresets([preset])
+
+    sandbox.presetManager.savePresets()
+
+    #expect(WidgetStateStore.current().pinnableItems.contains { $0.displayName == preset.name })
+  }
+
+  @Test func snapshotEncodeDecodeRoundTrips() throws {
+    let original = makeSnapshot(title: "Round Trip")
+    let data = try JSONEncoder().encode(original)
+    let decoded = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+    #expect(decoded == original)
+  }
+
+  @Test func fullyPopulatedSnapshotRoundTrips() throws {
+    let original = makeFullyPopulatedSnapshot()
+    let data = try JSONEncoder().encode(original)
+    let decoded = try JSONDecoder().decode(WidgetSnapshot.self, from: data)
+    #expect(decoded == original)
+  }
+
+  @Test func currentReturnsEmptyOnCorruptData() {
+    UserDefaults.shared.set(Data([0xFF, 0x00, 0xFF]), forKey: "widgetSnapshot")
+    #expect(WidgetStateStore.current() == .empty)
+  }
+
+  /// An older cached snapshot must survive a schema that adds optional fields.
+  @Test func decodeSucceedsWhenOptionalFieldMissing() throws {
+    let original = makeFullyPopulatedSnapshot()
+    let data = try JSONEncoder().encode(original)
+    var object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+    object.removeValue(forKey: "defaultAccentColorName")
+    let stripped = try JSONSerialization.data(withJSONObject: object)
+
+    let decoded = try JSONDecoder().decode(WidgetSnapshot.self, from: stripped)
+    var expected = original
+    expected.defaultAccentColorName = nil
+    #expect(decoded == expected)
+  }
+
+  // MARK: - Publish dedup
+
+  /// A skipped write leaves the corrupted default in place, so `current()` reads `.empty`.
+  @Test func identicalPublishSkipsWrite() {
+    let a = makeSnapshot(title: "A")
+    let b = makeSnapshot(title: "B")
+    // Publish `b` first so publish(a) writes whatever earlier tests left behind.
+    WidgetStateStore.publish(b)
+    WidgetStateStore.publish(a)
+    #expect(WidgetStateStore.current() == a)
+
+    UserDefaults.shared.set(Data([0xFF, 0x00]), forKey: "widgetSnapshot")
+    WidgetStateStore.publish(a)
+    #expect(WidgetStateStore.current() == .empty)
+  }
+
+  @Test func changedPublishWritesThrough() {
+    let a = makeSnapshot(title: "A")
+    let b = makeSnapshot(title: "B")
+    WidgetStateStore.publish(a)
+    WidgetStateStore.publish(b)
+    #expect(WidgetStateStore.current() == b)
+  }
+
+  // MARK: - Subtitle rule
+
+  @Test func soundNameSummaryEmptyIsBlankie() {
+    #expect(NowPlayingManager.soundNameSummary([]) == "Blankie")
+  }
+
+  @Test func soundNameSummarySingleLongTitleReturnedInFull() {
+    let long = String(repeating: "x", count: 80)
+    #expect(NowPlayingManager.soundNameSummary([long]) == long)
+  }
+
+  @Test func soundNameSummaryShortListJoined() {
+    #expect(NowPlayingManager.soundNameSummary(["Rain", "Waves"]) == "Rain, Waves")
+  }
+
+  @Test func soundNameSummaryOverBudgetFallsBackToCount() {
+    let titles = ["Rolling Thunder", "Distant Rainfall", "Crackling Fireplace", "Ocean Waves"]
+    let summary = NowPlayingManager.soundNameSummary(titles)
+    #expect(summary == String(localized: "\(titles.count) sounds"))
+  }
+
+  /// Boundary: a joined length of exactly the 50-char budget stays joined.
+  @Test func soundNameSummaryExactlyAtBudgetJoined() {
+    // "aaaa..." (24) + ", " (2) + "aaaa..." (24) = 50 characters joined.
+    let part = String(repeating: "a", count: 24)
+    let titles = [part, part]
+    let joined = titles.joined(separator: ", ")
+    #expect(joined.count == 50)
+    #expect(NowPlayingManager.soundNameSummary(titles) == joined)
+  }
+
+  // MARK: - Freshness
+
+  @Test func setStarredItemsRepublishesFavorites() {
+    let tokens = [GlobalSettings.allSoundsToken, GlobalSettings.quickMixToken]
+    // First set an empty list, then the target, so the target snapshot differs
+    // from the last publish and is guaranteed to write.
+    settings.setStarredItems([])
+    settings.setStarredItems(tokens)
+    #expect(WidgetStateStore.current().favorites.map(\.token) == [GlobalSettings.allSoundsToken])
+  }
+
+  /// A starred Quick Mix stays off the Favorites widget. Its tile would enter
+  /// Quick Mix with no sounds and stop what's playing.
+  @Test func favoritesLeaveOutQuickMix() {
+    // Empty first, so the target differs from the last publish and writes.
+    settings.setStarredItems([])
+    settings.setStarredItems([GlobalSettings.quickMixToken, GlobalSettings.allSoundsToken])
+    #expect(WidgetStateStore.current().favorites.map(\.token) == [GlobalSettings.allSoundsToken])
+  }
+}

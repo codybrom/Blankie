@@ -4,12 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Obsolete-feature keys must be swept on every launch, independent of the
-//  one-time unified migration — so a user who migrated on an earlier build
-//  still gets stale values (e.g. the removed appearance picker) cleaned up.
-//
-//  Serialized + class-based: writes real defaults keys; snapshot/restore guards
-//  the user's data.
+//  Obsolete-feature keys are swept on every launch, even after the one-time migration.
+//  Serialized: writes real defaults keys. The snapshot restores the user's values.
 //
 
 import Foundation
@@ -23,12 +19,11 @@ import Testing
   ])
 
   init() { snapshot.clear() }
-  deinit { snapshot.restore() }
+  isolated deinit { snapshot.restore() }
 
   @Test func obsoleteKeysPurgedEvenAfterMigrationCompleted() {
-    // Simulate a user who already completed the one-time migration…
+    // Migration already completed, but stale keys for removed features remain.
     UserDefaults.shared.set(true, forKey: "unifiedMigrationCompleted")
-    // …but still has stale keys for removed features.
     UserDefaults.shared.set("dark", forKey: "appearanceMode")  // removed in 2.0 (dark-only)
     UserDefaults.standard.set(true, forKey: "hideInactiveSounds")  // removed in 1.1
 

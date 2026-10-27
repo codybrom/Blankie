@@ -139,7 +139,7 @@ const sections = CATEGORIES.map((category) => ({
   </section>
 
   <script>
-    // Category bar = jump links. Highlight the section currently in view.
+    // The category bar's jump links highlight the section in view.
     document.addEventListener("DOMContentLoaded", () => {
       const links = document.querySelectorAll<HTMLAnchorElement>("#gxnav a");
       const byCat = new Map<string, HTMLAnchorElement>();

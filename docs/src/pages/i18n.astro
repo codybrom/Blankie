@@ -7,15 +7,14 @@ import { Card } from "@/components/ui/card";
 
 const title = "Translation Status";
 
-// Define types for the language data structure
 interface StringStats {
   totalStrings: number;
-  translatedStrings: number; // Finalized/reviewed strings
-  needsReviewStrings: number; // Strings that have translations but need review
-  untranslatedStrings: number; // Strings that haven't been translated at all
-  translationPercentage: number; // Percentage of finalized strings
-  needsReviewPercentage: number; // Percentage of strings needing review
-  untranslatedPercentage: number; // Percentage of strings not translated
+  translatedStrings: number; // Finalized (reviewed) strings
+  needsReviewStrings: number; // Translated but awaiting review
+  untranslatedStrings: number;
+  translationPercentage: number; // Finalized strings only
+  needsReviewPercentage: number;
+  untranslatedPercentage: number;
 }
 
 interface LanguageData {
@@ -26,10 +25,8 @@ interface LanguageData {
   statistics: Record<string, StringStats>;
 }
 
-// Fetch the languages.json data at build time
 const languageData = languagesJson as unknown as LanguageData;
 
-// Sort languages by native language name (ascending)
 const sortedLanguages = Object.entries(languageData.statistics).sort(
   ([langCodeA], [langCodeB]) => {
     const nameA = getNativeLanguageName(langCodeA);
@@ -40,12 +37,12 @@ const sortedLanguages = Object.entries(languageData.statistics).sort(
 
 const extractionTimestamp = languageData.metadata.extractedAt;
 
-// Function to calculate combined progress (translated + needs review)
+// Translated plus needs-review percentage.
 function getCombinedProgress(stats: StringStats): number {
   return stats.translationPercentage + stats.needsReviewPercentage;
 }
 
-// Status accent (left border) color for each language card
+// Left-border accent color for a language card.
 function getAccentClass(stats: StringStats): string {
   const combinedProgress = getCombinedProgress(stats);
 
@@ -56,7 +53,6 @@ function getAccentClass(stats: StringStats): string {
   return "border-fg-3/50";
 }
 
-// Function to determine the status text based on combined progress
 function getStatusText(stats: StringStats): string {
   const { translationPercentage, needsReviewPercentage } = stats;
   const combinedProgress = translationPercentage + needsReviewPercentage;
@@ -85,7 +81,6 @@ function getStatusText(stats: StringStats): string {
   return "Not Started";
 }
 
-// Badge variant for each language's status
 function getStatusVariant(stats: StringStats): LanguageRow["statusVariant"] {
   if (stats.translationPercentage >= 90) return "default";
   if (stats.translationPercentage >= 70) return "secondary";
@@ -93,7 +88,6 @@ function getStatusVariant(stats: StringStats): LanguageRow["statusVariant"] {
   return "outline";
 }
 
-// Pre-compute display-ready rows for the stats table
 const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
   langCode,
   title:
@@ -348,12 +342,10 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 </Layout>
 
 <script>
-  // Handle dropdown functionality
   const dropdownButton = document.querySelector(".dropdown button");
   const dropdownMenu = document.querySelector(".dropdown-menu");
 
   if (dropdownButton && dropdownMenu) {
-    // Toggle dropdown
     dropdownButton.addEventListener("click", (e) => {
       e.stopPropagation();
       const isExpanded = dropdownMenu.classList.contains("hidden");
@@ -364,19 +356,16 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
       );
     });
 
-    // Close dropdown when clicking outside
     document.addEventListener("click", () => {
       dropdownMenu.classList.add("hidden");
       dropdownButton.setAttribute("aria-expanded", "false");
     });
 
-    // Prevent closing when clicking inside dropdown
     dropdownMenu.addEventListener("click", (e) => {
       e.stopPropagation();
     });
   }
 
-  // Add local time conversion
   const localTimeElement = document.getElementById("localTime");
   if (localTimeElement) {
     const timestamp = localTimeElement.getAttribute("data-timestamp");

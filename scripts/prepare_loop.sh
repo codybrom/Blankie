@@ -82,7 +82,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# If no input provided, process all unprocessed files in AnimatedArtwork
+# No input: batch every source video in AnimatedArtwork that's missing an output.
 if [[ -z "$INPUT" ]]; then
   SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
   PROJECT_DIR=$(dirname "$SCRIPT_DIR")
@@ -93,22 +93,18 @@ if [[ -z "$INPUT" ]]; then
     exit 1
   fi
 
-  # Find all video files that don't have all three outputs (.mov, .jpg, and Square.jpg)
-  # Only use .mp4 files as source (skip .mov files - they are outputs)
   FILES_TO_PROCESS=()
   while IFS= read -r -d '' file; do
     basename=$(basename "$file")
     name="${basename%.*}"
     ext="${basename##*.}"
 
-    # Only process .mp4 files (and other source formats), skip .mov files
+    # .mov files are outputs, so skip them.
     if [[ "$ext" == "mov" ]]; then
       continue
     fi
 
-    # Reprocess if any expected output is missing. With --square that includes
-    # the square loop, so a source that already has the other three outputs
-    # still gets picked up to generate <name>Square.mov.
+    # With --square, a missing <name>Square.mov also counts as a missing output.
     if [[ ! -f "$ARTWORK_DIR/$name.mov" ]] || [[ ! -f "$ARTWORK_DIR/$name.jpg" ]] \
       || [[ ! -f "$ARTWORK_DIR/${name}Square.jpg" ]] \
       || { [[ "$SQUARE_VIDEO" -eq 1 ]] && [[ ! -f "$ARTWORK_DIR/${name}Square.mov" ]]; }; then
@@ -127,7 +123,6 @@ if [[ -z "$INPUT" ]]; then
   done
   echo ""
 
-  # Process each file
   for file in "${FILES_TO_PROCESS[@]}"; do
     basename=$(basename "$file")
     name="${basename%.*}"
@@ -136,7 +131,7 @@ if [[ -z "$INPUT" ]]; then
     echo "📹 Processing: $basename"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-    # Recursively call this script with the file as input
+    # Re-run this script on the single file.
     SQUARE_ARGS=()
     [[ "$SQUARE_VIDEO" -eq 1 ]] && SQUARE_ARGS+=(--square)
     "$0" "$file" -w "$WIDTH" -h "$HEIGHT" --crf "$CRF" --anchor "$ANCHOR" "${SQUARE_ARGS[@]}"
@@ -182,9 +177,7 @@ case "$ANCHOR" in
     ;;
 esac
 
-# Calculate 3:4 crop dimensions (portrait)
-# crop_w = min(iw, ih * 3/4)
-# crop_h = crop_w * 4/3
+# 3:4 portrait crop: crop_w = min(iw, ih * 3/4), crop_h = crop_w * 4/3
 CROP_W="min(iw\\,ih*3/4)"
 CROP_H="(${CROP_W})*4/3"
 

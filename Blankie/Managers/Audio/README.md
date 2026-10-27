@@ -1,6 +1,6 @@
 # Audio Managers
 
-Everything audio lives in this folder. `AudioManager` (plus its focused extensions) is the playback authority, `AudioEngineManager` owns the single shared `AVAudioEngine` and its graph, `SoundPlayer` is the per-sound engine unit behind each `Sound`, `NowPlayingManager` publishes to the system transport surfaces, and `AudioSessionManager` holds the iOS session policy.
+Everything audio lives in this folder. `AudioManager` (plus its focused extensions) is the playback authority, `AudioEngineManager` owns the single shared `AVAudioEngine` and its graph, `SoundPlayer` is the per-sound engine unit behind each `Sound`, the Now Playing backend behind `NowPlayingPublishing` publishes to the system transport surfaces, and `AudioSessionManager` holds the iOS session policy.
 
 ## Now Playing system behavior (iOS)
 
@@ -21,7 +21,7 @@ Everything below was established on a physical device. None of it is documented 
 
 ### How Blankie stays in sync
 
-Four cooperating mechanisms. All of them are required.
+Four cooperating mechanisms. All of them are required. Mechanisms 2 and 3 are the MediaPlayer backend's (`NowPlayingManager`) answer to rate derivation and per-key publishing, and apply only below OS 27. Mechanisms 1 and 4 are engine concerns that both backends rely on.
 
 1. **Idle the engine on full pause.** `AudioEngineManager.pauseIfIdle()` pauses hardware I/O once no registered player is rendering (preview mode and the mid-fade play-rescue keep it running). The graph stays intact and `ensureRunning()` restarts it on the next play. The audio session intentionally stays active so the system controls remain visible.
 2. **Publish nothing while a pause fade renders.** `NowPlayingManager.performNowPlayingUpdate` holds all writes while `!isPlaying && engine.isRunning`, because any write in that window re-asserts "playing." `AudioManager.scheduleEngineIdlePause` does one full republish after the engine idles.
@@ -35,6 +35,61 @@ Four cooperating mechanisms. All of them are required.
 - **Shorter audible ramps**: 0.5s and 0.15s remote-pause fades both danced in Control Center. Only a zero-length cut is stable.
 - **A rate-only "reassert" write after the engine idles**: not enough on its own while other writes still go out per-key.
 
-### Future
+## Interruptions and route changes (iOS / visionOS)
 
-iOS 27's NowPlaying framework (`MediaSession` / `MediaSessionRepresentable` / `MediaPlaybackSnapshot`) replaces rate-derivation with declared, typed state (`.playing()` / `.paused`) observed from an `@Observable` model. Apple's WWDC26 demo for it is an ambient-sounds engine app. Not even joking. I seriously couldn't make this up if I wanted. Sherlock who? Anyways, in iOS 27, `duration: .continuous` is also the sanctioned way to mark continuous audio that needs no scrubber. Adoption should be availability-gated; the mechanisms above remain the iOS 26 path. `MPNowPlayingSession` (iOS 16+) is not an alternative. It is `AVPlayer`-centric and publishes through the same dictionary mechanism.
+Every playback activation, including a sound-editor preview, installs the session observers before activating audio. Interruption begin pauses synchronously without a fade and remembers whether global playback was active. Interruption end consumes that remembered state exactly once and resumes only with the system's `shouldResume` hint. Explicit play or pause requests supersede that recovery, so Siri pause, sleep-timer expiry and headphone removal cannot be undone by a later interruption-end notification. Headphone removal stops previews too, even when global playback was already paused.
+
+A media-services reset rebuilds the engine, unloads the old players, restores session category/options without activating it, and clears pending recovery while staying paused. The next explicit play activates the restored session. Now Playing publishes the ordinary paused/playing states on both backends. There is not a separate iOS/iPadOS/macOS 27 interrupted state.
+
+## Now Playing on OS 27
+
+OS 27's NowPlaying framework replaces rate derivation with declared, typed state read from an `@Observable` model, so none of the mechanisms above are needed there. Both paths ship: the deployment targets stay on iOS 26.4 / macOS 26, and the 26 backend is unchanged. (`MPNowPlayingSession`, iOS 16+, is not an alternative: it is `AVPlayer`-centric and publishes through the same dictionary mechanism.)
+
+### The shape
+
+`NowPlayingPublishing` is the surface `AudioManager` publishes through, so no call site knows which backend it holds.
+
+- `NowPlayingManager` (with `+RemoteCommands`, `+Artwork`, `+AnimatedArtwork`, `+Helpers`) is the MediaPlayer backend, used below 27.
+- `MediaSessionNowPlaying` (with `+Artwork`) is the NowPlaying-framework backend, used on 27 and later. It resolves what to show, writes it to `NowPlayingSessionModel` — the `@Observable` `MediaSessionRepresentable` the framework reads — and keeps one `MediaSession` published.
+- `NowPlayingDisplay` holds the display rules both backends share: title and subtitle, the sound-name summary, the drawn fallback images, and the animated-artwork gate. `NowPlayingSessionMapping` holds the 27 path's pure mappings (content ids, artwork ids, playback, sleep-timer timing, ratio selection) with no framework import, so they compile and are tested without the 27 SDK. `AnimatedArtworkResolver` resolves a preset's loop video and preview on iOS for both backends.
+- `AudioManager.init` picks the backend on the main actor under `#available` and logs the choice through `Logger.nowPlaying` ("Now Playing backend is MediaSession" / "… is MediaPlayer").
+
+Apple documents that using `MPNowPlayingInfoCenter` or `MPRemoteCommandCenter` alongside the NowPlaying framework for local playback is undefined behavior. The 27 backend therefore calls neither: remote commands are declared per backend, and even the aspect-ratio probe in `AnimatedArtworkKey.preferredForDevice` asks whichever framework owns the card — `AnimatedArtwork.compatibleAspectRatios` on 27, `MPNowPlayingInfoCenter.supportedAnimatedArtworkKeys` below it.
+
+### Session lifetime
+
+The `MediaSession` is built on the first publish while playing, then `requestToBecomeApplicationPrimary()`. Creation alone publishes nothing, so the request is deliberately deferred until playback has started: every play path has run `setupAudioSessionForPlayback()` by then, which is the ordering Apple asks for, and it keeps the backend from ever activating or reconfiguring the audio session itself — an exclusive activation at first publish would interrupt other apps' audio on a paused launch. A failed request drops the session so the next playing publish retries. The session survives pausing. Only `clear()` drops it, and the next playing publish rebuilds it. `requestToBecomeSystemPrimary()` is deliberately not used: Apple documents it as not required for local playback unless an app needs to take over as the system primary from another session, it has to be made in the foreground, and it is iOS-only (`@available(macOS, unavailable)`). Blankie never takes over another app's session, so it stays unused.
+
+### Declared state
+
+`MediaPlaybackSnapshot` carries `.playing()` or `.paused`. The state is declared, not inferred from hardware I/O. **Show Playback as Continuous** defaults on for OS 27, publishing `MediaDuration.continuous` and hiding loop progress in system Now Playing and the app's single-sound and preset players. Turning it off publishes the single sound's loop or the longest selected loop as finite content. A 0.25-second poll detects wraps and duration changes. Only those events re-anchor the elapsed time, while the system extrapolates between anchors. Pausing captures the current position and stops the poll.
+
+A sleep timer always takes priority and remains visible in either mode. Timer changes arrive through `Observations` on `isTimerActive` and `selectedDuration`, not a poll. Both timer and loop snapshots carry `elapsedTime` and `timestamp` captured together. Timed content uses a `:timed:<seconds>` id suffix, and loop progress uses `:loop:<duration>`. The system reads duration once per content id, so switching between continuous, loop and timer modes must change the id, while loop wraps retain it. Changing the preference refreshes timing immediately. OS 26 keeps the MediaPlayer behavior.
+
+### Publish cadence
+
+`publishInfo` is debounced 0.1 s, the same interval the 26 backend has always used, and the newest call wins. One preset switch publishes six times while its sounds settle (name first, then the sound summary, then the playing state), and every model write is a change the framework forwards. Pushed unbuffered from a run of remote next presses, that tripped MediaRemote's throttle ("Application exceeded audio metadata throttle limit"), after which the system drops updates, artwork included, and a card can arrive with its title but no still. `updatePlaybackState` is not debounced, so a remote pause still lands at once.
+
+### Artwork, entities, commands
+
+The system pulls artwork through the `Artwork(id:)` and `AnimatedArtwork(id:)` providers on its own schedule and caches by id, never asking for a cached id again. The still is decided in the same pass as the title, stored artwork included (a synchronous read of the SwiftData row or its app-group mirror), because the system reads an item's artwork once and a still that arrives later is never shown. `NowPlayingSessionMapping.artworkID` therefore encodes everything that changes the rendered image: the source (stored, cached file, bundled, single sound, drawn fallback) plus the accent color and the icons a montage fallback draws. Rebuilds are gated on the preset or single sound actually changing, because re-assigning artwork restarts the animated loop. The providers are `@Sendable` and capture only `Data` and `URL`.
+
+Animated artwork is declared per aspect ratio: the ratios this device reports through `AnimatedArtwork.compatibleAspectRatios`, intersected with the ones we have both a video and a preview for. As on 26, only the preferred crop is downloaded (`downloadIfMissing: key == preferredForDevice`). The other is published only when it is already local, and a pack still downloading leaves the current card alone until `onDownloaded` comes back. The user's setting, Reduce Motion and Low Power Mode gate it exactly as on 26.
+
+`GenericContent.appEntityIdentifiers` — from the `_NowPlaying_AppIntents` cross-import overlay, which is why those files `import AppIntents` beside `import NowPlaying` — points the card at `SoundEntity` while a single sound plays and `PresetEntity` otherwise. Quick Mix is not a preset and points at nothing. Commands are `MediaCommand`s on the model: play, pause, togglePlayPause, and next/previous `.enabled(navigationEnabled)`, fed by `AudioManager.canNavigateNextPrevious`.
+
+### Two guards, both needed
+
+Every 27-only file is wrapped whole in `#if canImport(NowPlaying)`, because no generally available CI runner ships the 27 SDK (a file that also serves 26, like `BlankieAnimatedArtwork.swift`, guards just its import and its use sites). Use sites add `if #available(iOS 27, macOS 27, visionOS 27, *)`, because the deployment target stays on 26 and the choice is a runtime one. Files with no framework import — the protocol, the mappings, the shared display rules — stay unconditional. Linking needs nothing: NowPlaying weak-links automatically.
+
+Weak linking has a cost. On an OS without NowPlaying.framework the symbols resolve to null, and a stored property whose type is a framework struct makes the enclosing type's metadata crash whenever something realizes every Objective-C class (XCTest does at startup). So no framework struct is ever stored: `NowPlayingSessionModel` keeps `artwork` and `animatedArtwork` in type-erased `Any?` boxes behind computed accessors, everything else is stored as Blankie's own value types (`SessionPlayback`, `SessionProgress`, `SessionAspectRatio`), and framework values are built inside computed properties or local scope. A class reference such as `MediaSession<Model>?` is a plain pointer and is safe.
+
+The widget extension never compiles the 27 backend — `MediaSession` is unavailable in app extensions — so the backend choice is also behind `!WIDGET_EXTENSION` and the widget always gets `NowPlayingManager`.
+
+### What the 27 path drops
+
+The fade hold, the atomic dictionary merge and the rate reassert after `pauseIfIdle` are MediaPlayer-backend answers to rate derivation and per-key publishing. None of them exists on 27. Continuous mode also needs no loop-progress poll. Opting out enables the wrap-detection poll described above. `AudioEngineManager.pauseIfIdle()` itself stays. Idling the hardware once nothing renders is an engine concern, not a Now Playing one.
+
+### Verification
+
+iOS 27 was exercised on the `iPhone 18 Pro` simulator (the backend log line, clean publishes) and in the test suite. macOS 27 is compile-verified only: the host runs macOS 26.6.2, so the 26 path is what executes there. The iOS 26 runtime check still needs an iOS 26 simulator runtime or a device. On hardware, check the Lock Screen, Control Center, AirPods and CarPlay Simulator transports. Also confirm that animated artwork comes up tall on iPhone and square on iPad, and note the value of `AnimatedArtwork.compatibleAspectRatios`.

@@ -43,10 +43,9 @@ import os
         object: nil)
     }
 
-    /// Only the real app window should be tracked. Popovers, menus, and
-    /// tooltips are borderless `NSWindow`s; reacting to them re-rendered the
-    /// open popover (dropping native slider knobs) and corrupted the saved
-    /// window frame.
+    /// Only the real app window is tracked. Popovers, menus and tooltips are
+    /// borderless `NSWindow`s. Reacting to them re-renders an open popover
+    /// (dropping native slider knobs) and corrupts the saved window frame.
     private func isMainWindow(_ window: NSWindow) -> Bool {
       window.styleMask.contains(.titled)
     }
@@ -66,8 +65,13 @@ import os
     private func debouncedSaveWindowFrame(_ window: NSWindow) {
       debounceTimer?.invalidate()
       debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
-        self?.saveWindowFrame(window)
+        MainActor.assumeIsolated { self?.saveWindowFrame(window) }
       }
+    }
+
+    /// Saves a pending debounced frame now (the app is quitting).
+    func flushPendingSave() {
+      debounceTimer?.fire()
     }
 
     private func saveWindowFrame(_ window: NSWindow) {

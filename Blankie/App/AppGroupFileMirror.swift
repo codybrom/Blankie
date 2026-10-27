@@ -8,15 +8,11 @@
 import Foundation
 import os
 
-/// Serializes durable file-mirror I/O in the shared app-group container so
-/// concurrent writes to the same path can't interleave or land out of order,
-/// and keeps that I/O off the main actor. Owns the low-level read/write/remove
-/// primitives shared by the preset-artwork and custom-sound mirrors; each
-/// manager still computes its own URLs and decides what to mirror.
+/// Serializes app-group file-mirror I/O off the main actor so writes to one path
+/// can't interleave. Shared by the preset-artwork and custom-sound mirrors.
 actor AppGroupFileMirror {
   static let shared = AppGroupFileMirror()
 
-  /// Atomically write raw data, replacing any existing file.
   func write(_ data: Data, to url: URL) {
     do {
       try AppGroupConfiguration.writeProtectionlessFile(data, to: url)
@@ -27,8 +23,8 @@ actor AppGroupFileMirror {
     }
   }
 
-  /// Encode `value` as stable (sorted-key) JSON and write only when the on-disk
-  /// bytes differ — the read/compare happens here so it can't race a write.
+  /// Writes sorted-key JSON only when the on-disk bytes differ. The compare runs
+  /// inside the actor so it can't race a write.
   func writeJSONIfChanged<T: Encodable & Sendable>(_ value: T, to url: URL) {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]

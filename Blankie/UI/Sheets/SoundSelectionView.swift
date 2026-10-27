@@ -66,8 +66,8 @@ struct SoundSelectionView: View {
         ScrollView {
           LazyVStack(spacing: 0) {
             ForEach(orderedSounds, id: \.id) { sound in
-              // Wrap row + inter-row divider so each ForEach element yields one
-              // view (constant child count), instead of a bare trailing if.
+              // Wrap row and inter-row divider so each ForEach element yields one
+              // view (constant child count).
               VStack(spacing: 0) {
                 macRow(for: sound)
                 if sound.id != orderedSounds.last?.id {
@@ -94,74 +94,66 @@ struct SoundSelectionView: View {
 
     private func macRow(for sound: Sound) -> some View {
       let isSelected = selectedSounds.contains(sound.fileName)
-      return Button {
-        handleSoundToggle(sound)
-      } label: {
-        HStack(spacing: 12) {
-          Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-            .font(.title3)
-            .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
-            .frame(width: 24)
-            .accessibilityHidden(true)
-
-          Label {
-            Text(sound.localizedTitle)
-              .foregroundStyle(.primary)
-          } icon: {
-            Image(systemName: sound.systemIconName)
-              .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+      return HStack(spacing: 12) {
+        Button {
+          handleSoundToggle(sound)
+        } label: {
+          HStack(spacing: 12) {
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+              .font(.title3)
+              .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+              .frame(width: 24)
+              .accessibilityHidden(true)
+            soundLabel(for: sound, isSelected: isSelected)
+            Spacer(minLength: 0)
           }
-
-          Spacer()
-
-          SoundCreditInfoButton(sound: sound, accent: editingPreset?.accentColor)
+          .contentShape(Rectangle())
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .contentShape(Rectangle())
-        .background(isSelected ? AnyShapeStyle(.tint.opacity(0.12)) : AnyShapeStyle(.clear))
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(sound.localizedTitle))
+        .accessibilityValue(Text(verbatim: sound.localizedSubtitle ?? ""))
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        .accessibilityHint("Adds or removes this sound from the preset")
+
+        SoundCreditInfoButton(sound: sound, accent: editingPreset?.accentColor)
       }
-      .buttonStyle(.plain)
-      .accessibilityLabel(Text(sound.localizedTitle))
-      .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-      .accessibilityHint("Adds or removes this sound from the preset")
+      .padding(.horizontal, 16)
+      .padding(.vertical, 10)
+      .background(isSelected ? AnyShapeStyle(.tint.opacity(0.12)) : AnyShapeStyle(.clear))
+      .accessibilityElement(children: .contain)
     }
   #else
     private func soundRowContent(for sound: Sound) -> some View {
-      HStack(spacing: 12) {
-        let isRowSelected = selectedSounds.contains(sound.fileName)
-
-        Label {
-          Text(sound.localizedTitle)
-        } icon: {
-          Image(systemName: sound.systemIconName)
-            .foregroundStyle(isRowSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.white))
+      let isSelected = selectedSounds.contains(sound.fileName)
+      return HStack(spacing: 12) {
+        Button {
+          handleSoundToggle(sound)
+        } label: {
+          HStack(spacing: 12) {
+            soundLabel(for: sound, isSelected: isSelected)
+            Spacer(minLength: 0)
+            Image(systemName: "checkmark")
+              .foregroundStyle(.tint)
+              .opacity(isSelected ? 1 : 0)
+              .accessibilityHidden(true)
+          }
+          .contentShape(Rectangle())
         }
-
-        Spacer()
+        .buttonStyle(.borderless)
+        .accessibilityLabel(Text(sound.localizedTitle))
+        .accessibilityValue(Text(verbatim: sound.localizedSubtitle ?? ""))
+        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        .accessibilityHint("Adds or removes this sound from the preset")
 
         SoundCreditInfoButton(sound: sound, accent: editingPreset?.accentColor)
-
-        Image(systemName: "checkmark")
-          .foregroundStyle(.tint)
-          .opacity(isRowSelected ? 1 : 0)
-          .accessibilityHidden(true)
       }
+      .accessibilityElement(children: .contain)
     }
 
     var body: some View {
       List {
         ForEach(orderedSounds, id: \.id) { sound in
           soundRowContent(for: sound)
-            .contentShape(Rectangle())
-            .onTapGesture {
-              handleSoundToggle(sound)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(Text(sound.localizedTitle))
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAddTraits(selectedSounds.contains(sound.fileName) ? [.isSelected] : [])
-            .accessibilityHint("Adds or removes this sound from the preset")
         }
       }
       .listStyle(.plain)
@@ -176,4 +168,22 @@ struct SoundSelectionView: View {
       .tint(GlobalSettings.shared.customAccentColor ?? .accentColor)
     }
   #endif
+
+  private func soundLabel(for sound: Sound, isSelected: Bool) -> some View {
+    Label {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(sound.localizedTitle)
+          .foregroundStyle(.primary)
+        if let subtitle = sound.localizedSubtitle {
+          Text(subtitle)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+        }
+      }
+    } icon: {
+      Image(systemName: sound.systemIconName)
+        .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+    }
+  }
 }

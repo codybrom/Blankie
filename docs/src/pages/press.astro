@@ -51,7 +51,7 @@ const quick: [string, string][] = [
 // Fact rows: a bright primary value plus an optional muted continuation.
 const facts: { t: string; d?: string; m?: string }[] = [
   { t: "App name", d: "Blankie" },
-  { t: "Version", d: "2.0.1" },
+  { t: "Version", d: "2.1.0" },
   { t: "Developer", d: "Cody Bromley", m: "(independent developer)" },
   {
     t: "Price",
@@ -59,7 +59,7 @@ const facts: { t: string; d?: string; m?: string }[] = [
     m: "No ads, in-app purchases, subscriptions or accounts.",
   },
   { t: "Platforms", d: "iPhone, iPad, Mac", m: "(CarPlay supported)" },
-  { t: "Requires", d: "iOS 26 or later · macOS 26 or later" },
+  { t: "Requires", d: "iOS/iPadOS 26.4 or later · macOS 26 or later" },
   {
     t: "First released",
     d: "April 2025 on the Mac App Store",
@@ -100,6 +100,8 @@ const highlights = [
   "Every feature and sound free forever, with no ads, subscriptions or trackers.",
   "Works 100% offline",
   "Built in sleep timer",
+  "Home Screen widgets on iPhone and iPad, plus Siri and Shortcuts actions.",
+  "Find presets and sounds in Spotlight on Mac, iPhone and iPad.",
   "Fully accessible with VoiceOver and Dynamic Type.",
   "Open source and actively maintained with contributors worldwide.",
 ];
@@ -418,9 +420,8 @@ const assetGroups: { title: string; items: Asset[] }[] = [
         </div>
         {
           assetGroups.map((group) => {
-            // A group whose tiles mix orientations (e.g. iPad: a landscape
-            // window shot plus portrait store images) packs cleaner as masonry;
-            // single-orientation groups lay out as an even grid.
+            // Mixed-orientation groups (iPad: landscape window shot plus portrait
+            // store images) pack better as masonry. The rest use an even grid.
             const mixed =
               group.items.some((i) => i.tall) &&
               group.items.some((i) => !i.tall);

@@ -24,7 +24,6 @@ struct SpectrumColorPicker: View {
     .yellow, .brown,
   ]
 
-  // Initialize slider value based on selected color
   private func updateSliderValue() {
     if let selectedColor = selectedColor,
       let accentColor = spectrumColors.firstIndex(where: { $0.color == selectedColor })
@@ -36,14 +35,12 @@ struct SpectrumColorPicker: View {
     currentColorName = currentColor.name
   }
 
-  // Get color for current slider value
   private var currentColor: AccentColor {
     let index = Int(round(sliderValue))
     let clampedIndex = max(0, min(index, spectrumColors.count - 1))
     return spectrumColors[clampedIndex]
   }
 
-  // Determine if text should be white or black based on color brightness
   private var textColor: Color {
     // For lighter colors use black text, for darker colors use white
     switch currentColor {
@@ -54,15 +51,12 @@ struct SpectrumColorPicker: View {
     }
   }
 
-  // Get a darker version of the current color for the border
   private var borderColor: Color {
     (currentColor.color ?? .blue).opacity(0.6)
   }
 
-  // Gradient track background
   @ViewBuilder
   private func gradientTrack(geometry: GeometryProxy) -> some View {
-    // Glass-like track with material base and gradient tint
     let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
 
     ZStack {
@@ -117,7 +111,6 @@ struct SpectrumColorPicker: View {
     .animation(.easeInOut(duration: 0.18), value: isDragging)
   }
 
-  // Color chip overlay
   @ViewBuilder
   private func colorChip(geometry: GeometryProxy) -> some View {
     if showingChip {
@@ -144,7 +137,7 @@ struct SpectrumColorPicker: View {
     }
   }
 
-  // Base slider: native tick marks on OSes that support them, plain slider otherwise.
+  // Native Slider with a tick per spectrum color.
   @ViewBuilder
   private var baseSlider: some View {
     let onEditing: (Bool) -> Void = { editing in
@@ -189,7 +182,6 @@ struct SpectrumColorPicker: View {
     )
   }
 
-  // Color slider with ticks
   @ViewBuilder
   private var slider: some View {
     baseSlider
@@ -198,16 +190,14 @@ struct SpectrumColorPicker: View {
       }
       .tint(.clear)
       #if os(macOS)
-        // macOS renders Slider labels inline (iOS keeps them a11y-only),
-        // which pushed the gradient track behind the label text. The form
-        // supplies its own heading; keep the label for VoiceOver only.
+        // macOS renders Slider labels inline, over the gradient track. The form
+        // supplies its own heading, so the label stays VoiceOver-only.
         .labelsHidden()
       #endif
       .frame(height: 44)
       .accessibilityValue(Text(currentColor.name))
   }
 
-  // Track overlay view
   @ViewBuilder
   private var trackOverlay: some View {
     GeometryReader { geometry in
@@ -223,12 +213,10 @@ struct SpectrumColorPicker: View {
   var body: some View {
     VStack(spacing: 4) {
       ZStack {
-        // Always show gradient background
         GeometryReader { geometry in
           ZStack {
             gradientTrack(geometry: geometry)
 
-            // Show color chip overlay when dragging
             colorChip(geometry: geometry)
 
           }
@@ -246,6 +234,8 @@ struct SpectrumColorPicker: View {
     .onAppear {
       updateSliderValue()
     }
+    // Two-way with the slider's onChange (intentional): outside color changes move
+    // the slider unless a drag is in progress.
     .onChange(of: selectedColor) { _, _ in
       if !showingChip {
         updateSliderValue()
@@ -253,7 +243,6 @@ struct SpectrumColorPicker: View {
     }
   }
 
-  // Handle slider value changes
   private func handleSliderValueChange(_ newValue: Double) {
     // Snap to discrete values
     let rounded = round(newValue)
@@ -261,10 +250,8 @@ struct SpectrumColorPicker: View {
       sliderValue = rounded
     }
 
-    // Update color name for display
     currentColorName = currentColor.name
 
-    // Update color in real-time while dragging
     if isDragging {
       selectedColor = currentColor.color
 

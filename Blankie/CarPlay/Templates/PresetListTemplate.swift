@@ -19,7 +19,6 @@ import os
         sections: []
       )
 
-      // Set tab image
       template.tabImage = UIImage(systemName: "list.bullet")
 
       updateTemplate(template)
@@ -27,7 +26,6 @@ import os
     }
 
     static func updateTemplate(_ template: CPListTemplate) {
-      // Safety check for initialization
       guard !PresetManager.shared.isLoading else {
         Logger.carPlay.debug(
           "PresetListTemplate: PresetManager still loading, showing loading state")
@@ -40,15 +38,15 @@ import os
       let customPresets = PresetManager.shared.presets.filter { !$0.isDefault }
       let defaultPreset = PresetManager.shared.presets.first { $0.isDefault }
 
-      // The Presets tab is the full browse list — every preset plus All Sounds.
-      // Recent and Favorites live on the Home tab, so there's no dedup here.
+      // The full browse list: every preset plus All Sounds. Recent and Favorites
+      // are on the Home tab, so nothing is deduplicated.
       var sections: [CPListSection] = []
 
       if customPresets.isEmpty {
         addEmptyStateSection(to: &sections, defaultPreset: defaultPreset)
       } else {
-        // All Blankie Sounds is a fixed row at the top (as in the in-app list);
-        // the named presets follow, alphabetized with the A–Z scrubber.
+        // All Blankie Sounds stays on top, as in the app. Named presets follow
+        // alphabetically.
         addAllSoundsSection(to: &sections, defaultPreset: defaultPreset)
         addCustomPresetsSection(to: &sections, customPresets: customPresets)
       }
@@ -56,8 +54,7 @@ import os
       template.updateSections(sections)
     }
 
-    // Shared row builders — also used by HomeListTemplate's Now Playing and
-    // Favorites sections. Internal (not private) so Home can compose them.
+    // Row builders shared with HomeListTemplate, so they're internal.
     static func createPresetListItem(_ preset: Preset) -> CPListItem {
       let currentPresetId = PresetManager.shared.currentPreset?.id
       let isActive = preset.id == currentPresetId
@@ -68,42 +65,12 @@ import os
         image: getPresetArtwork(preset)
       )
 
-      // Leading "now playing" indicator marks the active item.
+      // Leading "now playing" indicator marks the active item while it plays.
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
-        Task {
-          do {
-            await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
-            }
-
-            // Allow audio system to process mode exits before applying new preset
-            await Task.yield()
-
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              // Ensure playback starts
-              AudioManager.shared.setGlobalPlaybackState(true)
-              CarPlayInterfaceController.shared.updateAllTemplates()
-              // Navigate to Now Playing screen
-              CarPlayInterfaceController.shared.showNowPlaying()
-            }
-          } catch {
-            Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
-          }
-          completion()
-        }
+        playPresetFromCar(preset, completion: completion)
       }
 
       return item
@@ -120,42 +87,41 @@ import os
       )
 
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
-        Task {
-          do {
-            await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
-            }
-
-            // Allow audio system to process mode exits before applying new preset
-            await Task.yield()
-
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              AudioManager.shared.setGlobalPlaybackState(true)
-              CarPlayInterfaceController.shared.updateAllTemplates()
-              // Navigate to Now Playing screen
-              CarPlayInterfaceController.shared.showNowPlaying()
-            }
-          } catch {
-            Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
-          }
-          completion()
-        }
+        playPresetFromCar(preset, completion: completion)
       }
 
       return item
+    }
+
+    /// Applies a preset row tapped in the car. Drops the tap if the car went away
+    /// before it ran, and re-reads the preset by id since the row may predate a
+    /// phone-side edit or delete.
+    private static func playPresetFromCar(_ preset: Preset, completion: @escaping () -> Void) {
+      Task {
+        do {
+          let livePreset = await MainActor.run { () -> Preset? in
+            guard CarPlayInterfaceController.shared.isConnected else { return nil }
+            return PresetManager.shared.presets.first { $0.id == preset.id }
+          }
+          guard let livePreset else {
+            Logger.carPlay.debug("CarPlay: Dropped a preset tap (car gone or preset deleted)")
+            await MainActor.run { CarPlayInterfaceController.shared.updateAllTemplates() }
+            return completion()
+          }
+
+          try await MainActor.run {
+            try PresetManager.shared.playPreset(livePreset)
+            CarPlayInterfaceController.shared.updateAllTemplates()
+            CarPlayInterfaceController.shared.showNowPlaying()
+          }
+        } catch {
+          Logger.carPlay.error("CarPlay: Error applying preset: \(error, privacy: .public)")
+        }
+        completion()
+      }
     }
 
     private static func getPresetDetailText(_ preset: Preset) -> String {
@@ -163,34 +129,30 @@ import os
 
       var detailParts: [String] = []
 
-      // Add creator name first if available
       if let creator = preset.creatorName, !creator.isEmpty {
         detailParts.append(creator)
       }
 
-      // Add sound names
       if activeSounds.isEmpty {
         if detailParts.isEmpty {
           return String(localized: "No active sounds")
         }
       } else {
-        let soundNames = activeSounds.compactMap { soundState in
-          AudioManager.shared.sounds.first { $0.fileName == soundState.fileName }?.title
+        let sounds = activeSounds.compactMap { soundState in
+          AudioManager.shared.sounds.first { $0.fileName == soundState.fileName }
         }
 
-        if !soundNames.isEmpty {
-          let soundsList = soundNames.joined(separator: ", ")
-          detailParts.append(soundsList)
+        if !sounds.isEmpty {
+          detailParts.append(CarPlaySoundNames.list(sounds))
         }
       }
 
-      // Join all parts with a separator
       return detailParts.joined(separator: " • ")
     }
 
     private static func getPresetArtwork(_ preset: Preset) -> UIImage? {
-      // Real (custom or animated) artwork is pre-rasterized into a cached
-      // thumbnail by the main app whenever a preset is created or modified.
+      // The app caches a thumbnail of custom or animated artwork whenever a
+      // preset is created or modified.
       let thumbnailKey = "preset_thumb_\(preset.id.uuidString)"
       let userDefaults = AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
 
@@ -200,10 +162,8 @@ import os
         return image
       }
 
-      // No real artwork — render the same tinted FallbackArtwork the library
-      // shows for this preset (the Blankie mark for "All Blankie Sounds", a
-      // montage of its sounds otherwise) so CarPlay rows are never imageless.
-      // CarPlay templates are always built on the main thread.
+      // Otherwise render the library's FallbackArtwork. CarPlay templates are
+      // always built on the main thread.
       return MainActor.assumeIsolated { fallbackArtwork(for: preset) }
     }
 
@@ -224,16 +184,18 @@ import os
         glyphFraction = 0.44
       }
 
-      // 44pt is the CarPlay list image footprint; render at 2x for crisp glyphs.
+      // Fill the list image slot (per car, read at runtime) at the car
+      // display's scale, matching how the system scales cached thumbnails.
+      let slot = CPListItem.maximumImageSize
       let view = FallbackArtwork(
         glyph: glyph,
         accent: accent,
-        size: 44,
+        size: min(slot.width, slot.height),
         cornerRadius: 0,
         glyphFraction: glyphFraction
       )
       let renderer = ImageRenderer(content: view)
-      renderer.scale = 2
+      renderer.scale = CarPlayInterfaceController.shared.carDisplayScale
       renderer.isOpaque = true
       return renderer.uiImage
     }
@@ -241,9 +203,8 @@ import os
     private static func addCustomPresetsSection(
       to sections: inout [CPListSection], customPresets: [Preset]
     ) {
-      // Alphabetical, split into one section per first letter so CarPlay's A–Z
-      // scrubber can jump by letter. No visible headers — the index rail is the
-      // only affordance — and "#" (non-letter starts) sorts last, list-app style.
+      // One headerless section per first letter so CarPlay's index can jump by
+      // letter. "#" (names that don't start with a letter) sorts last.
       let sorted = customPresets.sorted {
         $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
       }
@@ -261,7 +222,7 @@ import os
       }
     }
 
-    /// First letter of a preset name for the A–Z index, or "#" for names that
+    /// First letter of a preset name for the section index, or "#" for names that
     /// don't start with a Latin letter (numbers, symbols, other scripts).
     private static func sectionIndexLetter(for name: String) -> String {
       guard let first = name.first(where: { !$0.isWhitespace }) else { return "#" }
@@ -308,30 +269,26 @@ import os
       )
     }
 
-    // Favorited solo sound — selecting it enters solo mode for that sound.
-    // `@MainActor` for the `creditedAuthor` lookup.
+    // A starred sound row. Selecting it plays the sound on its own. `@MainActor` for
+    // the `creditedAuthor` lookup.
     @MainActor
-    static func createSoloItem(_ sound: Sound) -> CPListItem {
-      let isActive = AudioManager.shared.soloModeSound?.id == sound.id
+    static func createSingleItem(_ sound: Sound) -> CPListItem {
+      let isActive = AudioManager.shared.singleSound?.id == sound.id
 
-      // Caption only when a custom sound credits an artist; built-in authors live
-      // in the credits screens. No generic "Custom sound" / "Solo sound" label.
+      // Caption only a custom sound that credits an artist. Built-in authors are
+      // in the credits screens.
       let item = CPListItem(
-        text: sound.title,
+        text: CarPlaySoundNames.name(of: sound),
         detailText: sound.isCustom ? sound.creditedAuthor : nil,
         image: SoundsListTemplate.getSoundImage(for: sound)
       )
 
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
         Task {
-          await MainActor.run {
-            AudioManager.shared.enterSoloMode(for: sound)
-            CarPlayInterfaceController.shared.updateAllTemplates()
-            CarPlayInterfaceController.shared.showNowPlaying()
-          }
+          await MainActor.run { SoundsListTemplate.playSingleSound(sound) }
           completion()
         }
       }
@@ -343,8 +300,7 @@ import os
       let currentPresetId = PresetManager.shared.currentPreset?.id
       let isActive = preset.id == currentPresetId
 
-      // Named and styled like any other preset row — "All Blankie Sounds" with
-      // its active sounds underneath, matching the in-app preset list.
+      // Styled like any other preset row, with its active sounds underneath.
       let item = CPListItem(
         text: preset.displayName,
         detailText: getPresetDetailText(preset),
@@ -352,41 +308,10 @@ import os
       )
 
       item.playingIndicatorLocation = .leading
-      item.isPlaying = isActive
+      item.isPlaying = isActive && AudioManager.shared.isGloballyPlaying
 
       item.handler = { _, completion in
-        Task {
-          do {
-            await MainActor.run {
-              // Exit solo mode without resuming previous sounds if active
-              // This prevents the previous preset from briefly playing
-              if AudioManager.shared.soloModeSound != nil {
-                AudioManager.shared.exitSoloModeWithoutResuming()
-              }
-
-              // Exit Quick Mix mode if active
-              if AudioManager.shared.isQuickMix {
-                AudioManager.shared.exitQuickMix()
-              }
-            }
-
-            // Allow audio system to process mode exits before applying new preset
-            await Task.yield()
-
-            try await PresetManager.shared.applyPreset(preset)
-            await MainActor.run {
-              // Ensure playback starts
-              AudioManager.shared.setGlobalPlaybackState(true)
-              CarPlayInterfaceController.shared.updateAllTemplates()
-              // Navigate to Now Playing screen
-              CarPlayInterfaceController.shared.showNowPlaying()
-            }
-          } catch {
-            Logger.carPlay.error(
-              "CarPlay: Error applying All Sounds preset: \(error, privacy: .public)")
-          }
-          completion()
-        }
+        playPresetFromCar(preset, completion: completion)
       }
 
       return item

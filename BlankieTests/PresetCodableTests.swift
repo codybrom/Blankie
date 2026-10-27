@@ -4,11 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Full-fidelity Preset round-trip. Export, import, and the preset store all
-//  serialize the whole Preset; a CodingKeys or optionality change that drops
-//  artwork / moods / order / view mode silently loses user data on every
-//  save/import/export. PresetFactory seeds non-default values so a dropped field
-//  is detectable.
+//  Full-fidelity Preset round trip (export, import and the preset store all serialize the whole
+//  Preset). PresetFactory seeds non-default values so a dropped field is detectable.
 //
 
 import Foundation

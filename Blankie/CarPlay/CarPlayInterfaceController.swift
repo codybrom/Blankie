@@ -25,25 +25,24 @@ import os
     private var quickMixObservation: Task<Void, Never>?
     private var starredItemsObservation: Task<Void, Never>?
     private var globalPlayingObservation: Task<Void, Never>?
-    private var soloModeObservation: Task<Void, Never>?
+    private var singleSoundObservation: Task<Void, Never>?
     private var playbackStateObservation: Task<Void, Never>?
     private var currentPresetObservation: Task<Void, Never>?
     private var presetsObservation: Task<Void, Never>?
 
-    // Template references for updating
     private var homeTemplate: CPListTemplate?
     private var presetsTemplate: CPListTemplate?
     private var quickMixTemplate: CPGridTemplate?
     private var soundsTemplate: CPListTemplate?
     var currentEditTemplate: CPListTemplate?
+    /// The preset the open edit stack was built for.
+    var currentEditPresetID: UUID?
     var currentTimerTemplate: CPListTemplate?
 
-    // Public getter for interfaceController to allow access from methods
     var currentInterfaceController: CPInterfaceController? {
       return interfaceController
     }
 
-    // Quick Mix sounds (persisted from GlobalSettings)
     var quickMixSoundFileNames: [String] {
       return GlobalSettings.shared.quickMixSoundFileNames
     }
@@ -66,18 +65,16 @@ import os
       interfaceController = controller
       isConnected = true
 
-      // Observe Now Playing album-artist button taps (re-register defensively in
-      // case of a reconnect on the shared template).
+      // Re-register on the shared template in case this is a reconnect.
       CPNowPlayingTemplate.shared.remove(self)
       CPNowPlayingTemplate.shared.add(self)
 
-      // Set the tab bar root synchronously — built-ins/presets are loaded at app
-      // launch, so awaiting the slower custom-sound load here just delayed the UI.
+      // Set the root synchronously. Built-ins and presets load at app launch, so
+      // custom sounds can finish afterward.
       Logger.carPlay.debug("CarPlay: Setting up interface...")
       setupTabBarInterface()
 
-      // Finish the heavier initialization (custom sounds) in the background, then
-      // refresh templates so custom sounds and any late state appear.
+      // Load custom sounds in the background, then refresh the templates.
       Task { @MainActor in
         Logger.carPlay.debug("CarPlay: Starting background app initialization...")
         await initializeCarPlayApp()
@@ -98,18 +95,22 @@ import os
       interfaceController = nil
       isConnected = false
 
-      // CarPlay teardown means the car route is gone and the only route left is
-      // the phone, where audio must not resume. Pause first so exitQuickMix's
-      // restore loop (which plays selected sounds while isGloballyPlaying) can't
-      // race the .oldDeviceUnavailable route pause onto the phone speaker.
+      // Drop the templates so the observers stop rebuilding them on the phone.
+      homeTemplate = nil
+      presetsTemplate = nil
+      quickMixTemplate = nil
+      soundsTemplate = nil
+      currentEditTemplate = nil
+      currentEditPresetID = nil
+
+      // After teardown the only route left is the phone, where audio must not
+      // resume. Pause first so exitQuickMix's restore loop can't start sounds there.
       AudioManager.shared.setGlobalPlaybackState(false)
 
-      // Exit solo mode if active
-      if AudioManager.shared.soloModeSound != nil {
-        AudioManager.shared.exitSoloMode()
+      if AudioManager.shared.singleSound != nil {
+        AudioManager.shared.exitSingleSound()
       }
 
-      // Exit CarPlay Quick Mix mode if active
       if AudioManager.shared.isQuickMix {
         AudioManager.shared.exitQuickMix()
       }
@@ -123,27 +124,23 @@ import os
 
     // MARK: - App Initialization
 
-    /// Initialize CarPlay app
+    /// Prepares the store and sounds. Runs even while the device is locked.
     @MainActor
     private func initializeCarPlayApp() async {
       Logger.carPlay.debug("CarPlay: Checking initialization state...")
       let isProtectedDataAvailable = UIApplication.shared.isProtectedDataAvailable
       Logger.carPlay.debug("CarPlay: Protected data available: \(isProtectedDataAvailable)")
 
-      // CarPlay should work even when device is locked
-      // Skip waiting for protected data - CarPlay needs to function while driving
       if !isProtectedDataAvailable {
         Logger.carPlay.debug(
           "CarPlay: Device is locked, but proceeding anyway for CarPlay functionality")
       }
 
-      // Ensure the shared container is initialized
       if !SharedModelContainer.shared.isInitialized {
         Logger.carPlay.debug("CarPlay: Initializing shared model container...")
         SharedModelContainer.shared.initialize()
       }
 
-      // Set up manager contexts if not already done
       if AudioManager.shared.modelContext == nil {
         Logger.carPlay.debug("CarPlay: Setting up manager contexts...")
         let context = SharedModelContainer.shared.mainContext
@@ -151,7 +148,6 @@ import os
         PresetArtworkManager.shared.setModelContext(context)
       }
 
-      // Load all sounds
       Logger.carPlay.debug("CarPlay: Loading sounds...")
       await AudioManager.shared.loadCustomSoundsWhenReady()
 
@@ -164,13 +160,11 @@ import os
     private func setupTabBarInterface() {
       guard let interfaceController = interfaceController else { return }
 
-      // Create all tab templates
       homeTemplate = HomeListTemplate.createTemplate()
       presetsTemplate = PresetListTemplate.createTemplate()
       quickMixTemplate = QuickMixGridTemplate.createTemplate()
       soundsTemplate = SoundsListTemplate.createTemplate()
 
-      // Validate that templates were created successfully
       guard let homeTemplate = homeTemplate,
         let presetsTemplate = presetsTemplate,
         let quickMixTemplate = quickMixTemplate,
@@ -180,11 +174,8 @@ import os
         return
       }
 
-      // Setup Now Playing template with edit functionality
       setupNowPlayingTemplate()
 
-      // Create the tab bar. Home (now playing + favorites) leads; Presets and
-      // Sounds are the full browse lists; Quick Mix builds an ad-hoc mix.
       let tabBar = CPTabBarTemplate(templates: [
         homeTemplate,
         presetsTemplate,
@@ -238,14 +229,12 @@ import os
       updateSoundsTemplate()
     }
 
-    /// Reinitialize CarPlay interface if needed (e.g., after app becomes active)
+    /// Rebuilds the CarPlay interface if needed (for example, after the app becomes active).
     @MainActor
     func reinitializeIfNeeded() {
       guard isConnected, let interfaceController = interfaceController else { return }
 
-      // Check if the current root template exists
       if interfaceController.rootTemplate is CPTabBarTemplate {
-        // Just update existing templates
         updateAllTemplates()
       } else {
         Logger.carPlay.debug("CarPlay: Root template is not tab bar, reinitializing interface...")
@@ -267,7 +256,6 @@ import os
       )
     }
 
-    /// Show edit sounds interface (accessible from sounds tab)
     @MainActor
     func showEditInterface() {
       showEditSoundsInterface()
@@ -276,56 +264,54 @@ import os
     // MARK: - Observers
 
     private func observeAudioManagerChanges() {
-      // Observe global playback state (AudioManager is @Observable now).
       globalPlayingObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ AudioManager.shared.isGloballyPlaying }) {
           self?.updateAllTemplates()
         }
       }
 
-      // Observe solo mode changes. Tracks the soloed sound's id so entering or
-      // leaving solo (or switching the soloed sound) refreshes the templates.
-      soloModeObservation = Task { @MainActor [weak self] in
-        for await _ in Observations({ AudioManager.shared.soloModeSound?.id }) {
+      // Tracks the single sound's id so entering, leaving or switching single sound refreshes.
+      singleSoundObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ AudioManager.shared.singleSound?.id }) {
           self?.updateHomeTemplate()
           self?.updateSoundsTemplate()
           self?.updateQuickMixTemplate()
           self?.updateNowPlayingButtons()
+          self?.refreshOrDismissEditStack()
         }
       }
 
-      // Observe sound state changes
       NotificationCenter.default.publisher(for: .soundStateChanged)
         .sink { [weak self] _ in
           self?.updateQuickMixTemplate()
         }
         .store(in: &cancellables)
 
-      // Mirror phone-side play/pause of individual sounds onto CarPlay's tiles.
-      // The Sounds list and Quick Mix grid both render a per-sound "playing"
-      // state; a CarPlay tap posts `.soundStateChanged`, but a phone-side toggle
-      // (which may not flip global playback) has no such signal. Tracking each
-      // sound's `playbackState` closes that phone → CarPlay direction.
+      // Mirrors phone-side changes to each sound's playback state, title, icon and
+      // preset-use-only flag, which post no `.soundStateChanged` like CarPlay taps do.
       playbackStateObservation = Task { @MainActor [weak self] in
         for await _ in Observations({
-          AudioManager.shared.sounds.map { $0.playbackState == .playing }
+          AudioManager.shared.sounds.map {
+            (
+              $0.playbackState == .playing, $0.isPresetUseOnly, CarPlaySoundNames.name(of: $0),
+              $0.systemIconName
+            )
+          }
         }) {
           self?.updateSoundsTemplate()
           self?.updateQuickMixTemplate()
         }
       }
 
-      // Refresh the Quick Mix grid when its membership or order changes on
-      // the phone (editor sheet or grid reorder).
+      // Refresh the Quick Mix tab when its membership or order changes on the phone.
       quickMixObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ GlobalSettings.shared.quickMixSoundFileNames }) {
           self?.updateQuickMixTemplate()
         }
       }
 
-      // Swap the Now Playing timer glyph (and refresh the picker, if open) when a
-      // sleep timer starts, is canceled, or expires — from CarPlay or the phone.
-      // Tracks only `isTimerActive`, so the 1 Hz remainingTime tick doesn't fire it.
+      // Swap the Now Playing timer glyph and refresh an open picker when a timer
+      // starts or ends. Tracks only `isTimerActive`, not the 1 Hz remainingTime tick.
       timerActiveObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ TimerManager.shared.isTimerActive }) {
           guard let self else { return }
@@ -338,18 +324,16 @@ import os
     }
 
     private func observePresetManagerChanges() {
-      // Observe current preset (PresetManager is @Observable now). Tracks the
-      // whole value so a rename/theme/artwork edit of the current preset
-      // refreshes too, not just a switch.
+      // Tracks the whole preset value so edits to the current preset refresh too.
       currentPresetObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ PresetManager.shared.currentPreset }) {
           self?.updateHomeTemplate()
           self?.updatePresetsTemplate()
           self?.updateNowPlayingButtons()
+          self?.refreshOrDismissEditStack()
         }
       }
 
-      // Observe presets array changes (add/remove/reorder/rename/artwork).
       presetsObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ PresetManager.shared.presets }) {
           self?.updateHomeTemplate()
@@ -357,15 +341,15 @@ import os
         }
       }
 
-      // Observe favorites changes so the Home Favorites section refreshes.
+      // Refresh the Home favorites and the Now Playing star, including phone-side changes.
       starredItemsObservation = Task { @MainActor [weak self] in
         for await _ in Observations({ GlobalSettings.shared.starredItems }) {
           self?.updateHomeTemplate()
+          self?.updateNowPlayingButtons()
         }
       }
 
-      // Refresh list artwork when a preset thumbnail is regenerated or removed
-      // (the thumbnail re-cache finishes after the $presets-driven rebuild).
+      // Thumbnail re-caching finishes after the presets-driven rebuild, so refresh again.
       NotificationCenter.default.publisher(for: .presetThumbnailUpdated)
         .receive(on: DispatchQueue.main)
         .sink { [weak self] _ in
@@ -378,12 +362,12 @@ import os
     // MARK: - CPNowPlayingTemplateObserver
 
     func nowPlayingTemplateUpNextButtonTapped(_: CPNowPlayingTemplate) {
-      // Not used - we're using custom buttons instead
+      // Unused because the template uses custom buttons.
     }
 
     func nowPlayingTemplateAlbumArtistButtonTapped(_: CPNowPlayingTemplate) {
-      // The album line surfaces the running sleep timer ("N Minute Timer");
-      // tapping it opens the timer picker to set, restart, or cancel.
+      // The album line surfaces the running sleep timer ("N Minute Timer").
+      // Tapping it opens the timer picker to set, restart, or cancel.
       Task { @MainActor in
         showTimerOptions()
       }

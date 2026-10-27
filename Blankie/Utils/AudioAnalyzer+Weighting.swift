@@ -9,7 +9,7 @@ import AVFoundation
 import Accelerate
 import os
 
-struct KWeightingCoefficients {
+nonisolated struct KWeightingCoefficients: Sendable {
   let preFilterA: [Float]
   let preFilterB: [Float]
   let rlbFilterA: [Float]
@@ -18,49 +18,45 @@ struct KWeightingCoefficients {
 
 extension AudioAnalyzer {
 
-  static func getKWeightingCoefficients() -> KWeightingCoefficients {
-    // ITU-R BS.1770-4 K-weighting filter coefficients
-    // Pre-filter (shelving filter)
+  nonisolated static func getKWeightingCoefficients() -> KWeightingCoefficients {
+    // ITU-R BS.1770-4 K-weighting coefficients (a0 is 1.0 for both filters).
+    // Pre-filter (high shelf)
     let preFilterB: [Float] = [1.53512485958697, -2.69169618940638, 1.19839281085285]
-    let preFilterA: [Float] = [1.0, -1.69065929318241, 0.73248077421585]  // a0 should be 1.0
+    let preFilterA: [Float] = [1.0, -1.69065929318241, 0.73248077421585]
 
-    // RLB filter (high-pass filter)
+    // RLB filter (high-pass)
     let rlbFilterB: [Float] = [1.0, -2.0, 1.0]
-    let rlbFilterA: [Float] = [1.0, -1.99004745483398, 0.99007225036621]  // a0 should be 1.0
+    let rlbFilterA: [Float] = [1.0, -1.99004745483398, 0.99007225036621]
 
     return KWeightingCoefficients(
       preFilterA: preFilterA, preFilterB: preFilterB,
       rlbFilterA: rlbFilterA, rlbFilterB: rlbFilterB)
   }
 
-  static func processChannel(
+  nonisolated static func processChannel(
     _ channelData: UnsafeMutablePointer<Float>,
     frameLength: AVAudioFrameCount,
     filterCoefficients: KWeightingCoefficients,
     channelIndex: Int
   ) -> Float {
-    // Copy input data to avoid modifying the original
     var workingData = Array(UnsafeBufferPointer(start: channelData, count: Int(frameLength)))
 
-    // Apply pre-filter (high shelf) using direct biquad implementation
     workingData = applyBiquadFilter(
       input: workingData,
       filterB: filterCoefficients.preFilterB,
       filterA: filterCoefficients.preFilterA
     )
 
-    // Apply RLB filter (high-pass)
     workingData = applyBiquadFilter(
       input: workingData,
       filterB: filterCoefficients.rlbFilterB,
       filterA: filterCoefficients.rlbFilterA
     )
 
-    // Calculate mean square (power)
     var power: Float = 0
     vDSP_measqv(workingData, 1, &power, vDSP_Length(frameLength))
 
-    // Debug: Check power before and after filtering
+    // Log input vs. filtered power for near-silent channels.
     if power == 0 || power < 1e-10 {
       var inputPower: Float = 0
       vDSP_measqv(
@@ -71,15 +67,16 @@ extension AudioAnalyzer {
       )
     }
 
-    // Apply channel weighting (ITU-R BS.1770 specifies different weights for surround channels)
+    // ITU-R BS.1770 weights surround channels at 1.41.
     let channelWeight: Float = channelIndex < 2 ? 1.0 : 1.41
     return power * channelWeight
   }
 
-  static func applyBiquadFilter(input: [Float], filterB: [Float], filterA: [Float]) -> [Float] {
+  nonisolated static func applyBiquadFilter(input: [Float], filterB: [Float], filterA: [Float])
+    -> [Float]
+  {
     var output = [Float](repeating: 0, count: input.count)
 
-    // State variables for the filter
     var prevInput1: Float = 0
     var prevInput2: Float = 0
     var prevOutput1: Float = 0
@@ -95,7 +92,7 @@ extension AudioAnalyzer {
     for index in 0..<input.count {
       let currentInput = input[index]
 
-      // Direct Form II implementation
+      // Direct Form I:
       // y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
       let currentOutput =
         coeff0B * currentInput + coeff1B * prevInput1 + coeff2B * prevInput2 - coeff1A * prevOutput1
@@ -103,7 +100,6 @@ extension AudioAnalyzer {
 
       output[index] = currentOutput
 
-      // Update state variables
       prevInput2 = prevInput1
       prevInput1 = currentInput
       prevOutput2 = prevOutput1

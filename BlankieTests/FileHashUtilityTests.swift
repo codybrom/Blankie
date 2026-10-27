@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Custom-sound dedup keys off SHA-256. The streaming file hash and the
-//  in-memory data hash must agree and match known vectors, or dedup silently
-//  fails (duplicate imports) or misfires (distinct files treated as one).
+//  SHA-256 hashing for custom-sound dedup. The streaming file hash must match the
+//  in-memory data hash and known vectors.
 //
 
 import Foundation
@@ -16,7 +15,6 @@ import Testing
 
 @Suite struct FileHashUtilityTests {
 
-  /// Known SHA-256 vectors lock the algorithm and hex formatting.
   @Test func dataHashMatchesKnownVectors() {
     #expect(
       FileHashUtility.sha256Hash(for: Data("abc".utf8))
@@ -26,7 +24,6 @@ import Testing
         == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
   }
 
-  /// The streaming file hash equals the in-memory data hash for the same bytes.
   @Test func fileHashMatchesDataHash() throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -38,15 +35,13 @@ import Testing
     #expect(try FileHashUtility.sha256Hash(for: url) == FileHashUtility.sha256Hash(for: bytes))
   }
 
-  /// Different content yields a different hash (no collision passthrough).
   @Test func differentContentDiffers() {
     #expect(
       FileHashUtility.sha256Hash(for: Data("alpha".utf8))
         != FileHashUtility.sha256Hash(for: Data("beta".utf8)))
   }
 
-  /// A payload larger than the 1 MB streaming buffer hashes correctly across
-  /// multiple reads — guards the chunked-read loop.
+  /// Larger than the 1 MB streaming buffer, so it covers the chunked-read loop.
   @Test func largePayloadStreamsAcrossBuffers() throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }

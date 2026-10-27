@@ -4,33 +4,31 @@
 //
 //  Created by Cody Bromley on 6/22/26.
 //
-//  Reads just enough of a `.blankie` archive to render the Quick Look card:
-//  the preset's name, sound count, and artwork. Self-contained — the extension
-//  never touches the app's managers, SwiftData, or audio stack.
+//  Reads the name, sounds and artwork from a `.blankie` archive for the Quick
+//  Look card, without the app's managers, SwiftData or audio stack.
 //
 
 import Foundation
 import ZIPFoundation
 
 enum PresetPreviewReader {
-  /// Plain, `Sendable` value so it can cross out of the detached read task. The
-  /// artwork stays as raw `Data` here and is decoded to a `UIImage` on the main
-  /// actor in the view, mirroring how the app avoids returning `UIImage` from
-  /// detached work.
+  /// `Sendable` so it can leave the detached read task. Artwork stays `Data`
+  /// and is decoded on the main actor.
   struct PresetInfo: Sendable {
     let name: String
     let creator: String?
     let soundCount: Int
     let artworkData: Data?
+    /// Accent token (`"teal"`), or nil for the app default.
+    let accentColorName: String?
+    /// Selected sounds' SF Symbols for the no-artwork montage. Empty shows the Blankie mark.
+    let iconNames: [String]
+    /// The default preset always shows the brand mark.
+    let isDefault: Bool
   }
 
-  /// Cap on a single decompressed *entry* — not the whole archive. The preview
-  /// only ever extracts `preset.json` (kilobytes) and one preview image (well
-  /// under a megabyte), so 8 MB clears every legitimate payload with room to
-  /// spare while refusing to balloon memory on a crafted (zip-bomb) entry. A
-  /// large `.blankie` is fine: its bulk is custom-sound audio, which the preview
-  /// never reads. The cap is kept low because this Quick Look extension runs in
-  /// a tight memory sandbox.
+  /// Per-entry decompressed size cap (zip-bomb guard for a memory-limited extension).
+  /// The preview reads only `preset.json` and one image, never the audio.
   private static let maxEntryBytes = 8 * 1024 * 1024
 
   enum ReadError: Error {
@@ -57,24 +55,65 @@ enum PresetPreviewReader {
     let preset = try JSONDecoder().decode(ArchivedPreset.self, from: presetData)
 
     var artworkData: Data?
-    for name in ["animatedPreview.jpg", "artwork.jpg"] {
+    for name in ["artwork.jpg", "animatedPreview.jpg"] {
       if let data = entryData(in: archive, path: name) {
         artworkData = data
         break
       }
     }
 
+    let selected = preset.soundStates.filter(\.isSelected)
     let creator = preset.creatorName?.trimmingCharacters(in: .whitespacesAndNewlines)
     return PresetInfo(
       name: preset.name,
       creator: (creator?.isEmpty == false) ? creator : nil,
-      soundCount: preset.soundStates.filter(\.isSelected).count,
-      artworkData: artworkData
+      soundCount: selected.count,
+      artworkData: artworkData,
+      accentColorName: preset.accentColorName,
+      iconNames: resolveIcons(for: selected, in: archive),
+      isDefault: preset.isDefault ?? false
     )
   }
 
-  /// Extract a single archive entry into memory without unpacking the whole zip,
-  /// aborting if the decompressed size exceeds `maxEntryBytes`.
+  /// Same precedence as the app: icon override, then custom sound icon, then the
+  /// built-in catalog. Unmapped sounds are dropped.
+  private static func resolveIcons(
+    for selected: [ArchivedSoundState], in archive: Archive
+  ) -> [String] {
+    var overrides: [String: String] = [:]  // baseName -> customIconName
+    var customIcons: [String: String] = [:]  // baseName -> systemIconName
+    if let data = entryData(in: archive, path: "sounds/metadata.json"),
+      let manifest = try? JSONDecoder().decode(ArchivedSoundsManifest.self, from: data)
+    {
+      for sound in manifest.customSounds {
+        if let icon = sound.systemIconName { customIcons[baseName(sound.fileName)] = icon }
+      }
+      for custom in manifest.builtInCustomizations {
+        if let icon = custom.customIconName { overrides[baseName(custom.fileName)] = icon }
+      }
+    }
+
+    return selected.compactMap { state in
+      let key = baseName(state.fileName)
+      return overrides[key]
+        ?? customIcons[key]
+        ?? BuiltInSoundIcons.icon(for: key)
+    }
+  }
+
+  /// `soundStates` use base names but `sounds/metadata.json` (and legacy presets)
+  /// include the extension, so both sides key on the base name.
+  private static let audioExtensions: Set<String> = [
+    "m4a", "mp3", "wav", "aif", "aiff", "flac", "ogg", "opus", "caf", "aac", "au",
+  ]
+
+  private static func baseName(_ fileName: String) -> String {
+    let ext = (fileName as NSString).pathExtension.lowercased()
+    guard !ext.isEmpty, audioExtensions.contains(ext) else { return fileName }
+    return (fileName as NSString).deletingPathExtension
+  }
+
+  /// Extracts one entry into memory, aborting past `maxEntryBytes`.
   private static func entryData(in archive: Archive, path: String) -> Data? {
     guard let entry = archive[path] else { return nil }
     var data = Data()
@@ -90,13 +129,32 @@ enum PresetPreviewReader {
   }
 }
 
-/// A subset of the app's `Preset` — JSONDecoder ignores the keys we omit.
+/// Subset of the app's `Preset`.
 private struct ArchivedPreset: Decodable {
   let name: String
   let creatorName: String?
   let soundStates: [ArchivedSoundState]
+  let accentColorName: String?
+  let isDefault: Bool?
 }
 
 private struct ArchivedSoundState: Decodable {
+  let fileName: String
   let isSelected: Bool
+}
+
+/// Subset of the app's `SoundsManifest` (`sounds/metadata.json`), for icons only.
+private struct ArchivedSoundsManifest: Decodable {
+  let customSounds: [ArchivedCustomSound]
+  let builtInCustomizations: [ArchivedCustomization]
+
+  struct ArchivedCustomSound: Decodable {
+    let fileName: String
+    let systemIconName: String?
+  }
+
+  struct ArchivedCustomization: Decodable {
+    let fileName: String
+    let customIconName: String?
+  }
 }

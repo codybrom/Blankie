@@ -39,7 +39,7 @@ struct SoundSheet: View {
   @State var previewSound: Sound?
   @State var previewProgress: Double = 0
   @State var previewTimer: Timer?
-  @State var previousSoloModeSound: Sound?
+  @State var previousSingleSound: Sound?
   @State var wasPreviewSoundPlaying: Bool = false
   @State var showingDeleteConfirmation: Bool = false
   @State var showingResetConfirmation: Bool = false
@@ -49,7 +49,7 @@ struct SoundSheet: View {
   @State var addToPresetIDs: Set<UUID> = []
   @State var createMixPreset: Bool = false
   /// Import only: re-encode the picked file to AAC. User-toggled for eligible
-  /// files; forced by file size for very large ones (see CustomSoundManager).
+  /// files, but forced by file size for very large ones (see CustomSoundManager).
   @State var convertToAACOnImport: Bool = false
 
   // Track initial values to detect changes
@@ -178,17 +178,20 @@ struct SoundSheet: View {
       .onDisappear {
         handleOnDisappear()
       }
-      // Tint the whole sheet so accent-colored icons (selected sound icon,
-      // icon-picker highlight, Reset button) resolve from one stable environment
-      // and don't flip when a tinted control is touched. Standalone, sound
-      // editing is app-global so use the app accent; pushed inside Edit Preset
-      // (embedInNavigation false) inherit that stack's preset accent instead.
+      // A remote command, interruption, or mode change can end the preview from
+      // outside. Drop the saved single sound so stopPreview doesn't re-enter it on top.
+      .onChange(of: AudioManager.shared.previewModeSound == nil) { _, ended in
+        if ended, isPreviewing {
+          previousSingleSound = nil
+          isPreviewing = false
+        }
+      }
+      // Tint the whole sheet so accent-colored icons resolve from one stable
+      // environment. Standalone uses the app accent. Pushed inside Edit Preset,
+      // it inherits that stack's preset accent.
       .tint(embedInNavigation ? (GlobalSettings.shared.customAccentColor ?? .accentColor) : nil)
       #if os(iOS) || os(visionOS)
-        // Page-sized on iPad so the full sound editor gets room instead of the
-        // default small centered form sheet (no-op on iPhone). When pushed
-        // inside another navigation stack this is harmless. Matches the preset
-        // editors.
+        // Page-sized on iPad like the preset editors (no-op on iPhone).
         .presentationSizing(.page)
       #endif
   }
@@ -220,18 +223,17 @@ struct SoundSheet: View {
       sound.loadSound()
     }
 
-    // Pre-check the active custom preset in Add to Presets (the visible
-    // version of the old implicit add-to-current-preset behavior).
+    // Pre-check the active custom preset in Add to Presets.
     if mode.isAdd,
       let currentPreset = PresetManager.shared.currentPreset, !currentPreset.isDefault,
-      AudioManager.shared.soloModeSound == nil, !AudioManager.shared.isQuickMix
+      AudioManager.shared.singleSound == nil, !AudioManager.shared.isQuickMix
     {
       addToPresetIDs = [currentPreset.id]
     }
   }
 
   private func handleOnDisappear() {
-    // Mark that we're disappearing to prevent re-entrance
+    // Guards against re-entrance.
     guard !isDisappearing else {
       Logger.ui.debug("SoundSheet: handleOnDisappear called but already disappearing")
       return
@@ -246,6 +248,11 @@ struct SoundSheet: View {
       Logger.ui.debug("SoundSheet: Stopping preview in onDisappear")
       stopPreview()
     }
+
+    // Edits here (name, icon, preset-only) change what widgets, Siri, and
+    // Spotlight list. Both refreshes skip when nothing changed.
+    AudioManager.shared.republishWidgetCatalog()
+    PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
   }
 }
 

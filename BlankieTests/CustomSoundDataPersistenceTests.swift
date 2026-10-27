@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  SwiftData persistence for imported sounds, exercised against an in-memory
-//  store, plus the `toSoundData` bridge into the playback model. (The launch
-//  reconcile/snapshot path is covered by CustomSoundMirrorTests.)
+//  SwiftData persistence for imported sounds and the `toSoundData` bridge.
+//  CustomSoundMirrorTests covers the launch reconcile.
 //
 
 import Foundation
@@ -58,8 +57,7 @@ import Testing
     #expect(model.creditLicenseType == "")
   }
 
-  /// The bridge to the playback model places custom sounds after built-ins and
-  /// prefers the original file name for display.
+  /// Custom sounds sort after built-ins and display their original file name.
   @Test func toSoundDataMapsFields() {
     let model = CustomSoundData(
       title: "Rain", systemIconName: "cloud.rain", fileName: "abc", fileExtension: "m4a",

@@ -12,7 +12,6 @@ extension Sound {
 
   func getSoundURL() -> URL? {
     if isCustom, let customURL = fileURL {
-      // Verify the custom sound file actually exists
       if FileManager.default.fileExists(atPath: customURL.path) {
         Logger.sounds.debug("Sound: Loading custom sound from: \(customURL.path)")
         return customURL

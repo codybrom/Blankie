@@ -14,7 +14,7 @@ struct SoundIcon: View {
   let globalSettings = GlobalSettings.shared
   let audioManager = AudioManager.shared
   #if os(macOS)
-    // macOS honors the current preset's accent (see `accentColor`); observe the
+    // macOS honors the current preset's accent (see `accentColor`). Observe the
     // manager so the grid re-tints when the active preset's color changes.
     let presetManager = PresetManager.shared
   #endif
@@ -26,18 +26,15 @@ struct SoundIcon: View {
   #if os(macOS)
     /// Drives the custom primary-colored focus ring (system ring disabled).
     @FocusState private var isTileFocused: Bool
-    /// Ring shows only for keyboard-originated focus: clicks grab focus on
-    /// mouse-down (before the tap handler can clear it), which flashed the
-    /// ring for the duration of every press.
+    /// Limits the ring to keyboard focus. Clicks take focus on mouse-down,
+    /// before the tap handler can clear it.
     @State private var focusCameFromKeyboard = false
   #endif
 
   private var configuration: Configuration {
     #if os(macOS)
-      // macOS tiles scale with their grid cell (`maxWidth` from
-      // MacSoundGridView, floored at 120 and capped at 200 there), so icons
-      // grow into roomy windows. `iconSize` has no UI; the iOS switch below
-      // keeps its fixed sizes.
+      // macOS tiles scale with their cell (`maxWidth` from MacSoundGridView,
+      // 120 to 200 pt). The `iconSize` setting has no macOS UI.
       return Configuration(
         iconSize: maxWidth * 0.85,
         sliderWidth: maxWidth * 0.7,
@@ -51,10 +48,10 @@ struct SoundIcon: View {
         let iconSize: CGFloat = 75
         return Configuration(
           iconSize: iconSize,
-          sliderWidth: 70,  // Keep slider width the same
+          sliderWidth: 70,
           spacing: 1,
           padding: EdgeInsets(top: 2, leading: 1, bottom: 2, trailing: 1),
-          fontSizeOffset: -7  // Smaller text for small icons
+          fontSizeOffset: -7
         )
       case .medium:
         return Configuration(
@@ -95,9 +92,7 @@ struct SoundIcon: View {
 
   var accentColor: Color {
     #if os(macOS)
-      // Prefer the theming preset's accent, falling back to the global setting.
-      // `themingPreset` is nil during solo / Quick Mix, so those use the app
-      // accent (matching iOS, which always uses the app accent here).
+      // `themingPreset` is nil in single sound and Quick Mix, so those use the app accent.
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     #else
       globalSettings.customAccentColor ?? .accentColor
@@ -125,7 +120,6 @@ struct SoundIcon: View {
   var titleFont: Font {
     let baseFont: Font
 
-    // Start with callout and apply size adjustments
     switch globalSettings.iconSize {
     case .small:
       baseFont = .caption
@@ -135,10 +129,8 @@ struct SoundIcon: View {
       baseFont = .body
     }
 
-    // Apply weight based on script category
     let weightedFont = baseFont.weight(scriptCategory == .standard ? .regular : .thin)
 
-    // Apply additional size increase for dense scripts
     if scriptCategory == .dense {
       return weightedFont.leading(.tight)
     }
@@ -146,9 +138,8 @@ struct SoundIcon: View {
     return weightedFont
   }
 
-  /// Icon circle + name label as one group (the inner icon keeps its
-  /// tap-to-toggle). In the macOS grid the reorder gesture is attached by the
-  /// enclosing `SortableGridView` cell, not here.
+  /// Icon circle and name label as one group (the icon keeps its tap to toggle).
+  /// On macOS the enclosing `SortableGridView` cell attaches the reorder gesture.
   private var iconAndLabel: some View {
     VStack(spacing: configuration.spacing) {
       ZStack {
@@ -156,19 +147,16 @@ struct SoundIcon: View {
           .fill(backgroundFill)
           .frame(width: configuration.iconSize, height: configuration.iconSize)
 
-        // Progress border (inner border)
         if globalSettings.showProgressBorder && sound.isSelected && audioManager.isGloballyPlaying {
           let borderSize = configuration.iconSize - configuration.borderWidth
 
-          // Background track
           Circle()
             .stroke(Color.gray.opacity(0.3), lineWidth: configuration.borderWidth)
             .frame(width: borderSize, height: borderSize)
 
-          // Progress indicator with TimelineView for 30 FPS updates
           TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
             Circle()
-              .trim(from: 0, to: max(0.01, getCurrentProgress()))  // Ensure minimum visibility
+              .trim(from: 0, to: max(0.01, getCurrentProgress()))
               .stroke(
                 accentColor,
                 style: StrokeStyle(lineWidth: configuration.borderWidth, lineCap: .round)
@@ -178,10 +166,8 @@ struct SoundIcon: View {
           }
         }
 
-        // Render as a font glyph, not .resizable: SF Symbols keep their built-in
-        // optical centering this way (matching the iOS grid/list). With
-        // .resizable, the raw vector bounds get scaled and some glyphs — e.g.
-        // washer.fill's drum + basket — sit visibly off-center in the tile.
+        // A font glyph keeps SF Symbols' optical centering, while .resizable scales the
+        // raw vector bounds and pushes some glyphs (washer.fill) off-center.
         Image(systemName: sound.systemIconName)
           .font(.system(size: configuration.iconSize * 0.58))
           .foregroundColor(iconColor)
@@ -198,8 +184,7 @@ struct SoundIcon: View {
       .accessibilityLabel(Text(sound.localizedTitle))
       .onTapGesture {
         #if os(macOS)
-          // Clicking activates but must not keep keyboard focus — the ring is
-          // for Tab navigation only.
+          // Clicks must not keep keyboard focus. The ring is for Tab navigation.
           isTileFocused = false
         #endif
         activateTile()
@@ -208,17 +193,16 @@ struct SoundIcon: View {
       #if os(macOS)
         // Volume is a separate VoiceOver stop so the rotor stays reliable
         .accessibilityAction { DispatchQueue.main.async { activateTile() } }
-        // Plain focusable: tabbable even with the system "Keyboard navigation"
-        // setting off (.activate would gate on it). Click-to-focus is undone
-        // in the tap handler instead; VoiceOver has its own a11y focus.
+        // Plain .focusable() stays tabbable with the system Keyboard navigation
+        // setting off (.activate gates on it). The tap handler undoes click focus.
         .focusable()
         .focused($isTileFocused)
-        // Primary-colored ring instead of the system (accent-blue) effect.
+        // The overlay below draws a primary-colored ring.
         .focusEffectDisabled()
         .onChange(of: isTileFocused) { _, focused in
           guard focused else { return }
-          // Tab arrives as a keyDown; clicks are mouse events and launch-time
-          // initial focus has no event at all — only a provable keyDown rings.
+          // Tab arrives as a keyDown. Clicks are mouse events and launch focus
+          // has no event, so only a keyDown shows the ring.
           focusCameFromKeyboard = NSApp.currentEvent?.type == .keyDown
         }
         .overlay {
@@ -245,7 +229,7 @@ struct SoundIcon: View {
           return .handled
         }
         .onKeyPress(.escape) {
-          // Clear keyboard focus (matches clicking empty grid space); the
+          // Clear keyboard focus (matches clicking empty grid space). The
           // next Tab restarts from the first tile.
           DispatchQueue.main.async { NSApp.keyWindow?.makeFirstResponder(nil) }
           return .handled
@@ -266,7 +250,7 @@ struct SoundIcon: View {
               accentColor: accentColor)
           }
         }
-        .frame(maxWidth: maxWidth - 20, minHeight: 32)  // Consistent padding and height for all sizes
+        .frame(maxWidth: maxWidth - 20, minHeight: 32)
         .contentShape(Rectangle())
         // Hide so VoiceOver only reads once
         .accessibilityHidden(true)
@@ -274,16 +258,19 @@ struct SoundIcon: View {
     }
   }
 
-  /// The tile's primary action, shared by the mouse tap, the keyboard (Return/Space), and the VoiceOver action: toggle the sound in/out of the mix, or — when global playback is paused — select this sound (if it isn't already) and start playing instead of deselecting it.
+  /// The tile's action for tap, Return/Space and VoiceOver. Toggles the sound,
+  /// or while playback is paused selects it and starts playing.
   private func activateTile() {
     audioManager.toggleOrResume(sound)
   }
 
   #if os(macOS)
-    /// Volume nudge for the tile's VoiceOver adjustable action and the Up/Down arrow keys. No-op when the sound is off (its slider is disabled then).
+    /// Volume nudge for the tile's VoiceOver adjustable action and the Up/Down arrow keys.
+    /// No-op when the sound is off (its slider is disabled then).
     private func adjustVolume(_ direction: AccessibilityAdjustmentDirection) {
       guard sound.isSelected else { return }
-      let step: Float = 1.0 / 16.0  // 1/16, matching the master-volume shortcut and macOS volume keys
+      // 1/16, matching the master-volume shortcut and macOS volume keys
+      let step: Float = 1.0 / 16.0
       switch direction {
       case .increment: sound.volume = min(1, sound.volume + step)
       case .decrement: sound.volume = max(0, sound.volume - step)
@@ -294,9 +281,8 @@ struct SoundIcon: View {
 
   var body: some View {
     VStack(spacing: configuration.spacing) {
-      // Icon + label are the reorder drag region (large hit area, tap still
-      // toggles); the slider below is intentionally outside it so a reorder
-      // drag never hijacks the slider's gesture.
+      // Icon and label are the reorder drag region. The slider stays outside it
+      // so a reorder drag never takes the slider's gesture.
       iconAndLabel
         .reorderHandle()
 
@@ -330,12 +316,10 @@ struct SoundIcon: View {
           showingDeleteConfirmation = true
         }
       } else {
-        // Built-in sound customization options
         Button("Customize Sound", systemImage: "slider.horizontal.3") {
           showingEditSheet = true
         }
 
-        // Show reset option if sound has customizations
         if SoundCustomizationManager.shared.getCustomization(for: sound.fileName)?.hasCustomizations
           == true
         {
@@ -394,7 +378,6 @@ struct SoundIcon: View {
       maxWidth: 150
     )
     .onAppear {
-      // Set up preview state using setter methods
       GlobalSettings.shared.setAccentColor(.blue)
       GlobalSettings.shared.setVolume(0.7)
     }

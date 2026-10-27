@@ -45,28 +45,24 @@ interface KbdIconToken extends Tokens.Generic {
 }
 
 /** Drop lucide-static's per-file license comment (attribution stays in the
- * package); the ISC notice doesn't need to ship in every page's HTML. */
+ * package). */
 const normalize = (svg: string) => svg.replace(/<!--[\s\S]*?-->/g, "").trim();
 
-/** Lucide is stroke-only; fill the shape for glyphs iOS draws solid. */
+/** Lucide is stroke-only, so fill the shape for glyphs iOS draws solid. */
 const filled = (svg: string) =>
   svg.replace('fill="none"', 'fill="currentColor"');
 
-/** Composed play/pause glyph (triangle + two bars) in Lucide's filled style.
- * Lucide ships play and pause separately but no combined symbol, and the media
- * key prints both; one glyph keeps the keycap the same width as the others. */
+/** Combined play/pause glyph in Lucide's filled style. Lucide has no combined
+ * symbol, and one glyph keeps the keycap the same width as the others. */
 const playPause = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"><path d="M4 6 4 18 12 12 Z"/><rect x="15" y="6" width="2.6" height="12" rx="1.1"/><rect x="19.4" y="6" width="2.6" height="12" rx="1.1"/></svg>`;
 
-/** Tint a glyph by setting its CSS color. Lucide strokes with currentColor, so
- * the stroke follows. var() resolves here because it's a style property, not an
- * XML presentation attribute. Used for the semantic yes/no icons in tables. */
+/** Tint a glyph via its CSS color (Lucide strokes with currentColor). var()
+ * resolves because it's a style property, not an XML presentation attribute. */
 const tinted = (svg: string, color: string) =>
   svg.replace(/<svg(\s)/, `<svg style="color:${color}"$1`);
 
-// Inline glyph registry for `{{icon:name}}`: Lucide SVGs (ISC), keyed by the
-// names the guides use, which mirror the iOS controls they reference. Note:
-// SF Symbols themselves may NOT be redistributed as web assets — that's why
-// these are Lucide equivalents and not symbol renders.
+// Inline glyph registry for `{{icon:name}}`: Lucide SVGs keyed by the iOS
+// control names the guides use. SF Symbols can't be redistributed as web assets.
 const symbolSvgs: Record<string, string> = Object.fromEntries(
   Object.entries({
     plus,
@@ -84,9 +80,9 @@ const symbolSvgs: Record<string, string> = Object.fromEntries(
     grid: layoutGrid,
     list,
     speaker: volume2,
-    // Semantic status glyphs for comparison tables: green check (free), red x
-    // (no), muted dash for "not an issue" (e.g. credit isn't required), and an
-    // amber caution for "allowed, but with a condition attached" (e.g. sharealike).
+    // Status glyphs for comparison tables. `optional` means "not an issue"
+    // (e.g. credit isn't required). `caveat` means allowed with a condition
+    // (e.g. sharealike).
     yes: tinted(check, "var(--color-green-500)"),
     no: tinted(x, "var(--color-red-500)"),
     optional: tinted(minus, "var(--color-mid-gray)"),
@@ -94,14 +90,11 @@ const symbolSvgs: Record<string, string> = Object.fromEntries(
   }).map(([name, svg]) => [name, normalize(svg)]),
 );
 
-// Shared, single marked configuration for the site. This module is evaluated
-// once (ESM singleton), so the extensions below are registered exactly once
-// even when imported by multiple pages.
+// Shared marked configuration. ESM evaluates this module once, so each
+// extension registers once however many pages import it.
 
-// GitHub-style alerts ([!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION]).
-// Icons are stripped and titles uppercased to match the site's existing alert
-// design; the markup is styled via `.markdown-alert` / `.markdown-alert-title`
-// in global.css.
+// GitHub-style alerts with icons stripped and uppercase titles, styled by
+// `.markdown-alert` in global.css.
 marked.use(
   markedAlert({
     variants: [
@@ -114,10 +107,9 @@ marked.use(
   }),
 );
 
-// Inline UI glyphs: `{{icon:name}}` or `{{icon:name|Label}}` renders the
-// matching SVG inline with the text, like the button glyphs in Apple's support
-// guides. Without a label the glyph is decorative (the surrounding copy names
-// the button), so it's hidden from screen readers.
+// Inline UI glyphs: `{{icon:name}}` or `{{icon:name|Label}}`. Without a label
+// the glyph is decorative (the copy names the button), so it's hidden from
+// screen readers.
 marked.use({
   extensions: [
     {
@@ -140,7 +132,7 @@ marked.use({
         const { icon, alt } = token as SfSymbolToken;
         const svg = symbolSvgs[icon];
         if (!svg) {
-          // Fail the build loudly on a typo'd icon name instead of rendering nothing.
+          // Fail the build on an unknown icon name.
           throw new Error(
             `Unknown {{icon:${icon}}} — no src/assets/symbols/${icon}.svg`,
           );
@@ -158,8 +150,7 @@ marked.use({
 });
 
 // Keyboard shortcuts: `{{kbd:⌘ I}}` renders each space-separated key as a
-// physical-looking keycap, so shortcuts stand out from the surrounding copy.
-// Styled via `.kbd-combo` / `kbd` in global.css.
+// keycap, styled by `.kbd-combo` in global.css.
 marked.use({
   extensions: [
     {
@@ -187,10 +178,8 @@ marked.use({
   ],
 });
 
-// Glyph keycaps: `{{kbdicon:skip-back}}` renders a Lucide glyph inside a keycap,
-// for keys printed with a symbol rather than a letter (the media keys). Multiple
-// space-separated names sit in one cap, so `{{kbdicon:play pause}}` reads as the
-// play/pause key. Reuses the {{icon:...}} registry; styled via `.kbd-iconcap`.
+// Glyph keycaps for the media keys: `{{kbdicon:skip-back}}` puts a registry glyph
+// in a keycap. Space-separated names share one cap (`{{kbdicon:play pause}}`).
 marked.use({
   extensions: [
     {
@@ -227,9 +216,8 @@ marked.use({
   ],
 });
 
-// Verbatim App Store review quotes: `{{review:id}}` on its own line renders
-// the matching testimonial from utils/testimonials.ts as a card-styled
-// <figure>, the same markup the Testimonial component emits on .astro pages.
+// App Store review quotes: `{{review:id}}` on its own line renders the
+// testimonial from utils/testimonials.ts, same markup as the Testimonial component.
 marked.use({
   extensions: [
     {
@@ -244,7 +232,7 @@ marked.use({
         return { type: "reviewQuote", raw: match[0], id: match[1] };
       },
       renderer(token) {
-        // getTestimonial fails the build loudly on a typo'd id.
+        // getTestimonial fails the build on an unknown id.
         return renderTestimonial(
           getTestimonial((token as ReviewQuoteToken).id),
         );
@@ -253,10 +241,9 @@ marked.use({
   ],
 });
 
-// Images: `![alt](src "caption")` renders as <figure> with a <figcaption>
-// (styled by the typography plugin); without a caption it stays a plain <img>.
-// A paragraph that is only an image is hoisted out of its <p> wrapper, since
-// <figure> can't legally nest inside <p>.
+// Images: `![alt](src "caption")` renders as <figure> with a <figcaption>.
+// Without a caption it stays a plain <img>. An image-only paragraph drops its
+// <p> wrapper, since <figure> can't nest inside <p>.
 const escapeAttr = (s: string) =>
   s
     .replace(/&/g, "&amp;")

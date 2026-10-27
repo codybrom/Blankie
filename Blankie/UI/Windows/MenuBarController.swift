@@ -11,18 +11,16 @@
   import SwiftData
   import SwiftUI
 
-  /// Owns the menu bar status item and its click-through popover directly via
-  /// AppKit. SwiftUI's `MenuBarExtra(isInserted:)` won't reliably re-insert a
-  /// removed item (it writes a spurious `false` back during re-insertion), so the
-  /// "Show in Menu Bar" toggle could never turn the icon back on. Managing the
-  /// `NSStatusItem` ourselves gives reliable add/remove plus Cmd-drag-out.
+  /// Owns the menu bar status item and its popover via AppKit. `MenuBarExtra(isInserted:)`
+  /// doesn't reliably re-insert a removed item (it writes `false` back during re-insertion).
+  /// A managed `NSStatusItem` supports add/remove and Cmd-drag-out.
   @MainActor
   final class MenuBarController {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
-    private var visibilityObservation: Task<Void, Never>?
+    nonisolated(unsafe) private var visibilityObservation: Task<Void, Never>?
     private var visibilityKVO: NSKeyValueObservation?
-    private var closeObserver: NSObjectProtocol?
+    nonisolated(unsafe) private var closeObserver: NSObjectProtocol?
 
     init(modelContainer: ModelContainer) {
       popover.behavior = .transient
@@ -57,6 +55,8 @@
         guard statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.behavior = .removalAllowed  // Cmd-drag-out removes it
+        // The system restores a Cmd-dragged-out item as hidden. The setting is on, so show it.
+        item.isVisible = true
         if let button = item.button {
           let image = NSImage(named: "blankie.symbol")
           image?.isTemplate = true
@@ -65,7 +65,7 @@
           button.target = self
           button.setAccessibilityLabel(String(localized: "Blankie"))
         }
-        // Cmd-dragging the item off the menu bar flips isVisible; mirror that to
+        // Cmd-dragging the item off the menu bar flips isVisible. Mirror that to
         // the setting so the two controls stay in sync and the choice persists.
         visibilityKVO = item.observe(\.isVisible, options: [.new]) { item, _ in
           guard !item.isVisible else { return }
