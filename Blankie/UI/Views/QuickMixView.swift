@@ -149,7 +149,10 @@ import SwiftUI
         .disabled(!audioManager.isGloballyPlaying && !audioManager.hasSelectedSounds)
         .accessibilityLabel(audioManager.isGloballyPlaying ? Text("Pause") : Text("Play"))
 
-        volume
+        // CarPlay owns the volume while connected, like Now Playing.
+        if !audioManager.isCarPlayConnected {
+          volume
+        }
 
         HStack(spacing: 16) {
           #if os(iOS)

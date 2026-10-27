@@ -83,9 +83,12 @@ import SwiftUI
           .accessibilityLabel(Text("Next"))
         }
 
-        bareVolume
-          .frame(minWidth: 80, maxWidth: 260)
-          .padding(.horizontal, 8)
+        // CarPlay owns the volume while connected, like Now Playing.
+        if !audioManager.isCarPlayConnected {
+          bareVolume
+            .frame(minWidth: 80, maxWidth: 260)
+            .padding(.horizontal, 8)
+        }
 
         Spacer(minLength: 0)
 

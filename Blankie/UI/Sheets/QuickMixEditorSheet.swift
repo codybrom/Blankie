@@ -17,6 +17,11 @@ import SwiftUI
     /// carried through Done so the editor never prunes them.
     @State private var unresolvedSounds: [String] = []
 
+    /// Still-loading members not since picked by name; they keep their slots.
+    private var pendingSounds: [String] {
+      unresolvedSounds.filter { !selectedSounds.contains($0) }
+    }
+
     var body: some View {
       NavigationStack {
         List {
@@ -30,7 +35,8 @@ import SwiftUI
 
           Section {
             NavigationLink {
-              QuickMixSoundPicker(selectedSounds: $selectedSounds)
+              QuickMixSoundPicker(
+                selectedSounds: $selectedSounds, reservedSlots: pendingSounds.count)
             } label: {
               HStack {
                 Text("Choose Sounds")
@@ -68,7 +74,7 @@ import SwiftUI
               }
             }
           } header: {
-            Text("Sounds (\(selectedSounds.count)/8)")
+            Text("Sounds (\(selectedSounds.count + pendingSounds.count)/8)")
           } footer: {
             if !selectedSounds.isEmpty {
               Text("Drag to reorder, swipe to remove")
@@ -81,8 +87,7 @@ import SwiftUI
         .toolbar {
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") {
-              globalSettings.setQuickMixSoundFileNames(
-                Array((selectedSounds + unresolvedSounds).prefix(8)))
+              globalSettings.setQuickMixSoundFileNames(selectedSounds + pendingSounds)
               // Stop any sound that was just removed from an active mix.
               audioManager.reconcileQuickMixMembership()
               dismiss()
@@ -114,6 +119,8 @@ import SwiftUI
 
   struct QuickMixSoundPicker: View {
     @Binding var selectedSounds: [String]
+    /// Slots held by members that are still loading.
+    var reservedSlots = 0
     private let audioManager = AudioManager.shared
     private let globalSettings = GlobalSettings.shared
 
@@ -132,7 +139,7 @@ import SwiftUI
           Button {
             if isSelected {
               selectedSounds.removeAll { $0 == sound.fileName }
-            } else if selectedSounds.count < 8 {
+            } else if selectedSounds.count + reservedSlots < 8 {
               selectedSounds.append(sound.fileName)
             }
           } label: {
@@ -151,7 +158,7 @@ import SwiftUI
               }
             }
           }
-          .disabled(!isSelected && selectedSounds.count >= 8)
+          .disabled(!isSelected && selectedSounds.count + reservedSlots >= 8)
           .accessibilityLabel(Text(sound.localizedTitle))
           .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         }

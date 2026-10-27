@@ -49,6 +49,9 @@ private enum IPhonePage: Hashable {
     @State var showingNowPlaying = false
     /// iPhone: the Sound Mixer sheet the floating bar opens over Now Playing.
     @State private var showingMixerSheet = false
+    /// The mixer sheet was asked to close while an editor sat on it; it closes
+    /// once that editor does, so the editor's unsaved draft isn't thrown away.
+    @State private var closesMixerSheetAfterEditor = false
     @State private var showingPageTimer = false
     /// iPhone Duo's cover keeps a vertical toolbar rail beside the page; the
     /// player's AirPlay and Timer move onto it.
@@ -139,12 +142,21 @@ private enum IPhonePage: Hashable {
             iPhonePath = [.mixer]
           }
         } else {
-          showingMixerSheet = false
+          closeMixerSheet()
         }
       }
       // A solo sound has nothing to mix: close a mixer left open for a preset.
       .onChange(of: audioManager.soloModeSound != nil) { _, solo in
-        if solo { showingMixerSheet = false }
+        if solo { closeMixerSheet() }
+      }
+      .onChange(of: editorIsOpen) { _, open in
+        if !open, closesMixerSheetAfterEditor {
+          closesMixerSheetAfterEditor = false
+          showingMixerSheet = false
+        }
+      }
+      .onChange(of: showingMixerSheet) { _, showing in
+        if !showing { closesMixerSheetAfterEditor = false }
       }
       .sheet(isPresented: $showingMixerSheet) {
         mixerSheet
@@ -252,8 +264,26 @@ private enum IPhonePage: Hashable {
         // (widget, CarPlay, Siri), Quick Mix closes it too.
         if isQuickMix {
           showingNowPlaying = false
-          showingMixerSheet = false
+          closeMixerSheet()
         }
+      }
+    }
+
+    /// Any editor or panel that the mixer sheet may be hosting.
+    private var editorIsOpen: Bool {
+      soundToEdit != nil || presetToEdit != nil || showingQuickMixEditor
+        || showingSpatialMixer || showingNewPresetSheet || showingPageTimer
+        || showingNewPresetConfirmation
+    }
+
+    /// Closes the mixer sheet from code (a layout change, solo, Quick Mix),
+    /// waiting for an editor on it to close first.
+    private func closeMixerSheet() {
+      guard showingMixerSheet else { return }
+      if editorIsOpen {
+        closesMixerSheetAfterEditor = true
+      } else {
+        showingMixerSheet = false
       }
     }
 
