@@ -164,7 +164,7 @@ extension AudioManager {
   }
 
   /// Applies a custom-sound add or delete without rebuilding unchanged sounds,
-  /// since solo, preview and Quick Mix hold `Sound` instances.
+  /// since single sound, preview and Quick Mix hold `Sound` instances.
   @MainActor
   func syncCustomSounds() {
     let rowIDs = Set(CustomSoundManager.shared.getAllCustomSounds().map(\.id))

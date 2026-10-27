@@ -141,7 +141,7 @@ extension GlobalSettings {
   func setStarredItems(_ value: [String]) {
     starredItems = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.starredItems)
-    // Favorited solo sounds take part in lock-screen next/previous.
+    // Favorited single sounds take part in lock-screen next/previous.
     AudioManager.shared.updateNextPreviousCommandState()
     AudioManager.shared.republishWidgetCatalog()
   }
@@ -166,7 +166,7 @@ extension GlobalSettings {
   }
 
   /// Drop tokens for presets that no longer exist. `allSoundsToken` and
-  /// `quickMixToken` are always retained. Solo-sound tokens are retained when
+  /// `quickMixToken` are always retained. Single-sound tokens are retained when
   /// `validSoundFileNames` is nil (caller doesn't know the sound list) or when
   /// their file name is still present.
   @MainActor
@@ -175,7 +175,7 @@ extension GlobalSettings {
       switch PlayableItem(token: token) {
       case .allSounds, .quickMix:
         return true
-      case .solo(let fileName):
+      case .single(let fileName):
         return validSoundFileNames?.contains(fileName) ?? true
       case .preset(let id):
         return validPresetIDs.contains(id.uuidString)

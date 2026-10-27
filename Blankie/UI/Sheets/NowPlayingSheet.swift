@@ -35,9 +35,9 @@ import SwiftUI
     /// mixer can open the Now Playing sheet for it.
     var onNavigateToPreset: (() -> Void)?
 
-    /// Fired when the sheet's next/previous lands on a solo sound; the sheet
+    /// Fired when the sheet's next/previous lands on a single sound; the sheet
     /// dismisses and the inline player takes over.
-    var onNavigateToSolo: (() -> Void)?
+    var onNavigateToSingle: (() -> Void)?
 
     /// The mixer shown beside the player on wide screens. Supplied by the mixer
     /// so reordering saves as usual.
@@ -51,7 +51,7 @@ import SwiftUI
     /// so it drops the bottom row of action circles.
     var showsActions = true
 
-    /// iPhone Duo open with a solo sound: artwork on the left page, controls on the right.
+    /// iPhone Duo open with a single sound: artwork on the left page, controls on the right.
     var spreadsAcrossFold = false
 
     /// iPhone's Now Playing page: a labeled Sound Mixer button under the volume.
@@ -80,9 +80,9 @@ import SwiftUI
     @State private var artworkExpanded = false
 
     private var artworkTaskID: String {
-      let solo = audioManager.soloModeSound?.id.uuidString ?? ""
+      let single = audioManager.singleSound?.id.uuidString ?? ""
       let preset = presetManager.currentPreset?.id.uuidString ?? ""
-      return "\(solo)-\(preset)"
+      return "\(single)-\(preset)"
     }
 
     var body: some View {
@@ -107,7 +107,7 @@ import SwiftUI
                 // Rounded top corners show during the zoom transition.
                 Color.black
                   .overlay {
-                    if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
+                    if audioManager.singleSound == nil && !audioManager.isQuickMix,
                       let image = backgroundImage
                     {
                       Image(uiImage: image)
@@ -408,7 +408,7 @@ import SwiftUI
     private func playerActionRow(fills: Bool = false) -> some View {
       if let onOpenMixer {
         HStack(spacing: 12) {
-          if audioManager.soloModeSound == nil {
+          if audioManager.singleSound == nil {
             Button(action: onOpenMixer) {
               // Falls back to "Mixer" so the label never truncates.
               ViewThatFits(in: .horizontal) {
@@ -555,7 +555,7 @@ import SwiftUI
           Spacer(minLength: 0)
           panelToggle(.timer, symbol: "timer", label: Text("Timer"))
           panelToggle(.sounds, symbol: "slider.horizontal.3", label: Text("Sounds"))
-            .disabled(audioManager.soloModeSound != nil || soundsPanel == nil)
+            .disabled(audioManager.singleSound != nil || soundsPanel == nil)
         }
         .padding(.horizontal, 32)
       }
@@ -585,10 +585,10 @@ import SwiftUI
       .modifier(NowPlayingActionGlass())
     }
 
-    /// The stored panel, minus one that can't show (no mixer for a solo sound).
+    /// The stored panel, minus one that can't show (no mixer for a single sound).
     private var visiblePanel: NowPlayingPanel {
       let panel = NowPlayingPanel(rawValue: panelRaw) ?? .none
-      if panel == .sounds, audioManager.soloModeSound != nil || soundsPanel == nil {
+      if panel == .sounds, audioManager.singleSound != nil || soundsPanel == nil {
         return .none
       }
       return panel
@@ -746,9 +746,9 @@ import SwiftUI
     @ViewBuilder
     private func artworkContent(size: CGFloat, cornerRadius: CGFloat = 12) -> some View {
       Group {
-        if let soloSound = audioManager.soloModeSound {
+        if let singleSound = audioManager.singleSound {
           FallbackArtwork(
-            glyph: .symbol(soloSound.systemIconName),
+            glyph: .symbol(singleSound.systemIconName),
             accent: globalSettings.customAccentColor ?? .accentColor,
             size: size,
             cornerRadius: cornerRadius,
@@ -783,7 +783,7 @@ import SwiftUI
       }
 
       let anchorSound =
-        audioManager.soloModeSound
+        audioManager.singleSound
         ?? audioManager.sounds
         .filter { $0.isSelected }
         .max { $0.playbackDuration < $1.playbackDuration }
@@ -795,7 +795,7 @@ import SwiftUI
     /// A preset with nothing to play: empty (the editor badges itself), or
     /// every sound turned off. Play is disabled then, so this says why.
     private var silentPresetMessage: LocalizedStringKey? {
-      guard presetManager.currentPreset != nil, audioManager.soloModeSound == nil,
+      guard presetManager.currentPreset != nil, audioManager.singleSound == nil,
         !audioManager.isQuickMix, !audioManager.isGloballyPlaying,
         !audioManager.hasSelectedSounds, !presetManager.isLoading
       else { return nil }
@@ -980,8 +980,8 @@ import SwiftUI
 
     /// nil for Quick Mix, which can't be a favorite.
     private var favoriteToken: String? {
-      if let solo = audioManager.soloModeSound {
-        return GlobalSettings.soloToken(forFileName: solo.fileName)
+      if let single = audioManager.singleSound {
+        return GlobalSettings.singleToken(forFileName: single.fileName)
       }
       guard !audioManager.isQuickMix, let preset = presetManager.currentPreset else { return nil }
       return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
@@ -989,9 +989,9 @@ import SwiftUI
 
     // MARK: - Actions Row
 
-    /// Solo uses the app accent, ignoring the last preset's accent.
+    /// Single sound uses the app accent, ignoring the last preset's accent.
     private var accentColor: Color {
-      if audioManager.soloModeSound != nil {
+      if audioManager.singleSound != nil {
         return globalSettings.customAccentColor ?? .accentColor
       }
       return presetManager.currentPreset?.accentColor ?? globalSettings.customAccentColor
@@ -1036,8 +1036,8 @@ import SwiftUI
 
     private var infoTitle: some View {
       Group {
-        if let soloSound = audioManager.soloModeSound {
-          Text(soloSound.localizedTitle)
+        if let singleSound = audioManager.singleSound {
+          Text(singleSound.localizedTitle)
         } else if let preset = presetManager.currentPreset {
           Text(verbatim: preset.displayName)
         } else {
@@ -1052,10 +1052,10 @@ import SwiftUI
     /// A built-in sound's caption, a custom sound's author, or a preset's creator.
     private var infoSubtitle: Text? {
       let text: Text?
-      if let soloSound = audioManager.soloModeSound {
-        if let subtitle = soloSound.localizedSubtitle {
+      if let singleSound = audioManager.singleSound {
+        if let subtitle = singleSound.localizedSubtitle {
           text = Text(subtitle)
-        } else if soloSound.isCustom, let author = soloSound.creditedAuthor {
+        } else if singleSound.isCustom, let author = singleSound.creditedAuthor {
           text = Text(author)
         } else {
           text = nil
@@ -1093,7 +1093,7 @@ import SwiftUI
       }
     }
 
-    /// Runs next/previous and any solo/preset hand-off without animation, so the
+    /// Runs next/previous and any single sound/preset hand-off without animation, so the
     /// layout behind the player stays put. Artwork and title slide in from `edge`.
     private func performNavigation(from edge: Edge, _ navigate: () -> Void) {
       navigationEdge = edge
@@ -1110,7 +1110,7 @@ import SwiftUI
 
     /// What's playing, so its artwork and title can transition when it changes.
     private var itemKey: String {
-      if let solo = audioManager.soloModeSound { return "sound:\(solo.fileName)" }
+      if let single = audioManager.singleSound { return "sound:\(single.fileName)" }
       if audioManager.isQuickMix { return "quickMix" }
       return "preset:\(presetManager.currentPreset?.id.uuidString ?? "none")"
     }
@@ -1132,13 +1132,13 @@ import SwiftUI
       .animation(Self.itemChangeAnimation, value: itemKey)
     }
 
-    /// Solo sounds play in the inline player and presets in the sheet, so
+    /// Single sounds play in the inline player and presets in the sheet, so
     /// crossing between them hands off.
     private func handlePostNavigation() {
       if inline {
-        if audioManager.soloModeSound == nil { onNavigateToPreset?() }
+        if audioManager.singleSound == nil { onNavigateToPreset?() }
       } else {
-        if audioManager.soloModeSound != nil { onNavigateToSolo?() }
+        if audioManager.singleSound != nil { onNavigateToSingle?() }
       }
     }
 

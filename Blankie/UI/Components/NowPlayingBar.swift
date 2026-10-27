@@ -219,13 +219,13 @@ import SwiftUI
       PresetArtworkLoader(
         properties: ArtworkProperties(
           timerActive: timerManager.isTimerActive,
-          soloSound: audioManager.soloModeSound,
+          singleSound: audioManager.singleSound,
           hasSelectedSounds: audioManager.hasSelectedSounds,
           isQuickMix: audioManager.isQuickMix,
           presetArtworkId: presetManager.currentPreset?.artworkId,
           animatedArtwork: presetManager.currentPreset?.animatedArtwork,
           // Matches the library and Now Playing tint: the theming preset's accent, else
-          // the app accent (themingPreset is nil during solo and Quick Mix).
+          // the app accent (themingPreset is nil during single sound and Quick Mix).
           accentColor: presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor,
           playingIcons: audioManager.playingSoundIcons(),
           isDefaultPreset: presetManager.currentPreset?.isDefault ?? true
@@ -252,8 +252,8 @@ import SwiftUI
     }
 
     private var title: String {
-      if let soloSound = audioManager.soloModeSound {
-        return soloSound.localizedTitle
+      if let singleSound = audioManager.singleSound {
+        return singleSound.localizedTitle
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")
@@ -264,7 +264,7 @@ import SwiftUI
     /// Status line under the title. Active playback shows no caption; the title
     /// alone reads cleaner.
     private var caption: String? {
-      if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds
+      if audioManager.singleSound == nil && !audioManager.hasSelectedSounds
         && !audioManager.isQuickMix
       {
         return String(localized: "No sounds selected")
@@ -365,7 +365,7 @@ import SwiftUI
   /// the async loader task only restarts when something it shows has changed.
   struct ArtworkProperties: Equatable {
     let timerActive: Bool
-    let soloSound: Sound?
+    let singleSound: Sound?
     let hasSelectedSounds: Bool
     let isQuickMix: Bool
     let presetArtworkId: UUID?
@@ -375,7 +375,7 @@ import SwiftUI
     let isDefaultPreset: Bool
 
     static func == (lhs: ArtworkProperties, rhs: ArtworkProperties) -> Bool {
-      lhs.timerActive == rhs.timerActive && lhs.soloSound?.id == rhs.soloSound?.id
+      lhs.timerActive == rhs.timerActive && lhs.singleSound?.id == rhs.singleSound?.id
         && lhs.hasSelectedSounds == rhs.hasSelectedSounds && lhs.isQuickMix == rhs.isQuickMix
         && lhs.presetArtworkId == rhs.presetArtworkId
         && lhs.animatedArtwork == rhs.animatedArtwork
@@ -394,9 +394,9 @@ import SwiftUI
 
     var body: some View {
       Group {
-        if let soloSound = properties.soloSound {
+        if let singleSound = properties.singleSound {
           FallbackArtwork(
-            glyph: .symbol(soloSound.systemIconName),
+            glyph: .symbol(singleSound.systemIconName),
             accent: properties.accentColor ?? .accentColor,
             size: 36, cornerRadius: 4, glyphFraction: 0.44)
         } else if !properties.hasSelectedSounds && !properties.isQuickMix {
@@ -429,9 +429,9 @@ import SwiftUI
       // its sounds are selected.
       .task(
         id:
-          "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")-\(properties.soloSound == nil)-\(properties.hasSelectedSounds || properties.isQuickMix)"
+          "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")-\(properties.singleSound == nil)-\(properties.hasSelectedSounds || properties.isQuickMix)"
       ) {
-        guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix
+        guard properties.singleSound == nil, properties.hasSelectedSounds || properties.isQuickMix
         else {
           artworkImage = nil
           return

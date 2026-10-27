@@ -44,7 +44,7 @@ class PresetManager {
   private(set) var lastPresetRestoreFailed = false
   private(set) var error: Error?
 
-  /// The preset whose theme (accent, blur, view mode) drives the UI. Nil in solo
+  /// The preset whose theme (accent, blur, view mode) drives the UI. Nil in single sound
   /// (which keeps `currentPreset` for restore) and Quick Mix. Views reading this
   /// must also observe `AudioManager` to update when those modes change.
   @MainActor
@@ -53,7 +53,7 @@ class PresetManager {
     switch AudioManager.shared.activeItem {
     case .preset, .allSounds:
       return currentPreset
-    case .solo, .quickMix, .none:
+    case .single, .quickMix, .none:
       return nil
     }
   }
@@ -291,7 +291,7 @@ extension PresetManager {
         && presetMembers.contains(sound.fileName)
         && !otherCustomMembers.contains(sound.fileName)
         && !selectedOnDefault.contains(sound.fileName)
-        && audio.soloModeSound?.id != sound.id
+        && audio.singleSound?.id != sound.id
         && audio.previewModeSound?.id != sound.id
     }
   }
@@ -354,10 +354,10 @@ extension PresetManager {
   func updateCurrentPresetState() {
     if isInitializing { return }
 
-    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // Skip while the mixer doesn't reflect the preset (single sound, preview, or none
     // applied yet). Preview forces the previewed sound to volume 1.0, which must
     // not bleed into the saved preset.
-    if AudioManager.shared.soloModeSound != nil || AudioManager.shared.previewModeSound != nil
+    if AudioManager.shared.singleSound != nil || AudioManager.shared.previewModeSound != nil
       || !presetStatesApplied
     {
       return
@@ -422,8 +422,8 @@ extension PresetManager {
     AnimatedArtworkFileStore.removeItemIfExists(relativePath: preset.staticArtworkPath)
   }
 
-  /// Starts a preset from Siri, a widget or CarPlay. Leaves solo and Quick Mix
-  /// first, since an application skips solo and never exits Quick Mix itself.
+  /// Starts a preset from Siri, a widget or CarPlay. Leaves single sound and Quick Mix
+  /// first, since an application skips single sound and never exits Quick Mix itself.
   /// An application plays the new mix, so only a current preset needs a play.
   @MainActor
   func playPreset(_ preset: Preset) throws {
@@ -679,9 +679,9 @@ extension PresetManager {
     let wasPlaying = AudioManager.shared.isGloballyPlaying
 
     Task { @MainActor in
-      // A solo sound owns playback (for example, restored at launch). The preset
-      // is already current for when solo ends, so don't apply its states now.
-      guard AudioManager.shared.soloModeSound == nil else {
+      // A single sound owns playback (for example, restored at launch). The preset
+      // is already current for when single sound ends, so don't apply its states now.
+      guard AudioManager.shared.singleSound == nil else {
         prefetchNearbyAnimatedArtwork(currentPreset: preset)
         return
       }
@@ -847,14 +847,14 @@ extension PresetManager {
 
     let presetSoundFileNames = Set(targetStates.map(\.fileName))
 
-    // Leaving solo mode: a solo sound that's in the preset keeps playing
+    // Leaving single-sound mode: a single sound that's in the preset keeps playing
     // without a restart; one that isn't must stop.
-    if let soloSound = AudioManager.shared.soloModeSound {
-      if !presetSoundFileNames.contains(soloSound.fileName) {
-        soloSound.isSelected = false
-        soloSound.pause()
+    if let singleSound = AudioManager.shared.singleSound {
+      if !presetSoundFileNames.contains(singleSound.fileName) {
+        singleSound.isSelected = false
+        singleSound.pause()
       }
-      AudioManager.shared.exitSoloModeWithoutResuming()
+      AudioManager.shared.exitSingleSoundWithoutResuming()
     }
 
     // Disable sounds that are not in this preset
@@ -1016,8 +1016,8 @@ extension PresetManager {
   }
 
   #if !WIDGET_EXTENSION
-    /// Replaces the named Spotlight indexes with the current presets and solo-able
-    /// sounds. Indexing is additive, so each type is deleted first. Failures are non-fatal.
+    /// Replaces the named Spotlight indexes with the current presets and the sounds that can play
+    /// on their own. Indexing is additive, so each type is deleted first. Failures are non-fatal.
     private func donateEntitiesToSpotlight() {
       let presetEntities = presets.map(PresetEntity.init)
       let soundEntities =
@@ -1050,9 +1050,9 @@ extension PresetManager {
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {
-    // Skip while the mixer doesn't reflect the preset (solo, preview, or none
+    // Skip while the mixer doesn't reflect the preset (single sound, preview, or none
     // applied yet). Preview forces the previewed sound to volume 1.0.
-    guard AudioManager.shared.soloModeSound == nil, AudioManager.shared.previewModeSound == nil,
+    guard AudioManager.shared.singleSound == nil, AudioManager.shared.previewModeSound == nil,
       presetStatesApplied
     else { return }
 

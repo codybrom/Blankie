@@ -33,7 +33,7 @@ import Testing
     originalStatesApplied = PresetManager.shared.presetStatesApplied
     PresetManager.shared.setCurrentPreset(nil)
     PresetManager.shared.presetStatesApplied = false
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isGloballyPlaying = false
     engineManager.pause()
   }

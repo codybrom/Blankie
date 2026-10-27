@@ -23,7 +23,7 @@ struct SidebarContentView: View {
 
   /// The sidebar follows the theming preset: its accent, then the app-wide
   /// custom accent, then the system accent. `themingPreset` is nil during
-  /// solo / Quick Mix, so those use the app accent.
+  /// single sound / Quick Mix, so those use the app accent.
   private var activeAccent: Color {
     presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }
@@ -82,16 +82,16 @@ struct SidebarContentView: View {
     guard !presetManager.isLoading, !presetManager.presets.isEmpty else { return }
     let validIDs = Set(presetManager.presets.map { $0.id.uuidString })
     // Custom sounds may be unavailable this session (SwiftData fallback or not loaded yet).
-    // Union loaded sounds with SwiftData rows, and skip solo-pruning when there are no rows
-    // but a solo favorite is unknown, so a transient load failure keeps those favorites.
+    // Union loaded sounds with SwiftData rows, and skip single-sound pruning when there are no rows
+    // but a single sound favorite is unknown, so a transient load failure keeps those favorites.
     let customRowNames = Set(CustomSoundManager.shared.getAllCustomSounds().map { $0.fileName })
     let validSounds = Set(audioManager.sounds.map { $0.fileName }).union(customRowNames)
-    let soloFavoriteIsUnknown = globalSettings.starredItems.contains { token in
-      guard let fileName = GlobalSettings.soloFileName(fromToken: token) else { return false }
+    let singleFavoriteIsUnknown = globalSettings.starredItems.contains { token in
+      guard let fileName = GlobalSettings.singleFileName(fromToken: token) else { return false }
       return !validSounds.contains(fileName)
     }
     globalSettings.pruneStarredItems(
       validPresetIDs: validIDs,
-      validSoundFileNames: (customRowNames.isEmpty && soloFavoriteIsUnknown) ? nil : validSounds)
+      validSoundFileNames: (customRowNames.isEmpty && singleFavoriteIsUnknown) ? nil : validSounds)
   }
 }

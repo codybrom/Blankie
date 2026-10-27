@@ -45,8 +45,8 @@ final class NowPlayingManager: NowPlayingPublishing {
   nonisolated(unsafe) private var timerActiveObservation: Task<Void, Never>?
   nonisolated(unsafe) private var lockScreenBgObservation: Task<Void, Never>?
   private var lastPresetId: UUID?  // Track last preset to avoid unnecessary artwork updates
-  private var lastSoloSoundId: UUID?  // Track last solo sound so its icon artwork refreshes
-  // Set when artwork changed without a preset/solo change (an animation pack
+  private var lastSingleSoundId: UUID?  // Track last single sound so its icon artwork refreshes
+  // Set when artwork changed without a preset/single sound change (an animation pack
   // finished downloading), so the next update rebuilds and publishes it in full.
   var needsArtworkRebuild = false
   /// The drawn fallback's glyph while it's the artwork, so a later selection
@@ -153,10 +153,10 @@ final class NowPlayingManager: NowPlayingPublishing {
       "NowPlayingManager: Updating Now Playing info with title: \(displayInfo.title), artist: \(displayInfo.artist)"
     )
 
-    // `preset` is the last active preset, which solo mode and Quick Mix don't clear.
+    // `preset` is the last active preset, which single-sound mode and Quick Mix don't clear.
     // Skip its thumbnail and accent while either is active.
-    let isSoloActive = AudioManager.shared.soloModeSound != nil
-    let presetIsOverridden = isSoloActive || AudioManager.shared.isQuickMix
+    let isSingleSoundActive = AudioManager.shared.singleSound != nil
+    let presetIsOverridden = isSingleSoundActive || AudioManager.shared.isQuickMix
     // Any non-default preset gets a key, artwork or not: the cache also covers
     // animated-only presets, and the widget falls back to the icon (as `display(for:)`).
     let widgetThumbnailKey =
@@ -169,11 +169,11 @@ final class NowPlayingManager: NowPlayingPublishing {
       thumbnailKey: widgetThumbnailKey,
       accentColorName: presetIsOverridden ? nil : preset?.accentColorName)
 
-    // Artwork rebuilds when the preset or the solo sound changes. Solo sounds have
-    // no preset, so a switch between solo sounds shows up only in the solo id.
-    let soloSoundId = AudioManager.shared.soloModeSound?.id
+    // Artwork rebuilds when the preset or the single sound changes. Single sounds have
+    // no preset, so a switch between single sounds shows up only in the single sound id.
+    let singleSoundId = AudioManager.shared.singleSound?.id
     let presetChanged = preset?.id != lastPresetId
-    let soloChanged = soloSoundId != lastSoloSoundId
+    let singleChanged = singleSoundId != lastSingleSoundId
 
     updateBasicInfo(displayInfo: displayInfo)
     updateAlbumAndDuration(creatorName: resolvedCreatorName)
@@ -181,11 +181,11 @@ final class NowPlayingManager: NowPlayingPublishing {
 
     // Touch artwork only on those changes so incremental updates don't restart
     // animated artwork.
-    if presetChanged || soloChanged || needsArtworkRebuild {
+    if presetChanged || singleChanged || needsArtworkRebuild {
       needsArtworkRebuild = false
-      if let soloSound = AudioManager.shared.soloModeSound {
-        // Solo mode: show the sound's own icon, not the last preset's artwork.
-        applySoloArtwork(for: soloSound)
+      if let singleSound = AudioManager.shared.singleSound {
+        // Single-sound mode: show the sound's own icon, not the last preset's artwork.
+        applySingleArtwork(for: singleSound)
         #if os(iOS)
           removeAnimatedArtwork()
         #endif
@@ -217,7 +217,7 @@ final class NowPlayingManager: NowPlayingPublishing {
         #endif
       }
       lastPresetId = preset?.id
-      lastSoloSoundId = soloSoundId
+      lastSingleSoundId = singleSoundId
 
       // One full publish, after both artworks are ready.
       MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
@@ -258,13 +258,13 @@ final class NowPlayingManager: NowPlayingPublishing {
     }
   }
 
-  /// Sets the lock-screen artwork to the soloed sound's rendered icon. Clears
+  /// Sets the lock-screen artwork to the single sound's rendered icon. Clears
   /// the cached preset-artwork identity so returning to a preset reloads it.
-  private func applySoloArtwork(for sound: Sound) {
+  private func applySingleArtwork(for sound: Sound) {
     currentArtworkId = nil
     currentStaticArtworkPath = nil
     shownFallbackGlyph = nil
-    if let artwork = soloArtwork(for: sound) {
+    if let artwork = singleArtwork(for: sound) {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
     } else if let fallback = loadArtwork() {
       nowPlayingInfo[MPMediaItemPropertyArtwork] = fallback
@@ -277,8 +277,8 @@ final class NowPlayingManager: NowPlayingPublishing {
   }
 
   private func updateAlbumAndDuration(creatorName: String?) {
-    if let soloSound = AudioManager.shared.soloModeSound {
-      updateSoloModeInfo(soloSound: soloSound)
+    if let singleSound = AudioManager.shared.singleSound {
+      updateSingleSoundInfo(singleSound: singleSound)
     } else {
       updatePresetModeInfo(creatorName: creatorName)
     }
@@ -288,8 +288,8 @@ final class NowPlayingManager: NowPlayingPublishing {
     }
   }
 
-  private func updateSoloModeInfo(soloSound: Sound) {
-    if soloSound.isCustom, soloSound.creditedAuthor != nil {
+  private func updateSingleSoundInfo(singleSound: Sound) {
+    if singleSound.isCustom, singleSound.creditedAuthor != nil {
       nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Blankie"
     } else {
       nowPlayingInfo.removeValue(forKey: MPMediaItemPropertyAlbumTitle)
@@ -478,7 +478,7 @@ final class NowPlayingManager: NowPlayingPublishing {
     currentArtworkId = nil
     currentStaticArtworkPath = nil
     lastPresetId = nil
-    lastSoloSoundId = nil
+    lastSingleSoundId = nil
     shownFallbackGlyph = nil
     #if os(iOS)
       removeAnimatedArtwork()

@@ -26,8 +26,8 @@
     /// What the card points at in Siri and Shortcuts. Quick Mix is not a preset
     /// and has no entity of its own, so it points at nothing.
     func entityIdentifiers(for preset: Preset?) -> [EntityIdentifier] {
-      if let soloSound = AudioManager.shared.soloModeSound {
-        return [EntityIdentifier(for: SoundEntity.self, identifier: soloSound.fileName)]
+      if let singleSound = AudioManager.shared.singleSound {
+        return [EntityIdentifier(for: SoundEntity.self, identifier: singleSound.fileName)]
       }
       guard !AudioManager.shared.isQuickMix, let preset else { return [] }
       return [EntityIdentifier(for: PresetEntity.self, identifier: preset.id)]
@@ -36,22 +36,22 @@
     // MARK: - Artwork
 
     /// Rebuilds the card's artwork, after the first pass only when the preset or
-    /// soloed sound changed: artwork is cached by id, and a new animation restarts the video.
+    /// single sound changed: artwork is cached by id, and a new animation restarts the video.
     func refreshArtwork(preset: Preset?, fallbackArtworkId: UUID?) {
-      let soloSound = AudioManager.shared.soloModeSound
-      let soloSoundId = soloSound?.id
-      guard !hasBuiltArtwork || preset?.id != lastPresetId || soloSoundId != lastSoloSoundId
+      let singleSound = AudioManager.shared.singleSound
+      let singleSoundId = singleSound?.id
+      guard !hasBuiltArtwork || preset?.id != lastPresetId || singleSoundId != lastSingleSoundId
       else {
         refreshFallbackArtworkIfItsIdChanged()
         return
       }
       hasBuiltArtwork = true
       lastPresetId = preset?.id
-      lastSoloSoundId = soloSoundId
+      lastSingleSoundId = singleSoundId
 
-      if let soloSound {
-        // Solo mode: the sound's own icon, not the last preset's artwork.
-        applySoloArtwork(for: soloSound)
+      if let singleSound {
+        // Single-sound mode: the sound's own icon, not the last preset's artwork.
+        applySingleArtwork(for: singleSound)
         #if os(iOS)
           clearAnimatedArtwork()
         #endif
@@ -152,13 +152,13 @@
       }
     #endif
 
-    /// A soloed sound's artwork: its SF Symbol on the accent-tinted card.
-    private func applySoloArtwork(for sound: Sound) {
-      guard let data = Self.jpegData(NowPlayingDisplay.soloFallbackImage(for: sound)) else {
+    /// A single sound's artwork: its SF Symbol on the accent-tinted card.
+    private func applySingleArtwork(for sound: Sound) {
+      guard let data = Self.jpegData(NowPlayingDisplay.singleFallbackImage(for: sound)) else {
         applyFallbackArtwork()
         return
       }
-      setArtwork(data: data, source: .solo(fileName: sound.fileName))
+      setArtwork(data: data, source: .single(fileName: sound.fileName))
     }
 
     /// The drawn fallback encodes the selected sounds' icons and the accent, so

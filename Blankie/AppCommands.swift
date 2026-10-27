@@ -46,7 +46,7 @@ import SwiftUI
 
         Divider()
 
-        // Cycles favorites (starred presets and solo sounds), the same path CarPlay
+        // Cycles favorites (starred presets and single sounds), the same path CarPlay
         // and the Now Playing remote use.
         Button("Next Favorite") {
           audioManager.navigateToNextPreset()
@@ -107,9 +107,9 @@ import SwiftUI
           Task { await exportCurrentPreset() }
         }
         .keyboardShortcut(.exportPreset)
-        // Solo keeps currentPreset set, so ⌘E is also disabled in solo to avoid
+        // Single sound keeps currentPreset set, so ⌘E is also disabled in single sound to avoid
         // exporting a preset you aren't hearing.
-        .disabled(presetManager.currentPreset == nil || audioManager.soloModeSound != nil)
+        .disabled(presetManager.currentPreset == nil || audioManager.singleSound != nil)
 
         Button("Manage Sounds") {
           appState.showingManageSounds = true

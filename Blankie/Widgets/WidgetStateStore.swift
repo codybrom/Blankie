@@ -15,7 +15,7 @@ struct WidgetPlaybackState: Codable, Equatable {
   var title: String
   var subtitle: String?
   var soundSystemIconNames: [String]
-  /// Cached `preset_thumb_<uuid>` artwork key. Nil for solo, Quick Mix and the
+  /// Cached `preset_thumb_<uuid>` artwork key. Nil for single sound, Quick Mix and the
   /// default preset; the widget falls back to the icon.
   var thumbnailKey: String?
   /// The `starredItems` token for what's active, so a favorites tile can tell
@@ -62,7 +62,8 @@ struct WidgetSnapshot: Codable, Equatable {
   var playback: WidgetPlaybackState
   var favorites: [WidgetFavorite]
   var quickMixSounds: [WidgetQuickMixSound]
-  /// Every preset and solo-able sound, for the Pinned Sound picker (starring not required).
+  /// Every preset and every sound that can play on its own for the Pinned Sound picker, starred
+  /// or not.
   var pinnableItems: [WidgetFavorite]
   /// The user's app accent (`GlobalSettings.customAccentColor`), for the Quick Mix
   /// widget. Can differ from the widget bundle's static AccentColor asset.

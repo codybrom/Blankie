@@ -270,11 +270,11 @@ import os
       )
     }
 
-    // A starred sound row; selecting it solos the sound. `@MainActor` for
+    // A starred sound row; selecting it plays the sound on its own. `@MainActor` for
     // the `creditedAuthor` lookup.
     @MainActor
-    static func createSoloItem(_ sound: Sound) -> CPListItem {
-      let isActive = AudioManager.shared.soloModeSound?.id == sound.id
+    static func createSingleItem(_ sound: Sound) -> CPListItem {
+      let isActive = AudioManager.shared.singleSound?.id == sound.id
 
       // Caption only a custom sound that credits an artist. Built-in authors are
       // in the credits screens.
@@ -289,7 +289,7 @@ import os
 
       item.handler = { _, completion in
         Task {
-          await MainActor.run { SoundsListTemplate.playSoundInSoloMode(sound) }
+          await MainActor.run { SoundsListTemplate.playSingleSound(sound) }
           completion()
         }
       }

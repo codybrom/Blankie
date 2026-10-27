@@ -19,7 +19,7 @@ import Testing
   private let audioManager = AudioManager.shared
   private let snapshot = DefaultsSnapshot([
     "soundState",
-    UserDefaultsKeys.soloModeSoundFileName,
+    UserDefaultsKeys.singleSoundFileName,
     UserDefaultsKeys.starredItems,
     "defaultPreset",
     "savedPresets",

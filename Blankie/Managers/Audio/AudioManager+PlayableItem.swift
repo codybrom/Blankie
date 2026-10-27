@@ -21,12 +21,12 @@ struct PlayableItemDisplay {
 }
 
 extension AudioManager {
-  /// What drives the mixer: solo, then Quick Mix, then the current preset (the
+  /// What drives the mixer: single sound, then Quick Mix, then the current preset (the
   /// default reads as `.allSounds`). `PresetManager.themingPreset` uses the same order.
   @MainActor
   var activeItem: PlayableItem? {
-    if let soloSound = soloModeSound {
-      return .solo(fileName: soloSound.fileName)
+    if let singleSound = singleSound {
+      return .single(fileName: singleSound.fileName)
     }
     if isQuickMix {
       return .quickMix
@@ -57,12 +57,12 @@ extension AudioManager {
         subtitle: nil,
         accentColorName: appAccent,
         thumbnailKey: nil)
-    case .solo(let fileName):
-      guard let soloSound = sound(fileName: fileName) else { return nil }
+    case .single(let fileName):
+      guard let singleSound = sound(fileName: fileName) else { return nil }
       return PlayableItemDisplay(
-        displayName: soloSound.localizedTitle,
-        systemIconName: soloSound.systemIconName,
-        subtitle: soloSound.isCustom ? soloSound.creditedAuthor : nil,
+        displayName: singleSound.localizedTitle,
+        systemIconName: singleSound.systemIconName,
+        subtitle: singleSound.isCustom ? singleSound.creditedAuthor : nil,
         accentColorName: appAccent,
         thumbnailKey: nil)
     case .preset(let id):

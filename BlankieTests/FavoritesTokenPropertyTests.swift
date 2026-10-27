@@ -61,7 +61,7 @@ private enum Gen {
     case 0: return .allSounds
     case 1: return .quickMix
     case 2: return .preset(uuid(&rng))
-    default: return .solo(fileName: fileName(&rng))
+    default: return .single(fileName: fileName(&rng))
     }
   }
 }
@@ -121,7 +121,7 @@ private enum Gen {
       switch PlayableItem(token: token) {
       case .allSounds: #expect(token == "allSounds", "step \(step)")
       case .quickMix: #expect(token == "quickMix", "step \(step)")
-      case .solo(let fileName): #expect(token == "solo:" + fileName, "step \(step)")
+      case .single(let fileName): #expect(token == "solo:" + fileName, "step \(step)")
       case .preset(let id): #expect(UUID(uuidString: token) == id, "step \(step)")
       case nil:
         #expect(
@@ -165,7 +165,7 @@ private enum Gen {
   private func pool(_ rng: inout SeededGenerator) -> [String] {
     var tokens = [GlobalSettings.allSoundsToken, GlobalSettings.quickMixToken]
     tokens += (0..<4).map { _ in Gen.uuid(&rng).uuidString }
-    tokens += ["rain", "waves", "a:b", ""].map(GlobalSettings.soloToken(forFileName:))
+    tokens += ["rain", "waves", "a:b", ""].map(GlobalSettings.singleToken(forFileName:))
     return tokens
   }
 
@@ -230,8 +230,8 @@ private enum Gen {
     }
   }
 
-  /// Kept: both special tokens, live presets and existing solo sounds (every solo when the
-  /// sound list is unknown). Undecodable tokens are dropped.
+  /// Kept: both special tokens, live presets and existing single sounds (every single sound when
+  /// the sound list is unknown). Undecodable tokens are dropped.
   @Test func pruneKeepsAnOrderedSubsequenceByTheRules() {
     var rng = SeededGenerator(seed: Self.seed &+ 2)
     for sequence in 0..<Self.sequences {

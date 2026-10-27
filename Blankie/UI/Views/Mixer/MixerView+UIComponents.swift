@@ -15,8 +15,8 @@ import SwiftUI
     // MARK: - Navigation Elements
 
     var navigationTitle: String {
-      // Solo's inline player already shows the sound name under the artwork.
-      if audioManager.soloModeSound != nil {
+      // Single sound's inline player already shows the sound name under the artwork.
+      if audioManager.singleSound != nil {
         return ""
       }
 
@@ -37,7 +37,7 @@ import SwiftUI
     /// height (large iPhone in landscape), where the nav title names the preset.
     var showsPresetPageHeader: Bool {
       verticalSizeClass != .compact
-        && !presetManager.isLoading && audioManager.soloModeSound == nil
+        && !presetManager.isLoading && audioManager.singleSound == nil
         && !audioManager.isQuickMix && presetManager.currentPreset != nil
     }
 
@@ -108,7 +108,7 @@ import SwiftUI
       let target = editTarget
       ToolbarItemGroup(placement: .topBarTrailing) {
         if globalSettings.enableSpatialAudio,
-          audioManager.soloModeSound == nil, !audioManager.isQuickMix,
+          audioManager.singleSound == nil, !audioManager.isQuickMix,
           presetManager.currentPreset != nil
         {
           Button {
@@ -140,8 +140,8 @@ import SwiftUI
     /// The default preset has no editor, so its slot becomes New Preset (seeded
     /// with the playing sounds). `nil` renders the button disabled.
     var editTarget: (icon: String, label: String, action: () -> Void)? {
-      if let soloSound = audioManager.soloModeSound {
-        return ("slider.vertical.3", "Edit Sound", { soundToEdit = soloSound })
+      if let singleSound = audioManager.singleSound {
+        return ("slider.vertical.3", "Edit Sound", { soundToEdit = singleSound })
       } else if audioManager.isQuickMix {
         return ("slider.vertical.3", "Edit Quick Mix", { showingQuickMixEditor = true })
       } else if let currentPreset = presetManager.currentPreset {

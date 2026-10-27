@@ -92,7 +92,7 @@ enum AppDataMigrator {
       UserDefaultsKeys.volumeWithOtherAudio,
       UserDefaultsKeys.showSoundNames,
       UserDefaultsKeys.iconSize,
-      UserDefaultsKeys.soloModeSoundFileName,
+      UserDefaultsKeys.singleSoundFileName,
       UserDefaultsKeys.showingListView,
       UserDefaultsKeys.showProgressBorder,
       UserDefaultsKeys.lockPortraitOrientationiOS,
@@ -308,7 +308,7 @@ enum AppDataMigrator {
       UserDefaultsKeys.mixWithOthers,
       UserDefaultsKeys.volumeWithOtherAudio,
       UserDefaultsKeys.language,
-      UserDefaultsKeys.soloModeSoundFileName,
+      UserDefaultsKeys.singleSoundFileName,
 
       // Audio system keys
       "soundState",

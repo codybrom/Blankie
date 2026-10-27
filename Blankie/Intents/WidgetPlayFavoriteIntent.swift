@@ -40,7 +40,7 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
     }
 
     // Resolve the token first so a stale tile throws without touching what's
-    // playing. `playPreset` leaves solo and Quick Mix itself.
+    // playing. `playPreset` leaves single sound and Quick Mix itself.
     switch PlayableItem(token: favoriteToken) {
     case .allSounds:
       if let defaultPreset = PresetManager.shared.presets.first(where: { $0.isDefault }) {
@@ -48,14 +48,14 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
       }
       return .result()
     case .quickMix:
-      // Entering Quick Mix or solo leaves the other mode itself.
+      // Entering Quick Mix or single sound leaves the other mode itself.
       audio.enterQuickMix()
       return .result()
-    case .solo(let fileName):
-      guard let soloSound = audio.sound(fileName: fileName) else {
+    case .single(let fileName):
+      guard let singleSound = audio.sound(fileName: fileName) else {
         throw BlankieIntentError.soundNotFound
       }
-      audio.enterSoloMode(for: soloSound)
+      audio.enterSingleSound(for: singleSound)
       return .result()
     case .preset(let id):
       guard let preset = PresetManager.shared.presets.first(where: { $0.id == id }) else {

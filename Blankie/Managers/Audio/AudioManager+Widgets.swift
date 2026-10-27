@@ -15,7 +15,7 @@ extension AudioManager {
   @MainActor
   func publishCurrentWidgetSnapshot() {
     let preset = PresetManager.shared.currentPreset
-    let overridden = soloModeSound != nil || isQuickMix
+    let overridden = singleSound != nil || isQuickMix
     let display = NowPlayingDisplay.getDisplayInfo(
       presetName: preset?.name, creatorName: preset?.creatorName, preset: preset)
     publishWidgetSnapshot(
@@ -41,10 +41,10 @@ extension AudioManager {
         isPlaying: isPlaying,
         title: title,
         subtitle: subtitle,
-        // Quick Mix shows its shuffle glyph (as in the sidebar). Solo keeps other
-        // sounds selected, so it shows only the soloed sound's icon.
+        // Quick Mix shows its shuffle glyph (as in the sidebar). Single sound keeps other
+        // sounds selected, so it shows only the single sound's icon.
         soundSystemIconNames: {
-          if let soloSound = soloModeSound { return [soloSound.systemIconName] }
+          if let singleSound = singleSound { return [singleSound.systemIconName] }
           if isQuickMix { return ["shuffle"] }
           return playingSoundIcons(limit: 4)
         }(),
@@ -68,7 +68,7 @@ extension AudioManager {
     // Recomputed so a global accent change shows at once: the active preset's
     // accent, else the app-wide custom accent.
     let presetAccent =
-      soloModeSound == nil && !isQuickMix
+      singleSound == nil && !isQuickMix
       ? PresetManager.shared.currentPreset?.accentColorName : nil
     let accentColorName = presetAccent ?? GlobalSettings.shared.customAccentColor?.toString
     let playback = WidgetPlaybackState(
@@ -113,14 +113,14 @@ extension AudioManager {
     }
   }
 
-  /// Every preset and solo-able sound for the Pinned Sound widget's picker, starred
-  /// or not. Uses `widgetFavorite(forToken:)` so a pin matches its Favorites tile.
+  /// Every preset and every sound that can play on its own for the Pinned Sound widget's picker,
+  /// starred or not. Uses `widgetFavorite(forToken:)` so a pin matches its Favorites tile.
   func widgetPinnableItems() -> [WidgetFavorite] {
     let presetTokens = PresetManager.shared.presets.map { preset in
       preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
     }
     let soundTokens = sounds.filter { !$0.isPresetUseOnly }.map { sound in
-      GlobalSettings.soloToken(forFileName: sound.fileName)
+      GlobalSettings.singleToken(forFileName: sound.fileName)
     }
     return (presetTokens + soundTokens).compactMap(widgetFavorite(forToken:))
   }
@@ -138,7 +138,7 @@ extension AudioManager {
     return NowPlayingManager.soundNameSummary(titles)
   }
 
-  /// The `starredItems` token for `activeItem` (solo, then Quick Mix, then preset).
+  /// The `starredItems` token for `activeItem` (single sound, then Quick Mix, then preset).
   @MainActor
   var currentFavoriteToken: String? {
     activeItem?.token

@@ -4,9 +4,9 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Solo, Quick Mix and music exclusivity on AudioManager.shared, engine-free with TestSounds.
-//  Synthetic `test-*` names keep the real default preset's sounds from matching on re-sync.
-//  Serialized: each test restores the manager's sounds, mode flags and touched defaults.
+//  Single sound, Quick Mix and music exclusivity on AudioManager.shared, engine-free with
+//  TestSounds. Synthetic `test-*` names keep the real default preset's sounds from matching on
+//  re-sync. Serialized: each test restores the manager's sounds, mode flags and touched defaults.
 //
 
 import Foundation
@@ -17,20 +17,20 @@ import Testing
 @Suite(.serialized) @MainActor final class AudioStateMachineTests {
   private let audioManager = AudioManager.shared
   private let originalSounds: [Sound]
-  private let snapshot = DefaultsSnapshot([UserDefaultsKeys.soloModeSoundFileName])
+  private let snapshot = DefaultsSnapshot([UserDefaultsKeys.singleSoundFileName])
   nonisolated private static let testNames = [
-    "test-music-1", "test-music-2", "test-ambient", "test-a", "test-b", "test-solo",
+    "test-music-1", "test-music-2", "test-ambient", "test-a", "test-b", "test-single",
   ]
 
   init() {
     GlobalSettings.shared.setAutoPlayOnLaunch(false)
     originalSounds = audioManager.sounds
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
   }
 
   isolated deinit {
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     audioManager.quickMixOriginalStates = []
     audioManager.preQuickMixPreset = nil
@@ -59,39 +59,39 @@ import Testing
     #expect(ambient.isSelected, "a non-music sound is not affected by music exclusivity")
   }
 
-  // MARK: - Solo mode
+  // MARK: - Single sound
 
-  @Test func enterSoloPreservesOthersAndForcesFullVolume() {
+  @Test func enterSinglePreservesOthersAndForcesFullVolume() {
     let a = TestSound(fileName: "test-a")
     a.isSelected = true
     let b = TestSound(fileName: "test-b")
     b.isSelected = true
-    let solo = TestSound(fileName: "test-solo")
-    solo.volume = 0.6
-    audioManager.sounds = [a, b, solo]
+    let single = TestSound(fileName: "test-single")
+    single.volume = 0.6
+    audioManager.sounds = [a, b, single]
 
-    audioManager.enterSoloMode(for: solo, startPlaying: false)
+    audioManager.enterSingleSound(for: single, startPlaying: false)
 
-    #expect(audioManager.soloModeSound?.id == solo.id)
-    #expect(solo.isSelected)
-    #expect(solo.volume == 1.0)
-    #expect(a.isSelected, "other sounds keep their selection while soloed")
+    #expect(audioManager.singleSound?.id == single.id)
+    #expect(single.isSelected)
+    #expect(single.volume == 1.0)
+    #expect(a.isSelected, "other sounds keep their selection while a single sound plays")
     #expect(b.isSelected)
     #expect(!audioManager.isGloballyPlaying)
   }
 
-  @Test func exitSoloRestoresOriginalState() {
-    let solo = TestSound(fileName: "test-solo")
-    solo.volume = 0.6
-    solo.isSelected = false
-    audioManager.sounds = [solo]
+  @Test func exitSingleRestoresOriginalState() {
+    let single = TestSound(fileName: "test-single")
+    single.volume = 0.6
+    single.isSelected = false
+    audioManager.sounds = [single]
 
-    audioManager.enterSoloMode(for: solo, startPlaying: false)
-    audioManager.exitSoloMode()
+    audioManager.enterSingleSound(for: single, startPlaying: false)
+    audioManager.exitSingleSound()
 
-    #expect(audioManager.soloModeSound == nil)
-    #expect(solo.volume == 0.6)
-    #expect(!solo.isSelected)
+    #expect(audioManager.singleSound == nil)
+    #expect(single.volume == 0.6)
+    #expect(!single.isSelected)
   }
 
   // MARK: - Quick Mix
@@ -115,15 +115,16 @@ import Testing
 
   // MARK: - Leaving transient modes
 
-  /// Siri and widget play intents call this first, so an active solo can't mask what they apply.
-  @Test func leaveTransientModesExitsSolo() {
-    let solo = TestSound(fileName: "test-solo")
-    audioManager.sounds = [solo]
-    audioManager.enterSoloMode(for: solo, startPlaying: false)
-    #expect(audioManager.soloModeSound != nil)
+  /// Siri and widget play intents call this first, so an active single sound can't mask what they
+  /// apply.
+  @Test func leaveTransientModesExitsSingle() {
+    let single = TestSound(fileName: "test-single")
+    audioManager.sounds = [single]
+    audioManager.enterSingleSound(for: single, startPlaying: false)
+    #expect(audioManager.singleSound != nil)
 
     audioManager.leaveTransientModes()
-    #expect(audioManager.soloModeSound == nil)
+    #expect(audioManager.singleSound == nil)
   }
 
   /// A later Quick Mix action then enters fresh.

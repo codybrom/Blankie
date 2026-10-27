@@ -38,7 +38,7 @@ enum UserDefaultsKeys {
   static let volumeWithOtherAudio = "volumeWithOtherAudio"
   static let showSoundNames = "showSoundNames"
   static let iconSize = "iconSize"
-  static let soloModeSoundFileName = "soloModeSoundFileName"
+  static let singleSoundFileName = "soloModeSoundFileName"
   static let showingListView = "showingListView"
   static let showProgressBorder = "showProgressBorder"
   static let showPlaybackAsContinuous = "showPlaybackAsContinuous"
@@ -71,18 +71,18 @@ class GlobalSettings {
   static let allSoundsToken = PlayableItem.allSounds.token
   static let quickMixToken = PlayableItem.quickMix.token
 
-  /// Prefix for solo-sound tokens. A soloed sound is starred as
+  /// Prefix for single-sound tokens. A single sound is starred as
   /// `"solo:<fileName>"`, using the sound's stable `fileName` as its identity.
-  static let soloTokenPrefix = PlayableItem.soloTokenPrefix
+  static let singleTokenPrefix = PlayableItem.singleTokenPrefix
 
-  /// The starred token for soloing the given sound file.
-  static func soloToken(forFileName fileName: String) -> String {
-    PlayableItem.solo(fileName: fileName).token
+  /// The starred token for playing the given sound file on its own.
+  static func singleToken(forFileName fileName: String) -> String {
+    PlayableItem.single(fileName: fileName).token
   }
 
-  /// The sound file name encoded in a solo token, or nil if it isn't one.
-  static func soloFileName(fromToken token: String) -> String? {
-    if case .solo(let fileName) = PlayableItem(token: token) { return fileName }
+  /// The sound file name encoded in a single sound token, or nil if it isn't one.
+  static func singleFileName(fromToken token: String) -> String? {
+    if case .single(let fileName) = PlayableItem(token: token) { return fileName }
     return nil
   }
 
@@ -115,7 +115,7 @@ class GlobalSettings {
   var quickMixSoundFileNames: [String]
   /// Starred items in display order, shown in the iPad sidebar and CarPlay.
   /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
-  /// solo-sound token (`soloToken(forFileName:)`).
+  /// single-sound token (`singleToken(forFileName:)`).
   var starredItems: [String]
   var availableLanguages: [Language] = []
   var lockScreenBackgroundEnabled: Bool
@@ -215,22 +215,22 @@ extension GlobalSettings {
   }
 }
 
-// MARK: - Solo Mode
+// MARK: - Single Sound
 
 extension GlobalSettings {
   @MainActor
-  func saveSoloModeSound(fileName: String?) {
+  func saveSingleSoundSound(fileName: String?) {
     if let fileName = fileName {
-      UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.soloModeSoundFileName)
-      Logger.settings.debug("GlobalSettings: Saved solo mode sound: \(fileName)")
+      UserDefaults.shared.set(fileName, forKey: UserDefaultsKeys.singleSoundFileName)
+      Logger.settings.debug("GlobalSettings: Saved single sound: \(fileName)")
     } else {
-      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.soloModeSoundFileName)
-      Logger.settings.debug("GlobalSettings: Cleared solo mode sound")
+      UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.singleSoundFileName)
+      Logger.settings.debug("GlobalSettings: Cleared single sound")
     }
   }
 
-  func getSavedSoloModeFileName() -> String? {
-    return UserDefaults.shared.string(forKey: UserDefaultsKeys.soloModeSoundFileName)
+  func getSavedSingleSoundFileName() -> String? {
+    return UserDefaults.shared.string(forKey: UserDefaultsKeys.singleSoundFileName)
   }
 }
 

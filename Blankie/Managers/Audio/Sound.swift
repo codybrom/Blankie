@@ -98,10 +98,10 @@ open class Sound: NSObject, Identifiable {
             return
           }
 
-          // In solo mode, other selected sounds keep their selection but stay silent.
-          if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
+          // In single-sound mode, other selected sounds keep their selection but stay silent.
+          if let single = AudioManager.shared.singleSound, single.id != self.id {
             Logger.sounds.debug(
-              "Sound: Skipping auto-play for '\(self.fileName)' - solo mode active")
+              "Sound: Skipping auto-play for '\(self.fileName)' - single-sound mode active")
             return
           }
 
@@ -133,10 +133,11 @@ open class Sound: NSObject, Identifiable {
 
               guard AudioManager.shared.isGloballyPlaying else { return }
 
-              // Solo mode may have started during the yield.
-              if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
+              // Single-sound mode may have started during the yield.
+              if let single = AudioManager.shared.singleSound, single.id != self.id {
                 Logger.sounds.debug(
-                  "Sound: Skipping delayed auto-play for '\(self.fileName)' - solo mode active")
+                  "Sound: Skipping delayed auto-play for '\(self.fileName)' - single-sound mode active"
+                )
                 return
               }
 
@@ -387,10 +388,10 @@ open class Sound: NSObject, Identifiable {
   // MARK: - Spatial Arrangement (experimental, session-scoped)
 
   /// Whether this sound joins the spatial field: a session is active, a preset is
-  /// playing (not solo or Quick Mix), and the sound is still in the field.
+  /// playing (not single sound or Quick Mix), and the sound is still in the field.
   var isSpatialEligible: Bool {
     SpatialSessionManager.shared.isActive
-      && AudioManager.shared.soloModeSound == nil
+      && AudioManager.shared.singleSound == nil
       && !AudioManager.shared.isQuickMix
       && SpatialSessionManager.shared.isInField(fileName)
   }
@@ -488,9 +489,9 @@ open class Sound: NSObject, Identifiable {
 
     Logger.sounds.debug("Sound: Non-looping sound '\(self.fileName)' finished playing")
 
-    if AudioManager.shared.soloModeSound?.id == id {
+    if AudioManager.shared.singleSound?.id == id {
       Logger.sounds.debug(
-        "Sound: Non-looping sound in solo mode finished, pausing global playback")
+        "Sound: Non-looping sound in single-sound mode finished, pausing global playback")
       // An exhausted node still reports isPlaying, which makes resetSoundPosition()
       // skip the rewind. Stop it first.
       player?.stop()

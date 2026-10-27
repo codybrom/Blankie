@@ -51,7 +51,7 @@ import os
       template.updateSections(sections)
     }
 
-    /// The current mix (solo, Quick Mix or a preset), or the most recent preset when
+    /// The current mix (single sound, Quick Mix or a preset), or the most recent preset when
     /// nothing is active. The header reads "Now Playing" while playing, else "Recent".
     @MainActor
     private static func nowPlayingSection() -> CPListSection? {
@@ -60,8 +60,8 @@ import os
         ? String(localized: "Now Playing") : String(localized: "Recent")
 
       let item: CPListItem
-      if let solo = AudioManager.shared.soloModeSound {
-        item = PresetListTemplate.createSoloItem(solo)
+      if let single = AudioManager.shared.singleSound {
+        item = PresetListTemplate.createSingleItem(single)
       } else if AudioManager.shared.isQuickMix {
         item = quickMixItem()
       } else if let preset = PresetManager.shared.currentPreset {
@@ -106,9 +106,9 @@ import os
       let presets = PresetManager.shared.presets
       let items: [CPListItem] = GlobalSettings.shared.starredItems.compactMap { token in
         switch PlayableItem(token: token) {
-        case .solo(let fileName):
+        case .single(let fileName):
           guard let sound = AudioManager.shared.sound(fileName: fileName) else { return nil }
-          return PresetListTemplate.createSoloItem(sound)
+          return PresetListTemplate.createSingleItem(sound)
         case .allSounds:
           guard let defaultPreset = presets.first(where: { $0.isDefault }) else { return nil }
           return PresetListTemplate.createAllSoundsItem(defaultPreset)

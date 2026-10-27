@@ -19,17 +19,17 @@ nonisolated enum PlayableItem: Equatable, Hashable {
   case preset(UUID)
   /// The transient Quick Mix.
   case quickMix
-  /// A soloed sound, identified by its stable `fileName`.
-  case solo(fileName: String)
+  /// A single sound, identified by its stable `fileName`.
+  case single(fileName: String)
 
   // Canonical token strings. These are persisted; never change them.
   private static let allSoundsToken = "allSounds"
   private static let quickMixToken = "quickMix"
-  /// A soloed sound is stored as `"solo:<fileName>"`.
-  static let soloTokenPrefix = "solo:"
+  /// A single sound is stored as `"solo:<fileName>"`.
+  static let singleTokenPrefix = "solo:"
 
   /// Decodes a persisted `starredItems` token, or nil if it isn't a valid one.
-  /// The special tokens and the solo prefix are checked before falling back to a
+  /// The special tokens and the single sound prefix are checked before falling back to a
   /// preset UUID, so the four shapes stay mutually exclusive.
   init?(token: String) {
     switch token {
@@ -38,8 +38,8 @@ nonisolated enum PlayableItem: Equatable, Hashable {
     case Self.quickMixToken:
       self = .quickMix
     default:
-      if token.hasPrefix(Self.soloTokenPrefix) {
-        self = .solo(fileName: String(token.dropFirst(Self.soloTokenPrefix.count)))
+      if token.hasPrefix(Self.singleTokenPrefix) {
+        self = .single(fileName: String(token.dropFirst(Self.singleTokenPrefix.count)))
       } else if let id = UUID(uuidString: token) {
         self = .preset(id)
       } else {
@@ -55,8 +55,8 @@ nonisolated enum PlayableItem: Equatable, Hashable {
       return Self.allSoundsToken
     case .quickMix:
       return Self.quickMixToken
-    case .solo(let fileName):
-      return Self.soloTokenPrefix + fileName
+    case .single(let fileName):
+      return Self.singleTokenPrefix + fileName
     case .preset(let id):
       return id.uuidString
     }

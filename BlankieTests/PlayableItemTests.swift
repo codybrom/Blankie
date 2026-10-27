@@ -20,7 +20,7 @@ import Testing
   @Test func encodesEachShapeToItsPersistedToken() {
     #expect(PlayableItem.allSounds.token == "allSounds")
     #expect(PlayableItem.quickMix.token == "quickMix")
-    #expect(PlayableItem.solo(fileName: "rain").token == "solo:rain")
+    #expect(PlayableItem.single(fileName: "rain").token == "solo:rain")
     let id = UUID()
     #expect(PlayableItem.preset(id).token == id.uuidString)
   }
@@ -30,7 +30,7 @@ import Testing
   @Test func decodesEachShape() {
     #expect(PlayableItem(token: "allSounds") == .allSounds)
     #expect(PlayableItem(token: "quickMix") == .quickMix)
-    #expect(PlayableItem(token: "solo:rain") == .solo(fileName: "rain"))
+    #expect(PlayableItem(token: "solo:rain") == .single(fileName: "rain"))
     let id = UUID()
     #expect(PlayableItem(token: id.uuidString) == .preset(id))
   }
@@ -45,7 +45,7 @@ import Testing
 
   @Test func roundTripsThroughToken() {
     let items: [PlayableItem] = [
-      .allSounds, .quickMix, .solo(fileName: "distant-thunder"), .preset(UUID()),
+      .allSounds, .quickMix, .single(fileName: "distant-thunder"), .preset(UUID()),
     ]
     for item in items {
       #expect(PlayableItem(token: item.token) == item)
@@ -53,8 +53,8 @@ import Testing
   }
 
   /// Only the first `solo:` is stripped, so a delimiter in the file name survives.
-  @Test func soloPreservesColonInFileName() {
-    let item = PlayableItem.solo(fileName: "a:b")
+  @Test func singlePreservesColonInFileName() {
+    let item = PlayableItem.single(fileName: "a:b")
     #expect(item.token == "solo:a:b")
     #expect(PlayableItem(token: "solo:a:b") == item)
   }
@@ -63,8 +63,12 @@ import Testing
 
   @Test func shapesAreMutuallyExclusive() {
     #expect(PlayableItem(token: "allSounds") != .preset(UUID()))
-    if case .preset = PlayableItem(token: "solo:rain") { Issue.record("solo parsed as preset") }
-    if case .solo = PlayableItem(token: UUID().uuidString) { Issue.record("uuid parsed as solo") }
+    if case .preset = PlayableItem(token: "solo:rain") {
+      Issue.record("single sound parsed as preset")
+    }
+    if case .single = PlayableItem(token: UUID().uuidString) {
+      Issue.record("uuid parsed as single sound")
+    }
     if case .preset = PlayableItem(token: "quickMix") { Issue.record("quickMix parsed as preset") }
   }
 
@@ -74,6 +78,7 @@ import Testing
     #expect(PlayableItem.allSounds.token == GlobalSettings.allSoundsToken)
     #expect(PlayableItem.quickMix.token == GlobalSettings.quickMixToken)
     #expect(
-      PlayableItem.solo(fileName: "rain").token == GlobalSettings.soloToken(forFileName: "rain"))
+      PlayableItem.single(fileName: "rain").token == GlobalSettings.singleToken(forFileName: "rain")
+    )
   }
 }

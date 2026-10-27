@@ -162,9 +162,9 @@ struct PresetPickerRow: View {
     return preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }
 
-  /// Solo mode takes precedence over the current preset.
+  /// Single-sound mode takes precedence over the current preset.
   private var isCurrent: Bool {
-    audioManager.soloModeSound == nil && presetManager.currentPreset?.id == preset.id
+    audioManager.singleSound == nil && presetManager.currentPreset?.id == preset.id
   }
 
   /// macOS: while Settings holds the detail pane, any single click (current row
@@ -268,11 +268,11 @@ struct PresetPickerRow: View {
   private func applyPreset() {
     Task {
       do {
-        // Solo pauses the preset's sounds but keeps `currentPreset`, so
+        // Single sound pauses the preset's sounds but keeps `currentPreset`, so
         // returning to the same preset has to force a re-apply.
-        let wasSolo = audioManager.soloModeSound != nil
+        let wasSingle = audioManager.singleSound != nil
         audioManager.leaveTransientModes()
-        try presetManager.applyPreset(preset, forceReapply: wasSolo)
+        try presetManager.applyPreset(preset, forceReapply: wasSingle)
         if dismissOnSelect { dismiss() }
         onSelection?()
       } catch {
@@ -282,9 +282,9 @@ struct PresetPickerRow: View {
   }
 }
 
-/// A row that solos a single sound. Mirrors `PresetPickerRow`; the star uses
+/// A row that plays a single sound. Mirrors `PresetPickerRow`; the star uses
 /// the `solo:<fileName>` token.
-struct SoloPickerRow: View {
+struct SingleSoundPickerRow: View {
   let sound: Sound
   let isEditMode: Bool
   let dismissOnSelect: Bool
@@ -310,7 +310,7 @@ struct SoloPickerRow: View {
   }
 
   private var starToken: String {
-    GlobalSettings.soloToken(forFileName: sound.fileName)
+    GlobalSettings.singleToken(forFileName: sound.fileName)
   }
 
   private var accent: Color {
@@ -318,7 +318,7 @@ struct SoloPickerRow: View {
   }
 
   private var isCurrent: Bool {
-    audioManager.soloModeSound?.id == sound.id
+    audioManager.singleSound?.id == sound.id
   }
 
   /// macOS: while Settings holds the detail pane, any single click (current row
@@ -332,21 +332,21 @@ struct SoloPickerRow: View {
   }
 
   /// Shared by the tap and the macOS VoiceOver action. The current sidebar row
-  /// toggles play/pause; other rows solo the sound.
+  /// toggles play/pause; other rows play their sound on its own.
   private func activateRow() {
     guard !isEditMode else { return }
     #if os(macOS)
       if settingsPaneShowing {
         // The pane's onDisappear resets the sub-page flags.
         appState.showingSettingsPane = false
-        if !isCurrent { soloSound() }
+        if !isCurrent { singleSound() }
         return
       }
     #endif
     if presentation == .sidebar && isCurrent {
       audioManager.togglePlayback()
     } else {
-      soloSound()
+      singleSound()
     }
   }
 
@@ -412,15 +412,15 @@ struct SoloPickerRow: View {
     )
   }
 
-  private func soloSound() {
-    // Tapping the current solo sound leaves playback alone.
+  private func singleSound() {
+    // Tapping the current single sound leaves playback alone.
     if isCurrent {
       if dismissOnSelect { dismiss() }
       onSelection?()
       return
     }
     Task { @MainActor in
-      audioManager.toggleSoloMode(for: sound)
+      audioManager.toggleSingleSound(for: sound)
       if dismissOnSelect { dismiss() }
       onSelection?()
     }
@@ -476,11 +476,11 @@ struct LibraryView: View {
   }
 
   /// Non-favorited sounds, alphabetical. Favorites show in their own section;
-  /// preset-use-only sounds can't solo.
-  private var soloSounds: [Sound] {
+  /// preset-use-only sounds can't play on their own.
+  private var singleSounds: [Sound] {
     audioManager.sounds
       .filter { !$0.isPresetUseOnly }
-      .filter { !globalSettings.isStarred(GlobalSettings.soloToken(forFileName: $0.fileName)) }
+      .filter { !globalSettings.isStarred(GlobalSettings.singleToken(forFileName: $0.fileName)) }
       .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
   }
 
@@ -489,7 +489,7 @@ struct LibraryView: View {
   /// Favorited tokens in saved order, dropping any whose preset no longer exists.
   private var favoriteTokens: [String] {
     globalSettings.starredItems.filter { token in
-      if audioManager.sound(forSoloToken: token) != nil { return true }
+      if audioManager.sound(forSingleToken: token) != nil { return true }
       switch token {
       case GlobalSettings.allSoundsToken: return presetManager.presets.contains { $0.isDefault }
       default: return presetManager.presets.contains { $0.id.uuidString == token }
@@ -547,10 +547,10 @@ struct LibraryView: View {
 
   /// Only custom sounds can be deleted.
   private func deleteSounds(at offsets: IndexSet) {
-    if let index = offsets.first, soloSounds.indices.contains(index),
-      soloSounds[index].isCustom
+    if let index = offsets.first, singleSounds.indices.contains(index),
+      singleSounds[index].isCustom
     {
-      soundToDelete = soloSounds[index]
+      soundToDelete = singleSounds[index]
     }
   }
 
@@ -563,7 +563,7 @@ struct LibraryView: View {
       Logger.ui.error("LibraryView: Failed to delete custom sound: \(error, privacy: .public)")
       return
     }
-    // Drop only the deleted sound (a full reload strands solo/preview/Quick Mix instances).
+    // Drop only the deleted sound (a full reload strands single sound/preview/Quick Mix instances).
     AudioManager.shared.syncCustomSounds()
   }
 
@@ -627,9 +627,9 @@ struct LibraryView: View {
   @ViewBuilder
   private func tokenRow(_ token: String) -> some View {
     switch PlayableItem(token: token) {
-    case .solo(let fileName):
+    case .single(let fileName):
       if let sound = audioManager.sound(fileName: fileName) {
-        soloRow(sound)
+        singleRow(sound)
       }
     case .allSounds:
       if let defaultPreset = presetManager.presets.first(where: { $0.isDefault }) {
@@ -672,8 +672,8 @@ struct LibraryView: View {
 
   /// Edit any sound, delete custom ones, with the same menu and swipe as preset rows.
   @ViewBuilder
-  private func soloRow(_ sound: Sound) -> some View {
-    let row = SoloPickerRow(
+  private func singleRow(_ sound: Sound) -> some View {
+    let row = SingleSoundPickerRow(
       sound: sound, isEditMode: isEditMode, dismissOnSelect: dismissOnSelect,
       presentation: presentation, onSelection: onSelect)
     #if os(macOS)
@@ -707,8 +707,8 @@ struct LibraryView: View {
     let accent = globalSettings.customAccentColor ?? .accentColor
     return Button {
       Task { @MainActor in
-        if audioManager.soloModeSound != nil {
-          audioManager.exitSoloModeWithoutResuming()
+        if audioManager.singleSound != nil {
+          audioManager.exitSingleSoundWithoutResuming()
         }
         if !audioManager.isQuickMix {
           audioManager.enterQuickMix()
@@ -875,8 +875,8 @@ struct LibraryView: View {
 
         // Alphabetical and not reorderable. Only custom sounds can be deleted.
         Section(isExpanded: soundsExpandedBinding) {
-          ForEach(soloSounds, id: \.id) { sound in
-            soloRow(sound)
+          ForEach(singleSounds, id: \.id) { sound in
+            singleRow(sound)
               .deleteDisabled(!sound.isCustom)
           }
           .onDelete(perform: deleteSounds)

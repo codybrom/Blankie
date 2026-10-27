@@ -358,11 +358,11 @@ class CustomSoundManager {
   /// customization, playback profile, preferences, and Quick Mix and favorite references.
   @MainActor
   private func cleanUpResidualState(fileName: String, fileExtension: String) {
-    // Leave solo or preview if this sound is the subject so neither points at a removed
-    // instance. exitSoloMode() also stops playback, since there's nothing to resume.
+    // Leave single sound or preview if this sound is the subject so neither points at a removed
+    // instance. exitSingleSound() also stops playback, since there's nothing to resume.
     let audioManager = AudioManager.shared
-    if audioManager.soloModeSound?.fileName == fileName {
-      audioManager.exitSoloMode()
+    if audioManager.singleSound?.fileName == fileName {
+      audioManager.exitSingleSound()
     }
     if audioManager.previewModeSound?.fileName == fileName {
       audioManager.exitPreviewMode()
@@ -383,9 +383,9 @@ class CustomSoundManager {
       settings.setQuickMixSoundFileNames(
         settings.quickMixSoundFileNames.filter { $0 != fileName })
     }
-    let soloToken = "solo:\(fileName)"
-    if settings.isStarred(soloToken) {
-      settings.toggleStarred(soloToken)
+    let singleToken = "solo:\(fileName)"
+    if settings.isStarred(singleToken) {
+      settings.toggleStarred(singleToken)
     }
   }
 

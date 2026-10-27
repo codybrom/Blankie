@@ -24,13 +24,13 @@ enum NowPlayingDisplay {
   ) -> (
     title: String, artist: String
   ) {
-    if let soloSound = AudioManager.shared.soloModeSound {
+    if let singleSound = AudioManager.shared.singleSound {
       // A built-in sound's caption is the best second line. Custom sounds have no
       // caption, so they show their creator; the app name is the last resort.
       let artist =
-        soloSound.localizedSubtitle ?? (soloSound.isCustom ? soloSound.creditedAuthor : nil)
+        singleSound.localizedSubtitle ?? (singleSound.isCustom ? singleSound.creditedAuthor : nil)
         ?? "Blankie"
-      return (title: soloSound.localizedTitle, artist: artist)
+      return (title: singleSound.localizedTitle, artist: artist)
     } else if AudioManager.shared.isQuickMix {
       // Quick Mix has no preset, so name it explicitly (not "Custom Mix").
       let artistInfo = soundNameSummary(currentMixSoundTitles())
@@ -111,8 +111,8 @@ enum NowPlayingDisplay {
   /// The widget's second line. Where `getDisplayInfo` falls back to "Blankie" for
   /// the lock screen, the widget shows no second line.
   static func widgetSubtitle(resolvedCreatorName: String?) -> String? {
-    if let soloSound = AudioManager.shared.soloModeSound {
-      return soloSound.isCustom ? soloSound.creditedAuthor : nil
+    if let singleSound = AudioManager.shared.singleSound {
+      return singleSound.isCustom ? singleSound.creditedAuthor : nil
     } else if let creator = resolvedCreatorName, !AudioManager.shared.isQuickMix {
       return creator
     } else {
@@ -126,7 +126,7 @@ enum NowPlayingDisplay {
   /// The elapsed/duration the scrubber should represent right now, or `nil` for
   /// an indeterminate bar. Priority: an active sleep timer (real, slow,
   /// meaningful progress that ends where playback stops) wins over the looping
-  /// audio, then the solo sound, then the longest selected sound's loop.
+  /// audio, then the single sound, then the longest selected sound's loop.
   static func currentProgressAnchor() -> (elapsed: TimeInterval, duration: TimeInterval)? {
     let sleepTimer = TimerManager.shared
     if sleepTimer.isTimerActive, sleepTimer.selectedDuration > 0 {
@@ -135,8 +135,8 @@ enum NowPlayingDisplay {
     }
 
     let anchorSound: Sound?
-    if let soloSound = AudioManager.shared.soloModeSound {
-      anchorSound = soloSound
+    if let singleSound = AudioManager.shared.singleSound {
+      anchorSound = singleSound
     } else {
       // The longest selected sound (not only playing ones), so time still tracks
       // while paused.
@@ -173,7 +173,7 @@ enum NowPlayingDisplay {
   {
     let side: CGFloat = 512
     // The active preset's accent, else the app accent (themingPreset is nil during
-    // solo and Quick Mix), matching the in-app artwork tint.
+    // single sound and Quick Mix), matching the in-app artwork tint.
     let accent =
       PresetManager.shared.themingPreset?.accentColor
       ?? GlobalSettings.shared.customAccentColor ?? .accentColor
@@ -196,9 +196,9 @@ enum NowPlayingDisplay {
     #endif
   }
 
-  /// A soloed sound's lock-screen artwork: its SF Symbol in the accent on the
+  /// A single sound's lock-screen artwork: its SF Symbol in the accent on the
   /// dark tinted card, mirroring the in-app placeholder.
-  static func soloFallbackImage(for sound: Sound) -> PlatformImage? {
+  static func singleFallbackImage(for sound: Sound) -> PlatformImage? {
     fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
   }
 

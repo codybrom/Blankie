@@ -59,7 +59,7 @@ import os
       // rendering its fade-out when this refreshes.
       let isPlaying =
         sound.playbackState == .playing && AudioManager.shared.isQuickMix
-        && AudioManager.shared.soloModeSound == nil
+        && AudioManager.shared.singleSound == nil
 
       let titles = [sound.title]
 
@@ -118,8 +118,8 @@ import os
         // The car may have disconnected before this tap ran. Never start on the phone.
         guard CarPlayInterfaceController.shared.isConnected else { return }
 
-        if AudioManager.shared.soloModeSound != nil {
-          AudioManager.shared.exitSoloModeWithoutResuming()
+        if AudioManager.shared.singleSound != nil {
+          AudioManager.shared.exitSingleSoundWithoutResuming()
         }
 
         if !AudioManager.shared.isQuickMix {

@@ -84,7 +84,7 @@ extension AudioManager {
 
       // Re-apply the preset so late custom sounds get their saved selection and
       // volume (no autoplay). Runs before reconcileLaunchPlaybackState() so a
-      // deferred solo restore wins.
+      // deferred single sound restore wins.
       if presetManagerWasAlreadyInitialized,
         let preset = PresetManager.shared.currentPreset
       {
@@ -103,29 +103,29 @@ extension AudioManager {
   }
 
   /// Prunes favorites with missing targets and finishes or abandons a deferred
-  /// solo restore (falling back to the preset). Idempotent; runs on every bootstrap path.
+  /// single sound restore (falling back to the preset). Idempotent; runs on every bootstrap path.
   @MainActor
   private func reconcileLaunchPlaybackState() {
     // A custom row or file counts as valid even if it didn't load as a Sound. No
-    // rows plus an unknown solo favorite reads as a transient load failure, so
+    // rows plus an unknown single sound favorite reads as a transient load failure, so
     // sound favorites aren't pruned (same bail as cleanupDeletedCustomSounds).
     let customRowNames = Set(CustomSoundManager.shared.getAllCustomSounds().map { $0.fileName })
       .union(CustomSoundManager.shared.customAudioFileNamesOnDisk())
     let validNames = Set(sounds.map { $0.fileName }).union(customRowNames)
-    let soloFavoriteIsUnknown = GlobalSettings.shared.starredItems.contains { token in
-      guard let fileName = GlobalSettings.soloFileName(fromToken: token) else { return false }
+    let singleFavoriteIsUnknown = GlobalSettings.shared.starredItems.contains { token in
+      guard let fileName = GlobalSettings.singleFileName(fromToken: token) else { return false }
       return !validNames.contains(fileName)
     }
     let validSoundFileNames: Set<String>? =
-      (customRowNames.isEmpty && soloFavoriteIsUnknown) ? nil : validNames
+      (customRowNames.isEmpty && singleFavoriteIsUnknown) ? nil : validNames
 
     GlobalSettings.shared.pruneStarredItems(
       validPresetIDs: Set(PresetManager.shared.presets.map { $0.id.uuidString }),
       validSoundFileNames: validSoundFileNames)
 
-    let hadSavedSolo = GlobalSettings.shared.getSavedSoloModeFileName() != nil
-    let soloRestored = restoreSoloModeIfNeeded(soundsFullyLoaded: true)
-    if hadSavedSolo, !soloRestored, soloModeSound == nil, !isGloballyPlaying {
+    let hadSavedSingle = GlobalSettings.shared.getSavedSingleSoundFileName() != nil
+    let singleRestored = restoreSingleSoundIfNeeded(soundsFullyLoaded: true)
+    if hadSavedSingle, !singleRestored, singleSound == nil, !isGloballyPlaying {
       applyPresetLaunchState()
     }
   }
@@ -166,7 +166,7 @@ extension AudioManager {
 
           // Keeps `PlaySoundIntent` parameters and Spotlight in sync with the sounds.
           PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
-          // Pinnable sounds and solo favorites in the widgets changed too.
+          // Pinnable sounds and single sound favorites in the widgets changed too.
           self?.republishWidgetCatalog()
         }
       }

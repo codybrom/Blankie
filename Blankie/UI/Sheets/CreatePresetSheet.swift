@@ -293,7 +293,7 @@ extension CreatePresetSheet {
           await presetManager.cacheThumbnail(for: newPreset)
         }
 
-        // Leave solo/Quick Mix first, like a Library row tap, so the prior
+        // Leave single sound/Quick Mix first, like a Library row tap, so the prior
         // mix doesn't linger as the current selection.
         audioManager.leaveTransientModes()
         try presetManager.applyPreset(newPreset)

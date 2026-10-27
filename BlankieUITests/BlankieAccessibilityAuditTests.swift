@@ -25,8 +25,8 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
     app.launch()
     sleep(2)  // Let the grid, glass, and Now Playing bar settle.
 
-    // Solo and preset state survive the UI-test reset (app-group store), so select the default
-    // preset, which also exits solo.
+    // Single sound and preset state survive the UI-test reset (app-group store), so select the
+    // default preset, which also exits single sound.
     let defaultPreset = app.buttons["All Blankie Sounds"].firstMatch
     if defaultPreset.waitForExistence(timeout: 5) {
       #if os(macOS)

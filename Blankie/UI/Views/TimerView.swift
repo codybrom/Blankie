@@ -17,7 +17,7 @@ struct TimerView: View {
   var onFinish: (() -> Void)?
   @ScaledMetric(relativeTo: .largeTitle) private var countdownFontSize: CGFloat = 44
 
-  /// Theming preset's color wins, else the app accent (solo / Quick Mix).
+  /// Theming preset's color wins, else the app accent (single sound / Quick Mix).
   private var accentColor: Color {
     presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }

@@ -24,12 +24,12 @@ class AudioManager {
   var soundsData: [SoundData] = []  // Metadata for sounds (includes mood tags)
   var defaultSoundOrder: [String] = []  // Order of sounds in default view
   var isGloballyPlaying: Bool = false
-  var soloModeSound: Sound?
+  var singleSound: Sound?
   var hasSelectedSounds: Bool = false
-  @ObservationIgnored var soloModeOriginalVolume: Float?
-  @ObservationIgnored var soloModeOriginalSelection: Bool?
+  @ObservationIgnored var singleSoundOriginalVolume: Float?
+  @ObservationIgnored var singleSoundOriginalSelection: Bool?
 
-  // Preview Mode (separate from solo mode for SoundSheet previews)
+  // Preview Mode (separate from single-sound mode for SoundSheet previews)
   var previewModeSound: Sound?
   @ObservationIgnored var previewModeOriginalStates: [String: PreviewOriginalState] = [:]
 
@@ -160,10 +160,10 @@ class AudioManager {
         await self.analyzeCustomSoundsIfNeeded()
       }
 
-      // A custom solo sound may not be loaded yet; loadCustomSoundsWhenReady()
+      // A custom single sound may not be loaded yet; loadCustomSoundsWhenReady()
       // finishes or abandons that restore.
-      if self.restoreSoloModeIfNeeded() {
-        // Solo restored, or pending a custom sound.
+      if self.restoreSingleSoundIfNeeded() {
+        // Single sound restored, or pending a custom sound.
       } else {
         self.applyPresetLaunchState()
       }
@@ -210,10 +210,10 @@ extension AudioManager {
   }
 
   /// Republishes Now Playing when the selected set changes so the artist line
-  /// stays current. Quick Mix and solo publish on their own paths.
+  /// stays current. Quick Mix and single sound publish on their own paths.
   @MainActor
   private func refreshNowPlayingIfSelectionChanged() {
-    guard !isInitializing, !isQuickMix, soloModeSound == nil else { return }
+    guard !isInitializing, !isQuickMix, singleSound == nil else { return }
     let signature =
       sounds.filter { $0.isSelected }.map(\.fileName).sorted().joined(separator: ",")
     guard signature != lastPublishedSelectionSignature else { return }
@@ -229,8 +229,8 @@ extension AudioManager {
     if !newValue && isGloballyPlaying && previewModeSound == nil {
       Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
       Task { @MainActor in
-        // Check again when it runs. Entering solo ends a preview and queues this
-        // pause, then starts the solo sound before it lands.
+        // Check again when it runs. Entering single sound ends a preview and queues this
+        // pause, then starts the single sound before it lands.
         guard isGloballyPlaying, !hasPlayableSelection, previewModeSound == nil else { return }
         setGlobalPlaybackState(false)
       }
@@ -305,12 +305,14 @@ extension AudioManager {
       return
     }
 
-    // Solo forces the solo sound to selected at 1.0, so save its pre-solo values.
-    let soloID = soloModeSound?.id
+    // A single sound is forced to selected at 1.0, so save its earlier values.
+    let singleID = singleSound?.id
     let state = sounds.map { sound -> [String: Any] in
       let isSelected =
-        (sound.id == soloID) ? (soloModeOriginalSelection ?? sound.isSelected) : sound.isSelected
-      let volume = (sound.id == soloID) ? (soloModeOriginalVolume ?? sound.volume) : sound.volume
+        (sound.id == singleID)
+        ? (singleSoundOriginalSelection ?? sound.isSelected) : sound.isSelected
+      let volume =
+        (sound.id == singleID) ? (singleSoundOriginalVolume ?? sound.volume) : sound.volume
       return [
         "id": sound.id.uuidString,
         "fileName": sound.fileName,

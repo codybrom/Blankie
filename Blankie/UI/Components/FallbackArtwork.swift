@@ -19,9 +19,9 @@ struct FallbackArtwork: View {
     case brand  // the Blankie mark ("blankie.symbol")
     case composite([String])  // a montage of a preset's sound icons (up to 4)
 
-    /// The fallback glyph for the live playback state, shared by Now Playing, the mini bar
-    /// and the lock screen. Quick Mix gets its grid icon, the default preset (or none) the
-    /// Blankie mark, and a custom preset a montage of its sounds. Callers handle solo first.
+    /// The fallback glyph for the live playback state, shared by Now Playing, the mini bar and the
+    /// lock screen. Quick Mix gets its grid icon, the default preset (or none) the Blankie mark,
+    /// and a custom preset a montage of its sounds. Callers handle single sound first.
     static func playback(isQuickMix: Bool, isDefaultPreset: Bool, icons: [String]) -> Glyph {
       if isQuickMix { return .symbol("square.grid.2x2") }
       if isDefaultPreset { return .brand }

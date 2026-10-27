@@ -68,14 +68,14 @@ import os
     }
 
     private static func createSoundListItem(_ sound: Sound) -> CPListItem {
-      let isInSoloMode = AudioManager.shared.soloModeSound?.id == sound.id
+      let isPlayingSingleSound = AudioManager.shared.singleSound?.id == sound.id
 
       let item = CPListItem(
         text: sound.title,
         detailText: nil
       )
 
-      if isInSoloMode {
+      if isPlayingSingleSound {
         item.accessoryType = .disclosureIndicator
         item.setText("\(sound.title) ✓")
       }
@@ -86,7 +86,7 @@ import os
 
       item.handler = { _, completion in
         Task { @MainActor in
-          playSoundInSoloMode(sound)
+          playSingleSound(sound)
           completion()
         }
       }
@@ -94,13 +94,13 @@ import os
       return item
     }
 
-    /// Solos a sound tapped in the car. The preset list's solo rows share it.
+    /// Plays a sound tapped in the car on its own. The preset list's single-sound rows share it.
     @MainActor
-    static func playSoundInSoloMode(_ sound: Sound) {
+    static func playSingleSound(_ sound: Sound) {
       // The car may have disconnected before this tap ran. Never start on the phone.
       guard CarPlayInterfaceController.shared.isConnected else { return }
 
-      // A stale row can't solo a sound that was deleted or became preset-use-only
+      // A stale row can't play a sound that was deleted or became preset-use-only
       // (the same rule the intents follow).
       guard AudioManager.shared.sounds.contains(where: { $0 === sound }), !sound.isPresetUseOnly
       else {
@@ -108,10 +108,10 @@ import os
         return
       }
 
-      if AudioManager.shared.soloModeSound?.id == sound.id {
+      if AudioManager.shared.singleSound?.id == sound.id {
         CarPlayInterfaceController.shared.showNowPlaying()
       } else {
-        AudioManager.shared.enterSoloMode(for: sound)
+        AudioManager.shared.enterSingleSound(for: sound)
         CarPlayInterfaceController.shared.showNowPlaying()
       }
 
@@ -134,17 +134,18 @@ import os
       let renderer = UIGraphicsImageRenderer(size: size)
 
       return renderer.image { _ in
-        let isInSoloMode = AudioManager.shared.soloModeSound?.id == sound.id
+        let isPlayingSingleSound = AudioManager.shared.singleSound?.id == sound.id
 
-        drawBackground(size: size, isInSoloMode: isInSoloMode, sound: sound)
-        drawIcon(size: size, isInSoloMode: isInSoloMode, sound: sound)
+        drawBackground(size: size, isPlayingSingleSound: isPlayingSingleSound, sound: sound)
+        drawIcon(size: size, isPlayingSingleSound: isPlayingSingleSound, sound: sound)
       }
     }
 
-    private static func drawBackground(size: CGSize, isInSoloMode: Bool, sound: Sound) {
-      let backgroundColor = getBackgroundColor(for: sound, isInSoloMode: isInSoloMode)
+    private static func drawBackground(size: CGSize, isPlayingSingleSound: Bool, sound: Sound) {
+      let backgroundColor = getBackgroundColor(
+        for: sound, isPlayingSingleSound: isPlayingSingleSound)
 
-      if isInSoloMode {
+      if isPlayingSingleSound {
         backgroundColor.withAlphaComponent(0.3).setFill()
       } else {
         UIColor.systemGray.withAlphaComponent(0.1).setFill()
@@ -154,7 +155,7 @@ import os
       circle.fill()
     }
 
-    private static func drawIcon(size: CGSize, isInSoloMode: Bool, sound: Sound) {
+    private static func drawIcon(size: CGSize, isPlayingSingleSound: Bool, sound: Sound) {
       let iconName = sound.systemIconName
       let icon = UIImage(systemName: iconName) ?? UIImage(systemName: "speaker.wave.2")!
 
@@ -169,16 +170,17 @@ import os
         height: iconSize.height
       )
 
-      if isInSoloMode {
-        getBackgroundColor(for: sound, isInSoloMode: isInSoloMode).setFill()
+      if isPlayingSingleSound {
+        getBackgroundColor(for: sound, isPlayingSingleSound: isPlayingSingleSound).setFill()
       } else {
         UIColor.carPlayIconTint.setFill()
       }
       configuredIcon.withRenderingMode(.alwaysTemplate).draw(in: iconRect)
     }
 
-    private static func getBackgroundColor(for sound: Sound, isInSoloMode: Bool) -> UIColor {
-      if isInSoloMode {
+    private static func getBackgroundColor(for sound: Sound, isPlayingSingleSound: Bool) -> UIColor
+    {
+      if isPlayingSingleSound {
         return UIColor.carPlayIconTint
       } else {
         return UIColor.systemGray

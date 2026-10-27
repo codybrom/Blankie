@@ -17,7 +17,7 @@ import SwiftUI
     @ScaledMetric(relativeTo: .largeTitle) private var countdownFontSize: CGFloat = 48
 
     /// The action buttons' accent, using Now Playing's precedence. `themingPreset`
-    /// is nil during solo and Quick Mix, so those use the app accent.
+    /// is nil during single sound and Quick Mix, so those use the app accent.
     private var accentColor: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }

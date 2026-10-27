@@ -1,16 +1,16 @@
 //
-//  SoloSoundIcon.swift
+//  SingleSoundIcon.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 1/2/25.
 //
-//  The large icon shown in solo mode. It has no drag or context menu, and a
+//  The large icon shown in single-sound mode. It has no drag or context menu, and a
 //  tap toggles global playback.
 //
 
 import SwiftUI
 
-struct SoloSoundIcon: View {
+struct SingleSoundIcon: View {
   let sound: Sound
   var iconSize: CGFloat = 200
 
@@ -80,22 +80,22 @@ struct SoloSoundIcon: View {
       .accessibilityAction { audioManager.togglePlayback() }
     #endif
     .onTapGesture {
-      // The icon only shows the soloed sound, so a tap toggles playback.
+      // The icon only shows the single sound, so a tap toggles playback.
       audioManager.togglePlayback()
     }
     .sensoryFeedback(.selection, trigger: sound.isSelected)
   }
 }
 
-/// The solo sound as a Now Playing card: the large icon with the name and
-/// subtitle beneath. In solo mode it replaces the mixer's tiles.
-struct SoloSoundCard: View {
+/// The single sound as a Now Playing card: the large icon with the name and
+/// subtitle beneath. In single-sound mode it replaces the mixer's tiles.
+struct SingleSoundCard: View {
   let sound: Sound
   var iconSize: CGFloat = 200
 
   var body: some View {
     VStack(spacing: 16) {
-      SoloSoundIcon(sound: sound, iconSize: iconSize)
+      SingleSoundIcon(sound: sound, iconSize: iconSize)
         // The text below carries the name and subtitle to VoiceOver, so the
         // icon is decorative here.
         .accessibilityHidden(true)

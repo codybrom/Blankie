@@ -56,39 +56,39 @@ import Testing
 
   // MARK: - Adds and deletes keep live instances
 
-  /// Solo holds a `Sound` instance, so an add must not rebuild the others.
-  @Test func addingASoundKeepsTheSoloedInstance() async throws {
+  /// Single sound holds a `Sound` instance, so an add must not rebuild the others.
+  @Test func addingASoundKeepsTheSingleSoundInstance() async throws {
     try #require(audioManager.modelContext != nil, "launch installed the custom-sound observers")
-    let soloed = standIn(for: try insertRow(title: "Test A"))
-    audioManager.sounds = [soloed]
-    audioManager.enterSoloMode(for: soloed, startPlaying: false)
+    let singleSound = standIn(for: try insertRow(title: "Test A"))
+    audioManager.sounds = [singleSound]
+    audioManager.enterSingleSound(for: singleSound, startPlaying: false)
 
     _ = try insertRow(title: "Test B")
     NotificationCenter.default.post(name: .customSoundAdded, object: nil)
     await sandbox.settle()
 
     #expect(
-      audioManager.sounds.contains { $0 === soloed },
+      audioManager.sounds.contains { $0 === singleSound },
       "sounds were rebuilt: \(audioManager.sounds.map(\.fileName))")
-    #expect(audioManager.soloModeSound === soloed)
+    #expect(audioManager.singleSound === singleSound)
   }
 
   @Test func deletingASoundKeepsTheOthersInstances() async throws {
     try #require(audioManager.modelContext != nil, "launch installed the custom-sound observers")
-    let soloed = standIn(for: try insertRow(title: "Test A"))
+    let singleSound = standIn(for: try insertRow(title: "Test A"))
     let doomedRow = try insertRow(title: "Test B")
     let doomed = standIn(for: doomedRow)
-    audioManager.sounds = [soloed, doomed]
-    audioManager.enterSoloMode(for: soloed, startPlaying: false)
+    audioManager.sounds = [singleSound, doomed]
+    audioManager.enterSingleSound(for: singleSound, startPlaying: false)
 
     context.delete(doomedRow)
     try context.save()
     NotificationCenter.default.post(name: .customSoundDeleted, object: nil)
     await sandbox.settle()
 
-    #expect(audioManager.sounds.contains { $0 === soloed })
+    #expect(audioManager.sounds.contains { $0 === singleSound })
     #expect(!audioManager.sounds.contains { $0 === doomed })
-    #expect(audioManager.soloModeSound === soloed)
+    #expect(audioManager.singleSound === singleSound)
   }
 
   // MARK: - Pruning counts audio on disk

@@ -43,7 +43,7 @@ import Testing
   private let originalCurrentPreset: Preset?
   private let originalStatesApplied: Bool
   private let snapshot = DefaultsSnapshot([
-    UserDefaultsKeys.starredItems, UserDefaultsKeys.soloModeSoundFileName,
+    UserDefaultsKeys.starredItems, UserDefaultsKeys.singleSoundFileName,
     PresetStorage.customPresetsKey, PresetStorage.defaultPresetKey,
     PresetStorage.lastActivePresetIDKey, "widgetSnapshot",
   ])
@@ -57,7 +57,7 @@ import Testing
     originalCurrentPreset = PresetManager.shared.currentPreset
     originalStatesApplied = PresetManager.shared.presetStatesApplied
     audioManager.nowPlayingManager = recorder
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     audioManager.isGloballyPlaying = false
     PresetManager.shared.setCurrentPreset(nil)
@@ -66,7 +66,7 @@ import Testing
 
   isolated deinit {
     audioManager.isGloballyPlaying = false
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.sounds = originalSounds
     audioManager.nowPlayingManager = originalNowPlaying
     PresetManager.shared.setPresets(originalPresets)
@@ -209,12 +209,12 @@ import Testing
     #expect(recorder.publishedStates.last == false, "the last publish must be the pause")
   }
 
-  /// The same ordering through the solo branch.
-  @Test func pauseBeforeTheDeferredSoloPublishLeavesTheCardPaused() async {
+  /// The same ordering through the single sound branch.
+  @Test func pauseBeforeTheDeferredSinglePublishLeavesTheCardPaused() async {
     let a = TestSound(fileName: "test-a")
     audioManager.sounds = [a]
     await selectWhilePaused(a)
-    audioManager.soloModeSound = a
+    audioManager.singleSound = a
 
     audioManager.setGlobalPlaybackState(true)
     audioManager.setGlobalPlaybackState(false)

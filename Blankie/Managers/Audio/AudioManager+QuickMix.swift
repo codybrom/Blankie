@@ -11,11 +11,11 @@ import os
 extension AudioManager {
   // MARK: - Quick Mix Mode
 
-  /// Exits solo, then Quick Mix, before a preset switch. The pre-Quick-Mix mix
+  /// Exits single sound, then Quick Mix, before a preset switch. The pre-Quick-Mix mix
   /// is dropped unless `restoringQuickMix` is set, since the preset replaces it.
   @MainActor
   func leaveTransientModes(restoringQuickMix: Bool = false) {
-    exitSoloModeWithoutResuming()
+    exitSingleSoundWithoutResuming()
     exitQuickMix(restoring: restoringQuickMix)
   }
 
@@ -28,8 +28,8 @@ extension AudioManager {
     // Persist a pending (coalesced) mix edit before Quick Mix clears the preset.
     PresetManager.shared.updateCurrentPresetState()
 
-    if soloModeSound != nil {
-      exitSoloModeWithoutResuming()
+    if singleSound != nil {
+      exitSingleSoundWithoutResuming()
     }
 
     preQuickMixPreset = PresetManager.shared.currentPreset

@@ -44,11 +44,11 @@ import Testing
 
   // MARK: - Token helpers
 
-  @Test func soloTokenRoundTrips() {
-    let token = GlobalSettings.soloToken(forFileName: "rain")
+  @Test func singleTokenRoundTrips() {
+    let token = GlobalSettings.singleToken(forFileName: "rain")
     #expect(token == "solo:rain")
-    #expect(GlobalSettings.soloFileName(fromToken: token) == "rain")
-    #expect(GlobalSettings.soloFileName(fromToken: GlobalSettings.allSoundsToken) == nil)
+    #expect(GlobalSettings.singleFileName(fromToken: token) == "rain")
+    #expect(GlobalSettings.singleFileName(fromToken: GlobalSettings.allSoundsToken) == nil)
   }
 
   // MARK: - Starred list
@@ -73,12 +73,12 @@ import Testing
     #expect(UserDefaults.shared.stringArray(forKey: UserDefaultsKeys.starredItems) == ["x", "y"])
   }
 
-  @Test func pruneDropsDeadPresetsKeepsSpecialAndLiveSolo() {
+  @Test func pruneDropsDeadPresetsKeepsSpecialAndLiveSingle() {
     let livePreset = UUID().uuidString
     let deadPreset = UUID().uuidString
     settings.setStarredItems([
       GlobalSettings.allSoundsToken, GlobalSettings.quickMixToken,
-      livePreset, deadPreset, GlobalSettings.soloToken(forFileName: "rain"),
+      livePreset, deadPreset, GlobalSettings.singleToken(forFileName: "rain"),
     ])
 
     settings.pruneStarredItems(
@@ -87,23 +87,25 @@ import Testing
     #expect(settings.starredItems.contains(GlobalSettings.allSoundsToken))
     #expect(settings.starredItems.contains(GlobalSettings.quickMixToken))
     #expect(settings.starredItems.contains(livePreset))
-    #expect(settings.starredItems.contains(GlobalSettings.soloToken(forFileName: "rain")))
+    #expect(settings.starredItems.contains(GlobalSettings.singleToken(forFileName: "rain")))
     #expect(!settings.starredItems.contains(deadPreset))
   }
 
-  @Test func pruneDropsSoloForMissingSound() {
+  @Test func pruneDropsSingleForMissingSound() {
     settings.setStarredItems([
-      GlobalSettings.soloToken(forFileName: "rain"),
-      GlobalSettings.soloToken(forFileName: "deleted"),
+      GlobalSettings.singleToken(forFileName: "rain"),
+      GlobalSettings.singleToken(forFileName: "deleted"),
     ])
     settings.pruneStarredItems(validPresetIDs: [], validSoundFileNames: ["rain"])
-    #expect(settings.starredItems == [GlobalSettings.soloToken(forFileName: "rain")])
+    #expect(settings.starredItems == [GlobalSettings.singleToken(forFileName: "rain")])
   }
 
-  @Test func pruneKeepsSoloWhenSoundsUnknown() {
-    settings.setStarredItems([GlobalSettings.soloToken(forFileName: "anything"), UUID().uuidString])
+  @Test func pruneKeepsSingleWhenSoundsUnknown() {
+    settings.setStarredItems([
+      GlobalSettings.singleToken(forFileName: "anything"), UUID().uuidString,
+    ])
     settings.pruneStarredItems(validPresetIDs: [], validSoundFileNames: nil)
-    #expect(settings.starredItems == [GlobalSettings.soloToken(forFileName: "anything")])
+    #expect(settings.starredItems == [GlobalSettings.singleToken(forFileName: "anything")])
   }
 
   // MARK: - Setters

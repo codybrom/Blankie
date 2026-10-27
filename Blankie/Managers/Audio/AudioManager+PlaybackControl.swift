@@ -95,15 +95,15 @@ extension AudioManager {
       setupAudioSessionForPlayback()
     #endif
 
-    if let soloSound = soloModeSound {
-      Logger.audio.debug("  - In solo mode, playing only '\(soloSound.fileName)'")
+    if let singleSound = singleSound {
+      Logger.audio.debug("  - In single-sound mode, playing only '\(singleSound.fileName)'")
 
-      soloSound.play()
+      singleSound.play()
 
       // Read the state when the Task runs so a pause queued ahead of it wins.
       Task { @MainActor in
         nowPlayingManager.updateInfo(
-          presetName: soloSound.title,
+          presetName: singleSound.title,
           isPlaying: self.isGloballyPlaying
         )
       }
@@ -191,7 +191,7 @@ extension AudioManager {
       "AudioManager: Setting playback state to \(playing) - Current global state: \(self.isGloballyPlaying)"
     )
 
-    // With nothing selected (and no solo), every play request, remote ones
+    // With nothing selected (and no single sound), every play request, remote ones
     // included, becomes a pause so Now Playing never reports rate 1.0 over silence.
     let shouldPlay = playing && hasPlayableSelection
     if playing && !shouldPlay {
@@ -225,9 +225,9 @@ extension AudioManager {
     // the Now Playing debounce or the engine's pause fade.
     publishCurrentWidgetSnapshot()
 
-    if let soloSound = soloModeSound {
+    if let singleSound = singleSound {
       nowPlayingManager.updateInfo(
-        presetName: soloSound.title,
+        presetName: singleSound.title,
         isPlaying: isGloballyPlaying
       )
     } else {
@@ -242,18 +242,18 @@ extension AudioManager {
     }
   }
 
-  /// Whether there's a solo sound or any selected sound. Reads the live selection
+  /// Whether there's a single sound or any selected sound. Reads the live selection
   /// because `hasSelectedSounds` lags; intents and preset apply play right after selecting.
   var hasPlayableSelection: Bool {
-    soloModeSound != nil || sounds.contains { $0.isSelected }
+    singleSound != nil || sounds.contains { $0.isSelected }
   }
 
   // MARK: - Music Exclusivity
 
   /// One music sound per mix (Quick Mix included): selecting `keep` deselects any
-  /// other music sound. No-op during preset apply and solo, which manage selection.
+  /// other music sound. No-op during preset apply and single sound, which manage selection.
   func deselectOtherMusicSounds(except keep: Sound) {
-    guard soloModeSound == nil, !isApplyingPresetStates else { return }
+    guard singleSound == nil, !isApplyingPresetStates else { return }
     for sound in sounds where sound.id != keep.id && sound.isSelected && sound.isMusic {
       Logger.audio.debug(
         "AudioManager: Music '\(sound.fileName)' yields the slot to '\(keep.fileName)'")

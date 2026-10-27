@@ -33,10 +33,10 @@
     private var loopProgressTimer: Timer?
     private var lastLoopElapsed: TimeInterval?
     private var lastLoopDuration: TimeInterval?
-    /// Last preset and soloed sound the artwork was built for. The system caches
+    /// Last preset and single sound the artwork was built for. The system caches
     /// artwork by id, and rebuilding on every publish would restart the animated loop.
     var lastPresetId: UUID?
-    var lastSoloSoundId: UUID?
+    var lastSingleSoundId: UUID?
     /// Forces the first artwork build: both ids start nil, which is also Quick Mix's
     /// identity (no preset).
     var hasBuiltArtwork = false
@@ -162,19 +162,19 @@
         "MediaSessionNowPlaying: publishing title: \(displayInfo.title), subtitle: \(displayInfo.artist)"
       )
 
-      let soloFileName = AudioManager.shared.soloModeSound?.fileName
+      let singleFileName = AudioManager.shared.singleSound?.fileName
       let isQuickMix = AudioManager.shared.isQuickMix
-      // Some call sites publish a name without the preset (`exitSoloMode`), and the
+      // Some call sites publish a name without the preset (`exitSingleSound`), and the
       // system reads a changed id as a different item, so preset mode falls back to
       // the current preset. The id, entity and artwork all use this one value.
       let resolvedPreset =
         preset
-        ?? (soloFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset : nil)
+        ?? (singleFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset : nil)
 
       model.title = displayInfo.title
       model.subtitle = displayInfo.artist
       model.contentID = NowPlayingSessionMapping.contentID(
-        soloFileName: soloFileName, isQuickMix: isQuickMix, presetID: resolvedPreset?.id)
+        singleFileName: singleFileName, isQuickMix: isQuickMix, presetID: resolvedPreset?.id)
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)
       model.entityIdentifiers = entityIdentifiers(for: resolvedPreset)
       refreshTiming()
@@ -209,7 +209,7 @@
       // Clear the artwork identity so the same preset's new artwork is rebuilt.
       // A nil id alone matches Quick Mix's identity, so also drop the built flag.
       lastPresetId = nil
-      lastSoloSoundId = nil
+      lastSingleSoundId = nil
       hasBuiltArtwork = false
       updateInfo(
         preset: preset,
@@ -251,7 +251,7 @@
       #endif
       model.entityIdentifiers = []
       lastPresetId = nil
-      lastSoloSoundId = nil
+      lastSingleSoundId = nil
       hasBuiltArtwork = false
       #if os(iOS)
         currentAnimatedLoopPath = nil
@@ -322,12 +322,12 @@
     }
 
     /// Publishes the widget snapshot. `preset` is the last active preset even during
-    /// solo or Quick Mix, so its thumbnail and accent are skipped while either is active.
+    /// single sound or Quick Mix, so its thumbnail and accent are skipped while either is active.
     private func publishWidgetSnapshot(
       preset: Preset?, resolvedCreatorName: String?, title: String, isPlaying: Bool
     ) {
       let presetIsOverridden =
-        AudioManager.shared.soloModeSound != nil || AudioManager.shared.isQuickMix
+        AudioManager.shared.singleSound != nil || AudioManager.shared.isQuickMix
       let widgetThumbnailKey =
         presetIsOverridden
         ? nil : preset.flatMap { $0.isDefault ? nil : "preset_thumb_\($0.id.uuidString)" }

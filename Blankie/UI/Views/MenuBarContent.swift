@@ -159,18 +159,18 @@
         mixerContent
       case .timer:
         // Claim the timer's full height (fixedSize) so a short preceding screen
-        // (small preset / solo) can't squeeze the popover and clip it.
+        // (small preset / single sound) can't squeeze the popover and clip it.
         // Start and cancel go back to the mixer; dismiss would close the popover.
         TimerView(onFinish: { go(to: .mixer) })
           .fixedSize(horizontal: false, vertical: true)
       }
     }
 
-    /// The mixer: the solo icon or the iOS-style sound list, plus the control bar.
+    /// The mixer: the single sound icon or the iOS-style sound list, plus the control bar.
     private var mixerContent: some View {
       VStack(spacing: 0) {
-        if let solo = audioManager.soloModeSound {
-          SoloSoundCard(sound: solo, iconSize: 120)
+        if let single = audioManager.singleSound {
+          SingleSoundCard(sound: single, iconSize: 120)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
         } else {
@@ -220,16 +220,16 @@
       audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
-    /// Mixer title: solo sound, Quick Mix, or the preset name.
+    /// Mixer title: single sound, Quick Mix, or the preset name.
     private var mixerTitle: String {
-      if let solo = audioManager.soloModeSound {
-        return String(localized: String.LocalizationValue(solo.title))
+      if let single = audioManager.singleSound {
+        return String(localized: String.LocalizationValue(single.title))
       }
       if audioManager.isQuickMix { return String(localized: "Quick Mix") }
       return presetManager.currentPreset?.displayName ?? "Blankie"
     }
 
-    /// Active accent: a theming preset's color wins; app accent in solo/Quick Mix.
+    /// Active accent: a theming preset's color wins; app accent in single sound/Quick Mix.
     private var activeAccent: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }

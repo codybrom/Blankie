@@ -9,7 +9,7 @@ import SwiftUI
 import os
 
 private struct AnimationTrigger: Equatable {
-  let soloMode: UUID?
+  let singleSound: UUID?
   let quickMix: Bool
   let listView: Bool
   let isLoading: Bool
@@ -37,8 +37,8 @@ private enum IPhonePage: Hashable {
     @State var showingSettings = false
     @State var showingQuickMixEditor = false
     @State var soundToEdit: Sound?
-    /// Keeps the solo backdrop up while sheet preview temporarily exits solo mode.
-    @State private var soloBackdropSound: Sound?
+    /// Keeps the single sound backdrop up while sheet preview temporarily exits single-sound mode.
+    @State private var singleBackdropSound: Sound?
     @State var presetToEdit: Preset?
     /// Confirm-then-create flow replacing Edit Preset on the default preset.
     @State var showingNewPresetConfirmation = false
@@ -118,7 +118,7 @@ private enum IPhonePage: Hashable {
           NowPlayingSheet(
             onDismiss: { showingNowPlaying = false },
             backgroundImage: backgroundImage,
-            onNavigateToSolo: { swapNowPlaying(showSheet: false) },
+            onNavigateToSingle: { swapNowPlaying(showSheet: false) },
             soundsPanel: AnyView(nowPlayingSoundsPanel)
           )
         }
@@ -135,9 +135,9 @@ private enum IPhonePage: Hashable {
           closeMixerSheet()
         }
       }
-      // A solo sound has nothing to mix: close a mixer left open for a preset.
-      .onChange(of: audioManager.soloModeSound != nil) { _, solo in
-        if solo { closeMixerSheet() }
+      // A single sound has nothing to mix: close a mixer left open for a preset.
+      .onChange(of: audioManager.singleSound != nil) { _, single in
+        if single { closeMixerSheet() }
       }
       .onChange(of: editorIsOpen) { _, open in
         if !open, closesMixerSheetAfterEditor {
@@ -173,10 +173,10 @@ private enum IPhonePage: Hashable {
       }
       .onChange(of: soundToEdit) { oldValue, newValue in
         if let sound = newValue {
-          soloBackdropSound = audioManager.soloModeSound
+          singleBackdropSound = audioManager.singleSound
           Logger.ui.debug("MixerView: SoundSheet will be presented for '\(sound.title)'")
         } else if let oldSound = oldValue {
-          soloBackdropSound = nil
+          singleBackdropSound = nil
           Logger.ui.debug("MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
         }
       }
@@ -252,7 +252,7 @@ private enum IPhonePage: Hashable {
         || showingNewPresetConfirmation
     }
 
-    /// Closes the mixer sheet from code (a layout change, solo, Quick Mix),
+    /// Closes the mixer sheet from code (a layout change, single sound, Quick Mix),
     /// waiting for an editor on it to close first.
     private func closeMixerSheet() {
       guard showingMixerSheet else { return }
@@ -375,7 +375,7 @@ private enum IPhonePage: Hashable {
         }
         // Quick Mix carries its own controls.
         .nowPlayingBottomBar {
-          if !hidesNowPlayingBarForSolo && !audioManager.isQuickMix {
+          if !hidesNowPlayingBarForSingleSound && !audioManager.isQuickMix {
             regularPlaybackBar
           }
         }
@@ -404,7 +404,7 @@ private enum IPhonePage: Hashable {
       }
       // On the stack so the bar persists across the Library and the mixer.
       .nowPlayingBottomBar {
-        if !hidesNowPlayingBarForSolo {
+        if !hidesNowPlayingBarForSingleSound {
           nowPlayingBar
         }
       }
@@ -417,24 +417,24 @@ private enum IPhonePage: Hashable {
     }
 
     /// Hides the mini player where the full player is already on screen (the
-    /// solo player, the iPhone Now Playing page). The iPhone Library keeps it.
-    private var hidesNowPlayingBarForSolo: Bool {
+    /// single sound player, the iPhone Now Playing page). The iPhone Library keeps it.
+    private var hidesNowPlayingBarForSingleSound: Bool {
       if onPhonePlayerPage { return true }
-      return soloLayoutSound != nil && !barShowsMixer
+      return singleLayoutSound != nil && !barShowsMixer
     }
 
     /// iPhone pages open to Now Playing. Sounds always do; presets do unless
     /// the mixer is chosen first in Settings. Quick Mix is mixer-only.
     private var opensNowPlaying: Bool {
       !audioManager.isQuickMix
-        && (globalSettings.nowPlayingFirst || audioManager.soloModeSound != nil)
+        && (globalSettings.nowPlayingFirst || audioManager.singleSound != nil)
     }
 
     private var onPhonePlayerPage: Bool {
       !isLargeDevice && !iPhonePath.isEmpty && opensNowPlaying
     }
 
-    /// Next/previous between a solo sound (inline player) and a preset (sheet).
+    /// Next/previous between a single sound (inline player) and a preset (sheet).
     /// The layouts line up, so the swap skips animation.
     private func swapNowPlaying(showSheet: Bool) {
       var transaction = Transaction()
@@ -469,12 +469,12 @@ private enum IPhonePage: Hashable {
     // MARK: - Facing pages (iPhone Duo open)
 
     /// Two pages split at the fold: Library and Now Playing, or Now Playing and
-    /// the mixer. A solo sound's Now Playing spreads across both.
+    /// the mixer. A single sound's Now Playing spreads across both.
     private var pagesLayout: some View {
       GeometryReader { proxy in
         let split = CreaseInsets.split(containerWidth: proxy.size.width, fold: windowFold)
         let libraryOpen = iPhonePath.isEmpty
-        let spreads = audioManager.soloModeSound != nil && !libraryOpen
+        let spreads = audioManager.singleSound != nil && !libraryOpen
         ZStack {
           presetBackgroundView
           // Now Playing beside the Library has no system slider of its own.
@@ -541,7 +541,7 @@ private enum IPhonePage: Hashable {
     /// The upright half shows what's playing; the flat half holds the sounds
     /// and controls.
     private var proppedUpLayout: some View {
-      let showsLibrary = proppedShowsLibrary || soloLayoutSound != nil
+      let showsLibrary = proppedShowsLibrary || singleLayoutSound != nil
       return ZStack(alignment: .top) {
         presetBackgroundView
         volumeHUDSuppressor
@@ -608,7 +608,7 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     private var proppedUpLower: some View {
-      if proppedShowsLibrary || soloLayoutSound != nil {
+      if proppedShowsLibrary || singleLayoutSound != nil {
         proppedUpLibrary
       } else if audioManager.isQuickMix {
         QuickMixView(columns: 4)
@@ -619,7 +619,7 @@ private enum IPhonePage: Hashable {
 
     private var proppedUpBar: some View {
       HStack(spacing: 8) {
-        if soloLayoutSound == nil {
+        if singleLayoutSound == nil {
           Button {
             proppedShowsLibrary.toggle()
           } label: {
@@ -636,7 +636,7 @@ private enum IPhonePage: Hashable {
         }
         // The timer opens as a popover so it stays on the flat half.
         NowPlayingBar(style: .bare, showsExpand: false, timerAsPopover: true) {}
-        if globalSettings.enableSpatialAudio, soloLayoutSound == nil, !audioManager.isQuickMix {
+        if globalSettings.enableSpatialAudio, singleLayoutSound == nil, !audioManager.isQuickMix {
           Button {
             showingSpatialMixer = true
           } label: {
@@ -870,25 +870,25 @@ private enum IPhonePage: Hashable {
 
     // MARK: - Main Content
 
-    /// Blank while the header, the solo player or Quick Mix's column names what's playing.
+    /// Blank while the header, the single sound player or Quick Mix's column names what's playing.
     private var regularTitle: String {
       let named =
-        showsRegularHeader || soloLayoutSound != nil
+        showsRegularHeader || singleLayoutSound != nil
         || (audioManager.isQuickMix && quickMixShowsColumn)
       return named ? "" : navigationTitle
     }
 
-    /// No preset header over the solo player, including an Edit Sound preview.
+    /// No preset header over the single sound player, including an Edit Sound preview.
     private var showsRegularHeader: Bool {
-      showsPresetPageHeader && soloLayoutSound == nil
+      showsPresetPageHeader && singleLayoutSound == nil
     }
 
-    private var soloLayoutSound: Sound? {
-      if let solo = audioManager.soloModeSound, audioManager.previewModeSound == nil {
-        return solo
+    private var singleLayoutSound: Sound? {
+      if let single = audioManager.singleSound, audioManager.previewModeSound == nil {
+        return single
       }
       if soundToEdit != nil {
-        return soloBackdropSound
+        return singleBackdropSound
       }
       return nil
     }
@@ -899,8 +899,8 @@ private enum IPhonePage: Hashable {
         if presetManager.isLoading {
           // currentPreset is nil until the restore completes.
           Color.clear
-        } else if let soloSound = soloLayoutSound {
-          soloModeView(for: soloSound)
+        } else if let singleSound = singleLayoutSound {
+          singleSoundView(for: singleSound)
         } else if audioManager.isQuickMix {
           // Regular width gives Quick Mix its own control column (no bar).
           QuickMixView(
@@ -914,20 +914,20 @@ private enum IPhonePage: Hashable {
       .animation(
         .easeInOut(duration: 0.3),
         value: AnimationTrigger(
-          soloMode: soloLayoutSound?.id,
+          singleSound: singleLayoutSound?.id,
           quickMix: audioManager.isQuickMix,
           listView: showingListView,
           isLoading: presetManager.isLoading
         )
       )
-      .onChange(of: audioManager.soloModeSound) { oldValue, newValue in
-        if let newSolo = newValue {
+      .onChange(of: audioManager.singleSound) { oldValue, newValue in
+        if let newSingle = newValue {
           Logger.ui.debug(
-            "MixerView: Solo mode started for '\(newSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
+            "MixerView: Single-sound mode started for '\(newSingle.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
-        } else if let oldSolo = oldValue {
+        } else if let oldSingle = oldValue {
           Logger.ui.debug(
-            "MixerView: Solo mode ended for '\(oldSolo.title)' (SoundSheet open: \(soundToEdit != nil))"
+            "MixerView: Single-sound mode ended for '\(oldSingle.title)' (SoundSheet open: \(soundToEdit != nil))"
           )
         }
       }
@@ -954,15 +954,15 @@ private enum IPhonePage: Hashable {
 
 #if os(iOS) || os(visionOS)
   extension MixerView {
-    // MARK: - Solo Mode View
+    // MARK: - Single Sound View
 
     @ViewBuilder
-    func soloModeView(for soloSound: Sound) -> some View {
-      // Solo renders the full player inline. Next/previous onto a preset opens
+    func singleSoundView(for singleSound: Sound) -> some View {
+      // Single sound renders the full player inline. Next/previous onto a preset opens
       // the Now Playing sheet.
       NowPlayingSheet(inline: true, onNavigateToPreset: { swapNowPlaying(showSheet: true) })
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // The mini player is hidden during solo, so the zoom starts here. The
+        // The mini player is hidden during single sound, so the zoom starts here. The
         // two are never on screen together, so the id stays unique.
         .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
         .transition(.opacity)

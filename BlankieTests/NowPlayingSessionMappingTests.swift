@@ -114,28 +114,28 @@ import Testing
 
   // MARK: - Content identity
 
-  @Test func soloWinsOverEverything() {
+  @Test func singleWinsOverEverything() {
     #expect(
       NowPlayingSessionMapping.contentID(
-        soloFileName: "rain", isQuickMix: true, presetID: UUID()) == "solo:rain")
+        singleFileName: "rain", isQuickMix: true, presetID: UUID()) == "solo:rain")
   }
 
   @Test func quickMixWinsOverPreset() {
     #expect(
       NowPlayingSessionMapping.contentID(
-        soloFileName: nil, isQuickMix: true, presetID: UUID()) == "quickmix")
+        singleFileName: nil, isQuickMix: true, presetID: UUID()) == "quickmix")
   }
 
   @Test func presetUsesItsIdentifier() {
     let id = UUID()
     #expect(
-      NowPlayingSessionMapping.contentID(soloFileName: nil, isQuickMix: false, presetID: id)
+      NowPlayingSessionMapping.contentID(singleFileName: nil, isQuickMix: false, presetID: id)
         == "preset:\(id.uuidString)")
   }
 
   @Test func nothingActiveFallsBackToDefault() {
     #expect(
-      NowPlayingSessionMapping.contentID(soloFileName: nil, isQuickMix: false, presetID: nil)
+      NowPlayingSessionMapping.contentID(singleFileName: nil, isQuickMix: false, presetID: nil)
         == "default")
   }
 
@@ -171,16 +171,16 @@ import Testing
         == "bundled:OceanWaves")
   }
 
-  @Test func soloArtworkFoldsInTheAccent() {
-    // The solo card is drawn in the accent, and the system caches artwork by id.
+  @Test func singleArtworkFoldsInTheAccent() {
+    // The single sound card is drawn in the accent, and the system caches artwork by id.
     #expect(
-      NowPlayingSessionMapping.artworkID(source: .solo(fileName: "rain"), accentColorName: "teal")
+      NowPlayingSessionMapping.artworkID(source: .single(fileName: "rain"), accentColorName: "teal")
         == "solo:rain:teal")
   }
 
   @Test func missingAccentFallsBackToDefault() {
     #expect(
-      NowPlayingSessionMapping.artworkID(source: .solo(fileName: "rain"), accentColorName: nil)
+      NowPlayingSessionMapping.artworkID(source: .single(fileName: "rain"), accentColorName: nil)
         == "solo:rain:default")
   }
 

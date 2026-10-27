@@ -18,7 +18,7 @@
     private let audioManager = AudioManager.shared
     private let originalAutoPlay: Bool
     private let originalSounds: [Sound]
-    private let originalSolo: Sound?
+    private let originalSingle: Sound?
     private let originalQuickMix: Bool
     private let originalCurrentPreset: Preset?
     private let originalDefaultArtwork: AnimatedArtworkRef?
@@ -30,14 +30,14 @@
       GlobalSettings.shared.showPlaybackAsContinuous = true
       originalAutoPlay = GlobalSettings.shared.autoPlayOnLaunch
       originalSounds = audioManager.sounds
-      originalSolo = audioManager.soloModeSound
+      originalSingle = audioManager.singleSound
       originalQuickMix = audioManager.isQuickMix
       originalCurrentPreset = PresetManager.shared.currentPreset
       originalDefaultArtwork = GlobalSettings.shared.defaultLockScreenArtwork
       GlobalSettings.shared.setAutoPlayOnLaunch(false)
       // Skips `resetSounds()`: its debounced volume save would land after this suite ends
       // and race the next suite.
-      audioManager.soloModeSound = nil
+      audioManager.singleSound = nil
       audioManager.isQuickMix = false
       // With no app-wide animation, an artwork-less preset gets the drawn fallback, whose
       // id includes the accent.
@@ -48,7 +48,7 @@
       // No timer runs when the suite starts, so stopping it is the restore.
       TimerManager.shared.stopTimer()
       GlobalSettings.shared.showPlaybackAsContinuous = originalContinuous
-      audioManager.soloModeSound = originalSolo
+      audioManager.singleSound = originalSingle
       audioManager.isQuickMix = originalQuickMix
       audioManager.sounds = originalSounds
       PresetManager.shared.setCurrentPreset(originalCurrentPreset)
@@ -94,7 +94,7 @@
 
     // MARK: - Content identity
 
-    /// `exitSoloMode` publishes a name with no preset; the system reads a
+    /// `exitSingleSound` publishes a name with no preset; the system reads a
     /// changed id as a different item, so the current preset has to stand in.
     @Test func presetContentIDSurvivesANameOnlyPublish() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
@@ -110,13 +110,13 @@
       #expect(backend.model.contentID == "preset:\(preset.id.uuidString)")
     }
 
-    @Test func soloedSoundOwnsTheContentID() {
+    @Test func singleSoundOwnsTheContentID() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
       let backend = MediaSessionNowPlaying()
       _ = makeCurrentPreset()
       let rain = TestSound(fileName: Self.testName)
       audioManager.sounds = [rain]
-      audioManager.soloModeSound = rain
+      audioManager.singleSound = rain
 
       backend.updateInfo(presetName: "Blankie", isPlaying: false)
       backend.flushPendingPublish()
@@ -253,7 +253,7 @@
       sound.stubbedDuration = 120
       sound.isSelected = true
       audioManager.sounds = [sound]
-      audioManager.soloModeSound = sound
+      audioManager.singleSound = sound
       let backend = MediaSessionNowPlaying()
       backend.updateInfo(isPlaying: false)
       backend.flushPendingPublish()

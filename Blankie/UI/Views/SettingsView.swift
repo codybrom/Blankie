@@ -81,7 +81,7 @@ struct SettingsView: View {
   }
 
   #if os(iOS) || os(visionOS)
-    // `themingPreset` is nil under Quick Mix and solo, so neither shows an override.
+    // `themingPreset` is nil under Quick Mix and single sound, so neither shows an override.
     private var presetViewModeOverride: PresetViewMode? {
       presetManager.themingPreset?.viewMode
     }

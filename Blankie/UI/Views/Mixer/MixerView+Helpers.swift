@@ -28,12 +28,12 @@ import SwiftUI
     @ViewBuilder
     var presetBackgroundView: some View {
       let preset = presetManager.currentPreset
-      // Solo uses the app accent gradient, like Quick Mix, and ignores preset artwork.
-      let isSolo = audioManager.soloModeSound != nil
+      // Single sound uses the app accent gradient, like Quick Mix, and ignores preset artwork.
+      let isSingle = audioManager.singleSound != nil
 
       GeometryReader { geometry in
         ZStack {
-          if !isSolo, preset != nil,
+          if !isSingle, preset != nil,
             let artworkImage = backgroundImage
           {
             Image(uiImage: artworkImage)
@@ -52,15 +52,15 @@ import SwiftUI
           }
           else {
             SoundSurfaceBackground(
-              accent: isSolo
+              accent: isSingle
                 ? (globalSettings.customAccentColor ?? .accentColor)
                 : (preset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor)
             )
             .transition(.opacity)
           }
         }
-        // Gradient and artwork crossfade on isSolo; artwork swaps animate in the task below.
-        .animation(.easeInOut(duration: 0.35), value: isSolo)
+        // Gradient and artwork crossfade on isSingle; artwork swaps animate in the task below.
+        .animation(.easeInOut(duration: 0.35), value: isSingle)
         .accessibilityHidden(true)
       }
       .ignoresSafeArea()

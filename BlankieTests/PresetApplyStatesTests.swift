@@ -21,11 +21,11 @@ import Testing
   init() {
     GlobalSettings.shared.setAutoPlayOnLaunch(false)
     originalSounds = audioManager.sounds
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
   }
   isolated deinit {
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
     audioManager.sounds = originalSounds
   }

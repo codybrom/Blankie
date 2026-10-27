@@ -20,9 +20,9 @@ import UniformTypeIdentifiers
     @State private var showingTimerPopover = false
     @State private var showingSpatialMixer = false
     @State private var soundToEdit: Sound?
-    /// Keeps the solo backdrop up while sheet preview temporarily exits solo
+    /// Keeps the single sound backdrop up while sheet preview temporarily exits single sound
     /// mode (mirrors MixerView).
-    @State private var soloBackdropSound: Sound?
+    @State private var singleBackdropSound: Sound?
     @State private var presetToEdit: Preset?
     /// Confirm-then-create flow replacing Edit Preset on the default preset.
     @State private var showingNewPresetConfirmation = false
@@ -39,7 +39,7 @@ import UniformTypeIdentifiers
       audioManager.isGloballyPlaying ? .primary : .secondary
     }
 
-    /// `themingPreset` is nil during solo and Quick Mix, so those use the app accent.
+    /// `themingPreset` is nil during single sound and Quick Mix, so those use the app accent.
     private var activeAccent: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
@@ -47,7 +47,7 @@ import UniformTypeIdentifiers
     /// The preset whose artwork backs the tiles, while they're on screen.
     private var backdropPreset: Preset? {
       guard !presetManager.isLoading, !appState.showingSettingsPane,
-        !(showingSpatialMixer && spatialEntryAvailable), soloLayoutSound == nil
+        !(showingSpatialMixer && spatialEntryAvailable), singleLayoutSound == nil
       else { return nil }
       return presetManager.themingPreset
     }
@@ -55,26 +55,26 @@ import UniformTypeIdentifiers
     /// Spatial Mix: opted in via Settings, preset mode only (same gating as iOS).
     private var spatialEntryAvailable: Bool {
       globalSettings.enableSpatialAudio
-        && audioManager.soloModeSound == nil && !audioManager.isQuickMix
+        && audioManager.singleSound == nil && !audioManager.isQuickMix
         && presetManager.currentPreset != nil
     }
 
-    /// The real solo sound, or the captured backdrop while Edit Sound is up
+    /// The real single sound, or the captured backdrop while Edit Sound is up
     /// (mirrors MixerView).
-    private var soloLayoutSound: Sound? {
-      if let solo = audioManager.soloModeSound, audioManager.previewModeSound == nil {
-        return solo
+    private var singleLayoutSound: Sound? {
+      if let single = audioManager.singleSound, audioManager.previewModeSound == nil {
+        return single
       }
       if soundToEdit != nil {
-        return soloBackdropSound
+        return singleBackdropSound
       }
       return nil
     }
 
     private var navigationTitle: String {
-      // soloLayoutSound keeps the title steady while sheet preview exits solo.
-      if let soloSound = soloLayoutSound {
-        return soloSound.localizedTitle
+      // singleLayoutSound keeps the title steady while sheet preview exits single sound.
+      if let singleSound = singleLayoutSound {
+        return singleSound.localizedTitle
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")
@@ -118,7 +118,7 @@ import UniformTypeIdentifiers
         reservedStatusStrip
           .overlay {
             if !appState.showingSettingsPane, !presetManager.isLoading {
-              if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds {
+              if audioManager.singleSound == nil && !audioManager.hasSelectedSounds {
                 statusBanner("No Sounds Playing", systemImage: "speaker.slash.circle.fill")
                   .foregroundStyle(activeAccent)
                   .transition(.opacity)
@@ -139,10 +139,10 @@ import UniformTypeIdentifiers
         } else if showingSpatialMixer, spatialEntryAvailable {
           SpatialMixerView()
             .transition(.opacity)
-        } else if let soloSound = soloLayoutSound {
+        } else if let singleSound = singleLayoutSound {
           VStack {
             Spacer()
-            SoloSoundCard(sound: soloSound)
+            SingleSoundCard(sound: singleSound)
               .transition(.scale.combined(with: .opacity))
             Spacer()
           }
@@ -286,11 +286,11 @@ import UniformTypeIdentifiers
         if !appState.showingSettingsPane {
           ToolbarItem(placement: .primaryAction) {
             let onDefaultPreset =
-              audioManager.soloModeSound == nil
+              audioManager.singleSound == nil
               && presetManager.currentPreset?.isDefault == true
             Button {
-              if let soloSound = audioManager.soloModeSound {
-                soundToEdit = soloSound
+              if let singleSound = audioManager.singleSound {
+                soundToEdit = singleSound
               } else if let currentPreset = presetManager.currentPreset {
                 if currentPreset.isDefault {
                   showingNewPresetConfirmation = true
@@ -303,12 +303,12 @@ import UniformTypeIdentifiers
                 systemName: onDefaultPreset ? "rectangle.stack.badge.plus" : "slider.vertical.3")
             }
             .accessibilityLabel(
-              audioManager.soloModeSound != nil
+              audioManager.singleSound != nil
                 ? "Edit Sound" : onDefaultPreset ? "New Preset" : "Edit Preset"
             )
             // New Preset needs playing sounds to seed it.
             .disabled(
-              audioManager.soloModeSound == nil
+              audioManager.singleSound == nil
                 && (presetManager.currentPreset == nil
                   || (onDefaultPreset && !audioManager.hasSelectedSounds))
             )
@@ -319,12 +319,12 @@ import UniformTypeIdentifiers
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()
       }
-      // Capture the solo backdrop for the sheet's lifetime (mirrors MixerView).
+      // Capture the single sound backdrop for the sheet's lifetime (mirrors MixerView).
       .onChange(of: soundToEdit) { oldValue, newValue in
         if newValue != nil {
-          soloBackdropSound = audioManager.soloModeSound
+          singleBackdropSound = audioManager.singleSound
         } else if oldValue != nil {
-          soloBackdropSound = nil
+          singleBackdropSound = nil
         }
       }
       .sheet(item: $presetToEdit) { preset in
@@ -343,7 +343,7 @@ import UniformTypeIdentifiers
         )
       }
       .animation(.easeInOut(duration: 0.2), value: audioManager.isGloballyPlaying)
-      .animation(.easeInOut(duration: 0.3), value: audioManager.soloModeSound?.id)
+      .animation(.easeInOut(duration: 0.3), value: audioManager.singleSound?.id)
       .animation(.easeInOut(duration: 0.2), value: showingSpatialMixer)
       .animation(.easeInOut(duration: 0.2), value: appState.showingSettingsPane)
       .sheet(isPresented: $showingShortcuts) {

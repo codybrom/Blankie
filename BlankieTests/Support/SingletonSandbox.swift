@@ -27,7 +27,7 @@ import SwiftData
   private let originalPresets: [Preset]
   private let originalCurrentPreset: Preset?
   private let originalStatesApplied: Bool
-  private let originalSolo: Sound?
+  private let originalSingle: Sound?
   private let originalPreview: Sound?
   private let originalQuickMix: Bool
   private let originalQuickMixStates: [AudioManager.QuickMixState]
@@ -53,7 +53,7 @@ import SwiftData
     originalPresets = presetManager.presets
     originalCurrentPreset = presetManager.currentPreset
     originalStatesApplied = presetManager.presetStatesApplied
-    originalSolo = audioManager.soloModeSound
+    originalSingle = audioManager.singleSound
     originalPreview = audioManager.previewModeSound
     originalQuickMix = audioManager.isQuickMix
     originalQuickMixStates = audioManager.quickMixOriginalStates
@@ -65,7 +65,7 @@ import SwiftData
       PresetStorage.lastActivePresetIDKey,
       PresetStorage.defaultPresetBackupKey,
       PresetStorage.customPresetsBackupKey,
-      UserDefaultsKeys.soloModeSoundFileName,
+      UserDefaultsKeys.singleSoundFileName,
       UserDefaultsKeys.starredItems,
       UserDefaultsKeys.quickMixSoundFileNames,
       "defaultSoundOrder",
@@ -76,7 +76,7 @@ import SwiftData
     if audioManager.isGloballyPlaying {
       audioManager.setGlobalPlaybackState(false)
     }
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.previewModeSound = nil
     audioManager.isQuickMix = false
     // Tests install their own presets. Starting empty keeps the user's out of
@@ -138,7 +138,7 @@ import SwiftData
   }
 
   func restore() {
-    audioManager.soloModeSound = originalSolo
+    audioManager.singleSound = originalSingle
     audioManager.previewModeSound = originalPreview
     audioManager.isQuickMix = originalQuickMix
     audioManager.quickMixOriginalStates = originalQuickMixStates

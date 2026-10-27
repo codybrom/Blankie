@@ -25,7 +25,7 @@ import os
     private var quickMixObservation: Task<Void, Never>?
     private var starredItemsObservation: Task<Void, Never>?
     private var globalPlayingObservation: Task<Void, Never>?
-    private var soloModeObservation: Task<Void, Never>?
+    private var singleSoundObservation: Task<Void, Never>?
     private var playbackStateObservation: Task<Void, Never>?
     private var currentPresetObservation: Task<Void, Never>?
     private var presetsObservation: Task<Void, Never>?
@@ -107,8 +107,8 @@ import os
       // resume. Pause first so exitQuickMix's restore loop can't start sounds there.
       AudioManager.shared.setGlobalPlaybackState(false)
 
-      if AudioManager.shared.soloModeSound != nil {
-        AudioManager.shared.exitSoloMode()
+      if AudioManager.shared.singleSound != nil {
+        AudioManager.shared.exitSingleSound()
       }
 
       if AudioManager.shared.isQuickMix {
@@ -270,9 +270,9 @@ import os
         }
       }
 
-      // Tracks the soloed sound's id so entering, leaving or switching solo refreshes.
-      soloModeObservation = Task { @MainActor [weak self] in
-        for await _ in Observations({ AudioManager.shared.soloModeSound?.id }) {
+      // Tracks the single sound's id so entering, leaving or switching single sound refreshes.
+      singleSoundObservation = Task { @MainActor [weak self] in
+        for await _ in Observations({ AudioManager.shared.singleSound?.id }) {
           self?.updateHomeTemplate()
           self?.updateSoundsTemplate()
           self?.updateQuickMixTemplate()

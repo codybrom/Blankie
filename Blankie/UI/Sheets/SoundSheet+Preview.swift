@@ -57,12 +57,12 @@ extension SoundSheet {
   }
 
   private func prepareForPreview() {
-    // Save current solo mode sound if any (for restoration after preview)
-    previousSoloModeSound = AudioManager.shared.soloModeSound
+    // Save the current single sound, if any, to restore after the preview.
+    previousSingleSound = AudioManager.shared.singleSound
 
-    // Exit any existing solo mode first (but don't change global playback state)
-    if AudioManager.shared.soloModeSound != nil {
-      AudioManager.shared.exitSoloModeWithoutResuming()
+    // Exit any existing single-sound mode first (but don't change global playback state)
+    if AudioManager.shared.singleSound != nil {
+      AudioManager.shared.exitSingleSoundWithoutResuming()
     }
   }
 
@@ -133,24 +133,25 @@ extension SoundSheet {
         // Exit preview mode (this restores all original states)
         AudioManager.shared.exitPreviewMode()
 
-        if let previousSolo = previousSoloModeSound {
-          Logger.ui.debug("SoundSheet: Restoring previous solo mode for '\(previousSolo.title)'")
-          // Restore the solo session paused, since the solo sound is usually the one
+        if let previousSingle = previousSingleSound {
+          Logger.ui.debug(
+            "SoundSheet: Restoring previous single-sound mode for '\(previousSingle.title)'")
+          // Restore the single sound session paused, since the single sound is usually the one
           // just previewed (play/space resumes it). The explicit pause covers a
           // mid-fade snapshot that exitPreviewMode left audible.
-          previousSolo.pause()
-          AudioManager.shared.enterSoloMode(for: previousSolo, startPlaying: false)
+          previousSingle.pause()
+          AudioManager.shared.enterSingleSound(for: previousSingle, startPlaying: false)
         }
 
         // Tear down add mode's temp player; edit mode previews the real Sound,
-        // whose playback exitPreviewMode/enterSoloMode just restored.
+        // whose playback exitPreviewMode/enterSingleSound just restored.
         if case .add = mode {
           preview.unload()
         }
       }
 
       previewSound = nil
-      previousSoloModeSound = nil
+      previousSingleSound = nil
       wasPreviewSoundPlaying = false
     }
   }

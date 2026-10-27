@@ -170,10 +170,10 @@ extension SoundSheet {
     }
 
     // A preset-only sound (set directly or via loop-off) has no tile in the
-    // default preset, so deselect it unless a custom preset or solo shows it.
+    // default preset, so deselect it unless a custom preset or single sound shows it.
     if sound.isPresetUseOnly, sound.isSelected,
       PresetManager.shared.currentPreset?.isDefault ?? true,
-      AudioManager.shared.soloModeSound?.id != sound.id
+      AudioManager.shared.singleSound?.id != sound.id
     {
       sound.isSelected = false
     }
@@ -281,7 +281,7 @@ extension SoundSheet {
 
     switch result {
     case .success:
-      // Drop only the deleted sound, so solo, preview and Quick Mix keep the
+      // Drop only the deleted sound, so single sound, preview and Quick Mix keep the
       // Sound instances they hold.
       AudioManager.shared.syncCustomSounds()
 

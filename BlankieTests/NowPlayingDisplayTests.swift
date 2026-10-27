@@ -17,7 +17,7 @@ import Testing
   private let audioManager = AudioManager.shared
   private let originalAutoPlay: Bool
   private let originalSounds: [Sound]
-  private let originalSolo: Sound?
+  private let originalSingle: Sound?
   private let originalQuickMix: Bool
   private let originalPresets: [Preset]
   private let originalCurrentPreset: Preset?
@@ -26,18 +26,18 @@ import Testing
   init() {
     originalAutoPlay = GlobalSettings.shared.autoPlayOnLaunch
     originalSounds = audioManager.sounds
-    originalSolo = audioManager.soloModeSound
+    originalSingle = audioManager.singleSound
     originalQuickMix = audioManager.isQuickMix
     originalPresets = PresetManager.shared.presets
     originalCurrentPreset = PresetManager.shared.currentPreset
     GlobalSettings.shared.setAutoPlayOnLaunch(false)
     AudioManager.shared.resetSounds()
-    audioManager.soloModeSound = nil
+    audioManager.singleSound = nil
     audioManager.isQuickMix = false
   }
 
   isolated deinit {
-    audioManager.soloModeSound = originalSolo
+    audioManager.singleSound = originalSingle
     audioManager.isQuickMix = originalQuickMix
     audioManager.sounds = originalSounds
     PresetManager.shared.setPresets(originalPresets)
@@ -133,14 +133,14 @@ import Testing
       NowPlayingDisplay.getDisplayInfo(presetName: "Rainy Night").artist == "test-rain, test-waves")
   }
 
-  // MARK: - Solo and Quick Mix
+  // MARK: - Single sound and Quick Mix
 
   /// A built-in sound's author belongs on the credits screens, so the artist is the app name,
   /// even when the current preset has a creator.
-  @Test func soloSoundTitlesItselfWithBlankieArtist() {
+  @Test func singleSoundTitlesItselfWithBlankieArtist() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]
-    audioManager.soloModeSound = rain
+    audioManager.singleSound = rain
 
     let info = NowPlayingDisplay.getDisplayInfo(presetName: "Rainy Night", creatorName: "Ada")
     #expect(info.title == "test-rain")
@@ -148,10 +148,10 @@ import Testing
   }
 
   /// The caption resolves by title through the credits data.
-  @Test func soloSoundPublishesItsCaptionAsArtist() {
+  @Test func singleSoundPublishesItsCaptionAsArtist() {
     let rain = TestSound(fileName: "Rain")
     audioManager.sounds = [rain]
-    audioManager.soloModeSound = rain
+    audioManager.singleSound = rain
 
     let caption = rain.localizedSubtitle
     #expect(caption != nil)
@@ -201,11 +201,11 @@ import Testing
     #expect(NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: nil) == nil)
   }
 
-  /// A built-in solo has no creator to show.
-  @Test func widgetSubtitleIsNilForBuiltInSolo() {
+  /// A built-in single sound has no creator to show.
+  @Test func widgetSubtitleIsNilForBuiltInSingle() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]
-    audioManager.soloModeSound = rain
+    audioManager.singleSound = rain
     #expect(NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: "Ada") == nil)
   }
 

@@ -16,7 +16,7 @@ import os
   import SwiftUI
 
   extension CarPlayInterfaceController {
-    /// Sets up the Now Playing template: a favorite button for the current solo
+    /// Sets up the Now Playing template: a favorite button for the current single sound
     /// sound or preset (plus edit for presets), and the global sleep timer.
     @MainActor
     func setupNowPlayingTemplate() {
@@ -38,16 +38,16 @@ import os
       // a shortcut to the timer picker only then. Otherwise it shows the sound names.
       nowPlayingTemplate.isAlbumArtistButtonEnabled = TimerManager.shared.isTimerActive
 
-      // A soloed sound is favoritable under its `solo:` token (no edit, nothing to mix).
+      // A single sound is favoritable under its `solo:` token (no edit, nothing to mix).
       // Presets get favorite and edit. Quick Mix isn't favoritable, so it gets the timer only.
-      if let soloSound = AudioManager.shared.soloModeSound {
+      if let singleSound = AudioManager.shared.singleSound {
         let favoriteButton = Self.favoriteButton(
-          for: GlobalSettings.soloToken(forFileName: soloSound.fileName)
+          for: GlobalSettings.singleToken(forFileName: singleSound.fileName)
         ) { [weak self] in self?.updateNowPlayingButtons() }
 
         nowPlayingTemplate.updateNowPlayingButtons([favoriteButton, timerButton])
         Logger.carPlay.debug(
-          "CarPlay: Now Playing configured with favorite + timer buttons (solo mode)")
+          "CarPlay: Now Playing configured with favorite + timer buttons (single-sound mode)")
       } else if let preset = PresetManager.shared.currentPreset {
         let favoriteToken =
           preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString

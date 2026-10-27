@@ -47,7 +47,7 @@ enum NowPlayingSessionMapping {
     case stored(UUID)
     case file(String)
     case bundled(String)
-    case solo(fileName: String)
+    case single(fileName: String)
     case fallback(kind: String, icons: [String])
   }
 
@@ -91,12 +91,12 @@ enum NowPlayingSessionMapping {
   /// The published content's identity. Stable across incremental updates
   /// (volume, play/pause) so the system doesn't treat the card as a new item.
   nonisolated static func contentID(
-    soloFileName: String?,
+    singleFileName: String?,
     isQuickMix: Bool,
     presetID: UUID?
   ) -> String {
-    if let soloFileName {
-      return "solo:\(soloFileName)"
+    if let singleFileName {
+      return "solo:\(singleFileName)"
     } else if isQuickMix {
       return "quickmix"
     } else if let presetID {
@@ -128,7 +128,7 @@ enum NowPlayingSessionMapping {
       return "static:\(path)"
     case .bundled(let id):
       return "bundled:\(id)"
-    case .solo(let fileName):
+    case .single(let fileName):
       return "solo:\(fileName):\(accent)"
     case .fallback(let kind, let icons):
       return "fallback:\(kind):\(accent):\(icons.joined(separator: ","))"

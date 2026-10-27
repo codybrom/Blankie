@@ -1,5 +1,5 @@
 //
-//  AudioManager+SoloMode.swift
+//  AudioManager+SingleSound.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 6/1/25.
@@ -9,52 +9,53 @@ import Foundation
 import os
 
 extension AudioManager {
-  // MARK: - Solo Mode
+  // MARK: - Single Sound
 
   /// The sound a `solo:` starred token refers to, or nil if the token isn't a
-  /// solo token or its sound no longer exists.
-  func sound(forSoloToken token: String) -> Sound? {
-    guard let fileName = GlobalSettings.soloFileName(fromToken: token) else { return nil }
+  /// single sound token or its sound no longer exists.
+  func sound(forSingleToken token: String) -> Sound? {
+    guard let fileName = GlobalSettings.singleFileName(fromToken: token) else { return nil }
     return sounds.first { $0.fileName == fileName }
   }
 
   @MainActor
-  func toggleSoloMode(for sound: Sound) {
-    if soloModeSound?.id == sound.id {
-      exitSoloMode()
+  func toggleSingleSound(for sound: Sound) {
+    if singleSound?.id == sound.id {
+      exitSingleSound()
     } else {
-      enterSoloMode(for: sound)
+      enterSingleSound(for: sound)
     }
   }
 
-  /// Restores a saved solo sound, playing only when `autoPlayOnLaunch` is set.
-  /// Returns true if the solo was restored or its custom sound hasn't loaded yet
+  /// Restores a saved single sound, playing only when `autoPlayOnLaunch` is set.
+  /// Returns true if the single sound was restored or its custom sound hasn't loaded yet
   /// (launch skips the preset). Once `soundsFullyLoaded`, a missing sound clears
-  /// the saved solo and returns false.
+  /// the saved single sound and returns false.
   @MainActor
   @discardableResult
-  func restoreSoloModeIfNeeded(soundsFullyLoaded: Bool = false) -> Bool {
-    guard let savedSoloFileName = GlobalSettings.shared.getSavedSoloModeFileName() else {
+  func restoreSingleSoundIfNeeded(soundsFullyLoaded: Bool = false) -> Bool {
+    guard let savedSingleFileName = GlobalSettings.shared.getSavedSingleSoundFileName() else {
       return false
     }
-    if soloModeSound?.fileName == savedSoloFileName { return true }
-    if let soloSound = sounds.first(where: { $0.fileName == savedSoloFileName }) {
-      Logger.audio.debug("AudioManager: Restoring solo mode for '\(soloSound.title)'")
-      enterSoloMode(for: soloSound, startPlaying: GlobalSettings.shared.autoPlayOnLaunch)
+    if singleSound?.fileName == savedSingleFileName { return true }
+    if let singleSound = sounds.first(where: { $0.fileName == savedSingleFileName }) {
+      Logger.audio.debug("AudioManager: Restoring single-sound mode for '\(singleSound.title)'")
+      enterSingleSound(for: singleSound, startPlaying: GlobalSettings.shared.autoPlayOnLaunch)
       return true
     }
     if soundsFullyLoaded {
       // The sound was deleted; launch falls back to the preset.
-      Logger.audio.debug("AudioManager: Saved solo sound '\(savedSoloFileName)' is gone; clearing")
-      GlobalSettings.shared.saveSoloModeSound(fileName: nil)
+      Logger.audio.debug(
+        "AudioManager: Saved single sound '\(savedSingleFileName)' is gone; clearing")
+      GlobalSettings.shared.saveSingleSoundSound(fileName: nil)
       return false
     }
     Logger.audio.debug(
-      "AudioManager: Solo sound '\(savedSoloFileName)' not loaded yet; deferring restore")
+      "AudioManager: Single sound '\(savedSingleFileName)' not loaded yet; deferring restore")
     return true
   }
 
-  /// Launch state for a preset with no solo: plays when `autoPlayOnLaunch` is set
+  /// Launch state for a preset with no single sound: plays when `autoPlayOnLaunch` is set
   /// and sounds are selected, otherwise publishes a paused Now Playing.
   @MainActor
   func applyPresetLaunchState() {
@@ -75,41 +76,41 @@ extension AudioManager {
   }
 
   @MainActor
-  func enterSoloMode(for sound: Sound, startPlaying: Bool = true) {
-    // Re-entering would save the solo volume (1.0) as the original volume.
-    if soloModeSound?.id == sound.id { return }
+  func enterSingleSound(for sound: Sound, startPlaying: Bool = true) {
+    // Re-entering would save the single sound volume (1.0) as the original volume.
+    if singleSound?.id == sound.id { return }
 
-    Logger.audio.debug("AudioManager: Entering solo mode for '\(sound.title)'")
+    Logger.audio.debug("AudioManager: Entering single-sound mode for '\(sound.title)'")
 
     exitPreviewMode(resuming: false)
 
-    // Persist a pending (coalesced) mix edit before solo stops preset saves.
+    // Persist a pending (coalesced) mix edit before single sound stops preset saves.
     PresetManager.shared.updateCurrentPresetState()
 
-    // Solo and Quick Mix are mutually exclusive. No resume, since solo pauses the mix.
+    // Single sound and Quick Mix are exclusive. No resume, since a single sound pauses the mix.
     if isQuickMix {
       exitQuickMix(resuming: false)
     }
 
-    // Spatial sessions are bound to the preset mix; soloing ends them.
+    // Spatial sessions are bound to the preset mix; playing a single sound ends them.
     if SpatialSessionManager.shared.isActive {
       SpatialSessionManager.shared.setMode(.off)
     }
 
-    // Switching from another solo sound: restore its volume and selection so it
+    // Switching from another single sound: restore its volume and selection so it
     // doesn't join the mix at full volume.
-    restoreSoloSoundState()
+    restoreSingleSoundState()
 
-    soloModeOriginalVolume = sound.volume
-    soloModeOriginalSelection = sound.isSelected
+    singleSoundOriginalVolume = sound.volume
+    singleSoundOriginalSelection = sound.isSelected
 
     // Pause the others but keep their selection, which belongs to the preset.
     for otherSound in sounds where otherSound.id != sound.id {
       otherSound.pause()
     }
 
-    soloModeSound = sound
-    GlobalSettings.shared.saveSoloModeSound(fileName: sound.fileName)
+    singleSound = sound
+    GlobalSettings.shared.saveSingleSoundSound(fileName: sound.fileName)
     updateNextPreviousCommandState()
     sound.volume = 1.0
     sound.isSelected = true
@@ -136,36 +137,36 @@ extension AudioManager {
     )
   }
 
-  /// Pauses the soloed sound and restores its pre-solo volume and selection.
-  /// Leaves global playback and `soloModeSound` to the caller.
+  /// Pauses the single sound and restores the volume and selection it had before.
+  /// Leaves global playback and `singleSound` to the caller.
   @MainActor
-  private func restoreSoloSoundState() {
-    guard let soloSound = soloModeSound else { return }
+  private func restoreSingleSoundState() {
+    guard let singleSound = singleSound else { return }
 
-    soloSound.pause()
+    singleSound.pause()
 
-    if let originalVolume = soloModeOriginalVolume {
-      soloSound.volume = originalVolume
-      soloModeOriginalVolume = nil
+    if let originalVolume = singleSoundOriginalVolume {
+      singleSound.volume = originalVolume
+      singleSoundOriginalVolume = nil
     }
 
-    if let originalSelection = soloModeOriginalSelection {
-      soloSound.isSelected = originalSelection
-      soloModeOriginalSelection = nil
+    if let originalSelection = singleSoundOriginalSelection {
+      singleSound.isSelected = originalSelection
+      singleSoundOriginalSelection = nil
     }
   }
 
   @MainActor
-  func exitSoloMode() {
-    guard soloModeSound != nil else { return }
-    Logger.audio.debug("AudioManager: Exiting solo mode")
+  func exitSingleSound() {
+    guard singleSound != nil else { return }
+    Logger.audio.debug("AudioManager: Exiting single-sound mode")
 
-    restoreSoloSoundState()
-    soloModeSound = nil
-    GlobalSettings.shared.saveSoloModeSound(fileName: nil)
+    restoreSingleSoundState()
+    singleSound = nil
+    GlobalSettings.shared.saveSingleSoundSound(fileName: nil)
     setGlobalPlaybackState(false)
 
-    // A solo restored at launch skips applySoundStates, so presetStatesApplied is
+    // A single sound restored at launch skips applySoundStates, so presetStatesApplied is
     // still false. Playback is stopped first so this re-sync can't autoplay.
     if !PresetManager.shared.presetStatesApplied,
       let preset = PresetManager.shared.currentPreset
@@ -179,19 +180,19 @@ extension AudioManager {
       isPlaying: false
     )
 
-    Logger.audio.debug("AudioManager: Exit solo mode complete")
+    Logger.audio.debug("AudioManager: Exit single-sound mode complete")
   }
 
   @MainActor
-  func exitSoloModeWithoutResuming() {
-    guard soloModeSound != nil else { return }
-    Logger.audio.debug("AudioManager: Exiting solo mode (without resuming)")
+  func exitSingleSoundWithoutResuming() {
+    guard singleSound != nil else { return }
+    Logger.audio.debug("AudioManager: Exiting single-sound mode (without resuming)")
 
-    restoreSoloSoundState()
-    soloModeSound = nil
-    GlobalSettings.shared.saveSoloModeSound(fileName: nil)
+    restoreSingleSoundState()
+    singleSound = nil
+    GlobalSettings.shared.saveSingleSoundSound(fileName: nil)
 
-    // Same re-sync as exitSoloMode. Skipped when applySoundStates is the caller,
+    // Same re-sync as exitSingleSound. Skipped when applySoundStates is the caller,
     // so its isApplyingPresetStates window stays open.
     if !isApplyingPresetStates, !PresetManager.shared.presetStatesApplied,
       let preset = PresetManager.shared.currentPreset
@@ -201,7 +202,7 @@ extension AudioManager {
 
     updateNextPreviousCommandState()
 
-    Logger.audio.debug("AudioManager: Exit solo mode (without resuming) complete")
+    Logger.audio.debug("AudioManager: Exit single-sound mode (without resuming) complete")
   }
 
   // MARK: - Preview Mode (for SoundSheet previews)

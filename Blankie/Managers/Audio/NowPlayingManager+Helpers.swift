@@ -44,10 +44,10 @@ extension NowPlayingManager {
     }
   #endif
 
-  /// A soloed sound's lock-screen artwork: the shared fallback image wrapped for
+  /// A single sound's lock-screen artwork: the shared fallback image wrapped for
   /// MediaPlayer.
-  func soloArtwork(for sound: Sound) -> MPMediaItemArtwork? {
-    guard let image = NowPlayingDisplay.soloFallbackImage(for: sound) else { return nil }
+  func singleArtwork(for sound: Sound) -> MPMediaItemArtwork? {
+    guard let image = NowPlayingDisplay.singleFallbackImage(for: sound) else { return nil }
     return Self.makeArtwork(from: image)
   }
 

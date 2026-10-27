@@ -760,7 +760,7 @@ extension PresetImporter {
         }
 
       // Skip ids already loaded. Reloading them would orphan the instances
-      // solo, preview, or Quick Mix still hold.
+      // single sound, preview, or Quick Mix still hold.
       let loadedIds = Set(audioManager.sounds.compactMap(\.customSoundDataID))
       let newIds = Set(customSoundIds).subtracting(loadedIds)
       if !newIds.isEmpty {
@@ -779,8 +779,8 @@ extension PresetImporter {
 
       presetManager.savePresets()
 
-      // Activate the imported preset immediately. Leave solo/Quick Mix first, or
-      // solo skips the apply and a Quick Mix exit would discard it.
+      // Activate the imported preset immediately. Leave single sound/Quick Mix first, or
+      // single sound skips the apply and a Quick Mix exit would discard it.
       do {
         audioManager.leaveTransientModes()
         try presetManager.applyPreset(preset)

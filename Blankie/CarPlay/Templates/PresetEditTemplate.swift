@@ -67,7 +67,7 @@
     }
 
     /// Edits apply to the live mix of the preset the stack was opened for. A tap
-    /// that lands after a switch, solo or Quick Mix dismisses the stack instead.
+    /// that lands after a switch, single sound or Quick Mix dismisses the stack instead.
     @MainActor
     private static func editsLiveMix() -> Bool {
       guard CarPlayInterfaceController.shared.editStackIsLive else {

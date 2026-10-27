@@ -62,10 +62,10 @@ import os
     }
 
     /// Whether the open edit stack still edits the live mix of the preset it was
-    /// opened for. A switch, solo or Quick Mix replaces that mix.
+    /// opened for. A switch, single sound or Quick Mix replaces that mix.
     @MainActor
     var editStackIsLive: Bool {
-      AudioManager.shared.soloModeSound == nil && !AudioManager.shared.isQuickMix
+      AudioManager.shared.singleSound == nil && !AudioManager.shared.isQuickMix
         && PresetManager.shared.currentPreset?.id == currentEditPresetID
     }
 

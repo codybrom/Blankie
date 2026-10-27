@@ -92,7 +92,7 @@ struct SoundIcon: View {
 
   var accentColor: Color {
     #if os(macOS)
-      // `themingPreset` is nil in solo and Quick Mix, so those use the app accent.
+      // `themingPreset` is nil in single sound and Quick Mix, so those use the app accent.
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     #else
       globalSettings.customAccentColor ?? .accentColor

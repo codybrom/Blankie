@@ -53,7 +53,7 @@ struct SoundEntityQuery: EntityQuery, EntityStringQuery, EnumerableEntityQuery {
   }
 
   /// Also the vocabulary for the parameterized Siri phrases
-  /// (`updateAppShortcutParameters`), so every solo-able sound belongs here.
+  /// (`updateAppShortcutParameters`), so every sound that can play on its own belongs here.
   @MainActor
   func suggestedEntities() async throws -> [SoundEntity] {
     try await allEntities()

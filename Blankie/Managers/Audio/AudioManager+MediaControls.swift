@@ -9,10 +9,10 @@ import SwiftUI
 import os
 
 /// A destination the lock-screen / CarPlay next & previous commands can cycle
-/// to: a preset, or a favorited solo sound.
+/// to: a preset, or a favorited single sound.
 private enum NavigableItem {
   case preset(Preset)
-  case solo(Sound)
+  case single(Sound)
 }
 
 // MARK: - Media Controls
@@ -49,7 +49,7 @@ extension AudioManager {
         Logger.nowPlaying.debug("AudioManager: remote next received")
         guard let self = self else { return false }
 
-        // Quick Mix isn't in the favorites cycle; favorited solo sounds are.
+        // Quick Mix isn't in the favorites cycle; favorited single sounds are.
         guard !self.isQuickMix else {
           Logger.audio.debug("AudioManager: Skipping next - in quick mix")
           return true
@@ -78,8 +78,8 @@ extension AudioManager {
     let presets = PresetManager.shared.presets
     return GlobalSettings.shared.starredItems.compactMap { token in
       switch PlayableItem(token: token) {
-      case .solo(let fileName):
-        return sound(fileName: fileName).map { NavigableItem.solo($0) }
+      case .single(let fileName):
+        return sound(fileName: fileName).map { NavigableItem.single($0) }
       case .allSounds:
         return presets.first { $0.isDefault }.map { NavigableItem.preset($0) }
       case .quickMix:
@@ -92,12 +92,12 @@ extension AudioManager {
     }
   }
 
-  /// Index of the solo sound, else the current preset, in `items`. Nil when it
+  /// Index of the single sound, else the current preset, in `items`. Nil when it
   /// isn't favorited.
   private func currentNavigableIndex(in items: [NavigableItem]) -> Int? {
-    if let solo = soloModeSound {
+    if let single = singleSound {
       return items.firstIndex {
-        if case .solo(let sound) = $0 { return sound.id == solo.id }
+        if case .single(let sound) = $0 { return sound.id == single.id }
         return false
       }
     }
@@ -114,9 +114,9 @@ extension AudioManager {
   private func apply(_ item: NavigableItem) {
     switch item {
     case .preset(let preset):
-      // Leave solo without resuming so the previous mix doesn't briefly play.
-      if soloModeSound != nil {
-        exitSoloModeWithoutResuming()
+      // Leave single sound without resuming so the previous mix doesn't briefly play.
+      if singleSound != nil {
+        exitSingleSoundWithoutResuming()
       }
       Logger.audio.debug("AudioManager: Navigating to preset: \(preset.name)")
       do {
@@ -132,10 +132,10 @@ extension AudioManager {
           "AudioManager: Failed to apply preset \(preset.name): \(error, privacy: .public)"
         )
       }
-    case .solo(let sound):
-      Logger.audio.debug("AudioManager: Navigating to solo sound: \(sound.title)")
+    case .single(let sound):
+      Logger.audio.debug("AudioManager: Navigating to single sound: \(sound.title)")
       // Keep the current play/pause state.
-      enterSoloMode(for: sound, startPlaying: isGloballyPlaying)
+      enterSingleSound(for: sound, startPlaying: isGloballyPlaying)
     }
   }
 

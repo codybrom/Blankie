@@ -39,7 +39,7 @@ struct SoundSheet: View {
   @State var previewSound: Sound?
   @State var previewProgress: Double = 0
   @State var previewTimer: Timer?
-  @State var previousSoloModeSound: Sound?
+  @State var previousSingleSound: Sound?
   @State var wasPreviewSoundPlaying: Bool = false
   @State var showingDeleteConfirmation: Bool = false
   @State var showingResetConfirmation: Bool = false
@@ -179,10 +179,10 @@ struct SoundSheet: View {
         handleOnDisappear()
       }
       // A remote command, interruption, or mode change can end the preview from
-      // outside. Drop the saved solo so stopPreview doesn't re-enter it on top.
+      // outside. Drop the saved single sound so stopPreview doesn't re-enter it on top.
       .onChange(of: AudioManager.shared.previewModeSound == nil) { _, ended in
         if ended, isPreviewing {
-          previousSoloModeSound = nil
+          previousSingleSound = nil
           isPreviewing = false
         }
       }
@@ -226,7 +226,7 @@ struct SoundSheet: View {
     // Pre-check the active custom preset in Add to Presets.
     if mode.isAdd,
       let currentPreset = PresetManager.shared.currentPreset, !currentPreset.isDefault,
-      AudioManager.shared.soloModeSound == nil, !AudioManager.shared.isQuickMix
+      AudioManager.shared.singleSound == nil, !AudioManager.shared.isQuickMix
     {
       addToPresetIDs = [currentPreset.id]
     }
