@@ -100,3 +100,7 @@ scripts/.build/
 # Animated-artwork source videos (and any .download temp files)
 ArtworkSources/
 
+
+# Agent skills installed via npx skills (local tooling)
+.agents/
+skills-lock.json
