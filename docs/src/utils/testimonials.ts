@@ -21,7 +21,7 @@ export interface Testimonial {
   author?: string;
 }
 
-// Curated from public App Store reviews (App Store Connect export, June 2026).
+// Curated from public App Store reviews (App Store Connect export, Oct 2026).
 export const testimonials: Testimonial[] = [
   {
     id: "straightforward",
@@ -31,11 +31,81 @@ export const testimonials: Testimonial[] = [
     store: "United States",
   },
   {
+    id: "carplay-standout",
+    quote:
+      "Car Play feature seems to be what makes this app really stand out, especially once I realized I didn’t have to pay for any subscriptions anymore. Very cool.",
+    stars: 5,
+    store: "United States",
+    author: "KC.Linda",
+  },
+  {
+    id: "no-paywall-sleep",
+    quote:
+      "I really appreciate that you provide it without a paywall or subscription. It’s rare to find developers who care about accessibility like this. The sounds are beautiful and perfect for winding down. Thank you for helping me relax and sleep better every night!",
+    stars: 5,
+    store: "Russia",
+  },
+  {
     id: "youtube-tabs",
     quote:
       "Wish I could rate it higher, perfect lightweight solution compared to having several YouTube tabs open",
     stars: 5,
     store: "United States",
+    author: "Lily Caba",
+  },
+  {
+    id: "mix-five-sounds",
+    quote:
+      "…this is exactly what I was looking for : a simple app , no ads, great sleep sounds and able to mix 5 sounds together!",
+    stars: 5,
+    store: "Canada",
+  },
+  {
+    id: "custom-soundscapes",
+    quote:
+      "Very slick and easy to mix together custom soundscapes. And incredibly customizable to make it your own. I can’t believe it’s free!",
+    stars: 5,
+    store: "United States",
+    author: "Old Man Nik",
+  },
+  {
+    id: "grounded-at-work",
+    quote:
+      "Turn it on, grab your tools and forget everything else outside. It helps me focus at work and remain grounded when idle.",
+    stars: 5,
+    store: "India",
+  },
+  {
+    id: "nightly-mixes",
+    quote:
+      "I love this app and the flexibility of mixing the sounds. Each night I can try something different to see what works the best for me. I enjoy using it to read to as well. Gives the perfect sounds to block out the rest of my surroundings.",
+    stars: 5,
+    store: "United States",
+  },
+  {
+    id: "pencil-neighbor",
+    quote:
+      "Absolute silence lets you hear everything, like the pencil of your neighbor, and silent noises can become loud in comparison. This app plays relaxing background noises, even several at the same time, that allow you to sink in and thus help concentrating on what you are doing.",
+    stars: 5,
+    store: "Germany",
+  },
+  {
+    id: "einfach-genial",
+    quote:
+      "Ich mag Regen und Gewitters sehr und mit dieser App kann ich mich besser konzentrieren. Super einfach in der Anwendung zudem ohne Kosten. Absolute Empfehlung",
+    translation:
+      "I really like rain and thunderstorms, and with this app I can concentrate better. Super easy to use and free of charge. Absolute recommendation.",
+    language: "German",
+    stars: 5,
+    store: "Germany",
+  },
+  {
+    id: "simple-effective",
+    quote:
+      "It does exactly what it is meant to do in a simple, intuitive and effective way. Easy 5 stars.",
+    stars: 5,
+    store: "United States",
+    author: "Jeyxero",
   },
   {
     id: "coworking",
@@ -64,6 +134,7 @@ export const testimonials: Testimonial[] = [
     quote: "Enjoying using this a lot, it’s very 'Apple'…",
     stars: 5,
     store: "United Kingdom",
+    author: "Brad Haynes",
   },
   {
     id: "blanket-linux",
@@ -96,6 +167,7 @@ export const testimonials: Testimonial[] = [
     language: "German",
     stars: 5,
     store: "Germany",
+    author: "Lex G.",
   },
   {
     id: "simple-efficace",

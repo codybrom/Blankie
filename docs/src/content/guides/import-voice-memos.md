@@ -4,7 +4,7 @@ description: "Import a Voice Memos recording into Blankie and loop it. Turn your
 category: "import"
 order: 3
 updated: 2026-06-06
-platforms: "iPhone and iPad"
+platforms: "All Platforms"
 ---
 
 A thunderstorm you caught from the porch, the crackle of the campfire last summer and the hum of your favorite café belong in your mix. The Voice Memos app on your phone exports recordings in a format that Blankie can use natively, so you can go straight from recording to soundscape without converting or transferring.
@@ -13,11 +13,11 @@ A thunderstorm you caught from the porch, the crackle of the campfire last summe
 
 1. Open **Voice Memos** and tap the recording you want.
 2. Tap the **More** button {{icon:more}}, then tap the **Share** button {{icon:share}}.
-3. Scroll down, [tap **Save to Files**](https://support.apple.com/guide/iphone/export-a-recording-to-files-iph831c37815/ios), and drop it somewhere you'll be able to find again.
+3. Scroll down, [tap **Save to Files**](https://support.apple.com/guide/iphone/export-a-recording-to-files-iph831c37815/ios) and drop it somewhere you'll be able to find again.
 4. Over in Blankie, tap {{icon:plus|Add}} **→ Import** and pick the recording you just saved.
 5. Give it a name and an icon, then tap **Save**.
 
-<!-- image-todo: iPhone frame, dark mode. Show the Blankie import sheet that appears after picking an audio file in the Files app. The audio file is a loaded recording. Name field filled in with a plain name like 'Bedroom Fan'. Icon picker showing a selected icon (a fan or wind glyph). The preview/listen button visible. Save button visible in its toolbar slot. Crop to the sheet so the fields, icon picker, preview button, and Save button are all readable. Do not show the underlying library grid behind the sheet. -->
+![The Import Sound sheet on iPhone for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound and Randomize Start turned on.](../../assets/guides/shared/import-sheet-iphone.png)
 
 ## On Mac
 
@@ -33,7 +33,7 @@ A thunderstorm you caught from the porch, the crackle of the campfire last summe
 
 Once your trimmed recording is imported, read on about how you can use [Custom Sound Settings](/guides/custom-sound-settings/) to tweak it to your liking.
 
-<!-- image-todo: iPhone frame, dark mode. Blankie main sound grid. A custom tile labeled "Porch Storm" is active (highlighted) and playing, with built-in rain and crackling fireplace tiles also showing and active. Sliders at mid positions on the active tiles. Crop to the grid; no sheet open. -->
+![An imported recording, Porch Storm, playing alongside Rain and Fireplace in the Back Porch preset on iPhone.](../../assets/guides/import-voice-memos/porch-storm-iphone.png)
 
 ## Related guides
 

@@ -417,6 +417,10 @@ try {
     "ipad-store-2.png",
     "ipad-store-3.png",
     "ipad-store-4.png",
+    "guides/blankie-iphone-duo/closed.png",
+    "guides/blankie-iphone-duo/open-flat.png",
+    "guides/blankie-iphone-duo/book.png",
+    "guides/blankie-iphone-duo/seated.png",
   ];
   const present = pressFiles.filter((f) =>
     fs.existsSync(path.join(assetsDir, f)),

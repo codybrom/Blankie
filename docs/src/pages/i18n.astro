@@ -6,6 +6,8 @@ import { I18nStats, type LanguageRow } from "@/components/I18nStats";
 import { Card } from "@/components/ui/card";
 
 const title = "Translation Status";
+const description =
+  "Community translation progress for Blankie across 12 languages on Mac, iPhone, iPad and CarPlay, with downloadable CSV and JSON templates for contributors.";
 
 interface StringStats {
   totalStrings: number;
@@ -107,7 +109,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 }));
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
   <div class="mx-auto max-w-5xl px-5 pt-28 pb-10">
     <h1 class="mb-6 text-4xl font-semibold tracking-tight">Translation Status</h1>
 

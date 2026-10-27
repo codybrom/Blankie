@@ -1,9 +1,10 @@
 ---
 title: "Where to Find Free Ambient Sounds"
-description: "Where to download free ambient sounds, white noise, and field recordings without breaking copyright: Freesound, Pixabay, BBC Sound Effects, NASA, and more."
+description: "Where to download free ambient sounds, white noise and field recordings without breaking copyright: Freesound, Pixabay, BBC Sound Effects, NASA and more."
 category: "find"
 order: 10
-updated: 2026-06-06
+updated: 2026-10-26
+platforms: "All Platforms"
 ---
 
 Blankie comes with 24 curated ambient sounds but you can [import your own](/guides/import-sounds-mac/) whenever you want more. So where do you get more? Here are the places I trust for good audio that's free and legal to use.
@@ -18,7 +19,7 @@ Blankie comes with 24 curated ambient sounds but you can [import your own](/guid
 
 ## BBC Sound Effects
 
-The [BBC Sound Effects archive](https://sound-effects.bbcrewind.co.uk) holds more than 33,000 professional recordings, from steam trains to rainforests. The sounds are free for personal and educational use under the BBC's [RemArc licence](https://sound-effects.bbcrewind.co.uk/licensing), but not for commercial projects.
+The [BBC Sound Effects archive](https://sound-effects.bbcrewind.co.uk) holds more than 33,000 professional recordings, from steam trains to rainforests. The sounds are free for personal and educational use under the BBC's [RemArc license](https://sound-effects.bbcrewind.co.uk/licensing), but not for commercial projects.
 
 ## NASA
 
@@ -32,11 +33,11 @@ Rocket launches, radio emissions from Jupiter, the ambient hum of the Internatio
 
 Blankie imports most audio formats, such as M4A, MP3, WAV, FLAC, AIFF, OGG and more. Almost anything these sites hand you works as-is. There's no size limit to worry about, but files over 150 MB are converted to AAC automatically to preserve memory.
 
-<!-- image-todo: macOS, dark mode, Blankie in a Mac window frame. Capture the custom-sound import sheet that appears after you select an audio file to import (reached by opening Manage Sounds, default shortcut Cmd+O, then choosing Import and picking a file). Use a single chosen file named 'bedroom-fan.m4a' with the name field filled in as 'Bedroom Fan'. Show the name field, the SF Symbol icon picker with an icon selected, a visible preview/play button, the Sound Check toggle ON with its description line ('Sound Check adjusts the loudness between different sounds to play at the same volume.'), any supported-format/size hint the sheet shows, and the Import/Add button. The grid of built-in sounds (rain, ocean waves, fireplace) can be dimmed behind the sheet. Crop to the window/sheet with the sheet as the clear focus; no desktop clutter. -->
+![Blankie's Import Sound sheet on Mac for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound, Randomize Start and Sound Check turned on.](../../assets/guides/shared/import-sheet-mac.png)
 
 Wherever you grab a sound, take note of its license. Some ask for credit, and Blankie has built-in [Credits fields](/guides/custom-sound-settings/) made for exactly that. Our [license guide](/guides/sound-licenses-explained/) breaks down what each one actually means.
 
-<!-- image-todo: macOS, dark mode, Mac app window (or the import sheet cropped to its rounded corners). Open the custom-sound import sheet after selecting a downloaded Freesound file (a rain recording). State to capture: the sheet with the name field set to 'Rain (Freesound)', an icon picked, and the Credits section expanded and fully filled in as the visual focus: Author shows 'klankbeeld', the Source/link field shows a freesound.org URL, and the License control shows 'CC BY'. Keep the sheet's name field/icon at the top in frame only if both fit without scrolling; otherwise crop to the Credits section. Crop tight to the sheet; do not show the full grid behind it. -->
+![The Edit Sound sheet on Mac for Rain (Freesound), with its credits filled in: Original Work Rain, Author klankbeeld and License CC BY 4.0.](../../assets/guides/shared/sound-credits-mac.png)
 
 ## Related guides
 

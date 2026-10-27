@@ -1,5 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from "astro:content";
+import type { ImageMetadata } from "astro";
+import { getImage } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
 import { renderMarkdown } from "@/utils/markdown";
 import { imageExists } from "@/utils/imageExists";
@@ -67,8 +69,8 @@ const relatedGuides = [
   .map((m) => allGuides.find((g: Guide) => g.id === m[1]))
   .filter((g): g is Guide => Boolean(g) && g!.id !== guide.id);
 
-// Inline screenshots are referenced ahead of capture. Until the file lands in
-// public/images, drop the <img> entirely (no placeholder) so the article reads
+// Inline screenshots are referenced ahead of capture. Until a /images file lands
+// in public/images, drop the <img> entirely (no placeholder) so the article reads
 // as text-only, then picks the shot up automatically once it exists. Handles
 // both the <figure><img><figcaption> and bare <img> markup the renderer emits.
 function dropMissingImages(html: string): string {
@@ -88,7 +90,41 @@ function dropMissingImages(html: string): string {
     .replace(/<img\b[^>]*>/g, (img) => (isMissing(img) ? "" : img));
 }
 
-const content = dropMissingImages(renderMarkdown(mainBody));
+// Screenshots live as PNGs in src/assets/guides (the press kit links the
+// originals) and are referenced from Markdown as ../../assets/guides/…. The
+// Markdown renderer isn't Astro's, so optimize them here: WebP at a few widths.
+const guideImages = import.meta.glob<{ default: ImageMetadata }>(
+  "/src/assets/guides/**/*.png",
+  { eager: true },
+);
+
+async function optimizeGuideImages(html: string): Promise<string> {
+  let out = html;
+  for (const [tag, href] of html.matchAll(
+    /<img\b[^>]*\bsrc="\.\.\/\.\.\/assets\/guides\/([^"]+)"[^>]*>/g,
+  )) {
+    const meta = guideImages[`/src/assets/guides/${href}`]?.default;
+    if (!meta) continue;
+    const img = await getImage({
+      src: meta,
+      format: "webp",
+      widths: [480, 800, 1200, 1600]
+        .filter((w) => w < meta.width)
+        .concat(meta.width),
+      sizes: "(min-width: 48rem) 45rem, 100vw",
+    });
+    const optimized = tag.replace(
+      /\bsrc="[^"]*"/,
+      `src="${img.src}" srcset="${img.srcSet.attribute}" sizes="${img.attributes.sizes}" width="${meta.width}" height="${meta.height}"`,
+    );
+    out = out.replace(tag, optimized);
+  }
+  return out;
+}
+
+const content = await optimizeGuideImages(
+  dropMissingImages(renderMarkdown(mainBody)),
+);
 
 function readTime(body: string): string {
   const words = (body || "").trim().split(/\s+/).filter(Boolean).length;
@@ -201,7 +237,7 @@ const jsonLd = ldGraph(
     }
 
     <DownloadCTA
-      blurb="No ads, no paywalls and no privacy tradeoffs. Mix your own ambient soundscapes for focus, rest, and sleep on iPhone, iPad, CarPlay and Mac."
+      blurb="No ads, no paywalls and no privacy tradeoffs. Mix your own adjustable ambient soundscapes for sleep, rest and focus on iPhone, iPad, CarPlay and Mac."
     />
   </article>
 
