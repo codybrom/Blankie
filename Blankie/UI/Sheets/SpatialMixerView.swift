@@ -216,7 +216,7 @@ import SwiftUI
           spreadOutSounds()
         }
       } label: {
-        // Toolbars force Labels to icon-only; an HStack keeps the text.
+        // Toolbars force Labels to icon-only, so an HStack keeps the text.
         HStack(spacing: 4) {
           Image(systemName: "move.3d")
           Text("Arrange")
@@ -447,7 +447,7 @@ import SwiftUI
               .textCase(.uppercase)
               .foregroundColor(.secondary)
 
-            // Wraps; the map is width-sized, so extra rows only use the spacer.
+            // Wraps. The map is width-sized, so extra rows only use the spacer.
             LazyVGrid(
               columns: [GridItem(.adaptive(minimum: 64), spacing: 12)], spacing: 8
             ) {
@@ -525,7 +525,7 @@ import SwiftUI
     }
   }
 
-  /// Map-pin teardrop; the tip is the placement point. `clockwise: false`
+  /// Map-pin teardrop whose tip is the placement point. `clockwise: false`
   /// sweeps over the top in SwiftUI's flipped space.
   private nonisolated struct PinShape: Shape {
     func path(in rect: CGRect) -> Path {
@@ -546,7 +546,7 @@ import SwiftUI
     }
   }
 
-  /// Pie slice pointing up (forward); the grid rotates it to the head yaw.
+  /// Pie slice pointing up (forward). The grid rotates it to the head yaw.
   private nonisolated struct FacingWedge: Shape {
     var spanDegrees: Double = 70
 
@@ -588,7 +588,7 @@ import SwiftUI
         .onTapGesture {
           SpatialSessionManager.shared.setInField(false, for: sound.fileName)
 
-          // Last pin removed ends the session; setMode(.off) rebuilds every player.
+          // Last pin removed ends the session via setMode(.off), which rebuilds every player.
           let othersOnMap = AudioManager.shared.sounds.contains {
             $0.isSelected && $0.isSpatialReady
               && SpatialSessionManager.shared.isInField($0.fileName)

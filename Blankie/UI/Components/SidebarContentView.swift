@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Sidebar hosting the full `LibraryView` (the view iPhone shows as a sheet). iPad
-/// puts a Settings gear in the Library's leading toolbar; macOS uses a footer row
+/// puts a Settings gear in the Library's leading toolbar. macOS uses a footer row
 /// that toggles the Settings detail pane, as ⌘, does.
 struct SidebarContentView: View {
   #if os(iOS) || os(visionOS)
@@ -75,7 +75,7 @@ struct SidebarContentView: View {
   #endif
 
   // Drops starred tokens whose preset no longer exists. The Library only hides stale
-  // favorites; pruning persists it for other `starredItems` readers (CarPlay, widgets).
+  // favorites. Pruning persists the removal for other `starredItems` readers (CarPlay, widgets).
   private func pruneStarred() {
     // Skip while presets load, since a partial list would drop favorited custom presets.
     // The `.onChange(of: presetManager.presets)` re-runs this once they've loaded.

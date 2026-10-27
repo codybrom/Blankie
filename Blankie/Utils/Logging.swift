@@ -15,7 +15,7 @@ import os
 /// mark interpolated values `privacy: .public` or they show as <private>.
 ///
 /// `nonisolated` so off-main code (audio analysis, file mirrors) can log under
-/// default main-actor isolation; `Logger` is `Sendable`.
+/// default main-actor isolation. `Logger` is `Sendable`.
 extension Logger {
   nonisolated private static let subsystem =
     Bundle.main.bundleIdentifier ?? "com.codybrom.blankie"

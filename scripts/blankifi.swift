@@ -59,7 +59,7 @@ func readChannels(_ url: URL) throws -> (channels: [[Float]], sampleRate: Double
 }
 
 /// Encode per-channel float samples to an AAC `.m4a`, overwriting any existing
-/// file. `bitRate` is in bits per second; `sampleRate` must match `channels`.
+/// file. `bitRate` is in bits per second. `sampleRate` must match `channels`.
 func writeM4A(_ channels: [[Float]], sampleRate: Double, bitRate: Int, to url: URL) throws {
   let ch = channels.count
   let n = channels[0].count
@@ -145,7 +145,7 @@ func detectEdges(_ mono: [Float], sr: Double) -> (head: Int, tail: Int) {
   let n = mono.count
   let win = Int(sr * 0.002)  // 2 ms analysis windows
   let env = rmsEnvelope(mono[0...], win: win)
-  let bed = median(env)  // steady ambient floor; median ignores the transients
+  let bed = median(env)  // steady ambient floor, since median ignores the transients
   let thr = bed * 3  // 3x bed = clearly a transient, not ambient
   let settle = bed * 1.5  // back under 1.5x bed = returned to ambient
   let need = Int(0.015 / 0.002)  // ...sustained 15 ms before we call it settled
@@ -479,7 +479,7 @@ func cmdConvert(_ args: [String]) {
         Double(n) / 44100.0, Double(bitRate) / 1000.0))
   } catch {
     // convert reads whatever CoreAudio/AVAudioFile supports on this macOS
-    // (wav/aiff/mp3/m4a/caf/flac/ogg here); anything it can't decode lands here.
+    // (wav/aiff/mp3/m4a/caf/flac/ogg here). Anything it can't decode lands here.
     fail("convert failed (unreadable or unsupported input): \(error)")
   }
 }
@@ -569,7 +569,7 @@ func cmdReanalyze(_ args: [String]) async {
 
 /// Set `key` to `value` inside the JSON object that contains
 /// `"fileName": "<fileName>"`, preserving all other text and formatting. If the
-/// key exists its value is replaced; otherwise a new line is inserted before
+/// key exists its value is replaced. Otherwise a new line is inserted before
 /// `beforeKey` (to keep sorted order), or appended as the last field if
 /// `beforeKey` is nil. `value` is the raw JSON token (number / true / false).
 func upsertField(_ text: String, fileName: String, key: String, value: String, before beforeKey: String?)

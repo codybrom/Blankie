@@ -38,7 +38,7 @@ extension EditPresetSheet {
       starToken: starToken,
       accent: activeAccentColor,
       aiSoundTitles: orderedSelectedSounds.map(\.title),
-      // A typed name is settled; sparkles only fills an empty one here.
+      // A typed name is settled, so sparkles only fills an empty one here.
       sparklesOnlyWhenEmpty: true,
       onEdited: { applyChangesInstantly() },
       onRemoveArtwork: { artworkId = nil },
@@ -227,7 +227,7 @@ extension EditPresetSheet {
           Spacer()
         }
         // The sheet's accent tint overrides the destructive role's color in
-        // macOS grouped forms; destructive reads red on both platforms.
+        // macOS grouped forms. Destructive reads red on both platforms.
         .foregroundStyle(.red)
       }
     }

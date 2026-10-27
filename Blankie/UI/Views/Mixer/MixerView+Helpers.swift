@@ -59,7 +59,7 @@ import SwiftUI
             .transition(.opacity)
           }
         }
-        // Gradient and artwork crossfade on isSingle; artwork swaps animate in the task below.
+        // Gradient and artwork crossfade on isSingle. Artwork swaps animate in the task below.
         .animation(.easeInOut(duration: 0.35), value: isSingle)
         .accessibilityHidden(true)
       }

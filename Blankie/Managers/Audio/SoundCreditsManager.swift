@@ -94,7 +94,7 @@ extension Sound {
   }
 
   /// The credited author to display for this sound, or `nil` when there isn't
-  /// one. Custom sounds use their stored credit; built-in sounds look the author
+  /// one. Custom sounds use their stored credit. Built-in sounds look the author
   /// up by their original title. Empty strings are treated as absent.
   @MainActor var creditedAuthor: String? {
     if isCustom {
@@ -121,7 +121,7 @@ extension Sound {
       let sourceUrl = nonEmpty(data.creditSourceUrl) ?? nonEmpty(data.id3Url)
       let license = License(rawValue: data.creditLicenseType)
 
-      // The original filename is only a fallback display title; alone it
+      // The original filename is only a fallback display title, and alone it
       // isn't a credit worth surfacing.
       guard id3Title != nil || author != nil || sourceUrl != nil || license != nil else {
         return nil

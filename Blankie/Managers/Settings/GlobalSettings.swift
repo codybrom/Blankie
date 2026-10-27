@@ -122,7 +122,7 @@ class GlobalSettings {
   /// App-wide default lock screen animation. Used on the lock screen for any
   /// preset that doesn't set its own `animatedArtwork`.
   var defaultLockScreenArtwork: AnimatedArtworkRef?
-  /// App-wide blur (in points) for preset background artwork; 0 means off.
+  /// App-wide blur (in points) for preset background artwork, where 0 means off.
   var backgroundBlurRadius: Double
   /// macOS only: badge the Dock icon with a pause glyph while the app is silent.
   var showDockBadgeWhenPaused: Bool
@@ -241,7 +241,7 @@ extension GlobalSettings {
   func setEnableSpatialAudio(_ value: Bool) {
     enableSpatialAudio = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.enableSpatialAudio)
-    // Availability gate only; turning it off ends any live session.
+    // Availability gate only. Turning it off ends any live session.
     if !value, SpatialSessionManager.shared.isActive {
       SpatialSessionManager.shared.setMode(.off)
     }
@@ -294,7 +294,7 @@ extension GlobalSettings {
         let wasPlaying = AudioManager.shared.isGloballyPlaying
 
         if mixWithOthers {
-          // Mixing with other apps; Blankie applies its own volume.
+          // Mixing with other apps. Blankie applies its own volume.
           let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
           Logger.settings.debug("GlobalSettings: Setting Mix mode with manual volume control")
 

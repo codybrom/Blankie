@@ -35,7 +35,7 @@ extension AudioManager {
     preQuickMixPreset = PresetManager.shared.currentPreset
     PresetManager.shared.clearCurrentPreset()
 
-    // Spatial sessions are bound to the preset mix; Quick Mix ends them.
+    // Spatial sessions are bound to the preset mix, so Quick Mix ends them.
     if SpatialSessionManager.shared.isActive {
       SpatialSessionManager.shared.setMode(.off)
     }

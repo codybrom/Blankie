@@ -45,7 +45,7 @@ enum EngineRenderHarness {
     }
 
     // nonisolated(unsafe): the completion handler writes `result` and signals the
-    // semaphore; the wait() below establishes happens-before before we read it.
+    // semaphore. The wait() below establishes happens-before before we read it.
     nonisolated(unsafe) var result: Result<AVAudioUnit, Error>?
     let semaphore = DispatchSemaphore(value: 0)
     AVAudioUnit.instantiate(with: description, options: []) { unit, error in
@@ -115,7 +115,7 @@ enum EngineRenderHarness {
     let fileDuration = Double(fileLength) / format.sampleRate
     player.scheduleFile(file, at: nil)
     if seconds > fileDuration {
-      // Re-open so the second pass reads from frame 0 independently; the loop
+      // Re-open so the second pass reads from frame 0 independently. The loop
       // seam frame is therefore exactly fileLength.
       let secondPass = try AVAudioFile(forReading: fileURL)
       player.scheduleFile(secondPass, at: nil)
@@ -143,7 +143,7 @@ enum EngineRenderHarness {
         appendFrames(from: renderBuffer, to: output)
         rendered += renderBuffer.frameLength
       case .insufficientDataFromInputNode:
-        // Player ran dry; zero-pad the tail so callers get the full length.
+        // Player ran dry. Zero-pad the tail so callers get the full length.
         appendFrames(from: renderBuffer, to: output)
         rendered += renderBuffer.frameLength
         if renderBuffer.frameLength == 0 {

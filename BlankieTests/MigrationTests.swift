@@ -123,7 +123,7 @@ final class MigrationTests {
     AppDataMigrator.performAllMigrations()
     #expect(UserDefaults.shared.double(forKey: UserDefaultsKeys.volume) == 0.5)
 
-    // Pollute standard after the first migration; a second run must skip it.
+    // Pollute standard after the first migration. A second run must skip it.
     UserDefaults.standard.set(0.9, forKey: UserDefaultsKeys.volume)
     AppDataMigrator.performAllMigrations()
 
@@ -193,7 +193,7 @@ final class MigrationTests {
 
     AppDataMigrator.performAllMigrations()
 
-    // Volume migrates on every platform; autoPlayOnLaunch is macOS-only.
+    // Volume migrates on every platform, but autoPlayOnLaunch is macOS-only.
     #expect(UserDefaults.shared.double(forKey: UserDefaultsKeys.volume) == 0.8)
 
     let migratedSoundState = UserDefaults.shared.array(forKey: "soundState") as? [[String: Any]]
@@ -247,7 +247,7 @@ final class MigrationTests {
     UserDefaults.standard.set(30, forKey: "timerLastSelectedMinutes")
   }
 
-  /// Every key these tests write, in either suite; snapshotted and restored per test.
+  /// Every key these tests write, in either suite, is snapshotted and restored per test.
   private static let testKeys = [
     UserDefaultsKeys.volume,
     UserDefaultsKeys.accentColor,

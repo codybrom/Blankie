@@ -34,7 +34,7 @@ nonisolated final class PresetExporter: Sendable {
     }
   }
 
-  // @concurrent so the zip + file copies run off the main actor; every main-actor
+  // @concurrent so the zip + file copies run off the main actor. Every main-actor
   // read inside is already hopped via `await MainActor.run`.
   @concurrent func createArchive(for preset: Preset) async throws -> URL {
     let tempDir = FileManager.default.temporaryDirectory
@@ -222,7 +222,7 @@ nonisolated final class PresetExporter: Sendable {
   private func getSoundCustomizations(for preset: Preset) async -> [SoundCustomization] {
     let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
 
-    // Read the manager's customizations on the main actor; the filtering below
+    // Read the manager's customizations on the main actor. The filtering below
     // is pure value-type work that can stay off-main.
     let allCustomizations = await MainActor.run {
       SoundCustomizationManager.shared.getAllCustomizations()

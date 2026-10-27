@@ -19,7 +19,7 @@ class TimerManager {
   var selectedHours: Int
   var selectedMinutes: Int
 
-  // Plumbing the UI never reads; kept out of observation tracking.
+  // Plumbing the UI never reads, so it stays out of observation tracking.
   @ObservationIgnored nonisolated(unsafe) private var timer: Timer?
   // Read by getEndTime() in view bodies, so it stays observation-tracked.
   private var startTime: Date?
@@ -68,7 +68,7 @@ class TimerManager {
   }
 
   /// Advances the countdown one step using the injected clock. Production calls
-  /// it from the 1 Hz timer; tests call it directly.
+  /// it from the 1 Hz timer. Tests call it directly.
   func tick() { updateTimer() }
 
   private func updateTimer() {

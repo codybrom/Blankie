@@ -22,7 +22,7 @@ nonisolated enum PlayableItem: Equatable, Hashable {
   /// A single sound, identified by its stable `fileName`.
   case single(fileName: String)
 
-  // Canonical token strings. These are persisted; never change them.
+  // Canonical token strings. These are persisted, so never change them.
   private static let allSoundsToken = "allSounds"
   private static let quickMixToken = "quickMix"
   /// A single sound is stored as `"solo:<fileName>"`.

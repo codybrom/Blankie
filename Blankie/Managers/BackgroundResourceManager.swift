@@ -5,8 +5,8 @@
 //  Created by Cody Bromley on 7/3/25.
 //
 //  Animated-artwork videos as Apple-hosted Managed Background Assets. Each
-//  artwork is one asset pack named after its bundled id (e.g. "RainLoop");
-//  preview images stay bundled.
+//  artwork is one asset pack named after its bundled id (e.g. "RainLoop").
+//  Preview images stay bundled.
 //
 
 import Combine
@@ -74,7 +74,7 @@ final class BackgroundResourceManager: ObservableObject {
     #endif
   }
 
-  /// Video path inside the asset-pack namespace; must match the `fileSelectors` in
+  /// Video path inside the asset-pack namespace. It must match the `fileSelectors` in
   /// scripts/package_animated_artwork.sh. A `<id>Square` pack (the iPad lock screen
   /// crop) shares its base clip's folder: `<id>/<id>Square.mov`.
   private nonisolated func relativeVideoPath(for id: String) -> String {
@@ -230,7 +230,7 @@ final class BackgroundResourceManager: ObservableObject {
         logger.info("Downloaded artwork asset pack \(id, privacy: .public)")
         return try await cachedURL(for: id)
       } catch {
-        // Log the raw error; the UI gets a friendly one (offline if the network dropped).
+        // Log the raw error. The UI gets a friendly one (offline if the network dropped).
         logger.error(
           "Failed to download artwork asset pack \(id, privacy: .public): \(error, privacy: .public)"
         )
@@ -252,7 +252,7 @@ final class BackgroundResourceManager: ObservableObject {
       }
     }
 
-    /// `assetPack(withID:)` is the only id-to-pack lookup in the iOS 26 SDK; its
+    /// `assetPack(withID:)` is the only id-to-pack lookup in the iOS 26 SDK. Its
     /// replacement, `AssetPackManager.manifest`, is iOS 27.
     /// - TODO(iOS 27 SDK): switch to `AssetPackManager.shared.manifest.assetPack(withID:)`.
     private func resolveAssetPack(id: String) async throws -> AssetPack {
@@ -262,7 +262,7 @@ final class BackgroundResourceManager: ObservableObject {
 }
 
 /// Errors surfaced by the background-resource manager. Messages are end-user
-/// facing; the raw underlying error is logged separately for diagnostics.
+/// facing. The raw underlying error is logged separately for diagnostics.
 enum BackgroundResourceError: LocalizedError, Equatable {
   case offline
   case downloadFailed

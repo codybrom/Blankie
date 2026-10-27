@@ -131,7 +131,7 @@ extension SoundSheet {
         .disabled(isDisabled)
       }
     case .edit:
-      // Edits apply live, so dismissing finishes ("Done"). Modal only; a pushed
+      // Edits apply live, so dismissing finishes ("Done"). Modal only: a pushed
       // editor keeps just its Back button.
       if embedInNavigation {
         Button("Done") {

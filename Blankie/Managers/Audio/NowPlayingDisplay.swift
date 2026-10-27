@@ -26,7 +26,7 @@ enum NowPlayingDisplay {
   ) {
     if let singleSound = AudioManager.shared.singleSound {
       // A built-in sound's caption is the best second line. Custom sounds have no
-      // caption, so they show their creator; the app name is the last resort.
+      // caption, so they show their creator. The app name is the last resort.
       let artist =
         singleSound.localizedSubtitle ?? (singleSound.isCustom ? singleSound.creditedAuthor : nil)
         ?? "Blankie"
@@ -38,7 +38,7 @@ enum NowPlayingDisplay {
     } else if let preset {
       return (title: preset.displayName, artist: getArtistInfo(creatorName: creatorName))
     } else if let name = presetName {
-      // A name-only legacy call has no preset identity; handle its internal
+      // A name-only legacy call has no preset identity, so handle its internal
       // default name while preserving the existing fallback for generated names.
       let displayTitle: String
       if name == "Default" {
@@ -58,7 +58,7 @@ enum NowPlayingDisplay {
   }
 
   private static func getArtistInfo(creatorName: String? = nil) -> String {
-    // Creator name wins; otherwise list the sounds currently in the mix.
+    // Creator name wins. Otherwise, list the sounds currently in the mix.
     if let creator = creatorName {
       return creator
     }

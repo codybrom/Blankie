@@ -10,7 +10,7 @@ import SwiftUI
 #if os(iOS) || os(visionOS)
   struct QuickMixView: View {
     /// Regular width: Quick Mix has no playback bar, so its controls sit in a
-    /// column beside the tiles; tapping the artwork opens Now Playing.
+    /// column beside the tiles. Tapping the artwork opens Now Playing.
     var onOpenNowPlaying: (() -> Void)?
     /// Where Now Playing zooms from: the column's artwork, or the bar.
     var nowPlayingZoom: Namespace.ID?
@@ -27,7 +27,7 @@ import SwiftUI
     }
 
     /// The column needs room both ways (a large iPhone in landscape is wide but
-    /// short); otherwise the same bare bar as a preset page.
+    /// short). Otherwise it's the same bare bar as a preset page.
     private var showsColumn: Bool { size.width >= 640 && size.height >= 520 }
 
     let audioManager = AudioManager.shared

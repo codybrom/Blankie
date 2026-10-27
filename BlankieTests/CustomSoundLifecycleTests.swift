@@ -5,7 +5,7 @@
 //  Created by Cody Bromley on 10/12/26.
 //
 //  Custom-sound adds, deletes, conversions and launch recovery, checked against what the
-//  mixer and presets hold. Uses an in-memory store (SingletonSandbox); test files go in the
+//  mixer and presets hold. Uses an in-memory store (SingletonSandbox). Test files go in the
 //  real custom-sounds directory and are removed on restore.
 //
 
@@ -136,7 +136,7 @@ import Testing
 
   // MARK: - Recovery re-checks the store after its scan
 
-  /// Imports and deletes that land during the off-main scan stand; untouched sidecars
+  /// Imports and deletes that land during the off-main scan stand. Untouched sidecars
   /// still restore.
   @Test func recoverySkipsWhatChangedDuringTheScan() throws {
     let dir = TestSupport.makeTempDir()

@@ -216,8 +216,8 @@ class SoundCustomizationManager {
 
     do {
       let customizationArray = try JSONDecoder().decode([SoundCustomization].self, from: data)
-      // A duplicate fileName in the persisted array must not trap at launch;
-      // the last entry wins.
+      // A duplicate fileName in the persisted array must not trap at launch.
+      // The last entry wins.
       customizations = Dictionary(
         customizationArray.map { ($0.fileName, $0) }, uniquingKeysWith: { $1 })
       Logger.sounds.debug(

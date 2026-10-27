@@ -11,8 +11,8 @@ import os
 
 extension GlobalSettings {
   func loadBasicSettings() {
-    // object(forKey:) tells "never saved" (default 1.0) from a saved zero;
-    // double(forKey:) returns 0 for both.
+    // object(forKey:) tells "never saved" (default 1.0) from a saved zero,
+    // since double(forKey:) returns 0 for both.
     volume = UserDefaults.shared.object(forKey: UserDefaultsKeys.volume) as? Double ?? 1.0
 
     if let colorString = UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor) {
@@ -21,7 +21,7 @@ extension GlobalSettings {
       customAccentColor = nil
     }
 
-    // Autoplay is macOS-only (stored under autoPlayOnLaunchMac); on first launch
+    // Autoplay is macOS-only (stored under autoPlayOnLaunchMac). On first launch
     // after the rename, carry the legacy autoPlayOnLaunch value forward.
     #if os(macOS)
       if let mac = UserDefaults.shared.object(forKey: UserDefaultsKeys.autoPlayOnLaunchMac) as? Bool

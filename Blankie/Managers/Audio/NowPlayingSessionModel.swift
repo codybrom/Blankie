@@ -17,7 +17,7 @@
   @Observable
   @MainActor
   final class NowPlayingSessionModel: @MainActor MediaSessionRepresentable {
-    /// One session per app; the bundle id keeps it distinct from other apps'.
+    /// One session per app. The bundle id keeps it distinct from other apps'.
     let id = (Bundle.main.bundleIdentifier ?? "com.codybrom.blankie") + ".nowplaying"
 
     var title = ""

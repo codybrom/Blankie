@@ -16,7 +16,7 @@ export interface Testimonial {
   stars: 1 | 2 | 3 | 4 | 5;
   /** Storefront the review was left on, displayed as written. */
   store: string;
-  /** Reviewer nickname, kept only when it reads like a name; otherwise the
+  /** Reviewer nickname, kept only when it reads like a name. Otherwise the
    * attribution falls back to "App Store review". */
   author?: string;
 }

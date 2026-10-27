@@ -49,7 +49,7 @@ extension AudioManager {
         Logger.nowPlaying.debug("AudioManager: remote next received")
         guard let self = self else { return false }
 
-        // Quick Mix isn't in the favorites cycle; favorited single sounds are.
+        // Quick Mix isn't in the favorites cycle, but favorited single sounds are.
         guard !self.isQuickMix else {
           Logger.audio.debug("AudioManager: Skipping next - in quick mix")
           return true
@@ -121,7 +121,7 @@ extension AudioManager {
       Logger.audio.debug("AudioManager: Navigating to preset: \(preset.name)")
       do {
         // Keep the current play/pause state. applyPreset starts the new mix
-        // itself; playing here first would start the old one.
+        // itself. Playing here first would start the old one.
         let wasPlaying = isGloballyPlaying
         let started = try PresetManager.shared.applyPreset(preset, autoPlay: wasPlaying)
         if wasPlaying, !started {
@@ -172,7 +172,7 @@ extension AudioManager {
   /// Enables next/previous when there's somewhere to go: another favorite when the
   /// current item is one, otherwise any favorite. Always off in Quick Mix.
   func updateNextPreviousCommandState() {
-    // Nil until launch installs the backend; `setupMediaControls()` recomputes this.
+    // Nil until launch installs the backend. `setupMediaControls()` recomputes this.
     nowPlayingManager?.setNavigationCommandsEnabled(canNavigateNextPrevious)
   }
 }

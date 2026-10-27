@@ -76,7 +76,7 @@ const { videoSrc, mobileVideoSrc, posterSrc } = Astro.props;
               video.loop = true;
               video.autoplay = true;
               video.play().catch(() => {
-                // Autoplay blocked by browser policy; the poster stays visible.
+                // Autoplay blocked by browser policy. The poster stays visible.
               });
             }
             observer.unobserve(entry.target);

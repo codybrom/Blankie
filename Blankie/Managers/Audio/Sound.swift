@@ -27,7 +27,7 @@ open class Sound: NSObject, Identifiable {
   var normalizationFactor: Float?
   let truePeakdBTP: Float?
   let needsLimiter: Bool
-  /// Music tag default from sounds.json (false for custom sounds); the
+  /// Music tag default from sounds.json (false for custom sounds). The
   /// `isMusic` customization overrides it.
   let isMusicDefault: Bool
 
@@ -51,8 +51,8 @@ open class Sound: NSObject, Identifiable {
       originalTitle: originalTitle) ?? originalTitle
   }
 
-  /// Display title. Unrenamed built-in sounds localize under `sound.<fileName>`;
-  /// custom and renamed sounds show the user's title verbatim.
+  /// Display title. Unrenamed built-in sounds localize under `sound.<fileName>`.
+  /// Custom and renamed sounds show the user's title verbatim.
   var localizedTitle: String {
     guard !isCustom, title == originalTitle else { return title }
     return NSLocalizedString(
@@ -64,7 +64,7 @@ open class Sound: NSObject, Identifiable {
       originalIconName: originalSystemIconName) ?? originalSystemIconName
   }
 
-  /// Hidden from the Library's Sounds list and the All Sounds grid; still
+  /// Hidden from the Library's Sounds list and the All Sounds grid, but still
   /// usable inside presets. Non-looping one-shots are always preset-only.
   var isPresetUseOnly: Bool {
     let customization = SoundCustomizationManager.shared.getCustomization(for: fileName)
@@ -84,7 +84,7 @@ open class Sound: NSObject, Identifiable {
       // A newly selected sound starts playing once playback is active.
       if isSelected, oldValue == false {
         // A preset holds at most one music sound (last selected wins). Synchronous so
-        // the outgoing sound fades as this one comes in; skipped during bootstrap.
+        // the outgoing sound fades as this one comes in. Skipped during bootstrap.
         if isMusic, !AudioManager.isBootstrapping {
           AudioManager.shared.deselectOtherMusicSounds(except: self)
         }
@@ -120,7 +120,7 @@ open class Sound: NSObject, Identifiable {
             self.resetSoundPosition()  // Apply randomization if enabled
             self.play()
           } else {
-            // Playback may be about to auto-start; check again after a yield.
+            // Playback may be about to auto-start, so check again after a yield.
             Task { @MainActor [weak self] in
               await Task.yield()
               guard let self = self else { return }
@@ -186,7 +186,7 @@ open class Sound: NSObject, Identifiable {
   /// live engine I/O, so any audible ramp makes its transport button flip back and forth.
   static let remotePauseFadeDuration: TimeInterval = 0
 
-  // nonisolated(unsafe): only ever mutated on the main actor; the nonisolated
+  // nonisolated(unsafe): only ever mutated on the main actor. The nonisolated
   // deinit is the last reference, so invalidating it there is race-free.
   @ObservationIgnored nonisolated(unsafe) var volumeDebounceTimer: Timer?
 
@@ -212,7 +212,7 @@ open class Sound: NSObject, Identifiable {
       volumeDebounceTimer?.invalidate()
       volumeDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) {
         [weak self] _ in
-        // The timer fires on the main run loop; recover that isolation statically.
+        // The timer fires on the main run loop, so recover that isolation statically.
         MainActor.assumeIsolated {
           guard let self = self else { return }
 
@@ -420,7 +420,7 @@ open class Sound: NSObject, Identifiable {
     }
   }
 
-  /// Short sounds fold to mono in memory; long ones need their rendered mono cache
+  /// Short sounds fold to mono in memory. Long ones need their rendered mono cache
   /// (see prepareForSpatial). Memoized because the mixer reads this at ~10 Hz.
   var isSpatialReady: Bool {
     // Unknown duration counts as long (the player would stream it unspatialized).
@@ -467,8 +467,8 @@ open class Sound: NSObject, Identifiable {
   }
 
   /// Seeks a freshly (re)loaded player to a position captured before a
-  /// rebuild. Seconds, not frames (a mono cache's frame count can differ);
-  /// marks .paused so playSelected doesn't re-randomize it as "stopped".
+  /// rebuild. Seconds, not frames (a mono cache's frame count can differ).
+  /// Marks .paused so playSelected doesn't re-randomize it as "stopped".
   func restorePlaybackPosition(_ seconds: TimeInterval) {
     guard let player, seconds > 0 else { return }
     player.seek(toFrame: AVAudioFramePosition(seconds * player.sampleRate))
@@ -478,7 +478,7 @@ open class Sound: NSObject, Identifiable {
   // MARK: - Playback Completion
 
   /// Handles a non-looping sound reaching its end. SoundPlayer fires this on
-  /// the main queue; looping schedules never finish.
+  /// the main queue. Looping schedules never finish.
   func handleNonLoopingFinished() {
     playbackState = .stopped
 

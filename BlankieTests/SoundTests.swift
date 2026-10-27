@@ -47,10 +47,10 @@ struct SoundTests {
   @Test func invalidVolume() {
     let originalVolume = sound.volume
 
-    sound.volume = 2.0  // rejected; keeps the old value
+    sound.volume = 2.0  // rejected, keeping the old value
     #expect(sound.volume == originalVolume, "Volume should not change when set above 1.0")
 
-    sound.volume = -1.0  // rejected; keeps the old value
+    sound.volume = -1.0  // rejected, keeping the old value
     #expect(sound.volume == originalVolume, "Volume should not change when set below 0.0")
 
     sound.volume = 0.5

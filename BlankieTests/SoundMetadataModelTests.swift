@@ -67,7 +67,7 @@ import Testing
     #expect(License(rawValue: "cc0") == .cc0)
     #expect(License(rawValue: "nope") == nil)
     #expect(License.ccBy4.linkText == "CC BY 4.0")
-    // Creative Commons licenses link out; bespoke ones don't.
+    // Creative Commons licenses link out, but bespoke ones don't.
     #expect(License.cc0.url != nil)
     #expect(License.ccBy3.url != nil)
     #expect(License.custom.url == nil)

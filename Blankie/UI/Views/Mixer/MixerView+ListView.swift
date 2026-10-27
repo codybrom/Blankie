@@ -71,7 +71,7 @@ import os
         in: .circle
       )
       .opacity(sound.isSelected ? 1.0 : 0.4)
-      // VoiceOver toggle; the volume slider stays a separate adjustable element.
+      // VoiceOver toggle. The volume slider stays a separate adjustable element.
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(Text(sound.localizedTitle))
       .accessibilityAddTraits(.isButton)

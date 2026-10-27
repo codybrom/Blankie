@@ -5,7 +5,7 @@
 //  Created by Cody Bromley on 10/24/26.
 //
 //  The crease on a half-folded iPhone Duo must fall in the gap between the two
-//  sound-tile columns; flat or fold-less screens keep the plain symmetric grid.
+//  sound-tile columns. Flat or fold-less screens keep the plain symmetric grid.
 //
 
 import CoreGraphics
@@ -55,7 +55,7 @@ import Testing
     #expect(r.leading == 16 && r.trailing == 16 && r.columnSpacing == 16)
   }
 
-  // List rows keep to the leading page; panels split on the crease.
+  // List rows keep to the leading page. Panels split on the crease.
 
   // Flat and bent lay out the same, so bending the device moves nothing.
   @Test func leadingPageFlatOrBent() {

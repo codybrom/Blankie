@@ -15,11 +15,11 @@ import SwiftUI
     let audioManager = AudioManager.shared
     let globalSettings = GlobalSettings.shared
 
-    /// Quick Mix passes its own active state; the grid passes nil.
+    /// Quick Mix passes its own active state. The grid passes nil.
     private let isActiveOverride: Bool?
     var onTap: () -> Void
 
-    /// Computed so `body` observes `sound.isSelected`; `init` doesn't re-run on a toggle.
+    /// Computed so `body` observes `sound.isSelected`, since `init` doesn't re-run on a toggle.
     var isActive: Bool { isActiveOverride ?? sound.isSelected }
 
     private var isQuickMix: Bool { isActiveOverride != nil }
@@ -111,7 +111,7 @@ import SwiftUI
             .strokeBorder(accentColor.opacity(isLit ? 0.5 : 0.2), lineWidth: 1)
         }
       }
-      // Scale the inactive tile down; an active tile above 1.0 would overflow its cell.
+      // Scale the inactive tile down. An active tile above 1.0 would overflow its cell.
       .scaleEffect(isLit ? 1.0 : 0.95)
       .animation(.easeInOut(duration: 0.15), value: isLit)
       // Keyed to selection: `isLit` includes play state and would fire for every

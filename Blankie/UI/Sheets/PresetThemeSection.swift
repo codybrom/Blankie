@@ -8,8 +8,8 @@
 import SwiftUI
 
 /// Shared "Customize Theme" card for Edit Preset and New Preset. Each override is a
-/// toggle that reveals its control; toggled off follows the app-wide setting. Edit
-/// persists instantly via `onEdited`; New Preset reads the bindings on Create.
+/// toggle that reveals its control. Toggled off, it follows the app-wide setting.
+/// Edit persists instantly via `onEdited`. New Preset reads the bindings on Create.
 struct PresetThemeSection: View {
   @Binding var useCustomViewMode: Bool
   @Binding var viewModeOverride: PresetViewMode?

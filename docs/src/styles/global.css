@@ -187,7 +187,7 @@ body {
   @apply mt-0 mb-1 text-xs font-semibold tracking-wide text-yellow-500/90;
 }
 
-/* Set the body apart from surrounding prose with a slightly smaller size; the
+/* Set the body apart from surrounding prose with a slightly smaller size. The
    fill and label do the rest, so it keeps full text contrast. */
 .prose .markdown-alert {
   @apply text-[0.95em];
@@ -248,7 +248,7 @@ body {
 }
 
 /* Media-key keycaps holding Lucide glyphs ({{kbdicon:...}}). Tighter padding
-   than a text key; multiple glyphs (play/pause) sit side by side. */
+   than a text key. Multiple glyphs (play/pause) sit side by side. */
 .kbd-combo kbd.kbd-iconcap {
   gap: 0.05em;
   padding: 0 0.4em;
@@ -266,7 +266,7 @@ body {
   @apply bg-card ring-foreground/10 flex flex-col gap-3 rounded-xl p-6 ring-1;
 }
 
-/* Vertical rhythm in article flow only; grid layouts space cards themselves. */
+/* Vertical rhythm in article flow only, since grid layouts space cards themselves. */
 .prose .review-quote {
   @apply my-8;
 }
@@ -304,14 +304,14 @@ body {
   @apply text-fg-3 mt-auto text-left text-xs;
 }
 
-/* Base UI Accordion wraps each trigger in an <h3>; cancel the .prose h3 margins
+/* Base UI Accordion wraps each trigger in an <h3>. Cancel the .prose h3 margins
    that leak in because the accordion lives inside the .prose main. */
 .prose [data-slot="accordion-item"] h3 {
   margin-top: 0;
   margin-bottom: 0;
 }
 
-/* Inline code chips (privacy prose); strip prose's literal backticks */
+/* Inline code chips (privacy prose). Strip prose's literal backticks. */
 .prose :not(pre) > code {
   @apply rounded bg-white/10 px-1.5 py-0.5 font-medium;
 }
@@ -452,8 +452,8 @@ body {
   --background: var(--color-navy-deep); /* Blankie 2.0 midnight navy */
   --foreground: var(--color-ink);
 
-  /* Aliases of the @theme palette. Hand-written page CSS uses these bare names;
-     the @theme `--color-*` set backs the Tailwind utilities. */
+  /* Aliases of the @theme palette. Hand-written page CSS uses these bare names.
+     The @theme `--color-*` set backs the Tailwind utilities. */
   --page: var(--color-navy-deep);
   --page-deep: var(--color-midnight);
   --lift: var(--color-lift);

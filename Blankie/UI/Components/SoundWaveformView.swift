@@ -79,13 +79,13 @@ struct SoundWaveformView: View {
 
     do {
       let samples = try await extractAndDownsampleAudio(from: url, targetWidth: width)
-      // A width change cancels this task; a stale result must not overwrite
+      // A width change cancels this task. A stale result must not overwrite
       // the newer task's.
       try Task.checkCancellation()
       waveformSamples = samples
       isLoading = false
     } catch is CancellationError {
-      // Superseded by a newer width; leave state for that task to settle.
+      // Superseded by a newer width. Leave state for that task to settle.
     } catch {
       Logger.ui.error("Failed to load waveform: \(error, privacy: .public)")
       isLoading = false

@@ -109,7 +109,7 @@ extension CustomSoundManager {
       return .failure(.soundNotFound)
     }
 
-    // Release the live player so its file handle drops before the swap; the sound is
+    // Release the live player so its file handle drops before the swap. The sound is
     // then refreshed in place.
     let liveSound = AudioManager.shared.sounds.first { $0.customSoundDataID == soundDataID }
     let wasPlaying = liveSound?.playbackState == .playing
@@ -213,7 +213,7 @@ extension CustomSoundManager {
       AVNumberOfChannelsKey: channels,
       AVEncoderBitRateKey: Self.conversionBitRate,
     ]
-    // AAC needs an explicit channel layout above stereo; carry the source's over.
+    // AAC needs an explicit channel layout above stereo, so carry the source's over.
     var layoutSize = 0
     if let layoutPtr = CMAudioFormatDescriptionGetChannelLayout(formatDesc, sizeOut: &layoutSize),
       layoutSize > 0

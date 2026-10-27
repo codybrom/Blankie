@@ -367,7 +367,7 @@ extension EditPresetSheet {
       try await body()
     } catch {
       Logger.ui.error("Preset export failed: \(error.localizedDescription, privacy: .public)")
-      // Only ExportError messages are user-facing; anything else gets a generic message.
+      // Only ExportError messages are user-facing. Anything else gets a generic message.
       if error is PresetExporter.ExportError {
         exportError = error.localizedDescription
       } else {
@@ -554,7 +554,7 @@ extension EditPresetSheet {
     updatedPreset.lastModifiedVersion = currentVersion
 
     if preset.isDefault {
-      // The default preset takes no theme overrides; clear any older ones.
+      // The default preset takes no theme overrides, so clear any older ones.
       updatedPreset.accentColorName = nil
       updatedPreset.viewMode = nil
       updatedPreset.backgroundBlurRadius = nil
@@ -568,7 +568,7 @@ extension EditPresetSheet {
       // nil follows the app setting.
       updatedPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
 
-      // Blur is a global Display setting; clear legacy per-preset values.
+      // Blur is a global Display setting, so clear legacy per-preset values.
       updatedPreset.backgroundBlurRadius = nil
     }
 

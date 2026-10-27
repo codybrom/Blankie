@@ -87,7 +87,7 @@ class AudioManager {
   /// republishes only when the selection changes.
   @ObservationIgnored private var lastPublishedSelectionSignature: String?
 
-  /// Coalesces rapid selection and volume changes; see `soundDidChange`.
+  /// Coalesces rapid selection and volume changes (see `soundDidChange`).
   @ObservationIgnored private var soundChangeCoalesceTask: Task<Void, Never>?
 
   @ObservationIgnored var modelContext: ModelContext?
@@ -106,7 +106,7 @@ class AudioManager {
   @ObservationIgnored @MainActor var launchBootstrapGeneration = 0
   /// Set once, inside the bootstrap task, after custom sounds have loaded.
   @ObservationIgnored @MainActor var hasLoadedCustomSounds = false
-  /// Number of times the custom-sound load actually ran; internal so launch
+  /// Number of times the custom-sound load actually ran. It is internal so launch
   /// tests can assert the single-flight bootstrap coalesces concurrent callers.
   @ObservationIgnored @MainActor var customSoundLoadPasses = 0
   @ObservationIgnored var customSoundObserver: AnyCancellable?
@@ -125,7 +125,7 @@ class AudioManager {
     Logger.audio.debug("AudioManager: About to loadSavedState()")
     loadSavedState()
 
-    // Synchronous init done; the music-exclusivity didSet may reach `shared` now.
+    // Synchronous init is done, so the music-exclusivity didSet may reach `shared` now.
     Self.isBootstrapping = false
 
     // Media controls and observers wait so init doesn't trigger the audio session.
@@ -160,7 +160,7 @@ class AudioManager {
         await self.analyzeCustomSoundsIfNeeded()
       }
 
-      // A custom single sound may not be loaded yet; loadCustomSoundsWhenReady()
+      // A custom single sound may not be loaded yet, so loadCustomSoundsWhenReady()
       // finishes or abandons that restore.
       if self.restoreSingleSoundIfNeeded() {
         // Single sound restored, or pending a custom sound.
@@ -225,7 +225,7 @@ extension AudioManager {
     let newValue = sounds.contains { $0.isSelected }
 
     // Nothing selected pauses playback. Checked every pass, since hasSelectedSounds
-    // can already be false when playback starts; a preview defers it until it ends.
+    // can already be false when playback starts. A preview defers it until it ends.
     if !newValue && isGloballyPlaying && previewModeSound == nil {
       Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
       Task { @MainActor in
@@ -342,7 +342,7 @@ extension AudioManager {
   }
 
   /// Visible sounds for a preset, in its sound order. A custom preset shows its
-  /// own sounds by `soundOrder`; the default preset (or none) shows all but
+  /// own sounds by `soundOrder`. The default preset (or none) shows all but
   /// preset-use-only sounds by `defaultSoundOrder`. Unknown sounds sort last.
   @MainActor
   func orderedVisibleSounds(for preset: Preset?) -> [Sound] {

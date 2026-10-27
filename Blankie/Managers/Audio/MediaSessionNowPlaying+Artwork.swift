@@ -172,7 +172,7 @@
     }
 
     /// The drawn fallback for a mix without its own artwork. A render can fail in the
-    /// background; the last good render for the same id stands in, and with none the
+    /// background. The last good render for the same id stands in, and with none the
     /// next publish retries (the system never re-reads a bare item).
     private func applyFallbackArtwork() {
       let source = Self.fallbackArtworkSource()
@@ -253,7 +253,7 @@
           compatible: AnimatedArtwork.compatibleAspectRatios.map(Self.sessionRatio),
           available: Set(found.keys))
         // Nothing playable yet (a pack still downloading, or a missing loop).
-        // Clear the previous loop so it can't sit under this preset's title;
+        // Clear the previous loop so it can't sit under this preset's title.
         // `onDownloaded` comes back once a pack lands.
         guard !ratios.isEmpty else {
           clearAnimatedArtwork()

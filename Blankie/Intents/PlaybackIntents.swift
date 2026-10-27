@@ -46,7 +46,7 @@ import AppIntents
 
 struct ToggleBlankiePlaybackIntent: AppIntent, AudioPlaybackIntent {
   #if WIDGET_EXTENSION
-    // The app exposes the public action; the extension only renders its button.
+    // The app exposes the public action. The extension only renders its button.
     static var isDiscoverable: Bool { false }
   #endif
 

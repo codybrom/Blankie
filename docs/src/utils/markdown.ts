@@ -48,7 +48,7 @@ interface KbdIconToken extends Tokens.Generic {
  * package). */
 const normalize = (svg: string) => svg.replace(/<!--[\s\S]*?-->/g, "").trim();
 
-/** Lucide is stroke-only; fill the shape for glyphs iOS draws solid. */
+/** Lucide is stroke-only, so fill the shape for glyphs iOS draws solid. */
 const filled = (svg: string) =>
   svg.replace('fill="none"', 'fill="currentColor"');
 
@@ -81,7 +81,7 @@ const symbolSvgs: Record<string, string> = Object.fromEntries(
     list,
     speaker: volume2,
     // Status glyphs for comparison tables. `optional` means "not an issue"
-    // (e.g. credit isn't required); `caveat` means allowed with a condition
+    // (e.g. credit isn't required). `caveat` means allowed with a condition
     // (e.g. sharealike).
     yes: tinted(check, "var(--color-green-500)"),
     no: tinted(x, "var(--color-red-500)"),
@@ -241,8 +241,8 @@ marked.use({
   ],
 });
 
-// Images: `![alt](src "caption")` renders as <figure> with a <figcaption>;
-// without a caption it stays a plain <img>. An image-only paragraph drops its
+// Images: `![alt](src "caption")` renders as <figure> with a <figcaption>.
+// Without a caption it stays a plain <img>. An image-only paragraph drops its
 // <p> wrapper, since <figure> can't nest inside <p>.
 const escapeAttr = (s: string) =>
   s

@@ -79,7 +79,7 @@
 
       // Switching to .accessory orders open windows out, so capture visible ones
       // to restore. Uses the live window list because `hasWindow` can be stale
-      // at launch; a closing window is already !isVisible.
+      // at launch. A closing window is already !isVisible.
       let openWindows =
         desired == .accessory
         ? NSApp.windows.filter { $0.isVisible && $0.canBecomeMain }
@@ -89,7 +89,7 @@
 
       switch desired {
       case .regular:
-        // Cooperative activation only requests focus; bring the app forward.
+        // Cooperative activation only requests focus, so bring the app forward.
         NSApp.activate()
       case .accessory:
         // Restore any window the policy change ordered out.

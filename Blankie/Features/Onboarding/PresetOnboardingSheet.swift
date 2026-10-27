@@ -390,7 +390,7 @@ struct PresetOnboardingSheet: View {
 
   private var navigationButtons: some View {
     HStack(spacing: 16) {
-      // Skip is always available; Escape triggers it.
+      // Skip is always available, and Escape triggers it.
       Button("Skip") {
         skipOnboarding()
       }

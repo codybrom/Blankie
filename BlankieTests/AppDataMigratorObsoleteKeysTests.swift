@@ -5,7 +5,7 @@
 //  Created by Cody Bromley on 6/15/26.
 //
 //  Obsolete-feature keys are swept on every launch, even after the one-time migration.
-//  Serialized: writes real defaults keys; the snapshot restores the user's values.
+//  Serialized: writes real defaults keys. The snapshot restores the user's values.
 //
 
 import Foundation

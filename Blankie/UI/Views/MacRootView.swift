@@ -21,7 +21,7 @@
         ContentView(showingShortcuts: $showingShortcuts)
       }
       // The window's floor follows the sidebar: collapsed it can shrink to a
-      // compact mixer; open it must hold sidebar + a usable detail pane.
+      // compact mixer. Open, it must hold sidebar + a usable detail pane.
       .frame(
         minWidth: columnVisibility == .detailOnly
           ? WindowDefaults.minWidth : WindowDefaults.minWidthWithSidebar,

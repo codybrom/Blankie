@@ -52,7 +52,7 @@ import Testing
     #expect(result.soundStates == preset.soundStates)
   }
 
-  /// The original ID is kept for duplicate detection; an imported copy is never the default.
+  /// The original ID is kept for duplicate detection. An imported copy is never the default.
   @Test func createNewInstanceReIDsAndMarksImported() {
     let original = PresetFactory.makePreset(isDefault: true, isImported: false)
 

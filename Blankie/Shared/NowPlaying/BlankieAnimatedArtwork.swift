@@ -23,14 +23,14 @@ import Foundation
     /// The variant this device's lock screen shows (iPad advertises only 1x1,
     /// iPhone 3x4), so previews match it and each device fetches one pack. On
     /// iOS 27 the NowPlaying framework answers, since it must not be mixed with
-    /// MediaPlayer; a device that accepts both crops picks one by idiom.
+    /// MediaPlayer. A device that accepts both crops picks one by idiom.
     nonisolated static var preferredForDevice: AnimatedArtworkKey {
       #if canImport(NowPlaying)
         if #available(iOS 27, *) {
           let compatible = AnimatedArtwork.compatibleAspectRatios
           let square = compatible.contains(.square)
           if square, compatible.contains(.tall) {
-            // The idiom is main-actor API; every caller runs on the main actor.
+            // The idiom is main-actor API. Every caller runs on the main actor.
             return MainActor.assumeIsolated {
               UIDevice.current.userInterfaceIdiom == .pad ? .square : .portrait
             }

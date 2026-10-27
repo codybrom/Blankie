@@ -125,7 +125,7 @@ import Testing
 
   // MARK: - Zero-width waveform
 
-  /// Under about 2 pt of width there's room for zero bars; downsampling must not divide by zero.
+  /// Under about 2 pt of width there's room for zero bars. Downsampling must not divide by zero.
   @Test func waveformDownsamplesToZeroBars() {
     #expect(SoundWaveformView.downsample([0.5, -0.25, 0.75], to: 0).isEmpty)
     #expect(SoundWaveformView.downsample([0.5, -0.25], to: 4) == [0.5, 0.25])

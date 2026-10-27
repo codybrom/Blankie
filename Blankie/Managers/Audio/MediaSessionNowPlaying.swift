@@ -23,7 +23,7 @@
     let model = NowPlayingSessionModel()
     private var session: MediaSession<NowPlayingSessionModel>?
     private var primaryRequest: Task<Void, Never>?
-    /// The publish waiting out the debounce; the newest call replaces it.
+    /// The publish waiting out the debounce. The newest call replaces it.
     private var pendingPublish: PendingPublish?
     private var publishDebounce: Task<Void, Never>?
     private var timerActiveObservation: Task<Void, Never>?
@@ -257,7 +257,7 @@
         currentAnimatedLoopPath = nil
         currentAnimatedPreviewPath = nil
       #endif
-      // Handlers and navigation state survive a clear; AudioManager installs them
+      // Handlers and navigation state survive a clear. AudioManager installs them
       // once at setup.
     }
 
@@ -341,7 +341,7 @@
 
     /// Claims the Now Playing card once playback starts. Every play path configures the
     /// audio session first (the order Apple asks for before requesting primary). The
-    /// session persists through pauses; only `clear()` drops it.
+    /// session persists through pauses. Only `clear()` drops it.
     private func publishSessionIfPlaying() {
       guard model.playback == .playing, session == nil else { return }
       let session = MediaSession(model)

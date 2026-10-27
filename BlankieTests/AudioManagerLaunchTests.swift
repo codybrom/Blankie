@@ -6,7 +6,7 @@
 //
 //  The single-flight launch bootstrap: concurrent callers share one custom-sound load,
 //  and a run without a model context retries once one arrives.
-//  Serialized: mutates AudioManager.shared; each test restores its fields and defaults keys.
+//  Serialized: mutates AudioManager.shared. Each test restores its fields and defaults keys.
 //
 
 import Foundation

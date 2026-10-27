@@ -50,7 +50,7 @@ struct AppShortcut: Identifiable {
   }
 
   /// Name for keys whose `character` doesn't render legibly on its own
-  /// (Space is blank; the arrows are private-use glyphs). Letters and symbols
+  /// (Space is blank, and the arrows are private-use glyphs). Letters and symbols
   /// pass through uppercased.
   private static func displayName(for key: KeyEquivalent) -> String {
     switch key.character {
@@ -67,7 +67,7 @@ struct AppShortcut: Identifiable {
   var displayGlyphs: String { tokens.joined(separator: " ") }
 
   /// Spoken names for glyphs VoiceOver mispronounces or treats as punctuation.
-  /// Values are localizable; letters and digits are read verbatim.
+  /// Values are localizable. Letters and digits are read verbatim.
   private static let spokenNames: [String: LocalizedStringKey] = [
     "⌘": "Command",
     "⇧": "Shift",
@@ -99,7 +99,7 @@ struct AppShortcut: Identifiable {
 
 extension AppShortcut {
   // Canonical definitions. Bound entries are applied via `.keyboardShortcut(_:)`
-  // in AppCommands; display-only entries (`closeWindow`) are owned by the
+  // in AppCommands. Display-only entries (`closeWindow`) are owned by the
   // system and just shown in the cheat sheet.
   static let playPause = AppShortcut("Play/Pause Sounds", key: .space)
   static let nextFavorite = AppShortcut("Next Favorite", key: .rightArrow, modifiers: .command)

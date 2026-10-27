@@ -46,7 +46,7 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
   /// ignore, or a real finding that should fail the test.
   @MainActor private func shouldIgnoreAuditIssue(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
     // Layout containers (NavigationSplitView groups, the grid's `Other`, window chrome) trip the
-    // description and parent/child checks; their labeled descendants carry the meaning.
+    // description and parent/child checks. Their labeled descendants carry the meaning.
     let isContainer =
       issue.element?.elementType == .group || issue.element?.elementType == .other
     if isContainer,
@@ -66,7 +66,7 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
       return true
     }
 
-    // A native slider's knob is an AppKit ValueIndicator that SwiftUI can't label; VoiceOver
+    // A native slider's knob is an AppKit ValueIndicator that SwiftUI can't label. VoiceOver
     // reads the labeled slider. Framework false positive.
     #if os(macOS)
       if issue.auditType == .sufficientElementDescription,

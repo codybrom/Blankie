@@ -30,7 +30,7 @@ import Testing
     #expect(MixerLayout.resolve(isRegularWidth: true, fold: fold) == .pages)
   }
 
-  /// A real flat Duo reports a zero-width fold; it still lays out like a book.
+  /// A real flat Duo reports a zero-width fold but still lays out like a book.
   @Test func zeroWidthFlatFoldGetsFacingPages() {
     let fold = FoldInfo(frame: CGRect(x: 476, y: 0, width: 0, height: 669), isActive: false)
     #expect(fold.isPresent)

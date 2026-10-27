@@ -14,8 +14,8 @@ import os
 /// one peak limiter to the output. `ensureRunning()` is the only place the
 /// engine is ever started, so start failures and retries live in one place.
 ///
-/// Threading: call from the main thread (same contract as Sound/SoundPlayer);
-/// notification handlers hop to the main actor before calling in.
+/// Threading: call from the main thread (same contract as Sound/SoundPlayer).
+/// Notification handlers hop to the main actor before calling in.
 final class AudioEngineManager {
   static let shared = AudioEngineManager()
 
@@ -37,13 +37,13 @@ final class AudioEngineManager {
   /// Single mix-bus peak limiter between the main mixer and the output.
   private(set) var limiter: AVAudioUnitEffect
 
-  /// Experimental 3D environment for spatial sounds (mono inputs only); lives
+  /// Experimental 3D environment for spatial sounds (mono inputs only). It lives
   /// alongside the normal chain and feeds the same main mixer.
   private(set) var environment = AVAudioEnvironmentNode()
   private var environmentConnected = false
 
-  /// Registered players keyed by identity. `Sound` owns removal via `detach`;
-  /// an explicit registry lets rebuilds enumerate every node.
+  /// Registered players keyed by identity. `Sound` owns removal via `detach`.
+  /// An explicit registry lets rebuilds enumerate every node.
   private(set) var registered: [ObjectIdentifier: SoundPlayer] = [:]
 
   /// Set once the main mixer, limiter and output are wired.
@@ -76,7 +76,7 @@ final class AudioEngineManager {
     observeEngineNotifications()
 
     // Global volume and mix-with-others live on the main mixer. GlobalSettings'
-    // setters call applyGlobalVolumeSettings(); this seeds the initial gain.
+    // setters call applyGlobalVolumeSettings(). This seeds the initial gain.
     applyGlobalVolumeSettings()
   }
 
@@ -90,7 +90,7 @@ final class AudioEngineManager {
     limiter = Self.makeLimiter()
     environment = AVAudioEnvironmentNode()
     observeEngineNotifications()
-    // The fresh mixer defaults to 1.0; reapply the user's global volume.
+    // The fresh mixer defaults to 1.0, so reapply the user's global volume.
     globalVolume =
       Float(GlobalSettings.shared.volume)
       * (GlobalSettings.shared.mixWithOthers
@@ -109,7 +109,7 @@ final class AudioEngineManager {
   // MARK: - Graph attach / detach
 
   /// Attaches a player and wires its chain (idempotent). Spatial players feed the
-  /// environment (mono, HRTF-positioned); others feed their gain node, then the
+  /// environment (mono, HRTF-positioned). Others feed their gain node, then the
   /// main mixer in the file's format (the mixer converts sample rate).
   func attach(_ player: SoundPlayer) {
     let key = ObjectIdentifier(player)
@@ -130,7 +130,7 @@ final class AudioEngineManager {
   /// Wires (or re-wires after a rebuild) a player's output chain.
   func connectPlayerChain(_ player: SoundPlayer) {
     if player.isSpatial {
-      // Buffered spatial sounds carry their mono fold; streamed ones play a
+      // Buffered spatial sounds carry their mono fold. Streamed ones play a
       // rendered mono cache, so the file's own format is already mono.
       let format: AVAudioFormat
       switch player.mode {
@@ -271,7 +271,7 @@ final class AudioEngineManager {
     }
   }
 
-  /// Pauses hardware I/O once nothing is rendering; the graph stays intact for
+  /// Pauses hardware I/O once nothing is rendering. The graph stays intact for
   /// `ensureRunning()`. A running engine makes iOS report playback even at rate 0.
   @discardableResult
   func pauseIfIdle() -> Bool {
@@ -291,7 +291,7 @@ final class AudioEngineManager {
     Logger.audio.debug("AudioEngineManager: Paused engine")
   }
 
-  /// Exponential backoff (0.25 · 2^n s, 5 tries); after the cap, reports the
+  /// Exponential backoff (0.25 · 2^n s, 5 tries). After the cap, reports the
   /// failure and leaves the app paused with controls alive.
   private func scheduleStartRetry() {
     guard !startRetryPending else { return }

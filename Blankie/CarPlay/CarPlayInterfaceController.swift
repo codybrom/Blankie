@@ -359,12 +359,12 @@ import os
     // MARK: - CPNowPlayingTemplateObserver
 
     func nowPlayingTemplateUpNextButtonTapped(_: CPNowPlayingTemplate) {
-      // Unused; the template uses custom buttons.
+      // Unused because the template uses custom buttons.
     }
 
     func nowPlayingTemplateAlbumArtistButtonTapped(_: CPNowPlayingTemplate) {
-      // The album line surfaces the running sleep timer ("N Minute Timer");
-      // tapping it opens the timer picker to set, restart, or cancel.
+      // The album line surfaces the running sleep timer ("N Minute Timer").
+      // Tapping it opens the timer picker to set, restart, or cancel.
       Task { @MainActor in
         showTimerOptions()
       }

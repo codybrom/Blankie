@@ -90,7 +90,7 @@ func widgetAccentGradient(_ accent: Color, colorScheme: ColorScheme) -> LinearGr
     startPoint: .topLeading, endPoint: .bottomTrailing)
 }
 
-/// Corner brand mark. `blankie.mark` bakes the B's counter into an even-odd path;
+/// Corner brand mark. `blankie.mark` bakes the B's counter into an even-odd path, but
 /// `blankie.symbol`'s layered counter fills in under flat widget rendering.
 struct BlankieBadge: View {
   @Environment(\.widgetForeground) private var foreground

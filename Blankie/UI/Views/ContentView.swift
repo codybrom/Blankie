@@ -405,7 +405,7 @@ import UniformTypeIdentifiers
       }
     }
 
-    /// Persists a reorder. Indices are into `filteredSounds`; the complete order
+    /// Persists a reorder. Indices are into `filteredSounds`. The complete order
     /// goes to the custom preset or the default order (mirrors `MixerView.moveItems`).
     private func moveSounds(from source: IndexSet, to destination: Int) {
       var newOrder = filteredSounds.map(\.fileName)

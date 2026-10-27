@@ -44,7 +44,7 @@ import os
     }
 
     /// Only the real app window is tracked. Popovers, menus and tooltips are
-    /// borderless `NSWindow`s; reacting to them re-renders an open popover
+    /// borderless `NSWindow`s. Reacting to them re-renders an open popover
     /// (dropping native slider knobs) and corrupts the saved window frame.
     private func isMainWindow(_ window: NSWindow) -> Bool {
       window.styleMask.contains(.titled)

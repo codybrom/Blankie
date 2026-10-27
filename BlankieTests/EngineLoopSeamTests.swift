@@ -11,7 +11,7 @@ import Testing
 
 @testable import Blankie
 
-/// Looping across a wrap adds no click or gap at the seam; thresholds come from the file's
+/// Looping across a wrap adds no click or gap at the seam. Thresholds come from the file's
 /// own statistics. Serialized: offline renders are memory-heavy.
 @Suite(.serialized) struct EngineLoopSeamTests {
 

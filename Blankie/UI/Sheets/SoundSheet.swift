@@ -49,7 +49,7 @@ struct SoundSheet: View {
   @State var addToPresetIDs: Set<UUID> = []
   @State var createMixPreset: Bool = false
   /// Import only: re-encode the picked file to AAC. User-toggled for eligible
-  /// files; forced by file size for very large ones (see CustomSoundManager).
+  /// files, but forced by file size for very large ones (see CustomSoundManager).
   @State var convertToAACOnImport: Bool = false
 
   // Track initial values to detect changes
@@ -187,7 +187,7 @@ struct SoundSheet: View {
         }
       }
       // Tint the whole sheet so accent-colored icons resolve from one stable
-      // environment. Standalone uses the app accent; pushed inside Edit Preset,
+      // environment. Standalone uses the app accent. Pushed inside Edit Preset,
       // it inherits that stack's preset accent.
       .tint(embedInNavigation ? (GlobalSettings.shared.customAccentColor ?? .accentColor) : nil)
       #if os(iOS) || os(visionOS)

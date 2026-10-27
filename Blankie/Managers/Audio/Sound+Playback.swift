@@ -51,7 +51,7 @@ extension Sound {
       return
     }
 
-    // Re-attach (idempotent; covers engine recreation) and make sure the engine is
+    // Re-attach (idempotent, and covers engine recreation) and make sure the engine is
     // running, since AVAudioPlayerNode.play() throws otherwise.
     AudioEngineManager.shared.attach(player)
     guard AudioEngineManager.shared.ensureRunning() else {
@@ -89,7 +89,7 @@ extension Sound {
       shouldRandomizeStart = true
     }
 
-    // Random starts only make sense for looping beds (the loop wraps); a
+    // Random starts only make sense for looping beds (the loop wraps). A
     // one-shot started mid-file just loses its beginning.
     if shouldRandomizeStart && player.loops {
       guard player.duration > 0, player.duration.isFinite else {
@@ -113,8 +113,8 @@ extension Sound {
     playbackState = .stopped
   }
 
-  /// `fadeDuration` overrides the standard ramp (nil = `Sound.fadeDuration`);
-  /// zero still pauses in place, unlike `immediate`, which stops and clears position.
+  /// `fadeDuration` overrides the standard ramp (nil = `Sound.fadeDuration`).
+  /// Zero still pauses in place, unlike `immediate`, which stops and clears position.
   func pause(immediate: Bool = false, fadeDuration requestedFade: TimeInterval? = nil) {
     guard let currentPlayer = player else { return }
 
@@ -127,7 +127,7 @@ extension Sound {
       // would break resume).
       guard currentPlayer.isPlaying || playbackState == .playing else { return }
       // State flips to .paused at once so UI and playback logic treat the sound as
-      // paused during the ramp; play() can ramp a mid-fade pause back up.
+      // paused during the ramp. A mid-fade pause can be ramped back up by play().
       playbackState = .paused
       currentPlayer.fade(to: 0, duration: shouldFade ? (requestedFade ?? Sound.fadeDuration) : 0) {
         [weak currentPlayer] in
@@ -186,7 +186,7 @@ extension Sound {
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
 
-    // `volume = 0.75` above re-armed the debounced save; cancel it so it can't
+    // `volume = 0.75` above re-armed the debounced save. Cancel it so it can't
     // rewrite the removed key.
     volumeDebounceTimer?.invalidate()
     volumeDebounceTimer = nil

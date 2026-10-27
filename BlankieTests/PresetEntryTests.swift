@@ -77,7 +77,7 @@ import Testing
 
   // MARK: - applyPreset reports whether it ran
 
-  /// Callers start playback only when nothing was applied; an application starts the new mix
+  /// Callers start playback only when nothing was applied. An application starts the new mix
   /// itself.
   @Test func applyPresetReportsWhetherItApplied() async throws {
     let (a, b) = makeSounds()
@@ -140,7 +140,7 @@ import Testing
     audioManager.exitQuickMix()
   }
 
-  /// An empty preset still opens from the Library; its editor adds sounds.
+  /// An empty preset still opens from the Library. Its editor adds sounds.
   @Test func emptyPresetIsValid() {
     let empty = PresetFactory.makePreset(name: "Entry Empty", soundStates: [], soundOrder: [])
     #expect(empty.validate())
@@ -229,7 +229,7 @@ import Testing
     #expect(states.first { $0.fileName == b.fileName }?.isSelected == false)
   }
 
-  /// A deleted preset can name a sound deleted along with it; the default must still apply.
+  /// A deleted preset can name a sound deleted along with it. The default must still apply.
   @Test func deletingTheLastCustomPresetWithAMissingSoundLeavesTheDefaultCurrent() async {
     let (a, b) = makeSounds()
     let doomed = PresetFactory.makePreset(
@@ -291,7 +291,7 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
   }
 
-  /// A repeated Play Sound command resumes a paused single sound; it doesn't toggle it off.
+  /// A repeated Play Sound command resumes a paused single sound and doesn't toggle it off.
   @Test func playSoundResumesTheSamePausedSingle() async throws {
     let (a, b) = makeSounds()
     await install([preset("Entry Siri Resume", selecting: [a.fileName], from: [a])])

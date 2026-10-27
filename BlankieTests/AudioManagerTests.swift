@@ -38,7 +38,7 @@ struct AudioManagerTests {
     }
   }
 
-  /// Selection alone doesn't recompute `hasSelectedSounds`; the app calls
+  /// Selection alone doesn't recompute `hasSelectedSounds`. The app calls
   /// `updateHasSelectedSounds` on change.
   @Test func selectionUpdatesHasSelectedSounds() {
     #expect(!audioManager.hasSelectedSounds)

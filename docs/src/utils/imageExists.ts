@@ -3,7 +3,7 @@ import path from "node:path";
 
 /**
  * True when a site-absolute /images/... path has a file in public/, so guides can
- * show a placeholder until a screenshot lands. Build-time only; resolved from the
+ * show a placeholder until a screenshot lands. Build-time only. It resolves from the
  * project root because import.meta.url doesn't survive the SSR bundle.
  */
 export function imageExists(src: string | undefined): src is string {

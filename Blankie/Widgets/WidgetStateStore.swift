@@ -16,7 +16,7 @@ struct WidgetPlaybackState: Codable, Equatable {
   var subtitle: String?
   var soundSystemIconNames: [String]
   /// Cached `preset_thumb_<uuid>` artwork key. Nil for single sound, Quick Mix and the
-  /// default preset; the widget falls back to the icon.
+  /// default preset. The widget falls back to the icon.
   var thumbnailKey: String?
   /// The `starredItems` token for what's active, so a favorites tile can tell
   /// it's the one playing (or paused).

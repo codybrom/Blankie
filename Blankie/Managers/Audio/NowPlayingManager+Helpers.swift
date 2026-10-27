@@ -33,7 +33,7 @@ extension NowPlayingManager {
   }
 
   /// Wraps a pre-rendered image in `MPMediaItemArtwork`. `nonisolated` so the handler
-  /// doesn't inherit `@MainActor`; MediaPlayer calls it from a background queue.
+  /// doesn't inherit `@MainActor`. MediaPlayer calls it from a background queue.
   #if os(iOS) || os(visionOS)
     nonisolated static func makeArtwork(from image: UIImage) -> MPMediaItemArtwork {
       MPMediaItemArtwork(boundsSize: image.size) { _ in image }

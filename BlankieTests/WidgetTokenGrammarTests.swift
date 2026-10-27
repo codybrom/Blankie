@@ -162,7 +162,7 @@ import Testing
         PresetState(fileName: "test-waves", isSelected: false, volume: 0.5),
       ],
       soundOrder: ["test-rain", "test-waves"], creatorName: nil)
-    // Only the selected sound contributes; the deselected one is excluded.
+    // Only the selected sound contributes, and the deselected one is excluded.
     #expect(audioManager.presetSubtitle(for: preset) == "test-rain")
   }
 

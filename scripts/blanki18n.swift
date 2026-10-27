@@ -36,7 +36,7 @@ func parseCSV(data: String) -> [CSVRow] {
       .map { $0.trimmingCharacters(in: .init(charactersIn: "\"")) }
 
     if columns.count >= 4 {
-      // Prefer the target column; fall back to the source column when it's empty.
+      // Prefer the target column. Fall back to the source column when it's empty.
       let sourceValue = columns[1].trimmingCharacters(in: .whitespacesAndNewlines)
       let targetValue = columns[2].trimmingCharacters(in: .whitespacesAndNewlines)
       let translation = !targetValue.isEmpty ? targetValue : sourceValue

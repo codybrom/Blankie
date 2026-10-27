@@ -250,7 +250,7 @@ class PresetImporter {
     var archiveURL = url
     var tempExtractedURL: URL?
 
-    // A compressed .blankie is a file; an already-extracted archive is a directory.
+    // A compressed .blankie is a file. An already-extracted archive is a directory.
     var isDirectory: ObjCBool = false
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
       !isDirectory.boolValue
@@ -357,7 +357,7 @@ extension PresetImporter {
     return idMapping
   }
 
-  /// The archive's `metadata.json`, decoded once; `nil` when the file is absent.
+  /// The archive's `metadata.json`, decoded once, or `nil` when the file is absent.
   private func readSoundsManifest(from soundsDir: URL) throws -> SoundsManifest? {
     let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
     guard FileManager.default.fileExists(atPath: metadataURL.path) else {
@@ -419,7 +419,7 @@ extension PresetImporter {
     }
 
     // The ID names the stored file, so an ID already in use (say, a SHA mismatch)
-    // gets a fresh one; idMapping remaps the preset.
+    // gets a fresh one, and idMapping remaps the preset.
     if CustomSoundManager.shared.getCustomSound(by: actualId) != nil
       || CustomSoundManager.shared.customAudioFileNamesOnDisk().contains(actualId.uuidString)
     {

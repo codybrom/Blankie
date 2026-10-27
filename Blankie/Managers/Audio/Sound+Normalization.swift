@@ -17,7 +17,7 @@ extension Sound {
       return
     }
 
-    // Global volume and mix-with-others ride the engine's main mixer; this is
+    // Global volume and mix-with-others ride the engine's main mixer. This is
     // only the per-sound contribution.
     let scaledVol = scaledVolume(volume)
 
@@ -30,7 +30,7 @@ extension Sound {
     // attenuation rides the node volume. The mix-bus limiter catches residual clipping.
     var boostDB: Float = factor > 1 ? 20 * log10(factor) : 0
     if player.isMonoSource && !player.isSpatial {
-      boostDB += 3.0  // the mixer pans mono inputs ≈3 dB down; compensate
+      boostDB += 3.0  // the mixer pans mono inputs ≈3 dB down, so compensate
     }
     player.setBoostDB(min(boostDB, 24))
 
@@ -110,7 +110,7 @@ extension Sound {
     }
 
     PlaybackProfileStore.shared.store(profile)
-    // A new boost means a different spatial-cache key; re-check on next read.
+    // A new boost means a different spatial-cache key, so re-check on next read.
     spatialReadyCache = nil
     let freshFactor = pow(10, profile.gainDB / 20)
 

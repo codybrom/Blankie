@@ -10,7 +10,7 @@ import SwiftUI
 extension SoundSheetForm {
   /// Source file name for AI cleanup: the picked file on import, or the custom
   /// sound's original imported name when editing (the stored `fileName` is a
-  /// sanitized internal name). Nil hides the sparkles; built-ins have real names.
+  /// sanitized internal name). Nil hides the sparkles. Built-ins have real names.
   private var aiSourceFileName: String? {
     switch mode {
     case .add:
@@ -130,7 +130,7 @@ extension SoundSheetForm {
   @ViewBuilder
   var nameRow: some View {
     #if os(macOS)
-      // LabeledContent keeps the label and field aligned in a grouped form; a
+      // LabeledContent keeps the label and field aligned in a grouped form. A
       // trailing-aligned plain TextField renders the prompt and value together
       // on macOS.
       LabeledContent {
@@ -265,7 +265,7 @@ extension SoundSheetForm {
     if shouldShowActionSection {
       Section {
         #if os(macOS)
-          // Full-width borderless rows; a default Button in a grouped form
+          // Full-width borderless rows, since a default Button in a grouped form
           // renders as a cramped bordered pill.
           if case .edit = mode {
             Button {

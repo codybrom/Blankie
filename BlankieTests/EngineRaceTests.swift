@@ -5,7 +5,7 @@
 //  Created by Cody Bromley on 10/12/26.
 //
 //  Engine start retries, the mid-fade rescue and the post-preview idle pass. Needs the real
-//  shared engine and a bundled sound; cancels where the host has no audio output.
+//  shared engine and a bundled sound. Cancels where the host has no audio output.
 //  Serialized: preset saves are off for the suite so the probe never lands in a real preset.
 //
 
@@ -135,7 +135,7 @@ import Testing
   // MARK: - Mid-fade rescue
 
   /// The idle-pause safety net can pause the engine under a node that is still fading
-  /// out; replaying then takes the rescue branch.
+  /// out. Replaying then takes the rescue branch.
   @Test func rescuingAMidFadePauseRestartsTheEngine() async throws {
     let sound = try makeProbe()
     #expect(engineManager.ensureRunning())

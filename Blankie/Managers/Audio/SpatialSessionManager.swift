@@ -36,7 +36,7 @@ final class SpatialSessionManager: ObservableObject {
   private init() {}
 
   /// Whether audio routes to a car (CarPlay or car Bluetooth). Spatial
-  /// sessions are headphone-only; the spatial render fails on a car route.
+  /// sessions are headphone-only. The spatial render fails on a car route.
   static var isCarAudioRouteActive: Bool {
     #if os(iOS)
       return AVAudioSession.sharedInstance().currentRoute.outputs.contains {
@@ -47,7 +47,7 @@ final class SpatialSessionManager: ObservableObject {
     #endif
   }
 
-  /// Ends any live session when a car route/scene appears; no-op otherwise.
+  /// Ends any live session when a car route/scene appears. No-op otherwise.
   @MainActor
   func endSessionForCarAudio() {
     guard isActive else { return }
@@ -56,7 +56,7 @@ final class SpatialSessionManager: ObservableObject {
   }
 
   /// Switches mode. Entering or leaving a session rebuilds players (the spatial
-  /// chain is decided at load); fixed vs. head-tracked is only the env-node flag.
+  /// chain is decided at load). Fixed vs. head-tracked is only the env-node flag.
   @MainActor
   func setMode(_ newMode: SpatialSessionMode) {
     guard newMode != mode else { return }

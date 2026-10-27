@@ -146,7 +146,7 @@ extension CustomSoundManager {
   }
 
   /// Re-inserts rows that exist on disk (audio and sidecar) but not in the store,
-  /// after a store rebuild. Idempotent. The scan runs off the main actor; only the
+  /// after a store rebuild. Idempotent. The scan runs off the main actor. Only the
   /// insert and save use the main context.
   @MainActor
   func reconcileCustomSoundsFromDisk() async {
@@ -192,7 +192,7 @@ extension CustomSoundManager {
   }
 
   /// Decodes every sidecar in `dir` whose row is missing and whose audio file still
-  /// exists. Pure file work, safe off the main actor; not private so it's unit tested.
+  /// exists. Pure file work, safe off the main actor, and not private so it's unit tested.
   nonisolated static func restorableSnapshots(in dir: URL, excluding existing: Set<String>)
     -> [CustomSoundSnapshot]
   {
@@ -209,7 +209,7 @@ extension CustomSoundManager {
         let snapshot = try? JSONDecoder().decode(CustomSoundSnapshot.self, from: data)
       else { continue }
 
-      // Only restore when the audio file is actually present; a row with no file
+      // Only restore when the audio file is actually present, since a row with no file
       // would just fail to load and clutter the library.
       let audioURL = dir.appendingPathComponent("\(snapshot.fileName).\(snapshot.fileExtension)")
       guard fileManager.fileExists(atPath: audioURL.path) else { continue }

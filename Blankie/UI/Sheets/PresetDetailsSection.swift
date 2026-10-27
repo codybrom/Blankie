@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Name, Creator, Favorite and Artwork card shared by New Preset and Edit Preset.
-/// Edit passes `onEdited` and `starToken`; New Preset commits on Create.
+/// Edit passes `onEdited` and `starToken`. New Preset commits on Create.
 struct PresetDetailsSection: View {
   @Binding var presetName: String
   @Binding var creatorName: String
@@ -17,15 +17,15 @@ struct PresetDetailsSection: View {
   @Binding var animatedArtwork: AnimatedArtworkRef?
   @Binding var staticArtworkPath: String?
 
-  /// Star token for the Favorite row; nil hides it (New Preset).
+  /// Star token for the Favorite row. Nil hides it (New Preset).
   var starToken: String?
   var accent: Color
   /// Selected sound titles for AI naming (sparkles hides when empty).
   var aiSoundTitles: [String]
   /// Edit offers sparkles only while the name is empty (a typed name is
-  /// settled); New Preset always offers a regenerate.
+  /// settled). New Preset always offers a regenerate.
   var sparklesOnlyWhenEmpty: Bool
-  /// Runs after any field change (Edit persists instantly; nil for create).
+  /// Runs after any field change. Edit persists instantly, and create passes nil.
   var onEdited: (() -> Void)?
   /// Extra cleanup when artwork is removed (Edit also clears its artwork ID).
   var onRemoveArtwork: (() -> Void)?
@@ -55,7 +55,7 @@ struct PresetDetailsSection: View {
   }
 
   /// Background (the photo behind the sounds and the Now Playing thumbnail) and
-  /// Lock Screen (animated artwork) tiles. A preset can carry both; macOS shows
+  /// Lock Screen (animated artwork) tiles. A preset can carry both. macOS shows
   /// Background only.
   private var artworkSection: some View {
     Section {
@@ -239,7 +239,7 @@ struct ArtworkTile<Thumbnail: View>: View {
   let onTap: () -> Void
   var onRemove: (() -> Void)?
   /// The filled-state content, already sized to fill (`.aspectRatio(.fill)` for
-  /// images; a looping player fills on its own). Shown only when `isSet`.
+  /// images, and a looping player fills on its own). Shown only when `isSet`.
   @ViewBuilder var thumbnail: () -> Thumbnail
 
   var body: some View {

@@ -19,9 +19,9 @@ import SwiftUI
     enum Style { case full, bare }
 
     var style: Style = .full
-    /// The nightstand layout already shows the player above; no expand button.
+    /// The nightstand layout already shows the player above, so there is no expand button.
     var showsExpand = true
-    /// True when a tap shows the mixer. It only changes the announced hint; the owner
+    /// True when a tap shows the mixer. It only changes the announced hint. The owner
     /// supplies the action.
     var showsMixer = false
     /// Opens the timer as a popover over the bar.
@@ -261,7 +261,7 @@ import SwiftUI
       return presetManager.currentPreset?.activeTitle ?? "Blankie"
     }
 
-    /// Status line under the title. Active playback shows no caption; the title
+    /// Status line under the title. Active playback shows no caption, since the title
     /// alone reads cleaner.
     private var caption: String? {
       if audioManager.singleSound == nil && !audioManager.hasSelectedSounds
@@ -305,7 +305,7 @@ import SwiftUI
     }
   }
 
-  /// The standalone play/pause circle that trails the mini bar; the iPhone's
+  /// The standalone play/pause circle that trails the mini bar. The iPhone's
   /// Sound Mixer sheet carries it too, since the player is covered there.
   struct NowPlayingPlayPauseButton: View {
     @State private var audioManager = AudioManager.shared

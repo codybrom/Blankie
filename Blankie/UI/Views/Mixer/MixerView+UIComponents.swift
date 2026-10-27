@@ -89,7 +89,7 @@ import SwiftUI
     // MARK: - Top Bar Trailing Items
 
     /// Edit (plus Spatial Mix when enabled). A plain item group with titled
-    /// labels so iPhone Duo can move it into the side bar; Edit overflows last.
+    /// labels so iPhone Duo can move it into the side bar. Edit overflows last.
     @ToolbarContentBuilder
     var editToolbarItems: some ToolbarContent {
       #if os(iOS)

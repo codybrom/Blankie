@@ -17,11 +17,11 @@ import os
 /// touching state, and `generation` fences stale ones.
 final class SoundPlayer {
 
-  /// Files at or below this duration decode fully into a looping buffer;
-  /// longer files stream in chunks to bound memory.
+  /// Files at or below this duration decode fully into a looping buffer.
+  /// Longer files stream in chunks to bound memory.
   static let bufferThreshold: TimeInterval = 90.0
 
-  /// Streaming chunk length; the queue keeps roughly two of these scheduled.
+  /// Streaming chunk length. The queue keeps roughly two of these scheduled.
   static let streamChunkSeconds: TimeInterval = 30.0
 
   enum Mode {
@@ -37,7 +37,7 @@ final class SoundPlayer {
   let mode: Mode
   let loops: Bool
   /// Experimental: mono-folded for the 3D environment chain (it only spatializes
-  /// mono). The normalization boost is baked into the fold; the EQ isn't in that chain.
+  /// mono). The normalization boost is baked into the fold. The EQ isn't in that chain.
   let isSpatial: Bool
   /// Stable identifier used to derive this sound's 3D position.
   let sourceName: String
@@ -59,7 +59,7 @@ final class SoundPlayer {
   // queued streaming chunks keep valid completions so the chain resumes.
   private var generation: Int = 0
   // Fade layer: node.volume = baseVolume × fadeLevel. updateVolume() owns the
-  // base; play/pause transitions animate the fade.
+  // base. Play/pause transitions animate the fade.
   private var baseVolume: Float = 1
   private(set) var fadeLevel: Float = 1
   private var fadeTimer: Timer?
@@ -91,7 +91,7 @@ final class SoundPlayer {
       let cacheURL = SpatialAudioCache.existingCache(for: fileURL, boostDB: spatialBoostDB),
       let cacheFile = try? AVAudioFile(forReading: cacheURL)
     {
-      // Stream the rendered mono variant; its segments feed the environment
+      // Stream the rendered mono variant. Its segments feed the environment
       // node directly (boost is baked into the render).
       chosenFile = cacheFile
       chosenMode = .streaming
@@ -139,7 +139,7 @@ final class SoundPlayer {
   }
 
   /// Averages all channels into a mono buffer with the normalization boost
-  /// baked in (hard-capped at full scale; the fold is for the spatial chain).
+  /// baked in, hard-capped at full scale. The fold is for the spatial chain.
   /// Shared with SpatialAudioCache's chunked offline render.
   nonisolated static func monoFold(of buffer: AVAudioPCMBuffer, gainDB: Float) -> AVAudioPCMBuffer?
   {
@@ -198,7 +198,7 @@ final class SoundPlayer {
     return lastKnownFrame ?? segmentBaseFrame
   }
 
-  /// Whether the source is mono (the mixer pans mono inputs ≈3 dB down;
+  /// Whether the source is mono (the mixer pans mono inputs ≈3 dB down, so
   /// updateVolume compensates).
   var isMonoSource: Bool { file.processingFormat.channelCount == 1 }
 
@@ -212,7 +212,7 @@ final class SoundPlayer {
     }
   }
 
-  /// Boost gain in dB (≥ 0; attenuation lives in `volume`).
+  /// Boost gain in dB (≥ 0). Attenuation lives in `volume`.
   func setBoostDB(_ db: Float) {
     gain.globalGain = max(0, db)
   }
@@ -259,7 +259,7 @@ final class SoundPlayer {
         timer.invalidate()
         return
       }
-      // The fade timer fires on the main run loop; recover that isolation.
+      // The fade timer fires on the main run loop, so recover that isolation.
       let isFinalStep = MainActor.assumeIsolated { () -> Bool in
         self.fadeStep += 1
         let progress = Float(self.fadeStep) / Float(steps)
@@ -293,7 +293,7 @@ final class SoundPlayer {
   func play(fromFrame: AVAudioFramePosition, completion: (() -> Void)? = nil) {
     // -[AVAudioPlayerNode play] raises an Obj-C exception (uncatchable in Swift) when
     // the node isn't attached to a running engine. Callers attach() and ensureRunning()
-    // first; this guard turns a stale graph into a no-op.
+    // first. This guard turns a stale graph into a no-op.
     guard let nodeEngine = node.engine, nodeEngine.isRunning else {
       Logger.sounds.error(
         "SoundPlayer: play(fromFrame:) skipped — node not attached to a running engine")
@@ -327,7 +327,7 @@ final class SoundPlayer {
       }
     case .streaming:
       streamNextFrame = start
-      // Prime two chunks; subsequent chunks self-schedule on .dataConsumed.
+      // Prime two chunks. Subsequent chunks self-schedule on .dataConsumed.
       scheduleNextStreamChunk(generation: scheduleGeneration)
       scheduleNextStreamChunk(generation: scheduleGeneration)
     }
@@ -388,7 +388,7 @@ final class SoundPlayer {
   }
 
   /// Streaming: schedule one chunk from `streamNextFrame`. `.dataConsumed`
-  /// completion queues the next chunk (wrapping for loops); the final
+  /// completion queues the next chunk (wrapping for loops). The final
   /// non-looping chunk fires the finished callback on `.dataPlayedBack`.
   /// Never calls `node.stop()` here (documented completion-handler deadlock).
   private func scheduleNextStreamChunk(generation: Int) {

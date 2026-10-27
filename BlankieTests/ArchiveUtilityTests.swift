@@ -53,13 +53,13 @@ import ZIPFoundation
     let dest = outer.appendingPathComponent("extract", isDirectory: true)
     try ArchiveUtility.extract(from: zip, to: dest)
 
-    // The escaping entry resolves to `outer/escape.txt`; it must not exist.
+    // The escaping entry resolves to `outer/escape.txt`, which must not exist.
     #expect(
       !FileManager.default.fileExists(atPath: outer.appendingPathComponent("escape.txt").path))
     #expect(FileManager.default.fileExists(atPath: dest.appendingPathComponent("safe.txt").path))
   }
 
-  /// A symlink could redirect later writes; the rest of the archive still extracts.
+  /// A symlink could redirect later writes. The rest of the archive still extracts.
   @Test func symlinkEntryIsSkipped() throws {
     let outer = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: outer) }

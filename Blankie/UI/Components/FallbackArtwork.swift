@@ -35,7 +35,7 @@ struct FallbackArtwork: View {
   var cornerRadius: CGFloat = 12
   var isCircular = false
   /// Glyph diameter as a fraction of the card. ~0.4 reads like Apple's
-  /// Background Sounds art; bump it for the denser Blankie mark.
+  /// Background Sounds art. Bump it for the denser Blankie mark.
   var glyphFraction: CGFloat = 0.42
 
   private var glyphSize: CGFloat { size * glyphFraction }
@@ -119,7 +119,7 @@ struct FallbackArtwork: View {
     }
   }
 
-  /// The Blankie mark in the full accent; its aperture is a transparent knockout that
+  /// The Blankie mark in the full accent. Its aperture is a transparent knockout that
   /// shows the dark card. Palette mode punches that knockout where monochrome can fill it.
   private var brandMark: some View {
     Image("blankie.symbol")

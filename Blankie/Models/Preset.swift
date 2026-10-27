@@ -75,7 +75,7 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
   var viewMode: PresetViewMode?
 
   /// Legacy per-preset blur (in points), kept so older presets decode. Never
-  /// applied (blur is the global `GlobalSettings.backgroundBlurRadius`); cleared on save.
+  /// applied (blur is the global `GlobalSettings.backgroundBlurRadius`). Cleared on save.
   var backgroundBlurRadius: Double?
 
   var accentColor: Color? {
@@ -88,7 +88,7 @@ nonisolated struct Preset: Codable, Identifiable, Equatable {
     return isDefault ? String(localized: "All Blankie Sounds") : name
   }
 
-  /// Title to show when this preset is active; the default preset keeps its
+  /// Title to show when this preset is active. The default preset keeps its
   /// one name ("All Blankie Sounds") here too.
   var activeTitle: String {
     displayName

@@ -41,7 +41,7 @@ extension AudioManager {
       setupMediaServicesResetObserver()
 
       // A media-services reset invalidates every node bound to the dead
-      // engine; tear down players (keeping selection) for lazy rebuild.
+      // engine. Tear down players (keeping selection) for lazy rebuild.
       AudioEngineManager.shared.onEngineReset = { [weak self] in
         for sound in self?.sounds ?? [] { sound.unload() }
       }
@@ -142,7 +142,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        // Delivered on the main queue; the notification never leaves it.
+        // Delivered on the main queue. The notification never leaves it.
         nonisolated(unsafe) let note = notification
         MainActor.assumeIsolated { self?.handleAudioInterruption(note) }
       }
@@ -184,7 +184,7 @@ extension AudioManager {
       wasPlayingWhenInterrupted = false
       if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-        // .shouldResume is only a hint; resume only if audio was playing.
+        // .shouldResume is only a hint, so resume only if audio was playing.
         if options.contains(.shouldResume), wasPlaying {
           Logger.audio.debug(
             "AudioManager: Audio interruption ended with shouldResume flag - resuming playback")
@@ -203,15 +203,15 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { [weak self] notification in
-        // Delivered on the main queue; the notification never leaves it.
+        // Delivered on the main queue. The notification never leaves it.
         nonisolated(unsafe) let note = notification
         MainActor.assumeIsolated { self?.handleAudioRouteChange(note) }
       }
     }
 
     func handleAudioRouteChange(_ notification: Notification) {
-      // Every reason re-reads the route; category and configuration changes can
-      // expose the car output too.
+      // Every reason re-reads the route because category and configuration changes
+      // can expose the car output too.
       guard let userInfo = notification.userInfo,
         let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
         let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
@@ -251,7 +251,7 @@ extension AudioManager {
         object: nil,
         queue: .main
       ) { _ in
-        // willTerminate fires on the main queue; recover isolation synchronously
+        // willTerminate fires on the main queue, so recover isolation synchronously
         // (a Task would defer past app exit and lose the state save).
         MainActor.assumeIsolated { self.handleAppTermination() }
       }

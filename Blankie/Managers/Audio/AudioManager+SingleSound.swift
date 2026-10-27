@@ -44,7 +44,7 @@ extension AudioManager {
       return true
     }
     if soundsFullyLoaded {
-      // The sound was deleted; launch falls back to the preset.
+      // The sound was deleted, so launch falls back to the preset.
       Logger.audio.debug(
         "AudioManager: Saved single sound '\(savedSingleFileName)' is gone; clearing")
       GlobalSettings.shared.saveSingleSoundSound(fileName: nil)
@@ -92,7 +92,7 @@ extension AudioManager {
       exitQuickMix(resuming: false)
     }
 
-    // Spatial sessions are bound to the preset mix; playing a single sound ends them.
+    // Spatial sessions are bound to the preset mix, so playing a single sound ends them.
     if SpatialSessionManager.shared.isActive {
       SpatialSessionManager.shared.setMode(.off)
     }
@@ -115,7 +115,7 @@ extension AudioManager {
     sound.volume = 1.0
     sound.isSelected = true
 
-    // Loading applies a random start position; a reused stopped player needs it reset.
+    // Loading applies a random start position. A reused stopped player needs it reset.
     if !sound.isLoaded {
       sound.loadSound()
     } else if !sound.isPlaying {
@@ -287,7 +287,7 @@ extension AudioManager {
     // A mix emptied during the preview pauses now.
     updateHasSelectedSounds()
 
-    // A preview while paused ran the engine; idle it after the fade so iOS
+    // A preview while paused ran the engine. Idle it after the fade so iOS
     // stops reporting the app as playing.
     if !isGloballyPlaying {
       scheduleEngineIdlePause(afterFade: Sound.fadeDuration)

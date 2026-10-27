@@ -270,7 +270,7 @@ import os
       )
     }
 
-    // A starred sound row; selecting it plays the sound on its own. `@MainActor` for
+    // A starred sound row. Selecting it plays the sound on its own. `@MainActor` for
     // the `creditedAuthor` lookup.
     @MainActor
     static func createSingleItem(_ sound: Sound) -> CPListItem {

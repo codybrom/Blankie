@@ -239,7 +239,7 @@ class PresetArtworkManager: ObservableObject {
   }
 
   /// Deletes one artwork row plus its memory cache entry and app-group file mirror.
-  /// Doesn't save; callers batch the save.
+  /// Doesn't save. Callers batch the save.
   private func purgeArtwork(_ artwork: PresetArtwork, in context: ModelContext) {
     let id = artwork.id
     context.delete(artwork)

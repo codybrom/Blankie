@@ -34,8 +34,8 @@ import SwiftUI
         .navigationTitle("Timer")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          // The primary action ("Start Timer", "Cancel Timer") lives in the content;
-          // this toolbar button only dismisses, so it's a leading Close.
+          // The primary action ("Start Timer", "Cancel Timer") lives in the content.
+          // This toolbar button only dismisses, so it's a leading Close.
           ToolbarItem(placement: .topBarLeading) {
             Button {
               dismiss()

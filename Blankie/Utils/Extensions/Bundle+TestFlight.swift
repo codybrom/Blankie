@@ -15,8 +15,8 @@ import StoreKit
 extension Bundle {
   nonisolated private static let probeAttempts = 3
 
-  /// True for DEBUG builds and TestFlight installs, so beta-tester UI shows there;
-  /// false for the App Store or when unknown. Checks `AppDistributor.current` where
+  /// True for DEBUG builds and TestFlight installs, so beta-tester UI shows there.
+  /// False for the App Store or when unknown. Checks `AppDistributor.current` where
   /// MarketplaceKit exists, then whether `AppTransaction.shared` reports `.sandbox`,
   /// retrying a cold StoreKit cache. Never calls `refresh()`, which prompts sign-in.
   // @concurrent keeps the non-Sendable `AppDistributor` result off the main actor.

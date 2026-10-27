@@ -8,7 +8,7 @@
 import AppIntents
 
 /// Blankie's app-wide volume. On iPhone and iPad it only applies with "Mix with
-/// Other Audio" on (matching `NowPlayingSheet.volumeSlider`); otherwise the
+/// Other Audio" on (matching `NowPlayingSheet.volumeSlider`). Otherwise the
 /// hardware buttons own volume and the intent declines.
 struct SetVolumeIntent: AppIntent {
   static var title: LocalizedStringResource { "Set Volume" }

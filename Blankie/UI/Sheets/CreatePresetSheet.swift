@@ -14,7 +14,7 @@ struct CreatePresetSheet: View {
   /// the default preset). Empty = start with nothing selected.
   var initialSelectedSounds: Set<String> = []
   /// Fired after the new preset is created and applied so the owner can
-  /// navigate to it (iPhone Library pushes the mixer); nil at the mixer.
+  /// navigate to it (iPhone Library pushes the mixer). Nil at the mixer.
   var onCreated: (() -> Void)?
   private let presetManager = PresetManager.shared
   private let audioManager = AudioManager.shared
@@ -231,7 +231,7 @@ extension CreatePresetSheet {
   }
 
   func setupDefaultSelection() {
-    // Seed from the caller's pre-selection; otherwise start with no sounds selected.
+    // Seed from the caller's pre-selection, or start with no sounds selected.
     if !initialSelectedSounds.isEmpty {
       selectedSounds = initialSelectedSounds
       // Offer an Apple Intelligence name for the seeded mix up front. Held in a
@@ -247,7 +247,7 @@ extension CreatePresetSheet {
     orderedSounds.filter { selectedSounds.contains($0.fileName) }.map(\.title)
   }
 
-  /// Fills the name on open when seeded from playing sounds; taps on the
+  /// Fills the name on open when seeded from playing sounds. Taps on the
   /// details card's sparkles button regenerate from there.
   @MainActor
   private func generateInitialNameSuggestion() async {

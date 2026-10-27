@@ -24,7 +24,7 @@ struct RemoteCommandHandlers {
 /// What a Now Playing backend must publish and which remote commands it installs.
 @MainActor
 protocol NowPlayingPublishing: AnyObject {
-  /// Every backend implements this; call sites use `updateInfo`.
+  /// Every backend implements this. Call sites use `updateInfo`.
   func publishInfo(
     preset: Preset?,
     presetName: String?,
@@ -42,8 +42,8 @@ protocol NowPlayingPublishing: AnyObject {
 }
 
 extension NowPlayingPublishing {
-  /// Defaults for the call sites that publish only some of the fields; forwards
-  /// to the conforming backend's implementation.
+  /// Fills in defaults for call sites that publish only some of the fields, then
+  /// forwards to the conforming backend's implementation.
   func updateInfo(
     preset: Preset? = nil,
     presetName: String? = nil,

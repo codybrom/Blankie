@@ -73,10 +73,10 @@ class PresetManager {
   @ObservationIgnored private var soundsObservation: Task<Void, Never>?
   @ObservationIgnored private var isInitialLoad = true
 
-  /// Set by applySoundStates; until then the mixer may not match the preset.
+  /// Set by applySoundStates. Until then the mixer may not match the preset.
   @ObservationIgnored var presetStatesApplied = false
 
-  // In-flight prefetch for nearby preset animated artwork; cancelled when the
+  // In-flight prefetch for nearby preset animated artwork, cancelled when the
   // current preset changes so stale prefetches don't compete with the new one.
   @ObservationIgnored private var nearbyArtworkPrefetchTask: Task<Void, Never>?
 
@@ -702,7 +702,7 @@ extension PresetManager {
         AudioManager.shared.setGlobalPlaybackState(true)
       }
 
-      // Spatial sessions are bound to the mix they started on; switching
+      // Spatial sessions are bound to the mix they started on, so switching
       // presets ends them.
       if SpatialSessionManager.shared.isActive {
         SpatialSessionManager.shared.setMode(.off)
@@ -841,14 +841,14 @@ extension PresetManager {
   @MainActor
   func applySoundStates(_ targetStates: [PresetState]) {
     // Suppress music-exclusivity enforcement while the preset restores its own
-    // selection set; we sanitize once at the end instead.
+    // selection set. We sanitize once at the end instead.
     AudioManager.shared.isApplyingPresetStates = true
     defer { AudioManager.shared.isApplyingPresetStates = false }
 
     let presetSoundFileNames = Set(targetStates.map(\.fileName))
 
     // Leaving single-sound mode: a single sound that's in the preset keeps playing
-    // without a restart; one that isn't must stop.
+    // without a restart. One that isn't must stop.
     if let singleSound = AudioManager.shared.singleSound {
       if !presetSoundFileNames.contains(singleSound.fileName) {
         singleSound.isSelected = false
@@ -1007,7 +1007,7 @@ extension PresetManager {
       let signature = (presetPart + ["~"] + soundPart).joined(separator: "|")
       guard signature != lastDiscoverableEntitiesSignature else { return }
       lastDiscoverableEntitiesSignature = signature
-      // App Shortcut parameters are only refreshed on iOS; Spotlight runs on both.
+      // App Shortcut parameters are only refreshed on iOS. Spotlight runs on both.
       #if !os(macOS)
         BlankieShortcuts.updateAppShortcutParameters()
       #endif
@@ -1263,7 +1263,7 @@ extension PresetManager {
     guard let sourceData else { return false }
     let images = await renderThumbnails(sourceData)
     // Loading and rendering both suspend. An edit or removal can invalidate
-    // this request in either interval; never let its old image return afterward.
+    // this request in either interval, so never let its old image return afterward.
     guard !Task.isCancelled, thumbnailRequests[preset.id] == request else { return false }
     guard let thumbnailData = images.carPlay, let widgetData = images.widget else { return false }
 

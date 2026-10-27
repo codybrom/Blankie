@@ -32,7 +32,7 @@ extension View {
 }
 
 struct SettingsView: View {
-  /// macOS: shown in the main window's detail pane; Done closes it via AppState.
+  /// macOS: shown in the main window's detail pane. Done closes it via AppState.
   var isPane = false
   @Environment(\.dismiss) private var dismiss
   private let globalSettings = GlobalSettings.shared
@@ -524,7 +524,7 @@ struct SettingsView: View {
       #if os(iOS) || os(visionOS)
         Section {
           // Locked to Grid in Quick Mix. A preset override only shows the
-          // badge; the picker still edits the app-wide default.
+          // badge. The picker still edits the app-wide default.
           let presetOverride = presetViewModeOverride
           let pickerLocked = audioManager.isQuickMix
 
@@ -630,7 +630,7 @@ private struct PlaybackSettingsSection: View {
     Section(
       header: Text("Playback & Sounds")
     ) {
-      // macOS only; iOS keeps running in the background.
+      // macOS only: iOS keeps running in the background.
       #if os(macOS)
         Toggle(
           "Autoplay on Open",

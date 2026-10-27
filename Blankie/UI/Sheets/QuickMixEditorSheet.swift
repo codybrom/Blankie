@@ -17,7 +17,7 @@ import SwiftUI
     /// carried through Done so the editor never prunes them.
     @State private var unresolvedSounds: [String] = []
 
-    /// Still-loading members not since picked by name; they keep their slots.
+    /// Still-loading members not since picked by name. They keep their slots.
     private var pendingSounds: [String] {
       unresolvedSounds.filter { !selectedSounds.contains($0) }
     }

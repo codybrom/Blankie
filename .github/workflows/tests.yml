@@ -35,11 +35,11 @@ on:
       - "**/*.xcconfig"
       - ".github/workflows/tests.yml"
 
-# The job only checks out and runs xcodebuild; nothing writes back.
+# The job only checks out and runs xcodebuild, so nothing writes back.
 permissions:
   contents: read
 
-# One run per ref; a newer push cancels the older run on the shared runners.
+# One run per ref, so a newer push cancels the older run on the shared runners.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

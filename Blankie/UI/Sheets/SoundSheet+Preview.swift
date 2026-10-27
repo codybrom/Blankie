@@ -105,7 +105,7 @@ extension SoundSheet {
   private func createEditPreview(_ sound: Sound) {
     wasPreviewSoundPlaying = sound.isPlaying && sound.isSelected
 
-    // Edit mode previews the real sound; its changes already apply instantly.
+    // Edit mode previews the real sound, since its changes already apply instantly.
     previewSound = sound
   }
 
@@ -143,7 +143,7 @@ extension SoundSheet {
           AudioManager.shared.enterSingleSound(for: previousSingle, startPlaying: false)
         }
 
-        // Tear down add mode's temp player; edit mode previews the real Sound,
+        // Tear down add mode's temp player. Edit mode previews the real Sound,
         // whose playback exitPreviewMode/enterSingleSound just restored.
         if case .add = mode {
           preview.unload()

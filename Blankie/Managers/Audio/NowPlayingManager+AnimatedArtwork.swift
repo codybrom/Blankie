@@ -49,7 +49,7 @@ import os
       // May start a Background Assets download. The key picks the variant: iPad's
       // lock screen advertises only the 1x1 key, so it gets the square crop.
       guard let resources = loadAnimatedArtworkResources(for: preset, key: artworkKey) else {
-        // Still downloading: keep the current artwork; the download callback republishes.
+        // Still downloading: keep the current artwork. The download callback republishes.
         return
       }
 

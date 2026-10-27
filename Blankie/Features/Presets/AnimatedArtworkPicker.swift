@@ -25,7 +25,7 @@ import os
 
     @Binding var artwork: AnimatedArtworkRef?
     @Binding var staticArtworkPath: String?
-    /// Row label. Defaults to the per-preset wording; the app-wide default in
+    /// Row label. Defaults to the per-preset wording. The app-wide default in
     /// Settings passes "Default Animation" instead. Unused by the tile style.
     let label: LocalizedStringKey
     let presentation: Presentation
@@ -282,11 +282,11 @@ import os
         return
       }
       guard let asset else { return }
-      // Play only what is already on the device; don't fetch a pack for a tile.
+      // Play only what is already on the device. Don't fetch a pack for a tile.
       guard case .available = BackgroundResourceManager.shared.state(for: asset.preferredPackID)
       else { return }
       let url = try? await BackgroundResourceManager.shared.resourceURL(for: asset.preferredPackID)
-      // The asset can change while awaiting; `.task(id:)` cancels this task, so
+      // The asset can change while awaiting. `.task(id:)` cancels this task, so
       // don't publish a URL for a stale asset.
       guard !Task.isCancelled else { return }
       videoURL = url
@@ -970,7 +970,7 @@ import os
             self.isLoading = false
           }
         } catch is CancellationError {
-          // Sheet dismissed before download finished; nothing to do.
+          // Sheet dismissed before download finished. Nothing to do.
         } catch {
           // Leave `isLoading` true so the overlay's `.failed` branch (driven by
           // resourceState) stays on screen to show the error.
@@ -1004,7 +1004,7 @@ import os
       let license: String
     }
 
-    // Preview images + metadata are bundled and resolved by name; the video is
+    // Preview images + metadata are bundled and resolved by name. The video is
     // delivered separately as a Background Assets pack (id == asset-pack id).
     var previewResourceName: String { id }
     var previewExtension: String { "jpg" }

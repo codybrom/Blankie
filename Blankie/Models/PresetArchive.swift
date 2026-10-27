@@ -49,7 +49,7 @@ nonisolated struct ArchiveCompatibility: Codable {
 
   func isCompatible(with currentVersion: String) -> Bool {
     // Numeric comparison so multi-digit version segments order correctly
-    // (e.g. "1.10.0" > "1.9.0"); plain String >= is lexicographic.
+    // (e.g. "1.10.0" > "1.9.0"). Plain String >= is lexicographic.
     return currentVersion.compare(minimumBlankieVersion, options: .numeric) != .orderedAscending
   }
 }

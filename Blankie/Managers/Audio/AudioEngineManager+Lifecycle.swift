@@ -99,7 +99,7 @@ extension AudioEngineManager {
     finishRebuild(wasPlaying: wasPlaying)
   }
 
-  /// Closes out a rebuild; if another change arrived mid-flight, runs exactly
+  /// Closes out a rebuild. If another change arrived mid-flight, runs exactly
   /// one more coalesced pass to capture the final hardware state.
   private func finishRebuild(wasPlaying: Bool) {
     isRebuilding = false
@@ -126,7 +126,7 @@ extension AudioEngineManager {
         isCarPlayConnected: AudioManager.shared.isCarPlayConnected
       )
 
-      // Tear down every Sound's player without touching selection; the next
+      // Tear down every Sound's player without touching selection. The next
       // play call rebuilds fresh SoundPlayers against the new engine.
       onEngineReset?()
 

@@ -14,7 +14,7 @@ struct SoundIcon: View {
   let globalSettings = GlobalSettings.shared
   let audioManager = AudioManager.shared
   #if os(macOS)
-    // macOS honors the current preset's accent (see `accentColor`); observe the
+    // macOS honors the current preset's accent (see `accentColor`). Observe the
     // manager so the grid re-tints when the active preset's color changes.
     let presetManager = PresetManager.shared
   #endif
@@ -166,7 +166,7 @@ struct SoundIcon: View {
           }
         }
 
-        // A font glyph keeps SF Symbols' optical centering; .resizable scales the
+        // A font glyph keeps SF Symbols' optical centering, while .resizable scales the
         // raw vector bounds and pushes some glyphs (washer.fill) off-center.
         Image(systemName: sound.systemIconName)
           .font(.system(size: configuration.iconSize * 0.58))
@@ -184,7 +184,7 @@ struct SoundIcon: View {
       .accessibilityLabel(Text(sound.localizedTitle))
       .onTapGesture {
         #if os(macOS)
-          // Clicks must not keep keyboard focus; the ring is for Tab navigation.
+          // Clicks must not keep keyboard focus. The ring is for Tab navigation.
           isTileFocused = false
         #endif
         activateTile()
@@ -229,7 +229,7 @@ struct SoundIcon: View {
           return .handled
         }
         .onKeyPress(.escape) {
-          // Clear keyboard focus (matches clicking empty grid space); the
+          // Clear keyboard focus (matches clicking empty grid space). The
           // next Tab restarts from the first tile.
           DispatchQueue.main.async { NSApp.keyWindow?.makeFirstResponder(nil) }
           return .handled

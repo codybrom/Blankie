@@ -9,7 +9,7 @@ import Foundation
 
 extension Bundle {
   /// The app's marketing version (`CFBundleShortVersionString`). A missing value
-  /// means a misconfigured build, so this traps; presets and archive checks never
+  /// means a misconfigured build, so this traps. Presets and archive checks never
   /// get a made-up version.
   nonisolated var appVersion: String {
     guard let version = infoDictionary?["CFBundleShortVersionString"] as? String else {

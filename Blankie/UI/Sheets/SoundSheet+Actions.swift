@@ -160,7 +160,7 @@ extension SoundSheet {
       for: sound.fileName
     )
 
-    // Only custom sounds take a music override; built-ins keep their sounds.json
+    // Only custom sounds take a music override. Built-ins keep their sounds.json
     // default. The default varies per sound, so diff against the sound's own.
     if sound.isCustom {
       manager.setMusic(

@@ -69,7 +69,7 @@ enum NowPlayingSessionMapping {
     return SessionProgress(duration: selectedDuration, elapsed: elapsed, timestamp: now)
   }
 
-  /// Loop progress is opt-in; very short or invalid loops remain indeterminate.
+  /// Loop progress is opt-in. Very short or invalid loops remain indeterminate.
   nonisolated static func loopProgress(
     continuous: Bool, elapsed: TimeInterval, duration: TimeInterval, now: Date
   ) -> SessionProgress? {
@@ -145,7 +145,7 @@ enum NowPlayingSessionMapping {
   }
 
   /// The animated artwork's identity. Bundled artwork has no Documents loop
-  /// path, so its bundled id stands in; a preset with neither falls back to its
+  /// path, so its bundled id stands in. A preset with neither falls back to its
   /// own id.
   nonisolated static func animatedArtworkID(loopKey: String?, presetID: UUID) -> String {
     loopKey ?? presetID.uuidString

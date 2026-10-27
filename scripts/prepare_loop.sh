@@ -99,7 +99,7 @@ if [[ -z "$INPUT" ]]; then
     name="${basename%.*}"
     ext="${basename##*.}"
 
-    # .mov files are outputs; skip them.
+    # .mov files are outputs, so skip them.
     if [[ "$ext" == "mov" ]]; then
       continue
     fi

@@ -5,7 +5,7 @@
 //  Created by Cody Bromley on 10/13/26.
 //
 //  The CarPlay edit stack edits only its own preset's live mix, and a single sound tap after
-//  disconnect starts nothing. Builds only under the CarPlay scheme; uses SingletonSandbox.
+//  disconnect starts nothing. Builds only under the CarPlay scheme and uses SingletonSandbox.
 //
 
 #if CARPLAY_ENABLED && canImport(CarPlay)

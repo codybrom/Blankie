@@ -25,7 +25,7 @@ extension AudioManager {
   /// one bootstrap task, and a run that finished without a model context retries once one is set.
   @MainActor
   func loadCustomSoundsWhenReady() async {
-    // Only the waiter that sees an unchanged generation starts the retry; the
+    // Only the waiter that sees an unchanged generation starts the retry. The
     // others loop and join its task, so custom sounds never load twice.
     while let task = launchBootstrapTask {
       let generation = launchBootstrapGeneration
@@ -103,7 +103,7 @@ extension AudioManager {
   }
 
   /// Prunes favorites with missing targets and finishes or abandons a deferred
-  /// single sound restore (falling back to the preset). Idempotent; runs on every bootstrap path.
+  /// single sound restore (falling back to the preset). Idempotent. Runs on every bootstrap path.
   @MainActor
   private func reconcileLaunchPlaybackState() {
     // A custom row or file counts as valid even if it didn't load as a Sound. No
@@ -158,7 +158,7 @@ extension AudioManager {
         Task { @MainActor in
           self?.syncCustomSounds()
 
-          // Scrub presets right away; one referencing a missing sound fails
+          // Scrub presets right away, since one referencing a missing sound fails
           // validation at next launch.
           if notification.name == .customSoundDeleted {
             PresetManager.shared.cleanupDeletedCustomSounds()

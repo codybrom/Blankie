@@ -11,14 +11,14 @@ import SwiftUI
 import os
 
 extension AudioManager {
-  /// Toggles the playback state of all selected sounds; `pauseFadeDuration`
+  /// Toggles the playback state of all selected sounds. `pauseFadeDuration`
   /// overrides the fade-out ramp when the toggle pauses.
   @MainActor func togglePlayback(pauseFadeDuration: TimeInterval? = nil) {
     setGlobalPlaybackState(!isGloballyPlaying, pauseFadeDuration: pauseFadeDuration)
   }
 
   /// Tapping a sound tile or row: while playing, toggles the sound in or out of
-  /// the mix; while paused, selects it and resumes. `updateHasSelectedSounds()`
+  /// the mix, and while paused, selects it and resumes. `updateHasSelectedSounds()`
   /// publishes the selection before the coalesced pass.
   @MainActor func toggleOrResume(_ sound: Sound) {
     if !isGloballyPlaying {
@@ -77,7 +77,7 @@ extension AudioManager {
     }
   }
 
-  /// Async shim for the macOS screenshot path; forwards to `setGlobalPlaybackState`.
+  /// Async shim for the macOS screenshot path. Forwards to `setGlobalPlaybackState`.
   func setPlaybackState(_ playing: Bool, forceUpdate: Bool = false) {
     Task { @MainActor [weak self] in
       self?.setGlobalPlaybackState(playing, forceUpdate: forceUpdate)
@@ -111,7 +111,7 @@ extension AudioManager {
     }
 
     for sound in sounds where sound.isSelected {
-      // Paused sounds resume in place; stopped, new or finished ones reset
+      // Paused sounds resume in place, while stopped, new or finished ones reset
       // (respecting randomization).
       if !sound.isPlaying, sound.playbackState != .paused {
         sound.resetSoundPosition()
@@ -132,7 +132,7 @@ extension AudioManager {
     }
   }
 
-  /// `fadeDuration` overrides the fade-out ramp (remote pauses pass zero);
+  /// `fadeDuration` overrides the fade-out ramp (remote pauses pass zero), and
   /// nil uses the standard `Sound.fadeDuration`.
   func pauseAll(fadeDuration: TimeInterval? = nil) {
     Logger.audio.debug("AudioManager: Pausing all selected sounds")
@@ -148,7 +148,7 @@ extension AudioManager {
   }
 
   /// After the pause fade-outs land, idles the engine and does the single paused
-  /// publish (held until then; see performNowPlayingUpdate).
+  /// publish, held until then (see performNowPlayingUpdate).
   func scheduleEngineIdlePause(afterFade fadeDuration: TimeInterval) {
     Task { @MainActor [weak self] in
       // Zero-length fades pause their nodes synchronously in pauseAll, so the
@@ -177,7 +177,7 @@ extension AudioManager {
   }
 
   /// `pauseFadeDuration` overrides the fade-out ramp when pausing (remote
-  /// commands pass `Sound.remotePauseFadeDuration`); ignored on play.
+  /// commands pass `Sound.remotePauseFadeDuration`) and is ignored on play.
   @MainActor
   public func setGlobalPlaybackState(
     _ playing: Bool, forceUpdate: Bool = false, pauseFadeDuration: TimeInterval? = nil
@@ -243,7 +243,7 @@ extension AudioManager {
   }
 
   /// Whether there's a single sound or any selected sound. Reads the live selection
-  /// because `hasSelectedSounds` lags; intents and preset apply play right after selecting.
+  /// because `hasSelectedSounds` lags. Intents and preset apply play right after selecting.
   var hasPlayableSelection: Bool {
     singleSound != nil || sounds.contains { $0.isSelected }
   }

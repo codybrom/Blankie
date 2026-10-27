@@ -185,7 +185,7 @@ struct PresetArtworkManagerTests {
           for: preset, force: true, reloadingWidgets: false,
           renderThumbnails: { _ in (carPlay: replacement, widget: replacement) }))
     } else {
-      // No cache has been written yet; removal must still cancel the old write.
+      // No cache has been written yet. Removal must still cancel the old write.
       manager.removeThumbnail(for: preset.id)
     }
     release.continuation.yield(())

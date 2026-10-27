@@ -38,7 +38,7 @@ struct SoundSheetForm: View {
   @State var isGeneratingDetails = false
   @State var isGeneratingIcon = false
   /// Import-time AAC conversion state, refreshed on each file change. `forced`
-  /// locks the toggle on over the raw-import ceiling; `estimate` is non-nil when
+  /// locks the toggle on over the raw-import ceiling. `estimate` is non-nil when
   /// conversion is worth offering.
   @State var importConvertForced = false
   @State var importConvertEstimate: CustomSoundManager.CompressionEstimate?

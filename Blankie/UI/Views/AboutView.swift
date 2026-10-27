@@ -89,7 +89,7 @@ struct AboutView: View {
         creditsAndLicenseSection
       }
       .padding(20)
-      // Readable column in the wide Settings pane; no-op in the iOS sheet.
+      // Readable column in the wide Settings pane. No-op in the iOS sheet.
       .frame(maxWidth: 640)
       .frame(maxWidth: .infinity)
     }
@@ -115,7 +115,7 @@ extension AboutView {
             .aspectRatio(contentMode: .fit)
             .frame(width: 100, height: 100)
             .cornerRadius(20)
-            // Non-interactive; the picker lives in Settings.
+            // Non-interactive: the picker lives in Settings.
             .accessibilityLabel(Text("Blankie app icon"))
         }
       #elseif os(macOS)

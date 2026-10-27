@@ -16,7 +16,7 @@ struct EditableCreditsView: View {
     Group {
       // Original Work Title.
       // prompt + labelsHidden: on macOS a bare titleKey renders as a visible
-      // label next to the value; this keeps it a placeholder only (no-op on iOS).
+      // label next to the value. This keeps it a placeholder only (no-op on iOS).
       HStack {
         Text("Original Work")
         Spacer()

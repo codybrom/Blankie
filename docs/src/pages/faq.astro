@@ -19,7 +19,7 @@ const faqDek =
 const body = faqRaw
   // The layout renders the title as <h1>, so drop FAQ.md's own H1.
   .replace(/^#[^\n]*\n+/, "")
-  // Repo-relative link works on GitHub; rewrite it for the site.
+  // Repo-relative link works on GitHub. Rewrite it for the site.
   .replace(/\]\(\/CONTRIBUTING\.md\)/g, "](/contributing/)");
 
 const slugify = (s: string) =>

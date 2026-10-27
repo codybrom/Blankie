@@ -238,7 +238,7 @@ public enum AIPresetNameGenerator {
   #if canImport(FoundationModels)
     /// Picks a category, then a symbol within it, so the full catalog never has to
     /// fit the 4,096-token context window. Each pick is a DynamicGenerationSchema
-    /// `anyOf` property; each stage gets a fresh session because transcripts
+    /// `anyOf` property. Each stage gets a fresh session because transcripts
     /// accumulate. Default sampling, so re-roll gives a different answer.
     private static func pickIcon(for name: String) async throws -> String? {
       let model = SystemLanguageModel(useCase: .general)
@@ -304,7 +304,7 @@ public enum AIPresetNameGenerator {
         "AIPresetNameGenerator: symbol for '\(name)' = '\(symbol, privacy: .public)'"
       )
 
-      // The constraint guarantees catalog membership; verify anyway.
+      // Verify anyway, though the constraint guarantees catalog membership.
       return IconData.allIcons.contains(symbol) ? symbol : nil
     }
   #endif

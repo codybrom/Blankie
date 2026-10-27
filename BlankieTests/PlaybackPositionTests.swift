@@ -106,7 +106,7 @@ struct PlaybackPositionTests {
 
   // MARK: - Fade layer math
 
-  /// node.volume is baseVolume times fadeLevel; a zero-duration fade completes synchronously.
+  /// node.volume is baseVolume times fadeLevel. A zero-duration fade completes synchronously.
   @Test func fadeLayerScalesNodeVolume() throws {
     let sound = Sound(
       title: "Fade Probe", systemIconName: "speaker.wave.2",
@@ -167,7 +167,7 @@ struct PlaybackPositionTests {
     sound.play()
     #expect(sound.playbackState == .playing, "Rescue must restore intent")
 
-    // Let the original 0.5s fade deadline pass; its completion must not fire.
+    // Let the original 0.5s fade deadline pass. Its completion must not fire.
     RunLoop.current.run(until: Date(timeIntervalSinceNow: Sound.fadeDuration + 0.3))
     #expect(sound.isPlaying, "Superseded fade completion must not pause the sound")
     #expect(sound.playbackState == .playing)

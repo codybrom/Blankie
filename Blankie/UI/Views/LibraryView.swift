@@ -154,7 +154,7 @@ struct PresetPickerRow: View {
   }
 
   private var accent: Color {
-    // The iPhone page keeps every row on the app accent; elsewhere rows use
+    // The iPhone page keeps every row on the app accent. Elsewhere rows use
     // their preset's accent.
     if presentation == .page {
       return globalSettings.customAccentColor ?? .accentColor
@@ -178,7 +178,7 @@ struct PresetPickerRow: View {
   }
 
   /// Shared by the tap and the macOS VoiceOver action. The current sidebar row
-  /// toggles play/pause; other rows apply the preset.
+  /// toggles play/pause. Other rows apply the preset.
   private func activateRow() {
     guard !isEditMode else { return }
     #if os(macOS)
@@ -190,7 +190,7 @@ struct PresetPickerRow: View {
       }
     #endif
     if presentation == .sidebar && isCurrent {
-      // Don't start a silent mix; pausing is always allowed.
+      // Don't start a silent mix. Pausing is always allowed.
       if audioManager.isGloballyPlaying || audioManager.hasSelectedSounds {
         audioManager.togglePlayback()
       }
@@ -282,7 +282,7 @@ struct PresetPickerRow: View {
   }
 }
 
-/// A row that plays a single sound. Mirrors `PresetPickerRow`; the star uses
+/// A row that plays a single sound. Mirrors `PresetPickerRow`. The star uses
 /// the `solo:<fileName>` token.
 struct SingleSoundPickerRow: View {
   let sound: Sound
@@ -332,7 +332,7 @@ struct SingleSoundPickerRow: View {
   }
 
   /// Shared by the tap and the macOS VoiceOver action. The current sidebar row
-  /// toggles play/pause; other rows play their sound on its own.
+  /// toggles play/pause. Other rows play their sound on its own.
   private func activateRow() {
     guard !isEditMode else { return }
     #if os(macOS)
@@ -428,8 +428,8 @@ struct SingleSoundPickerRow: View {
 }
 
 struct LibraryView: View {
-  /// `.page`: the iPhone stack's root; a selection pushes the mixer.
-  /// `.sidebar`: inside a `NavigationSplitView`; stays put on selection.
+  /// `.page`: the iPhone stack's root. A selection pushes the mixer.
+  /// `.sidebar`: inside a `NavigationSplitView`. It stays put on selection.
   /// `.sheet`: a self-contained modal with its own stack and close button.
   enum Presentation {
     case sheet
@@ -475,8 +475,8 @@ struct LibraryView: View {
       }
   }
 
-  /// Non-favorited sounds, alphabetical. Favorites show in their own section;
-  /// preset-use-only sounds can't play on their own.
+  /// Non-favorited sounds, alphabetical. Favorites show in their own section.
+  /// Preset-use-only sounds can't play on their own.
   private var singleSounds: [Sound] {
     audioManager.sounds
       .filter { !$0.isPresetUseOnly }
@@ -853,7 +853,7 @@ struct LibraryView: View {
           Text("Favorites")
         }
 
-        // Quick Mix and All Blankie Sounds are fixed; only custom presets reorder.
+        // Quick Mix and All Blankie Sounds are fixed. Only custom presets reorder.
         Section(isExpanded: presetsExpandedBinding) {
           // Quick Mix can't be a favorite.
           #if !os(macOS)
@@ -932,7 +932,7 @@ struct LibraryView: View {
             .tint(Color.primary)
           }
         }
-        // Leading on iPhone and iPad; the sidebar's trailing edge holds the
+        // Leading on iPhone and iPad: the sidebar's trailing edge holds the
         // system sidebar toggle.
         if let onOpenSettings {
           ToolbarItem(placement: .topBarLeading) {
@@ -976,7 +976,7 @@ struct LibraryView: View {
       allowsMultipleSelection: false
     ) { result in
       guard case .success(let urls) = result, let url = urls.first else { return }
-      // .blankie files import as presets; audio opens the add-sound sheet.
+      // .blankie files import as presets. Audio opens the add-sound sheet.
       if url.pathExtension.lowercased() == "blankie" {
         AudioFileImporter.shared.handleIncomingFile(url)
       } else {
@@ -1060,7 +1060,7 @@ struct LibraryView: View {
 }
 
 /// Leading artwork tile for picker rows. Without saved artwork it shows the
-/// fallback glyph. Presets use a squircle; sounds use a circle.
+/// fallback glyph. Presets use a squircle and sounds use a circle.
 struct PresetThumbnail: View {
   let artworkId: UUID?
   let preset: Preset?

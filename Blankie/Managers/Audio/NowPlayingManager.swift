@@ -209,7 +209,7 @@ final class NowPlayingManager: NowPlayingPublishing {
             animatedArtwork: defaultArtwork
           )
         }
-        // Load static artwork synchronously so there's one publish; an async load
+        // Load static artwork synchronously so there's one publish. An async load
         // would publish again and restart animated artwork.
         await loadStaticArtworkSync(from: effectivePreset, fallbackArtworkId: artworkId)
         #if os(iOS)
@@ -319,7 +319,7 @@ final class NowPlayingManager: NowPlayingPublishing {
   }
 
   /// Writes the current progress anchor into the local `nowPlayingInfo` snapshot
-  /// (falling back to indeterminate). Used by the initial publish; the periodic
+  /// (falling back to indeterminate). Used by the initial publish. The periodic
   /// tick re-anchors the live center afterward.
   private func applyProgressAnchorToInfo() {
     if let anchor = NowPlayingDisplay.currentProgressAnchor() {
@@ -462,7 +462,7 @@ final class NowPlayingManager: NowPlayingPublishing {
     // Each source's duration is an exact constant, so any change means a new source.
     let durationChanged = abs(duration - lastObservedDuration) > 0.001
     // CarPlay extrapolates a sleep timer's bar unreliably, so re-anchor each whole
-    // second (timing keys only, in place; artwork untouched).
+    // second (timing keys only, in place, with artwork untouched).
     let timerAdvanced =
       TimerManager.shared.isTimerActive && floor(elapsed) > floor(lastObservedElapsed)
     guard isFirst || wrapped || durationChanged || timerAdvanced else { return }

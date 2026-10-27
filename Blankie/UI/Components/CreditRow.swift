@@ -36,7 +36,7 @@ struct CreditRow: View {
         .accessibilityHidden(true)
 
       if let soundUrl = credit.soundUrl {
-        // `.tint` follows the app accent; `Color.accentColor` ignores the .tint
+        // `.tint` follows the app accent, but `Color.accentColor` ignores the .tint
         // environment on macOS.
         Link(credit.soundName, destination: soundUrl)
           .foregroundStyle(.tint)

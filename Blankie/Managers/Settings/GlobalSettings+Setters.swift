@@ -22,7 +22,7 @@ extension GlobalSettings {
     AudioManager.shared.republishWidgetCatalog()
   }
 
-  /// macOS-only; stored under the platform-scoped autoPlayOnLaunchMac key.
+  /// macOS-only and stored under the platform-scoped autoPlayOnLaunchMac key.
   @MainActor
   func setAutoPlayOnLaunch(_ value: Bool) {
     autoPlayOnLaunch = value

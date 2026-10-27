@@ -13,7 +13,7 @@ struct SharedAppModifiers: ViewModifier {
   var globalSettings: GlobalSettings
   @StateObject private var audioFileImporter = AudioFileImporter.shared
 
-  /// Degraded store state awaiting its one-time notice; nil when healthy or dismissed.
+  /// Degraded store state awaiting its one-time notice, or nil when healthy or dismissed.
   @State private var degradedStoreNotice: AppSetup.StoreState?
   @State private var didEvaluateStoreNotice = false
 

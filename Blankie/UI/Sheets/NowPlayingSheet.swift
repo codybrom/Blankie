@@ -35,7 +35,7 @@ import SwiftUI
     /// mixer can open the Now Playing sheet for it.
     var onNavigateToPreset: (() -> Void)?
 
-    /// Fired when the sheet's next/previous lands on a single sound; the sheet
+    /// Fired when the sheet's next/previous lands on a single sound. The sheet
     /// dismisses and the inline player takes over.
     var onNavigateToSingle: (() -> Void)?
 
@@ -63,7 +63,7 @@ import SwiftUI
     /// The Duo cover's side bar carries the favorite star, which leaves the title row.
     var favoriteInToolbar = false
 
-    /// Which panel sits beside the player on wide screens; survives folding,
+    /// Which panel sits beside the player on wide screens. It survives folding,
     /// rotating and re-presenting.
     @SceneStorage("nowPlayingPanel") private var panelRaw = NowPlayingPanel.none.rawValue
     @State private var fold = FoldInfo.none
@@ -527,7 +527,7 @@ import SwiftUI
       .frame(maxWidth: 560)
     }
 
-    /// Close and AirPlay leading; the panel toggles trailing (filled when open).
+    /// Close and AirPlay sit leading. The panel toggles sit trailing (filled when open).
     private var regularBottomRow: some View {
       GlassEffectContainer(spacing: 16) {
         HStack(spacing: 16) {
@@ -596,7 +596,7 @@ import SwiftUI
 
     // MARK: - Landscape Layout
 
-    /// Artwork fills the page before the fold, fading toward it; the controls
+    /// Artwork fills the page before the fold, fading toward it. The controls
     /// sit centered on the page after it.
     private func spreadNowPlaying(in size: CGSize, bottomInset: CGFloat) -> some View {
       let split = CreaseInsets.split(containerWidth: size.width, fold: fold)
@@ -649,7 +649,7 @@ import SwiftUI
     /// Landscape: the artwork as large as fits, beside a controls column of
     /// its height, centered together. Wider screens get a wider column.
     private func landscapeNowPlaying(in size: CGSize, bottomInset: CGFloat) -> some View {
-      // Centers in the full height; the top bar's buttons sit at the far edges.
+      // Centers in the full height. The top bar's buttons sit at the far edges.
       GeometryReader { proxy in
         landscapeLayout(in: proxy.size, bottomInset: bottomInset)
       }
@@ -662,7 +662,7 @@ import SwiftUI
       let gapRatio: CGFloat = 48 / 290
       let columnRatio: CGFloat = 300 / 290
       let marginRatio: CGFloat = 56 / 290
-      // The transport needs 180; the Sound Mixer row ("Mixer" plus a 60pt
+      // The transport needs 180. The Sound Mixer row ("Mixer" plus a 60pt
       // slot per circle) or the sheet's row of circles may need more.
       let circles = (actionRowIncludesAirPlay ? 1 : 0) + (actionRowIncludesTimer ? 1 : 0)
       let mixerRow = onOpenMixer != nil ? 136 + CGFloat(circles) * 60 : 0
@@ -1001,7 +1001,7 @@ import SwiftUI
     // MARK: - Info Row
 
     /// The nightstand's title gets a third line. Accessibility sizes have no
-    /// limit; the layout scrolls.
+    /// limit, so the layout scrolls.
     private var titleLineLimit: Int? {
       dynamicTypeSize.isAccessibilitySize ? nil : (displayOnly ? 3 : 2)
     }
@@ -1147,7 +1147,7 @@ import SwiftUI
     @ViewBuilder
     private func transportControls(spread: Bool = false) -> some View {
       let canNavigate = audioManager.canNavigateNextPrevious
-      // Play would be silent with nothing selected; pause is always available.
+      // Play would be silent with nothing selected, but pause is always available.
       let canPlayPause = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
       // Spread: previous and next sit on the column's edges.
       HStack(spacing: spread ? 0 : 48) {
@@ -1358,7 +1358,7 @@ import SwiftUI
   struct SystemVolumeSlider: View {
     var body: some View {
       #if targetEnvironment(simulator)
-        // The simulator has no hardware volume slider; a disabled bar holds the layout.
+        // The simulator has no hardware volume slider, so a disabled bar holds the layout.
         Slider(value: .constant(0.5), in: 0...1)
           .tint(.white.opacity(0.7))
           .sliderThumbVisibility(.hidden)
@@ -1387,7 +1387,7 @@ import SwiftUI
 
   #if os(iOS)
     /// System AirPlay / output-route button. Defaults match the white-on-glass
-    /// Now Playing controls; the mini bar passes adaptive label colors instead.
+    /// Now Playing controls, but the mini bar passes adaptive label colors instead.
     struct AirPlayRoutePickerView: UIViewRepresentable {
       var tint: UIColor = UIColor.white.withAlphaComponent(0.7)
       var activeTint: UIColor = .white
@@ -1405,7 +1405,7 @@ import SwiftUI
       }
 
       // The route sheet renders outside the app's window, so no view override
-      // reaches it; only the Info.plist UIUserInterfaceStyle sets its appearance.
+      // reaches it. Only the Info.plist UIUserInterfaceStyle sets its appearance.
       func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
     }
 

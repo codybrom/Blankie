@@ -92,7 +92,7 @@ struct AppSetup {
   }
 
   /// Opens the shared SwiftData store. A first failure falls back to an in-memory
-  /// container for the session; a second consecutive failure quarantines the
+  /// container for the session. A second consecutive failure quarantines the
   /// unreadable store to `CorruptedStore/` and creates a fresh on-disk store.
   /// The versioned schema and migration plan keep SwiftData from inferring migrations.
   static func createModelContainer() -> ModelContainer {

@@ -421,7 +421,7 @@ const assetGroups: { title: string; items: Asset[] }[] = [
         {
           assetGroups.map((group) => {
             // Mixed-orientation groups (iPad: landscape window shot plus portrait
-            // store images) pack better as masonry; the rest use an even grid.
+            // store images) pack better as masonry. The rest use an even grid.
             const mixed =
               group.items.some((i) => i.tall) &&
               group.items.some((i) => !i.tall);

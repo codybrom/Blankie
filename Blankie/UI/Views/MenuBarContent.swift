@@ -78,7 +78,7 @@
     @ViewBuilder private var leadingButton: some View {
       switch screen {
       case .library:
-        // Root has no back button; actions live in the trailing "⋯" menu.
+        // Root has no back button. Actions live in the trailing "⋯" menu.
         EmptyView()
       case .mixer:
         circleButton("chevron.backward") { go(to: .library) }
@@ -151,7 +151,7 @@
     @ViewBuilder private var screenContent: some View {
       switch screen {
       case .library:
-        // Real library list; selecting a row moves to the mixer. The greedy
+        // Real library list. Selecting a row moves to the mixer. The greedy
         // List needs a definite height.
         LibraryView(presentation: .menuBar, onSelection: { go(to: .mixer) })
           .frame(height: 460)
@@ -160,7 +160,7 @@
       case .timer:
         // Claim the timer's full height (fixedSize) so a short preceding screen
         // (small preset / single sound) can't squeeze the popover and clip it.
-        // Start and cancel go back to the mixer; dismiss would close the popover.
+        // Start and cancel go back to the mixer. Dismiss would close the popover.
         TimerView(onFinish: { go(to: .mixer) })
           .fixedSize(horizontal: false, vertical: true)
       }
@@ -229,7 +229,7 @@
       return presetManager.currentPreset?.displayName ?? "Blankie"
     }
 
-    /// Active accent: a theming preset's color wins; app accent in single sound/Quick Mix.
+    /// Active accent: a theming preset's color wins. Single sound/Quick Mix use the app accent.
     private var activeAccent: Color {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
@@ -276,7 +276,7 @@
         .accessibilityValue(
           Text(globalSettings.volume.formatted(.percent.precision(.fractionLength(0)))))
 
-        // Sleep timer screen; tinted when active.
+        // Sleep timer screen, tinted when active.
         Button {
           go(to: .timer)
         } label: {

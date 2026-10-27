@@ -94,7 +94,7 @@
 
     // MARK: - Content identity
 
-    /// `exitSingleSound` publishes a name with no preset; the system reads a
+    /// `exitSingleSound` publishes a name with no preset. The system reads a
     /// changed id as a different item, so the current preset has to stand in.
     @Test func presetContentIDSurvivesANameOnlyPublish() {
       guard #available(iOS 27, macOS 27, visionOS 27, *) else { return }
@@ -176,7 +176,7 @@
 
     #if os(iOS)
       /// A preset's own still beats the preview of the app-wide default animation
-      /// it inherits for the lock screen; without one, the inherited preview wins.
+      /// it inherits for the lock screen. Without one, the inherited preview wins.
       @Test func ownStillBeatsTheInheritedDefaultAnimation() throws {
         guard #available(iOS 27, *) else { return }
         guard let defaultLoop = BundledAnimatedLoop.allCases.first else { return }

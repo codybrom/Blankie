@@ -133,7 +133,7 @@ extension SoundSheetForm {
       .disabled(!isCustomSound)
 
       // Import only: offer re-encoding to AAC to save space. Hidden when there's
-      // nothing to gain; locked on over the size ceiling to bound memory use.
+      // nothing to gain. Locked on over the size ceiling to bound memory use.
       if mode.isAdd, importConvertForced || importConvertEstimate != nil {
         Toggle(isOn: importConvertForced ? .constant(true) : $convertToAACOnImport) {
           Text("Convert to AAC")

@@ -30,7 +30,7 @@
           == .portrait)
     }
 
-    /// Early in launch the traits can be unspecified; the lock still holds.
+    /// Early in launch the traits can be unspecified, but the lock still holds.
     @Test func lockedUnspecifiedIsPortrait() {
       #expect(
         IOSAppDelegate.orientationMask(

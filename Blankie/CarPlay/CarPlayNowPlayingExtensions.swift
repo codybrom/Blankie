@@ -22,7 +22,7 @@ import os
     func setupNowPlayingTemplate() {
       let nowPlayingTemplate = CPNowPlayingTemplate.shared
 
-      // Global sleep-timer entry point. Idle = plain `timer`; running = a custom
+      // Global sleep-timer entry point. Idle shows plain `timer` and running shows a custom
       // "timer with a clock badge" (no such SF Symbol) mirroring globe.badge.clock.
       let timerImage =
         TimerManager.shared.isTimerActive

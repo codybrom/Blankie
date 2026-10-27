@@ -20,7 +20,7 @@ enum AppDataMigrator {
       "appearanceMode",  // Appearance picker removed in 2.0 (dark-only)
     ]
     #if os(iOS) || os(visionOS)
-      // Autoplay is macOS-only; sweep the legacy keys on iOS so no stale value
+      // Autoplay is macOS-only. Sweep the legacy keys on iOS so no stale value
       // can sync to a Mac. (macOS migrates them into autoPlayOnLaunchMac.)
       keys.append(UserDefaultsKeys.autoPlayOnLaunch)
       keys.append("alwaysStartPaused")

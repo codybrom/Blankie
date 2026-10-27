@@ -39,7 +39,7 @@ nonisolated class AudioAnalyzer {
   /// Kept well under the quietest built-in sound (boat, about -49.85 LUFS).
   static let minimumLUFS: Float = -60.0
 
-  /// Caps the normalization boost; attenuation is uncapped.
+  /// Caps the normalization boost. Attenuation is uncapped.
   static let maxGainDB: Float = 18.0
 
   /// Peak sample magnitude (0 to 1), or nil if the file can't be read.
@@ -103,7 +103,7 @@ nonisolated class AudioAnalyzer {
     guard lufs > minimumLUFS else { return 1.0 }
 
     // Two-way match: quiet sounds are boosted and loud ones attenuated, so built-in
-    // and custom sounds land at the same level. Only the boost is capped; the soft
+    // and custom sounds land at the same level. Only the boost is capped. The soft
     // limiter catches residual clipping.
     let requiredGainDB = targetLUFS - lufs
     let limitedGainDB = min(requiredGainDB, maxGainDB)
@@ -274,7 +274,7 @@ nonisolated class AudioAnalyzer {
       oversampledData[index * 4 + 2] = sample1 + delta * 2
       oversampledData[index * 4 + 3] = sample1 + delta * 3
     }
-    // The loop stops one sample short; write the final source sample so a
+    // The loop stops one sample short. Write the final source sample so a
     // peak on the last frame isn't missed.
     oversampledData[(Int(frameLength) - 1) * 4] = channelData[Int(frameLength) - 1]
 

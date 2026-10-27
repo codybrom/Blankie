@@ -8,7 +8,7 @@
 import SwiftUI
 import os
 
-// The About content is shared with the compact iOS sheet; macOS resolves text
+// The About content is shared with the compact iOS sheet. macOS resolves text
 // styles smaller (footnote/caption are 10pt), so each role steps up there.
 extension Font {
   static var aboutHeading: Font {
@@ -146,7 +146,7 @@ struct CenteredFlowLayout: Layout {
           )
           x += size.width + itemSpacing
         } else {
-          // Park the dropped separator off-bounds; the caller clips it away.
+          // Park the dropped separator off-bounds. The caller clips it away.
           subviews[itemIndex].place(
             at: CGPoint(x: bounds.minX, y: bounds.maxY + 1000),
             anchor: .topLeading,
@@ -175,7 +175,7 @@ struct CenteredFlowLayout: Layout {
     var x: CGFloat = 0
     for index in sizes.indices {
       let width = sizes[index].width
-      // Separators never wrap; they stay glued to the line of the preceding name.
+      // Separators never wrap and stay glued to the line of the preceding name.
       if !separators[index], !row.isEmpty, x + itemSpacing + width > maxWidth {
         rows.append(row)
         row = []

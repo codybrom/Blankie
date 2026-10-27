@@ -87,7 +87,7 @@ struct BlankieApp: App {
         MixerView()
           .sharedAppModifiers(appSetup: appSetup, globalSettings: globalSettings)
           .withPresetOnboarding(showOnboarding: $showingOnboarding)
-          // iOS/iPadOS lock dark via Info.plist UIUserInterfaceStyle; that key
+          // iOS/iPadOS lock dark via Info.plist UIUserInterfaceStyle. That key
           // doesn't exist on visionOS, so force it here for that platform.
           #if os(visionOS)
             .preferredColorScheme(.dark)

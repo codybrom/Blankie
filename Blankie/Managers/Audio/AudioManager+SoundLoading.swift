@@ -264,7 +264,7 @@ extension AudioManager {
 
       // A removed instance can still be retained (a tile, a pending auto-play
       // closure), and nothing outside `sounds` can stop it. Deselecting makes those
-      // closures no-op; unloading frees its engine nodes.
+      // closures no-op, and unloading frees its engine nodes.
       sound.unload()
       sound.isSelected = false
     }

@@ -22,7 +22,7 @@ nonisolated struct FoldInfo: Equatable, Sendable {
 /// Horizontal insets that keep a two-column grid's tiles off the fold.
 nonisolated enum CreaseInsets {
   /// With a vertical fold inside the grid, bent or flat, the column gap becomes
-  /// the fold band and both columns stay equal width; otherwise plain margins.
+  /// the fold band and both columns stay equal width (plain margins otherwise).
   static func twoColumn(
     containerWidth: CGFloat, margin: CGFloat, spacing: CGFloat, fold: FoldInfo
   ) -> (leading: CGFloat, trailing: CGFloat, columnSpacing: CGFloat) {
@@ -43,7 +43,7 @@ nonisolated enum CreaseInsets {
 
 nonisolated extension CreaseInsets {
   /// Trailing padding that keeps full-width content (list rows) on the leading
-  /// page while a vertical fold runs through it, flat or bent; 0 otherwise.
+  /// page while a vertical fold runs through it, flat or bent (0 otherwise).
   static func leadingPageTrailingPadding(containerWidth: CGFloat, fold: FoldInfo) -> CGFloat {
     leadingPage(containerWidth: containerWidth, fold: fold).map { containerWidth - $0 } ?? 0
   }
@@ -66,7 +66,7 @@ nonisolated extension CreaseInsets {
   }
 
   /// Width of the page before a vertical fold inside the container, bent or
-  /// flat, so a pane can end at the seam; nil without one.
+  /// flat, so a pane can end at the seam (nil without one).
   static func leadingPage(containerWidth: CGFloat, fold: FoldInfo) -> CGFloat? {
     fold.isVerticalCrease && fold.frame.minX > 0 && fold.frame.maxX < containerWidth
       ? fold.frame.minX : nil
@@ -99,7 +99,7 @@ private struct LeadingPageWhenFolded: ViewModifier {
 }
 
 extension View {
-  /// Reports the fold in this view's local space as it bends; `FoldInfo.none`
+  /// Reports the fold in this view's local space as it bends, or `FoldInfo.none`
   /// below iOS 27.1 and on other platforms, so callers need no availability checks.
   @ViewBuilder
   func onFoldChange(_ action: @escaping (FoldInfo) -> Void) -> some View {

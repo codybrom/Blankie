@@ -175,7 +175,7 @@ struct Language: Hashable, Identifiable, Equatable {
   }
 
   private static func resetBundleLocalization() {
-    // Refreshes some text in place; the rest updates after a relaunch.
+    // Refreshes some text in place. The rest updates after a relaunch.
     let value = UserDefaults.standard.object(forKey: "AppleLanguages")
     let languages = value as? [String] ?? Locale.preferredLanguages
 
@@ -201,7 +201,7 @@ struct Language: Hashable, Identifiable, Equatable {
         NSApplication.shared.terminate(nil)
       }
     #else
-      // iOS can't relaunch itself; the change applies on the next launch.
+      // iOS can't relaunch itself, so the change applies on the next launch.
       UserDefaults.standard.set(true, forKey: "LanguageChangePending")
       UserDefaults.standard.synchronize()
     #endif

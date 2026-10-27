@@ -15,7 +15,7 @@ struct SingleSoundIcon: View {
   var iconSize: CGFloat = 200
 
   private let globalSettings = GlobalSettings.shared
-  // Held as a property so the view observes playback; reading
+  // Held as a property so the view observes playback. Reading
   // AudioManager.shared statically misses updates.
   private let audioManager = AudioManager.shared
 
@@ -47,7 +47,7 @@ struct SingleSoundIcon: View {
         .frame(width: iconSize, height: iconSize)
         .glassEffect(.clear.interactive(), in: .circle)
 
-      // A font glyph keeps SF Symbols' optical centering; .resizable scales the
+      // A font glyph keeps SF Symbols' optical centering, while .resizable scales the
       // raw vector bounds and pushes some glyphs (washer.fill) off-center.
       Image(systemName: sound.systemIconName)
         .font(.system(size: iconSize * 0.58))
