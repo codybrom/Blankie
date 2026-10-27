@@ -138,7 +138,7 @@ import Testing
     #expect(presetManager.presetStatesApplied)
 
     edited.volume = 0.25
-    await sandbox.settle()
+    await sandbox.waitUntil { persistedVolume(of: edited.fileName, in: target.id) == 0.25 }
     #expect(savedVolume(of: edited.fileName, in: target.id) == 0.25)
     #expect(persistedVolume(of: edited.fileName, in: target.id) == 0.25)
   }

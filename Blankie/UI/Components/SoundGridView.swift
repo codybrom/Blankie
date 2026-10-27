@@ -28,25 +28,41 @@ import SwiftUI
     let sounds: [Sound]
     var onMove: (IndexSet, Int) -> Void
     var tile: (Sound) -> GridSoundButton
+    var columns = 2
 
     @State private var items: [SortableSound]
     @State private var isDragging = false
+    @State private var fold = FoldInfo.none
+    /// Set by the nightstand, whose bar sits below the tiles rather than over them.
+    @Environment(\.soundTileHeight) private var tileHeight
+    @State private var width: CGFloat = 0
 
     init(
       sounds: [Sound],
       onMove: @escaping (IndexSet, Int) -> Void,
-      tile: @escaping (Sound) -> GridSoundButton = { GridSoundButton(sound: $0) }
+      tile: @escaping (Sound) -> GridSoundButton = { GridSoundButton(sound: $0) },
+      columns: Int = 2
     ) {
+      self.columns = columns
       self.sounds = sounds
       self.onMove = onMove
       self.tile = tile
       self._items = State(initialValue: sounds.map { SortableSound(sound: $0) })
     }
 
+    /// On a bent iPhone Duo the column gap becomes the crease band. The fold
+    /// frame and the measured width share this view's local space.
+    private var creaseInsets: (leading: CGFloat, trailing: CGFloat, columnSpacing: CGFloat) {
+      columns == 2
+        ? CreaseInsets.twoColumn(containerWidth: width, margin: 16, spacing: 16, fold: fold)
+        : (16, 16, 16)
+    }
+
     var body: some View {
+      let insets = creaseInsets
       SortableGridView(
         isScrollable: true,
-        config: .init(spacing: 16, count: 2),
+        config: .init(spacing: 16, count: columns, columnSpacing: insets.columnSpacing),
         items: $items
       ) { item in
         tile(item.sound)
@@ -70,11 +86,19 @@ import SwiftUI
           }
         }
       }
-      .safeAreaPadding(16)
+      .safeAreaPadding(.vertical, 16)
+      .safeAreaPadding(.leading, insets.leading)
+      .safeAreaPadding(.trailing, insets.trailing)
       // The Now Playing mini player floats over the bottom edge and its
       // safe-area-bar inset doesn't reach this nested ScrollView — reserve
       // room so the last row can scroll clear of the bar (58pt + breathing).
-      .contentMargins(.bottom, 72, for: .scrollContent)
+      .contentMargins(.bottom, tileHeight == nil ? 72 : 0, for: .scrollContent)
+      .onFoldChange { fold = $0 }
+      .onGeometryChange(for: CGFloat.self) {
+        $0.size.width
+      } action: {
+        width = $0
+      }
       .onChange(of: sounds) { _, newSounds in
         guard !isDragging else { return }
         // After our own move commits, `sounds` returns in the order `items`

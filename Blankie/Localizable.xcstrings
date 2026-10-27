@@ -1,24 +1,79 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible." : {
-      "comment" : "Explanation below Show Playback as Continuous in Settings.",
+    "Mixer" : {
+      "comment" : "Short form of Sound Mixer on the Now Playing button when the full label doesn't fit.",
       "localizations" : {
-        "en" : {
+        "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible."
+            "state" : "needs_review",
+            "value" : "Mixer"
           }
-        }
-      }
-    },
-    "Show Playback as Continuous" : {
-      "comment" : "OS 27 playback setting. Hides loop progress while keeping sleep timer countdowns.",
-      "localizations" : {
-        "en" : {
+        },
+        "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Show Playback as Continuous"
+            "value" : "Mixer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mezclador"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mixeur"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Keverő"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mixer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ミキサー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "믹서"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mikser"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Misturador"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mikser"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "混音台"
           }
         }
       }
@@ -1251,6 +1306,158 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "+%lld 个"
+          }
+        }
+      }
+    },
+    "+1 min" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 Min."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+1 min"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 min"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 perc"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 min"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1分"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1분"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 min"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 min"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 dk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+1 分钟"
+          }
+        }
+      }
+    },
+    "+5 min" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 Min."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 min"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 min"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 perc"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 min"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5分"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5분"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 min"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 min"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 dk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "+5 分钟"
           }
         }
       }
@@ -3262,7 +3469,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aggiunge o rimuove un suono dal Mix rapido di Blankie."
+            "value" : "Aggiunge o rimuove un suono dal Quick Mix di Blankie."
           }
         },
         "ja" : {
@@ -3274,7 +3481,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie의 빠른 믹스에서 사운드를 추가하거나 제거합니다."
+            "value" : "Blankie의 Quick Mix에서 사운드를 추가하거나 제거합니다."
           }
         },
         "pl" : {
@@ -4212,7 +4419,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aplica un preajuste de Blankie y empieza a reproducir sus sonidos."
+            "value" : "Aplica un sonido prediseñado de Blankie y empieza a reproducir sus sonidos."
           }
         },
         "fr" : {
@@ -4230,7 +4437,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Applica un preset di Blankie e riproduce i suoi suoni."
+            "value" : "Applica una configurazione di Blankie e riproduce i suoi suoni."
           }
         },
         "ja" : {
@@ -4248,19 +4455,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Stosuje ustawienie Blankie i zaczyna odtwarzać jego dźwięki."
+            "value" : "Stosuje preset Blankie i zaczyna odtwarzać jego dźwięki."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Aplica uma predefinição da Blankie e começa a reproduzir os seus sons."
+            "value" : "Aplica uma pré-definição da Blankie e começa a reproduzir os seus sons."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bir Blankie hazır ayarını uygular ve seslerini çalmaya başlar."
+            "value" : "Bir Blankie ön ayarını uygular ve seslerini çalmaya başlar."
           }
         },
         "zh-Hans" : {
@@ -7589,7 +7796,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie의 취침 타이머를 취소합니다."
+            "value" : "Blankie의 수면 타이머를 취소합니다."
           }
         },
         "pl" : {
@@ -16056,7 +16263,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "No se pudo crear el preajuste"
+            "value" : "No se pudo crear el sonido prediseñado"
           }
         },
         "fr" : {
@@ -16074,7 +16281,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Impossibile creare il preset"
+            "value" : "Impossibile creare la configurazione"
           }
         },
         "ja" : {
@@ -16092,19 +16299,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nie udało się utworzyć ustawienia"
+            "value" : "Nie udało się utworzyć presetu"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Não foi possível criar a predefinição"
+            "value" : "Não foi possível criar a pré-definição"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hazır ayar oluşturulamadı"
+            "value" : "Ön ayar oluşturulamadı"
           }
         },
         "zh-Hans" : {
@@ -17749,6 +17956,83 @@
         }
       }
     },
+    "Hide Artwork" : {
+      "comment" : "Accessibility label: at large text sizes, shrinks the full Now Playing artwork back to a thumbnail.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Cover ausblenden"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide Artwork"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ocultar ilustración"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Masquer l’illustration"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Borítókép elrejtése"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Nascondi copertina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アートワークを非表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아트워크 가리기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ukryj grafikę"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ocultar imagem"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Görseli gizle"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "隐藏封面"
+          }
+        }
+      }
+    },
     "Hide Dock Icon When Window Is Closed" : {
       "comment" : "A toggle that hides the Dock icon while the window is closed.",
       "localizations" : {
@@ -17822,6 +18106,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "关闭窗口时隐藏程序坞图标"
+          }
+        }
+      }
+    },
+    "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible." : {
+      "comment" : "Explanation below Show Playback as Continuous in Settings.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide sound and preset progress bars in Now Playing and the player. Sleep timer countdowns stay visible."
           }
         }
       }
@@ -26146,6 +26441,82 @@
         }
       }
     },
+    "On iPhone, presets open to Now Playing instead of the mixer." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Auf dem iPhone öffnen Voreinstellungen die Aktuelle Wiedergabe statt des Mixers."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On iPhone, presets open to Now Playing instead of the mixer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "En el iPhone, los sonidos prediseñados se abren en Reproduciendo ahora en lugar del mezclador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sur iPhone, les préréglages s’ouvrent sur En cours de lecture plutôt que sur le mixeur."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iPhone-on a sablonok a Most szól nézetben nyílnak meg a keverő helyett."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Su iPhone, le configurazioni si aprono su In riproduzione invece che sul mixer."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iPhoneでは、プリセットがミキサーではなく再生中の画面で開きます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iPhone에서 프리셋이 믹서 대신 재생 중 화면으로 열립니다."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Na iPhonie presety otwierają się na ekranie Teraz odtwarzane zamiast miksera."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "No iPhone, as pré-definições abrem em A reproduzir em vez do misturador."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "iPhone'da ön ayarlar mikser yerine Şimdi Çalınan ekranında açılır."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "在 iPhone 上，预设会打开“正在播放”而不是混音台。"
+          }
+        }
+      }
+    },
     "Only applies when Loop Sound is on." : {
       "comment" : "A description of the \"Randomize Start Position\" toggle.",
       "isCommentAutoGenerated" : true,
@@ -26380,6 +26751,82 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "打开 Blankie"
+          }
+        }
+      }
+    },
+    "Open to Now Playing" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Zuerst Aktuelle Wiedergabe"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open to Now Playing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abrir en Reproduciendo ahora"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ouvrir sur En cours de lecture"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Megnyitás a Most szól nézetben"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Apri su In riproduzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再生中を先に表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "재생 중 화면으로 열기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Otwieraj ekran Teraz odtwarzane"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Abrir em A reproduzir"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Şimdi Çalınan ile Aç"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "先显示正在播放"
           }
         }
       }
@@ -28271,7 +28718,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reproducir un preajuste"
+            "value" : "Reproducir un sonido prediseñado"
           }
         },
         "fr" : {
@@ -28289,7 +28736,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Riproduci un preset"
+            "value" : "Riproduci una configurazione"
           }
         },
         "ja" : {
@@ -28307,19 +28754,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Odtwórz ustawienie"
+            "value" : "Odtwórz preset"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reproduzir uma predefinição"
+            "value" : "Reproduzir uma pré-definição"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bir Hazır Ayar Çal"
+            "value" : "Bir Ön Ayar Çal"
           }
         },
         "zh-Hans" : {
@@ -28601,7 +29048,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reproducir preajuste"
+            "value" : "Reproducir sonido prediseñado"
           }
         },
         "fr" : {
@@ -28619,7 +29066,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Riproduci preset"
+            "value" : "Riproduci configurazione"
           }
         },
         "ja" : {
@@ -28637,19 +29084,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Odtwórz ustawienie"
+            "value" : "Odtwórz preset"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reproduzir predefinição"
+            "value" : "Reproduzir pré-definição"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hazır Ayarı Çal"
+            "value" : "Ön Ayarı Çal"
           }
         },
         "zh-Hans" : {
@@ -29505,7 +29952,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reproduce un preajuste favorito, la mezcla rápida o un sonido de Blankie."
+            "value" : "Reproduce un sonido prediseñado favorito, la Mezcla rápida o un sonido de Blankie."
           }
         },
         "fr" : {
@@ -29523,7 +29970,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Riproduce un preset preferito, il Mix rapido o un suono di Blankie."
+            "value" : "Riproduce una configurazione preferita, il Quick Mix o un suono di Blankie."
           }
         },
         "ja" : {
@@ -29535,25 +29982,25 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie에서 즐겨찾는 프리셋, 빠른 믹스 또는 사운드를 재생합니다."
+            "value" : "Blankie에서 즐겨찾는 프리셋, Quick Mix 또는 사운드를 재생합니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Odtwarza ulubione ustawienie, Szybki miks lub dźwięk z Blankie."
+            "value" : "Odtwarza ulubiony preset, Quick Mix lub dźwięk z Blankie."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Reproduz uma predefinição favorita, a Quick Mix ou um som da Blankie."
+            "value" : "Reproduz uma pré-definição favorita, a Quick Mix ou um som da Blankie."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie'den favori bir hazır ayarı, Hızlı Karışımı veya sesi çalar."
+            "value" : "Blankie'den favori bir ön ayarı, Hızlı Karışımı veya sesi çalar."
           }
         },
         "zh-Hans" : {
@@ -30085,7 +30532,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Preajuste"
+            "value" : "Sonido prediseñado"
           }
         },
         "fr" : {
@@ -30103,7 +30550,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Preset"
+            "value" : "Configurazione"
           }
         },
         "ja" : {
@@ -30121,19 +30568,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ustawienie"
+            "value" : "Preset"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Predefinição"
+            "value" : "Pré-definição"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hazır Ayar"
+            "value" : "Ön Ayar"
           }
         },
         "zh-Hans" : {
@@ -30496,7 +30943,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Los preajustes pueden elegir su propia ilustración cuando los editas."
+            "value" : "Los sonidos prediseñados pueden tener su propia ilustración cuando los editas."
           }
         },
         "fr" : {
@@ -30514,7 +30961,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "I preset possono avere una loro immagine quando li modifichi."
+            "value" : "Le configurazioni possono avere una loro immagine quando le modifichi."
           }
         },
         "ja" : {
@@ -30532,7 +30979,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ustawienia mogą mieć własną grafikę, gdy je edytujesz."
+            "value" : "Presety mogą mieć własną grafikę, gdy je edytujesz."
           }
         },
         "pt-PT" : {
@@ -30544,7 +30991,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hazır ayarları düzenlerken kendi görsellerini seçebilirsiniz."
+            "value" : "Ön ayarları düzenlerken kendi görsellerini seçebilirsiniz."
           }
         },
         "zh-Hans" : {
@@ -30784,6 +31231,89 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "上一个喜爱"
+          }
+        }
+      }
+    },
+    "Privacy Policy" : {
+      "comment" : "Settings row and Help menu item that opens Blankie's privacy policy on the website.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Datenschutzrichtlinie"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy Policy"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Privacy Policy"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Política de privacidad"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Politique de confidentialité"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Adatvédelmi irányelvek"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Informativa sulla privacy"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "プライバシーポリシー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "개인정보 처리방침"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Polityka prywatności"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Política de privacidade"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Gizlilik Politikası"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "隐私政策"
           }
         }
       }
@@ -31117,86 +31647,86 @@
         }
       }
     },
-    "Quick Mix is a simple soundboard for quick access in CarPlay and beyond. Unlike presets, it doesn't have customizable volume, doesn't remember your sounds, and can't use custom sounds." : {
+    "Quick Mix is a simple soundboard for quick access in CarPlay and Home Screen widgets. Unlike presets, it doesn't remember your sounds or volume levels." : {
       "comment" : "A description of Quick Mix.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Schnellmix ist ein einfaches Soundboard für schnellen Zugriff in CarPlay und darüber hinaus. Anders als Voreinstellungen hat er keine anpassbare Lautstärke, merkt sich Ihre Geräusche nicht und kann keine eigenen Geräusche verwenden."
+            "value" : "Schnellmix ist ein einfaches Soundboard für schnellen Zugriff in CarPlay und in Widgets auf dem Home-Bildschirm. Anders als Voreinstellungen merkt er sich weder Ihre Geräusche noch deren Lautstärke."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quick Mix is a simple soundboard for quick access in CarPlay and beyond. Unlike presets, it doesn't have customizable volume, doesn't remember your sounds, and can't use custom sounds."
+            "value" : "Quick Mix is a simple soundboard for quick access in CarPlay and Home Screen widgets. Unlike presets, it doesn't remember your sounds or volume levels."
           }
         },
         "en-GB" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quick Mix is a simple soundboard for quick access in CarPlay and beyond. Unlike presets, it doesn't have customisable volume, doesn't remember your sounds, and can't use custom sounds."
+            "state" : "needs_review",
+            "value" : "Quick Mix is a simple soundboard for quick access in CarPlay and Home Screen widgets. Unlike presets, it doesn't remember your sounds or volume levels."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "La mezcla rápida es un panel de sonidos sencillo para acceder rápidamente en CarPlay y en otros lugares. A diferencia de los sonidos prediseñados, no tiene volumen ajustable, no recuerda tus sonidos y no puede usar sonidos personalizados."
+            "value" : "La mezcla rápida es un panel de sonidos sencillo para acceder rápidamente desde CarPlay y los widgets de la pantalla de inicio. A diferencia de los sonidos prediseñados, no recuerda tus sonidos ni sus niveles de volumen."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix est un tableau de sons simple pour un accès rapide dans CarPlay et au-delà. Contrairement aux préréglages, il n’a pas de volume réglable, ne mémorise pas vos sons et ne peut pas utiliser de sons personnalisés."
+            "value" : "Quick Mix est un tableau de sons simple pour un accès rapide dans CarPlay et les widgets de l’écran d’accueil. Contrairement aux préréglages, il ne mémorise ni vos sons ni leur volume."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "A Quick Mix egy egyszerű hangtábla a gyors eléréshez CarPlay-ben és máshol. A sablonokkal ellentétben nincs állítható hangereje, nem jegyzi meg a hangjaidat, és nem használhat egyéni hangokat."
+            "value" : "A Quick Mix egy egyszerű hangtábla a gyors eléréshez CarPlay-ben és a Főképernyő widgetjeiben. A sablonokkal ellentétben nem jegyzi meg a hangjaidat és azok hangerejét."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix è una semplice soundboard per un accesso rapido in CarPlay e oltre. A differenza delle configurazioni, non ha un volume regolabile, non ricorda i tuoi suoni e non può usare suoni personalizzati."
+            "value" : "Quick Mix è una semplice soundboard per un accesso rapido in CarPlay e nei widget della schermata Home. A differenza delle configurazioni, non ricorda i tuoi suoni né il loro volume."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "クイックミックスは、CarPlayなどですばやく使えるシンプルなサウンドボードです。プリセットとは異なり、音量を調整できず、サウンドを記憶せず、カスタムサウンドも使用できません。"
+            "value" : "クイックミックスは、CarPlayやホーム画面のウィジェットからすばやく使えるシンプルなサウンドボードです。プリセットとは異なり、サウンドや音量を記憶しません。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix는 CarPlay 등에서 빠르게 사용할 수 있는 간단한 사운드보드입니다. 프리셋과 달리 음량을 조절할 수 없고, 소리를 기억하지 않으며, 사용자 소리는 사용할 수 없습니다."
+            "value" : "Quick Mix는 CarPlay와 홈 화면 위젯에서 빠르게 사용할 수 있는 간단한 사운드보드입니다. 프리셋과 달리 소리와 음량을 기억하지 않습니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quick Mix to prosta tablica dźwięków zapewniająca szybki dostęp w CarPlay i nie tylko. W przeciwieństwie do presetów nie ma regulacji głośności, nie zapamiętuje dźwięków i nie może używać własnych dźwięków."
+            "value" : "Quick Mix to prosta tablica dźwięków zapewniająca szybki dostęp w CarPlay i w widżetach na ekranie początkowym. W przeciwieństwie do presetów nie zapamiętuje dźwięków ani ich głośności."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "O Quick Mix é um painel de sons simples para acesso rápido no CarPlay e não só. Ao contrário das pré-definições, não tem volume ajustável, não memoriza os seus sons e não pode usar sons personalizados."
+            "value" : "O Quick Mix é um painel de sons simples para acesso rápido no CarPlay e nos widgets do ecrã principal. Ao contrário das pré-definições, não memoriza os seus sons nem o respetivo volume."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hızlı Karışım, CarPlay'de ve ötesinde hızlı erişim için basit bir ses panosudur. Ön ayarların aksine, ayarlanabilir ses düzeyine sahip değildir, seslerinizi hatırlamaz ve özel sesleri kullanamaz."
+            "value" : "Hızlı Karışım, CarPlay'de ve Ana Ekran widget'larında hızlı erişim için basit bir ses panosudur. Ön ayarların aksine seslerinizi ve ses düzeylerini hatırlamaz."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "快速混音是一个简单的声音面板，便于在 CarPlay 及其他场景中快速使用。与预设不同，它无法调节音量，不会记住您的音效，也无法使用自定义音效。"
+            "value" : "快速混音是一个简单的声音面板，便于在 CarPlay 和主屏幕小组件中快速使用。与预设不同，它不会记住您的音效和音量。"
           }
         }
       }
@@ -34336,6 +34866,83 @@
         }
       }
     },
+    "Show Artwork" : {
+      "comment" : "Accessibility label: at large text sizes, expands the Now Playing thumbnail to the full artwork.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Cover einblenden"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Artwork"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mostrar ilustración"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Afficher l’illustration"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Borítókép megjelenítése"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mostra copertina"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "アートワークを表示"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "아트워크 보기"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pokaż grafikę"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mostrar imagem"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Görseli göster"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "显示封面"
+          }
+        }
+      }
+    },
     "Show Dock Icon Badge When Paused" : {
       "comment" : "A toggle that shows a pause badge on the Dock icon when audio is paused.",
       "localizations" : {
@@ -34487,6 +35094,17 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "在菜单栏中显示"
+          }
+        }
+      }
+    },
+    "Show Playback as Continuous" : {
+      "comment" : "OS 27 playback setting. Hides loop progress while keeping sleep timer countdowns.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Playback as Continuous"
           }
         }
       }
@@ -35183,7 +35801,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "취침 타이머가 취소되었습니다."
+            "value" : "수면 타이머가 취소되었습니다."
           }
         },
         "pl" : {
@@ -35339,7 +35957,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "취침 타이머가 %lld분으로 설정되었습니다."
+            "value" : "수면 타이머가 %lld분으로 설정되었습니다."
           }
         },
         "pl" : {
@@ -36207,6 +36825,82 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "音频文件"
+          }
+        }
+      }
+    },
+    "Sound Mixer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Klangmixer"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound Mixer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mezclador de sonidos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mixeur de sons"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Hangkeverő"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mixer dei suoni"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "サウンドミキサー"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "사운드 믹서"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mikser dźwięków"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Misturador de sons"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ses Mikseri"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "音效混音台"
           }
         }
       }
@@ -37092,8 +37786,8 @@
         },
         "it" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Focolaio"
+            "state" : "needs_review",
+            "value" : "Camino"
           }
         },
         "ja" : {
@@ -39013,7 +39707,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "취침 타이머 시작"
+            "value" : "수면 타이머 시작"
           }
         },
         "pl" : {
@@ -39181,7 +39875,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "종료 시 Blankie를 일시 정지하는 취침 타이머를 시작합니다."
+            "value" : "종료 시 Blankie를 일시 정지하는 수면 타이머를 시작합니다."
           }
         },
         "pl" : {
@@ -39673,7 +40367,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "취침 타이머 중단"
+            "value" : "수면 타이머 중단"
           }
         },
         "pl" : {
@@ -40521,85 +41215,85 @@
       "comment" : "A description of the Quick Mix widget.",
       "isCommentAutoGenerated" : true
     },
-    "Tap the star on any preset to add it here." : {
-      "comment" : "Hint shown when no favorites exist, telling the user to tap the star on a preset.",
+    "Tap the star on any preset or sound to add it here." : {
+      "comment" : "Hint shown when no favorites exist, telling the user to tap the star on a preset or sound.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Tippen Sie bei einer beliebigen Voreinstellung auf den Stern, um sie hier hinzuzufügen."
+            "value" : "Tippen Sie bei einer beliebigen Voreinstellung oder einem Geräusch auf den Stern, um sie hier hinzuzufügen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap the star on any preset to add it here."
+            "value" : "Tap the star on any preset or sound to add it here."
           }
         },
         "en-GB" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap the star on any preset to add it here."
+            "value" : "Tap the star on any preset or sound to add it here."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Toca la estrella en cualquier sonido prediseñado para añadirlo aquí."
+            "value" : "Toca la estrella en cualquier sonido, prediseñado o no, para añadirlo aquí."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Touchez l’étoile sur n’importe quel préréglage pour l’ajouter ici."
+            "value" : "Touchez l’étoile sur n’importe quel préréglage ou son pour l’ajouter ici."
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Koppints bármelyik sablon csillagára, hogy ide felvedd."
+            "value" : "Koppints bármelyik sablon vagy hang csillagára, hogy ide felvedd."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Tocca la stella su una configurazione qualsiasi per aggiungerla qui."
+            "value" : "Tocca la stella su una configurazione o un suono qualsiasi per aggiungerlo qui."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "プリセットのスターをタップすると、ここに追加されます。"
+            "value" : "プリセットやサウンドのスターをタップすると、ここに追加されます。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "프리셋의 별을 탭하면 여기에 추가됩니다."
+            "value" : "프리셋이나 소리의 별을 탭하면 여기에 추가됩니다."
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Stuknij gwiazdkę przy dowolnym presecie, aby dodać go tutaj."
+            "value" : "Stuknij gwiazdkę przy dowolnym presecie lub dźwięku, aby dodać go tutaj."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Toque na estrela de qualquer pré-definição para a adicionar aqui."
+            "value" : "Toque na estrela de qualquer pré-definição ou som para o adicionar aqui."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Buraya eklemek için herhangi bir ön ayardaki yıldıza dokunun."
+            "value" : "Buraya eklemek için herhangi bir ön ayardaki veya sesteki yıldıza dokunun."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "轻点任意预设上的星标即可将其添加到这里。"
+            "value" : "轻点任意预设或音效上的星标即可将其添加到这里。"
           }
         }
       }
@@ -40878,7 +41572,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "No se ha podido encontrar ese preajuste."
+            "value" : "No se ha podido encontrar ese sonido prediseñado."
           }
         },
         "fr" : {
@@ -40896,7 +41590,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Impossibile trovare quel preset."
+            "value" : "Impossibile trovare quella configurazione."
           }
         },
         "ja" : {
@@ -40914,19 +41608,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Nie można odnaleźć tego ustawienia."
+            "value" : "Nie można odnaleźć tego presetu."
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Não foi possível encontrar essa predefinição."
+            "value" : "Não foi possível encontrar essa pré-definição."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bu hazır ayar bulunamadı."
+            "value" : "Bu ön ayar bulunamadı."
           }
         },
         "zh-Hans" : {
@@ -41561,7 +42255,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "실행 중인 취침 타이머가 없습니다."
+            "value" : "실행 중인 수면 타이머가 없습니다."
           }
         },
         "pl" : {
@@ -42925,7 +43619,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Attiva/disattiva suono del Mix rapido"
+            "value" : "Attiva/disattiva suono del Quick Mix"
           }
         },
         "ja" : {
@@ -42937,7 +43631,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "빠른 믹스 사운드 전환"
+            "value" : "Quick Mix 사운드 전환"
           }
         },
         "pl" : {
@@ -43867,6 +44561,7 @@
     },
     "View" : {
       "comment" : "A menu that contains items that control the view.",
+      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "de" : {
@@ -45103,7 +45798,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "¿Qué preajuste quieres reproducir?"
+            "value" : "¿Qué sonido prediseñado quieres reproducir?"
           }
         },
         "fr" : {
@@ -45121,7 +45816,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Quale preset vuoi riprodurre?"
+            "value" : "Quale configurazione vuoi riprodurre?"
           }
         },
         "ja" : {
@@ -45139,19 +45834,19 @@
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Które ustawienie chcesz odtworzyć?"
+            "value" : "Który preset chcesz odtworzyć?"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Que predefinição gostaria de reproduzir?"
+            "value" : "Que pré-definição gostaria de reproduzir?"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Hangi hazır ayarı çalmak istersiniz?"
+            "value" : "Hangi ön ayarı çalmak istersiniz?"
           }
         },
         "zh-Hans" : {

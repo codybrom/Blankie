@@ -48,7 +48,7 @@ struct SoundManagementRowContent: View {
         Text(subtitle)
           .font(.caption)
           .foregroundStyle(.secondary)
-          .lineLimit(1)
+          .lineLimit(2)
       }
     }
   }

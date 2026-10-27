@@ -369,6 +369,26 @@ struct SettingsView: View {
         .formRowButtonStyle()
         .handCursor()
 
+        Link(destination: URL(string: "https://blankie.rest/privacy")!) {
+          HStack {
+            Label {
+              Text("Privacy Policy")
+                .foregroundColor(.primary)
+            } icon: {
+              Image(systemName: "hand.raised")
+                .foregroundStyle(.tint)
+            }
+            Spacer()
+            Image(systemName: "arrow.up.right")
+              .font(.footnote.weight(.semibold))
+              .foregroundStyle(.secondary)
+              .accessibilityHidden(true)
+          }
+          .formRowLabel()
+        }
+        .formRowButtonStyle()
+        .handCursor()
+
         #if DEBUG
           Button {
             showingOnboarding = true
@@ -447,6 +467,23 @@ struct SettingsView: View {
           Text(
             "Show Progress Borders")
         }
+
+        #if os(iOS)
+          VStack(alignment: .leading, spacing: 6) {
+            Toggle(
+              "Open to Now Playing",
+              isOn: Binding(
+                get: { globalSettings.nowPlayingFirst },
+                set: { globalSettings.setNowPlayingFirst($0) }
+              )
+            )
+            Text(
+              "On iPhone, presets open to Now Playing instead of the mixer."
+            )
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+          }
+        #endif
 
         #if os(iOS) || os(visionOS)
           // Animated artwork on the Lock Screen / Now Playing card. The toggle

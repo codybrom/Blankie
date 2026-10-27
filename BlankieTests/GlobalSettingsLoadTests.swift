@@ -22,22 +22,25 @@ import Testing
   private let settings = GlobalSettings.shared
   private let snapshot = DefaultsSnapshot([
     UserDefaultsKeys.volume, UserDefaultsKeys.backgroundBlurRadius,
-    UserDefaultsKeys.showPlaybackAsContinuous,
+    UserDefaultsKeys.showPlaybackAsContinuous, UserDefaultsKeys.nowPlayingFirst,
   ])
   private let originalVolume: Double
   private let originalBlur: Double
   private let originalContinuous: Bool
+  private let originalNowPlayingFirst: Bool
 
   init() {
     originalVolume = settings.volume
     originalBlur = settings.backgroundBlurRadius
     originalContinuous = settings.showPlaybackAsContinuous
+    originalNowPlayingFirst = settings.nowPlayingFirst
     snapshot.clear()
   }
   isolated deinit {
     settings.volume = originalVolume
     settings.backgroundBlurRadius = originalBlur
     settings.showPlaybackAsContinuous = originalContinuous
+    settings.nowPlayingFirst = originalNowPlayingFirst
     snapshot.restore()
   }
 
@@ -94,6 +97,17 @@ import Testing
     } else {
       #expect(settings.showsPlaybackProgress(timerActive: false))
     }
+  }
+
+  /// iPhone opens to Now Playing unless someone chose the mixer-first layout.
+  @Test func nowPlayingFirstDefaultsOnAndPreservesSavedOptOut() {
+    UserDefaults.shared.removeObject(forKey: UserDefaultsKeys.nowPlayingFirst)
+    settings.loadBasicSettings()
+    #expect(settings.nowPlayingFirst)
+    settings.setNowPlayingFirst(false)
+    settings.nowPlayingFirst = true
+    settings.loadBasicSettings()
+    #expect(!settings.nowPlayingFirst)
   }
 
 }

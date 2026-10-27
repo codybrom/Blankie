@@ -114,6 +114,13 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setNowPlayingFirst(_ value: Bool) {
+    nowPlayingFirst = value
+    UserDefaults.shared.set(value, forKey: UserDefaultsKeys.nowPlayingFirst)
+    logCurrentSettings()
+  }
+
+  @MainActor
   func setLockPortraitOrientationiOS(_ value: Bool) {
     lockPortraitOrientationiOS = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.lockPortraitOrientationiOS)

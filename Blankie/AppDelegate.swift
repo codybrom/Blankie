@@ -291,17 +291,38 @@ import os
 
     func application(
       _: UIApplication,
-      supportedInterfaceOrientationsFor _: UIWindow?
+      supportedInterfaceOrientationsFor window: UIWindow?
     ) -> UIInterfaceOrientationMask {
       #if os(iOS)
-        if GlobalSettings.shared.lockPortraitOrientationiOS {
-          return .portrait
-        } else {
-          return .all
-        }
+        Self.orientationMask(
+          lockPortrait: GlobalSettings.shared.lockPortraitOrientationiOS,
+          horizontalSizeClass: window?.traitCollection.horizontalSizeClass ?? .compact,
+          verticalSizeClass: window?.traitCollection.verticalSizeClass ?? .regular)
       #else
         return .all
       #endif
     }
+
+    #if os(iOS)
+      /// Has iOS re-read `orientationMask` for every window.
+      @MainActor static func refreshSupportedOrientations() {
+        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+          for window in scene.windows {
+            window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
+          }
+        }
+      }
+
+      /// The portrait lock is a phone-sized preference: it pins every window that
+      /// isn't regular both ways (a large iPhone sideways is regular width but
+      /// compact height), so only an open iPhone Duo or an iPad always rotates.
+      static func orientationMask(
+        lockPortrait: Bool, horizontalSizeClass: UIUserInterfaceSizeClass,
+        verticalSizeClass: UIUserInterfaceSizeClass
+      ) -> UIInterfaceOrientationMask {
+        let regularBothWays = horizontalSizeClass == .regular && verticalSizeClass == .regular
+        return lockPortrait && !regularBothWays ? .portrait : .all
+      }
+    #endif
   }
 #endif

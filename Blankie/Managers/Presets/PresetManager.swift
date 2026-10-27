@@ -45,6 +45,9 @@ class PresetManager {
 
   private(set) var hasCustomPresets: Bool = false
   private(set) var isLoading: Bool = true
+  /// Launch couldn't restore the last active preset (deleted, or it failed to
+  /// apply) and fell back to the default, so the UI opens on the Library.
+  private(set) var lastPresetRestoreFailed = false
   private(set) var error: Error?
 
   /// The preset whose theme (accent, blur, view mode) should drive the UI, or
@@ -66,6 +69,16 @@ class PresetManager {
       return currentPreset
     case .solo, .quickMix, .none:
       return nil
+    }
+  }
+
+  /// The active preset holds none of the loaded sounds, so only the editor
+  /// can give it something to play. Never true for the default preset.
+  @MainActor
+  var currentPresetHasNoSounds: Bool {
+    guard let preset = themingPreset, !preset.isDefault else { return false }
+    return !AudioManager.shared.sounds.contains { sound in
+      preset.soundStates.contains { $0.fileName == sound.fileName }
     }
   }
 
@@ -235,13 +248,23 @@ extension PresetManager {
           handleError(error)
         }
       } else {
-        // If no other custom presets exist, copy the deleted preset's state to the default preset
+        // No other custom presets: the default takes over the deleted preset's mix.
+        // It still lists every sound that exists (the default always does), so it
+        // applies even when the deleted preset named a sound that's now gone.
         if let defaultPresetIndex = presets.firstIndex(where: { $0.isDefault }) {
-          // Copy current state
           var updatedDefaultPreset = presets[defaultPresetIndex]
-          updatedDefaultPreset.soundStates = preset.soundStates
+          let deletedStates = Dictionary(
+            preset.soundStates.map { ($0.fileName, $0) }, uniquingKeysWith: { first, _ in first })
+          let defaultStates = Dictionary(
+            updatedDefaultPreset.soundStates.map { ($0.fileName, $0) },
+            uniquingKeysWith: { first, _ in first })
+          updatedDefaultPreset.soundStates = AudioManager.shared.sounds.map { sound in
+            deletedStates[sound.fileName]
+              ?? PresetState(
+                fileName: sound.fileName, isSelected: false,
+                volume: defaultStates[sound.fileName]?.volume ?? sound.volume)
+          }
           presets[defaultPresetIndex] = updatedDefaultPreset
-          currentPreset = nil
 
           do {
             Logger.presets.debug(
@@ -430,8 +453,11 @@ extension PresetManager {
   /// An application plays the new mix, so only a current preset needs a play.
   @MainActor
   func playPreset(_ preset: Preset) throws {
-    // Validate before leaving Quick Mix, which drops the earlier mix.
-    guard preset.validate() else { throw PresetError.invalidPreset }
+    // Validate before leaving Quick Mix, which drops the earlier mix. An empty
+    // preset opens in the app, but Siri, widgets and CarPlay can't play it.
+    guard preset.validate(), !preset.soundStates.isEmpty else {
+      throw PresetError.invalidPreset
+    }
     AudioManager.shared.leaveTransientModes()
     if try !applyPreset(preset) {
       AudioManager.shared.setGlobalPlaybackState(true)
@@ -964,30 +990,33 @@ extension PresetManager {
 
       updateCustomPresetStatus()
 
-      // Load last active preset or default
-      if let lastID = PresetStorage.loadLastActivePresetID() {
-        Logger.presets.debug("PresetManager: Found last active preset ID: \(lastID)")
-        if let lastPreset = presets.first(where: { $0.id == lastID }) {
-          Logger.presets.debug("PresetManager: Found matching preset: '\(lastPreset.name)'")
-          Logger.presets.debug(
-            "PresetManager: Loading last active preset:\n\(self.presetSummary(lastPreset))")
-          try applyPreset(lastPreset, isInitialLoad: true)
-          Logger.presets.debug(
-            "PresetManager: Successfully applied last active preset '\(lastPreset.name)'")
-        } else {
-          Logger.presets.debug(
-            "PresetManager: Last active preset ID \(lastID) not found in loaded presets")
-          Logger.presets.debug(
-            "PresetManager: Available presets: \(self.presets.map { "\($0.name) (\($0.id))" })")
-          Logger.presets.debug("PresetManager: Falling back to default preset")
-          try applyPreset(presets[0], isInitialLoad: true)
-        }
-      } else {
-        Logger.presets.debug("PresetManager: No last active preset ID found, applying default")
+      // Load last active preset or default. A preset that fails validation
+      // (say, a sound it uses is gone) falls back to the default rather than
+      // leaving no preset at all, which showed a phantom "Blankie" preset.
+      let lastID = PresetStorage.loadLastActivePresetID()
+      let lastPreset = lastID.flatMap { id in presets.first { $0.id == id } }
+      if let lastID, lastPreset == nil {
+        Logger.presets.debug(
+          "PresetManager: Last active preset ID \(lastID) not found, applying default")
+        lastPresetRestoreFailed = true
+      }
+      do {
+        try applyPreset(lastPreset ?? presets[0], isInitialLoad: true)
+      } catch  where lastPreset != nil {
+        Logger.presets.error(
+          "PresetManager: Last active preset failed to apply (\(error, privacy: .public)); applying default"
+        )
+        lastPresetRestoreFailed = true
         try applyPreset(presets[0], isInitialLoad: true)
       }
     } catch {
       handleError(error)
+      lastPresetRestoreFailed = true
+      // Never finish loading without a preset: show the default even if its mix
+      // couldn't be applied.
+      if currentPreset == nil, let defaultPreset = presets.first {
+        setCurrentPreset(defaultPreset)
+      }
     }
 
     setLoading(false)

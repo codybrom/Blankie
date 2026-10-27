@@ -93,6 +93,15 @@ import SwiftData
     try? await Task.sleep(for: .milliseconds(milliseconds))
   }
 
+  /// Polls until `condition` holds or `timeout` passes, so a check doesn't race
+  /// the coalesced refresh on a busy machine the way a fixed `settle()` can.
+  func waitUntil(timeout: Duration = .seconds(2), _ condition: () -> Bool) async {
+    let deadline = ContinuousClock.now + timeout
+    while !condition(), ContinuousClock.now < deadline {
+      try? await Task.sleep(for: .milliseconds(50))
+    }
+  }
+
   /// Waits for a preset application's async apply (and its follow-up refresh).
   func waitForPresetApply() async {
     for _ in 0..<40 where !presetManager.presetStatesApplied {

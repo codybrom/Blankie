@@ -27,21 +27,92 @@ import SwiftUI
       }
 
       if let preset = presetManager.currentPreset {
-        return preset.isDefault ? "Blankie" : preset.name
+        return preset.displayName
       }
 
       return "Blankie"
     }
 
-    // MARK: - Top Bar Trailing Button
+    // MARK: - Preset Page Header (regular width)
 
-    /// Top-trailing nav bar slot, identical on iPhone and iPad: the Edit
-    /// affordance for whatever is on screen — the Quick Mix editor, the current
-    /// preset, or the solo sound's editor. The nav bar supplies the Liquid
-    /// Glass treatment.
-    var topTrailingToolbarButton: some View {
+    /// The regular layout names the preset above its sounds; Solo and Quick
+    /// Mix have their own surfaces.
+    /// Skipped when height is compact (a large iPhone in landscape), where the
+    /// tiles need the room and the nav title names the preset instead.
+    var showsPresetPageHeader: Bool {
+      verticalSizeClass != .compact
+        && !presetManager.isLoading && audioManager.soloModeSound == nil
+        && !audioManager.isQuickMix && presetManager.currentPreset != nil
+    }
+
+    @ViewBuilder
+    var presetPageHeader: some View {
+      if let preset = presetManager.currentPreset {
+        HStack(spacing: 18) {
+          Group {
+            if let image = backgroundImage {
+              Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 96, height: 96)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            } else {
+              FallbackArtwork(
+                glyph: .playback(
+                  isQuickMix: false, isDefaultPreset: preset.isDefault,
+                  icons: audioManager.playingSoundIcons()),
+                accent: preset.accentColor ?? globalSettings.customAccentColor ?? .accentColor,
+                size: 96,
+                glyphFraction: 0.5
+              )
+            }
+          }
+          .accessibilityHidden(true)
+
+          VStack(alignment: .leading, spacing: 2) {
+            Text(preset.activeTitle)
+              .font(.title2.bold())
+              .lineLimit(2)
+            if let creator = preset.creatorName, !creator.isEmpty {
+              Text(creator)
+                .font(.title3)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+            }
+          }
+          .accessibilityElement(children: .combine)
+          .accessibilityAddTraits(.isHeader)
+
+          Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 8)
+      }
+    }
+
+    // MARK: - Top Bar Trailing Items
+
+    /// The Edit affordance for whatever is on screen — the Quick Mix editor, the
+    /// current preset, or the solo sound's editor — plus Spatial Mix when it's
+    /// on. A real item group (titled labels, no custom view) so iPhone Duo can
+    /// move it into the side bar; Edit is the last to overflow.
+    @ToolbarContentBuilder
+    var editToolbarItems: some ToolbarContent {
+      #if os(iOS)
+        if #available(iOS 27, *) {
+          editToolbarGroup.visibilityPriority(.high)
+        } else {
+          editToolbarGroup
+        }
+      #else
+        editToolbarGroup
+      #endif
+    }
+
+    @ToolbarContentBuilder
+    private var editToolbarGroup: some ToolbarContent {
       let target = editTarget
-      return HStack(spacing: 2) {
+      ToolbarItemGroup(placement: .topBarTrailing) {
         // Spatial mixer entry — preset mode only, and only when the user has
         // opted into the experimental feature in Settings
         if globalSettings.enableSpatialAudio,
@@ -54,22 +125,26 @@ import SwiftUI
             // Not person.spatialaudio.*: those are restricted to referring to
             // Apple's Spatial Audio feature, and our spatial mix is an in-app
             // binaural render, not the system feature.
-            Image(systemName: "speaker.wave.1.arrowtriangles.up.right.down.left")
+            Label("Spatial Mix", systemImage: "speaker.wave.1.arrowtriangles.up.right.down.left")
           }
           .tint(.primary)
-          .accessibilityLabel(Text("Spatial Mix"))
         }
 
         Button {
           target?.action()
         } label: {
-          Image(systemName: target?.icon ?? "slider.vertical.3")
+          Label(
+            LocalizedStringKey(target?.label ?? "Edit Preset"),
+            systemImage: target?.icon ?? "slider.vertical.3")
         }
         // Toolbar buttons draw their symbol from the tint, so the accent has to
         // be overridden here rather than via foregroundStyle on the label.
         .tint(.primary)
-        .accessibilityLabel(target?.label ?? "Edit Preset")
         .disabled(target == nil)
+        // An empty preset can only get sounds from its editor.
+        .badge(
+          presetManager.currentPresetHasNoSounds && !presetManager.isLoading
+            ? Text(verbatim: "!") : nil)
       }
     }
 
@@ -79,7 +154,7 @@ import SwiftUI
     /// creator seeded with the playing sounds). `nil` when there's nothing to
     /// edit (the button renders disabled rather than vanishing, so the slot
     /// never collapses).
-    private var editTarget: (icon: String, label: String, action: () -> Void)? {
+    var editTarget: (icon: String, label: String, action: () -> Void)? {
       if let soloSound = audioManager.soloModeSound {
         return ("slider.vertical.3", "Edit Sound", { soundToEdit = soloSound })
       } else if audioManager.isQuickMix {

@@ -26,9 +26,10 @@ import SwiftUI
     private let volumeStep = 1.0 / 16.0
 
     var body: some Commands {
-      // Custom View menu instead of SidebarCommands() so the toggle can bind
+      // In the system View menu, not SidebarCommands(), so the toggle can bind
       // ⌘S (free in Blankie — no documents to save) rather than the fixed ⌃⌘S.
-      CommandMenu("View") {
+      // A CommandMenu("View") would add a second View menu beside the system's.
+      CommandGroup(replacing: .sidebar) {
         Button("Show/Hide Sidebar") {
           NSApp.sendAction(#selector(NSSplitViewController.toggleSidebar(_:)), to: nil, from: nil)
         }
@@ -138,6 +139,12 @@ import SwiftUI
 
         Button("Blankie Help") {
           if let url = URL(string: "https://blankie.rest/faq") {
+            NSWorkspace.shared.open(url)
+          }
+        }
+
+        Button("Privacy Policy") {
+          if let url = URL(string: "https://blankie.rest/privacy") {
             NSWorkspace.shared.open(url)
           }
         }

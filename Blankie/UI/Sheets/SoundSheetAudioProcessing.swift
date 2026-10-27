@@ -198,7 +198,7 @@ extension SoundSheetForm {
         .foregroundColor(.secondary)
         .accessibilityHidden(true)
 
-        Slider(value: $volumeAdjustment, in: 0.5...8.0, step: 0.01)
+        Slider(value: $volumeAdjustment, in: 0.5...8.0)
           .accessibilityLabel(Text("Volume Adjustment"))
           .accessibilityValue(Text(volumePercentageText))
 
