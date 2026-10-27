@@ -50,7 +50,7 @@
       }
 
       let sortedSounds = presetSounds.sorted {
-        $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+        $0.localizedTitle.localizedCaseInsensitiveCompare($1.localizedTitle) == .orderedAscending
       }
 
       let items = sortedSounds.map { sound in
@@ -83,7 +83,7 @@
       let volumeText = String(localized: "\(percent) Volume")
 
       let item = CPListItem(
-        text: sound.title,
+        text: sound.localizedTitle,
         detailText: isSelected
           ? String(localized: "Playing • \(volumeText)") : String(localized: "Stopped")
       )
@@ -152,7 +152,7 @@
 
     static func createVolumeAdjustmentTemplate(for sound: Sound) -> CPListTemplate {
       let template = CPListTemplate(
-        title: String(localized: "\(sound.title) Volume"),
+        title: String(localized: "\(sound.localizedTitle) Volume"),
         sections: []
       )
 
@@ -240,7 +240,7 @@
       var items: [CPListItem] = []
 
       let headerItem = CPListItem(
-        text: String(localized: "Choose a volume to start \(sound.title)"),
+        text: String(localized: "Choose a volume to start \(sound.localizedTitle)"),
         detailText: nil
       )
       headerItem.isEnabled = false

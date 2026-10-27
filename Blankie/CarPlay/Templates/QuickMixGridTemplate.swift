@@ -61,7 +61,7 @@ import os
         sound.playbackState == .playing && AudioManager.shared.isQuickMix
         && AudioManager.shared.singleSound == nil
 
-      let titles = [sound.title]
+      let titles = [sound.localizedTitle]
 
       let button = CPGridButton(
         titleVariants: titles,

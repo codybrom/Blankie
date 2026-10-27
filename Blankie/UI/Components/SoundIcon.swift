@@ -265,7 +265,8 @@ struct SoundIcon: View {
   }
 
   #if os(macOS)
-    /// Volume nudge for the tile's VoiceOver adjustable action and the Up/Down arrow keys. No-op when the sound is off (its slider is disabled then).
+    /// Volume nudge for the tile's VoiceOver adjustable action and the Up/Down arrow keys.
+    /// No-op when the sound is off (its slider is disabled then).
     private func adjustVolume(_ direction: AccessibilityAdjustmentDirection) {
       guard sound.isSelected else { return }
       // 1/16, matching the master-volume shortcut and macOS volume keys

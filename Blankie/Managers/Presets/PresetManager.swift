@@ -1106,7 +1106,7 @@ extension PresetManager {
     }
   }
 
-  /// Migrates preset sound names from old format (with file extensions) to new format (without extensions)
+  /// Strips file extensions from preset sound names saved in the old format.
   private func migratePresetSoundNames() {
     let legacyExtensions = ["mp3", "m4a", "wav", "aiff"]
     var migratedPresets = [Preset]()

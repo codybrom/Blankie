@@ -37,7 +37,8 @@ open class Sound: NSObject, Identifiable {
   let customSoundDataID: UUID?
   @ObservationIgnored private var _customSoundData: CustomSoundData?
 
-  /// SwiftData record backing a custom sound, fetched once then reused (the model object stays live).
+  /// SwiftData record backing a custom sound, fetched once and then reused (the model
+  /// object stays live).
   @MainActor var customSoundData: CustomSoundData? {
     guard let id = customSoundDataID else { return nil }
     if _customSoundData == nil {

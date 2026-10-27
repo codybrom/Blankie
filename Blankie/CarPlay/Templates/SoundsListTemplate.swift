@@ -43,11 +43,11 @@ import os
       let allSounds =
         AudioManager.shared.sounds
         .filter { !$0.isPresetUseOnly }
-        .sorted { $0.title < $1.title }
+        .sorted { $0.localizedTitle < $1.localizedTitle }
 
       // One section per first letter for CarPlay's index.
       let groupedSounds = Dictionary(grouping: allSounds) { sound in
-        String(sound.title.prefix(1).uppercased())
+        String(sound.localizedTitle.prefix(1).uppercased())
       }
 
       let sortedKeys = groupedSounds.keys.sorted()
@@ -68,16 +68,16 @@ import os
     }
 
     private static func createSoundListItem(_ sound: Sound) -> CPListItem {
-      let isPlayingSingleSound = AudioManager.shared.singleSound?.id == sound.id
+      let isCurrentSingleSound = AudioManager.shared.singleSound?.id == sound.id
 
       let item = CPListItem(
-        text: sound.title,
+        text: sound.localizedTitle,
         detailText: nil
       )
 
-      if isPlayingSingleSound {
+      if isCurrentSingleSound {
         item.accessoryType = .disclosureIndicator
-        item.setText("\(sound.title) ✓")
+        item.setText("\(sound.localizedTitle) ✓")
       }
 
       if let image = getSoundImage(for: sound) {
@@ -134,18 +134,18 @@ import os
       let renderer = UIGraphicsImageRenderer(size: size)
 
       return renderer.image { _ in
-        let isPlayingSingleSound = AudioManager.shared.singleSound?.id == sound.id
+        let isCurrentSingleSound = AudioManager.shared.singleSound?.id == sound.id
 
-        drawBackground(size: size, isPlayingSingleSound: isPlayingSingleSound, sound: sound)
-        drawIcon(size: size, isPlayingSingleSound: isPlayingSingleSound, sound: sound)
+        drawBackground(size: size, isCurrentSingleSound: isCurrentSingleSound, sound: sound)
+        drawIcon(size: size, isCurrentSingleSound: isCurrentSingleSound, sound: sound)
       }
     }
 
-    private static func drawBackground(size: CGSize, isPlayingSingleSound: Bool, sound: Sound) {
+    private static func drawBackground(size: CGSize, isCurrentSingleSound: Bool, sound: Sound) {
       let backgroundColor = getBackgroundColor(
-        for: sound, isPlayingSingleSound: isPlayingSingleSound)
+        for: sound, isCurrentSingleSound: isCurrentSingleSound)
 
-      if isPlayingSingleSound {
+      if isCurrentSingleSound {
         backgroundColor.withAlphaComponent(0.3).setFill()
       } else {
         UIColor.systemGray.withAlphaComponent(0.1).setFill()
@@ -155,7 +155,7 @@ import os
       circle.fill()
     }
 
-    private static func drawIcon(size: CGSize, isPlayingSingleSound: Bool, sound: Sound) {
+    private static func drawIcon(size: CGSize, isCurrentSingleSound: Bool, sound: Sound) {
       let iconName = sound.systemIconName
       let icon = UIImage(systemName: iconName) ?? UIImage(systemName: "speaker.wave.2")!
 
@@ -170,17 +170,17 @@ import os
         height: iconSize.height
       )
 
-      if isPlayingSingleSound {
-        getBackgroundColor(for: sound, isPlayingSingleSound: isPlayingSingleSound).setFill()
+      if isCurrentSingleSound {
+        getBackgroundColor(for: sound, isCurrentSingleSound: isCurrentSingleSound).setFill()
       } else {
         UIColor.carPlayIconTint.setFill()
       }
       configuredIcon.withRenderingMode(.alwaysTemplate).draw(in: iconRect)
     }
 
-    private static func getBackgroundColor(for sound: Sound, isPlayingSingleSound: Bool) -> UIColor
+    private static func getBackgroundColor(for sound: Sound, isCurrentSingleSound: Bool) -> UIColor
     {
-      if isPlayingSingleSound {
+      if isCurrentSingleSound {
         return UIColor.carPlayIconTint
       } else {
         return UIColor.systemGray

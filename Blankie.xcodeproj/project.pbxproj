@@ -135,6 +135,7 @@
 				"Managers/Audio/AudioManager+Notifications.swift",
 				"Managers/Audio/AudioManager+PlayableItem.swift",
 				"Managers/Audio/AudioManager+PlaybackControl.swift",
+				"Managers/Audio/AudioManager+PreviewMode.swift",
 				"Managers/Audio/AudioManager+QuickMix.swift",
 				"Managers/Audio/AudioManager+SingleSound.swift",
 				"Managers/Audio/AudioManager+SoundLoading.swift",

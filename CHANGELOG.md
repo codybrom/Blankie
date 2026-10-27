@@ -42,7 +42,7 @@ Blankie 2.1 adds Home Screen widgets on iPhone and iPad, Siri and Shortcuts acti
 - Fixed crashes and data loss when importing presets or custom sounds, including custom sounds disappearing from presets, continuing to play after removal or crashing when longer than 25 hours. Corrupted audio files no longer crash the sound editor.
 - Interrupted app data migrations now resume cleanly on the next launch.
 - Renamed or deleted presets and sounds now update immediately in widgets, Siri and Spotlight.
-- CarPlay now matches the car's light or dark appearance, enables Previous and Next immediately on launch, syncs favorites and preset edits with iPhone and pauses "Mix with Other Audio" while connected so dashboard controls stay dedicated to Blankie.
+- CarPlay now matches the car's light or dark appearance, shows built-in sound names in your device's language, enables Previous and Next immediately on launch, syncs favorites and preset edits with iPhone and pauses "Mix with Other Audio" while connected so dashboard controls stay dedicated to Blankie.
 - On Mac, the main window uses a solid background again, Autoplay on Open only triggers at launch, re-enabling Show in Menu Bar restores the menu bar icon immediately and the View menu no longer appears twice.
 
 ## [2.0.2] - 2026-06-28

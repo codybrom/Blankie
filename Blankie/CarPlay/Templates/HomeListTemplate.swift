@@ -83,7 +83,7 @@ import os
     private static func quickMixItem() -> CPListItem {
       let titles = AudioManager.shared.sounds
         .filter { $0.isSelected }
-        .map { $0.title }
+        .map { $0.localizedTitle }
       let item = CPListItem(
         text: String(localized: "Quick Mix"),
         detailText: titles.isEmpty ? nil : titles.joined(separator: ", ")

@@ -47,7 +47,8 @@ nonisolated class AudioAnalyzer {
     do {
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
-      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz), and imports have no length cap.
+      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz), and imports have no
+      // length cap.
       guard let frameCount = AVAudioFrameCount(exactly: file.length) else { return nil }
 
       guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {

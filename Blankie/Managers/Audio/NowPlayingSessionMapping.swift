@@ -96,7 +96,7 @@ enum NowPlayingSessionMapping {
     presetID: UUID?
   ) -> String {
     if let singleFileName {
-      return "solo:\(singleFileName)"
+      return "\(PlayableItem.singleTokenPrefix)\(singleFileName)"
     } else if isQuickMix {
       return "quickmix"
     } else if let presetID {
@@ -129,7 +129,7 @@ enum NowPlayingSessionMapping {
     case .bundled(let id):
       return "bundled:\(id)"
     case .single(let fileName):
-      return "solo:\(fileName):\(accent)"
+      return "\(PlayableItem.singleTokenPrefix)\(fileName):\(accent)"
     case .fallback(let kind, let icons):
       return "fallback:\(kind):\(accent):\(icons.joined(separator: ","))"
     }

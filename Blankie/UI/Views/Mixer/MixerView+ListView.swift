@@ -29,7 +29,8 @@ import os
         audioManager.toggleOrResume(sound)
       }
       .glassEffect(.regular, in: .rect(cornerRadius: 12))
-      // Keyed to the sound's own selection (as in GridSoundButton) so global play/pause stays quiet.
+      // Keyed to the sound's own selection (as in GridSoundButton), so global play/pause
+      // stays quiet.
       .sensoryFeedback(.selection, trigger: sound.isSelected)
     }
 

@@ -279,7 +279,7 @@ import os
       // Caption only a custom sound that credits an artist. Built-in authors are
       // in the credits screens.
       let item = CPListItem(
-        text: sound.title,
+        text: sound.localizedTitle,
         detailText: sound.isCustom ? sound.creditedAuthor : nil,
         image: SoundsListTemplate.getSoundImage(for: sound)
       )
