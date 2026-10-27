@@ -109,6 +109,19 @@ import SwiftUI
           !audioManager.sounds.contains { $0.fileName == fileName }
         }
       }
+      // A member that finishes loading while the editor is open joins the
+      // selection in its slot, so it can be reordered or removed.
+      .onChange(of: audioManager.sounds.map(\.fileName)) { _, loaded in
+        let arrived = unresolvedSounds.filter(loaded.contains)
+        guard !arrived.isEmpty else { return }
+        unresolvedSounds.removeAll(where: arrived.contains)
+        for fileName in arrived where !selectedSounds.contains(fileName) {
+          let standsAlone = audioManager.sounds.contains {
+            $0.fileName == fileName && !$0.isPresetUseOnly
+          }
+          if standsAlone { selectedSounds.append(fileName) }
+        }
+      }
       // Quick Mix has no preset, so use the app accent. Tinting the whole sheet
       // keeps the accent-colored sound icons stable across interactions.
       .tint(globalSettings.customAccentColor ?? .accentColor)
