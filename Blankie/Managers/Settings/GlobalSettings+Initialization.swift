@@ -69,6 +69,10 @@ extension GlobalSettings {
       UserDefaults.shared.object(forKey: UserDefaultsKeys.lockPortraitOrientationiOS) as? Bool
       ?? false
 
+    // iPhone opens to Now Playing unless someone chose the mixer first
+    nowPlayingFirst =
+      UserDefaults.shared.object(forKey: UserDefaultsKeys.nowPlayingFirst) as? Bool ?? true
+
     // Load Quick Mix sound file names (default to original 8 sounds)
     if let savedQuickMixSounds = UserDefaults.shared.array(
       forKey: UserDefaultsKeys.quickMixSoundFileNames) as? [String]

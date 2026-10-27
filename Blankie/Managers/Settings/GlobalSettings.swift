@@ -44,6 +44,7 @@ enum UserDefaultsKeys {
   static let showProgressBorder = "showProgressBorder"
   static let showPlaybackAsContinuous = "showPlaybackAsContinuous"
   static let lockPortraitOrientationiOS = "lockPortraitOrientationiOS"
+  static let nowPlayingFirst = "nowPlayingFirst"
   static let quickMixSoundFileNames = "quickMixSoundFileNames"
   static let lockScreenBackgroundEnabled = "lockScreenBackgroundEnabled"
   static let defaultLockScreenArtwork = "defaultLockScreenArtwork"
@@ -110,6 +111,9 @@ class GlobalSettings {
   }
 
   var lockPortraitOrientationiOS: Bool
+  /// iPhone: choosing a preset or sound opens Now Playing, with the mixer one
+  /// tap away (on), or opens the mixer first (off).
+  var nowPlayingFirst: Bool
   var quickMixSoundFileNames: [String]
   /// Ordered list of starred items shown in the iPad sidebar and CarPlay.
   /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
@@ -160,6 +164,7 @@ class GlobalSettings {
     showProgressBorder = true
     showPlaybackAsContinuous = true
     lockPortraitOrientationiOS = false
+    nowPlayingFirst = true
     quickMixSoundFileNames = [
       "rain", "waves", "fireplace", "white-noise",
       "wind", "stream", "birds", "coffee-shop",
