@@ -13,13 +13,16 @@ import SwiftUI
     private let globalSettings = GlobalSettings.shared
     private let audioManager = AudioManager.shared
     @State private var selectedSounds: [String] = []
+    /// Stored names with no loaded sound yet (custom sounds still loading),
+    /// carried through Done so the editor never prunes them.
+    @State private var unresolvedSounds: [String] = []
 
     var body: some View {
       NavigationStack {
         List {
           Section {
             Text(
-              "Quick Mix is a simple soundboard for quick access in CarPlay and beyond. Unlike presets, it doesn't have customizable volume, doesn't remember your sounds, and can't use custom sounds."
+              "Quick Mix is a simple soundboard for quick access in CarPlay and Home Screen widgets. Unlike presets, it doesn't remember your sounds or volume levels."
             )
             .font(.subheadline)
             .foregroundStyle(.secondary)
@@ -78,7 +81,8 @@ import SwiftUI
         .toolbar {
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") {
-              globalSettings.setQuickMixSoundFileNames(selectedSounds)
+              globalSettings.setQuickMixSoundFileNames(
+                Array((selectedSounds + unresolvedSounds).prefix(8)))
               // Stop any sound that was just removed from an active mix.
               audioManager.reconcileQuickMixMembership()
               dismiss()
@@ -89,11 +93,15 @@ import SwiftUI
         }
       }
       .onAppear {
-        // Drop any stale entries that can no longer stand alone (preset-only or
-        // since-removed sounds), so the order list, the count, and what Done
-        // saves all stay consistent with what's actually selectable.
-        selectedSounds = globalSettings.quickMixSoundFileNames.filter { fileName in
+        // Drop entries that can't stand alone (preset-only), so the order list,
+        // the count, and what Done saves match what's selectable. Names that
+        // don't resolve yet are kept aside rather than dropped.
+        let stored = globalSettings.quickMixSoundFileNames
+        selectedSounds = stored.filter { fileName in
           audioManager.sounds.contains { $0.fileName == fileName && !$0.isPresetUseOnly }
+        }
+        unresolvedSounds = stored.filter { fileName in
+          !audioManager.sounds.contains { $0.fileName == fileName }
         }
       }
       // Quick Mix has no preset, so use the app accent. Tinting the whole sheet
@@ -109,17 +117,17 @@ import SwiftUI
     private let audioManager = AudioManager.shared
     private let globalSettings = GlobalSettings.shared
 
-    private var builtInSounds: [Sound] {
+    private var eligibleSounds: [Sound] {
       // Preset-use-only sounds (explicit or implied by a non-looping one-shot)
       // can't stand alone, so they're never eligible for Quick Mix.
       audioManager.sounds
-        .filter { !$0.isCustom && !$0.isPresetUseOnly }
+        .filter { !$0.isPresetUseOnly }
         .sorted { $0.title < $1.title }
     }
 
     var body: some View {
       List {
-        ForEach(builtInSounds) { sound in
+        ForEach(eligibleSounds) { sound in
           let isSelected = selectedSounds.contains(sound.fileName)
           Button {
             if isSelected {

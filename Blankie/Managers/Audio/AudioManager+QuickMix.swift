@@ -65,10 +65,10 @@ extension AudioManager {
     // Update media control command state
     updateNextPreviousCommandState()
 
-    // Filter initial sounds to only include Quick Mix sounds (built-in only)
+    // Filter initial sounds to only include Quick Mix sounds
     let quickMixSounds = GlobalSettings.shared.quickMixSoundFileNames
     let validInitialSounds = initialSounds.filter { sound in
-      quickMixSounds.contains(sound.fileName) && !sound.isCustom
+      quickMixSounds.contains(sound.fileName)
     }
 
     Logger.audio.debug(
@@ -76,7 +76,7 @@ extension AudioManager {
     )
 
     // Reset all Quick Mix sounds to 80% volume
-    for sound in sounds where quickMixSounds.contains(sound.fileName) && !sound.isCustom {
+    for sound in sounds where quickMixSounds.contains(sound.fileName) {
       sound.volume = 0.8
       Logger.audio.debug("AudioManager: Reset \(sound.fileName) volume to 80%")
     }
@@ -188,7 +188,7 @@ extension AudioManager {
   func adjustQuickMixSoundVolume(fileName: String, deltaPercent: Int) {
     guard isQuickMix,
       GlobalSettings.shared.quickMixSoundFileNames.contains(fileName),
-      let target = sound(fileName: fileName), !target.isCustom
+      let target = sound(fileName: fileName)
     else { return }
     let current = Int((target.volume * 100).rounded())
     let step = min(5, max(-5, deltaPercent))
@@ -199,13 +199,6 @@ extension AudioManager {
   @MainActor
   func toggleQuickMixSound(_ sound: Sound) {
     guard isQuickMix else { return }
-
-    // Only allow toggling of built-in sounds (no custom sounds)
-    guard !sound.isCustom else {
-      Logger.audio.debug(
-        "AudioManager: Attempted to toggle custom sound in Quick Mix: \(sound.fileName)")
-      return
-    }
 
     if sound.isSelected {
       sound.isSelected = false
