@@ -78,6 +78,17 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
       return true
     }
 
+    // A native slider's knob is an AppKit-generated ValueIndicator inside the
+    // labeled Slider (e.g. "Rain", 80%); VoiceOver reads the slider, and SwiftUI
+    // can't label the knob. Framework false positive.
+    #if os(macOS)
+      if issue.auditType == .sufficientElementDescription,
+        issue.element?.elementType == .valueIndicator
+      {
+        return true
+      }
+    #endif
+
     // Real finding: log and fail.
     print("⚠️ [A11y audit] \(issue.auditType): \(issue.compactDescription)")
     print("   element: \(issue.element?.debugDescription ?? "nil")")

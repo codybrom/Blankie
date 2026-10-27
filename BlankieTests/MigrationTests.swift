@@ -10,19 +10,40 @@ import Testing
 
 @testable import Blankie
 
+/// Always on in the iOS simulator's sandbox. On the Mac, off unless the run sets
+/// BLANKIE_RUN_MIGRATION_TESTS=1 (from xcodebuild, pass
+/// TEST_RUNNER_BLANKIE_RUN_MIGRATION_TESTS=1).
+private nonisolated enum MigrationTestsOptIn {
+  #if os(macOS)
+    static let isEnabled =
+      ProcessInfo.processInfo.environment["BLANKIE_RUN_MIGRATION_TESTS"] == "1"
+  #else
+    static let isEnabled = true
+  #endif
+}
+
 /// Serialized + class-based: every test mutates the shared `UserDefaults` suites
-/// and the one-time migration flag, so they must run one at a time, and `init` /
-/// `deinit` clear that state before and after each test (the XCTest setUp /
-/// tearDown equivalents).
-@Suite(.serialized) final class MigrationTests {
+/// and the one-time migration flag, so they must run one at a time. On the Mac
+/// the test host is the real app, so these keys are the user's own presets and
+/// settings: the suite only runs when opted in, and `init` / `deinit` snapshot
+/// and restore every key it clears.
+@Suite(
+  .serialized,
+  .enabled(
+    if: MigrationTestsOptIn.isEnabled,
+    "On the Mac this rewrites the real app's presets. Run with BLANKIE_RUN_MIGRATION_TESTS=1."
+  )
+)
+final class MigrationTests {
+  private let snapshot = DefaultsSnapshot(MigrationTests.testKeys)
+
   init() {
-    // Clear any existing migration state, plus all test keys from both suites.
-    UserDefaults.shared.removeObject(forKey: "unifiedMigrationCompleted")
-    Self.clearAllTestKeys()
+    // Start every test from a clean slate in both suites.
+    snapshot.clear()
   }
 
   isolated deinit {
-    Self.clearAllTestKeys()
+    snapshot.restore()
   }
 
   @Test func userDefaultsMigration() {
@@ -243,33 +264,27 @@ import Testing
     UserDefaults.standard.set(30, forKey: "timerLastSelectedMinutes")
   }
 
-  private static func clearAllTestKeys() {
-    let testKeys = [
-      UserDefaultsKeys.volume,
-      UserDefaultsKeys.accentColor,
-      UserDefaultsKeys.autoPlayOnLaunch,
-      "hideInactiveSounds",
-      UserDefaultsKeys.language,
-      UserDefaultsKeys.enableSpatialAudio,
-      "soundState",
-      "defaultSoundOrder",
-      "defaultPreset",
-      "savedPresets",
-      "lastActivePresetID",
-      "rain_isSelected",
-      "rain_volume",
-      "waves_isSelected",
-      "waves_volume",
-      "timerLastSelectedHours",
-      "timerLastSelectedMinutes",
-      "customSoundSettings",
-      "legacyPreset",
-      "unifiedMigrationCompleted",
-    ]
-
-    for key in testKeys {
-      UserDefaults.standard.removeObject(forKey: key)
-      UserDefaults.shared.removeObject(forKey: key)
-    }
-  }
+  /// Every key these tests write, in either suite; snapshotted and restored per test.
+  private static let testKeys = [
+    UserDefaultsKeys.volume,
+    UserDefaultsKeys.accentColor,
+    UserDefaultsKeys.autoPlayOnLaunch,
+    "hideInactiveSounds",
+    UserDefaultsKeys.language,
+    UserDefaultsKeys.enableSpatialAudio,
+    "soundState",
+    "defaultSoundOrder",
+    "defaultPreset",
+    "savedPresets",
+    "lastActivePresetID",
+    "rain_isSelected",
+    "rain_volume",
+    "waves_isSelected",
+    "waves_volume",
+    "timerLastSelectedHours",
+    "timerLastSelectedMinutes",
+    "customSoundSettings",
+    "legacyPreset",
+    "unifiedMigrationCompleted",
+  ]
 }
