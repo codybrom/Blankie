@@ -328,7 +328,7 @@ import UniformTypeIdentifiers
           }
         }
         // Edit affordance for whatever is on screen — the solo sound's editor
-        // or the current preset (mirrors iOS's topTrailingToolbarButton). The
+        // or the current preset (mirrors iOS's editToolbarItems). The
         // default preset has no editor, so there the slot offers to start a
         // new preset from the playing sounds (confirm, then the creator).
         if !appState.showingSettingsPane {

@@ -191,11 +191,14 @@ extension CreatePresetSheet {
         Button {
           showingSoundSelection = true
         } label: {
-          HStack {
+          // Reads as a navigation row: plain label, count, then a gray chevron
+          // (the button would otherwise tint all three with the accent).
+          HStack(spacing: 8) {
             LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
+              .foregroundStyle(.primary)
             Image(systemName: "chevron.right")
-              .foregroundStyle(.tertiary)
-              .imageScale(.small)
+              .font(.footnote.weight(.semibold))
+              .foregroundStyle(Color(.tertiaryLabel))
               .accessibilityHidden(true)
           }
         }

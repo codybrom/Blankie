@@ -919,10 +919,11 @@ struct LibraryView: View {
         Section {
           if favoriteTokens.isEmpty {
             Text(
-              "Tap the star on any preset to add it here."
+              "Tap the star on any preset or sound to add it here."
             )
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            // .secondary falls just short of the contrast audit on the sidebar.
+            .foregroundStyle(.primary.opacity(0.75))
             // Match the picker rows' glass on the page (nil elsewhere, keeping
             // the default background).
             .listRowBackground(
