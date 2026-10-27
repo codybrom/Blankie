@@ -10,7 +10,7 @@
 		AAAA0000000000000000AA02 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = AAAA0000000000000000AA03 /* ZIPFoundation */; };
 		F91C1C852FF54C7F00C58FC6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F91C1C842FF54C7F00C58FC6 /* WidgetKit.framework */; };
 		F91C1C872FF54C7F00C58FC6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F91C1C862FF54C7F00C58FC6 /* SwiftUI.framework */; };
-		F91C1C942FF54C8200C58FC6 /* BlankieWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F91C1C832FF54C7F00C58FC6 /* BlankieWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F91C1C942FF54C8200C58FC6 /* BlankieWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F91C1C832FF54C7F00C58FC6 /* BlankieWidgetExtension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F94CB79B2FEA47920077688E /* QuickLook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F94CB79A2FEA47920077688E /* QuickLook.framework */; };
 		F94CB7A72FEA47920077688E /* BlankiePresetPreview.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F94CB7992FEA47920077688E /* BlankiePresetPreview.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F94CB7B02FEA47A80077688E /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = F94CB7AF2FEA47A80077688E /* ZIPFoundation */; };
@@ -687,6 +687,7 @@
 /* Begin PBXTargetDependency section */
 		F91C1C932FF54C8200C58FC6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilter = ios;
 			target = F91C1C822FF54C7F00C58FC6 /* BlankieWidgetExtension */;
 			targetProxy = F91C1C922FF54C8200C58FC6 /* PBXContainerItemProxy */;
 		};
