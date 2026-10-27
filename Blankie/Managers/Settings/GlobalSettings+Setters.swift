@@ -89,7 +89,7 @@ extension GlobalSettings {
     showMenuBarIcon = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showMenuBarIcon)
     // The Dock-hiding modes need the menu bar icon as the way back, so clear
-    // them when it's off — the app can never hide both the Dock and the icon.
+    // them when it's off.
     if !value {
       menuBarOnlyMode = false
       UserDefaults.shared.set(false, forKey: UserDefaultsKeys.menuBarOnlyMode)
@@ -141,8 +141,7 @@ extension GlobalSettings {
   func setStarredItems(_ value: [String]) {
     starredItems = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.starredItems)
-    // A favorited solo sound participates in lock-screen next/previous, so the
-    // command availability depends on the favorites list — refresh it here.
+    // Favorited solo sounds take part in lock-screen next/previous.
     AudioManager.shared.updateNextPreviousCommandState()
     AudioManager.shared.republishWidgetCatalog()
   }
@@ -156,9 +155,7 @@ extension GlobalSettings {
   /// Toggle a token's starred membership. Newly starred items append to the end.
   @MainActor
   func toggleStarred(_ token: String) {
-    // Mutate a local copy so `starredItems` publishes once (via setStarredItems),
-    // not twice — a double publish made the CarPlay observer rebuild its template
-    // twice, the first time reading the pre-mutation value.
+    // Mutate a local copy so `starredItems` publishes once, via setStarredItems.
     var items = starredItems
     if let index = items.firstIndex(of: token) {
       items.remove(at: index)

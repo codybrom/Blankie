@@ -12,8 +12,7 @@ extension AudioManager {
   // MARK: - Solo Mode
 
   /// The sound a `solo:` starred token refers to, or nil if the token isn't a
-  /// solo token or its sound no longer exists. Single resolver shared by the
-  /// picker, sidebar, CarPlay, and lock-screen navigation.
+  /// solo token or its sound no longer exists.
   func sound(forSoloToken token: String) -> Sound? {
     guard let fileName = GlobalSettings.soloFileName(fromToken: token) else { return nil }
     return sounds.first { $0.fileName == fileName }
@@ -22,21 +21,16 @@ extension AudioManager {
   @MainActor
   func toggleSoloMode(for sound: Sound) {
     if soloModeSound?.id == sound.id {
-      // Exit solo mode
       exitSoloMode()
     } else {
-      // Enter solo mode
       enterSoloMode(for: sound)
     }
   }
 
-  /// Restore solo mode from persisted state if a solo sound was saved, playing
-  /// only when `autoPlayOnLaunch` is set. Returns true when the saved solo
-  /// "wins" (so launch shouldn't fall back to the preset): it's restored, or
-  /// it's still pending a not-yet-loaded custom sound. Returns false when there
-  /// is no saved solo, or — once `soundsFullyLoaded` is true — when the saved
-  /// sound no longer exists (deleted); in that case the stale state is cleared.
-  /// Idempotent: no-ops once that sound is already soloing.
+  /// Restores a saved solo sound, playing only when `autoPlayOnLaunch` is set.
+  /// Returns true if the solo was restored or its custom sound hasn't loaded yet
+  /// (launch skips the preset). Once `soundsFullyLoaded`, a missing sound clears
+  /// the saved solo and returns false.
   @MainActor
   @discardableResult
   func restoreSoloModeIfNeeded(soundsFullyLoaded: Bool = false) -> Bool {
@@ -50,8 +44,7 @@ extension AudioManager {
       return true
     }
     if soundsFullyLoaded {
-      // Every sound is loaded and it still isn't found → it was deleted. Clear
-      // the stale solo so launch falls back to the preset instead of silence.
+      // The sound was deleted; launch falls back to the preset.
       Logger.audio.debug("AudioManager: Saved solo sound '\(savedSoloFileName)' is gone; clearing")
       GlobalSettings.shared.saveSoloModeSound(fileName: nil)
       return false
@@ -61,10 +54,8 @@ extension AudioManager {
     return true
   }
 
-  /// Apply the launch playback state for a preset (no solo): start playback when
-  /// `autoPlayOnLaunch` is set and the preset has selected sounds, otherwise
-  /// publish a paused Now Playing. Shared by initial launch and the fallback
-  /// when a saved solo sound turns out to be missing.
+  /// Launch state for a preset with no solo: plays when `autoPlayOnLaunch` is set
+  /// and sounds are selected, otherwise publishes a paused Now Playing.
   @MainActor
   func applyPresetLaunchState() {
     let preset = PresetManager.shared.currentPreset
@@ -85,8 +76,7 @@ extension AudioManager {
 
   @MainActor
   func enterSoloMode(for sound: Sound, startPlaying: Bool = true) {
-    // Already soloing this exact sound: do nothing. Re-running would save the
-    // solo volume (1.0) as the "original", corrupting later restoration.
+    // Re-entering would save the solo volume (1.0) as the original volume.
     if soloModeSound?.id == sound.id { return }
 
     Logger.audio.debug("AudioManager: Entering solo mode for '\(sound.title)'")
@@ -96,8 +86,7 @@ extension AudioManager {
     // Persist a pending (coalesced) mix edit before solo stops preset saves.
     PresetManager.shared.updateCurrentPresetState()
 
-    // Solo and Quick Mix are mutually exclusive, so leave Quick Mix first. Don't
-    // resume the pre-Quick-Mix mix, since solo pauses it right away.
+    // Solo and Quick Mix are mutually exclusive. No resume, since solo pauses the mix.
     if isQuickMix {
       exitQuickMix(resuming: false)
     }
@@ -107,46 +96,33 @@ extension AudioManager {
       SpatialSessionManager.shared.setMode(.off)
     }
 
-    // Switching directly from another solo sound: restore that sound's pre-solo
-    // volume & selection first, so it doesn't stay selected at full volume and
-    // leak into the mix the next time playback starts.
+    // Switching from another solo sound: restore its volume and selection so it
+    // doesn't join the mix at full volume.
     restoreSoloSoundState()
 
-    // Save original state before modifying
     soloModeOriginalVolume = sound.volume
     soloModeOriginalSelection = sound.isSelected
 
-    // Stop all sounds but DON'T touch their selection state (preserve preset configuration)
+    // Pause the others but keep their selection, which belongs to the preset.
     for otherSound in sounds where otherSound.id != sound.id {
       otherSound.pause()
     }
 
-    // Set solo mode
     soloModeSound = sound
-
-    // Save to persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: sound.fileName)
-
-    // Update media control command state
     updateNextPreviousCommandState()
-
-    // Set the sound to full volume for solo mode
     sound.volume = 1.0
-
-    // Temporarily mark the sound as selected for solo mode playback
     sound.isSelected = true
 
-    // Ensure the sound is loaded (loading applies a random start position)
+    // Loading applies a random start position; a reused stopped player needs it reset.
     if !sound.isLoaded {
       sound.loadSound()
     } else if !sound.isPlaying {
-      // Re-randomize a reused stopped player; auto-play no longer does this.
       sound.resetSoundPosition()
     }
 
-    // Start playing unless we're restoring into a paused state (e.g. launch
-    // with auto-play off). The sound is already selected, so the play/pause
-    // control can resume it later.
+    // When restoring paused (launch with auto-play off), the selected sound
+    // resumes from the play/pause control.
     if startPlaying {
       setGlobalPlaybackState(true)
       sound.play()
@@ -154,16 +130,14 @@ extension AudioManager {
       isGloballyPlaying = false
     }
 
-    // Update Now Playing info immediately
     nowPlayingManager.updateInfo(
       presetName: sound.title,
       isPlaying: startPlaying
     )
   }
 
-  /// Restore the currently-soloed sound to its pre-solo volume & selection and
-  /// clear the saved slots. Pauses the sound, but does not change global
-  /// playback or clear `soloModeSound` — callers handle those.
+  /// Pauses the soloed sound and restores its pre-solo volume and selection.
+  /// Leaves global playback and `soloModeSound` to the caller.
   @MainActor
   private func restoreSoloSoundState() {
     guard let soloSound = soloModeSound else { return }
@@ -187,31 +161,19 @@ extension AudioManager {
     Logger.audio.debug("AudioManager: Exiting solo mode")
 
     restoreSoloSoundState()
-
-    // Clear solo mode
     soloModeSound = nil
-
-    // Clear from persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: nil)
-
-    // Stop global playback
     setGlobalPlaybackState(false)
 
-    // A solo restored at launch skips the preset's applySoundStates, so
-    // presetStatesApplied never flips and later mix edits won't persist.
-    // Playback is already stopped above, so re-syncing here can't auto-start
-    // audio (the isSelected didSet autoplay is gated on isGloballyPlaying); it
-    // only corrects selection/volume to the preset and sets the flag.
+    // A solo restored at launch skips applySoundStates, so presetStatesApplied is
+    // still false. Playback is stopped first so this re-sync can't autoplay.
     if !PresetManager.shared.presetStatesApplied,
       let preset = PresetManager.shared.currentPreset
     {
       PresetManager.shared.applySoundStates(preset.soundStates)
     }
 
-    // Update media control command state
     updateNextPreviousCommandState()
-
-    // Clear Now Playing info
     nowPlayingManager.updateInfo(
       presetName: "Blankie",
       isPlaying: false
@@ -226,24 +188,17 @@ extension AudioManager {
     Logger.audio.debug("AudioManager: Exiting solo mode (without resuming)")
 
     restoreSoloSoundState()
-
-    // Clear solo mode
     soloModeSound = nil
-
-    // Clear from persistent storage
     GlobalSettings.shared.saveSoloModeSound(fileName: nil)
 
-    // Same re-sync as exitSoloMode. Replaying the current preset short-circuits
-    // as already active, so presetStatesApplied would stay false and later mix
-    // edits would never persist. Skipped inside applySoundStates (which calls
-    // this) so its isApplyingPresetStates window isn't closed early.
+    // Same re-sync as exitSoloMode. Skipped when applySoundStates is the caller,
+    // so its isApplyingPresetStates window stays open.
     if !isApplyingPresetStates, !PresetManager.shared.presetStatesApplied,
       let preset = PresetManager.shared.currentPreset
     {
       PresetManager.shared.applySoundStates(preset.soundStates)
     }
 
-    // Update media control command state
     updateNextPreviousCommandState()
 
     Logger.audio.debug("AudioManager: Exit solo mode (without resuming) complete")
@@ -258,7 +213,6 @@ extension AudioManager {
     // Persist a pending (coalesced) mix edit before preview stops preset saves.
     PresetManager.shared.updateCurrentPresetState()
 
-    // Store original volume and playback states (don't touch selection states)
     previewModeOriginalStates.removeAll()
     for existingSound in sounds {
       previewModeOriginalStates[existingSound.fileName] = PreviewOriginalState(
@@ -267,42 +221,33 @@ extension AudioManager {
       )
     }
 
-    // Pause all other sounds (but preserve their playback position)
-    // Don't pause the preview sound itself
     for otherSound in sounds where otherSound.id != sound.id {
       if otherSound.isPlaying {
         otherSound.pause()
       }
     }
 
-    // Set preview mode (this doesn't trigger UI changes like solo mode)
     previewModeSound = sound
 
     #if os(iOS) || os(visionOS)
-      // Activate the playback session here too: previews must be audible while
-      // the app is globally paused, where playSelected() (the usual activation
-      // point) never runs and the session would otherwise stay inactive.
+      // Previews play while globally paused, when playSelected() (which normally
+      // activates the session) never runs.
       setupAudioSessionForPlayback()
     #endif
 
-    // Set the sound to full volume for preview (will be adjusted by customization)
     sound.volume = 1.0
 
-    // Ensure the sound is loaded
     if !sound.isLoaded {
       sound.loadSound()
     }
 
-    // Update volume based on any temporary customizations that might be applied
+    // Applies any temporary customizations on top of full volume.
     sound.updateVolume()
 
-    // Start playing the preview sound
     let wasAlreadyPlaying = previewModeOriginalStates[sound.fileName]?.isPlaying ?? false
     if !wasAlreadyPlaying {
-      // Sound wasn't playing before - reset position (respecting randomization)
       sound.resetSoundPosition()
     }
-    // Play the sound (continues from current position if it was already playing)
     sound.play()
 
     Logger.audio.debug("AudioManager: Preview mode started for '\(sound.title)'")
@@ -315,45 +260,34 @@ extension AudioManager {
     guard let previewSound = previewModeSound else { return }
     Logger.audio.debug("AudioManager: Exiting preview mode for '\(previewSound.title)'")
 
-    // Handle the preview sound: pause it only if it wasn't playing before preview
     let previewSoundWasPlaying =
       previewModeOriginalStates[previewSound.fileName]?.isPlaying ?? false
     if !previewSoundWasPlaying {
       previewSound.pause(fadeDuration: pauseFadeDuration)
     }
-    // If it was playing before, let it continue playing (it will be handled in the restoration loop)
 
-    // Restore original volume and playback states for all sounds
     for sound in sounds {
       if let originalState = previewModeOriginalStates[sound.fileName] {
         sound.volume = originalState.volume
-
-        // Update volume to reflect the restored state
         sound.updateVolume()
 
-        // Restore playback state: if it was playing before and should still be
-        // playing. isSelected can flip mid-preview (e.g. the editor marking a
-        // sound preset-only deselects it) — never resume a deselected sound.
-        //
-        // Call play() unconditionally: it no-ops when genuinely audible and
-        // rescues a sound still mid fade-out (node.isPlaying lags playbackState
-        // by ~0.5s, so an isPlaying guard here would skip the rescue and strand
-        // the sound silent while selected and globally playing).
+        // isSelected can flip mid-preview, so a deselected sound stays off. No
+        // isPlaying guard: play() rescues a sound mid fade-out, since
+        // node.isPlaying lags playbackState by about 0.5s.
         if resuming, originalState.isPlaying, isGloballyPlaying, sound.isSelected {
           sound.play()
         }
       }
     }
 
-    // Clear preview mode
     previewModeSound = nil
     previewModeOriginalStates.removeAll()
 
     // A mix emptied during the preview pauses now.
     updateHasSelectedSounds()
 
-    // A preview while paused ran the engine. Idle it once the fade-out lands,
-    // or iOS keeps reporting the app as playing over silence.
+    // A preview while paused ran the engine; idle it after the fade so iOS
+    // stops reporting the app as playing.
     if !isGloballyPlaying {
       scheduleEngineIdlePause(afterFade: Sound.fadeDuration)
     }

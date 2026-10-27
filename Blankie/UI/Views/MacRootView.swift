@@ -8,8 +8,7 @@
 #if os(macOS)
   import SwiftUI
 
-  /// macOS root: the iPad Library sidebar paired with the mixer in a split view,
-  /// replacing the old toolbar preset picker and hamburger menu.
+  /// macOS root: the iPad Library sidebar paired with the mixer in a split view.
   struct MacRootView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @Binding var showingShortcuts: Bool

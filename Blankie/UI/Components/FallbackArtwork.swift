@@ -4,12 +4,10 @@
 //
 //  Created by Cody Bromley on 6/12/25.
 //
-//  The shared fallback artwork used wherever a sound or preset has no real
-//  artwork: an SF Symbol (or the Blankie mark) in the full accent on a dark,
-//  accent-tinted card — the pre-session placeholder with a material tint. The
-//  same view is rendered in-app (Now Playing sheet/bar, library rows) and
-//  rasterized into `MPMediaItemArtwork` for the lock screen / CarPlay, so every
-//  no-artwork state looks identical.
+//  Shared fallback artwork for any sound or preset without real artwork: an SF
+//  Symbol (or the Blankie mark) in the full accent on a dark, accent-tinted card.
+//  Rendered in-app and rasterized into `MPMediaItemArtwork` for the lock screen
+//  and CarPlay, so every no-artwork state looks identical.
 //
 
 import SwiftUI
@@ -17,16 +15,13 @@ import SwiftUI
 struct FallbackArtwork: View {
   /// What sits on the card.
   enum Glyph: Equatable {
-    case symbol(String)  // an SF Symbol — sound fallbacks, the waveform mark
+    case symbol(String)  // an SF Symbol (sound fallbacks, the waveform mark)
     case brand  // the Blankie mark ("blankie.symbol")
     case composite([String])  // a montage of a preset's sound icons (up to 4)
 
-    /// The fallback glyph for the live playback state, shared by the Now Playing
-    /// sheet, mini bar, and lock-screen render so they always agree: Quick Mix
-    /// always shows its grid icon, the default "All Blankie Sounds" (including
-    /// the no-preset state) keeps the Blankie mark, and a custom preset shows a
-    /// montage of its sounds (the mark when nothing is playing). Solo is handled
-    /// by each caller before this.
+    /// The fallback glyph for the live playback state, shared by Now Playing, the mini bar
+    /// and the lock screen. Quick Mix gets its grid icon, the default preset (or none) the
+    /// Blankie mark, and a custom preset a montage of its sounds. Callers handle solo first.
     static func playback(isQuickMix: Bool, isDefaultPreset: Bool, icons: [String]) -> Glyph {
       if isQuickMix { return .symbol("square.grid.2x2") }
       if isDefaultPreset { return .brand }
@@ -51,9 +46,8 @@ struct FallbackArtwork: View {
       : AnyShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
   }
 
-  /// A dark, accent-tinted card — the pre-session near-black tile, but tinted
-  /// with the accent as a soft material gradient (darkened heavily so it stays
-  /// subtle in the dark UI; the hue just warms the near-black).
+  /// A near-black card tinted with the accent as a soft gradient, darkened heavily
+  /// so the hue only warms the black.
   private var cardFill: LinearGradient {
     LinearGradient(
       colors: [
@@ -64,8 +58,7 @@ struct FallbackArtwork: View {
     )
   }
 
-  /// The glyph: the full accent on top of the dark card, like the pre-session
-  /// placeholder. The card is always darker than this, so every accent reads.
+  /// The glyph uses the full accent. The card is always darker, so every accent reads.
   private var glyphTone: Color { accent }
 
   var body: some View {
@@ -106,8 +99,8 @@ struct FallbackArtwork: View {
       .foregroundStyle(glyphTone)
   }
 
-  /// Up to four sound icons in a centered 2-column montage (rows of two, a lone
-  /// final icon centered), so a preset's fallback reads as *its* sounds.
+  /// Up to four sound icons in a centered 2-column montage (a lone final icon
+  /// centered), so a preset's fallback reads as its own sounds.
   private func compositeGrid(_ icons: [String]) -> some View {
     let cell = size * 0.30
     let spacing = size * 0.09
@@ -126,10 +119,8 @@ struct FallbackArtwork: View {
     }
   }
 
-  /// The Blankie mark in the full accent. Its aperture is a transparent
-  /// knockout, so the dark card shows through it as a single clean dark circle
-  /// against the bright mark. Palette mode (one tone) reliably punches that
-  /// knockout where monochrome can leave it filled.
+  /// The Blankie mark in the full accent; its aperture is a transparent knockout that
+  /// shows the dark card. Palette mode punches that knockout where monochrome can fill it.
   private var brandMark: some View {
     Image("blankie.symbol")
       .resizable()

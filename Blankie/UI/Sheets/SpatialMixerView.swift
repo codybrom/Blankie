@@ -11,16 +11,11 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS) || os(macOS)
 
-  /// Streams the listener's live head yaw from compatible headphones so the
-  /// grid can show which way they're actually facing (yaw nil = wedge rests
-  /// at "up"), and tracks the output route for the capability hints — the
-  /// binaural render works on any headphones, only tracking needs AirPods.
-  /// macOS has no AVAudioSession, so it skips route reading and only tracks
-  /// the AirPods connection (CMHeadphoneMotionManager is macOS 14+).
+  /// Streams head yaw from motion-capable headphones (nil points the wedge up) and
+  /// tracks the output route for the hints. macOS has no AVAudioSession, so it only tracks AirPods.
   final class HeadPoseMonitor: NSObject, ObservableObject, CMHeadphoneMotionManagerDelegate {
-    /// One app-lifetime instance: CoreMotion delivers queued events AFTER
-    /// updates stop — a deallocated manager/delegate was a use-after-free
-    /// crash (EXC_BAD_ACCESS in a CoreMotion NSOperation) on sheet dismissal.
+    /// App-lifetime instance: CoreMotion delivers queued events after updates stop,
+    /// so a deallocated manager or delegate crashes (EXC_BAD_ACCESS).
     static let shared = HeadPoseMonitor()
 
     @Published var yawDegrees: Double?
@@ -29,9 +24,8 @@ import SwiftUI
 
     private let manager = CMHeadphoneMotionManager()
     private var routeObserver: NSObjectProtocol?
-    // Set by the connection-status delegate, which only fires for
-    // motion-capable headphones — isDeviceMotionAvailable alone reports the
-    // DEVICE's capability and stays true with no (or non-AirPods) headphones.
+    // Set by the connection delegate (motion-capable headphones only).
+    // isDeviceMotionAvailable reports the device and stays true without headphones.
     private var trackingDeviceConnected = false
 
     private override init() {
@@ -42,8 +36,7 @@ import SwiftUI
     func start() {
       guard manager.isDeviceMotionAvailable, !manager.isDeviceMotionActive else { return }
       manager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
-        // Queued updates can land after stop(); dropping them keeps the wedge
-        // from freezing at the last head yaw when leaving Head Tracked mode.
+        // Drop updates queued after stop() so the wedge resets on leaving Head Tracked.
         guard let self, self.manager.isDeviceMotionActive, let motion else { return }
         self.yawDegrees = motion.attitude.yaw * 180 / .pi
       }
@@ -73,8 +66,7 @@ import SwiftUI
         NotificationCenter.default.removeObserver(routeObserver)
       }
       routeObserver = nil
-      // Connection monitoring outlives the sheet during a head-tracked
-      // session: it drives the headTracked → fixed downgrade on disconnect.
+      // Kept running during a head-tracked session to downgrade to Fixed on disconnect.
       if manager.isConnectionStatusActive,
         SpatialSessionManager.shared.mode != .headTracked
       {
@@ -95,8 +87,7 @@ import SwiftUI
       Task { @MainActor in
         self.trackingDeviceConnected = false
         self.refreshRoute()
-        // AirPods gone mid-session: downgrade to Fixed, keep playing. Lives
-        // here (not the sheet) so it still fires with the sheet closed.
+        // Downgrade here, outside the sheet, so it works with the sheet closed.
         if SpatialSessionManager.shared.mode == .headTracked {
           SpatialSessionManager.shared.setMode(.fixed)
         }
@@ -115,10 +106,8 @@ import SwiftUI
     }
   }
 
-  /// Experimental per-preset spatial mixer: a grid of the space around the
-  /// listener with draggable dots for each sound in the mix. Tap a dot to lock
-  /// it into space or keep it in your head. Placements are session-scoped and
-  /// discarded when the session ends — nothing is written to presets.
+  /// Experimental spatial mixer: drag each sound's pin around the listener.
+  /// Placements last for the session and are never written to presets.
   struct SpatialMixerView: View {
     private let audioManager = AudioManager.shared
     @ObservedObject private var session = SpatialSessionManager.shared
@@ -129,21 +118,18 @@ import SwiftUI
       audioManager.sounds.filter { $0.isSelected }
     }
 
-    /// Sounds placed in the field — the only ones shown on the grid.
     private var gridSounds: [Sound] {
       mixSounds.filter { session.isInField($0.fileName) && $0.isSpatialReady }
     }
 
-    /// Taken-out or not-yet-prepared sounds, shown in the row below the grid.
+    /// Removed or not-yet-prepared sounds, shown below the map.
     private var parkedSounds: [Sound] {
       mixSounds.filter { !(session.isInField($0.fileName) && $0.isSpatialReady) }
     }
 
     var body: some View {
       #if os(macOS)
-        // Inline pane swapped in for the sound grid (toggled from the window
-        // toolbar) — no sheet chrome; Arrange lives in the header row and the
-        // toolbar toggle stands in for Done.
+        // Inline pane toggled from the window toolbar, so no Done button.
         mixerContent
           .frame(maxWidth: 560)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -153,8 +139,6 @@ import SwiftUI
             .navigationTitle("Spatial Mix")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-              // Only offered when pins have strayed from the even spread (it
-              // would be a no-op right after seeding or a previous reset).
               if session.isActive, !isSpreadOut {
                 ToolbarItem(placement: .topBarLeading) { arrangeButton }
               }
@@ -173,13 +157,10 @@ import SwiftUI
               }
             }
         }
-        // Give the square spatial canvas a full-height page on iPad instead of a
-        // small centered form sheet that wastes the screen and crowds the map.
-        // A `.large` detent would override `.page` and reinstate the small card.
+        // Page-sized on iPad. A `.large` detent would override `.page`.
         .presentationSizing(.page)
         .presentationDragIndicator(.visible)
         .presentationBackground {
-          // More translucent than a stock material: let the mixer glow through.
           Rectangle()
             .fill(.ultraThinMaterial)
             .opacity(0.8)
@@ -187,15 +168,11 @@ import SwiftUI
       #endif
     }
 
-    /// Controls + map + parked row, with the head-pose lifecycle attached —
-    /// shared by the iOS sheet and the inline macOS pane.
     private var mixerContent: some View {
       VStack(spacing: 12) {
         controls
 
-        // Every state renders the same fixed layout (the strip reserves its
-        // space even when empty) so the map never resizes; pins and chips
-        // are the only things that come and go. Off = dimmed empty field.
+        // Same layout in every state so the map never resizes. Off dims an empty field.
         Group {
           SpatialGrid(
             sounds: session.isActive ? gridSounds : [],
@@ -248,24 +225,20 @@ import SwiftUI
       .tint(.primary)
     }
 
-    /// Whether the pins already sit in the even spread (seeded or previously
-    /// spread) — Spread Out would be a no-op.
+    /// True when pins already sit in the even spread, so Arrange is hidden.
     private var isSpreadOut: Bool {
       let sounds = gridSounds
       guard !sounds.isEmpty else { return true }
       return sounds.enumerated().allSatisfy { index, sound in
         let placement = sound.spatialPlacement()
         let slot = SpatialSessionManager.spreadSlot(index: index, count: sounds.count)
-        // Circular compare: drags store atan2 angles (-180...180], slots are
-        // [0..360) — -90° and 270° are the same pin position.
+        // Circular compare: drags store (-180...180], slots use [0..360).
         let delta = abs((placement.angle - slot.angle).truncatingRemainder(dividingBy: 360))
         return min(delta, 360 - delta) < 0.5
           && abs(placement.distance - slot.distance) < 0.01
       }
     }
 
-    /// Distributes every placed, spatial-ready sound evenly around the
-    /// listener, so overlapping dots become visible at a glance.
     private func spreadOutSounds() {
       guard !gridSounds.isEmpty else { return }
 
@@ -276,7 +249,6 @@ import SwiftUI
       }
     }
 
-    /// Apple-style session control: Off | Fixed | Head Tracked.
     private var controls: some View {
       VStack(alignment: .leading, spacing: 10) {
         HStack(spacing: 12) {
@@ -289,26 +261,23 @@ import SwiftUI
           ) {
             Text("Off").tag(SpatialSessionMode.off)
             Text("Fixed").tag(SpatialSessionMode.fixed)
-            // Like Apple's control: the option only exists when tracking-capable
-            // headphones are connected.
+            // Shown only with tracking-capable headphones, like Apple's control.
             if headPose.trackingAvailable {
               Text("Head Tracked").tag(SpatialSessionMode.headTracked)
             }
           }
           .pickerStyle(.segmented)
 
-          // The macOS pane has no nav bar; Arrange rides the controls row.
+          // No nav bar on macOS, so Arrange sits in this row.
           #if os(macOS)
             if session.isActive, !isSpreadOut {
               arrangeButton
             }
           #endif
         }
-        // AirPods-disconnect downgrades happen in HeadPoseMonitor's delegate.
 
-        // Soft capability hints: the binaural render works on any headphones,
-        // so we inform rather than gate. macOS can't read the output route
-        // (no AVAudioSession), so it only shows the tracking hint.
+        // Hints only: the binaural render works on any headphones. macOS can't
+        // read the route, so it shows only the tracking hint.
         #if os(iOS) || os(visionOS)
           if session.isActive, !headPose.headphonesConnected {
             Label("Connect headphones to hear the spatial effect", systemImage: "headphones")
@@ -357,10 +326,8 @@ import SwiftUI
         let scale = (side / 2 - 28) / CGFloat(Self.fieldRadius)  // points per meter
         let radius = CGFloat(Self.fieldRadius) * scale
 
-        // The sheet's present/dismiss transition passes through zero-size
-        // geometry, where scale goes negative/zero and propagates degenerate
-        // frame dimensions and font sizes into layout (crashed dismissal).
-        // Render nothing until there's real space to draw in.
+        // The sheet transition passes through zero-size geometry, and a
+        // non-positive scale crashes layout.
         if scale > 0 {
           gridContent(center: center, scale: scale, radius: radius)
         }
@@ -369,16 +336,13 @@ import SwiftUI
 
     private func gridContent(center: CGPoint, scale: CGFloat, radius: CGFloat) -> some View {
       ZStack {
-        // Glassy field backing: .regular glass reads opaque on surfaces
-        // this large, so use clear glass + a slight dim + an accent rim.
+        // .regular glass reads opaque at this size: clear glass, dim and accent rim.
         glassDisc(radius: radius)
           .position(center)
 
         gridBackground(center: center, scale: scale)
 
-        // Live listening direction: head tracking anchors the SOUNDS in the
-        // room, so turning right means you now face sounds placed clockwise
-        // — the wedge sweeps over what you're pointed at.
+        // Sounds stay fixed in the room, so the wedge turns with the head.
         FacingWedge()
           .fill(.tint.opacity(0.13))
           .frame(width: radius * 2, height: radius * 2)
@@ -389,7 +353,7 @@ import SwiftUI
           .animation(.linear(duration: 0.1), value: headYawDegrees)
           .allowsHitTesting(false)
 
-        // Solid hub over the dead zone — pins can't live here (0.5m clamp).
+        // Hub over the 0.5 m dead zone.
         Circle()
           .fill(.secondary.opacity(0.3))
           .overlay {
@@ -421,7 +385,7 @@ import SwiftUI
         let bounds = CGRect(
           x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
 
-        // Graph-paper grid, one line per half meter, clipped to the field circle
+        // One line per half meter, clipped to the field.
         let clip = Path(ellipseIn: bounds)
         context.clip(to: clip)
         var grid = Path()
@@ -438,7 +402,7 @@ import SwiftUI
         }
         context.stroke(grid, with: .color(.secondary.opacity(0.15)), lineWidth: 1)
 
-        // Field boundary + 1m/2m reference rings
+        // Boundary plus 1 m and 2 m rings.
         context.stroke(clip, with: .color(.secondary.opacity(0.4)), lineWidth: 1.5)
         for meters: CGFloat in [1, 2] {
           let ring = CGRect(
@@ -448,8 +412,7 @@ import SwiftUI
             Path(ellipseIn: ring), with: .color(.secondary.opacity(0.2)), lineWidth: 1)
         }
 
-        // Dead zone: pins clamp to ≥0.5m from the listener, so disclose the
-        // keep-out spot with a dashed ring (matches the actual drag clamp).
+        // Dashed ring at the 0.5 m drag clamp.
         let exclusionRadius = 0.5 * scale
         let exclusion = CGRect(
           x: center.x - exclusionRadius, y: center.y - exclusionRadius,
@@ -466,17 +429,15 @@ import SwiftUI
 
   // MARK: - Parked Sounds (below the grid)
 
-  /// Sounds that aren't on the spatial map: taken off by tap, or long ones
-  /// that haven't rendered their mono variant yet. Tap to (prepare and) place.
-  /// Always occupies its height so the map above never resizes.
+  /// Sounds off the map (removed, or long sounds without a mono variant yet).
+  /// Keeps its height so the map never resizes.
   private struct ParkedSoundsRow: View {
     let sounds: [Sound]
 
     var body: some View {
       Group {
         if sounds.isEmpty {
-          // Fixed-height reservation: a bare Color.clear is greedy and would
-          // steal the map's height whenever the strip is empty.
+          // Fixed height: a bare Color.clear would take the map's height.
           Color.clear
             .frame(height: 72)
         } else {
@@ -486,8 +447,7 @@ import SwiftUI
               .textCase(.uppercase)
               .foregroundColor(.secondary)
 
-            // Wraps to extra rows rather than scrolling; the map above is
-            // width-sized, so growth here only consumes the spacer below.
+            // Wraps; the map is width-sized, so extra rows only use the spacer.
             LazyVGrid(
               columns: [GridItem(.adaptive(minimum: 64), spacing: 12)], spacing: 8
             ) {
@@ -526,7 +486,7 @@ import SwiftUI
           }
         }
 
-        // Not a ternary String — that's Text's verbatim init, skipping localization.
+        // A ternary String would pick Text's verbatim init and skip localization.
         Group {
           if isPreparing {
             Text("Preparing…")
@@ -543,8 +503,7 @@ import SwiftUI
       .accessibilityLabel(Text("\(sound.localizedTitle), in your head, tap to place in space"))
     }
 
-    /// Long sounds render their mono variant first ("Preparing for Spatial"),
-    /// then everything locks into the field and jumps onto the grid.
+    /// Long sounds render a mono variant before joining the field.
     private func placeInField() {
       guard !isPreparing else { return }
 
@@ -566,9 +525,8 @@ import SwiftUI
     }
   }
 
-  /// Classic map-pin teardrop: circular head flowing into a tapered tail, as
-  /// one filled path (the tip is the precise placement point). Arc direction
-  /// verified: clockwise=false sweeps over the top in SwiftUI's flipped space.
+  /// Map-pin teardrop; the tip is the placement point. `clockwise: false`
+  /// sweeps over the top in SwiftUI's flipped space.
   private nonisolated struct PinShape: Shape {
     func path(in rect: CGRect) -> Path {
       var path = Path()
@@ -588,8 +546,7 @@ import SwiftUI
     }
   }
 
-  /// A wide pie slice pointing "up" (the canonical forward direction); the
-  /// grid rotates it to the live head yaw.
+  /// Pie slice pointing up (forward); the grid rotates it to the head yaw.
   private nonisolated struct FacingWedge: Shape {
     var spanDegrees: Double = 70
 
@@ -629,11 +586,9 @@ import SwiftUI
           y: center.y - CGFloat(cos(radians)) * distance * scale
         )
         .onTapGesture {
-          // Take the sound out of the field; it moves to the parked row.
           SpatialSessionManager.shared.setInField(false, for: sound.fileName)
 
-          // Last pin removed: an empty map isn't a spatial session, and
-          // setMode(.off) already rebuilds every player, this one included.
+          // Last pin removed ends the session; setMode(.off) rebuilds every player.
           let othersOnMap = AudioManager.shared.sounds.contains {
             $0.isSelected && $0.isSpatialReady
               && SpatialSessionManager.shared.isInField($0.fileName)
@@ -647,8 +602,6 @@ import SwiftUI
         .gesture(dragGesture)
     }
 
-    /// Map-pin look: a single teardrop silhouette (head + tapering tail in one
-    /// filled path) with the sound's icon in the head, label underneath.
     private var pin: some View {
       VStack(spacing: 2) {
         PinShape()

@@ -34,7 +34,7 @@ final class AudioEngineManager {
   /// rebuild transitions from another file (same relaxation as Sound.lufs).
   var state: EngineState = .idle
 
-  /// Single mix-bus peak limiter (mainMixer → limiter → output).
+  /// Single mix-bus peak limiter between the main mixer and the output.
   private(set) var limiter: AVAudioUnitEffect
 
   /// Experimental 3D environment for spatial sounds (mono inputs only); lives
@@ -46,7 +46,7 @@ final class AudioEngineManager {
   /// an explicit registry lets rebuilds enumerate every node.
   private(set) var registered: [ObjectIdentifier: SoundPlayer] = [:]
 
-  /// Set once the lazy mainMixer → limiter → output chain is wired up.
+  /// Set once the main mixer, limiter and output are wired.
   private var limiterConnected = false
 
   // Rebuild coalescing guards (used by the +Lifecycle extension).
@@ -57,7 +57,7 @@ final class AudioEngineManager {
   private var startRetryCount = 0
   private let maxStartRetries = 5
   /// One retry in flight at a time. Every selected sound's play() reaches
-  /// ensureRunning, so one failed pass would otherwise spend the whole budget.
+  /// ensureRunning, and they share one retry budget.
   private var startRetryPending = false
 
   /// Starts the engine. Tests replace it to simulate a start failure.
@@ -75,10 +75,8 @@ final class AudioEngineManager {
     engine.isAutoShutdownEnabled = true
     observeEngineNotifications()
 
-    // Global volume and mix-with-others apply to the whole mix, so they live on
-    // the main mixer (per-sound updateVolume no longer multiplies them in).
-    // GlobalSettings' setters call applyGlobalVolumeSettings() directly; seed
-    // the initial gain here.
+    // Global volume and mix-with-others live on the main mixer. GlobalSettings'
+    // setters call applyGlobalVolumeSettings(); this seeds the initial gain.
     applyGlobalVolumeSettings()
   }
 
@@ -110,15 +108,13 @@ final class AudioEngineManager {
 
   // MARK: - Graph attach / detach
 
-  /// Attaches a player and wires its chain: spatial players go node →
-  /// environment (mono, HRTF-positioned); everything else node → gain →
-  /// mainMixer with the file's format (the mixer handles SR conversion).
-  /// Idempotent.
+  /// Attaches a player and wires its chain (idempotent). Spatial players feed the
+  /// environment (mono, HRTF-positioned); others feed their gain node, then the
+  /// main mixer in the file's format (the mixer converts sample rate).
   func attach(_ player: SoundPlayer) {
     let key = ObjectIdentifier(player)
-    // Trust the registry only while the node is still attached. A teardown can
-    // leave a node detached (engine == nil) with a stale registry entry, and
-    // playing a detached node crashes — so re-wire it instead of no-op'ing.
+    // Trust the registry only while the node is attached. A teardown can leave
+    // a detached node with a stale entry, and playing a detached node crashes.
     if registered[key] != nil, player.node.engine != nil {
       return
     }
@@ -173,7 +169,7 @@ final class AudioEngineManager {
 
   // MARK: - Spatial environment
 
-  /// Wires the 3D environment into the mix once (environment → mainMixer).
+  /// Wires the 3D environment into the main mixer once.
   func connectEnvironmentIfNeeded() {
     guard !environmentConnected else { return }
 
@@ -206,11 +202,9 @@ final class AudioEngineManager {
       x: distance * sin(radians), y: elevation, z: -distance * cos(radians))
   }
 
-  /// Default ring slot from a stable hash of the sound's name (djb2, then a
-  /// Fibonacci mix — raw djb2 low bits are dominated by the shared ".m4a" /
-  /// ".wav" suffixes, which clustered every sound at nearly the same angle).
-  /// Swift's Hashable is seeded per launch, hence the hand-rolled hash.
-  /// Ear height only — placements are 2D throughout.
+  /// Default ring slot from a stable djb2 hash of the name plus a Fibonacci mix
+  /// (raw djb2 low bits cluster on shared file suffixes). Swift's Hashable is
+  /// seeded per launch. Placements are 2D at ear height.
   static func defaultSpatialPlacement(for name: String) -> (
     angleDegrees: Float, distance: Float
   ) {
@@ -230,8 +224,8 @@ final class AudioEngineManager {
 
   // MARK: - Limiter chain
 
-  /// Wires mainMixer → limiter → output once. Format nil lets each edge adopt
-  /// the hardware format, so output sample-rate switches stay the engine's job.
+  /// Wires the main mixer through the limiter to the output once. A nil format
+  /// lets each edge adopt the hardware format across sample-rate switches.
   func connectLimiterChainIfNeeded() {
     guard !limiterConnected else { return }
 
@@ -277,9 +271,8 @@ final class AudioEngineManager {
     }
   }
 
-  /// Pauses hardware I/O once nothing is rendering (graph stays intact;
-  /// `ensureRunning()` restarts on next play). An engine left running — even
-  /// over silence — makes iOS report the app as playing despite rate 0.
+  /// Pauses hardware I/O once nothing is rendering; the graph stays intact for
+  /// `ensureRunning()`. A running engine makes iOS report playback even at rate 0.
   @discardableResult
   func pauseIfIdle() -> Bool {
     guard engine.isRunning else { return false }
@@ -324,18 +317,15 @@ final class AudioEngineManager {
     Task { @MainActor in
       try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
       self.startRetryPending = false
-      // Key on play intent, not engine state. A pause in the meantime must not
-      // restart the engine, and a rebuild may have restarted it without
-      // rescheduling the sound that failed to start.
+      // Gate on play intent. A pause in the meantime must not restart the engine,
+      // and a rebuild may have restarted it without rescheduling the failed sound.
       guard AudioManager.shared.isGloballyPlaying else {
         // The user paused. The next play starts with a full budget.
         self.startRetryCount = 0
         return
       }
-      // Recovering the engine isn't enough: if we were "playing" while it was
-      // down, nothing rescheduled the sounds, so the lock screen shows rate 1.0
-      // over silence. Resume the (solo-aware) selection once it's back. Sounds
-      // already playing ignore the call.
+      // A recovered engine still needs the selection rescheduled, or the lock
+      // screen shows rate 1.0 over silence. playSelected() skips playing sounds.
       if self.ensureRunning() {
         AudioManager.shared.playSelected()
       }
@@ -350,9 +340,8 @@ final class AudioEngineManager {
     set { engine.mainMixerNode.outputVolume = newValue }
   }
 
-  /// Recompute the main-mixer gain from the global volume settings. Called
-  /// synchronously by GlobalSettings' volume setters (the settings are mutated
-  /// only through them), keeping the volume slider's response crisp.
+  /// Recomputes the main-mixer gain. GlobalSettings' volume setters (the only
+  /// writers) call this synchronously so the slider responds immediately.
   func applyGlobalVolumeSettings() {
     let settings = GlobalSettings.shared
     globalVolume =

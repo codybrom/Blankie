@@ -8,7 +8,6 @@
 import SwiftUI
 import os
 
-// Animation trigger struct to consolidate multiple animation values
 private struct AnimationTrigger: Equatable {
   let soloMode: UUID?
   let quickMix: Bool
@@ -16,8 +15,8 @@ private struct AnimationTrigger: Equatable {
   let isLoading: Bool
 }
 
-/// The iPhone stack's pushed pages. The Library is the stack ROOT (spatially
-/// to the left); the mixer is the only pushed destination.
+/// The iPhone stack's pushed pages. The Library is the root; the mixer is the
+/// only pushed destination.
 private enum IPhonePage: Hashable {
   case mixer
 }
@@ -33,7 +32,6 @@ private enum IPhonePage: Hashable {
     /// launches with the mixer pushed on top, so the mixer's back button (or
     /// an edge swipe) leads left to the Library.
     @State private var iPhonePath: [IPhonePage] = [.mixer]
-    // Start with the Library showing; the system still collapses it when narrow.
     @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
     @State var showingSoundManagement = false
     @State var showingSettings = false
@@ -53,21 +51,19 @@ private enum IPhonePage: Hashable {
     /// once that editor does, so the editor's unsaved draft isn't thrown away.
     @State private var closesMixerSheetAfterEditor = false
     @State private var showingPageTimer = false
-    /// iPhone Duo's cover keeps a vertical toolbar rail beside the page; the
-    /// player's AirPlay and Timer move onto it.
+    /// iPhone Duo's cover has a vertical toolbar rail; AirPlay and Timer move onto it.
     @State private var hasToolbarRail = false
     @State private var showingVolumeZeroWarning = false
     @State private var isLandscape = false
-    // Measured Now Playing bar height, used to inset the iPhone and stacked Duo
-    // Library lists under it (the stack's safeAreaBar doesn't reach that root list).
+    // Insets the Library lists, which the stack's safeAreaBar doesn't reach.
     @State private var nowPlayingBarHeight: CGFloat = 0
     /// The fold in window space (decides the propped-up layout) and in the
     /// playback bar's space (keeps the bar off a bent crease).
     @State private var windowFold = FoldInfo.none
     @State private var barFold = FoldInfo.none
     @State private var barWidth: CGFloat = 0
-    /// Nightstand: the lower half can swap the sounds for the Library, and an
-    /// open Now Playing steps aside while propped up (restored after).
+    /// Nightstand: the lower half can show the Library in place of the sounds,
+    /// and an open Now Playing closes while propped up and reopens after.
     @State private var proppedShowsLibrary = false
     @State private var quickMixShowsColumn = false
     @State private var detailFold = FoldInfo.none
@@ -75,10 +71,8 @@ private enum IPhonePage: Hashable {
     @State private var nowPlayingBeforeProppedUp = false
     @State private var proppedLowerHeight: CGFloat = 0
     @State private var proppedBottomInset: CGFloat = 0
-    /// Anchors the zoom transition between the mini bar and the Now Playing cover.
     @Namespace private var nowPlayingNamespace
 
-    // Performance optimization: cached state properties
     @State var cachedFilteredSounds: [Sound] = []
     @State var lastFilterHash: Int = 0
     @State var cachedColumnWidth: CGFloat = 0
@@ -113,11 +107,8 @@ private enum IPhonePage: Hashable {
         }
       }
       .onFoldChange { windowFold = $0 }
-      // iPad covers the content with a fullScreenCover; even a page-sized sheet
-      // stays an inset floating card there. iPhone keeps a sheet for the
-      // system's grab-anywhere pull-to-dismiss. Both zoom from the mini player.
-      // Swapping the two rebuilds everything above, so the layout handlers
-      // below stay outside it.
+      // Swapping cover and sheet rebuilds everything above, so the layout
+      // handlers stay below this modifier.
       .modifier(
         NowPlayingPresentation(
           isPresented: $showingNowPlaying,
@@ -132,9 +123,8 @@ private enum IPhonePage: Hashable {
           )
         }
       )
-      // The iPhone's player is a page and its mixer a sheet; the wide layouts
-      // flip that. Hand Now Playing over when the layout changes (closing or
-      // opening iPhone Duo) instead of stacking a sheet over the page.
+      // The iPhone's player is a page and its mixer a sheet; wide layouts flip
+      // that. Opening or closing iPhone Duo hands Now Playing over between them.
       .onChange(of: currentLayout == .compact) { _, compact in
         if compact {
           if showingNowPlaying && opensNowPlaying {
@@ -169,8 +159,7 @@ private enum IPhonePage: Hashable {
           showingNowPlaying = false
         } else if nowPlayingBeforeProppedUp {
           nowPlayingBeforeProppedUp = false
-          // Shut straight from seated: the iPhone's Now Playing is its page, so
-          // restore that rather than a sheet over it.
+          // Closed from seated: the iPhone restores Now Playing as its page.
           if currentLayout == .compact && opensNowPlaying {
             iPhonePath = [.mixer]
           } else if currentLayout != .pages {
@@ -178,8 +167,7 @@ private enum IPhonePage: Hashable {
           }
         }
       }
-      // Facing pages already show Now Playing on the left page; close a player
-      // the closed phone left open (Quick Mix, or a mixer-first preset).
+      // Facing pages already show Now Playing on the left page.
       .onChange(of: currentLayout == .pages) { _, pages in
         if pages { showingNowPlaying = false }
       }
@@ -192,9 +180,8 @@ private enum IPhonePage: Hashable {
           Logger.ui.debug("MixerView: SoundSheet will be dismissed for '\(oldSound.title)'")
         }
       }
-      // Launch nag when Mix With Other Audio is on but Blankie's volume with
-      // media is zeroed — playback would be silent (mirrors Music.app's
-      // volume warning on macOS).
+      // Launch warning when Mix With Other Audio is on and Blankie's volume
+      // with media is zero.
       .onAppear {
         if VolumeZeroWarning.shouldWarn() {
           VolumeZeroWarning.markShown()
@@ -212,18 +199,15 @@ private enum IPhonePage: Hashable {
       } message: {
         Text("To change it, adjust 'Blankie Volume with Media' in Settings.")
       }
-      // The last preset couldn't be restored at launch: open on the Library to
-      // choose one, not a player for a preset nobody picked.
-      // Initial too: a launch from CarPlay or a widget can finish loading
-      // before this view exists.
+      // A failed launch restore opens on the Library. Initial, since a CarPlay
+      // or widget launch can finish loading before this view exists.
       .onChange(of: presetManager.isLoading, initial: true) { _, loading in
         guard !loading, presetManager.lastPresetRestoreFailed else { return }
         var transaction = Transaction()
         transaction.disablesAnimations = true
         withTransaction(transaction) { iPhonePath = [] }
       }
-      // Onboarding just created (and applied) a preset — land on it: close
-      // Settings if it hosted the onboarding, and show the mixer.
+      // Onboarding created a preset: close Settings and show the mixer.
       .onChange(of: appState.onboardingCreatedPreset) { _, created in
         guard created else { return }
         appState.onboardingCreatedPreset = false
@@ -249,19 +233,11 @@ private enum IPhonePage: Hashable {
       }
       .sheet(isPresented: $showingSettings) {
         SettingsView()
-          // A full settings screen, not a dialog — give it a page on iPad
-          // instead of the default small centered form sheet.
           .presentationSizing(.page)
       }
-      // Sound add/remove, preset switches, and preset edits all flow through
-      // @Observable reads now (audioManager.sounds, presetManager.currentPreset),
-      // so the grid refreshes automatically — no manual trigger needed. Only the
-      // Quick Mix transition keeps a handler, since it has navigation side effects.
+      // Quick Mix always lands on its mixer, including when started from a
+      // widget, CarPlay or Siri.
       .onChange(of: audioManager.isQuickMix) { _, isQuickMix in
-        // Quick Mix is a grid-first mode — entering it (e.g. from the preset
-        // picker) always lands on the mixer, never the Now Playing view.
-        // The mixer sheet shows the preset's sounds; started from outside
-        // (widget, CarPlay, Siri), Quick Mix closes it too.
         if isQuickMix {
           showingNowPlaying = false
           closeMixerSheet()
@@ -287,17 +263,16 @@ private enum IPhonePage: Hashable {
       }
     }
 
-    /// The editors the mixer's Edit/Spatial buttons open, plus the audio error
-    /// alert. Attached twice — the root and the iPhone's Sound Mixer sheet — and
-    /// only the one in front hosts, since a view already showing a sheet can't
-    /// present another.
+    /// Editors and the audio error alert. Attached to both the root and the
+    /// iPhone's mixer sheet; only the front one hosts, since a view already
+    /// showing a sheet can't present another.
     private func editorPresentations(_ content: some View, hosts: Bool) -> some View {
       content
         .modifier(AudioErrorHandler(hosts: hosts))
         .sheet(item: gated($soundToEdit, hosts)) { sound in
           SoundSheet(mode: .edit(sound))
             .modifier(EditorPlacement(layout: currentLayout))
-            .interactiveDismissDisabled()  // Prevent accidental dismissal
+            .interactiveDismissDisabled()
             .onAppear {
               Logger.ui.debug("MixerView: SoundSheet appeared for '\(sound.title)'")
             }
@@ -317,8 +292,6 @@ private enum IPhonePage: Hashable {
           TimerSheetView()
             .presentationDetents([.medium, .large])
         }
-        // The default preset has no editor; its Edit slot offers to start a new
-        // preset from whatever is currently playing instead.
         .alert(
           "Create a Preset from Playing Sounds?",
           isPresented: gated($showingNewPresetConfirmation, hosts)
@@ -340,9 +313,8 @@ private enum IPhonePage: Hashable {
             .onDisappear {
               Logger.ui.debug("MixerView: EditPresetSheet closed")
 
-              // CRITICAL: Re-establish media controls after sheet dismissal
-              // Animated artwork video preview may have caused iOS to disconnect remote command handlers
-              // We restore controls regardless of play state since the gallery may have been browsed
+              // Animated artwork previews can disconnect the remote command
+              // handlers, so restore them whatever the play state.
               Logger.ui.debug("MixerView: Restoring media controls after sheet dismissal")
               audioManager.setupMediaControls()
             }
@@ -357,9 +329,7 @@ private enum IPhonePage: Hashable {
       Binding(get: { hosts && binding.wrappedValue }, set: { binding.wrappedValue = $0 })
     }
 
-    /// App-wide Grid/List preference. Read live from GlobalSettings so changes
-    /// made in the Settings sheet take effect immediately — a local @State
-    /// mirror would only refresh on the next view appearance.
+    /// Read live so a change in Settings applies immediately.
     var showingListView: Bool {
       globalSettings.showingListView
     }
@@ -382,8 +352,7 @@ private enum IPhonePage: Hashable {
               }
               mainContentView
             }
-            // Beside the Library on a flat iPhone Duo, the mixer takes the page
-            // past the fold, where the book pose puts it, so bending moves nothing.
+            // On iPhone Duo the mixer starts past the fold, flat or bent.
             .padding(
               .leading,
               CreaseInsets.trailingPageStart(containerWidth: detailWidth, fold: detailFold) ?? 0)
@@ -394,24 +363,17 @@ private enum IPhonePage: Hashable {
           } action: {
             detailWidth = $0
           }
-          // The page header (or Quick Mix's control column) names what's
-          // playing; otherwise a plain inline title.
           .navigationTitle(
             regularTitle
           )
           .navigationBarTitleDisplayMode(.inline)
-          // The NavigationSplitView owns the sidebar toggle and keeps it
-          // available in the detail when collapsed, so we add no reveal control.
+          // NavigationSplitView supplies the sidebar toggle.
           .toolbarBackground(.hidden, for: .navigationBar)
           .toolbar {
             editToolbarItems
           }
         }
-        // Playback controls must be reachable at every size class. Without
-        // this, iPad at regular horizontal size shows no play/pause at all
-        // (compact width falls back to iPhoneLayout, which does include it).
-        // Quick Mix carries its own controls; elsewhere a bare bar (the sidebar
-        // and header already say what's playing).
+        // Quick Mix carries its own controls.
         .nowPlayingBottomBar {
           if !hidesNowPlayingBarForSolo && !audioManager.isQuickMix {
             regularPlaybackBar
@@ -423,11 +385,8 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     private var iPhoneLayout: some View {
-      // The Library is the stack's ROOT, to the LEFT of the mixer: the app
-      // launches with the mixer pushed on top, the mixer's back button slides
-      // left to the Library, and selecting any Library row pushes the mixer
-      // again. Settings is a further push from the Library's leading gear —
-      // as the root, the Library has no back button competing for that edge.
+      // The Library is the root, so it has no back button competing with the
+      // Settings gear. Launch pushes the mixer on top.
       NavigationStack(path: $iPhonePath) {
         LibraryView(
           presentation: .page,
@@ -436,8 +395,6 @@ private enum IPhonePage: Hashable {
           bottomBarHeight: nowPlayingBarHeight
         )
         .navigationDestination(for: IPhonePage.self) { _ in
-          // Quick Mix is mixer-only; everything else plays on Now Playing
-          // unless someone chose the mixer first in Settings.
           if opensNowPlaying {
             nowPlayingPage(drawsBackdrop: true, showsMixerButton: true)
           } else {
@@ -445,8 +402,7 @@ private enum IPhonePage: Hashable {
           }
         }
       }
-      // Attached to the stack, not a page, so the bar persists across the
-      // Library root and the pushed mixer.
+      // On the stack so the bar persists across the Library and the mixer.
       .nowPlayingBottomBar {
         if !hidesNowPlayingBarForSolo {
           nowPlayingBar
@@ -454,21 +410,15 @@ private enum IPhonePage: Hashable {
       }
     }
 
-    /// On the iPhone stack's Library root, the bar tap steps "in" to the mixer
-    /// instead of expanding the player (Library → mixer → full player); from
-    /// the mixer — and always on iPad, where the mixer is the ever-present
-    /// detail — it expands Now Playing.
+    /// On the iPhone Library, a bar tap pushes the mixer. Everywhere else it
+    /// expands Now Playing.
     private var barShowsMixer: Bool {
       !isLargeDevice && iPhonePath.isEmpty
     }
 
-    /// Hide the bottom mini player while the mixer is showing the big solo card
-    /// — the card already is the now-playing surface, so the bar would just echo
-    /// the same sound. It stays everywhere else: the iPhone Library root
-    /// (`barShowsMixer`), Quick Mix, and normal preset playback.
+    /// Hides the mini player where the full player is already on screen (the
+    /// solo player, the iPhone Now Playing page). The iPhone Library keeps it.
     private var hidesNowPlayingBarForSolo: Bool {
-      // The iPhone's Now Playing page is the player itself; its toolbar holds
-      // Timer, AirPlay and the Sound Mixer. The Library keeps its bar.
       if onPhonePlayerPage { return true }
       return soloLayoutSound != nil && !barShowsMixer
     }
@@ -484,11 +434,8 @@ private enum IPhonePage: Hashable {
       !isLargeDevice && !iPhonePath.isEmpty && opensNowPlaying
     }
 
-    /// Cross between a solo sound (inline player) and a preset (modal sheet) via
-    /// next/previous. The two layouts are lined up, so swap instantly (no zoom or
-    /// slide) — it reads as the content simply changing rather than a full sheet
-    /// present/dismiss. When returning to a solo sound, make the mixer the page
-    /// behind the sheet so it lands on the solo sound's inline page.
+    /// Next/previous between a solo sound (inline player) and a preset (sheet).
+    /// The layouts line up, so the swap skips animation.
     private func swapNowPlaying(showSheet: Bool) {
       var transaction = Transaction()
       transaction.disablesAnimations = true
@@ -498,8 +445,6 @@ private enum IPhonePage: Hashable {
       }
     }
 
-    /// Mini player pinned above the bottom safe area; the zoom transition into
-    /// the Now Playing cover originates from it.
     private var nowPlayingBar: some View {
       NowPlayingBar(showsMixer: barShowsMixer && !opensNowPlaying) {
         if barShowsMixer {
@@ -523,10 +468,8 @@ private enum IPhonePage: Hashable {
 
     // MARK: - Facing pages (iPhone Duo open)
 
-    /// Two pages split at the fold. With the Library open (left), Now Playing
-    /// takes the right page. Choosing something puts its Now Playing on the left
-    /// and the mixer on the right; a solo sound has nothing to mix, so its Now
-    /// Playing spreads across both pages.
+    /// Two pages split at the fold: Library and Now Playing, or Now Playing and
+    /// the mixer. A solo sound's Now Playing spreads across both.
     private var pagesLayout: some View {
       GeometryReader { proxy in
         let split = CreaseInsets.split(containerWidth: proxy.size.width, fold: windowFold)
@@ -543,8 +486,6 @@ private enum IPhonePage: Hashable {
               Color.clear
                 .frame(width: split.gap)
               if libraryOpen {
-                // Opening the mixer closes the Library: Now Playing moves left
-                // and the mixer takes this page.
                 NowPlayingSheet(
                   backgroundImage: backgroundImage, inline: true, showsActions: false,
                   onOpenMixer: { iPhonePath = [.mixer] }, actionRowIncludesAirPlay: true
@@ -597,8 +538,8 @@ private enum IPhonePage: Hashable {
 
     // MARK: - Nightstand (propped up, partly folded)
 
-    /// Apple's one sanctioned pose layout: the upright half shows what's
-    /// playing, the flat half holds the sounds and every control.
+    /// The upright half shows what's playing; the flat half holds the sounds
+    /// and controls.
     private var proppedUpLayout: some View {
       let showsLibrary = proppedShowsLibrary || soloLayoutSound != nil
       return ZStack(alignment: .top) {
@@ -623,8 +564,7 @@ private enum IPhonePage: Hashable {
               } action: {
                 proppedLowerHeight = $0
               }
-              // Held flat, tiles fade out across the fold as they scroll up
-              // instead of vanishing at its edge.
+              // Held flat, tiles fade out across the fold as they scroll up.
               .scrollClipDisabled(!windowFold.isActive)
               .mask(alignment: .top) {
                 let bleed = windowFold.isActive ? 0 : windowFold.frame.height + 32
@@ -638,9 +578,7 @@ private enum IPhonePage: Hashable {
           }
         }
       }
-      // Floats over the content like the iPhone bar, so the Library keeps its
-      // background behind it and scrolls under it. Inset from the sides as far
-      // as from the bottom edge, so it sits evenly in the rounded corners.
+      // Side inset matches the bottom inset so the bar sits evenly in the corners.
       .nowPlayingBottomBar {
         proppedUpBar
           .padding(.horizontal, max(proppedBottomInset, 16))
@@ -696,7 +634,7 @@ private enum IPhonePage: Hashable {
           .buttonBorderShape(.circle)
           .tint(.primary)
         }
-        // A popover between the fold and the bar, not a sheet over both halves.
+        // The timer opens as a popover so it stays on the flat half.
         NowPlayingBar(style: .bare, showsExpand: false, timerAsPopover: true) {}
         if globalSettings.enableSpatialAudio, soloLayoutSound == nil, !audioManager.isQuickMix {
           Button {
@@ -710,7 +648,6 @@ private enum IPhonePage: Hashable {
           .buttonBorderShape(.circle)
           .tint(.primary)
         }
-        // Disabled rather than removed when there's nothing to edit, like the toolbar.
         let target = editTarget
         Button {
           target?.action()
@@ -731,8 +668,8 @@ private enum IPhonePage: Hashable {
       .dynamicTypeSize(...DynamicTypeSize.accessibility3)
     }
 
-    /// With a fold, flat or bent, the bar keeps to one page instead of spanning
-    /// it: past the fold beside the Library, otherwise the leading page.
+    /// With a fold, flat or bent, the bar keeps to one page: past the fold
+    /// beside the Library, otherwise the leading page.
     private var regularPlaybackBar: some View {
       let start = CreaseInsets.trailingPageStart(containerWidth: barWidth, fold: barFold)
       let page =
@@ -768,10 +705,7 @@ private enum IPhonePage: Hashable {
         if !presetManager.isLoading {
           NowPlayingSheet(
             backgroundImage: backgroundImage, inline: true,
-            // Mixer-first presets: leaving a solo sound for a preset lands on its
-            // mixer with Now Playing over it, as before.
-            // Only the iPhone opens a cover for it; the open Duo already shows the
-            // preset's Now Playing on its page.
+            // Mixer-first presets on iPhone open Now Playing over the mixer.
             onNavigateToPreset: globalSettings.nowPlayingFirst || currentLayout != .compact
               ? nil : { swapNowPlaying(showSheet: true) },
             showsActions: false,
@@ -791,33 +725,28 @@ private enum IPhonePage: Hashable {
         isLandscape = newValue
       }
       .toolbar {
-        // Beside the open Duo's mixer page, AirPlay, Timer and the editors live
-        // in that page's bar instead.
+        // Beside the open Duo's mixer page, these live in that page's bar.
         if spreads {
           playerToolbarItems(showsTimer: true)
         }
-        // On the Duo's cover the favorite star, AirPlay and Timer move onto the
-        // rail under Back; the Sound Mixer button stays in the player.
+        // On the Duo's cover the favorite, AirPlay and Timer move to the rail.
         if showsMixerButton, hasToolbarRail, !spreads {
           playerToolbarItems(showsTimer: true, showsFavorite: true)
         }
-        // iPhone keeps AirPlay and Timer in the player's row beside the mixer.
         if showsMixerButton || spreads {
           editToolbarItems
         }
       }
     }
 
-    /// AirPlay, then Timer (unless the player shows it beside the Sound Mixer),
-    /// kept in the side bar under Back on iPhone Duo; AirPlay's custom picker
-    /// would otherwise pull them into a horizontal bar.
+    /// Prefers the vertical rail on iPhone Duo; AirPlay's custom view would
+    /// otherwise pull the group into a horizontal bar.
     @ToolbarContentBuilder
     private func playerToolbarItems(showsTimer: Bool, showsFavorite: Bool = false)
       -> some ToolbarContent
     {
       verticalPreferred(
         ToolbarItemGroup(placement: .topBarTrailing) {
-          // Quick Mix can't be a favorite; everything else stars under its token.
           if showsFavorite, !audioManager.isQuickMix,
             let token = audioManager.currentFavoriteToken
           {
@@ -835,8 +764,7 @@ private enum IPhonePage: Hashable {
           AirPlayRouteButton(activeColor: accent, inactiveColor: .primary)
             .frame(width: 44, height: 44)
             .accessibilityLabel(Text("AirPlay"))
-            // The side bar drops this custom view when iPhone Duo's cover turns;
-            // a fresh one per orientation keeps it.
+            // The rail drops this custom view on rotation; a new identity restores it.
             .id(isLandscape)
 
           if showsTimer {
@@ -906,8 +834,7 @@ private enum IPhonePage: Hashable {
       presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
     }
 
-    /// Hidden volume view to globally suppress the system volume HUD when
-    /// physical hardware buttons are pressed.
+    /// Hidden volume view that suppresses the system volume HUD.
     @ViewBuilder
     private var volumeHUDSuppressor: some View {
       #if os(iOS)
@@ -921,12 +848,10 @@ private enum IPhonePage: Hashable {
     @ViewBuilder
     private var mixerPage: some View {
       ZStack {
-        // Background layer
         presetBackgroundView
 
         volumeHUDSuppressor
 
-        // Main content
         VStack(spacing: 0) {
           mainContentView
         }
@@ -972,21 +897,17 @@ private enum IPhonePage: Hashable {
     private var mainContentView: some View {
       Group {
         if presetManager.isLoading {
-          // Until the restore completes, currentPreset is nil and the grid would
-          // flash every sound (reading as the default preset). Show nothing over
-          // the neutral background; content fades in once the preset is applied.
+          // currentPreset is nil until the restore completes.
           Color.clear
         } else if let soloSound = soloLayoutSound {
           soloModeView(for: soloSound)
         } else if audioManager.isQuickMix {
-          // Quick Mix mode view
           // Regular width gives Quick Mix its own control column (no bar).
           QuickMixView(
             onOpenNowPlaying: isLargeDevice ? { showingNowPlaying = true } : nil,
             nowPlayingZoom: nowPlayingNamespace,
             onColumnChange: { quickMixShowsColumn = $0 })
         } else {
-          // Normal content: list or grid based on user preference (iPad).
           soundsView
         }
       }
@@ -1013,8 +934,6 @@ private enum IPhonePage: Hashable {
     }
 
     // MARK: - Helper Views
-
-    // Helper computed properties are implemented in MixerView+UIComponents.swift
   }
 
   extension View {
@@ -1039,17 +958,12 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     func soloModeView(for soloSound: Sound) -> some View {
-      // The solo sound IS the now-playing surface: render the full Now Playing
-      // player inline (square artwork, name, caption, transport, volume,
-      // actions) instead of a separate sheet. If next/previous navigates onto a
-      // preset (leaving solo), open the full Now Playing sheet for it rather than
-      // dropping back to the grid.
+      // Solo renders the full player inline. Next/previous onto a preset opens
+      // the Now Playing sheet.
       NowPlayingSheet(inline: true, onNavigateToPreset: { swapNowPlaying(showSheet: true) })
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Source the sheet's zoom transition from the inline solo player (the
-        // mini-player, the usual source, is hidden during solo). Presenting or
-        // dismissing the preset sheet then morphs to/from this player instead of
-        // sliding. The two are never on screen together, so the id is unambiguous.
+        // The mini player is hidden during solo, so the zoom starts here. The
+        // two are never on screen together, so the id stays unique.
         .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
         .transition(.opacity)
     }
@@ -1079,9 +993,7 @@ private enum IPhonePage: Hashable {
       SoundGridView(sounds: filteredSounds, onMove: moveItems)
     }
 
-    /// Resolved view mode for the current context: per-preset override wins
-    /// over the app-wide default. Solo mode and Quick Mix have their own
-    /// rendering paths and don't route through here.
+    /// Per-preset view mode override, else the app-wide default.
     var effectiveUseListView: Bool {
       if let override = presetManager.currentPreset?.viewMode {
         return override == .list
@@ -1089,8 +1001,6 @@ private enum IPhonePage: Hashable {
       return showingListView
     }
 
-    /// Chooses list or grid view based on per-preset override then app
-    /// setting. Grid is the tile layout (matches Quick Mix visually).
     @ViewBuilder
     var soundsView: some View {
       if effectiveUseListView {
@@ -1115,8 +1025,8 @@ private enum IPhonePage: Hashable {
   private struct EditorPlacement: ViewModifier {
     let layout: MixerLayout
 
-    // One modifier chain whose values change, so folding or resizing while an
-    // editor is open never rebuilds it (unsaved edits and previews survive).
+    // One modifier chain whose values change, so folding or resizing keeps the
+    // open editor's unsaved edits.
     func body(content: Content) -> some View {
       #if os(iOS)
         if #available(iOS 27, *) {
@@ -1132,11 +1042,8 @@ private enum IPhonePage: Hashable {
 #endif
 
 #if os(iOS) || os(visionOS)
-  /// Presents Now Playing to fill the screen on iPad via `fullScreenCover` (a
-  /// sheet, even page-sized, stays an inset floating card there) and as a
-  /// page-sized sheet on iPhone (for the system's grab-anywhere
-  /// pull-to-dismiss). The player draws its own drag handle and chevron-down
-  /// dismiss, so both paths hide the system indicator and rely on `onDismiss`.
+  /// `fullScreenCover` on iPad (a page-sized sheet stays an inset card there);
+  /// a page sheet on iPhone for pull-to-dismiss. The player draws its own handle.
   private struct NowPlayingPresentation<SheetBody: View>: ViewModifier {
     @Binding var isPresented: Bool
     let coversFullScreen: Bool

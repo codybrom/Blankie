@@ -8,17 +8,14 @@
 import Foundation
 import os
 
-/// Unified-logging categories, one per functional area. Filter by category in
-/// Xcode's console or Console.app (subsystem com.codybrom.blankie).
+/// Unified-logging categories, one per functional area (subsystem
+/// com.codybrom.blankie).
 ///
-/// Conventions: `.debug` for dev chatter (memory-only, never persisted, near
-/// zero cost in release). `.error` for failures — persisted to disk in release
-/// builds, so mark interpolated values `privacy: .public` there or they render
-/// as <private> in sysdiagnoses.
+/// `.debug` is memory-only dev chatter. `.error` persists in release builds, so
+/// mark interpolated values `privacy: .public` or they show as <private>.
 ///
-/// `nonisolated` so categories can be used from off-main code (audio analysis,
-/// file mirrors) under module-wide default main-actor isolation. `Logger` is
-/// `Sendable`, so sharing these constants across actors is safe.
+/// `nonisolated` so off-main code (audio analysis, file mirrors) can log under
+/// default main-actor isolation; `Logger` is `Sendable`.
 extension Logger {
   nonisolated private static let subsystem =
     Bundle.main.bundleIdentifier ?? "com.codybrom.blankie"

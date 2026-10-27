@@ -29,8 +29,7 @@ struct CreatePresetSheet: View {
   @State private var showingImageCropper = false
   @State private var animatedArtwork: AnimatedArtworkRef?
   @State private var staticArtworkPath: String?
-  // Theme overrides (same semantics as Edit Preset: toggled off = nil =
-  // follow the app-wide setting).
+  // Theme overrides, as in Edit Preset: toggled off is nil (follow the app-wide setting).
   @State private var useCustomTheme = false
   @State private var accentColor: Color?
   @State private var useCustomViewMode = false
@@ -51,8 +50,8 @@ struct CreatePresetSheet: View {
     }
   }
 
-  /// Live accent: the in-flight custom accent once enabled, else app-wide —
-  /// mirrors Edit Preset so the sheet re-themes while you pick.
+  /// Live accent: the custom accent once enabled, else the app-wide one, so the
+  /// sheet re-themes while you pick (as Edit Preset does).
   private var activeAccentColor: Color {
     if useCustomTheme {
       return accentColor ?? globalSettings.customAccentColor ?? .accentColor
@@ -64,7 +63,7 @@ struct CreatePresetSheet: View {
     NavigationStack {
       Form {
         errorSection
-        // Same details card as Edit Preset (no Favorite — no preset yet).
+        // Same details card as Edit Preset, minus Favorite (no preset yet).
         PresetDetailsSection(
           presetName: $presetName,
           creatorName: $creatorName,
@@ -113,10 +112,9 @@ struct CreatePresetSheet: View {
       #endif
       .onAppear(perform: setupDefaultSelection)
       .onChange(of: presetName) { _, _ in
-        // The user touched the name field: abandon the auto-suggestion so it
-        // can't replace what they typed, and drop the spinner right away. The
-        // suggestion's own write nils the task first (in its defer), so this
-        // only fires for real edits, not the AI filling the name in.
+        // A user edit cancels the auto-suggestion so it can't replace their text, and
+        // drops the spinner. The suggestion nils the task (in its defer) before
+        // writing, so only user edits reach this.
         if let task = nameSuggestionTask {
           task.cancel()
           nameSuggestionTask = nil
@@ -160,9 +158,7 @@ struct CreatePresetSheet: View {
     // Edit Preset's root tint).
     .tint(activeAccentColor)
     #if os(iOS) || os(visionOS)
-      // A full preset editor, not a quick dialog — page-sized on iPad instead
-      // of the default small centered form sheet (no-op on iPhone). Matches
-      // EditPresetSheet so both editors present identically.
+      // Page-sized on iPad like EditPresetSheet (no-op on iPhone).
       .presentationSizing(.page)
     #endif
     .onDisappear {
@@ -182,9 +178,8 @@ extension CreatePresetSheet {
     }
   }
 
-  /// Mirrors Edit Preset's Sounds section (header, Choose Sounds row, then a
-  /// row per selected sound) minus reorder/edit — there's no preset to
-  /// persist against yet.
+  /// Mirrors Edit Preset's Sounds section (header, Choose Sounds row, a row per sound)
+  /// without reorder or edit, since there's no preset to persist against yet.
   var soundsSection: some View {
     Section {
       #if os(iOS)
@@ -236,8 +231,7 @@ extension CreatePresetSheet {
   }
 
   func setupDefaultSelection() {
-    // Seed from the caller's pre-selection; otherwise start with no sounds
-    // selected - user can add sounds as needed
+    // Seed from the caller's pre-selection; otherwise start with no sounds selected.
     if !initialSelectedSounds.isEmpty {
       selectedSounds = initialSelectedSounds
       // Offer an Apple Intelligence name for the seeded mix up front. Held in a
@@ -305,12 +299,8 @@ extension CreatePresetSheet {
         try presetManager.applyPreset(newPreset)
         await MainActor.run {
           didCreatePreset = true
-          // Re-arm the remote command handlers and refresh Now Playing for the
-          // freshly created preset. Browsing the animated-artwork gallery while
-          // creating can make iOS disconnect the handlers, which otherwise
-          // leaves the new preset's lock-screen / Control Center transport dead
-          // (existing presets are fine because nothing tore their handlers
-          // down). Mirrors EditPresetSheet and the artwork picker's restore.
+          // Re-arm the remote command handlers and refresh Now Playing, since browsing
+          // the artwork gallery can make iOS drop them. Mirrors EditPresetSheet.
           audioManager.setupMediaControls()
           audioManager.nowPlayingManager.updateInfo(
             preset: newPreset,
@@ -347,7 +337,6 @@ extension CreatePresetSheet {
     let presetId = UUID()
     let artworkId = await saveArtworkIfPresent(for: presetId)
 
-    // Assign order based on existing custom presets count
     let customPresetsCount = presetManager.presets.filter { !$0.isDefault }.count
 
     var newPreset = Preset(
@@ -365,11 +354,10 @@ extension CreatePresetSheet {
       order: customPresetsCount
     )
 
-    // Theme overrides, persisted exactly like Edit Preset's save path
-    // (toggled off = nil = follow the app-wide setting).
+    // Theme overrides, persisted like Edit Preset's save path.
     newPreset.accentColorName = useCustomTheme ? accentColor?.toString : nil
     newPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
-    // Background blur is now a global Display setting, not a per-preset override.
+    // Background blur is a global Display setting.
 
     Logger.ui.debug(
       "CreatePresetSheet: Creating preset '\(presetName)' with artwork: \(artworkId != nil ? "set" : "none")"

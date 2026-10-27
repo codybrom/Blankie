@@ -14,7 +14,6 @@ import Testing
 /// keys of icon-categories.json, and the string catalog.
 @Suite struct IconCategoryTests {
 
-  /// icon-categories.json top-level keys and IconCategory cases must match exactly.
   @Test func enumMatchesJSONKeys() {
     let jsonKeys = Set(IconData.iconCategories.keys)
     let enumKeys = Set(IconCategory.allCases.map(\.rawValue))
@@ -26,15 +25,12 @@ import Testing
       enumKeys.subtracting(jsonKeys) == [], "IconCategory cases missing from icon-categories.json")
   }
 
-  /// Every category must contribute at least one icon to the picker.
   @Test func everyCategoryHasIcons() {
     for category in IconCategory.allCases {
       #expect(!category.icons.isEmpty, "Category '\(category.rawValue)' has no icons")
     }
   }
 
-  /// Every category name must have an entry in the compiled string catalog for
-  /// every locale the app ships Localizable strings in.
   @Test func categoryNamesAreLocalized() {
     let appBundle = Bundle(for: AudioManager.self)
     let sentinel = "<<missing>>"

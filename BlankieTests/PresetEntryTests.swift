@@ -4,18 +4,8 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Pins how presets, Quick Mix, and the sound-editor preview hand playback to
-//  each other. It checks that an application reports whether it ran, so callers
-//  don't start the old mix. It also checks that leaving Quick Mix for a preset
-//  drops the pre-Quick-Mix mix, a pending edit is saved before Quick Mix,
-//  deleting the current preset while paused stays paused, a stale widget tile
-//  leaves solo alone, playPreset starts a current preset (also after a relaunch
-//  into solo), Play Sound joins a custom preset, an invalid preset
-//  leaves Quick Mix alone, and play/pause or a preset command ends a preview
-//  (an ignored play or an emptied mix doesn't, and solo out of one keeps playing).
-//
-//  Engine-free (TestSounds), serialized and main-actor, on an isolated preset
-//  list (SingletonSandbox).
+//  How presets, Quick Mix, solo and the sound-editor preview hand playback to each other, plus
+//  interruption resume. Engine-free, on an isolated preset list (SingletonSandbox).
 //
 
 import Foundation
@@ -85,10 +75,10 @@ import Testing
     await sandbox.settle()
   }
 
-  // MARK: - applyPreset reports whether it ran (F1)
+  // MARK: - applyPreset reports whether it ran
 
-  /// Callers start playback only when nothing was applied. An application starts
-  /// the new mix itself, and playing first would start the old one.
+  /// Callers start playback only when nothing was applied; an application starts the new mix
+  /// itself.
   @Test func applyPresetReportsWhetherItApplied() async throws {
     let (a, b) = makeSounds()
     let first = preset("Entry One", selecting: [a.fileName], from: [a, b])
@@ -103,11 +93,10 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
   }
 
-  // MARK: - Quick Mix exits (F3)
+  // MARK: - Quick Mix exits
 
-  /// Leaving Quick Mix for a preset drops the pre-Quick-Mix mix and preset, so
-  /// the preset about to apply isn't preceded by the old mix (or short-circuited
-  /// when it's the same preset).
+  /// Leaving Quick Mix for a preset drops the pre-Quick-Mix mix and preset, so the old mix
+  /// doesn't play first and the same preset still applies.
   @Test func leavingQuickMixForAPresetDropsTheOldMix() async {
     let (a, b) = makeSounds()
     let current = preset("Entry QM", selecting: [a.fileName], from: [a, b])
@@ -135,8 +124,7 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
   }
 
-  /// A preset that fails validation throws before leaving Quick Mix, so the
-  /// earlier mix isn't dropped for nothing.
+  /// A preset that fails validation throws before leaving Quick Mix.
   @Test func invalidPresetLeavesQuickMixAlone() async {
     let (a, b) = makeSounds()
     await install([preset("Entry QM Invalid", selecting: [a.fileName], from: [a, b])])
@@ -158,8 +146,7 @@ import Testing
     #expect(empty.validate())
   }
 
-  /// Siri, widgets and CarPlay can't play an empty preset, and asking them to
-  /// keeps Quick Mix playing instead of going silent.
+  /// Siri, widgets and CarPlay can't play an empty preset, so Quick Mix keeps playing.
   @Test func emptyPresetLeavesQuickMixAlone() async {
     let (a, b) = makeSounds()
     await install([preset("Entry QM Empty", selecting: [a.fileName], from: [a, b])])
@@ -185,8 +172,7 @@ import Testing
     #expect(a.isSelected)
   }
 
-  /// Entering Quick Mix saves the edit still waiting on the coalesced refresh.
-  /// Quick Mix clears the current preset, so the refresh would skip it.
+  /// Quick Mix clears the current preset, so entering it saves the pending edit first.
   @Test func enteringQuickMixSavesThePendingEdit() async {
     let (a, b) = makeSounds()
     let current = preset("Entry QM Flush", selecting: [a.fileName], from: [a, b])
@@ -201,7 +187,7 @@ import Testing
     audioManager.exitQuickMix()
   }
 
-  // MARK: - Deleting the current preset (D1)
+  // MARK: - Deleting the current preset
 
   /// Deleting the current preset while paused makes the next one current
   /// without starting it.
@@ -226,8 +212,8 @@ import Testing
       isDefault: true, soundOrder: sounds.map(\.fileName))
   }
 
-  /// Deleting the last custom preset hands its mix to All Blankie Sounds, which
-  /// must still list every sound rather than only the deleted preset's.
+  /// Deleting the last custom preset hands its mix to All Blankie Sounds, which still lists
+  /// every sound.
   @Test func deletingTheLastCustomPresetKeepsEverySoundInTheDefault() async {
     let (a, b) = makeSounds()
     let doomed = preset("Entry Doomed", selecting: [a.fileName], from: [a])
@@ -243,9 +229,7 @@ import Testing
     #expect(states.first { $0.fileName == b.fileName }?.isSelected == false)
   }
 
-  /// A deleted preset can name a sound that's gone (deleted along with it). The
-  /// default must still apply, or no preset is current and every launch comes up
-  /// on a bare "Blankie" with the old selection.
+  /// A deleted preset can name a sound deleted along with it; the default must still apply.
   @Test func deletingTheLastCustomPresetWithAMissingSoundLeavesTheDefaultCurrent() async {
     let (a, b) = makeSounds()
     let doomed = PresetFactory.makePreset(
@@ -265,10 +249,9 @@ import Testing
     #expect(!states.contains { $0.fileName == "test-entry-gone" })
   }
 
-  // MARK: - Stale widget tile (X2)
+  // MARK: - Stale widget tile
 
-  /// A tile for a deleted preset throws before leaving solo, so the soloed
-  /// sound isn't left paused under a "playing" state.
+  /// A tile for a deleted preset throws before leaving solo.
   @Test func staleWidgetTileLeavesSoloAlone() async {
     let (a, b) = makeSounds()
     await install([preset("Entry Solo", selecting: [a.fileName], from: [a, b])])
@@ -283,8 +266,8 @@ import Testing
 
   // MARK: - Siri and solo
 
-  /// Siri plays a sound on its own, just like a sound in Favorites. It must not
-  /// add that sound to the active preset or save its temporary solo state.
+  /// Siri solos a sound the way Favorites does, without adding it to the active preset or
+  /// saving its temporary solo state.
   @Test func playSoundSolosWithoutChangingTheCurrentCustomPreset() async throws {
     let (a, b) = makeSounds()
     let current = preset("Entry Siri", selecting: [a.fileName], from: [a])
@@ -308,8 +291,7 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
   }
 
-  /// Repeating a deterministic Play Sound command resumes a paused solo rather
-  /// than toggling it off or leaving it paused.
+  /// A repeated Play Sound command resumes a paused solo; it doesn't toggle it off.
   @Test func playSoundResumesTheSamePausedSolo() async throws {
     let (a, b) = makeSounds()
     await install([preset("Entry Siri Resume", selecting: [a.fileName], from: [a])])
@@ -326,8 +308,8 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
   }
 
-  /// A sound command leaves Quick Mix through the normal solo transition,
-  /// retaining the saved preset rather than adding a sound to its membership.
+  /// A sound command leaves Quick Mix through the normal solo transition and keeps the saved
+  /// preset's membership.
   @Test func playSoundLeavesQuickMixForSolo() async throws {
     let (a, b) = makeSounds()
     let current = preset("Entry Siri Quick Mix", selecting: [a.fileName], from: [a])
@@ -366,7 +348,7 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
   }
 
-  // MARK: - Commands end a preview (F2)
+  // MARK: - Commands end a preview
 
   /// Play/pause from anywhere ends the sound-editor preview first.
   @Test func playbackCommandEndsThePreview() async {
@@ -391,8 +373,8 @@ import Testing
     #expect(audioManager.previewModeSound == nil)
   }
 
-  /// The editor can deselect the sound it previews. The empty-mix pause waits
-  /// for the preview to end instead of cutting it off.
+  /// The editor can deselect the sound it previews, so the empty-mix pause waits for the
+  /// preview to end.
   @Test func emptiedMixPausesAfterThePreview() async {
     let (a, _) = makeSounds()
     audioManager.setGlobalPlaybackState(true)
@@ -441,7 +423,7 @@ import Testing
     audioManager.setGlobalPlaybackState(false)
   }
 
-  // MARK: - Interruption resume (F4)
+  // MARK: - Interruption resume
 
   #if os(iOS) || os(visionOS)
     @Test(arguments: [false, true])
@@ -532,7 +514,7 @@ import Testing
       interrupt(.began)
       interrupt(.ended, resume: includeOptions ? false : nil)
       #expect(!audioManager.wasPlayingWhenInterrupted)
-      // A duplicate/stale end must not resurrect the consumed request.
+      // A duplicate or stale end must not reuse the consumed request.
       interrupt(.ended, resume: true)
       #expect(!audioManager.isGloballyPlaying)
     }

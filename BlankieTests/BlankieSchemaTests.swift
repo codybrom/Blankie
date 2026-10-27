@@ -11,13 +11,8 @@ import Testing
 @testable import Blankie
 
 @Suite struct BlankieSchemaTests {
-  /// Pins V1's shape. If a `@Model` in V1 gains, loses, or renames a field, this
-  /// fails — forcing a deliberate new schema version plus migration stage rather
-  /// than letting V1 silently follow the live model types (which would defeat the
-  /// point of an explicit versioned schema). When you intentionally evolve the
-  /// models: snapshot the current definitions into a frozen `BlankieSchemaVN`,
-  /// add the migration stage, then update the expectation below for the new V1
-  /// freeze.
+  /// Pins V1's shape. Changing a V1 `@Model` field needs a frozen `BlankieSchemaVN`,
+  /// a migration stage and an updated expectation here.
   @Test func v1SchemaMatchesPinnedShape() {
     #expect(BlankieSchemaV1.versionIdentifier == Schema.Version(1, 0, 0))
 

@@ -7,11 +7,8 @@
 
 import AppIntents
 
-/// Plays a favorited item from a widget tap. Takes a plain
-/// `starredItems` token rather than an entity type (unlike `PlayPresetIntent`)
-/// so the widget extension never needs to query `PresetManager`/`AudioManager`
-/// just to resolve a parameter — the token is already known from the cached
-/// `WidgetSnapshot` the tile was built from.
+/// Plays a favorited item from a widget tap. Takes a plain `starredItems` token
+/// from the cached `WidgetSnapshot`, so the widget never queries the managers.
 struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
   static var isDiscoverable: Bool { false }
 
@@ -36,8 +33,7 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
     await AppSetup.ensureManagersReadyForIntents()
     let audio = AudioManager.shared
 
-    // Tapping the tile that's already active reads as "pause this", not
-    // "restart this" — matches the tile's own play/pause glyph in the widget.
+    // Tapping the active tile toggles playback, matching its play/pause glyph.
     if favoriteToken == audio.currentFavoriteToken {
       audio.togglePlayback()
       return .result()

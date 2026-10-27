@@ -4,12 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The preset store's static persistence API. Critically: a corrupt blob must
-//  never silently wipe the user's library — it's backed up and every preset
-//  that still decodes on its own is salvaged.
-//
-//  Serialized + class-based: writes the real app-group preset keys, so each
-//  test snapshots them on entry and restores them on exit.
+//  PresetStorage persistence. A corrupt blob is backed up and every preset that still decodes
+//  is salvaged. Serialized: snapshots and restores the real app-group preset keys.
 //
 
 import Foundation
@@ -64,16 +60,12 @@ import Testing
     #expect(PresetStorage.loadLastActivePresetID() == nil)
   }
 
-  /// A corrupt default-preset blob is backed up and yields nil, not a crash.
   @Test func corruptDefaultPresetIsBackedUp() {
     UserDefaults.shared.set(Data("not json".utf8), forKey: PresetStorage.defaultPresetKey)
     #expect(PresetStorage.loadDefaultPreset() == nil)
     #expect(UserDefaults.shared.data(forKey: PresetStorage.defaultPresetBackupKey) != nil)
   }
 
-  /// The headline resilience guarantee: a custom-preset array with one undecodable
-  /// element salvages the valid presets instead of returning an empty library
-  /// that the next save would persist.
   @Test func corruptCustomPresetsSalvageValidEntries() throws {
     let valid = PresetFactory.makePreset(name: "Survivor")
     let validObject = try JSONSerialization.jsonObject(with: JSONEncoder().encode(valid))

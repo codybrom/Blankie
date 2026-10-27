@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Fades and Now Playing debounces are run-loop timers, and the app's deferred
-//  work is main-actor tasks. A sleeping test doesn't reliably run either, so the
-//  race tests spin the run loop and yield in turns instead.
+//  Fades and Now Playing debounces are run-loop timers and deferred work is main-actor tasks.
+//  A sleeping test doesn't reliably run either, so race tests spin the run loop and yield.
 //
 
 import Foundation

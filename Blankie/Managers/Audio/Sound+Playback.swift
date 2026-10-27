@@ -12,7 +12,7 @@ import os
 // MARK: - Playback Controls
 extension Sound {
 
-  /// A 0.5s ramp would swallow most of a clip shorter than ~2s, so play/pause cut hard instead of fading.
+  /// Clips shorter than ~2s skip the play/pause ramp, which would swallow most of the clip.
   private var isTooShortToFade: Bool {
     guard let player else { return false }
     return player.duration < Sound.fadeDuration * 4
@@ -27,7 +27,6 @@ extension Sound {
   }
 
   func play() {
-    // Ensure player is loaded first
     if player == nil {
       loadSound()
     }
@@ -37,8 +36,8 @@ extension Sound {
       return
     }
 
-    // Already audible — rescheduling would audibly restart the sound. If a
-    // fade-out pause is in flight, rescue it by ramping back up instead.
+    // Rescheduling an audible node would restart the sound. A fade-out pause in
+    // flight ramps back up.
     guard !player.isPlaying else {
       if playbackState == .paused {
         Logger.sounds.debug("Sound: Rescuing mid-fade pause for '\(self.fileName)'")
@@ -52,8 +51,8 @@ extension Sound {
       return
     }
 
-    // Re-attach (idempotent; covers engine recreation) and make sure the
-    // engine is live — AVAudioPlayerNode.play() throws if it isn't.
+    // Re-attach (idempotent; covers engine recreation) and make sure the engine is
+    // running, since AVAudioPlayerNode.play() throws otherwise.
     AudioEngineManager.shared.attach(player)
     guard AudioEngineManager.shared.ensureRunning() else {
       Logger.sounds.error(
@@ -61,12 +60,10 @@ extension Sound {
       return
     }
 
-    // Ensure volume is set before playing
     updateVolume()
 
-    // One path for resume and fresh start: currentFrame is the paused position
-    // for .paused sounds, the (possibly randomized) seek target otherwise.
-    // Start silent, then fade in — unless fades are off for this sound.
+    // currentFrame is the paused position or the (possibly random) seek target, so
+    // this covers resume and fresh start. Starts silent and fades in if fades are on.
     let fadeIn = shouldFade ? Sound.fadeDuration : 0
     player.setFadeLevel(fadeIn > 0 ? 0 : 1)
     player.play(fromFrame: player.currentFrame)
@@ -80,21 +77,16 @@ extension Sound {
   /// first 75% of a looping clip, or the beginning otherwise.
   func resetSoundPosition() {
     guard let player = self.player else {
-      // If player doesn't exist yet, it will be positioned when loaded
       return
     }
 
-    // Never reposition live playback (matches the old currentTime semantics:
-    // callers only reset stopped/paused sounds).
     guard !player.isPlaying else { return }
 
-    // Check if randomize start position is enabled
-    // Default to true for both custom and built-in sounds unless explicitly disabled
     let shouldRandomizeStart: Bool
     if let customization = SoundCustomizationManager.shared.getCustomization(for: fileName) {
       shouldRandomizeStart = customization.randomizeStartPosition ?? true
     } else {
-      shouldRandomizeStart = true  // Default to true for all sounds
+      shouldRandomizeStart = true
     }
 
     // Random starts only make sense for looping beds (the loop wraps); a
@@ -106,7 +98,6 @@ extension Sound {
         )
         return
       }
-      // Limit random position to maximum 75% of the duration
       let maxFrame = AVAudioFramePosition(Double(player.totalFrames) * 0.75)
       let randomFrame = AVAudioFramePosition.random(in: 0..<max(maxFrame, 1))
       player.seek(toFrame: randomFrame)
@@ -114,13 +105,11 @@ extension Sound {
         "Sound: Reset '\(self.fileName)' to random position: \(Double(randomFrame) / player.sampleRate)s of \(player.duration)s (max 75%)"
       )
     } else {
-      // Reset to beginning if randomization is disabled
       player.seek(toFrame: 0)
       Logger.sounds.debug("Sound: Reset '\(self.fileName)' to beginning")
     }
 
-    // Seeking clears any paused schedule, so the next play() must schedule
-    // fresh rather than resume.
+    // Seeking clears any paused schedule, so the next play() schedules fresh.
     playbackState = .stopped
   }
 
@@ -134,12 +123,11 @@ extension Sound {
       playbackState = .stopped
       Logger.sounds.debug("Sound: Immediately stopped '\(self.fileName)'")
     } else {
-      // Nothing audible to fade (already stopped/paused) — bail rather than
-      // flip a .stopped sound to .paused and corrupt resume semantics.
+      // Nothing audible to fade. A .stopped sound must not become .paused (that
+      // would break resume).
       guard currentPlayer.isPlaying || playbackState == .playing else { return }
-      // Fade out, then pause. State flips to .paused right away so UI and
-      // playback logic treat the sound as paused during the ramp; play() can
-      // rescue a mid-fade pause by ramping back up.
+      // State flips to .paused at once so UI and playback logic treat the sound as
+      // paused during the ramp; play() can ramp a mid-fade pause back up.
       playbackState = .paused
       currentPlayer.fade(to: 0, duration: shouldFade ? (requestedFade ?? Sound.fadeDuration) : 0) {
         [weak currentPlayer] in
@@ -160,12 +148,8 @@ extension Sound {
     Logger.sounds.debug("Sound: Stopped '\(self.fileName)'")
   }
 
-  /// Rebuilds the live player when the loop preference changed. `loops` is
-  /// fixed when the player is created, so editing the toggle on a loaded sound
-  /// has no effect until the player is recreated — without this a sound loaded
-  /// as looping keeps looping. A sound that is audibly playing resumes (as the
-  /// new loop mode); anything paused/stopped just gets a fresh player for its
-  /// next start.
+  /// Rebuilds the player when the loop preference changes (`loops` is fixed at
+  /// creation). A playing sound resumes in the new mode.
   func reloadForLoopChange() {
     guard let player else { return }  // not loaded: next load reads the new value
 
@@ -190,24 +174,20 @@ extension Sound {
 
     Logger.sounds.debug("Sound: Resetting '\(self.fileName)'")
 
-    // Clean up timers
     volumeDebounceTimer?.invalidate()
     volumeDebounceTimer = nil
 
-    // Tear down playback (stops, detaches from the engine, releases)
     unload()
 
-    // Reset state
     isSelected = false
     volume = 0.75
 
-    // Clear user defaults
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isSelected")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_volume")
     UserDefaults.shared.removeObject(forKey: "\(fileName)_isHidden")
 
-    // `volume = 0.75` above re-armed the debounced volume save; cancel it so it
-    // can't rewrite the key we just removed.
+    // `volume = 0.75` above re-armed the debounced save; cancel it so it can't
+    // rewrite the removed key.
     volumeDebounceTimer?.invalidate()
     volumeDebounceTimer = nil
 

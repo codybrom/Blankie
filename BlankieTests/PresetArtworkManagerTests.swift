@@ -15,8 +15,7 @@ import Testing
 @Suite(.serialized) @MainActor
 struct PresetArtworkManagerTests {
 
-  /// `saveArtwork` must delete EVERY existing row of the same type, not just the
-  /// first, so a legacy duplicate can't survive and shadow the new artwork.
+  /// A legacy duplicate row must not survive to shadow the new artwork.
   @Test func saveArtworkReplacesAllDuplicateRows() async throws {
     let container = try ModelContainer(
       for: PresetArtwork.self,

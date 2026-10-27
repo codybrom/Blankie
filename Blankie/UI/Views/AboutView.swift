@@ -12,21 +12,17 @@ import os
   import UIKit
 
   extension UIApplication {
-    /// Returns the currently active app icon image (supports alternate icons), falling back to the primary icon
+    /// The active app icon (alternate or primary), downsampled for the header.
     var currentAppIcon: UIImage? {
-      // 1024px display assets alias when GPU-minified to header size;
-      // downsample once with a proper filter instead.
+      // 1024px display assets alias when GPU-minified to header size, so
+      // downsample once with a proper filter.
       currentAppIconFullSize?.preparingThumbnail(of: CGSize(width: 360, height: 360))
         ?? currentAppIconFullSize
     }
 
     private var currentAppIconFullSize: UIImage? {
-      // iOS 18: .icon files cannot be loaded with UIImage(named:)
-      // We need to look for matching display assets in the asset catalog
-
-      // If an alternate icon is active, load its display asset. (Display assets
-      // only: UIImage(named:) on a .icon-compiled name throws rather than
-      // returning nil.)
+      // Load the matching display assets: UIImage(named:) throws on a
+      // .icon-compiled name.
       if let altName = UIApplication.shared.alternateIconName {
         if let image = UIImage(named: "\(altName)Display") {
           return image
@@ -34,12 +30,11 @@ import os
         Logger.ui.debug("AboutView: Unable to load alternate icon image '\(altName)'; falling back")
       }
 
-      // Try primary icon display asset
       if let image = UIImage(named: "BlankieAppIconDisplay") {
         return image
       }
 
-      // Ultimate fallback to a system symbol so the About header never appears empty
+      // A system symbol keeps the About header from appearing empty.
       return UIImage(systemName: "app.fill")
     }
   }
@@ -101,9 +96,8 @@ struct AboutView: View {
     .onAppear {
       loadCredits()
     }
-    // Tint the About content once so link/help icons that use Color.accentColor
-    // resolve from the same environment as tinted rows (e.g. InspirationSection),
-    // so one interaction can't flip them between system blue and the app accent.
+    // Tint once so icons using Color.accentColor resolve from the same
+    // environment as tinted rows and can't flip to system blue.
     .tint(globalSettings.customAccentColor ?? .accentColor)
   }
 }
@@ -121,7 +115,7 @@ extension AboutView {
             .aspectRatio(contentMode: .fit)
             .frame(width: 100, height: 100)
             .cornerRadius(20)
-            // Non-interactive; the picker lives in Settings now.
+            // Non-interactive; the picker lives in Settings.
             .accessibilityLabel(Text("Blankie app icon"))
         }
       #elseif os(macOS)
@@ -129,7 +123,6 @@ extension AboutView {
           Image(nsImage: appIcon)
             .resizable()
             .frame(width: 128, height: 128)
-            // Non-interactive on macOS; give it a description rather than a bare image.
             .accessibilityLabel(Text("Blankie app icon"))
         }
       #endif
@@ -155,10 +148,8 @@ extension AboutView {
   }
 
   private var copyrightText: some View {
-    // Single source of truth: the bundle's NSHumanReadableCopyright, localized
-    // via InfoPlist.xcstrings (same value the system uses). localizedInfoDictionary
-    // gives the per-language value; fall back to the base plist so en (or any
-    // missing locale) still shows the copyright rather than the raw key.
+    // NSHumanReadableCopyright, localized via InfoPlist.xcstrings. Falls back to
+    // the base plist for en and any missing locale.
     let copyright =
       (Bundle.main.localizedInfoDictionary?["NSHumanReadableCopyright"] as? String)
       ?? (Bundle.main.infoDictionary?["NSHumanReadableCopyright"] as? String)
@@ -177,9 +168,8 @@ extension AboutView {
           isAcknowledgementsExpanded = false
         }
       ) {
-        // Two columns of credit cards on macOS — the rows are short and the
-        // single column made the list a scroll marathon in the pane. Each
-        // card stays one VoiceOver group (CreditRow's contained element).
+        // Two columns of short credit cards on macOS. Each card stays one
+        // VoiceOver group (CreditRow's contained element).
         #if os(macOS)
           LazyVGrid(
             columns: [

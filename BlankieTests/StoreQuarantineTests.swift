@@ -4,10 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The corrupt-store quarantine move. After two consecutive on-disk store-open
-//  failures this is the ONLY path that preserves a recoverable copy of the
-//  user's preset / custom-sound metadata, so the file move (store + -wal/-shm)
-//  must be exact and must keep only the most recent salvage.
+//  The corrupt-store quarantine move. It keeps the only recoverable copy of the metadata, so it
+//  moves the store and its -wal/-shm exactly and keeps only the most recent salvage.
 //
 
 import Foundation
@@ -44,7 +42,6 @@ import Testing
     #expect(movedShm == Data("SHM".utf8))
   }
 
-  /// Missing sidecars are skipped, not fatal; the store alone is moved.
   @Test func handlesMissingSidecars() throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -58,8 +55,6 @@ import Testing
     #expect(try Data(contentsOf: moved) == Data("ONLY".utf8))
   }
 
-  /// Quarantining twice keeps only the most recent salvage (the prior
-  /// CorruptedStore is replaced, not merged).
   @Test func keepsOnlyMostRecentSalvage() throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }

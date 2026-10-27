@@ -19,10 +19,8 @@ extension UTType {
   static let blankie = UTType(exportedAs: "com.codybrom.blankie.preset")
 }
 
-/// Value-type navigation key for pushing Edit Sound. Pushing the `Sound`
-/// class itself into the NavigationStack path can hand the destination a
-/// zeroed reference on re-render (EXC_BAD_ACCESS), so navigate by fileName
-/// and resolve the live instance at the destination.
+/// Navigation key for Edit Sound. A `Sound` reference in the path can arrive
+/// zeroed on re-render (EXC_BAD_ACCESS), so the destination resolves it by fileName.
 struct SoundEditDestination: Hashable {
   let fileName: String
 }
@@ -41,11 +39,8 @@ struct EditPresetSheet: View {
   @State var error: String?
   @State var showingSoundSelection = false
   @State var artworkData: Data?
-  /// The artwork data already persisted for this preset — seeded from the
-  /// existing artwork on open and updated after each save. Lets us tell a real
-  /// artwork change from the seeded preview, so edits don't re-save and re-id
-  /// the artwork on every change (that id-churn reloaded the mixer background
-  /// repeatedly, which showed as a purple/blue strobe).
+  /// The artwork already persisted for this preset, seeded on open. Only a change
+  /// from this baseline counts as a new pick, so an unchanged image keeps its `artworkId`.
   @State var savedArtworkData: Data?
   @State var artworkId: UUID?
   @State var animatedArtwork: AnimatedArtworkRef?
@@ -66,8 +61,7 @@ struct EditPresetSheet: View {
     @State var soundEditMode: EditMode = .inactive
   #endif
   @State var navPath = NavigationPath()
-  // Edit has no auto-suggest, so its AI-naming flag is purely local (drives the
-  // sparkles button's spinner / disabled state in PresetDetailsSection).
+  // Local only: Edit has no auto-suggest. Drives the sparkles button's spinner.
   @State var isGeneratingName = false
   @Environment(\.dismiss) private var dismiss
 
@@ -75,9 +69,8 @@ struct EditPresetSheet: View {
     self.preset = preset
     _isPresented = isPresented
 
-    // Seed editing state before first render. Populating it in onAppear
-    // tripped the accent/theme onChange handlers, dirtying the preset (and
-    // re-saving its artwork under a new ID) on every open.
+    // Seed state before first render so the accent/theme onChange handlers
+    // don't fire (and save) on open.
     _presetName = State(initialValue: preset.name)
     _creatorName = State(initialValue: preset.creatorName ?? "")
     _moods = State(initialValue: Set(preset.moods ?? []))
@@ -132,9 +125,8 @@ struct EditPresetSheet: View {
         .formStyle(.grouped)
         .frame(minWidth: 400, idealWidth: 500, minHeight: preset.isDefault ? 200 : 300)
         .toolbar {
-          // Keep these as separate items: macOS 26 sheet bottom bars render
-          // only ONE item per action slot, so grouping share with Done (or
-          // sharing the .confirmationAction placement) silently drops Done.
+          // Separate items: macOS 26 sheet bottom bars render one item per
+          // action slot, so grouping share with Done drops Done.
           ToolbarItem(placement: .confirmationAction) {
             Button("Done") { isPresented = nil }
             .keyboardShortcut(.escape)
@@ -151,7 +143,6 @@ struct EditPresetSheet: View {
       }
       .onAppear(perform: setupInitialValues)
       .onDisappear {
-        // Clean up exported file when sheet closes
         cleanupExportedFile()
       }
       .onChange(of: accentColor) { _, _ in
@@ -161,9 +152,8 @@ struct EditPresetSheet: View {
         applyChangesInstantly()
       }
       #if os(macOS)
-        // macOS edits sounds via an inline NavigationLink (no sheet to close),
-        // so there's no dismiss event to apply on. Apply whenever the selection
-        // set changes instead. iOS keeps its sheet-close trigger below.
+        // macOS picks sounds inline (no sheet dismiss to apply on), so apply on
+        // each selection change. iOS applies when its sheet closes, below.
         .onChange(of: selectedSounds) { _, _ in
           applyChangesInstantly()
         }
@@ -230,8 +220,7 @@ struct EditPresetSheet: View {
       }
     }
     #if os(iOS) || os(visionOS)
-      // A full preset editor, not a quick dialog — page-sized on iPad instead
-      // of the default small centered form sheet (no-op on iPhone).
+      // Page-sized on iPad (no-op on iPhone).
       .presentationSizing(.page)
     #endif
   }
@@ -257,8 +246,7 @@ struct EditPresetSheet: View {
           SoundSheet(mode: .edit(sound), embedInNavigation: false)
         }
       }
-      // Match the editor's preset accent so the pushed Edit Sound page (which
-      // inherits tint when embedded) themes like the sheet that opened it.
+      // The pushed Edit Sound page inherits tint, so it matches the preset accent.
       .tint(activeAccentColor)
     }
   }
@@ -272,10 +260,6 @@ struct EditPresetSheet: View {
             "EditPresetSheet: ImagePicker dismissed, artworkData is \(artworkData != nil ? "set" : "nil")"
           )
           if artworkData != savedArtworkData {
-            // A genuinely new image was picked — mint a new id and persist.
-            // Comparing against the seeded baseline (not just `!= nil`) avoids
-            // treating a cancel — where artworkData is still the seeded preview
-            // — as a new pick, which minted a dangling id and dropped the art.
             Logger.ui.debug("EditPresetSheet: New artwork picked, applying changes")
             artworkId = UUID()
             applyChangesInstantly()
@@ -295,10 +279,6 @@ extension EditPresetSheet {
     if !preset.isDefault {
       Group {
         #if os(iOS) || os(visionOS)
-          // ShareLink builds the archive lazily inside its Transferable, so the
-          // share sheet sits there silently for seconds (large custom sounds)
-          // and the app looks frozen. Build it ourselves behind a spinner, then
-          // hand the ready file to the system share sheet.
           Button {
             Task { await prepareAndPresentShare() }
           } label: {
@@ -317,9 +297,8 @@ extension EditPresetSheet {
             }
           }
         #else
-          // macOS: one pull-down menu offers both the native share sheet and a
-          // plain "Export to File…" save panel. Kept in a single menu because a
-          // macOS sheet toolbar renders only one item per action slot.
+          // One menu for Share and Export: a macOS sheet toolbar renders one item
+          // per action slot.
           if isExporting {
             ProgressView()
               .scaleEffect(0.8)
@@ -356,14 +335,10 @@ extension EditPresetSheet {
     }
   }
 
-  /// Builds the `.blankie` archive for the current edits and moves it into
-  /// Documents for sharing. The heavy file work (copying custom sounds, zipping)
-  /// runs off the main actor inside `PresetExporter`, so callers can show a
-  /// spinner while awaiting without blocking the UI.
+  /// Builds the `.blankie` archive into Documents off the main actor. Share builds it
+  /// up front behind a spinner because ShareLink's lazy build shows no progress.
   @MainActor
   private func buildExportArchive() async throws -> URL {
-    // Read-only snapshot: never mutate the stored preset's artwork while
-    // building the archive (edits are already persisted via applyChangesInstantly).
     let updatedPreset = await createUpdatedPreset(persistArtworkChanges: false)
     let tempArchiveURL = try await PresetExporter.shared.createArchive(for: updatedPreset)
 
@@ -392,8 +367,7 @@ extension EditPresetSheet {
       try await body()
     } catch {
       Logger.ui.error("Preset export failed: \(error.localizedDescription, privacy: .public)")
-      // Show ExportError's user-facing message; for an unexpected system error
-      // show a friendly fallback rather than leaking a raw error string.
+      // Only ExportError messages are user-facing; anything else gets a generic message.
       if error is PresetExporter.ExportError {
         exportError = error.localizedDescription
       } else {
@@ -405,8 +379,6 @@ extension EditPresetSheet {
   }
 
   #if os(iOS) || os(visionOS)
-    /// Builds the archive behind a spinner, then presents the system share
-    /// sheet once the file is ready.
     @MainActor
     private func prepareAndPresentShare() async {
       await runExport {
@@ -417,10 +389,6 @@ extension EditPresetSheet {
   #endif
 
   #if os(macOS)
-    /// Builds the archive behind the toolbar spinner, then presents the native
-    /// macOS share menu for the ready file. Building first — instead of letting a
-    /// ShareLink resolve it lazily — means the menu never sits there silently
-    /// while a large custom-sound archive copies and zips.
     @MainActor
     private func prepareAndPresentMacShare() async {
       await runExport {
@@ -429,27 +397,22 @@ extension EditPresetSheet {
     }
 
     private func presentMacSharePicker(for url: URL) {
-      // Fall back to the main window if none is key, so the user's Share tap
-      // never silently does nothing.
       guard let anchor = (NSApp.keyWindow ?? NSApp.mainWindow)?.contentView else {
         Logger.ui.error("Preset share: no window available to present the share picker")
         return
       }
       let picker = NSSharingServicePicker(items: [url])
-      // Anchor near the top-trailing corner, beside the toolbar share button.
-      // (SwiftUI doesn't expose the toolbar item's view to anchor to precisely.)
+      // Top-trailing corner, near the share button (SwiftUI doesn't expose the
+      // toolbar item's view).
       let rect = NSRect(x: anchor.bounds.maxX - 1, y: anchor.bounds.maxY - 1, width: 1, height: 1)
       picker.show(relativeTo: rect, of: anchor, preferredEdge: .minY)
     }
 
-    /// Lets the user pick a destination with a save panel, then writes the
-    /// built archive there (behind the same spinner as the share path).
     @MainActor
     private func exportToFile() async {
       guard !isExporting else { return }
 
-      // Pick the destination before the spinner — the save panel is the user's
-      // step, not part of the work being awaited behind the spinner.
+      // The save panel runs before the spinner starts.
       let panel = NSSavePanel()
       panel.allowedContentTypes = [.blankie]
       panel.nameFieldStringValue = "\(presetName).blankie"
@@ -460,7 +423,6 @@ extension EditPresetSheet {
         let builtURL = try await buildExportArchive()
         try? FileManager.default.removeItem(at: destination)
         try FileManager.default.copyItem(at: builtURL, to: destination)
-        // The Documents working copy isn't needed once it's saved elsewhere.
         cleanupExportedFile()
       }
     }
@@ -468,17 +430,14 @@ extension EditPresetSheet {
 
   private func cleanupExportedFile() {
     if let url = exportedURL {
-      // Delete the temporary file
       try? FileManager.default.removeItem(at: url)
       Logger.ui.debug("Cleaned up temporary export file: \(url.lastPathComponent)")
     }
-    // Reset the state
     exportedURL = nil
     exportError = nil
   }
 
-  // Safety net only: the Edit affordances route the default preset to the
-  // create-preset flow instead of this sheet, so this should never show.
+  // Fallback only: Edit routes the default preset to the create-preset flow.
   var defaultPresetSection: some View {
     Group {
       Section {
@@ -500,8 +459,6 @@ extension EditPresetSheet {
     }
   }
 
-  // The default preset shares the "allSounds" token; custom presets use their
-  // UUID string.
   var starToken: String {
     preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
   }
@@ -515,8 +472,6 @@ extension EditPresetSheet {
           await MainActor.run {
             let data = image.jpegData(compressionQuality: 0.8)
             self.artworkData = data
-            // Baseline: the seeded preview is the already-saved artwork, so an
-            // unchanged sheet never counts as an artwork edit.
             self.savedArtworkData = data
           }
         }
@@ -527,7 +482,6 @@ extension EditPresetSheet {
   func applyChangesInstantly(skipRefresh: Bool = false) {
     Logger.ui.debug("EditPresetSheet: Applying changes instantly (skipRefresh: \(skipRefresh))")
 
-    // Only validate name for non-default presets
     if !preset.isDefault {
       guard !presetName.isEmpty else {
         error = String(localized: "Preset name cannot be empty")
@@ -544,13 +498,10 @@ extension EditPresetSheet {
           currentPresets[index] = updatedPreset
           presetManager.setPresets(currentPresets)
 
-          // Update current preset reference if this is the active preset
           if presetManager.currentPreset?.id == preset.id {
+            // Update metadata without reapplying, so audio doesn't restart.
             presetManager.setCurrentPreset(updatedPreset)
-            // Don't reapply the preset - just update the metadata
-            // This prevents audio from restarting when editing non-sound properties
 
-            // Force full Now Playing update to refresh lock screen artwork immediately
             if !skipRefresh {
               audioManager.nowPlayingManager.forceRefresh(
                 preset: updatedPreset,
@@ -559,17 +510,14 @@ extension EditPresetSheet {
             }
           }
 
-          // Save presets directly without overriding the current preset state
           savePresetsDirectly()
 
-          // Post notification that preset was updated
           NotificationCenter.default.post(
             name: Notification.Name("PresetUpdated"), object: updatedPreset)
         }
       }
 
-      // Regenerate the CarPlay thumbnail (force, so new artwork replaces a
-      // stale cached image), or drop it if the artwork was removed.
+      // Force so new artwork replaces the cached CarPlay thumbnail.
       if updatedPreset.artworkId != nil || updatedPreset.animatedArtwork != nil {
         await presetManager.cacheThumbnail(for: updatedPreset, force: true)
       } else {
@@ -578,22 +526,15 @@ extension EditPresetSheet {
     }
   }
 
-  /// Builds the up-to-date `Preset` value from the editor state.
-  ///
-  /// `persistArtworkChanges` runs the artwork save/delete against the store as a
-  /// side effect — correct when applying edits, but it MUST be `false` for
-  /// export. Export only needs a read-only snapshot; running the artwork
-  /// mutation there deleted the stored preset's artwork (export doesn't persist
-  /// the returned value, so the delete/replace orphaned it).
+  /// Builds a `Preset` from the editor state. Pass `persistArtworkChanges: false`
+  /// for export, which must not save or delete the stored artwork.
   func createUpdatedPreset(persistArtworkChanges: Bool = true) async -> Preset {
     let currentVersion =
       Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
 
     var updatedPreset = preset
 
-    // Only update name, creator, and sounds for non-default presets
     if !preset.isDefault {
-      // Create sound states
       let selectedSoundStates = createSoundStates()
 
       updatedPreset.name = presetName
@@ -603,37 +544,31 @@ extension EditPresetSheet {
       updatedPreset.soundOrder = soundOrder
     }
 
-    // Handle artwork (allowed for all presets including default). Skipped for
-    // export so building the archive never mutates the stored preset's artwork.
     if persistArtworkChanges {
       await handleArtworkChanges()
     }
 
-    // Update preset properties
     updatedPreset.artworkId = artworkId
     updatedPreset.animatedArtwork = animatedArtwork
     updatedPreset.staticArtworkPath = staticArtworkPath
     updatedPreset.lastModifiedVersion = currentVersion
 
     if preset.isDefault {
-      // The default preset takes no theme overrides (its sheet doesn't offer
-      // them); clear any set before this rule so they can't linger invisibly.
+      // The default preset takes no theme overrides; clear any older ones.
       updatedPreset.accentColorName = nil
       updatedPreset.viewMode = nil
       updatedPreset.backgroundBlurRadius = nil
     } else {
-      // Save accent color
       if useCustomTheme, let color = accentColor {
         updatedPreset.accentColorName = color.toString
       } else {
         updatedPreset.accentColorName = nil
       }
 
-      // Save per-preset view-mode override (nil = follow app setting).
+      // nil follows the app setting.
       updatedPreset.viewMode = useCustomViewMode ? viewModeOverride : nil
 
-      // Background blur is now an all-or-nothing global Display setting, so
-      // clear any legacy per-preset override as presets are edited.
+      // Blur is a global Display setting; clear legacy per-preset values.
       updatedPreset.backgroundBlurRadius = nil
     }
 
@@ -641,7 +576,6 @@ extension EditPresetSheet {
   }
 
   private func createSoundStates() -> [PresetState] {
-    // Get existing sound states for this preset
     let existingSoundStates = preset.soundStates
 
     let states: [PresetState] = orderedSelectedFileNames.compactMap { fileName -> PresetState? in
@@ -649,12 +583,10 @@ extension EditPresetSheet {
         return nil
       }
 
-      // If this sound was already in the preset, preserve its state
       if let existingState = existingSoundStates.first(where: { $0.fileName == fileName }) {
         return existingState
       }
 
-      // New sound added to preset - set it as selected by default
       return PresetState(
         fileName: sound.fileName,
         isSelected: true,
@@ -671,10 +603,6 @@ extension EditPresetSheet {
 
   private func handleArtworkChanges() async {
     if let data = artworkData {
-      // Only persist when the image actually changed. Opening the sheet seeds
-      // `artworkData` from the existing artwork for the preview; without this
-      // guard every edit re-saved it under a new id, and that id-churn reloaded
-      // the mixer background over and over (the purple/blue strobe).
       guard data != savedArtworkData else { return }
       do {
         let savedId = try await PresetArtworkManager.shared.saveArtwork(
@@ -687,9 +615,7 @@ extension EditPresetSheet {
         Logger.ui.error("EditPresetSheet: Failed to save artwork: \(error, privacy: .public)")
       }
     } else if artworkId == nil, preset.artworkId != nil {
-      // Artwork was deleted - clean up old artwork. Delete by the PRESET id
-      // (the method filters on `presetId`); passing `preset.artworkId` (the
-      // row's own id) matched nothing, orphaning the row and its file mirror.
+      // deleteArtwork filters on the preset id, not the artwork row's id.
       do {
         try await PresetArtworkManager.shared.deleteArtwork(for: preset.id, type: .artwork)
         savedArtworkData = nil
@@ -737,11 +663,10 @@ extension EditPresetSheet {
         do {
           let data = try Data(contentsOf: url)
           if let nsImage = NSImage(data: data) {
-            // Process and crop the image
             let targetSize = CGSize(width: 300, height: 300)
             if let processedData = processImage(nsImage: nsImage, targetSize: targetSize) {
               artworkData = processedData
-              artworkId = UUID()  // Generate new ID for the new artwork
+              artworkId = UUID()
               applyChangesInstantly()
             }
           }
@@ -776,7 +701,6 @@ extension EditPresetSheet {
     #if os(macOS)
       guard let image = NSImage(data: data) else { return nil }
 
-      // Resize if needed (max 2048x2048)
       let maxSize: CGFloat = 2048
       var targetSize = image.size
 
@@ -798,7 +722,6 @@ extension EditPresetSheet {
       )
       resizedImage.unlockFocus()
 
-      // Convert to JPEG with compression
       guard let tiffData = resizedImage.tiffRepresentation,
         let bitmap = NSBitmapImageRep(data: tiffData)
       else { return nil }
@@ -808,7 +731,6 @@ extension EditPresetSheet {
     #else
       guard let image = UIImage(data: data) else { return nil }
 
-      // Resize if needed (max 2048x2048)
       let maxSize: CGFloat = 2048
       var targetSize = image.size
 
@@ -831,9 +753,7 @@ extension EditPresetSheet {
 }
 
 #if os(iOS) || os(visionOS)
-  /// Presents the system share sheet for an already-built export file, so the
-  /// archive can be shared once it's ready (after the spinner) rather than
-  /// inside ShareLink's silent lazy resolution.
+  /// Presents the system share sheet for an already-built export file.
   private struct PresetShareSheet: UIViewControllerRepresentable {
     let url: URL
 

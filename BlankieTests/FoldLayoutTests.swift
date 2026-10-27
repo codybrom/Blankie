@@ -55,7 +55,7 @@ import Testing
     #expect(r.leading == 16 && r.trailing == 16 && r.columnSpacing == 16)
   }
 
-  // Review fixes: list rows keep to the leading page; panels split on the crease.
+  // List rows keep to the leading page; panels split on the crease.
 
   // Flat and bent lay out the same, so bending the device moves nothing.
   @Test func leadingPageFlatOrBent() {

@@ -7,10 +7,8 @@
 
 import AppIntents
 
-/// App Intents-facing wrapper around `Sound`, keyed by the sound's stable
-/// `fileName` (not its `UUID`, which is re-minted every launch).
-/// `IndexedEntity` makes sounds findable in Spotlight; the default index
-/// attributes are derived from `displayRepresentation` (title + icon).
+/// App Intents wrapper around `Sound`, keyed by the stable `fileName` (a
+/// sound's `UUID` changes every launch). Indexed for Spotlight.
 struct SoundEntity: AppEntity, IndexedEntity {
   let id: String
   var title: String
@@ -26,10 +24,8 @@ struct SoundEntity: AppEntity, IndexedEntity {
     DisplayRepresentation(title: "\(title)", image: .init(systemName: systemIconName))
   }
 
-  // AppEntity requires Sendable, which opts this struct out of the project's
-  // default main-actor isolation — so unlike a plain `nonisolated struct` model
-  // (e.g. `Preset`), reading `Sound`'s main-actor-isolated computed properties
-  // here needs an explicit annotation.
+  // AppEntity requires Sendable, which opts this struct out of default
+  // main-actor isolation, so reading `Sound`'s properties needs @MainActor.
   @MainActor
   init(sound: Sound) {
     id = sound.fileName

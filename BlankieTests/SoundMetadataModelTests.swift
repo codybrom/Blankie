@@ -4,9 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The shipped sound catalog and credit/license value types. Decoding the
-//  bundled sounds.json is the empty-grid-on-launch canary; License/Mood drift
-//  would mis-tag or mis-link every sound's credits.
+//  The shipped sound catalog (sounds.json) and the credit, license and mood value types.
 //
 
 import Foundation
@@ -16,7 +14,6 @@ import Testing
 
 @Suite struct SoundMetadataModelTests {
 
-  /// The bundled catalog decodes and still contains the full built-in library.
   @Test func shippedSoundsJSONDecodes() throws {
     let url = try #require(Bundle.main.url(forResource: "sounds", withExtension: "json"))
     let container = try JSONDecoder().decode(SoundsContainer.self, from: Data(contentsOf: url))
@@ -30,8 +27,7 @@ import Testing
     }
   }
 
-  /// Every built-in sound ships a non-empty subtitle caption (the character
-  /// line shown under the title in Now Playing and the sound pickers).
+  /// The subtitle is the caption under the title in Now Playing and the sound pickers.
   @Test func everyBuiltInSoundHasSubtitle() throws {
     let url = try #require(Bundle.main.url(forResource: "sounds", withExtension: "json"))
     let container = try JSONDecoder().decode(SoundsContainer.self, from: Data(contentsOf: url))
@@ -42,10 +38,8 @@ import Testing
     }
   }
 
-  /// Each subtitle string is a key in the compiled string catalog. `Sound`'s
-  /// `localizedSubtitle` looks the subtitle up with `NSLocalizedString`, so a
-  /// subtitle edited in sounds.json without a matching catalog key would
-  /// silently fall back to English — this catches that drift.
+  /// `localizedSubtitle` looks subtitles up with `NSLocalizedString`, so each one needs a
+  /// catalog key or it shows in English.
   @Test func everySubtitleHasCatalogEntry() throws {
     let url = try #require(Bundle.main.url(forResource: "sounds", withExtension: "json"))
     let container = try JSONDecoder().decode(SoundsContainer.self, from: Data(contentsOf: url))

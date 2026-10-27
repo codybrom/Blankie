@@ -16,7 +16,7 @@ nonisolated struct ArchiveUtility {
     case limitExceeded
   }
 
-  // Caps for untrusted .blankie archives — far above any real preset
+  // Caps for untrusted .blankie archives, far above any real preset
   // (a manifest, artwork, and a few sounds capped at 50 MB each).
   private static let maxEntryCount = 512
   // 512 MiB in all (8 sounds at 50 MB plus artwork)
@@ -45,10 +45,8 @@ nonisolated struct ArchiveUtility {
       }
       // A symlink could redirect later entries' writes outside the destination.
       guard entry.type != .symlink else { continue }
-      // Use appending(path:directoryHint:) (no filesystem access) rather than
-      // appendingPathComponent, which stats the path and canonicalizes the base
-      // (e.g. /var -> /private/var). That canonicalization made `path` diverge
-      // from `rootPrefix` and the containment check rejected every entry.
+      // appending(path:directoryHint:) skips filesystem access. appendingPathComponent
+      // canonicalizes the base (/var to /private/var), which breaks the `rootPrefix` check.
       let path = root.appending(path: entry.path, directoryHint: .inferFromPath)
         .standardizedFileURL
       guard path.path.hasPrefix(rootPrefix) else {
@@ -86,15 +84,12 @@ nonisolated struct ArchiveUtility {
     Logger.app.debug(
       "ArchiveUtility: Creating archive from \(sourceURL.path) to \(archiveURL.path)")
 
-    // Remove existing archive if needed
     try removeExistingArchive(at: archiveURL)
 
-    // Create new archive
     Logger.app.debug("ArchiveUtility: Creating new archive...")
     let archive = try Archive(url: archiveURL, accessMode: .create)
     Logger.app.debug("ArchiveUtility: Archive created successfully")
 
-    // Enumerate and add files
     let fileCount = try addFilesToArchive(archive, from: sourceURL)
 
     Logger.app.debug("ArchiveUtility: Archive creation completed with \(fileCount) files")
@@ -124,7 +119,6 @@ nonisolated struct ArchiveUtility {
     for case let fileURL as URL in enumerator {
       let relativePath = fileURL.path.replacingOccurrences(of: sourceURL.path + "/", with: "")
 
-      // Skip empty relative paths
       if relativePath.isEmpty {
         continue
       }
@@ -164,7 +158,7 @@ nonisolated struct ArchiveUtility {
       with: relativePath,
       type: .file,
       uncompressedSize: fileSize,
-      compressionMethod: .none  // Store without compression
+      compressionMethod: .none
     ) { position, size in
       // Stream file data in chunks
       let fileHandle = try FileHandle(forReadingFrom: fileURL)

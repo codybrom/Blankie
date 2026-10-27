@@ -41,8 +41,7 @@ import SwiftUI
 
     var body: some View {
       ZStack {
-        // Shared accent surface — same gradient used by the main grid so
-        // Quick Mix reads as a variant of the same visual system.
+        // The same accent gradient as the main mixer, so Quick Mix matches it.
         SoundSurfaceBackground(
           accent: globalSettings.customAccentColor ?? .accentColor
         )
@@ -58,7 +57,7 @@ import SwiftUI
           grid
         }
         // No room for the column (iPad portrait beside the sidebar, a large
-        // iPhone in landscape): the same bare bar as a preset page instead.
+        // iPhone in landscape): the same bare bar as a preset page.
         .safeAreaInset(edge: .bottom) {
           if let onOpenNowPlaying, size.width > 0, !showsColumn {
             NowPlayingBar(style: .bare, onTap: onOpenNowPlaying)

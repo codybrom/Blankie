@@ -4,13 +4,8 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  An imported archive can carry IDs that already exist here, from your own
-//  export re-imported or from a crafted or edited archive. Nothing may be stored under a
-//  taken ID. Artwork saved for the archive's preset ID purged the original
-//  preset's artwork, and a sound written under a taken ID overwrote another
-//  sound's audio.
-//
-//  Runs against an in-memory store and an isolated preset list (SingletonSandbox).
+//  An imported archive can carry IDs that already exist (a re-imported export or an edited
+//  archive), so nothing is stored under a taken ID. Runs on SingletonSandbox's in-memory store.
 //
 
 import Foundation
@@ -37,7 +32,7 @@ import Testing
       FetchDescriptor<PresetArtwork>(predicate: #Predicate { $0.presetId == presetID }))
   }
 
-  // MARK: - Preset artwork (P1)
+  // MARK: - Preset artwork
 
   /// Importing your own export re-IDs the preset before storing its artwork, so
   /// the original keeps its artwork row and the copy gets its own.
@@ -75,11 +70,9 @@ import Testing
     try? await PresetArtworkManager.shared.deleteArtwork(for: imported.id)
   }
 
-  // MARK: - Custom sound IDs (P3)
+  // MARK: - Custom sound IDs
 
-  /// An archive sound whose ID is already taken by a different file (a SHA
-  /// mismatch) gets a fresh ID. The existing sound's audio and row stay intact,
-  /// and the mapping points the preset at the new ID.
+  /// A taken ID with a different SHA gets a fresh ID, and the mapping points the preset at it.
   @Test func importedSoundWithATakenIDGetsAFreshOne() async throws {
     let dir = try sandbox.customSoundsDirectory()
     let takenID = UUID()

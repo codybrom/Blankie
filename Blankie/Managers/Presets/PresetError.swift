@@ -5,13 +5,6 @@
 //  Created by Cody Bromley on 1/5/25.
 //
 
-//
-//  PresetError.swift
-//  Blankie
-//
-//  Created by Cody Bromley on 1/5/25.
-//
-
 import Foundation
 
 enum PresetError: LocalizedError {

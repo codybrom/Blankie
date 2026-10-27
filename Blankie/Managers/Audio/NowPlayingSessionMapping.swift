@@ -41,8 +41,8 @@ enum NowPlayingSessionMapping {
     case tall
   }
 
-  /// Where a piece of static artwork came from — everything that decides which
-  /// image gets rendered, and nothing about how it is drawn.
+  /// Where a piece of static artwork came from: everything that decides which
+  /// image renders, and nothing about how it's drawn.
   nonisolated enum ArtworkSource: Equatable {
     case stored(UUID)
     case file(String)
@@ -117,10 +117,8 @@ enum NowPlayingSessionMapping {
     return base
   }
 
-  /// The artwork's identity. The system caches artwork by id and never asks for
-  /// a cached one again, so this has to change whenever the rendered image
-  /// would — which for the drawn fallbacks means folding in the accent and the
-  /// icons they montage.
+  /// The artwork's identity. The system caches artwork by id and never re-requests
+  /// it, so the id changes whenever the image would (for fallbacks: accent and icons).
   nonisolated static func artworkID(source: ArtworkSource, accentColorName: String?) -> String {
     let accent = accentColorName ?? "default"
     switch source {

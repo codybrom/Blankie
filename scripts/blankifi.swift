@@ -18,7 +18,7 @@ fi
 exec "$BIN" "$@"
 //<<<BLANKIFI-SWIFT>>>
 
-//  blankifi.swift — Blankie's audio toolkit
+//  blankifi.swift: Blankie's audio toolkit
 //
 //  Usage:  ./scripts/blankifi.swift <subcommand> [args]
 //
@@ -28,8 +28,8 @@ exec "$BIN" "$@"
 //    convert    <in> <out.m4a> [--bitrate 192000]               transcode to 44.1k stereo M4A
 //    reanalyze  [--write] [--json PATH] [--sounds-dir DIR]      batch re-measure sounds.json
 //
-//  The shell preamble above compiles this file together with the app's real
-//  AudioAnalyzer, so `analyze`/`reanalyze` report the exact LUFS as the app
+//  The shell preamble compiles this file with the app's AudioAnalyzer, so
+//  `analyze` and `reanalyze` report the same LUFS the app computes.
 
 import AVFoundation
 import Accelerate
@@ -279,8 +279,8 @@ func renderBands(_ bands: [Band], width: Int, height: Int, to url: URL) {
 func cmdAnalyze(_ args: [String]) async {
   guard let path = args.first else { fail("analyze <file>") }
   let url = URL(fileURLWithPath: path)
-  // comprehensiveAnalysis swallows read errors and returns defaults, so verify
-  // the file actually decodes first — otherwise we'd print bogus values.
+  // comprehensiveAnalysis returns defaults on a read error, so check that the
+  // file decodes first.
   guard (try? AVAudioFile(forReading: url)) != nil else { fail("cannot read \(path)") }
   let r = await AudioAnalyzer.comprehensiveAnalysis(at: url)
   print("file=\(url.lastPathComponent)")

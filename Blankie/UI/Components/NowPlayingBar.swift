@@ -11,10 +11,8 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
 
-  /// Compact glass bar pinned above the bottom safe area on iPhone and iPad.
-  /// Tapping the bar steps one level toward what's playing: from the iPhone
-  /// Library it shows the mixer, from the mixer it expands the full Now
-  /// Playing cover. Play/pause stays inline.
+  /// Compact glass bar above the bottom safe area on iPhone and iPad. A tap steps one
+  /// level toward what's playing (Library to mixer, mixer to the Now Playing cover).
   struct NowPlayingBar: View {
     /// `.bare` drops the artwork and title for wide layouts where the sidebar
     /// and page header already say what's playing.
@@ -23,10 +21,10 @@ import SwiftUI
     var style: Style = .full
     /// The nightstand layout already shows the player above; no expand button.
     var showsExpand = true
-    /// True when the tap shows the mixer rather than expanding the player —
-    /// only affects the announced hint; the owner supplies the action itself.
+    /// True when a tap shows the mixer. It only changes the announced hint; the owner
+    /// supplies the action.
     var showsMixer = false
-    /// Opens the timer as a popover over the bar instead of a sheet.
+    /// Opens the timer as a popover over the bar.
     var timerAsPopover = false
     let onTap: () -> Void
 
@@ -170,8 +168,8 @@ import SwiftUI
       #endif
     }
 
-    /// Capsule bar plus a standalone play/pause circle trailing it, so the two
-    /// glass shapes read as separate controls that share one glass tissue.
+    /// Capsule bar plus a standalone play/pause circle trailing it, two glass shapes
+    /// that read as separate controls.
     private var barContent: some View {
       HStack(spacing: 12) {
         openButton
@@ -226,9 +224,8 @@ import SwiftUI
           isQuickMix: audioManager.isQuickMix,
           presetArtworkId: presetManager.currentPreset?.artworkId,
           animatedArtwork: presetManager.currentPreset?.animatedArtwork,
-          // Match the library/Now Playing artwork tint: the active preset's
-          // accent, falling back to the app accent (themingPreset is nil during
-          // solo / Quick Mix, so those correctly use the app accent).
+          // Matches the library and Now Playing tint: the theming preset's accent, else
+          // the app accent (themingPreset is nil during solo and Quick Mix).
           accentColor: presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor,
           playingIcons: audioManager.playingSoundIcons(),
           isDefaultPreset: presetManager.currentPreset?.isDefault ?? true
@@ -264,8 +261,8 @@ import SwiftUI
       return presetManager.currentPreset?.activeTitle ?? "Blankie"
     }
 
-    /// Status line under the title. Active playback shows no caption — the
-    /// title alone reads cleaner than announcing "Playing".
+    /// Status line under the title. Active playback shows no caption; the title
+    /// alone reads cleaner.
     private var caption: String? {
       if audioManager.soloModeSound == nil && !audioManager.hasSelectedSounds
         && !audioManager.isQuickMix
@@ -321,9 +318,8 @@ import SwiftUI
     }
 
     var body: some View {
-      // Pause must always be reachable: enable whenever the app is playing OR
-      // has sounds to start, matching every other surface's convention so the
-      // bar can never get stuck in a "playing" state with no way to pause.
+      // Pause stays reachable: enabled while playing or when there are sounds to
+      // start, matching the other playback surfaces.
       let isInteractive = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
       return Button {
         guard isInteractive else { return }
@@ -416,8 +412,8 @@ import SwiftUI
             .resizable()
             .scaledToFill()
         } else {
-          // Quick Mix → grid, All Blankie Sounds → the Blankie mark, a custom
-          // preset → a montage of its sounds; matching the preset's library tile.
+          // Matches the preset's library tile: Quick Mix gets the grid, All Blankie
+          // Sounds the Blankie mark, a custom preset a montage of its sounds.
           FallbackArtwork(
             glyph: .playback(
               isQuickMix: properties.isQuickMix,
@@ -429,27 +425,25 @@ import SwiftUI
       }
       .frame(width: 36, height: 36)
       .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-      // Keyed on the guard's inputs too: at launch the preset arrives before its
-      // sounds are selected, and an id of the artwork alone never re-ran.
+      // Keyed on the guard's inputs too, since at launch the preset arrives before
+      // its sounds are selected.
       .task(
         id:
           "\(properties.presetArtworkId?.uuidString ?? "nil")-\(properties.animatedArtwork?.squarePreviewPath ?? properties.animatedArtwork?.previewPath ?? "nil")-\(properties.soloSound == nil)-\(properties.hasSelectedSounds || properties.isQuickMix)"
       ) {
-        // Only load artwork when not in solo/no sounds mode
         guard properties.soloSound == nil, properties.hasSelectedSounds || properties.isQuickMix
         else {
           artworkImage = nil
           return
         }
 
-        // Try to load from artworkId first
         if let artworkId = properties.presetArtworkId,
           let data = await PresetArtworkManager.shared.loadArtworkData(id: artworkId),
           let image = UIImage(data: data)
         {
           artworkImage = image
         } else if let preset = presetManager.currentPreset {
-          // Fallback: Use animated artwork preview if available
+          // Fall back to the animated artwork preview.
           artworkImage = await PresetArtworkManager.shared.loadBackgroundImageAsync(for: preset)
         } else {
           artworkImage = nil

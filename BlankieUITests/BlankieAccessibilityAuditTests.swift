@@ -4,11 +4,8 @@
 //
 //  Created by Cody Bromley on 6/8/26.
 //
-//  Automated accessibility backstop (#57): `performAccessibilityAudit` runs the
-//  Accessibility Inspector's checks over the live UI and fails on any issue not
-//  deliberately ignored. Also the empirical guard for the label (#55) and Liquid
-//  Glass contrast (#56) work. VoiceOver speech and Switch Control aren't
-//  automatable (no XCTest API) — those stay in notes/a11y-test-plan.md.
+//  Runs `performAccessibilityAudit` over the live UI and fails on any issue not deliberately
+//  ignored. VoiceOver speech and Switch Control have no XCTest API, so they're tested by hand.
 //
 
 import XCTest
@@ -20,7 +17,7 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
     executionTimeAllowance = 120
   }
 
-  /// Audits the main mixer screen — the densest, highest-traffic surface.
+  /// Audits the main mixer screen, the densest surface.
   @MainActor func testMixerAccessibilityAudit() throws {
     let app = XCUIApplication()
     // ScreenshotMode activates sounds so the audit sees a populated grid.
@@ -28,9 +25,8 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
     app.launch()
     sleep(2)  // Let the grid, glass, and Now Playing bar settle.
 
-    // Pin to a deterministic surface: solo/preset state survives the UI-test
-    // reset (it lives in the shared app-group store), so force the default
-    // preset, which also exits solo mode.
+    // Solo and preset state survive the UI-test reset (app-group store), so select the default
+    // preset, which also exits solo.
     let defaultPreset = app.buttons["All Blankie Sounds"].firstMatch
     if defaultPreset.waitForExistence(timeout: 5) {
       #if os(macOS)
@@ -41,21 +37,16 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
       sleep(1)
     }
 
-    // `performAccessibilityAudit` is @MainActor-isolated, so it must run on the
-    // main thread — then emits a non-failing "should not be called on the main
-    // thread" advisory. An Apple framework contradiction: not the Main Thread
-    // Checker (disabling it had no effect), and off-main is impossible. Worth a
-    // feedback report; nothing to fix here.
+    // `performAccessibilityAudit` is main-actor isolated yet logs a non-failing "should not be
+    // called on the main thread" advisory. That's a framework issue with nothing to fix here.
     try app.performAccessibilityAudit { self.shouldIgnoreAuditIssue($0) }
   }
 
   /// Whether an audit issue is a documented framework/system false positive to
   /// ignore, or a real finding that should fail the test.
   @MainActor private func shouldIgnoreAuditIssue(_ issue: XCUIAccessibilityAuditIssue) -> Bool {
-    // Structural containers (NavigationSplitView's groups, the grid's `Other`,
-    // window-chrome groups) are layout wrappers, not controls — they trip the
-    // no-description and parent/child checks while their labeled descendants
-    // carry the meaning. Real controls never surface as a bare container.
+    // Layout containers (NavigationSplitView groups, the grid's `Other`, window chrome) trip the
+    // description and parent/child checks; their labeled descendants carry the meaning.
     let isContainer =
       issue.element?.elementType == .group || issue.element?.elementType == .other
     if isContainer,
@@ -64,23 +55,19 @@ final class BlankieAccessibilityAuditTests: XCTestCase {
       return true
     }
 
-    // The macOS Touch Bar is a system element (present with no items / no
-    // hardware); not app content and can't be described.
+    // The macOS Touch Bar is a system element, present even without the hardware.
     if issue.element?.elementType == .touchBar {
       return true
     }
 
-    // A SwiftUI `Menu` is a pull-down button: its action is show-menu (which
-    // VoiceOver operates), but `.action` only recognizes a press action. The
-    // menu is HIG-correct and VoiceOver-verified operable; the alternatives that
-    // expose a press action are worse. Framework false positive.
+    // A SwiftUI `Menu` exposes show-menu (which VoiceOver operates), but `.action` only
+    // recognizes press. Framework false positive.
     if issue.auditType == .action, issue.element?.elementType == .menuButton {
       return true
     }
 
-    // A native slider's knob is an AppKit-generated ValueIndicator inside the
-    // labeled Slider (e.g. "Rain", 80%); VoiceOver reads the slider, and SwiftUI
-    // can't label the knob. Framework false positive.
+    // A native slider's knob is an AppKit ValueIndicator that SwiftUI can't label; VoiceOver
+    // reads the labeled slider. Framework false positive.
     #if os(macOS)
       if issue.auditType == .sufficientElementDescription,
         issue.element?.elementType == .valueIndicator

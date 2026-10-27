@@ -19,8 +19,7 @@ enum IconSize: String, CaseIterable {
 }
 
 extension UserDefaults {
-  /// Shared UserDefaults instance for app group
-  /// Falls back to standard UserDefaults if app group is not available
+  /// The app group's UserDefaults, or `.standard` when the group is unavailable.
   static var shared: UserDefaults {
     AppGroupConfiguration.sharedDefaults ?? UserDefaults.standard
   }
@@ -30,7 +29,7 @@ extension UserDefaults {
 enum UserDefaultsKeys {
   static let volume = "globalVolume"
   static let accentColor = "customAccentColor"
-  /// Legacy autoplay key (pre-2.0). Migrated to `autoPlayOnLaunchMac`
+  /// Legacy autoplay key (pre-2.0), migrated to `autoPlayOnLaunchMac`.
   static let autoPlayOnLaunch = "autoPlayOnLaunch"
   static let autoPlayOnLaunchMac = "autoPlayOnLaunchMac"
   static let enableSpatialAudio = "enableSpatialAudio"
@@ -58,9 +57,8 @@ enum UserDefaultsKeys {
   static let libraryPresetsExpanded = "libraryPresetsExpanded"
 }
 
-/// Blur (in points) applied to a preset's background artwork behind the mixer
-/// when "Blur Background" is on. Blur is on/off and app-wide: any radius > 0
-/// means on, at this value. (Per-preset blur was removed; see `Preset`.)
+/// Blur (in points) behind the mixer when "Blur Background" is on. Blur is
+/// on/off and app-wide: any saved radius above 0 means on, at this value.
 let defaultBackgroundBlurRadius: Double = 7.5
 
 @Observable
@@ -115,35 +113,29 @@ class GlobalSettings {
   /// tap away (on), or opens the mixer first (off).
   var nowPlayingFirst: Bool
   var quickMixSoundFileNames: [String]
-  /// Ordered list of starred items shown in the iPad sidebar and CarPlay.
+  /// Starred items in display order, shown in the iPad sidebar and CarPlay.
   /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
   /// solo-sound token (`soloToken(forFileName:)`).
-  /// Order = display order; membership = starred.
   var starredItems: [String]
   var availableLanguages: [Language] = []
   var lockScreenBackgroundEnabled: Bool
   /// App-wide default lock screen animation. Used on the lock screen for any
   /// preset that doesn't set its own `animatedArtwork`.
   var defaultLockScreenArtwork: AnimatedArtworkRef?
-  /// App-wide default blur (in points) for preset background artwork. A preset's
-  /// own `backgroundBlurRadius` overrides this when set.
+  /// App-wide blur (in points) for preset background artwork; 0 means off.
   var backgroundBlurRadius: Double
-  /// macOS only: badge the Dock icon with a pause glyph while the app is
-  /// silent. On by default.
+  /// macOS only: badge the Dock icon with a pause glyph while the app is silent.
   var showDockBadgeWhenPaused: Bool
-  /// macOS only: show Blankie's icon in the menu bar. On by default.
+  /// macOS only: show Blankie's icon in the menu bar.
   var showMenuBarIcon: Bool
-  /// macOS only: hide the Dock icon now (menu-bar-only mode). Off by default.
+  /// macOS only: hide the Dock icon now (menu-bar-only mode).
   var menuBarOnlyMode: Bool
-  /// macOS only: hide the Dock icon while the main window is closed. Off by
-  /// default.
+  /// macOS only: hide the Dock icon while the main window is closed.
   var hideDockWhenWindowClosed: Bool
-  /// Library: whether the Sounds / Presets sections are expanded. Persisted so
-  /// the collapse state survives launches. Both default to expanded.
+  /// Whether the Library's Sounds and Presets sections are expanded.
   var librarySoundsExpanded: Bool
   var libraryPresetsExpanded: Bool
 
-  // Platform-specific settings
   /// Availability gate for the experimental spatial feature: shows the
   /// Spatial Mix entry on presets. Sessions themselves are started in-sheet.
   var enableSpatialAudio: Bool = false
@@ -153,7 +145,6 @@ class GlobalSettings {
   var volumeDebounceTimer: Timer?
 
   private init() {
-    // Initialize required properties first
     volume = 1.0
     customAccentColor = nil
     autoPlayOnLaunch = false
@@ -180,13 +171,11 @@ class GlobalSettings {
     librarySoundsExpanded = true
     libraryPresetsExpanded = true
 
-    // Then load actual values from UserDefaults
     loadBasicSettings()
     loadPlatformSettings()
     loadLanguageSettings()
     migrateLegacySettings()
 
-    // After initialization, log current settings
     logCurrentSettings()
   }
 
@@ -265,17 +254,14 @@ extension GlobalSettings {
       mixWithOthers = value
       UserDefaults.shared.set(value, forKey: UserDefaultsKeys.mixWithOthers)
 
-      // Reset volume to 100% when disabling mix with others
       if !value && volumeWithOtherAudio < 1.0 {
         volumeWithOtherAudio = 1.0
         UserDefaults.shared.set(
           volumeWithOtherAudio, forKey: UserDefaultsKeys.volumeWithOtherAudio)
       }
 
-      // Update audio session configuration
       updateAudioSession()
 
-      // Apply the new volume settings to currently playing sounds
       if AudioManager.shared.isGloballyPlaying {
         AudioManager.shared.applyVolumeSettings()
       }
@@ -289,9 +275,8 @@ extension GlobalSettings {
 
   @MainActor
   func setVolumeWithOtherAudio(_ level: Double) {
-    volumeWithOtherAudio = max(0.0, min(1.0, level))  // Clamp between 0.0 and 1.0
+    volumeWithOtherAudio = max(0.0, min(1.0, level))
     UserDefaults.shared.set(volumeWithOtherAudio, forKey: UserDefaultsKeys.volumeWithOtherAudio)
-    // Apply the new volume level to currently playing sounds
     if AudioManager.shared.isGloballyPlaying {
       AudioManager.shared.applyVolumeSettings()
     }
@@ -308,9 +293,8 @@ extension GlobalSettings {
       do {
         let wasPlaying = AudioManager.shared.isGloballyPlaying
 
-        // Configure the session based on mixWithOthers setting
         if mixWithOthers {
-          // Allow mixing with other apps - we handle volume manually
+          // Mixing with other apps; Blankie applies its own volume.
           let options: AVAudioSession.CategoryOptions = [.mixWithOthers]
           Logger.settings.debug("GlobalSettings: Setting Mix mode with manual volume control")
 
@@ -320,7 +304,6 @@ extension GlobalSettings {
             options: options
           )
         } else {
-          // Exclusive playback mode - no mixing
           try AVAudioSession.sharedInstance().setCategory(
             .playback,
             mode: .default,
@@ -328,14 +311,11 @@ extension GlobalSettings {
           )
         }
 
-        // Always activate if we're currently playing to ensure we take over
+        // Reactivate while playing so the new category takes effect.
         if wasPlaying {
           try AVAudioSession.sharedInstance().setActive(true)
 
-          // Note: We don't call playSelected() here to preserve playback positions
-          // The audio players will automatically continue from their current positions
-
-          // Update Now Playing info
+          // No playSelected() here, so players keep their current positions.
           AudioManager.shared.updateNowPlayingState()
         }
 

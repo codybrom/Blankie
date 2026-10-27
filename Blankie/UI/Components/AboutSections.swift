@@ -40,8 +40,8 @@ struct DeveloperSection: View {
       Text("Developed By")
         .foregroundStyle(.secondary)
 
-      // .tint (not Color.accentColor, which ignores the .tint environment
-      // on macOS and stays system blue) so the link follows the app accent.
+      // Color.accentColor ignores the .tint environment on macOS, so .tint
+      // keeps the link on the app accent.
       Link(destination: URL(string: "https://www.codybrom.com")!) {
         Text(verbatim: "Cody Bromley")
       }
@@ -64,9 +64,7 @@ struct ContributorSection: View {
         .padding(.bottom, 4)
 
       CenteredFlowLayout(itemSpacing: 8, lineSpacing: 10) {
-        // Names and dot separators are interleaved as separate items: a name is
-        // fixed so it never breaks mid-word, and the layout drops any separator
-        // that lands at the end of a line so dots stay strictly interior.
+        // Names and dots are separate flow items (see CenteredFlowLayout).
         ForEach(contributors.indices, id: \.self) { index in
           Text(contributors[index])
             .font(.aboutBody)
@@ -86,7 +84,7 @@ struct ContributorSection: View {
       .padding(.horizontal, 40)
       // Clip the row-trailing separators the layout parks off-bounds.
       .clipped()
-      // Read the whole list as one phrase rather than name-by-name with dots.
+      // VoiceOver reads the whole list as one phrase.
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(Text(contributors.joined(separator: ", ")))
     }
@@ -208,16 +206,13 @@ struct TranslatorSection: View {
         .font(.aboutHeading)
         .padding(.bottom, 4)
 
-      // Filter out languages without translators
       let translatedLanguages = translators.filter { !$0.value.isEmpty }.keys.sorted()
       let isOddCount = translatedLanguages.count % 2 != 0
 
-      // Split languages for grid and potential last item
       let gridLanguages = isOddCount ? Array(translatedLanguages.dropLast()) : translatedLanguages
       let lastLanguage = isOddCount ? translatedLanguages.last : nil
 
       VStack(spacing: 20) {
-        // Two-column grid for even items
         if !gridLanguages.isEmpty {
           LazyVGrid(
             columns: [GridItem(.fixed(columnWidth)), GridItem(.fixed(columnWidth))], spacing: 20
@@ -244,7 +239,6 @@ struct TranslatorSection: View {
           .frame(maxWidth: .infinity)
         }
 
-        // Centered last item if odd count
         if let lastLanguage = lastLanguage,
           let translatorList = translators[lastLanguage], !translatorList.isEmpty
         {

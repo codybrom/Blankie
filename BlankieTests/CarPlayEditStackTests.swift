@@ -4,12 +4,8 @@
 //
 //  Created by Cody Bromley on 10/13/26.
 //
-//  Pins the CarPlay checks that keep car taps off the wrong mix. The edit stack
-//  edits only the live mix of the preset it opened for, and a solo row tapped
-//  after the car disconnects starts nothing on the phone.
-//
-//  Builds only under the CarPlay scheme. Engine-free (TestSounds), on an
-//  isolated preset list (SingletonSandbox).
+//  The CarPlay edit stack edits only its own preset's live mix, and a solo tap after
+//  disconnect starts nothing. Builds only under the CarPlay scheme; uses SingletonSandbox.
 //
 
 #if CARPLAY_ENABLED && canImport(CarPlay)

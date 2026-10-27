@@ -210,9 +210,8 @@ struct SoundManagementView: View {
       globalSettings.customAccentColor ?? .accentColor
     }
 
-    /// macOS layout: a roomy grouped list focused on sound management. The
-    /// global "Autoplay on Open" toggle lives in the parent Preferences window,
-    /// so it's intentionally omitted here.
+    /// macOS layout: a roomy grouped list for sound management. The global
+    /// "Autoplay on Open" toggle lives in the parent Preferences window.
     private var macContent: some View {
       List {
         Section {
@@ -359,16 +358,13 @@ struct SoundManagementView: View {
     case .success(let urls):
       guard let url = urls.first else { return }
 
-      // Check if it's a .blankie preset file
       if url.pathExtension.lowercased() == "blankie" {
-        // Use AudioFileImporter to handle preset import
         AudioFileImporter.shared.handleIncomingFile(url)
         return
       }
 
-      // Otherwise, it's an audio file for custom sound. Stage an app-owned copy
-      // so previewing the not-yet-saved sound can load it after the picker's
-      // security scope ends.
+      // An audio file: stage an app-owned copy so the unsaved sound's preview
+      // can load it after the picker's security scope ends.
       selectedFileURL = AudioFileImporter.shared.stagedTempCopy(of: url)
       showingImportSheet = selectedFileURL != nil
     case .failure(let error):

@@ -4,12 +4,7 @@
 //
 //  Created by Cody Bromley on 6/10/25.
 //
-//  Unified sound tile used by both the normal preset grid and Quick Mix.
-//  Visual style matches the list view: a translucent glass icon circle with
-//  an accent-tinted symbol when active, dimmed when inactive, plus an inline
-//  volume slider so users don't need a popover.
-//  Callers pick `isActive` (grid uses sound.isSelected; Quick Mix uses
-//  isQuickMix && sound.isSelected) and supply the tap behavior.
+//  Sound tile shared by the preset grid and Quick Mix.
 //
 
 import SwiftUI
@@ -20,25 +15,13 @@ import SwiftUI
     let audioManager = AudioManager.shared
     let globalSettings = GlobalSettings.shared
 
-    /// Explicit lit-state override. Quick Mix passes `isQuickMix &&
-    /// sound.isSelected`; the grid passes `nil` and falls back to the sound's
-    /// live selection below.
+    /// Quick Mix passes its own active state; the grid passes nil.
     private let isActiveOverride: Bool?
-    /// Tap action. Grid mode toggles selection (or resumes playback); Quick
-    /// Mix mode enters quick mix and toggles membership.
     var onTap: () -> Void
 
-    /// Whether the tile should render as "lit up". Read live in `body` (the
-    /// `@Observable` `sound.isSelected` read tracks here) rather than captured in
-    /// `init`, which doesn't re-run on a selection toggle — a stored copy would
-    /// go stale and the tile wouldn't light up when tapped. Quick Mix supplies an
-    /// explicit override, recomputed on each `QuickMixView` re-render.
+    /// Computed so `body` observes `sound.isSelected`; `init` doesn't re-run on a toggle.
     var isActive: Bool { isActiveOverride ?? sound.isSelected }
 
-    /// Quick Mix is the only caller that passes an explicit `isActive` override
-    /// (the grid passes nil). Use that to tell the two apart: Quick Mix is a
-    /// membership picker — tap to add/remove — with no per-sound volume, so its
-    /// tiles omit the slider entirely.
     private var isQuickMix: Bool { isActiveOverride != nil }
 
     /// The nightstand sizes tiles so exactly two rows fill its flat half.
@@ -56,20 +39,14 @@ import SwiftUI
       self.onTap = onTap ?? { AudioManager.shared.toggleOrResume(sound) }
     }
 
-    // Prefer the theming preset's accent so tiles match the preset theme; fall
-    // back to the app-wide custom accent, then the system accent. `themingPreset`
-    // is nil during solo / Quick Mix, so those use the app accent. Read without
-    // observing PresetManager (which republishes on every sound-state save) —
-    // the grid's parent re-renders on preset changes, and this tile already
-    // observes AudioManager, so solo / Quick Mix changes stay current too.
+    // Deliberately doesn't observe PresetManager, which republishes on every
+    // sound-state save. The parent re-renders on preset changes.
     private var accentColor: Color {
       PresetManager.shared.themingPreset?.accentColor ?? globalSettings.customAccentColor
         ?? .accentColor
     }
 
-    /// A tile only renders in its accent-lit form when the sound is selected
-    /// AND Blankie is actually playing. When paused, selected tiles drop
-    /// back to the dim/gray styling so the paused state reads clearly.
+    /// Lit only while selected and playing, so paused tiles read as paused.
     private var isLit: Bool {
       isActive && audioManager.isGloballyPlaying
     }
@@ -79,12 +56,8 @@ import SwiftUI
     }
 
     var body: some View {
-      // Group the card glass and the icon's glass circle in one container so
-      // both sample the gradient behind the tile as a unit, instead of the
-      // icon glass sampling the already-frosted card glass beneath it. That
-      // glass-on-glass double-frost — large at the icon's 80pt size — was what
-      // made the tile read as opaque rather than glassy. (The list view avoids
-      // it implicitly: its 50pt icon is a tiny fraction of a short, wide row.)
+      // One container so the icon glass samples the background, not the card's
+      // glass (glass on glass reads opaque at this size).
       GlassEffectContainer(spacing: 0) {
         VStack(spacing: compact ? 8 : 12) {
           VStack(spacing: compact ? 8 : 12) {
@@ -97,8 +70,7 @@ import SwiftUI
                   .fontWeight(.medium)
                   .foregroundColor(.primary)
                   .multilineTextAlignment(.center)
-                  // The nightstand's tiles are a fixed height: large text
-                  // shrinks to one line there rather than spilling the row.
+                  // Nightstand tiles are fixed height, so names shrink to one line.
                   .lineLimit(compact ? 1 : 2)
                   .minimumScaleFactor(compact ? 0.5 : 1)
 
@@ -114,18 +86,14 @@ import SwiftUI
           .accessibilityElement(children: .ignore)
           .accessibilityAddTraits(.isButton)
           .accessibilityAddTraits(sound.isSelected ? [.isSelected] : [])
-          // Label the tile explicitly so VoiceOver/Voice Control name it even
-          // when "Show Sound Names" hides the visible title (otherwise the only
-          // accessible text is the SF Symbol's derived name).
+          // Explicit label for when "Show Sound Names" hides the title.
           .accessibilityLabel(Text(sound.localizedTitle))
           .onTapGesture {
             onTap()
           }
-          // Reorder drags start from the icon/title only, never the slider
-          // below — so adjusting volume can't be hijacked by the tile move.
+          // Reorder from the icon and title only, so the slider never starts a move.
           .reorderHandle()
 
-          // Quick Mix is membership-only; per-sound volume lives in the grid.
           if !isQuickMix {
             volumeSlider
           }
@@ -134,36 +102,20 @@ import SwiftUI
         .padding(.vertical, compact ? 10 : 16)
         .padding(.horizontal, 12)
         .frame(height: tileHeight)
-        // Use the `.clear` glass variant, not `.regular`: regular Liquid Glass
-        // frosts its backing heavily, so at the tile's size the surface read as
-        // an opaque panel even though the rim still looked glassy. Clear glass
-        // keeps the surface transparent so the background gradient shows
-        // through. The lit/accent state is carried by the icon circle and
-        // slider tint, not a tint on the whole tile.
+        // .regular glass reads opaque at tile size. Clear glass needs a dim
+        // layer beneath it for legibility (Apple's guidance).
         .glassEffect(.clear, in: .rect(cornerRadius: 16))
-        // Clear glass needs a dimming layer beneath it for legibility (Apple's
-        // guidance): a slight neutral wash keeps the text and slider readable
-        // over the brighter parts of the gradient without reintroducing the
-        // frosted, opaque look.
         .background(Color.black.opacity(0.15), in: .rect(cornerRadius: 16))
-        // Faint accent rim, a touch stronger when the tile is lit, so the edge
-        // picks up the preset/accent color rather than a plain hairline.
         .overlay {
           RoundedRectangle(cornerRadius: 16)
             .strokeBorder(accentColor.opacity(isLit ? 0.5 : 0.2), lineWidth: 1)
         }
       }
-      // Shrink the inactive tile rather than growing the active one: at the
-      // grid's tile width an active tile scaled >1 overflows the 16pt spacing
-      // and collides with its neighbor (most visible on iPad's wider tiles).
-      // Keeping the active tile at 1.0 means it never exceeds its cell, so the
-      // gap is always preserved.
+      // Scale the inactive tile down; an active tile above 1.0 would overflow its cell.
       .scaleEffect(isLit ? 1.0 : 0.95)
       .animation(.easeInOut(duration: 0.15), value: isLit)
-      // Fire on the user's own selection toggle, not on `isLit`. Keying off
-      // `isLit` (which folds in global play state) skipped feedback when
-      // toggling while paused and fired one haptic per active tile on every
-      // global play/pause.
+      // Keyed to selection: `isLit` includes play state and would fire for every
+      // tile on play/pause.
       .sensoryFeedback(.selection, trigger: sound.isSelected)
       .dynamicTypeSize(...DynamicTypeSize.accessibility3)
       .accessibilityShowsLargeContentViewer {
@@ -191,8 +143,6 @@ import SwiftUI
           .foregroundColor(iconForegroundColor)
       }
       .frame(width: iconSize, height: iconSize)
-      // Glass icon circle matching the list view: accent-tinted when lit,
-      // plain glass otherwise. Inactive icons dim to read as "off".
       .glassEffect(
         isLit
           ? .regular.tint(accentColor.opacity(0.5)).interactive()
@@ -217,8 +167,6 @@ import SwiftUI
         in: 0...1
       )
       .tint(isLit ? accentColor : .gray)
-      // Only rendered in the grid (Quick Mix omits it). Disable for sounds that
-      // aren't selected so the slider can't edit an inactive sound.
       .disabled(!isActive)
       .padding(.horizontal, 4)
       .accessibilityLabel(Text(sound.localizedTitle))

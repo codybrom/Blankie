@@ -7,9 +7,8 @@ export interface Testimonial {
   id: string;
   /** Verbatim quote in the reviewer's original language, kept as the record. */
   quote: string;
-  /** English translation. When present it's displayed INSTEAD of the
-   * original, with a "translated from X" note in the byline, so non-English
-   * text never interrupts an English page. */
+  /** English translation. When present it replaces the original on the page,
+   * with a "translated from X" note in the byline. */
   translation?: string;
   /** Language the review was written in, for the translation note. */
   language?: string;
@@ -112,7 +111,7 @@ export const testimonials: Testimonial[] = [
 
 const byId = new Map(testimonials.map((t) => [t.id, t]));
 
-/** Look up a testimonial, failing the build loudly on a typo'd id. */
+/** Look up a testimonial, failing the build on an unknown id. */
 export function getTestimonial(id: string): Testimonial {
   const t = byId.get(id);
   if (!t) {
@@ -146,9 +145,8 @@ const starsRow = (stars: number) => {
   return `<div class="review-quote-stars" role="img" aria-label="Rated ${stars} out of 5 stars">${glyphs}</div>`;
 };
 
-/** Render a testimonial as a card-styled <figure>, shared between the
- * Testimonial component and the `{{review:id}}` markdown extension so quote
- * cards look the same everywhere. Styled via `.review-quote` in global.css. */
+/** Render a testimonial as a `.review-quote` <figure>, shared by the
+ * Testimonial component and the `{{review:id}}` markdown extension. */
 export function renderTestimonial(t: Testimonial): string {
   const quote = t.translation ?? t.quote;
   const attribution = [

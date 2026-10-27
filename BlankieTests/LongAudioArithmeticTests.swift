@@ -4,16 +4,9 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Pins frame and duration arithmetic at the edges imports can reach, since
-//  imports have no length cap. Each case below has a test.
-//  - files of 2^32 or more frames (about 25 hours at 48 kHz) used to trap
-//    narrowing to AVAudioFrameCount
-//  - malformed files can report a non-finite duration
-//  - the waveform can lay out at zero width
-//
-//  The 2^32-frame file is a sparse CAF. It's an 8-bit mono header whose data
-//  chunk says "until end of file", extended with ftruncate. It reports 2^32 + 7
-//  frames and uses a few KB of disk.
+//  Frame and duration arithmetic at the edges uncapped imports can reach: 2^32+ frames,
+//  non-finite durations and zero-width waveforms. The 2^32-frame fixture is a sparse CAF
+//  that uses a few KB of disk.
 //
 
 import AVFoundation
@@ -63,10 +56,9 @@ import Testing
     #expect(AVAudioFrameCount(exactly: file.length) == nil)
   }
 
-  // MARK: - 2^32+ frames (Z1, Z2)
+  // MARK: - 2^32+ frames
 
-  /// Whole-file analysis declines a file too long for one buffer. UInt32(_:)
-  /// trapped on it during import.
+  /// A file too long for one buffer can't narrow to AVAudioFrameCount.
   @Test func wholeFileAnalysisDeclinesHugeFiles() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -76,8 +68,7 @@ import Testing
     #expect(await AudioAnalyzer.analyzeRMSLevel(at: url) == nil)
   }
 
-  /// Streaming playback schedules its first chunk of a 2^32+ frame file. The
-  /// remainder was narrowed before the min() and trapped.
+  /// The remaining frame count must be clamped before it narrows to AVAudioFrameCount.
   @Test func streamingSchedulesTheFirstChunkOfHugeFiles() throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -108,10 +99,9 @@ import Testing
     #expect(player.isPlaying)
   }
 
-  // MARK: - Non-finite durations (Z4)
+  // MARK: - Non-finite durations
 
-  /// A malformed file's duration can be infinite or absurdly large. The
-  /// estimate declines instead of trapping in Int64(_:).
+  /// A malformed file's duration can be infinite or too large for Int64(_:).
   @Test func compressionEstimateDeclinesNonFiniteDurations() {
     let manager = CustomSoundManager.shared
     let bytes: Int64 = 50 * 1024 * 1024
@@ -125,8 +115,7 @@ import Testing
       manager.compressionEstimate(forExtension: "wav", currentBytes: bytes, duration: 60) != nil)
   }
 
-  /// The m:ss label shows a placeholder for non-finite or huge intervals. Int(_:)
-  /// trapped on them.
+  /// Int(_:) traps on non-finite or huge values.
   @Test func clockShowsAPlaceholderForNonFiniteIntervals() {
     for interval in [TimeInterval.infinity, -.infinity, .nan, 1e300, -1e300] {
       #expect(interval.minuteSecondClock == "--:--")
@@ -134,10 +123,9 @@ import Testing
     #expect(TimeInterval(185).minuteSecondClock == "3:05")
   }
 
-  // MARK: - Zero-width waveform (Z3)
+  // MARK: - Zero-width waveform
 
-  /// Under about 2 pt of width there's room for zero bars. Downsampling returns
-  /// none instead of dividing by zero.
+  /// Under about 2 pt of width there's room for zero bars; downsampling must not divide by zero.
   @Test func waveformDownsamplesToZeroBars() {
     #expect(SoundWaveformView.downsample([0.5, -0.25, 0.75], to: 0).isEmpty)
     #expect(SoundWaveformView.downsample([0.5, -0.25], to: 4) == [0.5, 0.25])

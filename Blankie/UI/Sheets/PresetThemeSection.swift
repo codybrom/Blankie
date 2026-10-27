@@ -7,11 +7,9 @@
 
 import SwiftUI
 
-/// Shared "Customize Theme" card for the preset editors (Edit Preset and New
-/// Preset). Every override follows the same shape: a toggle to opt in, with
-/// the control revealed below it (so the pickers don't need a "Default"
-/// option — toggled off = follow the app-wide setting). Edit persists
-/// instantly via `onEdited`; New Preset reads the bindings when Create runs.
+/// Shared "Customize Theme" card for Edit Preset and New Preset. Each override is a
+/// toggle that reveals its control; toggled off follows the app-wide setting. Edit
+/// persists instantly via `onEdited`; New Preset reads the bindings on Create.
 struct PresetThemeSection: View {
   @Binding var useCustomViewMode: Bool
   @Binding var viewModeOverride: PresetViewMode?
@@ -79,9 +77,8 @@ struct PresetThemeSection: View {
         }
       }
       .onChange(of: useCustomTheme) { _, enabled in
-        // Seed with what the untouched picker shows (the app-wide custom
-        // accent, else the slider's resting color) so enabling alone saves
-        // an override — a nil accent persists as "no override".
+        // Seed with what the untouched picker shows (the app-wide custom accent, else
+        // the slider's resting color) so enabling alone saves an override.
         if enabled, accentColor == nil {
           accentColor = globalSettings.customAccentColor ?? .green
         }

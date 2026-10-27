@@ -139,7 +139,7 @@ const features = [
   },
 ];
 
-// "One Blankie, every screen" — a device card per surface, with a real shot.
+// "One Blankie, every screen": a device card per surface, with a real shot.
 const devices = [
   {
     icon: Monitor,
@@ -717,7 +717,7 @@ const pills = [
         });
       }
 
-      // Floating section nav — highlight the link for the section in view
+      // Floating section nav: highlight the link for the section in view.
       const links = document.querySelectorAll<HTMLAnchorElement>(".section-pill a[data-section]");
       const byId = new Map<string, HTMLAnchorElement>();
       links.forEach((l) => byId.set(l.dataset.section || "", l));

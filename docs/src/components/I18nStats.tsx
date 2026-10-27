@@ -27,9 +27,8 @@ export interface LanguageRow {
 }
 
 /**
- * A single segmented progress bar: finalized (accent blue) + in-review (warm
- * gold) stacked on a contrasted track, with the remainder (needs-translation)
- * left as track. Static — widths are baked in at build time.
+ * Segmented progress bar: finalized and in-review segments on a contrasted
+ * track, with needs-translation left as track. Widths are set at build time.
  */
 function StackedBar({
   finalizedPct,
@@ -38,9 +37,8 @@ function StackedBar({
   finalizedPct: number;
   reviewPct: number;
 }) {
-  // Finalized (accent blue) + in-review (warm gold) — the site's two signature
-  // accent hues, which differ in luminance so the two segments read distinctly
-  // at their boundary without the edge-vibration of bright clashing colors.
+  // Accent blue (finalized) and warm gold (in review) differ in luminance, so
+  // the two segments stay distinct at their boundary.
   return (
     <div className="flex h-2 w-full overflow-hidden rounded-full bg-black/40">
       <div

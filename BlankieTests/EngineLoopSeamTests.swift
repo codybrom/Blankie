@@ -11,10 +11,8 @@ import Testing
 
 @testable import Blankie
 
-/// Verifies that looping across a wrap introduces neither a click nor a silent
-/// gap at the seam. Thresholds are self-referential (derived from the file's own
-/// statistics) to avoid magic numbers. Serialized: each test renders audio
-/// offline, so running them concurrently would multiply peak memory.
+/// Looping across a wrap adds no click or gap at the seam; thresholds come from the file's
+/// own statistics. Serialized: offline renders are memory-heavy.
 @Suite(.serialized) struct EngineLoopSeamTests {
 
   private func bundledSoundURL(_ name: String) throws -> URL {

@@ -4,12 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  A Sound whose loadSound() never creates a player, so play()/pause()/reset
-//  are safe no-ops (they all guard on `player`). Lets tests drive AudioManager's
-//  selection, solo, Quick Mix, and music-exclusivity state machines without
-//  touching the real audio engine. The `isMusic` / `isCustom` flags are settable
-//  for the music-tag and built-in-only paths, `customSoundDataID` links a
-//  custom stand-in to its SwiftData row, and `stubbedDuration` fakes a length.
+//  A Sound with no player, so play(), pause() and reset are no-ops. Lets tests drive
+//  AudioManager's state machines without the audio engine.
 //
 
 import Foundation

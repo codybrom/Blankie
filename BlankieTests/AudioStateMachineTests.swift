@@ -4,14 +4,9 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Solo, Quick Mix, and music-tag exclusivity as state machines on
-//  AudioManager.shared, driven engine-free with TestSounds (no player, so
-//  play()/pause() no-op). Synthetic `test-*` file names so the real default
-//  preset's sounds never match during preset re-sync.
-//
-//  Serialized + main-actor, following the existing AudioManagerTests pattern:
-//  autoplay off + nothing globally playing, so selecting never starts audio.
-//  Each test restores the manager's sounds, mode flags, and touched defaults.
+//  Solo, Quick Mix and music exclusivity on AudioManager.shared, engine-free with TestSounds.
+//  Synthetic `test-*` names keep the real default preset's sounds from matching on re-sync.
+//  Serialized: each test restores the manager's sounds, mode flags and touched defaults.
 //
 
 import Foundation
@@ -49,8 +44,6 @@ import Testing
 
   // MARK: - Music exclusivity
 
-  /// A preset holds at most one music sound: selecting a second music sound
-  /// turns the first off (radio-button), while non-music sounds are untouched.
   @Test func selectingMusicDeselectsOtherMusic() {
     let m1 = TestSound(fileName: "test-music-1", isMusic: true)
     let m2 = TestSound(fileName: "test-music-2", isMusic: true)
@@ -68,8 +61,6 @@ import Testing
 
   // MARK: - Solo mode
 
-  /// Entering solo marks the soloed sound selected at full volume, preserves the
-  /// other sounds' selection (they just go silent), and records the mode.
   @Test func enterSoloPreservesOthersAndForcesFullVolume() {
     let a = TestSound(fileName: "test-a")
     a.isSelected = true
@@ -89,8 +80,6 @@ import Testing
     #expect(!audioManager.isGloballyPlaying)
   }
 
-  /// Exiting solo clears the mode and restores the soloed sound's pre-solo
-  /// volume and selection.
   @Test func exitSoloRestoresOriginalState() {
     let solo = TestSound(fileName: "test-solo")
     solo.volume = 0.6
@@ -107,8 +96,6 @@ import Testing
 
   // MARK: - Quick Mix
 
-  /// Entering Quick Mix deselects everything; exiting restores each sound's
-  /// prior selection and volume.
   @Test func quickMixEntersClearedAndRestoresOnExit() {
     let a = TestSound(fileName: "test-a")
     a.isSelected = true
@@ -128,9 +115,7 @@ import Testing
 
   // MARK: - Leaving transient modes
 
-  /// `leaveTransientModes` clears solo — the exit the Siri (`PlayPresetIntent`/
-  /// `PlaySoundIntent`) and widget play intents run first, so what they apply
-  /// isn't masked by an active solo sound.
+  /// Siri and widget play intents call this first, so an active solo can't mask what they apply.
   @Test func leaveTransientModesExitsSolo() {
     let solo = TestSound(fileName: "test-solo")
     audioManager.sounds = [solo]
@@ -141,8 +126,7 @@ import Testing
     #expect(audioManager.soloModeSound == nil)
   }
 
-  /// `leaveTransientModes` clears Quick Mix, so a later Quick Mix action enters
-  /// fresh instead of toggling on top of a still-active mix.
+  /// A later Quick Mix action then enters fresh.
   @Test func leaveTransientModesExitsQuickMix() {
     let a = TestSound(fileName: "test-a")
     a.isSelected = true

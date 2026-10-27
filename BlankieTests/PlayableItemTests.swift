@@ -4,11 +4,8 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  PlayableItem is the single codec for the persisted `starredItems` token
-//  grammar (allSounds | quickMix | solo:<fileName> | preset-UUID). These pin the
-//  round-trip and byte-compatibility with the strings already in App Group
-//  storage; a change here is a change to user data. GlobalSettings' token
-//  helpers forward to this, so WidgetTokenGrammarTests covers them too.
+//  PlayableItem is the codec for persisted `starredItems` tokens, so its encodings must stay
+//  byte-compatible with what App Group storage already holds.
 //
 
 import Foundation
@@ -55,8 +52,7 @@ import Testing
     }
   }
 
-  /// A file name containing the delimiter survives: only the first `solo:` is
-  /// stripped, so the remainder is returned intact.
+  /// Only the first `solo:` is stripped, so a delimiter in the file name survives.
   @Test func soloPreservesColonInFileName() {
     let item = PlayableItem.solo(fileName: "a:b")
     #expect(item.token == "solo:a:b")
@@ -65,8 +61,6 @@ import Testing
 
   // MARK: - Mutual exclusivity
 
-  /// The special/solo tokens never parse as a preset UUID, and a UUID never
-  /// parses as one of the others — the four shapes stay disjoint.
   @Test func shapesAreMutuallyExclusive() {
     #expect(PlayableItem(token: "allSounds") != .preset(UUID()))
     if case .preset = PlayableItem(token: "solo:rain") { Issue.record("solo parsed as preset") }

@@ -14,8 +14,7 @@
     // MARK: - Main Edit Template
 
     static func createTemplate() -> CPListTemplate {
-      // Title from the current preset's display name, the same one the app
-      // shows everywhere ("All Blankie Sounds" for the default).
+      // The app's display name for the preset ("All Blankie Sounds" for the default).
       let presetName =
         PresetManager.shared.currentPreset?.displayName ?? String(localized: "Current Mix")
 
@@ -29,7 +28,6 @@
     }
 
     static func updateTemplate(_ template: CPListTemplate) {
-      // Get the current preset to determine which sounds to show
       guard let currentPreset = PresetManager.shared.currentPreset else {
         let noPresetItem = CPListItem(
           text: String(localized: "No preset selected"), detailText: nil)
@@ -38,10 +36,8 @@
         return
       }
 
-      // Get only sounds that are part of the current preset
       let presetSounds = AudioManager.shared.sounds.filter { sound in
-        // Check if this sound is saved in the preset's sound states
-        // This includes sounds that might be turned off but are part of the preset
+        // Includes preset sounds that are turned off.
         currentPreset.soundStates.contains { $0.fileName == sound.fileName }
       }
 
@@ -53,7 +49,6 @@
         return
       }
 
-      // Sort sounds alphabetically
       let sortedSounds = presetSounds.sorted {
         $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
       }
@@ -93,21 +88,17 @@
           ? String(localized: "Playing • \(volumeText)") : String(localized: "Stopped")
       )
 
-      // Set icon with playing/stopped state
       if let image = createSoundIcon(for: sound, isPlaying: isSelected) {
         item.setImage(image)
       }
 
-      // Always show disclosure indicator since we can adjust volume or turn on/off
       item.accessoryType = .disclosureIndicator
 
       item.handler = { _, completion in
         Task { @MainActor in
           if sound.isSelected {
-            // Sound is currently ON - show volume adjustment options
             CarPlayInterfaceController.shared.showVolumeAdjustment(for: sound)
           } else {
-            // Sound is currently OFF - show options to turn ON with volume selection
             CarPlayInterfaceController.shared.showTurnOnOptions(for: sound)
           }
 
@@ -126,18 +117,14 @@
         let soundColor = UIColor.carPlayIconTint
 
         if isPlaying {
-          // Draw colored circle background when playing
           soundColor.withAlphaComponent(0.3).setFill()
           let circle = UIBezierPath(ovalIn: CGRect(origin: .zero, size: size))
           circle.fill()
         }
-        // No background when stopped
 
-        // Draw icon
         let iconName = sound.systemIconName
         let icon = UIImage(systemName: iconName) ?? UIImage(systemName: "speaker.wave.2")!
 
-        // Configure icon size
         let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
         let configuredIcon = icon.withConfiguration(iconConfig)
 
@@ -149,17 +136,13 @@
           height: iconSize.height
         )
 
-        // Apply icon color
         let iconColor: UIColor
         if isPlaying {
-          // Use sound's color when playing
           iconColor = soundColor
         } else {
-          // Use disabled gray when stopped
           iconColor = UIColor.systemGray
         }
 
-        // Draw the icon with the proper color
         let coloredIcon = configuredIcon.withTintColor(iconColor, renderingMode: .alwaysOriginal)
         coloredIcon.draw(in: iconRect)
       }
@@ -175,13 +158,10 @@
 
       var items: [CPListItem] = []
 
-      // Current volume display
       items.append(createCurrentVolumeItem(for: sound))
 
-      // Option to turn OFF the sound
       items.append(createTurnOffItem(for: sound))
 
-      // Volume options (10% increments)
       items.append(contentsOf: createVolumeItems(for: sound))
 
       let section = CPListSection(items: items)
@@ -230,9 +210,7 @@
         )
 
         if isCurrentVolume {
-          // Disable the current volume selection
           item.isEnabled = false
-          // Don't set a handler for disabled items
           item.handler = nil
         } else {
           item.handler = { _, completion in
@@ -261,7 +239,6 @@
 
       var items: [CPListItem] = []
 
-      // Header text
       let headerItem = CPListItem(
         text: String(localized: "Choose a volume to start \(sound.title)"),
         detailText: nil
@@ -269,7 +246,6 @@
       headerItem.isEnabled = false
       items.append(headerItem)
 
-      // Volume options (10% increments, highest first)
       for percentage in stride(from: 100, through: 10, by: -10) {
         let volume = Float(percentage) / 100.0
 
@@ -281,18 +257,14 @@
         item.handler = { _, completion in
           Task { @MainActor in
             guard editsLiveMix() else { return completion() }
-            // Turn on the sound with selected volume. Selecting it auto-plays
-            // while playback is active (with the solo guard), so no direct play().
+            // Selecting auto-plays while playback is active, so no direct play().
             sound.volume = volume
             sound.isSelected = true
 
-            // Update AudioManager state
             AudioManager.shared.updateHasSelectedSounds()
 
-            // Save the change
             PresetManager.shared.savePresets()
 
-            // Pop back and refresh
             CarPlayInterfaceController.shared.popAndRefreshEditTemplate()
 
             completion()

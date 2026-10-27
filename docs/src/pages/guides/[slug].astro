@@ -55,9 +55,8 @@ const { title, description, category, updated, platforms } = guide.data;
 
 const EyebrowIcon = CAT_ICONS[category];
 
-// A trailing "## Related guides" markdown list becomes "Keep reading" cards
-// (like the hub) instead of inline bullet links. Split it off the body so the
-// prose renders without it, then resolve each /guides/<slug>/ link to its entry.
+// A trailing "## Related guides" list renders as "Keep reading" cards (like the
+// hub). Split it off the body, then resolve each /guides/<slug>/ link to its entry.
 const allGuides = await getCollection("guides");
 const [mainBody, relatedBlock = ""] = (guide.body ?? "").split(
   /^##\s+Related guides\s*$/m,

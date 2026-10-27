@@ -3,8 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: ["main"]
-    # Only the Xcode/app build surface — not docs, notes, apple_docs, scripts
-    # (incl. scripts/*.swift), or top-level markdown.
+    # App build surface only (skips docs, notes, apple_docs, scripts and top-level markdown).
     paths:
       - "Blankie/**"
       - "BlankieTests/**"
@@ -40,8 +39,7 @@ on:
 permissions:
   contents: read
 
-# One run per ref: a newer push cancels the superseded run instead of
-# queueing behind it on the shared runners.
+# One run per ref; a newer push cancels the older run on the shared runners.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -72,12 +70,9 @@ jobs:
             sed -i '' 's/YOUR_TEAM_ID_HERE/DUMMY_TEAM/' Configuration.xcconfig
             sed -i '' 's/com.yournamehere.blankie/com.example.blankie/' Configuration.xcconfig
           fi
-          # The unit tests run on the iOS Simulator, unsigned. An unsigned build
-          # carries no entitlements, and on iOS 27
-          # AssetPackManager stops the app when its app group is missing. Link
-          # the group in as the simulator's entitlements section, as signed
-          # simulator builds do. The debug dylib is off so the section lands in
-          # the main executable, where the simulator reads it.
+          # Unsigned builds carry no entitlements, and on iOS 27 AssetPackManager stops
+          # the app without its app group. Link the group in as an __entitlements section
+          # (debug dylib off so it lands in the main executable, where the simulator reads it).
           APP_GROUP=$(sed -n 's/^APP_GROUP_IDENTIFIER *= *//p' Configuration.xcconfig)
           ENTITLEMENTS="$RUNNER_TEMP/simulator.entitlements"
           printf '%s\n' \

@@ -37,7 +37,6 @@ import os
         SpatialSessionManager.shared.endSessionForCarAudio()
       }
 
-      // Set up CarPlay interface - the shared controller handles initialization
       CarPlayInterfaceController.shared.setInterfaceController(interfaceController)
     }
 

@@ -10,9 +10,8 @@ import AppIntents
 // Only Toggle Playback is used by widget buttons. Keep app-only Play/Pause
 // out of the extension's action catalog so it cannot advertise duplicate actions.
 #if !WIDGET_EXTENSION
-  /// Resumes playback of the current mix. Deterministic "get sound going"
-  /// intent for Siri — distinct from `ToggleBlankiePlaybackIntent`, which can
-  /// pause depending on current state and is a poor match for a "Play" phrase.
+  /// Resumes playback of the current mix. Siri's "Play" phrases use this because
+  /// `ToggleBlankiePlaybackIntent` can pause, depending on state.
   struct PlayBlankieIntent: AppIntent, AudioPlaybackIntent {
     static var title: LocalizedStringResource { "Play" }
     static var description: IntentDescription {

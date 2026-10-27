@@ -4,12 +4,8 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Seeded property tests for the `starredItems` token grammar and the list
-//  operations on it. Each test generates its inputs from a fixed seed, so a
-//  failure reproduces exactly. The seed and step are in the failure message.
-//
-//  The list suite is serialized and main-actor because it drives
-//  GlobalSettings.shared. It restores the touched value and UserDefaults key.
+//  Seeded property tests for the `starredItems` token grammar and its list operations.
+//  Failure messages carry the seed and step. The list suite restores GlobalSettings.shared.
 //
 
 import Foundation
@@ -76,7 +72,6 @@ private enum Gen {
   private static let seed: UInt64 = 0xB1A7_C1E5
   private static let cases = 2_000
 
-  /// Decoding an item's token gives back the same item, for every shape.
   @Test func itemTokenRoundTrips() {
     var rng = SeededGenerator(seed: Self.seed)
     for step in 0..<Self.cases {
@@ -85,8 +80,7 @@ private enum Gen {
     }
   }
 
-  /// A token the app wrote decodes and re-encodes to the identical string, so
-  /// a stored list compares equal to what the app would write today.
+  /// Stored lists then compare equal to what the app writes today.
   @Test func writtenTokenIsAFixedPoint() {
     var rng = SeededGenerator(seed: Self.seed &+ 1)
     for step in 0..<Self.cases {
@@ -95,7 +89,7 @@ private enum Gen {
     }
   }
 
-  /// Distinct items never share a token, so membership by string is sound.
+  /// Membership checks compare token strings.
   @Test func distinctItemsHaveDistinctTokens() {
     var rng = SeededGenerator(seed: Self.seed &+ 2)
     var byToken: [String: PlayableItem] = [:]
@@ -108,7 +102,6 @@ private enum Gen {
     }
   }
 
-  /// Near misses of each shape are rejected rather than read as something else.
   @Test func nearMissTokensAreRejected() {
     let uuid = UUID().uuidString
     let nearMisses = [
@@ -121,7 +114,6 @@ private enum Gen {
     }
   }
 
-  /// Random strings decode only when they really have one of the four shapes.
   @Test func randomStringsDecodeOnlyIntoTheirShape() {
     var rng = SeededGenerator(seed: Self.seed &+ 3)
     for step in 0..<Self.cases {
@@ -139,9 +131,7 @@ private enum Gen {
     }
   }
 
-  /// A lowercase preset UUID decodes but re-encodes uppercase. The app only
-  /// ever writes `uuidString` (uppercase), so stored lists stay canonical. This
-  /// pins the behavior in case a lowercase source ever appears.
+  /// The app writes uppercase `uuidString`, so stored lists stay canonical.
   @Test func lowercasePresetTokenCanonicalizesToUppercase() {
     let id = UUID()
     let lower = id.uuidString.lowercased()
@@ -183,8 +173,7 @@ private enum Gen {
     #expect(Set(list).count == list.count, "duplicate token after \(context): \(list)")
   }
 
-  /// Random toggles and reorders match a reference model, never duplicate a
-  /// token, and a reorder is always a permutation.
+  /// Also checks that no token repeats and that each reorder is a permutation.
   @Test func toggleAndReorderMatchModel() {
     var rng = SeededGenerator(seed: Self.seed)
     for sequence in 0..<Self.sequences {
@@ -218,8 +207,6 @@ private enum Gen {
     }
   }
 
-  /// Toggling twice restores an unstarred token's list exactly, and a starred
-  /// token's membership and the others' order.
   @Test func doubleToggleIsIdentity() {
     var rng = SeededGenerator(seed: Self.seed &+ 1)
     for sequence in 0..<Self.sequences {
@@ -243,10 +230,8 @@ private enum Gen {
     }
   }
 
-  /// Prune keeps exactly the tokens the rules allow, in their original order.
-  /// Those are both special tokens, live presets, and solo sounds that still
-  /// exist (all of them when the sound list is unknown). Undecodable tokens are
-  /// dropped.
+  /// Kept: both special tokens, live presets and existing solo sounds (every solo when the
+  /// sound list is unknown). Undecodable tokens are dropped.
   @Test func pruneKeepsAnOrderedSubsequenceByTheRules() {
     var rng = SeededGenerator(seed: Self.seed &+ 2)
     for sequence in 0..<Self.sequences {

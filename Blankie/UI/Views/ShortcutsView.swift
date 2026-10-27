@@ -7,17 +7,14 @@
 
 import SwiftUI
 
-/// A keyboard shortcut definition shared by the menu bar (`AppCommands`) and
-/// the on-screen cheat sheet (`ShortcutsView`), so the two can't drift apart.
-///
-/// `KeyEquivalent` + `EventModifiers` are the source of truth: the displayed
-/// glyphs and the VoiceOver-spoken label are both derived from them.
+/// A keyboard shortcut shared by the menu bar (`AppCommands`) and the cheat sheet
+/// (`ShortcutsView`). The displayed glyphs and VoiceOver label derive from its keys.
 struct AppShortcut: Identifiable {
   let action: LocalizedStringKey
   let key: KeyEquivalent?
   let modifiers: EventModifiers
-  /// Glyph for actions triggered by a media key rather than a `KeyEquivalent`
-  /// (e.g. the Play/Pause key), which has no `KeyboardShortcut` representation.
+  /// Glyph for actions on a media key (e.g. Play/Pause), which has no
+  /// `KeyboardShortcut` representation.
   let mediaGlyph: String?
 
   init(

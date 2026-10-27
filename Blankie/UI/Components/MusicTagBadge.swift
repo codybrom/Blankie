@@ -7,13 +7,11 @@
 
 import SwiftUI
 
-/// Small music-note-in-a-circle badge shown after a music-tagged sound's name.
-/// Idle, the circle is a hollow outline (cutout); when this is the active
-/// (playing) music sound the circle fills with the accent color. A preset plays
-/// at most one music sound at a time, so only one badge is ever filled.
+/// Music-note badge after a music-tagged sound's name. The circle is an outline when
+/// idle and fills with the accent for the active (playing) music sound. A preset
+/// plays at most one music sound, so at most one badge is filled.
 struct MusicTagBadge: View {
-  /// True when this is the sound currently holding the preset's music slot and
-  /// audible — the "active" music sound.
+  /// True when this sound holds the preset's music slot and is audible.
   let isActive: Bool
   var accentColor: Color = .accentColor
 
@@ -21,9 +19,8 @@ struct MusicTagBadge: View {
 
   var body: some View {
     ZStack {
-      // A Shape (not a circle.fill/circle symbol swap) so the fill color
-      // interpolates clear↔accent and the outline fades, giving a smooth
-      // transition instead of a hard symbol replace.
+      // A Shape so the fill animates between clear and the accent while the outline
+      // fades, which a circle/circle.fill symbol swap can't do.
       Circle()
         .fill(isActive ? AnyShapeStyle(accentColor) : AnyShapeStyle(.clear))
         .overlay {

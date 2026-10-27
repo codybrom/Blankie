@@ -6,9 +6,8 @@
 import Foundation
 import ImageIO
 
-/// A bounded, file-backed artwork cache shared by the app and widget extension.
-/// Keep the small CarPlay thumbnail in defaults; larger widget artwork belongs
-/// on disk and is decoded to each tile's pixel size by the extension.
+/// Bounded file-backed artwork cache shared with the widget extension. The small
+/// CarPlay thumbnail stays in defaults.
 nonisolated enum WidgetArtworkCache {
   static let maximumPixelSize = 1024
 

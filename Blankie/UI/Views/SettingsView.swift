@@ -7,9 +7,8 @@
 
 import SwiftUI
 
-// macOS renders a bare Button in a grouped Form as a bordered pill instead of
-// a tappable list row (iOS's rendering); plain style + a full-width content
-// shape restore the row look and keep the whole row clickable. No-ops on iOS.
+// macOS draws a bare Button in a grouped Form as a bordered pill. Plain style
+// and a full-width content shape make it a clickable row, as on iOS.
 extension View {
   @ViewBuilder
   fileprivate func formRowLabel() -> some View {
@@ -33,8 +32,7 @@ extension View {
 }
 
 struct SettingsView: View {
-  /// macOS: embedded in the main window's detail pane (sidebar gear) instead
-  /// of its own sheet/scene — fills the pane and Done closes it via AppState.
+  /// macOS: shown in the main window's detail pane; Done closes it via AppState.
   var isPane = false
   @Environment(\.dismiss) private var dismiss
   private let globalSettings = GlobalSettings.shared
@@ -47,15 +45,14 @@ struct SettingsView: View {
     @State private var showingAppIconPicker = false
   #endif
   #if os(macOS)
-    /// Holds the in-pane About sub-page flag (app-level so the menu bar's
-    /// About Blankie can open straight to it; reset when the pane closes).
+    /// Holds the sub-page flags, app-level so About Blankie in the menu bar can
+    /// open straight to About.
     @ObservedObject private var appState = AppState.shared
   #endif
   #if os(macOS)
     @State private var showingRestartAlert = false
   #endif
-  // Populated asynchronously from `Bundle.main.isTestFlightOrDebug` (StoreKit
-  // AppTransaction). Starts `false` so App Store users never flash beta UI.
+  // Starts false so App Store builds never flash beta UI before the async check.
   @State private var showBetaTesterUI = false
 
   private let appVersion =
@@ -73,8 +70,6 @@ struct SettingsView: View {
     }
   }
 
-  // Compact badge marking a Theme Default the active preset overrides, used in
-  // place of a full explanatory caption.
   private var overriddenByPresetBadge: some View {
     Text("Changed by Preset")
       .font(.caption2.weight(.semibold))
@@ -86,10 +81,7 @@ struct SettingsView: View {
   }
 
   #if os(iOS) || os(visionOS)
-    // A preset can override these app-wide defaults (`nil` = follow global).
-    // `themingPreset` is nil under Quick Mix (tile-only, no preset) and solo
-    // mode (preserves its preset for restore but uses the app accent), so
-    // neither shows these controls as overridden.
+    // `themingPreset` is nil under Quick Mix and solo, so neither shows an override.
     private var presetViewModeOverride: PresetViewMode? {
       presetManager.themingPreset?.viewMode
     }
@@ -101,9 +93,8 @@ struct SettingsView: View {
   @ViewBuilder
   var body: some View {
     if isPane {
-      // About swaps in-pane rather than via NavigationLink: a NavigationStack
-      // push here escapes the pane and takes over the whole detail column,
-      // hiding the playback bar below.
+      // Sub-pages swap in place: a NavigationStack push here takes over the
+      // whole detail column and hides the playback bar.
       NavigationStack {
         #if os(macOS)
           if appState.showingSettingsAboutPage {
@@ -120,9 +111,7 @@ struct SettingsView: View {
         #endif
       }
       #if os(macOS)
-        // After the pane is fully gone, reset to the root settings list so
-        // the next open (gear/⌘,) starts there. Doing this on the pane flag
-        // itself flashed the root mid-fade-out.
+        // Reset after the pane is gone so it doesn't flash the root mid-fade.
         .onDisappear {
           appState.showingSettingsAboutPage = false
           appState.showingSettingsManageSoundsPage = false
@@ -131,16 +120,13 @@ struct SettingsView: View {
     } else {
       NavigationStack { settingsForm }
         #if os(macOS)
-          // Tuned sheet/scene size; the grouped form scrolls inside it.
           .frame(width: 500, height: 640)
         #endif
     }
   }
 
   #if os(macOS)
-    /// Back/Done toolbar shared by the pane's in-pane sub-pages (About,
-    /// Manage Sounds). Done ends Settings entirely — the pane's onDisappear
-    /// then resets the sub-page flags.
+    /// Back/Done for the pane's sub-pages. Done closes Settings entirely.
     @ToolbarContentBuilder
     private var paneSubPageToolbar: some ToolbarContent {
       ToolbarItem(placement: .navigation) {
@@ -161,8 +147,7 @@ struct SettingsView: View {
     }
   #endif
 
-  /// App-wide accent color row: iOS shows it in Theme (with the preset
-  /// override badge), macOS in Display.
+  /// iOS shows this in Default Theme (with the override badge), macOS in Display.
   private var accentColorControl: some View {
     VStack(alignment: .leading, spacing: 8) {
       HStack(spacing: 6) {
@@ -176,8 +161,7 @@ struct SettingsView: View {
       SpectrumColorPicker(
         selectedColor: Binding(
           get: { globalSettings.customAccentColor },
-          // Use the setter so the choice persists (assigning the
-          // @Published directly never writes to UserDefaults).
+          // The setter persists the choice.
           set: { globalSettings.setAccentColor($0) }
         )
       )
@@ -205,11 +189,8 @@ struct SettingsView: View {
       .pickerStyle(.menu)
     }
 
-    /// App-level macOS settings: menu bar presence, Dock-icon behavior, the Dock
-    /// pause badge, and language. The Dock-hiding toggles only appear when the
-    /// menu bar icon is shown (so a closed window is never unreachable), and
-    /// "Hide Dock Icon When Window Is Closed" hides under Menu Bar Only, which
-    /// already keeps the Dock icon hidden.
+    /// Dock-hiding toggles need the menu bar icon, so a closed window stays
+    /// reachable. Menu Bar Only already hides the Dock icon.
     private var appSection: some View {
       Section(header: Text("App")) {
         Toggle(
@@ -259,8 +240,6 @@ struct SettingsView: View {
 
   private var settingsForm: some View {
     Form {
-      // App identity header (icon, name, developer) with the About link and
-      // beta/debug rows grouped beneath it, like a standard iOS settings card.
       Section {
         HStack(spacing: 14) {
           #if os(iOS)
@@ -269,7 +248,7 @@ struct SettingsView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 60, height: 60)
-                // Match the system app-icon corner ratio (~22.4% of size).
+                // System app-icon corner ratio (about 22.4% of size).
                 .clipShape(RoundedRectangle(cornerRadius: 13.5, style: .continuous))
                 .accessibilityHidden(true)
             }
@@ -279,7 +258,7 @@ struct SettingsView: View {
           VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: "Blankie")
               .font(.system(.title3, design: .rounded).weight(.semibold))
-            // Same localized key as the About sheet's version line.
+            // Shares its localized key with the About sheet.
             Text("Version \(appVersion) (\(buildNumber))")
               .font(.footnote)
               .foregroundColor(.secondary)
@@ -287,17 +266,14 @@ struct SettingsView: View {
               Text("Have Feedback?")
             }
             .font(.subheadline)
-            // Borderless keeps the Link its own tap target instead of the
-            // row's hit-testing owning the tap.
+            // Borderless keeps the Link its own tap target inside the row.
             .buttonStyle(.borderless)
             .handCursor()
           }
         }
         .padding(.vertical, 4)
 
-        // About is a sub-page on both platforms: iOS pushes in the settings
-        // sheet's stack; macOS swaps in-pane (a push there escapes the pane).
-        // (In the unreachable macOS sheet/scene this row no-ops.)
+        // macOS swaps sub-pages in the pane (a push escapes it).
         #if os(macOS)
           Button {
             appState.showingSettingsAboutPage = true
@@ -322,8 +298,7 @@ struct SettingsView: View {
         #endif
 
         #if os(iOS)
-          // App icon picker, promoted from the About page. Presented as its
-          // own sheet so dismissing it can't tear down the settings stack.
+          // Its own sheet, so dismissing it can't tear down the settings stack.
           Button {
             showingAppIconPicker = true
           } label: {
@@ -342,13 +317,11 @@ struct SettingsView: View {
             NavigationStack {
               AppIconPickerView()
             }
-            // Page-sized on iPad so the icon grid gets room instead of a small
-            // centered form sheet. A `.large` detent would override `.page`.
+            // A `.large` detent would override `.page`.
             .presentationSizing(.page)
           }
         #endif
 
-        // Help row, relocated from the About page's footer.
         Link(destination: URL(string: "https://blankie.rest/faq")!) {
           HStack {
             Label {
@@ -406,7 +379,6 @@ struct SettingsView: View {
         #endif
 
         if showBetaTesterUI {
-          // Celebratory call-to-action for beta testers.
           Link(destination: URL(string: "https://forms.gle/3K748v8G8KDrdV7E7")!) {
             HStack(spacing: 12) {
               Image(systemName: "sparkles")
@@ -444,8 +416,6 @@ struct SettingsView: View {
 
       PlaybackSettingsSection(globalSettings: globalSettings)
 
-      // Always-active visual settings: applied globally, with no per-preset
-      // override.
       Section(
         header: Text("Display")
       ) {
@@ -486,11 +456,8 @@ struct SettingsView: View {
         #endif
 
         #if os(iOS) || os(visionOS)
-          // Animated artwork on the Lock Screen / Now Playing card. The toggle
-          // is the on/off; the default picker chooses what Quick Mix and All
-          // Blankie Sounds use (presets can still carry their own). Both share
-          // one row so no separator sits between them — the picker reads as a
-          // sub-option of the toggle, not a sibling row.
+          // Toggle and default picker share one row so the picker reads as a
+          // sub-option. The default covers Quick Mix and All Blankie Sounds.
           VStack(alignment: .leading, spacing: 12) {
             Toggle(
               isOn: Binding(
@@ -511,20 +478,16 @@ struct SettingsView: View {
                   staticArtworkPath: .constant(nil),
                   label: "Default Animation",
                   onChange: {
-                    // Republish so the lock screen reflects the new default now.
+                    // Republish so the Lock Screen shows the new default now.
                     if let preset = presetManager.currentPreset {
                       audioManager.nowPlayingManager.forceRefresh(
                         preset: preset, isPlaying: audioManager.isGloballyPlaying)
                     }
                   }
                 )
-                // Indented and nudged down so it reads as a sub-option of the
-                // toggle above rather than a peer control.
                 .padding(.top, 8)
                 .padding(.leading, 16)
 
-                // Link the mental model: this is the fallback, and any preset
-                // can pick its own artwork in the editor.
                 Text("Presets can choose their own artwork when you edit them.")
                   .font(.footnote)
                   .foregroundStyle(.secondary)
@@ -533,9 +496,8 @@ struct SettingsView: View {
             #endif
           }
 
-          // App-wide blur for the preset background artwork. All-or-nothing: on
-          // applies `defaultBackgroundBlurRadius`, off is no blur. This toggle
-          // is iOS-only. The Mac backdrop also reads the saved blur radius.
+          // On applies `defaultBackgroundBlurRadius`, off is no blur. The Mac
+          // backdrop uses the same saved radius but has no toggle.
           Toggle(
             isOn: Binding(
               get: { globalSettings.backgroundBlurRadius > 0 },
@@ -549,8 +511,7 @@ struct SettingsView: View {
         #endif
 
         #if os(macOS)
-          // Accent lives in Display (Theme is iOS-only). The Dock badge and
-          // Language moved to the App section below.
+          // Default Theme is iOS-only, so the accent lives here on macOS.
           accentColorControl
         #endif
       }
@@ -559,15 +520,11 @@ struct SettingsView: View {
         appSection
       #endif
 
-      // App-wide defaults a preset inherits and can override in Edit Preset
-      // (view mode, accent color). iOS-only as a section — macOS folds accent
-      // into Display above.
+      // App-wide defaults a preset can override in Edit Preset.
       #if os(iOS) || os(visionOS)
         Section {
-          // View mode (Grid / List). This is the app-wide default. It's
-          // locked to Grid while in Quick Mix (tile-only by design). A preset
-          // override no longer locks the control — the badge marks it, and the
-          // picker still shows/edits the app-wide default like Accent.
+          // Locked to Grid in Quick Mix. A preset override only shows the
+          // badge; the picker still edits the app-wide default.
           let presetOverride = presetViewModeOverride
           let pickerLocked = audioManager.isQuickMix
 
@@ -608,7 +565,6 @@ struct SettingsView: View {
     }
     .navigationTitle("Settings")
     #if os(macOS)
-      // Grouped form so macOS renders the same inset card sections as iOS.
       .formStyle(.grouped)
     #endif
     .tint(globalSettings.customAccentColor ?? .accentColor)
@@ -664,8 +620,6 @@ struct SettingsView: View {
   }
 }
 
-// Playback preferences (Autoplay, Mix with Other Audio). Lives in the main iOS
-// Settings list, above Sounds — not under Manage Sounds.
 private struct PlaybackSettingsSection: View {
   #if os(iOS) || os(visionOS)
     private let audioManager = AudioManager.shared
@@ -676,7 +630,7 @@ private struct PlaybackSettingsSection: View {
     Section(
       header: Text("Playback & Sounds")
     ) {
-      // Autoplay on Open is macOS-only (iOS stays alive in the background).
+      // macOS only; iOS keeps running in the background.
       #if os(macOS)
         Toggle(
           "Autoplay on Open",
@@ -706,16 +660,14 @@ private struct PlaybackSettingsSection: View {
         }
       }
 
-      // Mix with Other Audio is AVAudioSession-based, so it has no macOS form.
+      // AVAudioSession only, so there's no macOS version.
       #if os(iOS) || os(visionOS)
         mixWithOthersSection
       #endif
 
       spatialAvailabilitySection
 
-      // Manage Sounds mirrors the About row: iOS pushes in the settings
-      // sheet's stack; macOS swaps in-pane (a push there escapes the pane).
-      // (In the unreachable macOS sheet/scene this row no-ops.)
+      // Swaps in the pane on macOS, like the About row.
       #if os(macOS)
         Button {
           AppState.shared.showingSettingsManageSoundsPage = true
@@ -742,8 +694,7 @@ private struct PlaybackSettingsSection: View {
     }
   }
 
-  /// Education-style availability gate: opting in just reveals the Spatial
-  /// Mix button on presets; sessions start (and end) in the mixer itself.
+  /// Opting in only reveals the Spatial Mix button on presets.
   @ViewBuilder
   private var spatialAvailabilitySection: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -855,7 +806,6 @@ private struct PlaybackSettingsSection: View {
   #endif
 }
 
-// Preview Provider
 struct SettingsView_Previews: PreviewProvider {
   static var previews: some View {
     SettingsView()

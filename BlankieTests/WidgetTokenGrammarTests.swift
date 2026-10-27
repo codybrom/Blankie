@@ -4,14 +4,9 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  The persisted token grammar wiring favorites to widgets, Siri, and
-//  CarPlay. A `starredItems` token is one of four mutually exclusive
-//  shapes (allSounds | quickMix | solo:<fileName> | preset-UUID); this pins the
-//  codec, the token→display resolution, and the active-token precedence so a
-//  format or precedence change can't silently break those surfaces.
-//
-//  The resolution suite is serialized + main-actor: it drives the shared
-//  AudioManager / PresetManager singletons and restores every touched field.
+//  The `starredItems` token grammar behind favorites, widgets, Siri and CarPlay: the codec,
+//  token-to-display resolution and active-token precedence. The resolution suite is
+//  serialized and restores the AudioManager and PresetManager fields it touches.
 //
 
 import Foundation
@@ -29,7 +24,6 @@ import Testing
     #expect(GlobalSettings.soloFileName(fromToken: token) == "rain")
   }
 
-  /// Only a solo token decodes to a file name; the other three shapes don't.
   @Test func soloFileNameRejectsNonSoloTokens() {
     #expect(GlobalSettings.soloFileName(fromToken: GlobalSettings.allSoundsToken) == nil)
     #expect(GlobalSettings.soloFileName(fromToken: GlobalSettings.quickMixToken) == nil)
@@ -37,16 +31,13 @@ import Testing
     #expect(GlobalSettings.soloFileName(fromToken: "") == nil)
   }
 
-  /// A file name containing the prefix delimiter survives the round-trip: only
-  /// the first `solo:` is stripped, so the rest is returned intact.
+  /// Only the first `solo:` is stripped, so a delimiter in the file name survives.
   @Test func soloTokenPreservesColonInFileName() {
     let token = GlobalSettings.soloToken(forFileName: "a:b")
     #expect(token == "solo:a:b")
     #expect(GlobalSettings.soloFileName(fromToken: token) == "a:b")
   }
 
-  /// The four shapes are mutually exclusive: neither special token carries the
-  /// solo prefix, and only a preset UUID string parses as a UUID.
   @Test func tokenShapesAreMutuallyExclusive() {
     #expect(!GlobalSettings.allSoundsToken.hasPrefix(GlobalSettings.soloTokenPrefix))
     #expect(!GlobalSettings.quickMixToken.hasPrefix(GlobalSettings.soloTokenPrefix))
@@ -58,7 +49,7 @@ import Testing
   }
 }
 
-// MARK: - Token → display resolution + active-token precedence
+// MARK: - Token-to-display resolution and active-token precedence
 
 @Suite(.serialized) @MainActor final class WidgetFavoriteResolutionTests {
   private let audioManager = AudioManager.shared
@@ -142,8 +133,7 @@ import Testing
 
   // MARK: widgetPinnableItems()
 
-  /// The Pinned widget's picker entry for the default preset must carry the
-  /// same identity as its Favorites tile: grid icon, no thumbnail, no subtitle.
+  /// The default preset's Pinned picker entry matches its Favorites tile.
   @Test func pinnableDefaultPresetMatchesFavoritesIdentity() throws {
     PresetManager.shared.setPresets([PresetFactory.makePreset(isDefault: true)])
 
@@ -204,9 +194,8 @@ import Testing
 
   // MARK: currentFavoriteToken precedence
 
-  /// Solo outranks Quick Mix and a current preset. Set the mode state directly
-  /// (the engine-free convention `PresetApplyStatesTests` uses) so the read
-  /// under test has no audio/session/media-remote side effects.
+  /// Solo outranks Quick Mix and a current preset. Mode state is set directly, so the read
+  /// has no audio or session side effects.
   @Test func currentTokenPrefersSolo() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]

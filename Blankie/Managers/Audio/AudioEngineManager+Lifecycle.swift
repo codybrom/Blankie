@@ -13,8 +13,8 @@ import os
 extension AudioEngineManager {
 
   /// Registers (or re-binds) the configuration-change observer scoped to the
-  /// current engine object. The handler hops to the main actor — never tear
-  /// down the graph on AVFoundation's internal delivery queue (deadlock).
+  /// current engine object. The handler hops to the main actor because tearing
+  /// down the graph on AVFoundation's delivery queue deadlocks.
   func observeEngineNotifications() {
     if let existing = configObserver {
       NotificationCenter.default.removeObserver(existing)
@@ -33,8 +33,8 @@ extension AudioEngineManager {
   }
 
   /// Coalesced graph rebuild after a hardware configuration change. Freezes
-  /// every player's position before stopping, reconnects the graph, and — only
-  /// if playback intent was active — restarts and resumes from frozen frames.
+  /// every player's position before stopping, reconnects the graph, and
+  /// resumes from the frozen frames only if playback intent was active.
   func handleConfigurationChange() {
     // Coalesce bursts (CarPlay attach) into a single trailing rebuild.
     if isRebuilding {
@@ -51,18 +51,14 @@ extension AudioEngineManager {
     Logger.audio.debug(
       "AudioEngineManager: Configuration change (wasPlaying: \(wasPlaying))")
 
-    // Snapshot positions: freeze() strictly BEFORE node.stop() (stop zeroes
-    // the player timeline). Skip players mid-fade-to-silence: their node is
-    // still rendering the ramp but they're logically paused — resuming them
-    // here would resurrect them at full volume with nothing left to stop
-    // them (Quick Mix exit racing a CarPlay detach did exactly that).
+    // freeze() must run before node.stop(), which zeroes the player timeline.
+    // Players mid-fade-to-silence are logically paused, so they don't resume.
     var resumeFrames: [ObjectIdentifier: AVAudioFramePosition] = [:]
     var frozenFrames: [ObjectIdentifier: AVAudioFramePosition] = [:]
     for (key, player) in registered {
       player.freeze()
-      // Capture every player's position, not just the ones we'll resume: stop()
-      // below clears it, and a paused (or globally-paused) sound must still
-      // continue from here when the user next presses play, not from frame 0.
+      // Capture every position: stop() clears it, and paused sounds continue
+      // from here on the next play.
       frozenFrames[key] = player.currentFrame
       if player.isPlaying, !player.isFadingToSilence {
         resumeFrames[key] = player.currentFrame
@@ -82,9 +78,8 @@ extension AudioEngineManager {
       for (key, player) in registered {
         guard let frame = resumeFrames[key] else { continue }
         player.play(fromFrame: frame)
-        // A player caught mid-fade-in keeps its partial fadeLevel across the
-        // rebuild; without this it resumes stuck at reduced (maybe near-zero)
-        // volume. Snap to full — updateVolume() below reads fadeLevel.
+        // A mid-fade-in player keeps its partial fadeLevel across the rebuild,
+        // so snap it to full before updateVolume() reads it.
         player.setFadeLevel(1)
       }
       // Reapply per-sound volumes (no-ops for sounds without a live player).
@@ -120,7 +115,7 @@ extension AudioEngineManager {
     /// Recovers from a media-services reset: the old engine and every node
     /// bound to it are dead. Recreates the engine, reapplies session config,
     /// and tears down each Sound's player (via `onEngineReset`) for lazy
-    /// rebuild on next play. Never auto-resumes — Apple requires user action.
+    /// rebuild on next play. Never auto-resumes: Apple requires user action.
     func handleMediaServicesReset() {
       Logger.audio.error("AudioEngineManager: Media services reset — rebuilding engine")
 

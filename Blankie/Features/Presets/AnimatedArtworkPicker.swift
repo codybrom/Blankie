@@ -29,9 +29,8 @@ import os
     /// Settings passes "Default Animation" instead. Unused by the tile style.
     let label: LocalizedStringKey
     let presentation: Presentation
-    /// Accent used by the gallery (pills, selection, Choose button). Passed in
-    /// by the call site so Settings uses the app-wide accent and Edit Preset
-    /// uses the edited preset's accent — never the unrelated playing preset's.
+    /// Gallery accent (pills, selection, Choose button). Settings passes the app-wide
+    /// accent and Edit Preset passes the edited preset's, never the playing preset's.
     let accent: Color
     let onChange: () -> Void
 
@@ -135,7 +134,6 @@ import os
       )
     }
 
-    /// The currently selected bundled loop, if any.
     private var selectedAsset: BundledAnimatedLoop? {
       guard let identifier = selectedBundledIdentifier else { return nil }
       return BundledAnimatedLoop.allCases.first { $0.id == identifier }
@@ -185,7 +183,6 @@ import os
           throw AnimatedArtworkError.missingBundledAsset("\(asset.id)/preview-square")
         }
 
-        // Clean up old files
         if let oldLoop = artwork?.loopPath {
           AnimatedArtworkFileStore.removeItemIfExists(relativePath: oldLoop)
         }
@@ -298,9 +295,8 @@ import os
 
   // MARK: - Looping Player View
 
-  /// A muted, seamlessly-looping, aspect-fill video layer for tile-sized
-  /// previews. Uses `AVPlayerLooper` for gapless loops and the `.pauses`
-  /// background policy so it never claims the Now Playing controls.
+  /// A muted, aspect-fill `AVPlayerLooper` layer for tile-sized previews. The
+  /// `.pauses` background policy keeps it off the Now Playing controls.
   private struct LoopingPlayerView: UIViewRepresentable {
     let url: URL
 
@@ -315,9 +311,8 @@ import os
     }
 
     static func dismantleUIView(_ uiView: LoopingPlayerContainerView, coordinator: Coordinator) {
-      // SwiftUI tears views down on the main actor; assert it so the main-actor
-      // `teardown()` (which stops the player and breaks the looper's observer
-      // retain cycle) can run here.
+      // SwiftUI tears views down on the main actor, so the main-actor `teardown()`
+      // (stops the player, breaks the looper's observer retain cycle) can run here.
       MainActor.assumeIsolated {
         uiView.teardown()
       }
@@ -372,25 +367,21 @@ import os
     @State private var selectedCategory: String?
 
     private func handleUncache(asset: BundledAnimatedLoop) {
-      // If uncaching the currently selected video, unselect it
       if selectedIdentifier == asset.id {
         onClear()
       }
     }
 
     private func restoreAudioControlsAfterVideoPreview() {
-      // CRITICAL: After video preview, iOS may have disconnected remote command handlers
-      // even though we configured the preview player with .pauses policy.
-      // We must re-establish media controls to ensure play/pause/next/previous work.
+      // iOS can drop the remote command handlers after a video preview, even with the
+      // `.pauses` policy, so re-register them and refresh Now Playing.
       let audioManager = AudioManager.shared
 
       Logger.ui.debug("AnimatedArtworkGallery: Restoring audio controls after video preview")
 
       Task { @MainActor in
-        // Re-register remote command handlers (play, pause, next, previous)
         audioManager.setupMediaControls()
 
-        // Refresh Now Playing info to ensure it's current
         let currentPreset = PresetManager.shared.currentPreset
         audioManager.nowPlayingManager.updateInfo(
           preset: currentPreset,
@@ -410,7 +401,7 @@ import os
       let all = BundledAnimatedLoop.allCases
       let filtered = selectedCategory == nil ? all : all.filter { $0.category == selectedCategory }
 
-      // Sort so selected item is always first
+      // The selected item sorts first.
       guard let selectedId = selectedIdentifier else { return filtered }
       return filtered.sorted { asset1, asset2 in
         let isAsset1Selected = asset1.id == selectedId
@@ -495,7 +486,6 @@ import os
             },
             onDismiss: {
               previewingAsset = nil
-              // Re-establish audio session and media controls after video preview
               restoreAudioControlsAfterVideoPreview()
             },
             onDelete: {
@@ -704,7 +694,6 @@ import os
     }
   }
 
-  // Helper for corner radius on specific corners
   extension View {
     func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
       clipShape(RoundedCorner(radius: radius, corners: corners))
@@ -766,7 +755,6 @@ import os
               .disabled(true)
           }
 
-          // Loading indicator while downloading/loading
           if isLoading {
             VStack(spacing: 16) {
               switch resourceState {
@@ -832,7 +820,6 @@ import os
           VStack {
             Spacer()
 
-            // Info overlay
             if showInfo {
               VStack(alignment: .leading, spacing: 8) {
                 Text(asset.displayName)
@@ -962,8 +949,7 @@ import os
             let player = AVPlayer(url: videoURL)
             player.isMuted = true
 
-            // CRITICAL: Prevent this preview player from taking over Now Playing controls
-            // This ensures background audio playback controls remain active
+            // Keep this preview from taking over the Now Playing controls.
             player.audiovisualBackgroundPlaybackPolicy = .pauses
             player.preventsDisplaySleepDuringVideoPlayback = false
 
@@ -981,15 +967,13 @@ import os
 
             player.play()
 
-            // Hide loading indicator once player is ready
             self.isLoading = false
           }
         } catch is CancellationError {
           // Sheet dismissed before download finished; nothing to do.
         } catch {
-          // Keep `isLoading` true so the overlay's `.failed` branch (driven by
-          // resourceState) stays on screen. Setting it false here collapsed the
-          // view to a black background instead of showing the error.
+          // Leave `isLoading` true so the overlay's `.failed` branch (driven by
+          // resourceState) stays on screen to show the error.
           Logger.ui.error("Failed to load video for preview: \(error, privacy: .public)")
         }
       }
@@ -1039,10 +1023,8 @@ import os
         ? squarePreviewResourceName : previewResourceName
     }
 
-    /// Cached once: the bundle's animated-artwork set is fixed at runtime, and
-    /// this is read on every gallery/tile render. Recomputing re-walked the
-    /// bundle directory and re-decoded every metadata JSON each time (and spammed
-    /// the log), so it is loaded a single time on first access.
+    /// Loaded once on first access: the bundle's artwork set is fixed at runtime,
+    /// and this is read on every gallery and tile render.
     static let allCases: [BundledAnimatedLoop] = loadFromBundle()
 
     private static func loadFromBundle() -> [BundledAnimatedLoop] {
@@ -1065,7 +1047,6 @@ import os
 
       var artworks: [BundledAnimatedLoop] = []
 
-      // Find all *Metadata.json files
       let metadataFiles = contents.filter { $0.lastPathComponent.hasSuffix("Metadata.json") }
 
       for metadataURL in metadataFiles {
@@ -1081,7 +1062,7 @@ import os
       }
 
       Logger.ui.debug("Loaded \(artworks.count) artworks from bundle resources")
-      return artworks.sorted { $0.id < $1.id }  // Sort alphabetically by ID
+      return artworks.sorted { $0.id < $1.id }
     }
   }
 

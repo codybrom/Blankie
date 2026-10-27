@@ -11,23 +11,18 @@ import Observation
 import SwiftUI
 import os
 
-/// Represents a single sound with its associated properties and playback controls.
+/// One built-in or custom sound, with its playback state and customizations.
 @Observable
 open class Sound: NSObject, Identifiable {
   public let id = UUID()
   let originalTitle: String
   let originalSystemIconName: String
   let fileName: String
-  // `fileExtension` and `fileURL` are `var` so an in-place AAC conversion can
-  // repoint a custom sound at its re-encoded file (CustomSoundManager.convertToAAC)
-  // without rebuilding the whole sound list — which keeps the open editor and the
-  // grid (both observing this instance) coherent.
+  // `fileExtension` and `fileURL` are `var` so an in-place AAC conversion can repoint
+  // a custom sound at its re-encoded file while views keep observing this instance.
   var fileExtension: String
-  // `lufs` and `normalizationFactor` are `var` (not `let`) because deferred
-  // LUFS analysis can complete after a custom sound is already loaded and
-  // playing; `Sound+Normalization.analyzeAndUpdateLUFS` writes these from an
-  // extension in another file, so they cannot be `private(set)`. Without this
-  // relaxation, volume stays stuck at factor 1.0 until next app launch.
+  // `var` because deferred LUFS analysis (Sound+Normalization) can finish after
+  // the sound is already loaded and playing.
   var lufs: Float?
   var normalizationFactor: Float?
   let truePeakdBTP: Float?
@@ -36,11 +31,10 @@ open class Sound: NSObject, Identifiable {
   /// `isMusic` customization overrides it.
   let isMusicDefault: Bool
 
-  // Properties for unified sound model
   let isCustom: Bool
   var fileURL: URL?
   let dateAdded: Date?
-  let customSoundDataID: UUID?  // For linking to SwiftData if needed
+  let customSoundDataID: UUID?
   @ObservationIgnored private var _customSoundData: CustomSoundData?
 
   /// SwiftData record backing a custom sound, fetched once then reused (the model object stays live).
@@ -52,19 +46,13 @@ open class Sound: NSObject, Identifiable {
     return _customSoundData
   }
 
-  // Computed properties that respect customizations
   var title: String {
     return SoundCustomizationManager.shared.getCustomization(for: fileName)?.effectiveTitle(
       originalTitle: originalTitle) ?? originalTitle
   }
 
-  /// Title for display, localized through the string catalog. Built-in sounds
-  /// key off their stable `fileName` (`sound.<fileName>`) rather than the English
-  /// title, so localization survives a title reword and never clashes with an
-  /// unrelated string that happens to share the English text. Localization is
-  /// gated to built-in sounds the user hasn't renamed: a custom sound (or a
-  /// renamed built-in) carries user content and is shown verbatim — so a custom
-  /// sound named "Rain" is never turned into "Regen".
+  /// Display title. Unrenamed built-in sounds localize under `sound.<fileName>`;
+  /// custom and renamed sounds show the user's title verbatim.
   var localizedTitle: String {
     guard !isCustom, title == originalTitle else { return title }
     return NSLocalizedString(
@@ -93,14 +81,10 @@ open class Sound: NSObject, Identifiable {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
 
-      // If sound was just selected, start playing it immediately when playback becomes active
-      // Only do this after AudioManager is fully initialized to avoid circular dependency
+      // A newly selected sound starts playing once playback is active.
       if isSelected, oldValue == false {
-        // A preset holds at most one music sound; selecting one turns every
-        // other selected music sound off (radio-button, last selected wins).
-        // Synchronous so the outgoing sound fades as this one comes in. Skipped
-        // during init: state restore runs there and reaching `shared` would trap
-        // (saved state already honors the invariant, so the deselect is moot).
+        // A preset holds at most one music sound (last selected wins). Synchronous so
+        // the outgoing sound fades as this one comes in; skipped during bootstrap.
         if isMusic, !AudioManager.isBootstrapping {
           AudioManager.shared.deselectOtherMusicSounds(except: self)
         }
@@ -108,33 +92,27 @@ open class Sound: NSObject, Identifiable {
         DispatchQueue.main.async { [weak self] in
           guard let self = self else { return }
 
-          // Fix race condition: Ensure sound is still selected before proceeding
           guard self.isSelected else {
             Logger.sounds.debug(
               "Sound: Aborting auto-play for '\(self.fileName)' - sound was deselected")
             return
           }
 
-          // In solo mode only the soloed sound may sound; other sounds keep
-          // their selection but must stay silent. Without this, a preset's
-          // selected sounds auto-play alongside a restored solo sound.
+          // In solo mode, other selected sounds keep their selection but stay silent.
           if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
             Logger.sounds.debug(
               "Sound: Skipping auto-play for '\(self.fileName)' - solo mode active")
             return
           }
 
-          // Already audible by intent — restarting would audibly jump
-          // position. Check playbackState, not the node: a fast off/on toggle
-          // leaves the node rendering its fade-out, and skipping then would
-          // strand the sound selected-but-paused. play() rescues mid-fade.
+          // Restarting a playing sound would jump its position. Check playbackState,
+          // not the node: mid-fade-out the node still reports playing (play() resumes it).
           if self.playbackState == .playing {
             Logger.sounds.debug(
               "Sound: Skipping auto-play for '\(self.fileName)' - already playing")
             return
           }
 
-          // Check if playback is active, or will become active soon
           if AudioManager.shared.isGloballyPlaying {
             Logger.sounds.debug(
               "Sound: Auto-playing newly selected sound '\(self.fileName)' during active playback")
@@ -142,12 +120,11 @@ open class Sound: NSObject, Identifiable {
             self.resetSoundPosition()  // Apply randomization if enabled
             self.play()
           } else {
-            // If playback isn't active yet, wait for auto-start to kick in
+            // Playback may be about to auto-start; check again after a yield.
             Task { @MainActor [weak self] in
-              await Task.yield()  // Allow auto-start to process
+              await Task.yield()
               guard let self = self else { return }
 
-              // Fix race condition: Ensure sound is still selected before proceeding
               guard self.isSelected else {
                 Logger.sounds.debug(
                   "Sound: Aborting delayed auto-play for '\(self.fileName)' - sound was deselected")
@@ -156,15 +133,14 @@ open class Sound: NSObject, Identifiable {
 
               guard AudioManager.shared.isGloballyPlaying else { return }
 
-              // Re-check solo here too: it may have been entered during the yield.
+              // Solo mode may have started during the yield.
               if let solo = AudioManager.shared.soloModeSound, solo.id != self.id {
                 Logger.sounds.debug(
                   "Sound: Skipping delayed auto-play for '\(self.fileName)' - solo mode active")
                 return
               }
 
-              // Already audible by intent (see the synchronous guard above:
-              // node-level isPlaying would wrongly skip mid-fade-out sounds).
+              // Check playbackState, not the node (see the guard above).
               if self.playbackState == .playing {
                 Logger.sounds.debug(
                   "Sound: Skipping delayed auto-play for '\(self.fileName)' - already playing")
@@ -181,27 +157,21 @@ open class Sound: NSObject, Identifiable {
         }
       }
 
-      // If sound was just deselected, fade it out (preset switches read as a
-      // crossfade: outgoing sounds ramp down while incoming ones ramp up)
+      // A deselected sound fades out, so preset switches read as a crossfade.
       if !isSelected, oldValue == true {
         Logger.sounds.debug("Sound: Auto-stopping newly deselected sound '\(self.fileName)'")
-        // If player exists, fade out and pause it
         if player != nil {
           pause()
         }
-        // Also make sure AudioManager stops it if it's playing there
         DispatchQueue.main.async {
           if AudioManager.shared.isGloballyPlaying {
-            // Force AudioManager to update its playing sounds
             AudioManager.shared.updatePlayingSounds()
           }
         }
       }
 
-      // Selection changed: refresh derived selection state, preset divergence,
-      // and Now Playing. Replaces the old per-Sound Combine observer in
-      // AudioManager. Skipped during bootstrap (reaching `shared` would re-enter
-      // its still-running init); state restore there seeds the same state.
+      // Refresh selection state, preset divergence and Now Playing. Skipped during
+      // bootstrap, where reaching `shared` would re-enter its still-running init.
       if !AudioManager.isBootstrapping {
         AudioManager.shared.soundDidChange()
       }
@@ -211,9 +181,8 @@ open class Sound: NSObject, Identifiable {
   /// Play/pause fades and preset crossfades all use this ramp length.
   static let fadeDuration: TimeInterval = 0.5
 
-  /// Remote-command pauses cut instantly: Control Center re-derives "playing"
-  /// from live engine I/O, and any audible ramp (0.5s and 0.15s both
-  /// device-tested) made its transport button dance.
+  /// Remote-command pauses cut instantly. Control Center derives "playing" from
+  /// live engine I/O, so any audible ramp makes its transport button flip back and forth.
   static let remotePauseFadeDuration: TimeInterval = 0
 
   // nonisolated(unsafe): only ever mutated on the main actor; the nonisolated
@@ -234,7 +203,6 @@ open class Sound: NSObject, Identifiable {
         return
       }
 
-      // Always update volume if player exists, not just when playing
       if player != nil {
         updateVolume()
       }
@@ -247,7 +215,6 @@ open class Sound: NSObject, Identifiable {
         MainActor.assumeIsolated {
           guard let self = self else { return }
 
-          // Don't persist volume changes during Quick Mix mode
           guard !AudioManager.shared.isQuickMix else {
             Logger.sounds.debug(
               "Sound: Skipping volume save for '\(self.fileName)' during Quick Mix mode")
@@ -258,8 +225,7 @@ open class Sound: NSObject, Identifiable {
         }
       }
 
-      // Volume changed: re-evaluate preset divergence (a preset records each
-      // sound's volume). Replaces the old per-Sound Combine observer.
+      // Re-evaluate preset divergence (a preset records each sound's volume).
       if !AudioManager.isBootstrapping {
         AudioManager.shared.soundDidChange()
       }
@@ -268,8 +234,7 @@ open class Sound: NSObject, Identifiable {
 
   @ObservationIgnored var player: SoundPlayer?
 
-  /// Explicit playback lifecycle. `var` (not `private(set)`) because
-  /// Sound+Playback maintains it from another file (same relaxation as `lufs`).
+  /// Explicit playback lifecycle. `var` because Sound+Playback maintains it from another file.
   var playbackState: PlaybackState = .stopped
 
   enum PlaybackState {
@@ -280,7 +245,6 @@ open class Sound: NSObject, Identifiable {
 
   // MARK: - Playback Facade
 
-  /// Whether this sound is currently audible.
   var isPlaying: Bool { player?.isPlaying ?? false }
 
   /// Current playback position in seconds (0 when unloaded).
@@ -289,7 +253,6 @@ open class Sound: NSObject, Identifiable {
   /// Playable duration in seconds (0 when unloaded).
   var playbackDuration: TimeInterval { player?.duration ?? 0 }
 
-  /// Whether a player is loaded for this sound.
   var isLoaded: Bool { player != nil }
 
   /// Stops playback, detaches from the engine, and releases the player
@@ -308,7 +271,6 @@ open class Sound: NSObject, Identifiable {
   // Sound+Normalization invalidates it when the baked boost changes).
   @ObservationIgnored var spatialReadyCache: Bool?
 
-  // Metadata properties
   var channelCount: Int?
   var duration: TimeInterval?
   var fileSize: Int64?
@@ -339,31 +301,17 @@ open class Sound: NSObject, Identifiable {
 
     super.init()
 
-    // Volume and selection state will be restored by AudioManager.loadSavedState()
-    // Don't load from UserDefaults here to avoid duplicate work
-
-    // Global volume rides the engine's main mixer (AudioEngineManager), so
-    // sounds no longer observe it individually.
-
-    // Customization-derived values (title, icon, music/preset-only tags) are
-    // computed reads of the now-@Observable SoundCustomizationManager, so views
-    // track them automatically — no manual observer needed. The live volume
-    // side effect of a customization change is applied by the editor's
-    // explicit `applyCustomizationInstantly` → `updateVolume()` path.
-
-    // Don't load sound immediately to avoid triggering audio session during initialization
-    // loadSound() will be called lazily when needed
+    // AudioManager.loadSavedState() restores volume and selection. The player loads
+    // lazily so creating a sound doesn't activate the audio session.
   }
 
   open func loadSound() {
-    // Prevent concurrent loading
     guard !isLoading else {
       Logger.sounds.debug(
         "Sound: Already loading '\(self.fileName).\(self.fileExtension)', skipping")
       return
     }
 
-    // If player already exists, no need to reload
     guard player == nil else {
       Logger.sounds.debug(
         "Sound: Player already loaded for '\(self.fileName).\(self.fileExtension)'")
@@ -382,7 +330,6 @@ open class Sound: NSObject, Identifiable {
     }
 
     do {
-      // Extract metadata before creating player
       extractMetadata(from: soundURL)
 
       let shouldLoop =
@@ -403,11 +350,9 @@ open class Sound: NSObject, Identifiable {
       player = loadedPlayer
       AudioEngineManager.shared.attach(loadedPlayer)
 
-      // Set initial volume with normalization
       updateVolume()
 
-      // Apply random start position if enabled (resetSoundPosition is a no-op
-      // seek to 0 when randomization is disabled, matching the old load path)
+      // Random start position if enabled (otherwise seeks to 0).
       resetSoundPosition()
 
       Logger.sounds.debug(
@@ -441,9 +386,8 @@ open class Sound: NSObject, Identifiable {
 
   // MARK: - Spatial Arrangement (experimental, session-scoped)
 
-  /// Whether this sound joins the spatial field right now: a session is
-  /// active, preset mode (spatial is preset-only — never solo or Quick Mix),
-  /// and the sound hasn't been taken out of the field this session.
+  /// Whether this sound joins the spatial field: a session is active, a preset is
+  /// playing (not solo or Quick Mix), and the sound is still in the field.
   var isSpatialEligible: Bool {
     SpatialSessionManager.shared.isActive
       && AudioManager.shared.soloModeSound == nil
@@ -460,9 +404,8 @@ open class Sound: NSObject, Identifiable {
     return (slot.angleDegrees, slot.distance)
   }
 
-  /// Live-moves the sound in the field; optionally remembers the spot for the
-  /// rest of the session (in memory only — synchronous, so the mixer re-reads
-  /// fresh data immediately and released dots don't snap back).
+  /// Moves the sound in the field. `persist` stores the spot in memory for the session,
+  /// synchronously, so the mixer re-reads it at once and released dots stay put.
   @MainActor
   func setSpatialPlacement(angleDegrees: Float, distance: Float, persist: Bool) {
     let point = AudioEngineManager.point(angleDegrees: angleDegrees, distance: distance)
@@ -476,13 +419,10 @@ open class Sound: NSObject, Identifiable {
     }
   }
 
-  /// Whether the sound can join the field right now: short sounds fold in
-  /// memory; long ones need their rendered mono cache (see prepareForSpatial).
-  /// The cache-existence check is memoized — the mixer reads this per redraw
-  /// (~10 Hz under head tracking) and a filesystem stat each time adds up.
+  /// Short sounds fold to mono in memory; long ones need their rendered mono cache
+  /// (see prepareForSpatial). Memoized because the mixer reads this at ~10 Hz.
   var isSpatialReady: Bool {
-    // Unknown duration is NOT short (the player would silently stream flat);
-    // treat it as long and let the cache check settle it.
+    // Unknown duration counts as long (the player would stream it unspatialized).
     if let duration, duration <= SoundPlayer.bufferThreshold { return true }
     if let cached = spatialReadyCache { return cached }
     guard let url = getSoundURL() else { return false }
@@ -541,8 +481,7 @@ open class Sound: NSObject, Identifiable {
   func handleNonLoopingFinished() {
     playbackState = .stopped
 
-    // Loop toggled on after load (player not reloaded yet): the old delegate
-    // ended silently in that case, so match it.
+    // Loop toggled on after load (player not reloaded yet): just stop.
     let shouldLoop =
       SoundCustomizationManager.shared.getCustomization(for: fileName)?.loopSound ?? true
     guard !shouldLoop else { return }
@@ -552,20 +491,16 @@ open class Sound: NSObject, Identifiable {
     if AudioManager.shared.soloModeSound?.id == id {
       Logger.sounds.debug(
         "Sound: Non-looping sound in solo mode finished, pausing global playback")
-      // A node that ran out of audio still reports isPlaying == true (it was
-      // never stopped), so resetSoundPosition()'s !isPlaying guard would no-op
-      // and strand the play head at the end — the next play finishes in one
-      // frame and the button looks dead. Stop first so the rewind takes.
+      // An exhausted node still reports isPlaying, which makes resetSoundPosition()
+      // skip the rewind. Stop it first.
       player?.stop()
       resetSoundPosition()
       Task { @MainActor in
         AudioManager.shared.setGlobalPlaybackState(false)
       }
     } else {
-      // Normal mode - stop the exhausted node and rewind before deselecting,
-      // so the auto-deselect fade (and any re-tap rescue) can't ramp silence
-      // through a node whose schedule is already spent (same stale-isPlaying
-      // trap the solo branch above guards against).
+      // Stop and rewind before deselecting so the deselect fade (or a re-tap)
+      // doesn't run on a spent schedule (same isPlaying issue as above).
       player?.stop()
       resetSoundPosition()
       isSelected = false

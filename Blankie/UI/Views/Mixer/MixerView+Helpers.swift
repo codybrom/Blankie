@@ -9,12 +9,10 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
   extension MixerView {
-    // Filtered + ordered sounds for the current preset (shared with macOS).
     var filteredSounds: [Sound] {
       audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
-    // Determine if we're on iPad or Mac
     var isLargeDevice: Bool {
       horizontalSizeClass == .regular
     }
@@ -30,15 +28,11 @@ import SwiftUI
     @ViewBuilder
     var presetBackgroundView: some View {
       let preset = presetManager.currentPreset
-      // Solo is its own thing — it shouldn't inherit the last preset's artwork.
-      // It uses the shared accent gradient (app accent), like Quick Mix.
+      // Solo uses the app accent gradient, like Quick Mix, and ignores preset artwork.
       let isSolo = audioManager.soloModeSound != nil
 
       GeometryReader { geometry in
         ZStack {
-          // Layer 1: Animated artwork preview image (blurred) — only when
-          // a custom artwork exists (and not in solo mode). Presets without
-          // artwork fall through to the shared accent gradient.
           if !isSolo, preset != nil,
             let artworkImage = backgroundImage
           {
@@ -56,9 +50,6 @@ import SwiftUI
               .id(ObjectIdentifier(artworkImage))
               .transition(.opacity)
           }
-          // Layer 2: Shared accent gradient — matches Quick Mix so the
-          // default preset, custom accent presets, solo mode, and Quick Mix
-          // all read as variants of the same surface.
           else {
             SoundSurfaceBackground(
               accent: isSolo
@@ -68,9 +59,7 @@ import SwiftUI
             .transition(.opacity)
           }
         }
-        // Crossfade background changes rather than hard-cutting. The gradient↔
-        // artwork flip animates off isSolo; artwork swaps animate via the
-        // withAnimation around the backgroundImage assignment below.
+        // Gradient and artwork crossfade on isSolo; artwork swaps animate in the task below.
         .animation(.easeInOut(duration: 0.35), value: isSolo)
         .accessibilityHidden(true)
       }
@@ -97,10 +86,7 @@ import SwiftUI
     let accent: Color
 
     var body: some View {
-      // The base (bottom) stop must adapt: a hardcoded near-black makes the
-      // grid/Quick Mix render black-on-black under the Light appearance (tile
-      // text is `.primary`). Dark keeps the deep look; Light falls back to the
-      // system background, matching the pre-unification main-grid surface.
+      // Tile text is `.primary`, so the base stop follows the color scheme.
       let base =
         colorScheme == .dark
         ? Color.black.opacity(0.9)

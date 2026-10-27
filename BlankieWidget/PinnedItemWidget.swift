@@ -9,11 +9,8 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-/// Lightweight, snapshot-backed entity for the Pinned Sound widget's
-/// configuration picker — reads `WidgetStateStore.current().pinnableItems`,
-/// every preset and solo-able sound rather than just what's starred. Pinning
-/// one specific thing to the Home Screen shouldn't require favoriting it
-/// first, unlike the Favorites widget, which is intentionally starred-only.
+/// Pinned Sound picker entity. Offers every preset and sound from
+/// `pinnableItems`, so pinning doesn't require starring first.
 struct PinnableItemEntity: AppEntity {
   let id: String
   var displayName: String
@@ -111,14 +108,7 @@ struct PinnedItemProvider: AppIntentTimelineProvider {
   }
 }
 
-/// Uses the same `NowPlayingSmallCard` shape and background treatment
-/// `NowPlayingWidget` does — a pinned preset/sound and whatever's currently
-/// playing are the same kind of object, so they read as the same widget
-/// family instead of two competing card designs. Small only: a pinned
-/// item's whole point is a single glanceable shortcut, and the medium
-/// layout (framed art + text + a plain circular button, no badge) reads as
-/// a different, weaker version of the same idea rather than a genuinely
-/// useful larger size.
+/// Same card as `NowPlayingWidget`. Small only: a pinned item is a single shortcut.
 struct PinnedItemWidgetEntryView: View {
   @Environment(\.colorScheme) private var colorScheme
   var entry: PinnedItemProvider.Entry

@@ -10,10 +10,8 @@ const { videoSrc, mobileVideoSrc, posterSrc } = Astro.props;
 
 <div class="absolute inset-0 bg-black opacity-80">
   <!--
-    Real <img> poster layer. It paints at first contentful paint and, being the
-    largest element, owns LCP — a later same-size video frame can't override it
-    because it isn't larger. This is what keeps the hero's LCP fast instead of
-    waiting on the video to download and render its first frame.
+    Real <img> poster layer. As the largest element at first contentful paint it
+    owns LCP, so the hero's LCP doesn't wait on the video's first frame.
   -->
   <img
     id="background-poster"
@@ -78,7 +76,7 @@ const { videoSrc, mobileVideoSrc, posterSrc } = Astro.props;
               video.loop = true;
               video.autoplay = true;
               video.play().catch(() => {
-                // Handle autoplay policy restrictions silently
+                // Autoplay blocked by browser policy; the poster stays visible.
               });
             }
             observer.unobserve(entry.target);

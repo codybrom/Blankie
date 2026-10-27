@@ -4,11 +4,8 @@
 //
 //  Created by Cody Bromley on 10/13/26.
 //
-//  An import activates the imported preset right away. Solo used to skip that
-//  apply and a later Quick Mix exit threw it away, so the import leaves both
-//  first. An archive's volume adjustment is clamped to the editor's range.
-//
-//  Runs against an in-memory store and an isolated preset list (SingletonSandbox).
+//  An import leaves solo and Quick Mix, activates the imported preset and clamps an archive's
+//  volume adjustments. Runs on an in-memory store and isolated presets (SingletonSandbox).
 //
 
 import Foundation

@@ -5,26 +5,8 @@
 //  Created by Cody Bromley on 5/24/26.
 //
 //  Long-press-to-reorder grid, adapted from Balaji Venkatesh's "Sortable Grid"
-//  (28/01/26). The dragged tile is lifted into an overlay preview while the
-//  underlying cells swap live as it passes over them; the host commits the
-//  final order once, on release.
-//
-//  Two deviations from the original recipe:
-//    • Elements don't have to carry their own `position` — callers wrap their
-//      model in a tiny `SortableGridProtocol` value (see SortableSound) so the
-//      `Sound` model stays untouched.
-//    • The reorder gesture is attached per-tile via `.reorderHandle()` on just
-//      the tile's icon/tap-zone, never the whole cell. A brief long-press
-//      preroll alone wasn't enough to protect an inline volume slider: the
-//      composed long-press→drag still claimed the touch in the gesture arena
-//      and starved the slider's own drag (the slider would grab but not move,
-//      while the tile never actually reordered). Scoping the gesture off the
-//      slider region is the real fix. `SortableGridView` injects the per-cell
-//      callbacks through the environment, so the generic content API and its
-//      callers stay unchanged.
-//
-//  Pure SwiftUI and identical on every platform (long-press → drag), so the
-//  lift/swap/commit behavior is shared.
+//  (28/01/26). Callers wrap their model in a `SortableGridProtocol` value, and
+//  tiles attach the gesture with `.reorderHandle()` so it never covers a slider.
 //
 
 import SwiftUI
@@ -39,13 +21,11 @@ struct SortableGridView<
 where
   Data.Element: SortableGridProtocol, Data: MutableCollection, Data: RangeReplaceableCollection
 {
-  /// Captured once on init — we don't want a scroll/no-scroll flip mid-drag.
+  /// Captured once on init so scrolling can't flip mid-drag.
   @State var isScrollable: Bool
   var config: SortableGridConfig
   @Binding var items: Data
   /// Scrollable grids only: content shorter than this is centered vertically.
-  /// Pass the viewport height to center sparse grids (cell rects are tracked
-  /// in .global coordinates, so the shift doesn't disturb reordering).
   var minContentHeight: CGFloat? = nil
   @ViewBuilder var content: (Data.Element) -> Content
   @ViewBuilder var draggingPreview: (Data.Element) -> DraggingPreview
@@ -76,17 +56,15 @@ where
         draggingPreview(draggingItem)
           .disabled(true)
           .allowsHitTesting(false)
-          // Transient floating copy of the lifted tile. Hide duplicate from assistive technologies
+          // Floating copy of the lifted tile.
           .accessibilityHidden(true)
           .frame(width: draggingStartRect.width, height: draggingStartRect.height)
           .animation(.snappy(duration: 0.3, extraBounce: 0)) { content in
             content
               .scaleEffect(isDragging ? config.previewScale : 1)
           }
-          // Cell rects and the finger are tracked in .global (reliable inside
-          // the iPad split-view detail pane, where a custom named space did
-          // not resolve). Localize to this overlay by subtracting the grid's
-          // own global origin.
+          // Positions are .global (a named space doesn't resolve in the iPad
+          // split-view detail pane), so subtract the grid's own origin.
           .offset(
             x: draggingStartRect.minX - gridOrigin.x,
             y: draggingStartRect.minY - gridOrigin.y
@@ -94,7 +72,6 @@ where
           .offset(draggingOffset)
       }
     }
-    // Block interaction with the grid while a tile is in flight.
     .onGeometryChange(for: CGPoint.self) {
       $0.frame(in: .global).origin
     } action: {
@@ -110,15 +87,10 @@ where
 
     LazyVGrid(columns: columns, spacing: config.spacing) {
       ForEach($items) { $item in
-        // Captured at render time, while the element binding's index is valid.
-        // The geometry action below can fire AFTER `items` shrinks (preset
-        // switch relayouts every cell); writing through the positional `$item`
-        // binding then traps out-of-bounds, so it writes by id lookup instead.
+        // The geometry action can fire after `items` shrinks, where the positional
+        // `$item` binding traps, so it writes by id.
         let itemID = item.id
         content(item)
-          // Hand each tile its reorder callbacks via the environment; the tile
-          // attaches the gesture to just its icon/tap-zone with `.reorderHandle()`
-          // so it never overlaps the inline volume slider.
           .environment(
             \.reorderHandlers,
             ReorderHandlers(
@@ -150,8 +122,7 @@ where
     }
   }
 
-  /// Called continuously while a tile is being dragged. `location` is in
-  /// `.global` space.
+  /// `location` is in `.global` space.
   private func handleReorderChange(_ location: CGPoint, item: Data.Element) {
     if draggingItem == nil {
       draggingItem = item
@@ -160,9 +131,6 @@ where
       isDragging = true
     }
 
-    // `location` and the cell rects are both in .global, so the preview offset
-    // is just the global delta since pickup; the overlay localizes it via
-    // `gridOrigin`.
     if let start = draggingStartLocation {
       draggingOffset = CGSize(
         width: location.x - start.x,
@@ -173,7 +141,6 @@ where
     onDraggingChange(location, draggingOffset, true)
   }
 
-  /// Called when the drag gesture ends: settle the lifted preview, then drop it.
   private func handleReorderEnd() {
     guard draggingItem != nil else { return }
     onDraggingChange(.zero, .zero, false)
@@ -212,7 +179,7 @@ where
       items.insert(item, at: destIndex)
     }
 
-    // Debounce so a single pass over a cell triggers one swap, not many.
+    // One swap per pass over a cell.
     DispatchQueue.main.async {
       swapLock = false
     }
@@ -230,10 +197,7 @@ struct SortableGridConfig {
 
 // MARK: - Scoped reorder handle
 
-/// Per-cell reorder callbacks, injected by `SortableGridView` into each cell's
-/// environment so a tile can attach the long-press→drag gesture to just its
-/// drag-region (the icon/tap-zone), leaving sibling controls like the inline
-/// volume slider fully interactive.
+/// Per-cell reorder callbacks that `SortableGridView` puts in each cell's environment.
 struct ReorderHandlers {
   var onStart: () -> Void = {}
   var onChanged: (CGPoint) -> Void = { _ in }
@@ -333,13 +297,8 @@ struct ReorderHandleModifier: ViewModifier {
 }
 
 extension View {
-  /// Attaches the reorder gesture (long-press preroll → drag) to *this* region
-  /// only, pulling the per-cell callbacks from the environment that
-  /// `SortableGridView` set. Put it on a tile's icon/tap-zone so the gesture
-  /// never overlaps an inline volume slider — the slider's own drag stays
-  /// uncontested in the gesture arena. The finger is reported in `.global`
-  /// (matching the cells' `frame(in: .global)`). Pure SwiftUI, identical on
-  /// every platform.
+  /// Attaches the reorder gesture to this region only. Keep it off sliders,
+  /// whose own drag it would otherwise take over.
   func reorderHandle() -> some View {
     modifier(ReorderHandleModifier())
   }

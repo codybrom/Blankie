@@ -12,11 +12,9 @@ import os
   import CarPlay
   import SwiftUI
 
-  /// Sleep-timer picker pushed from the CarPlay Now Playing screen. Offers a few
-  /// fixed durations (and a cancel option while a timer is running) so a driver
-  /// can set "pause in N minutes" without leaving CarPlay.
+  /// Sleep timer picker pushed from the CarPlay Now Playing screen: fixed durations,
+  /// plus Cancel while a timer runs.
   enum TimerOptionsTemplate {
-    /// Durations offered on CarPlay, in minutes.
     static let durationsInMinutes = [5, 10, 15, 20, 30, 60]
 
     @MainActor
@@ -35,9 +33,8 @@ import os
         sections.append(activeTimerSection(timerManager))
       }
 
-      // Inactive: the header doubles as the one-line explainer of what picking a
-      // duration does. Active: the stop time already shows on Cancel above, so
-      // the header just labels the restart options.
+      // Inactive, the header explains what a duration does. Active, Cancel already
+      // shows the stop time, so the header just labels the restart options.
       let durationItems = durationsInMinutes.map { createDurationItem($0) }
       sections.append(
         CPListSection(
@@ -53,9 +50,8 @@ import os
     }
 
     private static func activeTimerSection(_ timerManager: TimerManager) -> CPListSection {
-      // Caption the cancel row with the fixed stop instant ("pauses at 10:36 AM"),
-      // not a live countdown: this list is a static snapshot and a frozen MM:SS
-      // reads as a stuck timer.
+      // Caption Cancel with the fixed stop time ("pauses at 10:36 AM"). The list is a
+      // static snapshot, so a countdown would look stuck.
       let cancel = CPListItem(
         text: String(localized: "Cancel Timer"), detailText: pauseAtText(timerManager))
       cancel.setImage(tinted("xmark.circle.fill"))

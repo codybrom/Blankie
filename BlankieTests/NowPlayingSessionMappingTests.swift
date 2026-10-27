@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 9/15/26.
 //
-//  The OS 27 session's pure mappings: playback state, sleep-timer progress,
-//  duration, and the content identity that has to stay stable across
-//  incremental updates so the system doesn't restart the card.
+//  Pure OS 27 session mappings. Content ids stay stable across incremental updates so the
+//  system doesn't restart the card.
 //
 
 import Foundation
@@ -140,9 +139,8 @@ import Testing
         == "default")
   }
 
-  /// A running sleep timer publishes under its own id, and the base id comes
-  /// back untouched when it ends. Adding time changes the id, since the system
-  /// reads a duration once per id and would keep the old end.
+  /// The system reads a duration once per id, so a running timer (and each added time) gets
+  /// its own id.
   @Test func timedContentIDIsSuffixedOnlyWhileATimerRuns() {
     #expect(
       NowPlayingSessionMapping.contentID("quickmix", timerDuration: 600) == "quickmix:timed:600")
@@ -174,8 +172,7 @@ import Testing
   }
 
   @Test func soloArtworkFoldsInTheAccent() {
-    // The soloed sound's card is drawn in the accent, so two accents have to be
-    // two ids — the system never re-requests an id it already cached.
+    // The solo card is drawn in the accent, and the system caches artwork by id.
     #expect(
       NowPlayingSessionMapping.artworkID(source: .solo(fileName: "rain"), accentColorName: "teal")
         == "solo:rain:teal")

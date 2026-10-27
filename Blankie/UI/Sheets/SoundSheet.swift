@@ -186,17 +186,12 @@ struct SoundSheet: View {
           isPreviewing = false
         }
       }
-      // Tint the whole sheet so accent-colored icons (selected sound icon,
-      // icon-picker highlight, Reset button) resolve from one stable environment
-      // and don't flip when a tinted control is touched. Standalone, sound
-      // editing is app-global so use the app accent; pushed inside Edit Preset
-      // (embedInNavigation false) inherit that stack's preset accent instead.
+      // Tint the whole sheet so accent-colored icons resolve from one stable
+      // environment. Standalone uses the app accent; pushed inside Edit Preset,
+      // it inherits that stack's preset accent.
       .tint(embedInNavigation ? (GlobalSettings.shared.customAccentColor ?? .accentColor) : nil)
       #if os(iOS) || os(visionOS)
-        // Page-sized on iPad so the full sound editor gets room instead of the
-        // default small centered form sheet (no-op on iPhone). When pushed
-        // inside another navigation stack this is harmless. Matches the preset
-        // editors.
+        // Page-sized on iPad like the preset editors (no-op on iPhone).
         .presentationSizing(.page)
       #endif
   }
@@ -228,8 +223,7 @@ struct SoundSheet: View {
       sound.loadSound()
     }
 
-    // Pre-check the active custom preset in Add to Presets (the visible
-    // version of the old implicit add-to-current-preset behavior).
+    // Pre-check the active custom preset in Add to Presets.
     if mode.isAdd,
       let currentPreset = PresetManager.shared.currentPreset, !currentPreset.isDefault,
       AudioManager.shared.soloModeSound == nil, !AudioManager.shared.isQuickMix
@@ -239,7 +233,7 @@ struct SoundSheet: View {
   }
 
   private func handleOnDisappear() {
-    // Mark that we're disappearing to prevent re-entrance
+    // Guards against re-entrance.
     guard !isDisappearing else {
       Logger.ui.debug("SoundSheet: handleOnDisappear called but already disappearing")
       return

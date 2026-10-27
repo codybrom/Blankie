@@ -8,11 +8,9 @@
 import SwiftUI
 
 extension SoundSheetForm {
-  /// Source file name the AI cleanup derives from: the picked file on import;
-  /// in edit mode the custom sound's ORIGINAL imported file name — the stored
-  /// `fileName` is an internal sanitized name with no semantic content, which
-  /// left the model guessing. No original on record → no sparkles (built-ins
-  /// already have real names).
+  /// Source file name for AI cleanup: the picked file on import, or the custom
+  /// sound's original imported name when editing (the stored `fileName` is a
+  /// sanitized internal name). Nil hides the sparkles; built-ins have real names.
   private var aiSourceFileName: String? {
     switch mode {
     case .add:
@@ -52,8 +50,7 @@ extension SoundSheetForm {
   }
 
   /// Sparkles next to the name field: cleans the raw file name into a display
-  /// name. Name only — the icon row has its own sparkles; only the initial
-  /// auto-suggest on import fills both at once.
+  /// name. Only the initial auto-suggest on import fills the icon too.
   @ViewBuilder
   var aiDetailsButton: some View {
     if let fileName = aiSourceFileName, AIPresetNameGenerator.isAvailable {
@@ -118,13 +115,11 @@ extension SoundSheetForm {
   @ViewBuilder
   var basicInformationSection: some View {
     Section {
-      // Name
       nameRow
 
-      // Icon
       iconRow
     } header: {
-      // Edits here are per-sound, not per-preset — make the blast radius clear.
+      // Edits here apply to the sound in every preset, so say so.
       if case .edit = mode {
         Text("Changes affect this sound across all modes")
           .textCase(nil)
@@ -140,9 +135,8 @@ extension SoundSheetForm {
       // on macOS.
       LabeledContent {
         HStack(spacing: 6) {
-          // Use `prompt:` (placeholder) — the label-closure initializer renders
-          // its text as a visible field label, which collides with the
-          // LabeledContent "Name" label.
+          // Use `prompt:` (placeholder). The label-closure initializer shows its
+          // text as a visible label that collides with LabeledContent's "Name".
           TextField(
             "Sound Name",
             text: $soundName,
@@ -209,8 +203,7 @@ extension SoundSheetForm {
   }
 
   /// Sparkles on the icon row: re-rolls just the icon for the current name
-  /// (constraint-decoded against the picker catalog). Disabled — not hidden —
-  /// while the name is empty (there's nothing to depict yet).
+  /// (constraint-decoded against the picker catalog). Disabled while the name is empty.
   @ViewBuilder
   var aiIconButton: some View {
     if AIPresetNameGenerator.isAvailable {
@@ -307,7 +300,6 @@ extension SoundSheetForm {
             }
           }
 
-          // Delete button for custom sounds
           if case .edit(let sound) = mode, sound.isCustom {
             Button(action: { showingDeleteConfirmation = true }) {
               HStack {

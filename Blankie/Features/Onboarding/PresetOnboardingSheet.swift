@@ -43,7 +43,6 @@ struct PresetOnboardingSheet: View {
   var body: some View {
     NavigationStack {
       ZStack {
-        // Background gradient
         LinearGradient(
           colors: [
             (globalSettings.customAccentColor ?? .accentColor).opacity(0.1),
@@ -55,10 +54,8 @@ struct PresetOnboardingSheet: View {
         .ignoresSafeArea()
 
         VStack(spacing: 0) {
-          // Progress indicator
           progressIndicator
 
-          // Content
           #if os(macOS)
             // macOS TabView renders visible tab chrome, so show the current step directly
             stepView(for: steps[currentStep], at: currentStep)
@@ -75,7 +72,6 @@ struct PresetOnboardingSheet: View {
             .animation(.easeInOut, value: currentStep)
           #endif
 
-          // Navigation buttons
           navigationButtons
         }
       }
@@ -98,13 +94,12 @@ struct PresetOnboardingSheet: View {
         aiAvailable = AIPresetNameGenerator.isAvailable
       }
     }
-    // Only Skip (or finishing) dismisses — no swipe-down or click-outside.
+    // Only Skip (or finishing) dismisses: no swipe-down or click-outside.
     .interactiveDismissDisabled()
     #if os(macOS)
       .frame(width: 500, height: 640)
     #else
-      // Page-sized on iPad so the paged flow fills the canvas instead of
-      // squeezing into a small centered form sheet (no-op on iPhone).
+      // Page-sized on iPad so the paged flow fills the canvas (no-op on iPhone).
       .presentationSizing(.page)
     #endif
   }
@@ -117,7 +112,6 @@ struct PresetOnboardingSheet: View {
       Spacer()
 
       VStack(alignment: .leading, spacing: 24) {
-        // Icon
         step.imageView
           .font(.system(size: 80))
           .symbolRenderingMode(.palette)
@@ -138,12 +132,10 @@ struct PresetOnboardingSheet: View {
           .padding(.bottom, 8)
           .accessibilityHidden(true)
 
-        // Title
         Text(step.title)
           .font(titleFont)
           .multilineTextAlignment(.leading)
 
-        // Description
         Text(
           step == .complete && !presetName.isEmpty
             ? "'\(presetName)' is ready! Tap 'Create Preset' to save and start listening."
@@ -154,7 +146,6 @@ struct PresetOnboardingSheet: View {
         .multilineTextAlignment(.leading)
       }
 
-      // Interactive content based on step
       Group {
         switch step {
         case .welcome:
@@ -236,7 +227,6 @@ struct PresetOnboardingSheet: View {
       }
     } label: {
       HStack(spacing: 12) {
-        // Selection Indicator
         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
           .font(.system(size: 22))
           .foregroundStyle(
@@ -245,13 +235,11 @@ struct PresetOnboardingSheet: View {
           )
           .accessibilityHidden(true)
 
-        // Sound icon
         Image(systemName: sound.systemIconName)
-          .font(.system(size: 20))  // Slightly smaller
+          .font(.system(size: 20))
           .foregroundStyle(isSelected ? .primary : .secondary)
           .accessibilityHidden(true)
 
-        // Sound info
         VStack(alignment: .leading, spacing: 4) {
           Text(sound.localizedTitle)
             .font(.body)
@@ -260,12 +248,11 @@ struct PresetOnboardingSheet: View {
 
         Spacer()
 
-        // Preview button (De-emphasized)
         Button {
           togglePreview(for: sound)
         } label: {
           Image(systemName: previewingSound == sound.fileName ? "stop.fill" : "play.fill")
-            .font(.system(size: 14))  // Smaller
+            .font(.system(size: 14))
             .foregroundStyle(previewingSound == sound.fileName ? .primary : .secondary)
             .padding(8)
             .background(Color.secondary.opacity(0.1))
@@ -305,7 +292,6 @@ struct PresetOnboardingSheet: View {
         .multilineTextAlignment(.center)
         .padding(.horizontal, 40)
 
-      // AI name generation button
       if aiAvailable {
         Button {
           Task {
@@ -327,7 +313,6 @@ struct PresetOnboardingSheet: View {
         .disabled(isGeneratingName)
       }
 
-      // Preview selected sounds
       if !selectedSounds.isEmpty {
         VStack(spacing: 8) {
           Text("Your preset will include")
@@ -426,7 +411,6 @@ struct PresetOnboardingSheet: View {
 
       Spacer()
 
-      // Next/Create button
       if currentStep < steps.count - 1 {
         Button {
           withAnimation {
@@ -477,14 +461,12 @@ struct PresetOnboardingSheet: View {
   }
 
   private func togglePreview(for sound: Sound) {
-    // Use preview mode (not solo mode): it plays the sound without touching
-    // soloModeSound, so the live mixer background behind the sheet stays static,
-    // and it persists no solo token.
+    // Preview mode plays the sound without touching soloModeSound, so the mixer
+    // behind the sheet stays static and no solo token persists.
     if previewingSound == sound.fileName {
       audioManager.exitPreviewMode()
       previewingSound = nil
     } else {
-      // Stop any currently previewing sound
       if previewingSound != nil {
         audioManager.exitPreviewMode()
       }
@@ -536,7 +518,6 @@ struct PresetOnboardingSheet: View {
   private func createPreset() {
     Task {
       do {
-        // Build the preset
         let currentVersion =
           Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let orderedSounds = audioManager.sounds.sorted { $0.title < $1.title }
@@ -568,24 +549,20 @@ struct PresetOnboardingSheet: View {
           order: customPresetsCount
         )
 
-        // Save the preset
         var currentPresets = PresetManager.shared.presets
         currentPresets.append(newPreset)
         PresetManager.shared.setPresets(currentPresets)
         PresetManager.shared.updateCustomPresetStatus()
         PresetManager.shared.savePresets()
 
-        // Apply the preset
         try PresetManager.shared.applyPreset(newPreset)
 
-        // Mark onboarding as complete
         onboardingManager.completeOnboarding()
 
         // Land the user on their new preset (the roots navigate and reset
         // this: iPhone pushes the mixer, macOS closes the Settings pane).
         AppState.shared.onboardingCreatedPreset = true
 
-        // Dismiss
         dismiss()
       } catch {
         Logger.ui.error(

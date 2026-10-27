@@ -15,9 +15,7 @@ import SwiftUI
     // MARK: - Navigation Elements
 
     var navigationTitle: String {
-      // Solo renders the full inline now-playing player, which shows the sound
-      // name under the artwork — leave the nav heading empty so it isn't shown
-      // twice.
+      // Solo's inline player already shows the sound name under the artwork.
       if audioManager.soloModeSound != nil {
         return ""
       }
@@ -35,10 +33,8 @@ import SwiftUI
 
     // MARK: - Preset Page Header (regular width)
 
-    /// The regular layout names the preset above its sounds; Solo and Quick
-    /// Mix have their own surfaces.
-    /// Skipped when height is compact (a large iPhone in landscape), where the
-    /// tiles need the room and the nav title names the preset instead.
+    /// Preset name above the sounds in the regular layout. Skipped in compact
+    /// height (large iPhone in landscape), where the nav title names the preset.
     var showsPresetPageHeader: Bool {
       verticalSizeClass != .compact
         && !presetManager.isLoading && audioManager.soloModeSound == nil
@@ -92,10 +88,8 @@ import SwiftUI
 
     // MARK: - Top Bar Trailing Items
 
-    /// The Edit affordance for whatever is on screen — the Quick Mix editor, the
-    /// current preset, or the solo sound's editor — plus Spatial Mix when it's
-    /// on. A real item group (titled labels, no custom view) so iPhone Duo can
-    /// move it into the side bar; Edit is the last to overflow.
+    /// Edit (plus Spatial Mix when enabled). A plain item group with titled
+    /// labels so iPhone Duo can move it into the side bar; Edit overflows last.
     @ToolbarContentBuilder
     var editToolbarItems: some ToolbarContent {
       #if os(iOS)
@@ -113,8 +107,6 @@ import SwiftUI
     private var editToolbarGroup: some ToolbarContent {
       let target = editTarget
       ToolbarItemGroup(placement: .topBarTrailing) {
-        // Spatial mixer entry — preset mode only, and only when the user has
-        // opted into the experimental feature in Settings
         if globalSettings.enableSpatialAudio,
           audioManager.soloModeSound == nil, !audioManager.isQuickMix,
           presetManager.currentPreset != nil
@@ -122,9 +114,7 @@ import SwiftUI
           Button {
             showingSpatialMixer = true
           } label: {
-            // Not person.spatialaudio.*: those are restricted to referring to
-            // Apple's Spatial Audio feature, and our spatial mix is an in-app
-            // binaural render, not the system feature.
+            // person.spatialaudio.* symbols are restricted to Apple's Spatial Audio feature.
             Label("Spatial Mix", systemImage: "speaker.wave.1.arrowtriangles.up.right.down.left")
           }
           .tint(.primary)
@@ -137,8 +127,7 @@ import SwiftUI
             LocalizedStringKey(target?.label ?? "Edit Preset"),
             systemImage: target?.icon ?? "slider.vertical.3")
         }
-        // Toolbar buttons draw their symbol from the tint, so the accent has to
-        // be overridden here rather than via foregroundStyle on the label.
+        // Toolbar buttons draw their symbol from the tint.
         .tint(.primary)
         .disabled(target == nil)
         // An empty preset can only get sounds from its editor.
@@ -148,12 +137,8 @@ import SwiftUI
       }
     }
 
-    /// What the Edit button targets: the solo sound's editor, the Quick Mix
-    /// editor, or the current preset. The default preset has no editor —
-    /// there, the slot becomes a New Preset affordance (confirm, then the
-    /// creator seeded with the playing sounds). `nil` when there's nothing to
-    /// edit (the button renders disabled rather than vanishing, so the slot
-    /// never collapses).
+    /// The default preset has no editor, so its slot becomes New Preset (seeded
+    /// with the playing sounds). `nil` renders the button disabled.
     var editTarget: (icon: String, label: String, action: () -> Void)? {
       if let soloSound = audioManager.soloModeSound {
         return ("slider.vertical.3", "Edit Sound", { soundToEdit = soloSound })
@@ -161,7 +146,6 @@ import SwiftUI
         return ("slider.vertical.3", "Edit Quick Mix", { showingQuickMixEditor = true })
       } else if let currentPreset = presetManager.currentPreset {
         if currentPreset.isDefault {
-          // Nothing playing means nothing to seed the new preset with.
           guard audioManager.hasSelectedSounds else { return nil }
           return (
             "rectangle.stack.badge.plus", "New Preset", { showingNewPresetConfirmation = true }

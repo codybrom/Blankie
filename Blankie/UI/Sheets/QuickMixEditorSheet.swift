@@ -47,7 +47,6 @@ import SwiftUI
             }
           }
 
-          // Order section — drag to reorder
           Section {
             if selectedSounds.isEmpty {
               Text("No sounds selected")
@@ -98,9 +97,8 @@ import SwiftUI
         }
       }
       .onAppear {
-        // Drop entries that can't stand alone (preset-only), so the order list,
-        // the count, and what Done saves match what's selectable. Names that
-        // don't resolve yet are kept aside rather than dropped.
+        // Drop preset-only entries so the order list, count and saved set match
+        // what's selectable. Names that don't resolve yet are kept aside.
         let stored = globalSettings.quickMixSoundFileNames
         selectedSounds = stored.filter { fileName in
           audioManager.sounds.contains { $0.fileName == fileName && !$0.isPresetUseOnly }

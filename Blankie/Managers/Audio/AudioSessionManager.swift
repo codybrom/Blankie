@@ -11,7 +11,6 @@ import os
   import AVFoundation
   import SwiftUI
 
-  /// Manages iOS/visionOS audio session configuration
   final class AudioSessionManager {
     static let shared = AudioSessionManager()
 
@@ -67,7 +66,6 @@ import os
     }
 
     func deactivate() {
-      // Deactivate audio session when stopping to allow other apps to play
       do {
         try setActive(false, .notifyOthersOnDeactivation)
         Logger.audio.debug("AudioSessionManager: Audio session deactivated")
@@ -78,13 +76,11 @@ import os
     }
 
     func reactivateForForeground(mixWithOthers: Bool, isCarPlayConnected: Bool, isPlaying: Bool) {
-      // Only configure and activate the audio session if we're actually playing
       guard isPlaying else {
         Logger.audio.debug("AudioSessionManager: Skipping audio session setup - not playing")
         return
       }
 
-      // Same rules as starting playback, including exclusive audio under CarPlay.
       setupForPlayback(mixWithOthers: mixWithOthers, isCarPlayConnected: isCarPlayConnected)
     }
   }

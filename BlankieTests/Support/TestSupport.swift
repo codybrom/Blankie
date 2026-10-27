@@ -22,6 +22,6 @@ enum TestSupport {
   }
 }
 
-/// `|a - b| <= tol` — float-tolerant equality for use inside `#expect`.
+/// Float-tolerant equality (`|a - b| <= tol`) for `#expect`.
 func isClose(_ a: Double, _ b: Double, tol: Double = 1e-6) -> Bool { abs(a - b) <= tol }
 func isClose(_ a: Float, _ b: Float, tol: Float = 1e-4) -> Bool { abs(a - b) <= tol }

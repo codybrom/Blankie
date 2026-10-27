@@ -4,11 +4,8 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Moving the SwiftData store into the app group copies its main, -wal, and
-//  -shm files as a set. The next launch treats an existing main file as a
-//  finished migration, so a copy that fails partway must leave no main file
-//  behind, and that launch must not open a store at the destination either.
-//  Uses temp directories only, never the real store.
+//  Moving the SwiftData store into the app group copies its main, -wal and -shm files as a set.
+//  A failed copy leaves no main file and keeps that launch in memory. Uses temp directories only.
 //
 
 import Foundation
@@ -28,7 +25,6 @@ import Testing
     ((try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []).sorted()
   }
 
-  /// A full copy moves every file into place and leaves no staged files.
   @Test func copiesTheWholeSet() throws {
     let source = TestSupport.makeTempDir()
     let destination = TestSupport.makeTempDir()
@@ -47,9 +43,8 @@ import Testing
     #expect(try Data(contentsOf: groupURL) == Data("store".utf8))
   }
 
-  /// A -wal that can't be read fails the copy after the main file was staged.
-  /// No main file may appear, since the next launch would accept it as a
-  /// complete store.
+  /// An unreadable -wal fails the copy after the main file is staged. The next launch would
+  /// accept any main file as a complete store.
   @Test func failedCopyLeavesNoMainFile() throws {
     let source = TestSupport.makeTempDir()
     let destination = TestSupport.makeTempDir()
@@ -90,9 +85,7 @@ import Testing
       try Data(contentsOf: URL(fileURLWithPath: groupURL.path + "-wal")) == Data("store-wal".utf8))
   }
 
-  /// After a failed copy the launch runs on an in-memory store. A new store at
-  /// the app-group location would read as a finished migration next launch and
-  /// strand the legacy rows for good.
+  /// A new store at the app-group location would read as a finished migration next launch.
   @Test func pendingCopyKeepsTheStoreInMemory() {
     let originalState = AppSetup.storeState
     defer {

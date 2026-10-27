@@ -15,23 +15,18 @@ import os
 #endif
 
 extension NowPlayingManager {
-  /// Load static artwork synchronously to avoid double-publishing that restarts animated artwork
+  /// Loads static artwork synchronously so the caller publishes once (a second
+  /// publish restarts animated artwork).
   func loadStaticArtworkSync(from preset: Preset?, fallbackArtworkId: UUID?) async {
-    // Priority order:
-    // 1. Static artwork from artworkId (SwiftData) - TOP PRIORITY
-    // 2. Bundled animated artwork square preview (from app bundle)
-    // 3. Cached animated artwork square preview (from Documents)
-    // 4. Other cached paths
-
-    // PRIORITY 1: Static artwork from artworkId
+    // Priority: stored artwork (artworkId), bundled square preview, cached square
+    // preview, then other cached paths.
     let targetArtworkId = preset?.artworkId ?? fallbackArtworkId
     if let artworkId = targetArtworkId {
-      // If this artwork is already showing (a forced refresh of the same preset),
-      // keep it rather than falling through to a lower-priority image.
+      // Already showing (a forced refresh of the same preset): keep it.
       guard artworkId != currentArtworkId else { return }
       currentStaticArtworkPath = nil
-      // Read synchronously, as the OS 27 backend does. Suspending here let a
-      // second update interleave and publish one preset's title with another's still.
+      // Read synchronously (as the OS 27 backend does) so a second update can't
+      // interleave and pair one preset's title with another's artwork.
       let data = PresetArtworkManager.shared.storedArtworkData(id: artworkId)
       // Record the id only once it loads, so a failed read is retried later.
       currentArtworkId = data == nil ? nil : artworkId
@@ -41,7 +36,7 @@ extension NowPlayingManager {
 
     #if os(iOS) && !WIDGET_EXTENSION
       if let preset {
-        // PRIORITY 2: For bundled animated artwork (ODR), load square preview from bundle
+        // Bundled animated artwork (ODR): square preview from the app bundle.
         if let bundledId = preset.animatedArtwork?.bundledIdentifier,
           let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
           let squarePreviewURL = Bundle.main.url(
@@ -58,7 +53,7 @@ extension NowPlayingManager {
           return
         }
 
-        // PRIORITY 3: Check for cached animated artwork square preview
+        // Cached animated artwork square preview.
         if let squarePreviewPath = preset.animatedArtwork?.squarePreviewPath,
           AnimatedArtworkFileStore.fileExists(at: squarePreviewPath),
           currentStaticArtworkPath != squarePreviewPath
@@ -72,7 +67,7 @@ extension NowPlayingManager {
           return
         }
 
-        // PRIORITY 4: Other cached paths (staticArtworkPath, previewPath)
+        // Other cached paths.
         let candidatePath =
           preset.staticArtworkPath
           ?? preset.animatedArtwork?.previewPath
@@ -89,24 +84,18 @@ extension NowPlayingManager {
       }
     #endif
 
-    // No artwork found — always apply the Blankie fallback so presets without
-    // artwork still show the NowPlaying.png icon on the lock screen / CarPlay.
+    // No artwork: show the Blankie fallback on the lock screen and CarPlay.
     currentArtworkId = nil
     currentStaticArtworkPath = nil
     updateArtwork(artworkData: nil)
   }
 
-  /// Legacy async version - only use when not publishing immediately after
+  /// Async variant for callers that don't publish right after. Writes only the
+  /// artwork key itself.
   func loadStaticArtwork(from preset: Preset?, fallbackArtworkId: UUID?) {
     staticArtworkTask?.cancel()
 
-    // Priority order (same as loadStaticArtworkSync):
-    // 1. Static artwork from artworkId (SwiftData) - TOP PRIORITY
-    // 2. Bundled animated artwork square preview (from app bundle)
-    // 3. Cached animated artwork square preview (from Documents)
-    // 4. Other cached paths
-
-    // PRIORITY 1: Static artwork from artworkId
+    // Same priority order as loadStaticArtworkSync.
     let targetArtworkId = preset?.artworkId ?? fallbackArtworkId
     if targetArtworkId != nil {
       let hadStaticArtworkPath = currentStaticArtworkPath != nil
@@ -129,7 +118,7 @@ extension NowPlayingManager {
 
     #if os(iOS) && !WIDGET_EXTENSION
       if let preset {
-        // PRIORITY 2: Bundled animated artwork (ODR) square preview from bundle
+        // Bundled animated artwork (ODR): square preview from the app bundle.
         if let bundledId = preset.animatedArtwork?.bundledIdentifier,
           let asset = BundledAnimatedLoop.allCases.first(where: { $0.id == bundledId }),
           let squarePreviewURL = Bundle.main.url(
@@ -147,7 +136,7 @@ extension NowPlayingManager {
             await MainActor.run {
               self.updateArtwork(artworkData: data)
 
-              // Update only the artwork key in MPNowPlayingInfoCenter to avoid restarting animated artwork
+              // Write only the artwork key so animated artwork doesn't restart.
               if let artwork = self.nowPlayingInfo[MPMediaItemPropertyArtwork] {
                 MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] =
                   artwork
@@ -157,7 +146,7 @@ extension NowPlayingManager {
           return
         }
 
-        // PRIORITY 3: Cached animated artwork square preview
+        // Cached animated artwork square preview.
         if let squarePreviewPath = preset.animatedArtwork?.squarePreviewPath,
           AnimatedArtworkFileStore.fileExists(at: squarePreviewPath)
         {
@@ -186,7 +175,7 @@ extension NowPlayingManager {
       }
     #endif
 
-    // PRIORITY 4: Other cached paths
+    // Other cached paths.
     #if os(iOS)
       if let preset {
         let candidatePath =
@@ -218,8 +207,7 @@ extension NowPlayingManager {
       }
     #endif
 
-    // No artwork found — always apply the Blankie fallback so presets without
-    // artwork still show the NowPlaying.png icon on the lock screen / CarPlay.
+    // No artwork: show the Blankie fallback on the lock screen and CarPlay.
     currentStaticArtworkPath = nil
     currentArtworkId = nil
     updateArtwork(artworkData: nil)
@@ -254,14 +242,12 @@ extension NowPlayingManager {
     return true
   }
 
-  /// Load artwork from SwiftData and update Now Playing info
+  /// Loads stored artwork off the main thread and applies it.
   func loadAndUpdateArtwork(artworkId: UUID, shouldPublish: Bool = true) async {
     Logger.nowPlaying.debug(
       "NowPlayingManager: Loading artwork from SwiftData with ID: \(artworkId)")
 
-    // Load artwork on background thread to prevent UI blocking
     let artworkData: Data? = await Task.detached {
-      // Get the data directly from PresetArtworkManager instead of converting image
       let imageData = await PresetArtworkManager.shared.loadArtworkData(id: artworkId)
       if let imageData = imageData {
         Logger.nowPlaying.debug(
@@ -270,18 +256,14 @@ extension NowPlayingManager {
       return imageData
     }.value
 
-    // Update artwork in memory on main thread
     await MainActor.run {
       if artworkData == nil {
         Logger.nowPlaying.debug("NowPlayingManager: No artwork found in SwiftData")
       }
       updateArtwork(artworkData: artworkData)
 
-      // Only publish if requested (when called from old async flow)
-      // When called from performNowPlayingUpdate, we skip publishing to avoid restarting animated artwork
       if shouldPublish {
-        // Update only the artwork key in MPNowPlayingInfoCenter to avoid restarting animated artwork
-        // This preserves the animated artwork objects while updating the static artwork
+        // Write only the artwork key so animated artwork doesn't restart.
         if let artwork = nowPlayingInfo[MPMediaItemPropertyArtwork] {
           MPNowPlayingInfoCenter.default().nowPlayingInfo?[MPMediaItemPropertyArtwork] = artwork
         }

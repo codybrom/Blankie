@@ -16,7 +16,7 @@ const guideSchema = z.object({
 });
 
 // The FAQ is its own top-level page (src/pages/faq.astro), parsed from the
-// repo-root FAQ.md. It is intentionally NOT part of this collection.
+// repo-root FAQ.md, so it's not part of this collection.
 const guides = defineCollection({
   loader: glob({ pattern: "**/*.md", base: "./src/content/guides" }),
   schema: guideSchema,

@@ -12,10 +12,9 @@ struct TimerView: View {
   private let presetManager = PresetManager.shared
   private let globalSettings = GlobalSettings.shared
   @Environment(\.dismiss) private var dismiss
-  /// Runs instead of `dismiss()` after start/cancel, so a host like the menu bar
+  /// Replaces `dismiss()` after start or cancel, so a host like the menu bar
   /// popover can navigate without closing its whole window.
   var onFinish: (() -> Void)?
-  // Scales the large countdown with Dynamic Type while keeping its default size.
   @ScaledMetric(relativeTo: .largeTitle) private var countdownFontSize: CGFloat = 44
 
   /// Theming preset's color wins, else the app accent (solo / Quick Mix).
@@ -23,7 +22,6 @@ struct TimerView: View {
     presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }
 
-  /// Host's `onFinish` if provided, else `dismiss()`.
   private func finish() {
     if let onFinish { onFinish() } else { dismiss() }
   }
@@ -38,7 +36,7 @@ struct TimerView: View {
     }
     .padding(20)
     .frame(idealWidth: 300, maxWidth: 320, minHeight: 120)
-    // No opaque background — sit on the host's own glass material.
+    // No opaque background: the view sits on the host's glass material.
   }
 
   private var activeTimerView: some View {

@@ -15,9 +15,8 @@ import os
 @Observable
 class AudioManager {
   static let shared = AudioManager()
-  /// True only during `shared`'s synchronous init. A plain static (not an
-  /// instance flag) so the music-exclusivity didSet can read it without
-  /// re-entering the still-initializing `shared` lazy static and trapping.
+  /// True only during `shared`'s synchronous init. Static so the music-exclusivity
+  /// didSet can read it without re-entering `shared` mid-init, which traps.
   nonisolated(unsafe) static var isBootstrapping = true
   @ObservationIgnored var onReset: (() -> Void)?
 
@@ -45,9 +44,8 @@ class AudioManager {
   @ObservationIgnored private var carAudioRouteActive = false
   private(set) var isCarPlayConnected: Bool = false
 
-  /// Called by `CarPlayAudioBridge` when CarPlay connects or disconnects.
-  /// Updates `isCarPlayConnected` and, if audio is currently playing, reconfigures
-  /// the audio session so it picks up the new routing policy.
+  /// Called by `CarPlayAudioBridge` when CarPlay connects or disconnects. A
+  /// playing audio session is reconfigured for the new routing policy.
   @MainActor
   func setCarPlayConnected(_ connected: Bool) {
     carPlaySceneConnected = connected
@@ -85,13 +83,11 @@ class AudioManager {
   @ObservationIgnored var quickMixOriginalStates: [QuickMixState] = []
   @ObservationIgnored var preQuickMixPreset: Preset?
 
-  /// Signature of the last selected-sound set published to Now Playing. Lets the
-  /// sound-change observer republish the system/CarPlay "Now Playing" sound list
-  /// only when the selection actually changes (not on every volume/state tick).
+  /// Selected-sound set last published to Now Playing, so the sound list
+  /// republishes only when the selection changes.
   @ObservationIgnored private var lastPublishedSelectionSignature: String?
 
-  /// Coalesces rapid sound selection/volume changes into one derived-state
-  /// refresh (replaces the old per-Sound Combine observer); see `soundDidChange`.
+  /// Coalesces rapid selection and volume changes; see `soundDidChange`.
   @ObservationIgnored private var soundChangeCoalesceTask: Task<Void, Never>?
 
   @ObservationIgnored var modelContext: ModelContext?
@@ -100,21 +96,13 @@ class AudioManager {
   /// Set once the open-time autoplay fired or playback otherwise started, so it
   /// can't re-fire on a later empty-to-selected change.
   @ObservationIgnored var launchAutoPlayHandled = false
-  /// True while a preset's sound states are being applied. Suppresses the
-  /// music-exclusivity enforcement (`deselectOtherMusicSounds`), which would
-  /// otherwise fight the preset restoring its own selection set.
+  /// True while a preset's sound states are applied. Suppresses
+  /// `deselectOtherMusicSounds` so it can't undo the preset's own selection.
   @ObservationIgnored var isApplyingPresetStates = false
-  /// The in-flight (or finished) launch bootstrap. Every caller of
-  /// `loadCustomSoundsWhenReady()` (scene setup, App Intents, CarPlay) joins this
-  /// one task instead of each running the load, so custom sounds can't be
-  /// double-loaded — a second full load re-instantiates the custom `Sound`
-  /// objects the active preset/UI still holds, orphaning the originals (which
-  /// then can't be stopped). Not `private` only because the bootstrap body lives
-  /// in a separate extension file.
+  /// The launch bootstrap shared by every `loadCustomSoundsWhenReady()` caller.
   @ObservationIgnored @MainActor var launchBootstrapTask: Task<Void, Never>?
-  /// Bumped each time a bootstrap task is installed. `Task` is a value type with
-  /// no identity, so waiters compare this generation (not the task itself) to
-  /// decide whether a retry was already started by another caller.
+  /// Bumped per installed bootstrap task. `Task` has no identity, so waiters
+  /// compare this to tell whether another caller already started a retry.
   @ObservationIgnored @MainActor var launchBootstrapGeneration = 0
   /// Set once, inside the bootstrap task, after custom sounds have loaded.
   @ObservationIgnored @MainActor var hasLoadedCustomSounds = false
@@ -124,16 +112,14 @@ class AudioManager {
   @ObservationIgnored var customSoundObserver: AnyCancellable?
   #if os(iOS) || os(visionOS)
     @ObservationIgnored var audioSessionObserversSetup = false
-    /// Whether playback was active when an audio-session interruption began, so
-    /// the `.shouldResume` hint only resumes audio the user had actually going —
-    /// a call arriving while paused must not start the app playing on its own.
+    /// Whether audio was playing when an interruption began, so `.shouldResume`
+    /// never starts playback the user had paused.
     @ObservationIgnored var wasPlayingWhenInterrupted = false
   #endif
 
   private init() {
     Logger.audio.debug("AudioManager: Initializing - START")
 
-    // Only load sounds and state immediately - delay media controls and observers
     Logger.audio.debug("AudioManager: About to loadSounds()")
     loadSounds()
     Logger.audio.debug("AudioManager: About to loadSavedState()")
@@ -142,9 +128,8 @@ class AudioManager {
     // Synchronous init done; the music-exclusivity didSet may reach `shared` now.
     Self.isBootstrapping = false
 
-    // Delay media controls and notification setup to avoid triggering audio session
+    // Media controls and observers wait so init doesn't trigger the audio session.
     Task { @MainActor in
-      // Pick the Now Playing backend for this OS, on the MainActor.
       #if canImport(NowPlaying) && !WIDGET_EXTENSION
         if #available(iOS 27, macOS 27, visionOS 27, *) {
           self.nowPlayingManager = MediaSessionNowPlaying()
@@ -158,7 +143,7 @@ class AudioManager {
         Logger.nowPlaying.debug("AudioManager: Now Playing backend is MediaPlayer")
       #endif
 
-      // Allow app to fully launch before setting up delayed components
+      // Let launch finish first.
       await Task.yield()
 
       Logger.audio.debug("AudioManager: About to setupMediaControls() (delayed)")
@@ -171,18 +156,14 @@ class AudioManager {
       Logger.audio.debug("AudioManager: About to refreshSoundDerivedState() (after initialization)")
       self.refreshSoundDerivedState()
 
-      // Analyze custom sounds that might be missing profiles
       Task {
         await self.analyzeCustomSoundsIfNeeded()
       }
 
-      // Restore solo mode if it was saved (respecting auto-play). A custom solo
-      // sound may not be loaded yet here; restoreSoloModeIfNeeded() reports true
-      // so we don't fall back to the preset prematurely, and
-      // loadCustomSoundsWhenReady() finishes (or abandons) the restore once
-      // custom sounds load.
+      // A custom solo sound may not be loaded yet; loadCustomSoundsWhenReady()
+      // finishes or abandons that restore.
       if self.restoreSoloModeIfNeeded() {
-        // Solo restored (or pending a still-loading custom sound).
+        // Solo restored, or pending a custom sound.
       } else {
         self.applyPresetLaunchState()
       }
@@ -191,9 +172,8 @@ class AudioManager {
 
   deinit {
     NotificationCenter.default.removeObserver(self)
-    // AudioManager is a process-lifetime singleton, so deinit never actually
-    // runs; assumeIsolated keeps the defensive cleanup compiling without an
-    // isolated deinit (which doesn't survive cross-module testability builds).
+    // A process-lifetime singleton never deinits. assumeIsolated avoids an isolated
+    // deinit, which fails cross-module testability builds.
     MainActor.assumeIsolated { cleanup() }
     Logger.audio.debug("AudioManager: Deinit called, cleanup performed")
   }
@@ -202,19 +182,14 @@ class AudioManager {
 // MARK: - Initialization Helpers
 
 extension AudioManager {
-  /// Seeds the derived selection state after sounds (re)load. Sounds are
-  /// `@Observable` and call `soundDidChange()` from their own `isSelected` /
-  /// `volume` didSet, so no per-Sound observers are needed — newly loaded
-  /// sounds participate automatically.
+  /// Seeds the derived selection state after sounds (re)load. Later changes
+  /// arrive through each sound's `soundDidChange()` call.
   func refreshSoundDerivedState() {
     updateHasSelectedSounds()
   }
 
-  /// Called by a `Sound` whenever its selection or volume changes. Coalesces
-  /// rapid changes (e.g. applying a preset toggles many sounds) into a single
-  /// refresh of the derived selection flag, preset divergence, and Now Playing.
-  /// Replaces the old per-Sound `objectWillChange` debounce. Hops to the main
-  /// actor first so the coalesce task is only ever touched there.
+  /// Called by a `Sound` when its selection or volume changes. Coalesces bursts
+  /// (a preset apply toggles many sounds) into one refresh on the main actor.
   func soundDidChange() {
     Task { @MainActor in
       self.scheduleSoundChangeRefresh()
@@ -234,9 +209,8 @@ extension AudioManager {
     }
   }
 
-  /// Republishes Now Playing when the selected-sound set changes so the artist
-  /// line stays current as sounds toggle — not only on global play/pause. Quick
-  /// Mix and solo republish on their own paths, so they're skipped here.
+  /// Republishes Now Playing when the selected set changes so the artist line
+  /// stays current. Quick Mix and solo publish on their own paths.
   @MainActor
   private func refreshNowPlayingIfSelectionChanged() {
     guard !isInitializing, !isQuickMix, soloModeSound == nil else { return }
@@ -250,11 +224,8 @@ extension AudioManager {
   func updateHasSelectedSounds() {
     let newValue = sounds.contains { $0.isSelected }
 
-    // Nothing selected pauses playback, since silence should read as paused and
-    // never as a silent "playing" state. Check on every pass, not only on a
-    // change, because hasSelectedSounds can already be false when playback starts
-    // (e.g. a mode exit briefly restored a selection that the next preset cleared).
-    // A preview waits until it ends (the editor can deselect the sound it plays).
+    // Nothing selected pauses playback. Checked every pass, since hasSelectedSounds
+    // can already be false when playback starts; a preview defers it until it ends.
     if !newValue && isGloballyPlaying && previewModeSound == nil {
       Logger.audio.debug("AudioManager: No sounds selected - pausing playback")
       Task { @MainActor in
@@ -270,8 +241,6 @@ extension AudioManager {
         "AudioManager: hasSelectedSounds changed from \(self.hasSelectedSounds) to \(newValue)")
       hasSelectedSounds = newValue
 
-      // Auto-start playback when sounds are selected and nothing is currently playing
-      // Only auto-start if autoplay is enabled and we're not during initialization
       if newValue && !isGloballyPlaying && !sounds.isEmpty && GlobalSettings.shared.autoPlayOnLaunch
         && !isInitializing && !launchAutoPlayHandled
       {
@@ -290,8 +259,8 @@ extension AudioManager {
 
   #if os(iOS) || os(visionOS)
     func setupAudioSessionForPlayback() {
-      // Previews activate this session too; observe before activation on every
-      // playback path so even the first preview handles interruptions/routes.
+      // Observe before activating on every path (previews too), so even the
+      // first preview handles interruptions and route changes.
       setupAudioSessionObservers()
       setCarAudioRouteActive(
         SpatialSessionManager.isCarAudioRouteActive, reconfigureSession: false)
@@ -316,7 +285,7 @@ extension AudioManager {
       else {
         continue
       }
-      // Only update if values have actually changed to avoid unnecessary processing
+      // Assign only on change to skip the didSet work.
       let savedIsSelected = savedState["isSelected"] as? Bool ?? false
       let savedVolume = savedState["volume"] as? Float ?? 1.0
 
@@ -330,15 +299,13 @@ extension AudioManager {
   }
 
   func saveState() {
-    // Don't save state during Quick Mix mode - volume changes are temporary
+    // Quick Mix volumes are temporary.
     guard !isQuickMix else {
       Logger.audio.debug("AudioManager: Skipping state save during Quick Mix mode")
       return
     }
 
-    // While soloing, the solo sound's live values are forced (selected, volume
-    // 1.0); persist its saved pre-solo originals instead so a background/quit
-    // mid-solo doesn't corrupt the user's real mix on the next launch.
+    // Solo forces the solo sound to selected at 1.0, so save its pre-solo values.
     let soloID = soloModeSound?.id
     let state = sounds.map { sound -> [String: Any] in
       let isSelected =
@@ -365,19 +332,16 @@ extension AudioManager {
 extension AudioManager {
   // MARK: - Sound Management
 
-  /// Looks up a loaded sound by its stable `fileName` (not its `UUID`, which
-  /// is re-minted every launch) — the identity App Intents resolve `SoundEntity`
-  /// parameters against.
+  /// Looks up a sound by its stable `fileName` (its `UUID` changes every launch).
+  /// App Intents resolve `SoundEntity` this way.
   @MainActor
   func sound(fileName: String) -> Sound? {
     sounds.first { $0.fileName == fileName }
   }
 
-  /// Visible sounds for a preset context, ordered by the active sound order —
-  /// the single source for the mixer grid, the menu bar list, and iOS. A custom
-  /// (non-default) preset shows only its own sounds in its `soundOrder`; the
-  /// default preset (or none) shows everything but preset-use-only sounds, in
-  /// `defaultSoundOrder`. Unknown sounds sort last.
+  /// Visible sounds for a preset, in its sound order. A custom preset shows its
+  /// own sounds by `soundOrder`; the default preset (or none) shows all but
+  /// preset-use-only sounds by `defaultSoundOrder`. Unknown sounds sort last.
   @MainActor
   func orderedVisibleSounds(for preset: Preset?) -> [Sound] {
     let visible = sounds.filter { sound in
@@ -392,18 +356,15 @@ extension AudioManager {
     } else {
       order = defaultSoundOrder
     }
-    // Keep the first occurrence. An imported archive's order can repeat a name,
-    // and uniqueKeysWithValues would trap on it (on every launch once saved).
+    // An imported archive's order can repeat a name, so keep the first occurrence.
     let rank = Dictionary(
       order.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
     return visible.sorted { (rank[$0.fileName] ?? Int.max) < (rank[$1.fileName] ?? Int.max) }
   }
 
-  /// SF Symbol names for a preset's *selected* sounds, in the preset's order,
-  /// for composite fallback artwork — a montage of the sounds it plays. Resolved
-  /// from `soundStates` directly (ordered by `soundOrder` when present) so a
-  /// stale or partial `soundOrder` can't drop selected sounds. Deduped and
-  /// capped at `limit`; unknown file names are skipped.
+  /// SF Symbols for a preset's selected sounds, for composite fallback artwork.
+  /// Built from `soundStates` (sorted by `soundOrder`) so a stale `soundOrder`
+  /// can't drop a sound. Deduped and capped at `limit`.
   @MainActor
   func compositeSoundIcons(for preset: Preset, limit: Int = 4) -> [String] {
     let selected = preset.soundStates.filter(\.isSelected).map(\.fileName)
@@ -439,13 +400,11 @@ extension AudioManager {
     return result
   }
 
-  /// Move a sound to a new position
   func moveSound(from sourceIndex: Int, to destinationIndex: Int) {
     guard sourceIndex < sounds.count && destinationIndex <= sounds.count else {
       return
     }
 
-    // Move sound in the array
     let movedSound = sounds.remove(at: sourceIndex)
     sounds.insert(movedSound, at: min(destinationIndex, sounds.count))
 
@@ -454,12 +413,11 @@ extension AudioManager {
     )
   }
 
-  /// Apply volume settings to all playing sounds by triggering volume updates
+  /// Recomputes selected sounds' volumes after a volume setting changes.
   func applyVolumeSettings() {
     Logger.audio.debug("AudioManager: Updating volumes for volume settings change")
 
     for sound in sounds where sound.isSelected {
-      // Trigger volume recalculation which will include custom volume settings
       sound.updateVolume()
     }
   }

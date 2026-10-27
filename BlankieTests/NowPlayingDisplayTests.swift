@@ -4,13 +4,8 @@
 //
 //  Created by Cody Bromley on 9/15/26.
 //
-//  The backend-neutral display rules: which title and artist the lock screen
-//  shows, what the widget's second line is, and when the scrubber has an anchor.
-//  Characterization tests — they pin the rules exactly as the MediaPlayer
-//  backend shipped them, so a second backend can't quietly drift.
-//
-//  Serialized + main-actor: drives the AudioManager / PresetManager singletons
-//  and GlobalSettings.shared; every touched value is restored in deinit.
+//  Backend-neutral display rules: lock screen title and artist, the widget's second line
+//  and the scrubber anchor. Serialized: deinit restores every touched singleton value.
 //
 
 import Foundation
@@ -54,8 +49,7 @@ import Testing
     }
   }
 
-  /// Two engine-free sounds, both switched on, inside a preset that fixes their
-  /// display order — so the mix's title list is deterministic.
+  /// Two selected TestSounds in a preset that fixes their order, so the title list is stable.
   private func selectTwoSoundsInOrder() {
     let rain = TestSound(fileName: "test-rain")
     let waves = TestSound(fileName: "test-waves")
@@ -80,8 +74,7 @@ import Testing
     )
   }
 
-  /// The default preset has one name everywhere (Library, bar, mixer, Now
-  /// Playing): its display name, never "Blankie" or "Custom Mix".
+  /// The default preset uses its display name everywhere (Library, bar, mixer, Now Playing).
   @Test func defaultPresetActiveTitleIsItsDisplayName() {
     let builtIn = PresetFactory.makePreset(name: "Default", isDefault: true)
     #expect(builtIn.activeTitle == builtIn.displayName)
@@ -89,8 +82,7 @@ import Testing
     #expect(custom.activeTitle == "Rainy Night")
   }
 
-  /// Preset identity determines its display title; a user's name that happens
-  /// to match a legacy placeholder must still be shown verbatim.
+  /// A user's name that matches a legacy placeholder still shows verbatim.
   @Test func presetIdentityDeterminesTitle() {
     let builtIn = PresetFactory.makePreset(name: "Default", isDefault: true)
     #expect(
@@ -109,12 +101,10 @@ import Testing
         == String(localized: "Custom Mix"))
   }
 
-  /// A name the user actually chose is the title, verbatim.
   @Test func realPresetNameIsTheTitle() {
     #expect(NowPlayingDisplay.getDisplayInfo(presetName: "Rainy Night").title == "Rainy Night")
   }
 
-  /// No preset name at all still gets a title.
   @Test func missingPresetNameShowsCustomMix() {
     #expect(
       NowPlayingDisplay.getDisplayInfo(presetName: nil).title == String(localized: "Custom Mix"))
@@ -131,15 +121,12 @@ import Testing
     )
   }
 
-  /// Nothing to list means the artist line falls back to the app name rather
-  /// than going blank.
   @Test func noCreatorAndNoSoundsIsBlankie() {
     audioManager.sounds = []
     #expect(NowPlayingDisplay.getDisplayInfo(presetName: "Rainy Night").artist == "Blankie")
   }
 
-  /// Without a creator the artist line lists the switched-on sounds, in the
-  /// preset's own order.
+  /// Sounds list in the preset's own order.
   @Test func noCreatorListsSelectedSoundTitles() {
     selectTwoSoundsInOrder()
     #expect(
@@ -148,9 +135,8 @@ import Testing
 
   // MARK: - Solo and Quick Mix
 
-  /// Solo mode names the sound itself. A built-in sound's author belongs to the
-  /// credits screens, so the artist falls back to the app name — even when the
-  /// preset that's still "current" has a creator.
+  /// A built-in sound's author belongs on the credits screens, so the artist is the app name,
+  /// even when the current preset has a creator.
   @Test func soloSoundTitlesItselfWithBlankieArtist() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]
@@ -161,9 +147,7 @@ import Testing
     #expect(info.artist == "Blankie")
   }
 
-  /// A built-in sound that carries a caption publishes it as the second line,
-  /// so the lock screen reads "Rain / Soft, steady rainfall" instead of
-  /// "Rain / Blankie". The caption resolves by title through the credits data.
+  /// The caption resolves by title through the credits data.
   @Test func soloSoundPublishesItsCaptionAsArtist() {
     let rain = TestSound(fileName: "Rain")
     audioManager.sounds = [rain]
@@ -174,8 +158,6 @@ import Testing
     #expect(NowPlayingDisplay.getDisplayInfo(presetName: nil).artist == caption)
   }
 
-  /// Quick Mix has no preset of its own, so it names itself instead of falling
-  /// through to "Custom Mix".
   @Test func quickMixTitlesItself() {
     audioManager.isQuickMix = true
     #expect(
@@ -183,8 +165,7 @@ import Testing
         == String(localized: "Quick Mix"))
   }
 
-  /// Entering Quick Mix keeps the last preset loaded, but none of its creator
-  /// or membership metadata belongs to the new mix.
+  /// Quick Mix keeps the last preset loaded but ignores its creator and membership.
   @Test func quickMixIgnoresPreviousPresetMetadata() {
     selectTwoSoundsInOrder()
     let preset = PresetFactory.makePreset(
@@ -210,20 +191,17 @@ import Testing
 
   // MARK: - Widget subtitle
 
-  /// A creator is a real second line.
   @Test func widgetSubtitleIsTheCreator() {
     #expect(NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: "Ada") == "Ada")
   }
 
-  /// No creator and nothing selected means no second line: the widget must not
-  /// repeat the synthesized "Blankie" artist.
+  /// The widget doesn't repeat the synthesized "Blankie" artist.
   @Test func widgetSubtitleIsNilWithNoCreatorAndNoSelection() {
     audioManager.sounds = []
     #expect(NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: nil) == nil)
   }
 
-  /// A soloed built-in sound has no creator to show, so the widget drops the
-  /// line rather than echoing the artist's "Blankie".
+  /// A built-in solo has no creator to show.
   @Test func widgetSubtitleIsNilForBuiltInSolo() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]
@@ -233,15 +211,13 @@ import Testing
 
   // MARK: - Progress anchor
 
-  /// Nothing selected and no sleep timer leaves the scrubber indeterminate.
   @Test func progressAnchorIsNilWithoutSelectionOrTimer() {
     audioManager.sounds = []
     #expect(!TimerManager.shared.isTimerActive)
     #expect(NowPlayingDisplay.currentProgressAnchor() == nil)
   }
 
-  /// The position poll can't see a sub-second loop wrap, so the bar stays
-  /// indeterminate instead of running past the end.
+  /// The position poll can't see a sub-second loop wrap.
   @Test func progressAnchorIsNilForSubSecondLoops() {
     let short = TestSound(fileName: "test-rain")
     short.isSelected = true

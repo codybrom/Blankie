@@ -4,17 +4,9 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Pins custom-sound adds, deletes, conversions, and launch recovery against
-//  what the mixer and presets hold. Each rule below has a test.
-//  - an add or delete must not replace the `Sound` instances solo holds
-//  - pruning must keep a sound whose audio survived a lost row
-//  - recovery must re-check the store after its off-main scan
-//  - a conversion must not leave files behind when its sound is deleted or
-//    converted twice at once
-//
-//  Runs against an in-memory store (SingletonSandbox). Files go in the real
-//  custom-sounds directory, which is the only one this code reads. Each is
-//  registered and removed on restore.
+//  Custom-sound adds, deletes, conversions and launch recovery, checked against what the
+//  mixer and presets hold. Uses an in-memory store (SingletonSandbox); test files go in the
+//  real custom-sounds directory and are removed on restore.
 //
 
 import AVFoundation
@@ -62,10 +54,9 @@ import Testing
     return entries.filter { $0.hasPrefix("\(fileName)-aac-") }
   }
 
-  // MARK: - Adds and deletes keep live instances (C1)
+  // MARK: - Adds and deletes keep live instances
 
-  /// Adding a custom sound leaves the others' instances alone. A full rebuild
-  /// left solo holding a detached copy that nothing could stop.
+  /// Solo holds a `Sound` instance, so an add must not rebuild the others.
   @Test func addingASoundKeepsTheSoloedInstance() async throws {
     try #require(audioManager.modelContext != nil, "launch installed the custom-sound observers")
     let soloed = standIn(for: try insertRow(title: "Test A"))
@@ -82,7 +73,6 @@ import Testing
     #expect(audioManager.soloModeSound === soloed)
   }
 
-  /// Deleting a custom sound removes only that sound's instance.
   @Test func deletingASoundKeepsTheOthersInstances() async throws {
     try #require(audioManager.modelContext != nil, "launch installed the custom-sound observers")
     let soloed = standIn(for: try insertRow(title: "Test A"))
@@ -101,11 +91,10 @@ import Testing
     #expect(audioManager.soloModeSound === soloed)
   }
 
-  // MARK: - Pruning counts audio on disk (L1)
+  // MARK: - Pruning counts audio on disk
 
-  /// A sound whose row was lost (a store rebuild) but whose audio is still on
-  /// disk stays in presets. Pruning is irreversible. A sound with neither a row
-  /// nor a file is still pruned.
+  /// Pruning is irreversible, so a sound with audio on disk but no row (after a store
+  /// rebuild) stays in presets.
   @Test func pruningKeepsSoundsWhoseAudioIsOnDisk() throws {
     _ = try insertRow(title: "Other")  // a non-empty store, so pruning runs
     let dir = try sandbox.customSoundsDirectory()
@@ -127,7 +116,6 @@ import Testing
     #expect(kept == ["test-life-a", rowless])
   }
 
-  /// The on-disk set names audio files only, never mirror sidecars or hidden files.
   @Test func onDiskNamesSkipSidecarsAndHiddenFiles() throws {
     let dir = try sandbox.customSoundsDirectory()
     let audio = UUID().uuidString
@@ -146,11 +134,10 @@ import Testing
     #expect(!names.contains(hidden))
   }
 
-  // MARK: - Recovery re-checks the store after its scan (L3)
+  // MARK: - Recovery re-checks the store after its scan
 
-  /// An import or delete that lands during recovery's off-main scan must not be
-  /// undone. The imported sound gets no second row, and the deleted one doesn't
-  /// come back. Sidecars nothing touched are still restored.
+  /// Imports and deletes that land during the off-main scan stand; untouched sidecars
+  /// still restore.
   @Test func recoverySkipsWhatChangedDuringTheScan() throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -180,10 +167,9 @@ import Testing
     #expect(rows.contains(names[2]))
   }
 
-  // MARK: - Conversion temp files (C2, C3)
+  // MARK: - Conversion temp files
 
-  /// A sound deleted while it converts gets no orphan .m4a moved into place, and
-  /// the conversion stops before saving the deleted model.
+  /// The conversion stops before saving a deleted model and moves no .m4a into place.
   @Test func deleteDuringConversionLeavesNothingBehind() async throws {
     let row = try insertRow(title: "Converting", fileExtension: "wav")
     let id = row.id
@@ -210,9 +196,8 @@ import Testing
     await sandbox.settle()
   }
 
-  /// Two conversions of one sound use separate temp files, so neither can unlink
-  /// or swap in the other's half-written output. The sound ends with one
-  /// complete .m4a.
+  /// Each conversion uses its own temp file, so neither can unlink or swap in the
+  /// other's half-written output.
   @Test func concurrentConversionsLeaveOneCompleteFile() async throws {
     let row = try insertRow(title: "Converting twice", fileExtension: "wav")
     let id = row.id

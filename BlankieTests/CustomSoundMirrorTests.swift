@@ -10,14 +10,12 @@ import Testing
 
 @testable import Blankie
 
-/// Covers the custom-sound file mirror: the snapshot must losslessly capture
-/// every persisted field, and the launch reconcile must restore exactly the
-/// rows that are safe to restore.
+/// The custom-sound file mirror: lossless snapshots, and a launch reconcile that restores
+/// only rows that are safe to restore.
 @Suite(.serialized) @MainActor
 struct CustomSoundMirrorTests {
 
-  /// A model with every field set to a non-default value, so a round-trip that
-  /// drops any field is detectable.
+  /// Every field is non-default, so a round trip that drops one is detectable.
   private func makePopulatedModel() -> CustomSoundData {
     let model = CustomSoundData(
       title: "Rainstorm",
@@ -52,9 +50,8 @@ struct CustomSoundMirrorTests {
     return model
   }
 
-  /// The snapshot must capture, encode, and rebuild every persisted field. If a
-  /// field is added to `CustomSoundData` but not mirrored, this fails — the guard
-  /// against silent metadata loss when a row is restored after a store rebuild.
+  /// Rows restored after a store rebuild come from this snapshot, so it must mirror
+  /// every persisted `CustomSoundData` field.
   @Test func snapshotRoundTripPreservesEveryField() throws {
     let model = makePopulatedModel()
 
@@ -92,7 +89,6 @@ struct CustomSoundMirrorTests {
     #expect(rebuilt.duration == model.duration)
   }
 
-  /// A sidecar whose audio file is present and whose row is missing is restored.
   @Test func reconcileRestoresSidecarWhenAudioPresent() throws {
     try withTemporaryDirectory { dir in
       let snapshot = CustomSoundSnapshot(makePopulatedModel())
@@ -106,8 +102,7 @@ struct CustomSoundMirrorTests {
     }
   }
 
-  /// A sidecar with no audio file is skipped — restoring it would just create a
-  /// row that can't load.
+  /// Restoring a sidecar with no audio would create a row that can't load.
   @Test func reconcileSkipsSidecarWithoutAudio() throws {
     try withTemporaryDirectory { dir in
       let snapshot = CustomSoundSnapshot(makePopulatedModel())
@@ -117,7 +112,6 @@ struct CustomSoundMirrorTests {
     }
   }
 
-  /// A sidecar whose row already exists in the store is skipped (no duplicates).
   @Test func reconcileSkipsRowsThatAlreadyExist() throws {
     try withTemporaryDirectory { dir in
       let snapshot = CustomSoundSnapshot(makePopulatedModel())

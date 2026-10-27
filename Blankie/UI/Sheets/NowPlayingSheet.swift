@@ -23,29 +23,24 @@ import SwiftUI
     @State private var timerManager = TimerManager.shared
 
     @State private var globalSettings = GlobalSettings.shared
-    /// Presented from inside the cover — a sheet attached to the base
-    /// hierarchy can't present over a fullScreenCover.
+    /// Presented from inside the cover, since a sheet on the base hierarchy
+    /// can't present over a fullScreenCover.
     @State private var showingTimer = false
     var backgroundImage: PlatformImage?
 
-    /// Rendered inline as the solo mixer's now-playing surface rather than in a
-    /// sheet: drops the drag handle and the dark sheet background so the player
-    /// content sits over the mixer's own backdrop, and hides the close chevron
-    /// (solo is left by choosing another sound or preset, not by dismissing).
+    /// Inline in the mixer: no drag handle, sheet background or close chevron.
     var inline: Bool = false
 
-    /// Fired when the inline player's next/previous lands on a preset (so solo
-    /// ends). The mixer would otherwise drop back to the grid; instead it opens
-    /// the full Now Playing sheet for the preset, keeping the expanded player.
+    /// Fired when the inline player's next/previous lands on a preset, so the
+    /// mixer can open the Now Playing sheet for it.
     var onNavigateToPreset: (() -> Void)?
 
-    /// The mirror of `onNavigateToPreset`: fired when the modal sheet's
-    /// next/previous lands on a solo sound. The sheet dismisses so the inline
-    /// solo player takes over instead of the sheet showing the solo sound.
+    /// Fired when the sheet's next/previous lands on a solo sound; the sheet
+    /// dismisses and the inline player takes over.
     var onNavigateToSolo: (() -> Void)?
 
-    /// The mixer for the current mode, shown beside the player on wide screens
-    /// (like Music's Queue). Supplied by the mixer so reordering saves as usual.
+    /// The mixer shown beside the player on wide screens. Supplied by the mixer
+    /// so reordering saves as usual.
     var soundsPanel: AnyView?
 
     /// The nightstand's upright half: artwork, title and progress to read from
@@ -56,18 +51,16 @@ import SwiftUI
     /// so it drops the bottom row of action circles.
     var showsActions = true
 
-    /// iPhone Duo open with nothing to mix (a solo sound): artwork fills the
-    /// left page and the controls the right, like Music with Lyrics closed.
+    /// iPhone Duo open with a solo sound: artwork on the left page, controls on the right.
     var spreadsAcrossFold = false
 
-    /// iPhone's Now Playing page: opens the Sound Mixer from a labeled button
-    /// under the volume, next to what it changes (like Music's Queue).
+    /// iPhone's Now Playing page: a labeled Sound Mixer button under the volume.
     var onOpenMixer: (() -> Void)?
     /// The open Duo's right page has no side bar, so AirPlay joins that row.
     var actionRowIncludesAirPlay = false
     /// The Duo cover's side bar carries Timer instead.
     var actionRowIncludesTimer = true
-    /// ...and the favorite star, which then leaves the title row.
+    /// The Duo cover's side bar carries the favorite star, which leaves the title row.
     var favoriteInToolbar = false
 
     /// Which panel sits beside the player on wide screens; survives folding,
@@ -75,9 +68,7 @@ import SwiftUI
     @SceneStorage("nowPlayingPanel") private var panelRaw = NowPlayingPanel.none.rawValue
     @State private var fold = FoldInfo.none
 
-    /// CarPlay routes audio (and volume) to the car, so the in-app volume bar
-    /// has nothing to control there — hide the whole row when connected.
-    /// Reads the combined CarPlay scene and car-audio route state.
+    /// CarPlay owns the volume, so the volume row hides while connected.
     private var isCarPlayConnected: Bool {
       audioManager.isCarPlayConnected
     }
@@ -97,13 +88,9 @@ import SwiftUI
     var body: some View {
       Group {
         if inline {
-          // Inline in the solo mixer: the player content over the mixer's own
-          // backdrop, no sheet chrome. Extend into the bottom safe area like the
-          // sheet does (which ignoresSafeArea) so the shared layout's bottom
-          // spacer clears the home indicator once, not twice — otherwise the
-          // AirPlay/Timer row rides ~34pt high and won't line up with the sheet.
-          // The outer reader respects the safe area, so it reports the insets
-          // the inner, safe-area-ignoring one can't.
+          // Ignores the bottom safe area like the sheet, so the shared layout
+          // clears the home indicator once and the rows line up. The outer
+          // reader respects the safe area to report the insets.
           GeometryReader { safe in
             GeometryReader { proxy in
               nowPlayingView(in: proxy.size, bottomInset: safe.safeAreaInsets.bottom)
@@ -112,15 +99,12 @@ import SwiftUI
             .ignoresSafeArea(.container, edges: .bottom)
           }
         } else {
-          // Size to the presenting sheet (not the window): a large-detent sheet is
-          // a touch shorter than the full window, so framing to the sheet keeps the
-          // bottom controls on screen instead of clipped. The outer reader
-          // respects the safe area so it can report the insets.
+          // Sized to the sheet, which is shorter than the window at the large
+          // detent. The outer reader respects the safe area to report the insets.
           GeometryReader { safe in
             GeometryReader { proxy in
               ZStack {
-                // Background fills the whole sheet. Rounded top corners show while the
-                // zoom transition is mid-flight and behind the sheet's own rounding.
+                // Rounded top corners show during the zoom transition.
                 Color.black
                   .overlay {
                     if audioManager.soloModeSound == nil && !audioManager.isQuickMix,
@@ -157,10 +141,8 @@ import SwiftUI
                   .ignoresSafeArea()
                   .accessibilityHidden(true)
 
-                // Content stays within the top safe area so the drag handle and
-                // everything below it sit clear of the Dynamic Island.
-                // Side insets too: iPhone Duo's outer screen puts the status bar
-                // in a column along the trailing edge.
+                // Respects the top inset (Dynamic Island) and side insets
+                // (iPhone Duo's outer screen has a trailing status bar).
                 let insets = safe.safeAreaInsets
                 expandedPlayerView(
                   CGSize(
@@ -179,11 +161,8 @@ import SwiftUI
         }
       }
       .sheet(isPresented: $showingTimer) {
-        // Detents and presentationSizing don't compose — when both are set the
-        // detents win and presentationSizing is ignored, leaving iPad stuck at
-        // the short `.medium` height that clips the picker. So size by idiom:
-        // iPad gets a standard `.form` sheet (tall enough, no detents); iPhone
-        // keeps its draggable medium/large detents.
+        // Detents override presentationSizing, so iPad gets `.form` without
+        // detents and iPhone keeps its medium and large detents.
         if isRegularCanvas {
           TimerSheetView()
             .presentationSizing(.form)
@@ -199,9 +178,8 @@ import SwiftUI
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
-    /// Regular in both directions — room for the balanced, width-capped column
-    /// (iPad, an open iPhone Duo). iPhone landscape is compact-height and keeps
-    /// its side-by-side layout.
+    /// Regular in both directions (iPad, an open iPhone Duo): the centered,
+    /// width-capped column.
     private var isRegularCanvas: Bool {
       horizontalSizeClass == .regular && verticalSizeClass == .regular
     }
@@ -221,17 +199,12 @@ import SwiftUI
       if spreadsAcrossFold {
         spreadNowPlaying(in: size, bottomInset: bottomInset)
       } else if isRegularCanvas {
-        // Regular canvas: every size class is wide enough that the phone's full-width
-        // stacked layout sprawls, and tall enough that its single flexible
-        // spacer leaves a dead gap under the artwork. Use a centered, balanced
-        // column tuned for the larger canvas.
         regularNowPlaying(in: size, bottomInset: bottomInset)
       } else if dynamicTypeSize.isAccessibilitySize, aspect > 1 {
         accessibilityLandscape(in: size, bottomInset: bottomInset)
       } else if aspect > 1.6 || (verticalSizeClass == .compact && aspect > 1) {
-        // Side-by-side landscape when the area is meaningfully wider than tall
-        // (iPhone landscape), or short and wide like iPhone Duo's outer screen
-        // turned sideways, where the stacked column runs off the bottom.
+        // Side by side on iPhone landscape, or when short and wide (iPhone Duo's
+        // outer screen turned sideways), where the stacked column won't fit.
         landscapeNowPlaying(in: size, bottomInset: bottomInset)
       } else {
         portraitNowPlaying(in: size, bottomInset: bottomInset)
@@ -257,17 +230,15 @@ import SwiftUI
 
     @ViewBuilder
     private func portraitNowPlaying(in size: CGSize, bottomInset: CGFloat) -> some View {
-      // Cap by height too. When the pane is short relative to its width — iPad
-      // landscape with the sidebar open makes the detail pane nearly square —
-      // width - 64 overflows vertically and crowds the controls. Reserve room
-      // for the progress/volume stack; true (tall) portrait is unaffected.
+      // Capped by height too, leaving room for the progress and volume rows in
+      // a near-square pane (iPad landscape with the sidebar open).
       let artworkSize = max(min(size.width - 64, size.height - 240), 120)
 
       if dynamicTypeSize.isAccessibilitySize {
         accessibilityPortrait(artworkSize: artworkSize, bottomInset: bottomInset)
       } else {
         // Short screens (iPhone Duo's cover) shrink the artwork a step at a
-        // time rather than squeezing the title and subtitle.
+        // time so the title and subtitle keep their room.
         ViewThatFits(in: .vertical) {
           ForEach([1, 0.9, 0.8, 0.7] as [CGFloat], id: \.self) { scale in
             portraitStack(artworkSize: max(artworkSize * scale, 120), bottomInset: bottomInset)
@@ -276,9 +247,8 @@ import SwiftUI
       }
     }
 
-    /// Accessibility text sizes: the artwork folds into a thumbnail, so the
-    /// name reads in full and the controls stay on screen. Only the text
-    /// scrolls, and only when it has to.
+    /// Accessibility text sizes: the artwork folds into a thumbnail so the name
+    /// reads in full. Only the text scrolls, and only when it has to.
     private func accessibilityPortrait(artworkSize: CGFloat, bottomInset: CGFloat) -> some View {
       VStack(spacing: 16) {
         accessibilityText(artworkSize: artworkSize)
@@ -287,8 +257,7 @@ import SwiftUI
       .padding(.bottom, max(20, bottomInset))
     }
 
-    /// The same at accessibility sizes on a landscape screen: the text on one
-    /// side, the controls on the other.
+    /// Accessibility sizes in landscape: text on one side, controls on the other.
     private func accessibilityLandscape(in size: CGSize, bottomInset: CGFloat) -> some View {
       let controlsWidth = min(size.width * 0.45, 400)
       let textWidth = size.width - controlsWidth - 16
@@ -309,8 +278,7 @@ import SwiftUI
       .padding(.bottom, max(20, bottomInset))
     }
 
-    /// Everything in full, a size or two smaller if it's just over; scroll
-    /// only past that.
+    /// Full size, then up to two sizes smaller, then scrolling.
     private func accessibilityText(artworkSize: CGFloat) -> some View {
       ViewThatFits(in: .vertical) {
         ForEach(textSizesToTry, id: \.self) { size in
@@ -346,7 +314,7 @@ import SwiftUI
       }
     }
 
-    /// The person's text size, then up to two steps smaller, never below the
+    /// The current text size, then up to two steps smaller, staying within the
     /// accessibility sizes.
     private var textSizesToTry: [DynamicTypeSize] {
       DynamicTypeSize.allCases
@@ -434,16 +402,15 @@ import SwiftUI
       .modifier(SettlesRows(item: itemKey, showsProgress: showsProgressRow))
     }
 
-    /// iPhone's Now Playing page: the labeled way into the Sound Mixer, then
-    /// (on the open Duo) AirPlay, then Timer; a solo sound keeps the same row.
-    /// `fills` stretches the Sound Mixer button to the row's width.
+    /// Sound Mixer, then AirPlay (open Duo only), then Timer. `fills` stretches
+    /// the Sound Mixer button to the row's width.
     @ViewBuilder
     private func playerActionRow(fills: Bool = false) -> some View {
       if let onOpenMixer {
         HStack(spacing: 12) {
           if audioManager.soloModeSound == nil {
             Button(action: onOpenMixer) {
-              // Short of room, "Mixer" alone rather than a truncated label.
+              // Falls back to "Mixer" so the label never truncates.
               ViewThatFits(in: .horizontal) {
                 Label("Sound Mixer", systemImage: "slider.horizontal.3")
                 Label("Mixer", systemImage: "slider.horizontal.3")
@@ -459,11 +426,11 @@ import SwiftUI
             .buttonStyle(.plain)
             .accessibilityLabel(Text("Sound Mixer"))
             .glassEffect(.regular.interactive(), in: .capsule)
-            // Nothing to mix in an empty preset; its editor adds sounds.
+            // An empty preset gets its sounds from the editor.
             .disabled(presetManager.currentPresetHasNoSounds)
             .opacity(presetManager.currentPresetHasNoSounds ? 0.4 : 1)
             .overlay(alignment: .topTrailing) {
-              // An empty preset needs the editor instead, which carries the badge.
+              // An empty preset's editor carries the badge.
               if silentPresetMessage != nil, !presetManager.currentPresetHasNoSounds {
                 Image(systemName: "exclamationmark")
                   .font(.caption.weight(.bold))
@@ -506,13 +473,11 @@ import SwiftUI
 
     // MARK: - iPad Layout
 
-    /// Music-style on wide screens: one centered column, or the column beside
-    /// a Sounds or Timer panel. On a bent crease the column keeps to the
-    /// leading page instead of straddling it.
+    /// One centered column, or the column beside a Sounds or Timer panel. With
+    /// a fold, flat or bent, the column keeps to the leading page.
     @ViewBuilder
     private func regularNowPlaying(in size: CGSize, bottomInset: CGFloat) -> some View {
       let panel = visiblePanel
-      // Flat or bent alike, so bending iPhone Duo moves nothing.
       let creaseSplit = CreaseInsets.leadingPage(containerWidth: size.width, fold: fold) != nil
       let split = CreaseInsets.split(containerWidth: size.width, fold: fold)
       let columnWidth = panel != .none || creaseSplit ? split.leading : size.width
@@ -631,14 +596,13 @@ import SwiftUI
 
     // MARK: - Landscape Layout
 
-    /// Artwork fills the page before the fold edge to edge, fading toward the
-    /// fold; the controls sit centered on the page after it (Music's layout).
+    /// Artwork fills the page before the fold, fading toward it; the controls
+    /// sit centered on the page after it.
     private func spreadNowPlaying(in size: CGSize, bottomInset: CGFloat) -> some View {
       let split = CreaseInsets.split(containerWidth: size.width, fold: fold)
       return HStack(spacing: 0) {
-        // Drawn as an overlay on a page-sized frame, oversized and clipped, so
-        // it fills the page (under the safe areas too) without growing the
-        // layout or pushing its center off the middle.
+        // An oversized, clipped overlay on a page-sized frame fills the page
+        // (safe areas included) without growing the layout.
         Color.clear
           .frame(width: split.leading)
           .frame(maxHeight: .infinity)
@@ -685,18 +649,15 @@ import SwiftUI
     /// Landscape: the artwork as large as fits, beside a controls column of
     /// its height, centered together. Wider screens get a wider column.
     private func landscapeNowPlaying(in size: CGSize, bottomInset: CGFloat) -> some View {
-      // Measure the space offered: the sheet's size includes its drag handle.
-      // The top bar's buttons sit at the far edges, clear of the content, so
-      // center in the full height rather than below the bar.
+      // Centers in the full height; the top bar's buttons sit at the far edges.
       GeometryReader { proxy in
         landscapeLayout(in: proxy.size, bottomInset: bottomInset)
       }
       .ignoresSafeArea(.container, edges: [.top, .bottom])
     }
 
-    /// Proportions taken from iPhone 17 Pro (artwork 290, gap 48, column
-    /// 300, side margins 56), scaled to the space. The column never narrows
-    /// past what its rows need; the artwork gives way instead.
+    /// iPhone 17 Pro proportions (artwork 290, gap 48, column 300, margins 56),
+    /// scaled. The artwork shrinks before the column narrows past its rows.
     private func landscapeLayout(in size: CGSize, bottomInset: CGFloat) -> some View {
       let gapRatio: CGFloat = 48 / 290
       let columnRatio: CGFloat = 300 / 290
@@ -722,8 +683,7 @@ import SwiftUI
       return HStack(spacing: spacing) {
         artworkView(size: artworkSize, shrinksWhenPaused: false)
 
-        // Large text (or a wrapped title) can outgrow the artwork's height;
-        // then the column scrolls instead of spilling off the screen.
+        // Scrolls when large text or a wrapped title outgrows the artwork's height.
         ViewThatFits(in: .vertical) {
           landscapeControls
           ScrollView {
@@ -737,8 +697,7 @@ import SwiftUI
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Every row shares the column's edges, so they line up with each other
-    /// and with the artwork's top and bottom.
+    /// Rows share the column's edges and line up with the artwork's top and bottom.
     private var landscapeControls: some View {
       VStack(spacing: 0) {
         infoRow(inset: 0, alignment: .top)
@@ -788,8 +747,6 @@ import SwiftUI
     private func artworkContent(size: CGFloat, cornerRadius: CGFloat = 12) -> some View {
       Group {
         if let soloSound = audioManager.soloModeSound {
-          // Solo has no preset artwork: the shared fallback with the sound's
-          // own icon and the app accent.
           FallbackArtwork(
             glyph: .symbol(soloSound.systemIconName),
             accent: globalSettings.customAccentColor ?? .accentColor,
@@ -804,8 +761,6 @@ import SwiftUI
             .frame(width: size, height: size)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         } else {
-          // No custom/animated artwork: Quick Mix → grid, All Blankie Sounds →
-          // the Blankie mark, a custom preset → a montage of its playing sounds.
           FallbackArtwork(
             glyph: .playback(
               isQuickMix: audioManager.isQuickMix,
@@ -848,8 +803,7 @@ import SwiftUI
         ? "No sounds in this preset" : "No Sounds Playing"
     }
 
-    /// Whether the progress row shows anything; when it doesn't, layouts drop
-    /// it and its spacing rather than holding an empty gap.
+    /// When false, layouts drop the progress row and its spacing.
     private var showsProgressRow: Bool {
       silentPresetMessage != nil
         || globalSettings.showsPlaybackProgress(timerActive: timerManager.isTimerActive)
@@ -900,7 +854,6 @@ import SwiftUI
         .frame(height: 6)
         .accessibilityHidden(true)
 
-        // Labels
         HStack {
           if timerManager.isTimerActive {
             Text("Pausing at \(timerEndTimeString)")
@@ -931,10 +884,8 @@ import SwiftUI
         .formatted(date: .omitted, time: .shortened)
     }
 
-    // Volume controls. While mixing with other audio the iOS hardware slider
-    // would move every app's level together, so it can't isolate Blankie. In
-    // that mode we swap in a slider bound to volumeWithOtherAudio — Blankie's
-    // level over the other media — and label it so the change is obvious.
+    // While mixing with other audio the hardware slider moves every app at
+    // once, so a labeled slider for volumeWithOtherAudio replaces it.
     @ViewBuilder
     private func volumeSlider(inset: CGFloat = 32) -> some View {
       #if os(iOS) || os(visionOS)
@@ -988,9 +939,6 @@ import SwiftUI
     }
 
     #if os(iOS) || os(visionOS)
-      /// Mixing mode: the slider controls Blankie's own level over the other
-      /// audio (volumeWithOtherAudio), tinted with the accent and headed
-      /// "Blankie Volume" so it's clearly not the device volume.
       private func blankieVolumeRow(inset: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 8) {
           Text("Blankie Volume with Media")
@@ -1030,10 +978,7 @@ import SwiftUI
 
     // MARK: - Helper Properties
 
-    /// Starred token for the current context, or nil when favoriting doesn't
-    /// apply. Solo sounds favorite under their `solo:` token; the default preset
-    /// maps to `allSoundsToken`, custom presets to their UUID. Quick Mix isn't
-    /// favoritable, so it returns nil (the star is hidden).
+    /// nil for Quick Mix, which can't be a favorite.
     private var favoriteToken: String? {
       if let solo = audioManager.soloModeSound {
         return GlobalSettings.soloToken(forFileName: solo.fileName)
@@ -1044,8 +989,7 @@ import SwiftUI
 
     // MARK: - Actions Row
 
-    /// Accent used throughout Now Playing. Solo mode is its own thing, so it
-    /// uses the app accent instead of carrying over the last preset's accent.
+    /// Solo uses the app accent, ignoring the last preset's accent.
     private var accentColor: Color {
       if audioManager.soloModeSound != nil {
         return globalSettings.customAccentColor ?? .accentColor
@@ -1056,9 +1000,8 @@ import SwiftUI
 
     // MARK: - Info Row
 
-    /// Long names wrap rather than truncate; the nightstand's title is read
-    /// from across the room, so it gets a third line. At accessibility text
-    /// sizes nothing is cut off: the text wraps fully and the layout scrolls.
+    /// The nightstand's title gets a third line. Accessibility sizes have no
+    /// limit; the layout scrolls.
     private var titleLineLimit: Int? {
       dynamicTypeSize.isAccessibilitySize ? nil : (displayOnly ? 3 : 2)
     }
@@ -1091,7 +1034,6 @@ import SwiftUI
       .padding(.horizontal, inset)
     }
 
-    /// The solo sound's or preset's name.
     private var infoTitle: some View {
       Group {
         if let soloSound = audioManager.soloModeSound {
@@ -1107,8 +1049,7 @@ import SwiftUI
       .foregroundColor(.white)
     }
 
-    /// Built-in sounds carry a subtitle caption; custom sounds show their
-    /// credited author instead, and presets their creator.
+    /// A built-in sound's caption, a custom sound's author, or a preset's creator.
     private var infoSubtitle: Text? {
       let text: Text?
       if let soloSound = audioManager.soloModeSound {
@@ -1152,12 +1093,8 @@ import SwiftUI
       }
     }
 
-    /// Run a next/previous, then hand off if we've crossed between a solo sound
-    /// (inline player) and a preset (sheet), all in one non-animated transaction
-    /// so the aligned layouts swap in place instead of the sheet sliding/zooming.
-    /// The artwork and title slide in from `edge` (next: trailing, previous:
-    /// leading) through their own animation; navigating itself isn't animated,
-    /// so the layout behind the player (iPad) doesn't fade along with it.
+    /// Runs next/previous and any solo/preset hand-off without animation, so the
+    /// layout behind the player stays put. Artwork and title slide in from `edge`.
     private func performNavigation(from edge: Edge, _ navigate: () -> Void) {
       navigationEdge = edge
       navigate()
@@ -1195,16 +1132,12 @@ import SwiftUI
       .animation(Self.itemChangeAnimation, value: itemKey)
     }
 
-    /// Keep next/previous consistent about where a sound "lives": solo sounds
-    /// belong to the inline player, presets to the modal sheet. After navigating,
-    /// hand off if we've crossed that line.
+    /// Solo sounds play in the inline player and presets in the sheet, so
+    /// crossing between them hands off.
     private func handlePostNavigation() {
       if inline {
-        // Inline solo player landed on a preset → open the full sheet for it.
         if audioManager.soloModeSound == nil { onNavigateToPreset?() }
       } else {
-        // Modal sheet landed on a solo sound → dismiss so the solo sound's
-        // inline page takes over instead of showing it in the sheet.
         if audioManager.soloModeSound != nil { onNavigateToSolo?() }
       }
     }
@@ -1281,8 +1214,6 @@ import SwiftUI
 
     private var bottomActionsContent: some View {
       HStack(spacing: 20) {
-        // Left: collapse back to the mini bar. Sheet only — the inline solo
-        // player has no close button (the mixer's own nav bar collapses it).
         if !inline {
           Button {
             onDismiss?()
@@ -1298,9 +1229,6 @@ import SwiftUI
           .modifier(NowPlayingActionGlass())
         }
 
-        // Middle: AirPlay / audio output route picker. The Playing Audio HIG
-        // asks apps to permit rerouting of audio output when possible; this is
-        // the system-standard control for it.
         #if os(iOS)
           AirPlayRouteButton(
             activeColor: accentColor,
@@ -1313,7 +1241,6 @@ import SwiftUI
           .modifier(NowPlayingActionGlass())
         #endif
 
-        // Right: Timer
         Button {
           showingTimer = true
         } label: {
@@ -1357,8 +1284,7 @@ import SwiftUI
 
   }
 
-  /// Rows slide into place when the item changes or the progress row comes
-  /// or goes (a subtitle or progress bar appearing), instead of jumping.
+  /// Rows slide into place when the item changes or the progress row comes or goes.
   private struct SettlesRows: ViewModifier {
     let item: String
     let showsProgress: Bool
@@ -1375,7 +1301,6 @@ import SwiftUI
     case none, sounds, timer
   }
 
-  /// Liquid Glass circle for the bottom action buttons
   private struct NowPlayingActionGlass: ViewModifier {
     func body(content: Content) -> some View {
       content.glassEffect(.regular.interactive(), in: .circle)
@@ -1384,7 +1309,6 @@ import SwiftUI
 
   struct NowPlayingPreviewWrapper: View {
     init() {
-      // Inject mock state so the preview isn't empty
       let mockPreset = Preset(
         id: UUID(),
         name: "Deep Sleep",
@@ -1415,8 +1339,8 @@ import SwiftUI
   final class CenteredVolumeView: MPVolumeView {
     override func layoutSubviews() {
       super.layoutSubviews()
-      // MPVolumeView creates/replaces its slider lazily, including after route
-      // changes. Apply appearance during layout rather than one SwiftUI update.
+      // MPVolumeView replaces its slider lazily (including after route
+      // changes), so styling happens on every layout pass.
       if let slider = subviews.first(where: { $0 is UISlider }) as? UISlider {
         slider.minimumTrackTintColor = UIColor.white.withAlphaComponent(0.7)
         slider.maximumTrackTintColor = UIColor.white.withAlphaComponent(0.2)
@@ -1434,8 +1358,7 @@ import SwiftUI
   struct SystemVolumeSlider: View {
     var body: some View {
       #if targetEnvironment(simulator)
-        // Simulator cannot provide the hardware-volume slider. A read-only bar
-        // keeps player layouts visible without pretending to control device audio.
+        // The simulator has no hardware volume slider; a disabled bar holds the layout.
         Slider(value: .constant(0.5), in: 0...1)
           .tint(.white.opacity(0.7))
           .sliderThumbVisibility(.hidden)
@@ -1450,9 +1373,7 @@ import SwiftUI
   private struct NativeSystemVolumeSlider: UIViewRepresentable {
     func makeUIView(context: Context) -> MPVolumeView {
       let volumeView = CenteredVolumeView(frame: .zero)
-      // Hide the thumb for a clean bar look. This is a method on MPVolumeView
-      // itself, so it works even before the internal UISlider subview exists
-      // (the subview is created lazily after layout).
+      // Set on MPVolumeView, so it applies before the lazy UISlider exists.
       volumeView.setVolumeThumbImage(UIImage(), for: .normal)
       return volumeView
     }
@@ -1483,34 +1404,14 @@ import SwiftUI
         return picker
       }
 
-      // The system route / "Share Audio" sheet this button presents is rendered
-      // outside the app's window — it never enters the window's presentation
-      // chain, and dark window/VC overrides don't reach it (verified on device).
-      // Per Apple's "Choosing a specific interface style for your iOS app", only a
-      // process-level Info.plist UIUserInterfaceStyle = Dark forces system sheets
-      // dark (i.e. making the whole app dark-only), so there is intentionally no
-      // per-sheet appearance override here.
+      // The route sheet renders outside the app's window, so no view override
+      // reaches it; only the Info.plist UIUserInterfaceStyle sets its appearance.
       func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
     }
 
-    /// Watches the live output route and maps it to an SF Symbol plus whether
-    /// audio is leaving the built-in speaker. Drives the AirPlay button's icon
-    /// and tint so it reflects the kind of device audio is going to.
-    ///
-    /// Deliberately maps only to *generic* symbols (headphones, hifispeaker, car,
-    /// tv, airplayaudio) keyed off `portType`, the one reliable signal. We do NOT
-    /// try to show the specific product (AirPods, Beats, HomePod, Apple TV): those
-    /// glyphs are license-restricted to their exact product ("may only be used to
-    /// refer to Apple's AirPods"), and the only model hint the route exposes is
-    /// `portName` — a free, user-renameable string. Guessing the product from it
-    /// could incorrectly paint a restricted Apple/Beats glyph on the wrong (or a
-    /// third-party) device, which violates the SF Symbols license. So we don't.
-    ///
-    /// iOS 27 (in beta, unreleased) adds `AVSystemRoute.routeSymbolName`, where
-    /// the system hands back an already-vetted symbol — safe to show verbatim.
-    /// But it only covers routes from a media device extension (third-party
-    /// AirPlay-style receivers), not AirPods/HomePod/wired/built-in, so this
-    /// generic mapping still carries the everyday cases.
+    /// Maps the output route's `portType` to a generic symbol and whether audio
+    /// left the built-in speaker. SF Symbols restricts device glyphs (AirPods,
+    /// HomePod, Beats) to that exact product, and `portName` is user-editable.
     final class AudioRouteObserver: ObservableObject {
       @Published private(set) var symbolName = "airplayaudio"
       @Published private(set) var isExternal = false
@@ -1536,8 +1437,6 @@ import SwiftUI
         case .builtInSpeaker, .builtInReceiver:
           (symbolName, isExternal) = ("airplayaudio", false)
         case .headphones, .bluetoothA2DP, .bluetoothLE, .bluetoothHFP:
-          // Generic personal-audio glyph for any wired/Bluetooth headset; we
-          // can't (and per the license shouldn't) claim it's a specific model.
           (symbolName, isExternal) = ("headphones", true)
         case .carAudio:
           (symbolName, isExternal) = ("car", true)
@@ -1546,8 +1445,7 @@ import SwiftUI
         case .usbAudio, .lineOut, .thunderbolt:
           (symbolName, isExternal) = ("hifispeaker.fill", true)
         case .airPlay:
-          // HomePod/Apple TV/AirPlay speakers all land here; the generic AirPlay
-          // glyph is both license-safe and the honest icon (class is unknowable).
+          // HomePod, Apple TV and other AirPlay receivers all report this type.
           (symbolName, isExternal) = ("airplayaudio", true)
         default:
           (symbolName, isExternal) = ("airplayaudio", true)
@@ -1555,10 +1453,8 @@ import SwiftUI
       }
     }
 
-    /// AirPlay control that shows a themed, route-category icon while still
-    /// presenting the system route picker. The icon is tinted with the theme
-    /// accent when audio is routed off-device and dimmed when it isn't; a
-    /// transparent `AVRoutePickerView` sits on top to capture the tap.
+    /// A themed route icon drawn over a transparent `AVRoutePickerView`, which
+    /// still takes the tap and presents the system picker.
     struct AirPlayRouteButton: View {
       var activeColor: Color
       var inactiveColor: Color

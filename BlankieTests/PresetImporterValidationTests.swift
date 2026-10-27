@@ -4,9 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The import pipeline's directory-level gates: required files present, version
-//  compatible, and the preset/manifest decode. These run on extracted archive
-//  directories (no ZIP, no singletons), so they're pure to exercise.
+//  The import pipeline's directory-level gates (required files, version compatibility, preset
+//  and manifest decoding), run on extracted archive directories.
 //
 
 import Foundation
@@ -16,7 +15,6 @@ import Testing
 
 @Suite struct PresetImporterValidationTests {
 
-  /// A directory missing manifest.json / preset.json is rejected.
   @Test func validateThrowsWhenRequiredFilesMissing() {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -26,7 +24,6 @@ import Testing
     }
   }
 
-  /// A directory with both required files passes.
   @Test func validatePassesWithRequiredFiles() throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -35,7 +32,6 @@ import Testing
     try PresetImporter.shared.validateArchiveStructure(at: dir)  // must not throw
   }
 
-  /// A manifest demanding a future minimum version is rejected.
   @Test func validateCompatibilityRejectsFutureMinimum() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -52,7 +48,6 @@ import Testing
     }
   }
 
-  /// A current-floor manifest passes the compatibility gate.
   @Test func validateCompatibilityAcceptsCurrentFloor() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -62,9 +57,7 @@ import Testing
     try PresetImporter.shared.validateCompatibility(manifest)  // must not throw
   }
 
-  /// The preset decodes back from the archive with identity AND the full optional
-  /// payload intact — artwork/moods/order/view mode are the fields most likely to
-  /// silently vanish on a CodingKeys change, and they ride this export path.
+  /// The optional artwork, moods, order and view mode fields survive this path too.
   @Test func readPresetRoundTrips() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
@@ -89,7 +82,6 @@ import Testing
     #expect(decoded.staticArtworkPath == original.staticArtworkPath)
   }
 
-  /// An archive with no sounds directory reports zero custom sounds.
   @Test func countCustomSoundsZeroWhenAbsent() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }

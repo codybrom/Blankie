@@ -8,10 +8,9 @@
 import Foundation
 
 extension Bundle {
-  /// The app's marketing version (`CFBundleShortVersionString`). A shipped build
-  /// always defines it (from `MARKETING_VERSION`); a missing value means the
-  /// build is misconfigured, so trap rather than stamp a fabricated version into
-  /// presets and archive-compatibility checks.
+  /// The app's marketing version (`CFBundleShortVersionString`). A missing value
+  /// means a misconfigured build, so this traps; presets and archive checks never
+  /// get a made-up version.
   nonisolated var appVersion: String {
     guard let version = infoDictionary?["CFBundleShortVersionString"] as? String else {
       preconditionFailure("CFBundleShortVersionString missing from Info.plist")

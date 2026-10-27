@@ -4,9 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  Pure loudness/gain math. A sign flip or a broken cap makes the whole library
-//  too loud or over-amplifies noise. (The file-decoding analysis paths are
-//  covered by EngineLoudnessTests; this covers the arithmetic directly.)
+//  AudioAnalyzer loudness and gain arithmetic. EngineLoudnessTests covers file decoding.
 //
 
 import Foundation

@@ -4,13 +4,8 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  saveState() persistence, driven engine-free with TestSounds. The headline
-//  guard: quitting mid-solo must persist the soloed sound's PRE-solo volume and
-//  selection, not the forced solo values — otherwise the user's real mix is
-//  overwritten on the next launch.
-//
-//  Serialized + main-actor (drives AudioManager.shared); snapshots the real
-//  "soundState" key so it never corrupts the user's saved mix.
+//  saveState() persistence. Quitting mid-solo saves the soloed sound's pre-solo values.
+//  Serialized: snapshots the real "soundState" key so the user's saved mix is restored.
 //
 
 import Foundation
@@ -74,7 +69,6 @@ import Testing
     #expect(isClose(entry?["volume"] as? Float ?? -1, 0.6))
   }
 
-  /// saveState is a no-op during Quick Mix so transient mix volumes never persist.
   @Test func saveStateSkippedDuringQuickMix() {
     let a = TestSound(fileName: "test-a")
     a.isSelected = true

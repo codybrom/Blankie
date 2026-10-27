@@ -41,31 +41,24 @@ nonisolated final class PresetExporter: Sendable {
     let archiveDir = tempDir.appendingPathComponent("\(preset.name).blankie-temp")
     let archiveZip = tempDir.appendingPathComponent("\(preset.name).blankie")
 
-    // Remove existing files if they exist
     try? FileManager.default.removeItem(at: archiveDir)
     try? FileManager.default.removeItem(at: archiveZip)
 
-    // Create archive directory
     try FileManager.default.createDirectory(at: archiveDir, withIntermediateDirectories: true)
 
-    // Create archive manifest
     let currentVersion = Bundle.main.appVersion
     let manifest = ArchiveManifest(blankieVersion: currentVersion)
 
-    // Get custom sounds for this preset
     let customSounds = try await getCustomSounds(for: preset)
 
-    // Get sound customizations for this preset
     let soundCustomizations = await getSoundCustomizations(for: preset)
 
-    // Create archive object
     let archive = PresetArchive(
       manifest: manifest,
       preset: preset,
       customSounds: customSounds
     )
 
-    // Write archive files
     try await writeManifest(archive.manifest, to: archiveDir)
     try await writePreset(archive.preset, to: archiveDir)
     try await writeArtwork(for: preset, to: archiveDir)
@@ -73,28 +66,24 @@ nonisolated final class PresetExporter: Sendable {
       customSounds, withCustomizations: soundCustomizations, to: archiveDir
     )
 
-    // Create zip file
     try await createZipFile(from: archiveDir, to: archiveZip)
 
-    // Clean up temporary directory
     try? FileManager.default.removeItem(at: archiveDir)
 
     return archiveZip
   }
 
   private func getCustomSounds(for preset: Preset) async throws -> [CustomSoundMetadata] {
-    // Get custom sounds on main actor and immediately convert to metadata
+    // Convert to metadata on the main actor so CustomSoundData doesn't cross actors.
     let customSoundMetadata = await MainActor.run {
       let customSoundManager = CustomSoundManager.shared
       let allCustomSounds = customSoundManager.getAllCustomSounds()
 
-      // Filter to sounds used in this preset
       let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
       let relevantCustomSounds = allCustomSounds.filter { customSound in
         presetSoundFileNames.contains(customSound.fileName)
       }
 
-      // Convert to metadata
       return relevantCustomSounds.map { customSound in
         CustomSoundMetadata(from: customSound)
       }
@@ -201,11 +190,9 @@ nonisolated final class PresetExporter: Sendable {
   {
     guard !customSounds.isEmpty || !customizations.isEmpty else { return }
 
-    // Create sounds directory
     let soundsDir = archiveDir.appendingPathComponent(PresetArchive.soundsDirectoryName)
     try FileManager.default.createDirectory(at: soundsDir, withIntermediateDirectories: true)
 
-    // Write unified sounds metadata including customizations
     let soundsManifest = SoundsManifest(
       customSounds: customSounds, builtInCustomizations: customizations
     )
@@ -213,7 +200,6 @@ nonisolated final class PresetExporter: Sendable {
     let metadataData = try JSONEncoder().encode(soundsManifest)
     try metadataData.write(to: metadataURL)
 
-    // Copy sound files
     for soundMetadata in customSounds {
       // Get the sound URL on main actor to avoid sending CustomSoundData across actors
       let soundURL = await MainActor.run {
@@ -234,7 +220,6 @@ nonisolated final class PresetExporter: Sendable {
   }
 
   private func getSoundCustomizations(for preset: Preset) async -> [SoundCustomization] {
-    // Get sound file names from the preset
     let presetSoundFileNames = Set(preset.soundStates.map(\.fileName))
 
     // Read the manager's customizations on the main actor; the filtering below
@@ -246,10 +231,8 @@ nonisolated final class PresetExporter: Sendable {
       allCustomizations
       .filter { presetSoundFileNames.contains($0.fileName) }
       .compactMap { customization in
-        // A built-in sound's name and icon are personal, cosmetic overrides
-        // (and a shared preset shouldn't leak them, nor force the recipient's
-        // built-in name away from their own localized default). Strip both;
-        // behavioral settings still travel. Drop entries left with nothing.
+        // A built-in sound's name and icon overrides are personal, so strip them
+        // (the recipient keeps their localized name). Drop entries left empty.
         var stripped = customization
         stripped.customTitle = nil
         stripped.customIconName = nil

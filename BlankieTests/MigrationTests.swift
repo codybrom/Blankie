@@ -22,11 +22,8 @@ private nonisolated enum MigrationTestsOptIn {
   #endif
 }
 
-/// Serialized + class-based: every test mutates the shared `UserDefaults` suites
-/// and the one-time migration flag, so they must run one at a time. On the Mac
-/// the test host is the real app, so these keys are the user's own presets and
-/// settings: the suite only runs when opted in, and `init` / `deinit` snapshot
-/// and restore every key it clears.
+/// Serialized: every test rewrites both defaults suites and the migration flag. On the Mac the
+/// host is the real app, so the suite runs only when opted in and restores every key it clears.
 @Suite(
   .serialized,
   .enabled(
@@ -47,27 +44,22 @@ final class MigrationTests {
   }
 
   @Test func userDefaultsMigration() {
-    // 1. Setup existing user data in UserDefaults.standard (pre-migration user).
     Self.setupExistingUserData()
 
-    // 2. Verify data lives in standard but not yet in shared.
     #expect(UserDefaults.standard.double(forKey: UserDefaultsKeys.volume) == 0.8)
     #expect(UserDefaults.standard.string(forKey: UserDefaultsKeys.accentColor) == "blue")
     #expect(UserDefaults.shared.object(forKey: UserDefaultsKeys.volume) == nil)
 
-    // 3. Run migration.
     AppDataMigrator.performAllMigrations()
 
-    // 4. Verify cross-platform keys migrated to shared. `autoPlayOnLaunch` is
-    // deliberately not asserted: it migrates only on macOS — on iOS it's an
-    // obsolete key folded into `autoPlayOnLaunchMac`, not copied to shared.
+    // `autoPlayOnLaunch` isn't checked: it migrates only on macOS (iOS folds it into
+    // `autoPlayOnLaunchMac`).
     #expect(
       UserDefaults.shared.double(forKey: UserDefaultsKeys.volume) == 0.8, "Volume should migrate")
     #expect(
       UserDefaults.shared.string(forKey: UserDefaultsKeys.accentColor) == "blue",
       "Accent color should migrate")
 
-    // 5. Verify migrated keys were cleared from standard.
     #expect(
       UserDefaults.standard.object(forKey: UserDefaultsKeys.volume) == nil,
       "Volume should be removed from standard")
@@ -75,7 +67,6 @@ final class MigrationTests {
       UserDefaults.standard.object(forKey: UserDefaultsKeys.accentColor) == nil,
       "Accent color should be removed from standard")
 
-    // 6. Verify migration flag is set.
     #expect(
       UserDefaults.shared.bool(forKey: "unifiedMigrationCompleted"), "Migration flag should be set")
   }
@@ -202,33 +193,25 @@ final class MigrationTests {
 
     AppDataMigrator.performAllMigrations()
 
-    // Core settings (volume migrates cross-platform; autoPlayOnLaunch is macOS-only).
+    // Volume migrates on every platform; autoPlayOnLaunch is macOS-only.
     #expect(UserDefaults.shared.double(forKey: UserDefaultsKeys.volume) == 0.8)
 
-    // Sound data.
     let migratedSoundState = UserDefaults.shared.array(forKey: "soundState") as? [[String: Any]]
     #expect(migratedSoundState != nil)
     #expect(migratedSoundState?.count == 3)
     #expect(migratedSoundState?.first?["fileName"] as? String == "rain")
     #expect(migratedSoundState?.first?["isSelected"] as? Bool == true)
 
-    // Cleanup.
     #expect(UserDefaults.standard.object(forKey: UserDefaultsKeys.volume) == nil)
     #expect(UserDefaults.standard.object(forKey: "soundState") == nil)
 
-    // Migration flag.
     #expect(UserDefaults.shared.bool(forKey: "unifiedMigrationCompleted"))
   }
 
-  /// Per-key guard: when a value already exists in the shared (app-group)
-  /// defaults, migration must NOT overwrite it with the legacy `standard` value
-  /// — it only fills in keys that are missing. Distinct from `migrationOnlyRunsOnce`
-  /// (which covers the run-once flag); this is the within-a-run "don't clobber" rule.
   @Test func existingAppGroupValuesAreNotOverwritten() {
-    // Already-migrated values live in shared…
+    // Migrated values in shared, stale conflicting values still in standard.
     UserDefaults.shared.set(0.9, forKey: UserDefaultsKeys.volume)
     UserDefaults.shared.set("blue", forKey: UserDefaultsKeys.accentColor)
-    // …while stale conflicting values still sit in standard.
     UserDefaults.standard.set(0.5, forKey: UserDefaultsKeys.volume)
     UserDefaults.standard.set("red", forKey: UserDefaultsKeys.accentColor)
 

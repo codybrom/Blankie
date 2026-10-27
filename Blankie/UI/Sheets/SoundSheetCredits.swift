@@ -73,8 +73,8 @@ extension SoundSheetForm {
   private func editCreditsRow(for sound: Sound, hasCredit: Bool) -> some View {
     let label = hasCredit ? Text("Edit Credits") : Text("Add Credits")
     #if os(macOS)
-      // No NavigationStack wraps the macOS sheet, so present the editor as its
-      // own sheet rather than a (dead) NavigationLink.
+      // No NavigationStack wraps the macOS sheet, so a NavigationLink would do
+      // nothing; present the editor as its own sheet.
       Button {
         showingCreditsEditor = true
       } label: {

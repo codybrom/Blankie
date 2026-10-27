@@ -4,10 +4,7 @@
 //
 //  Created by Cody Bromley on 6/15/26.
 //
-//  The durable mirror that rehydrates custom-sound / preset-artwork metadata
-//  after a store rebuild. writeJSONIfChanged must skip identical writes (no
-//  artwork churn) yet always persist a changed snapshot, encoded with stable
-//  (sorted-key) bytes so the compare is deterministic.
+//  AppGroupFileMirror.writeJSONIfChanged: skips identical writes, persists changed ones.
 //
 
 import Foundation

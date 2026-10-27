@@ -55,7 +55,6 @@ struct EditableCreditsView: View {
           .accessibilityLabel("Source URL")
       }
 
-      // License
       Picker("License", selection: $selectedLicense) {
         Text("None").tag(nil as License?)
         ForEach(License.allCases, id: \.self) { license in
@@ -63,7 +62,6 @@ struct EditableCreditsView: View {
         }
       }
 
-      // Custom License Details
       if selectedLicense == .custom {
         VStack(alignment: .leading, spacing: 8) {
           Text("License Details")

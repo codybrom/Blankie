@@ -35,9 +35,8 @@
 
     // MARK: - Artwork
 
-    /// Rebuilds the card's artwork, but after the first pass only when the
-    /// preset or the soloed sound actually changed — the system caches artwork
-    /// by id, and a new animated artwork restarts the video.
+    /// Rebuilds the card's artwork, after the first pass only when the preset or
+    /// soloed sound changed: artwork is cached by id, and a new animation restarts the video.
     func refreshArtwork(preset: Preset?, fallbackArtworkId: UUID?) {
       let soloSound = AudioManager.shared.soloModeSound
       let soloSoundId = soloSound?.id
@@ -67,9 +66,8 @@
       #endif
     }
 
-    /// Presets without their own lock screen background inherit the app-wide
-    /// default (preset → default → Blankie icon). Substituted on a value copy so
-    /// the fallback is never persisted onto the preset.
+    /// Presets without a lock screen background inherit the app-wide default (then
+    /// the Blankie icon). Applied to a copy so it's never saved to the preset.
     private func effectiveArtworkPreset(for preset: Preset?) -> Preset? {
       var effectivePreset = preset
       if effectivePreset != nil, effectivePreset?.animatedArtwork == nil {
@@ -77,9 +75,8 @@
       } else if effectivePreset == nil, AudioManager.shared.isQuickMix,
         let defaultArtwork = GlobalSettings.shared.defaultLockScreenArtwork
       {
-        // Quick Mix has no preset of its own, so it never reaches the fallback
-        // above. Give it the app-wide default lock screen animation via a
-        // throwaway preset that only carries the artwork.
+        // Quick Mix has no preset, so carry the default lock screen animation on a
+        // throwaway preset.
         effectivePreset = Preset(
           id: UUID(),
           name: "Quick Mix",
@@ -174,10 +171,9 @@
       if id != current { applyFallbackArtwork() }
     }
 
-    /// The drawn fallback a mix without artwork of its own shows. A render can
-    /// fail while the app is in the background; then the last good render for
-    /// the same id stands in, and the next publish tries again rather than
-    /// leaving the card bare (the system never re-reads a bare item).
+    /// The drawn fallback for a mix without its own artwork. A render can fail in the
+    /// background; the last good render for the same id stands in, and with none the
+    /// next publish retries (the system never re-reads a bare item).
     private func applyFallbackArtwork() {
       let source = Self.fallbackArtworkSource()
       let id = NowPlayingSessionMapping.artworkID(
@@ -205,8 +201,8 @@
       model.artwork = Artwork(id: id) { _ in try ArtworkRepresentation(data: data) }
     }
 
-    /// The accent the drawn fallbacks render in, as a stable id component —
-    /// the same two reads `NowPlayingDisplay.fallbackArtworkImage` makes.
+    /// The fallback's accent as a stable id component (the same two reads
+    /// `NowPlayingDisplay.fallbackArtworkImage` makes).
     private var artworkAccentName: String? {
       PresetManager.shared.themingPreset?.accentColorName
         ?? GlobalSettings.shared.customAccentColor?.toString

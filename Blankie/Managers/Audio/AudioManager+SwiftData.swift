@@ -14,8 +14,6 @@ import os
 extension AudioManager {
   // MARK: - SwiftData Integration
 
-  /// Set up the model context for accessing custom sounds
-  /// CRITICAL: Must be called on @MainActor to prevent SwiftData actor violations
   @MainActor
   func setModelContext(_ context: ModelContext) {
     modelContext = context
@@ -23,26 +21,16 @@ extension AudioManager {
     setupCustomSoundObservers()
   }
 
-  /// Load all sounds (built-in + custom) after initialization is complete, so
-  /// PresetManager gets complete sound data. Single-flight: every caller joins
-  /// the one in-flight bootstrap task rather than starting its own load. A run
-  /// that finished before a model context existed (built-ins-only early path)
-  /// retries once a context is set, so custom sounds can't stay unloaded.
+  /// Loads built-in and custom sounds, then initializes PresetManager. Every caller joins
+  /// one bootstrap task, and a run that finished without a model context retries once one is set.
   @MainActor
   func loadCustomSoundsWhenReady() async {
-    // Join the in-flight bootstrap. A run that finished before a model context
-    // existed (built-ins-only early path) needs a retry once one is set — but
-    // only ONE caller may start it, or concurrent waiters each spawn a second
-    // full load (re-instantiating the custom Sound objects the active preset
-    // still holds). After awaiting, the caller that still sees the just-finished
-    // task claims the retry; any other waiter loops and joins the task that
-    // caller installed rather than starting its own.
+    // Only the waiter that sees an unchanged generation starts the retry; the
+    // others loop and join its task, so custom sounds never load twice.
     while let task = launchBootstrapTask {
       let generation = launchBootstrapGeneration
       await task.value
       if hasLoadedCustomSounds || modelContext == nil { return }
-      // No new task was installed while we awaited: we claim the retry. If the
-      // generation moved, another caller already installed one — loop and join.
       if launchBootstrapGeneration == generation { break }
     }
     launchBootstrapGeneration += 1
@@ -51,13 +39,10 @@ extension AudioManager {
     await task.value
   }
 
-  /// The launch bootstrap body. Only one instance ever runs at a time (serialized
-  /// by `loadCustomSoundsWhenReady`'s single-flight task), so the
-  /// `hasLoadedCustomSounds` read/set gap can't race a concurrent caller into a
-  /// second full load.
+  /// The bootstrap body. `loadCustomSoundsWhenReady` runs one at a time, so the
+  /// `hasLoadedCustomSounds` check can't race a second load.
   @MainActor
   private func performLaunchBootstrap() async {
-    // Load built-in sounds first if not already loaded
     if sounds.isEmpty {
       Logger.audio.debug("AudioManager: Loading built-in sounds first...")
       loadSounds()
@@ -65,16 +50,13 @@ extension AudioManager {
 
     guard modelContext != nil else {
       Logger.audio.debug("AudioManager: Model context not ready - built-in sounds only")
-      // Initialize PresetManager with built-in sounds only
       await PresetManager.shared.initializePresetManager()
       reconcileLaunchPlaybackState()
       return
     }
 
-    // For CarPlay, try to load custom sounds even if protected data isn't available
-    // This allows CarPlay to function when the device is locked. UIApplication.shared
-    // is unavailable in app extensions (e.g. the widget extension, which also shares
-    // this file to run App Intents in-process), hence the WIDGET_EXTENSION guard.
+    // Load anyway so CarPlay works while the device is locked. The widget extension
+    // compiles this file for App Intents and has no `UIApplication.shared`.
     #if !os(macOS) && !WIDGET_EXTENSION
       if !UIApplication.shared.isProtectedDataAvailable {
         Logger.audio.debug(
@@ -83,15 +65,10 @@ extension AudioManager {
       }
     #endif
 
-    // Whether a previous no-context run already initialized PresetManager (and
-    // cleared its "Loading Presets…" spinner) with built-in sounds only. If so,
-    // re-apply the current preset after the late custom sounds load below.
-    // `isLoading` is PresetManager's public proxy for that state (it clears
-    // together with the private `isInitializing` at the end of `loadPresets()`).
+    // True if a no-context run already initialized PresetManager with built-ins
+    // only. `isLoading` clears together with its private `isInitializing`.
     let presetManagerWasAlreadyInitialized = !PresetManager.shared.isLoading
 
-    // Load custom sounds once. Serialized by the single-flight task, so this
-    // read/set of `hasLoadedCustomSounds` can't race a concurrent caller.
     if hasLoadedCustomSounds {
       Logger.audio.debug("AudioManager: Custom sounds already loaded, skipping reload")
     } else {
@@ -102,15 +79,12 @@ extension AudioManager {
       loadCustomSounds()
       customSoundLoadPasses += 1
       hasLoadedCustomSounds = true
-      // Back-fill mirrors for sounds saved before mirroring existed, so existing
-      // libraries gain durability without waiting for an edit.
+      // Back-fill mirrors for sounds saved before mirroring existed.
       CustomSoundManager.shared.syncAllMirrors()
 
-      // Custom sounds arrived after a built-ins-only early path already applied
-      // the current preset; re-apply it so they pick up their saved
-      // selection/volume. Autoplay-gated by `isGloballyPlaying`, so this cannot
-      // start audio on its own. Runs before `reconcileLaunchPlaybackState()` so a
-      // deferred solo restore still runs last and wins.
+      // Re-apply the preset so late custom sounds get their saved selection and
+      // volume (no autoplay). Runs before reconcileLaunchPlaybackState() so a
+      // deferred solo restore wins.
       if presetManagerWasAlreadyInitialized,
         let preset = PresetManager.shared.currentPreset
       {
@@ -118,32 +92,23 @@ extension AudioManager {
       }
     }
 
-    // Initialize PresetManager with ALL sounds loaded
     await PresetManager.shared.initializePresetManager()
 
     reconcileLaunchPlaybackState()
 
-    // Publish the initial Siri/Shortcuts vocabulary and Spotlight index now that
-    // presets and sounds are fully loaded.
+    // Siri/Shortcuts vocabulary and the Spotlight index need the full library.
     PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
     // An earlier built-ins-only publish left out custom favorites and pinnable sounds.
     republishWidgetCatalog()
   }
 
-  /// Once every sound and preset is loaded, drop favorites whose target no
-  /// longer exists, and finish (or abandon) a deferred solo restore — falling
-  /// back to the preset if the saved solo sound turns out to be gone. Runs on
-  /// every `loadCustomSoundsWhenReady()` path (including the no-model-context
-  /// one); it's idempotent and safe to re-run.
+  /// Prunes favorites with missing targets and finishes or abandons a deferred
+  /// solo restore (falling back to the preset). Idempotent; runs on every bootstrap path.
   @MainActor
   private func reconcileLaunchPlaybackState() {
-    // Custom sounds may be unavailable this session (SwiftData fell back to an
-    // in-memory store, or the rows haven't loaded). Union the loaded sounds with
-    // the SwiftData rows so a row that exists but didn't load as a Sound is still
-    // valid. If no rows are visible yet a solo favorite points at a non-built-in
-    // sound, that's a likely transient load failure, not a deletion — pass nil so
-    // solo favorites are kept rather than irreversibly pruned (mirrors the bail
-    // in PresetManager.cleanupDeletedCustomSounds).
+    // A custom row or file counts as valid even if it didn't load as a Sound. No
+    // rows plus an unknown solo favorite reads as a transient load failure, so
+    // sound favorites aren't pruned (same bail as cleanupDeletedCustomSounds).
     let customRowNames = Set(CustomSoundManager.shared.getAllCustomSounds().map { $0.fileName })
       .union(CustomSoundManager.shared.customAudioFileNamesOnDisk())
     let validNames = Set(sounds.map { $0.fileName }).union(customRowNames)
@@ -166,8 +131,8 @@ extension AudioManager {
   }
 
   #if !os(macOS) && !WIDGET_EXTENSION
-    /// Wait for protected data to become available before accessing SwiftData
-    /// This prevents crashes during CarPlay cold start on locked devices
+    /// Waits for protected data before touching SwiftData, since CarPlay can
+    /// cold-start on a locked device.
     @MainActor
     private func waitForProtectedDataAvailability() async {
       guard !UIApplication.shared.isProtectedDataAvailable else {
@@ -177,7 +142,6 @@ extension AudioManager {
 
       Logger.audio.debug("AudioManager: Protected data not available, waiting...")
 
-      // Use AsyncStream for Swift 6 compliance
       for await _ in NotificationCenter.default.notifications(
         named: UIApplication.protectedDataDidBecomeAvailableNotification)
       {
@@ -188,23 +152,19 @@ extension AudioManager {
   #endif
 
   func setupCustomSoundObservers() {
-    // Observe custom sound changes
     customSoundObserver = NotificationCenter.default.publisher(for: .customSoundAdded)
       .merge(with: NotificationCenter.default.publisher(for: .customSoundDeleted))
       .sink { [weak self] notification in
         Task { @MainActor in
           self?.syncCustomSounds()
 
-          // Scrub the just-deleted sound from every preset now (syncCustomSounds
-          // has already removed it from `sounds`), so a delete-then-quit can't
-          // leave a preset referencing a missing sound — which fails validation
-          // at next launch.
+          // Scrub presets right away; one referencing a missing sound fails
+          // validation at next launch.
           if notification.name == .customSoundDeleted {
             PresetManager.shared.cleanupDeletedCustomSounds()
           }
 
-          // A custom sound was added or removed — refresh Siri parameters and
-          // the Spotlight index so `PlaySoundIntent` matches the current sounds.
+          // Keeps `PlaySoundIntent` parameters and Spotlight in sync with the sounds.
           PresetManager.shared.refreshDiscoverableEntitiesIfNeeded()
           // Pinnable sounds and solo favorites in the widgets changed too.
           self?.republishWidgetCatalog()

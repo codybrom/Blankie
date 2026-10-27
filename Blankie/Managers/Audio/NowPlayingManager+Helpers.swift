@@ -32,10 +32,8 @@ extension NowPlayingManager {
     return nil
   }
 
-  /// Wraps a pre-rendered image in `MPMediaItemArtwork`. Declared `nonisolated`
-  /// so the request handler closure does NOT inherit `NowPlayingManager`'s
-  /// `@MainActor` isolation — MediaPlayer invokes that handler from a background
-  /// queue, and an isolated closure would force an `unsafeForcedSync` hop.
+  /// Wraps a pre-rendered image in `MPMediaItemArtwork`. `nonisolated` so the handler
+  /// doesn't inherit `@MainActor`; MediaPlayer calls it from a background queue.
   #if os(iOS) || os(visionOS)
     nonisolated static func makeArtwork(from image: UIImage) -> MPMediaItemArtwork {
       MPMediaItemArtwork(boundsSize: image.size) { _ in image }

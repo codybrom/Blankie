@@ -20,7 +20,6 @@ import os
         sections: []
       )
 
-      // Set tab image
       template.tabImage = UIImage(systemName: "speaker.wave.2")
 
       updateTemplate(template)
@@ -29,7 +28,6 @@ import os
 
     @MainActor
     static func updateTemplate(_ template: CPListTemplate) {
-      // Safety check for initialization
       guard !AudioManager.shared.sounds.isEmpty else {
         Logger.carPlay.debug("SoundsListTemplate: No sounds loaded yet")
         let loadingItem = CPListItem(text: String(localized: "Loading sounds..."), detailText: nil)
@@ -38,24 +36,20 @@ import os
         return
       }
 
-      // Custom sounds should already be loaded during app initialization
-
       var sections: [CPListSection] = []
 
-      // Get all sounds and sort alphabetically. Preset-use-only sounds (explicit
-      // or implied by a non-looping one-shot) are hidden here just like in the
-      // app's grid and Library Sounds list — they can't stand alone.
+      // Preset-use-only sounds (explicit, or implied by a non-looping one-shot)
+      // can't play alone, so they're hidden here as in the app.
       let allSounds =
         AudioManager.shared.sounds
         .filter { !$0.isPresetUseOnly }
         .sorted { $0.title < $1.title }
 
-      // Group sounds by first letter for better navigation
+      // One section per first letter for CarPlay's index.
       let groupedSounds = Dictionary(grouping: allSounds) { sound in
         String(sound.title.prefix(1).uppercased())
       }
 
-      // Create sections for each letter
       let sortedKeys = groupedSounds.keys.sorted()
       for key in sortedKeys {
         if let sounds = groupedSounds[key] {
@@ -63,7 +57,7 @@ import os
           sections.append(
             CPListSection(
               items: soundItems,
-              header: nil,  // No header for cleaner look
+              header: nil,
               sectionIndexTitle: key
             )
           )
@@ -81,13 +75,11 @@ import os
         detailText: nil
       )
 
-      // Add accessory if playing in solo mode
       if isInSoloMode {
         item.accessoryType = .disclosureIndicator
         item.setText("\(sound.title) ✓")
       }
 
-      // Set image
       if let image = getSoundImage(for: sound) {
         item.setImage(image)
       }
@@ -105,29 +97,24 @@ import os
     /// Solos a sound tapped in the car. The preset list's solo rows share it.
     @MainActor
     static func playSoundInSoloMode(_ sound: Sound) {
-      // The car may have gone away before this tap ran. Never start on the phone.
+      // The car may have disconnected before this tap ran. Never start on the phone.
       guard CarPlayInterfaceController.shared.isConnected else { return }
 
-      // A row drawn before the sound was deleted or became preset-use-only can't
-      // solo it (the same rule the intents follow).
+      // A stale row can't solo a sound that was deleted or became preset-use-only
+      // (the same rule the intents follow).
       guard AudioManager.shared.sounds.contains(where: { $0 === sound }), !sound.isPresetUseOnly
       else {
         CarPlayInterfaceController.shared.updateAllTemplates()
         return
       }
 
-      // If this sound is already in solo mode, just show Now Playing
       if AudioManager.shared.soloModeSound?.id == sound.id {
-        // Just navigate to Now Playing screen without changing playback
         CarPlayInterfaceController.shared.showNowPlaying()
       } else {
-        // Switch to solo mode for a different sound
         AudioManager.shared.enterSoloMode(for: sound)
-        // Show Now Playing when starting a new solo sound
         CarPlayInterfaceController.shared.showNowPlaying()
       }
 
-      // Update interface
       CarPlayInterfaceController.shared.updateAllTemplates()
     }
   }
@@ -143,7 +130,6 @@ import os
 
   extension SoundsListTemplate {
     static func getSoundImage(for sound: Sound) -> UIImage? {
-      // Create a circular background with the icon centered
       let size = CGSize(width: 40, height: 40)
       let renderer = UIGraphicsImageRenderer(size: size)
 
@@ -159,10 +145,8 @@ import os
       let backgroundColor = getBackgroundColor(for: sound, isInSoloMode: isInSoloMode)
 
       if isInSoloMode {
-        // Show colored background when playing
         backgroundColor.withAlphaComponent(0.3).setFill()
       } else {
-        // Very subtle gray background when not playing
         UIColor.systemGray.withAlphaComponent(0.1).setFill()
       }
 
@@ -171,11 +155,9 @@ import os
     }
 
     private static func drawIcon(size: CGSize, isInSoloMode: Bool, sound: Sound) {
-      // Draw icon
       let iconName = sound.systemIconName
       let icon = UIImage(systemName: iconName) ?? UIImage(systemName: "speaker.wave.2")!
 
-      // Configure icon size proportionally
       let iconConfig = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
       let configuredIcon = icon.withConfiguration(iconConfig)
 
@@ -187,7 +169,6 @@ import os
         height: iconSize.height
       )
 
-      // Set icon color based on state and customization
       if isInSoloMode {
         getBackgroundColor(for: sound, isInSoloMode: isInSoloMode).setFill()
       } else {
@@ -198,7 +179,6 @@ import os
 
     private static func getBackgroundColor(for sound: Sound, isInSoloMode: Bool) -> UIColor {
       if isInSoloMode {
-        // Use the same color hierarchy as the main app
         return UIColor.carPlayIconTint
       } else {
         return UIColor.systemGray

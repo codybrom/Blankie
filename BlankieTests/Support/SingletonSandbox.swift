@@ -4,10 +4,8 @@
 //
 //  Created by Cody Bromley on 10/12/26.
 //
-//  Isolates a test from the shared managers' live state. That covers the mixer's
-//  sounds and modes, the preset list, the persisted preset keys, and (on
-//  request) the custom-sound and preset-artwork stores. `restore()` puts all of it back and
-//  removes the custom-sound files the test registered.
+//  Isolates a test from the shared managers: mixer sounds and modes, presets, persisted preset
+//  keys and (on request) in-memory stores. `restore()` puts it back and removes tracked files.
 //
 
 import AVFoundation

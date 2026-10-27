@@ -75,7 +75,6 @@ nonisolated struct CustomSoundMetadata: Codable, Identifiable {
       customSoundData.detectedLUFS != nil ? Double(customSoundData.detectedLUFS!) : nil
     sha256Hash = customSoundData.sha256Hash
 
-    // Create credits from custom sound data
     var credits: SoundCredits?
     if customSoundData.creditAuthor != nil || customSoundData.creditSourceUrl != nil {
       credits = SoundCredits(

@@ -4,13 +4,9 @@
 //
 //  Created by Cody Bromley on 7/8/26.
 //
-//  A single identity for "what a favorite / lock-screen / CarPlay / Siri entry
-//  points at": the default preset, a saved preset, Quick Mix, or a soloed sound.
-//  This is the one place the persisted `starredItems` token grammar is encoded
-//  and decoded — every surface that used to re-parse the four token shapes by
-//  hand can route through here instead. The `token` output is byte-identical to
-//  the strings already stored in App Group storage, so it is user data and must
-//  not change (pinned by WidgetTokenGrammarTests / PlayableItemTests).
+//  What a favorite, lock screen, CarPlay or Siri entry points at, and the one
+//  codec for the persisted `starredItems` tokens. Tokens are user data and must
+//  not change (pinned by WidgetTokenGrammarTests and PlayableItemTests).
 //
 
 import Foundation
@@ -26,7 +22,7 @@ nonisolated enum PlayableItem: Equatable, Hashable {
   /// A soloed sound, identified by its stable `fileName`.
   case solo(fileName: String)
 
-  // Canonical token strings. These are the persisted grammar — do not change.
+  // Canonical token strings. These are persisted; never change them.
   private static let allSoundsToken = "allSounds"
   private static let quickMixToken = "quickMix"
   /// A soloed sound is stored as `"solo:<fileName>"`.
@@ -52,8 +48,7 @@ nonisolated enum PlayableItem: Equatable, Hashable {
     }
   }
 
-  /// The persisted token for this item — identical to the strings already in
-  /// App Group storage.
+  /// The persisted token for this item, matching the strings in App Group storage.
   var token: String {
     switch self {
     case .allSounds:

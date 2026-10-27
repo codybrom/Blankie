@@ -21,14 +21,13 @@ import SwiftUI
     @State private var globalSettings = GlobalSettings.shared
     @Environment(\.openWindow) private var openWindow
 
-    /// Master-volume nudge per keystroke. 1/16 matches the macOS hardware
-    /// volume keys, so ⌘↑/⌘↓ feel native next to them.
+    /// Master-volume step per keystroke. 1/16 matches the macOS hardware volume keys.
     private let volumeStep = 1.0 / 16.0
 
     var body: some Commands {
-      // In the system View menu, not SidebarCommands(), so the toggle can bind
-      // ⌘S (free in Blankie — no documents to save) rather than the fixed ⌃⌘S.
-      // A CommandMenu("View") would add a second View menu beside the system's.
+      // Replaces the View menu's sidebar item so the toggle can use ⌘S (Blankie has no
+      // documents to save). SidebarCommands() fixes it to ⌃⌘S, and a CommandMenu("View")
+      // would add a second View menu.
       CommandGroup(replacing: .sidebar) {
         Button("Show/Hide Sidebar") {
           NSApp.sendAction(#selector(NSSplitViewController.toggleSidebar(_:)), to: nil, from: nil)
@@ -37,9 +36,8 @@ import SwiftUI
       }
 
       CommandMenu("Controls") {
-        // Space mirrors the play/pause convention in music apps (Music, Spotify).
-        // SwiftUI routes the binding through the focus chain, so a focused text
-        // field or sound tile still gets the keystroke first.
+        // Space follows the music-app play/pause convention. The binding routes through
+        // the focus chain, so a focused text field or sound tile gets the key first.
         Button(audioManager.isGloballyPlaying ? "Pause" : "Play") {
           audioManager.togglePlayback()
         }
@@ -48,8 +46,8 @@ import SwiftUI
 
         Divider()
 
-        // Next/Previous cycle the favorites list (starred presets + solo
-        // sounds) — the same path CarPlay and the Now Playing remote drive.
+        // Cycles favorites (starred presets and solo sounds), the same path CarPlay
+        // and the Now Playing remote use.
         Button("Next Favorite") {
           audioManager.navigateToNextPreset()
         }
@@ -79,9 +77,8 @@ import SwiftUI
 
       CommandGroup(replacing: .appInfo) {
         Button {
-          // Open the Settings pane directly on its About sub-page (sub-page
-          // flag first so the pane never flashes the settings root). The pane
-          // lives in the main window — reopen it if closed, or focus it.
+          // Sub-page flag first so the pane doesn't flash the settings root. The pane
+          // lives in the main window, which openWindow reopens or focuses.
           appState.showingSettingsAboutPage = true
           appState.showingSettingsPane = true
           openWindow(id: "main")
@@ -91,9 +88,8 @@ import SwiftUI
       }
 
       CommandGroup(replacing: .newItem) {
-        // Reopen the real "main" Window scene. Hand-building an NSWindow +
-        // NSHostingView here breaks the split view's toolbar integration
-        // (merged toolbar cluster, floating sidebar).
+        // Reopens the "main" Window scene. A hand-built NSWindow breaks the split
+        // view's toolbar integration.
         Button("New Window") {
           openWindow(id: "main")
         }
@@ -111,9 +107,8 @@ import SwiftUI
           Task { await exportCurrentPreset() }
         }
         .keyboardShortcut(.exportPreset)
-        // Disabled when no preset is effectively in control: Quick Mix already
-        // clears currentPreset, but solo preserves it — so gate on solo too, so
-        // ⌘E never exports the hidden preset while you're hearing one sound.
+        // Solo keeps currentPreset set, so ⌘E is also disabled in solo to avoid
+        // exporting a preset you aren't hearing.
         .disabled(presetManager.currentPreset == nil || audioManager.soloModeSound != nil)
 
         Button("Manage Sounds") {
@@ -130,7 +125,6 @@ import SwiftUI
         }
       #endif
 
-      // Add Help menu command
       CommandGroup(replacing: .help) {
         Button("Keyboard Shortcuts") {
           showingShortcuts = true
@@ -151,9 +145,8 @@ import SwiftUI
       }
     }
 
-    /// Exports the currently playing preset as a `.blankie` file. Lives here
-    /// (rather than the Edit sheet) so ⌘E works from anywhere — the archive
-    /// build is the same off-main-actor `PresetExporter` path the sheet uses.
+    /// Exports the current preset as a `.blankie` file so ⌘E works from anywhere.
+    /// Uses the same off-main-actor `PresetExporter` path as the Edit sheet.
     @MainActor
     private func exportCurrentPreset() async {
       guard let preset = presetManager.currentPreset else { return }

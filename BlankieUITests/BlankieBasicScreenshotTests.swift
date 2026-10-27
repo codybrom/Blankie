@@ -55,15 +55,7 @@ final class BlankieBasicScreenshotTests: XCTestCase {
   @MainActor
   func testBasicScreenshotsAllLanguages() throws {
     print("\n=== STARTING SCREENSHOT TEST ===\n")
-    // Screenshots are saved as XCTest attachments
-    // To access them:
-    // 1. Open Report Navigator (Cmd+9) in Xcode
-    // 2. Find this test run
-    // 3. Click on the test
-    // 4. Screenshots appear as attachments in the test report
-    // 5. Right-click on attachments to save them
-
-    // Languages to test
+    // Screenshots are saved as XCTest attachments on the test report.
     let languages = [
       ("en", "English"),
       ("de", "German"),
@@ -74,9 +66,6 @@ final class BlankieBasicScreenshotTests: XCTestCase {
       ("zh-Hans", "Chinese_Simplified"),
     ]
 
-    // No need to configure sounds manually - they'll be set via UserDefaults
-
-    // Now take screenshots in all languages and appearances
     print("\n=== Starting screenshot capture phase ===")
 
     for isDark in [false, true] {
@@ -89,7 +78,6 @@ final class BlankieBasicScreenshotTests: XCTestCase {
         let app = XCUIApplication()
         app.terminate()
 
-        // Configure launch arguments for screenshots
         app.launchArguments = [
           "-AppleLanguages", "(\(langCode))",
           "-AppleLocale", "\(langCode)",
@@ -101,7 +89,6 @@ final class BlankieBasicScreenshotTests: XCTestCase {
           app.launchArguments += ["-ForceDarkMode", "YES"]
         }
 
-        // Launch app
         app.launch()
 
         // Wait for UI to stabilize and window to be configured
@@ -114,10 +101,8 @@ final class BlankieBasicScreenshotTests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
 
-        // Print what we're capturing
         print("✓ Captured screenshot: \(langName) - \(appearanceName)")
 
-        // Terminate app
         app.terminate()
       }
 
