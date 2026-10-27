@@ -219,6 +219,13 @@
 			);
 			target = F95914CF2FDF1D2300808460 /* BlankieAssetDownloader */;
 		};
+		F97812B62EA2EF1E00580F1A /* Exceptions for "Blankie" folder in "Blankie" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Managers/Audio/README.md,
+			);
+			target = F913505E2D233A43003C85BE /* Blankie */;
+		};
 		FADE000000000000005B0001 /* Exceptions for "Blankie" folder in "BlankiePresetPreview" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -258,6 +265,7 @@
 		F9BC93262D41457D00E450FC /* Blankie */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				F97812B62EA2EF1E00580F1A /* Exceptions for "Blankie" folder in "Blankie" target */,
 				FADE000000000000005B0001 /* Exceptions for "Blankie" folder in "BlankiePresetPreview" target */,
 				F91C40D12FF54FB100C58FC6 /* Exceptions for "Blankie" folder in "BlankieWidgetExtension" target */,
 			);
