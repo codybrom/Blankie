@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Tapping Pause on a widget after Blankie was force-quit no longer starts playback.
 - First-run setup and the sound credits in About now sort sounds by the names you see.
 
 ## [2.1.0] - 2026-10-28
