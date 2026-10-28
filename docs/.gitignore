@@ -13,6 +13,7 @@ public/*
 !public/robots.txt
 !public/favicon.ico
 !public/llms.txt
+!public/.well-known/
 !public/.assetsignore
 
 # dependencies

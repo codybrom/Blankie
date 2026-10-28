@@ -1,0 +1,35 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Blankie",
+    "identifier": "https://blankie.rest/"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:blankie.rest:docs:llms-txt",
+      "displayName": "Blankie site index",
+      "description": "What Blankie is, when it fits, key facts and a link to every page on blankie.rest. Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac and CarPlay.",
+      "type": "text/markdown",
+      "url": "https://blankie.rest/llms.txt",
+      "representativeQueries": [
+        "free ambient sound app for iPhone with no subscription",
+        "white noise app for Mac that works offline",
+        "app that mixes rain and fireplace sounds for sleep",
+        "ambient sounds in CarPlay"
+      ]
+    },
+    {
+      "identifier": "urn:air:blankie.rest:docs:llms-full",
+      "displayName": "Blankie guides and docs, every page in one file",
+      "description": "The full text of every page on blankie.rest, including how-to guides for presets, the sleep timer, importing sounds, Siri and Shortcuts.",
+      "type": "text/markdown",
+      "url": "https://blankie.rest/llms-full.txt",
+      "representativeQueries": [
+        "how do I set a sleep timer in Blankie",
+        "import my own sounds into Blankie on iPhone",
+        "control Blankie with Siri or Shortcuts",
+        "where to find free ambient sounds to import"
+      ]
+    }
+  ]
+}

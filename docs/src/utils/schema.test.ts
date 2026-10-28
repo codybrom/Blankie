@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ldGraph, organizationLd, softwareAppLd, websiteLd } from "./schema";
+import {
+  itemListLd,
+  ldGraph,
+  organizationLd,
+  softwareAppLd,
+  videoLd,
+  websiteLd,
+} from "./schema";
 import { SOCIAL_LINKS } from "./socials";
 
 describe("homepage JSON-LD", () => {
@@ -27,6 +34,45 @@ describe("homepage JSON-LD", () => {
     expect(org.address).toEqual({
       "@type": "PostalAddress",
       addressCountry: "US",
+    });
+  });
+
+  it("adds the screenshot only when given one", () => {
+    expect(softwareAppLd()).not.toHaveProperty("screenshot");
+    const app = softwareAppLd({
+      screenshot: { path: "/_astro/hero.png", caption: "Blankie" },
+    });
+    expect(app.screenshot).toEqual({
+      "@type": "ImageObject",
+      url: "https://blankie.rest/_astro/hero.png",
+      caption: "Blankie",
+    });
+  });
+
+  it("describes a product video with absolute URLs", () => {
+    const video = videoLd({
+      name: "Lock Screen",
+      description: "Blankie on the Lock Screen.",
+      path: "/_astro/lock.mp4",
+      thumbnailPath: "/_astro/lock.jpg",
+      uploadDate: "2026-10-28",
+    });
+    expect(video["@type"]).toBe("VideoObject");
+    expect(video.contentUrl).toBe("https://blankie.rest/_astro/lock.mp4");
+    expect(video.thumbnailUrl).toBe("https://blankie.rest/_astro/lock.jpg");
+    expect(video.uploadDate).toBe("2026-10-28");
+  });
+
+  it("numbers list items from one", () => {
+    const list = itemListLd("Features", [
+      { name: "Offline", description: "Works without a connection." },
+      { name: "Private", description: "Collects nothing." },
+    ]);
+    expect(list["@type"]).toBe("ItemList");
+    expect(list.itemListElement.map((i) => i.position)).toEqual([1, 2]);
+    expect(list.itemListElement[1]).toMatchObject({
+      "@type": "ListItem",
+      name: "Private",
     });
   });
 

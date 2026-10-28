@@ -63,7 +63,10 @@ export function articleLd(opts: {
 export const APP_RATING = { value: 4.9, count: 70 };
 
 /** Blankie itself, for pages whose subject is the app. */
-export function softwareAppLd(opts?: { withRating?: boolean }) {
+export function softwareAppLd(opts?: {
+  withRating?: boolean;
+  screenshot?: { path: string; caption: string };
+}) {
   return {
     "@type": "SoftwareApplication",
     name: "Blankie",
@@ -80,6 +83,15 @@ export function softwareAppLd(opts?: { withRating?: boolean }) {
             ratingValue: APP_RATING.value,
             ratingCount: APP_RATING.count,
             bestRating: 5,
+          },
+        }
+      : {}),
+    ...(opts?.screenshot
+      ? {
+          screenshot: {
+            "@type": "ImageObject",
+            url: `${SITE}${opts.screenshot.path}`,
+            caption: opts.screenshot.caption,
           },
         }
       : {}),
@@ -115,6 +127,42 @@ export function organizationLd() {
       url: `${SITE}/contact/`,
     },
     address: { "@type": "PostalAddress", addressCountry: "US" },
+  };
+}
+
+/** A list the page shows, such as its feature cards. */
+export function itemListLd(
+  name: string,
+  items: { name: string; description: string }[],
+) {
+  return {
+    "@type": "ItemList",
+    name,
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.name,
+      description: item.description,
+    })),
+  };
+}
+
+/** A product video shown on the page, about the app. */
+export function videoLd(opts: {
+  name: string;
+  description: string;
+  path: string;
+  thumbnailPath: string;
+  uploadDate: string;
+}) {
+  return {
+    "@type": "VideoObject",
+    name: opts.name,
+    description: opts.description,
+    contentUrl: `${SITE}${opts.path}`,
+    thumbnailUrl: `${SITE}${opts.thumbnailPath}`,
+    uploadDate: opts.uploadDate,
+    about: { "@type": "SoftwareApplication", name: "Blankie", url: SITE },
   };
 }
 

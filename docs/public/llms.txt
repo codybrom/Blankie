@@ -4,7 +4,12 @@
 
 Blankie is made by Cody Bromley, an independent developer. Every feature is free, with nothing locked behind a paywall or trial. All sounds are bundled in the app, so it plays offline, and presets, settings and imported sounds stay on your device.
 
-Every page on this site also has a Markdown version at its URL with `.md` in place of the trailing slash, for example https://blankie.rest/guides/sleep-timer.md (the homepage is https://blankie.rest/index.md).
+## For agents
+
+- Access: everything on this site is public. There's no API, no authentication and nothing to sign in to.
+- Markdown: every page has a Markdown version at its URL with `.md` in place of the trailing slash, for example https://blankie.rest/guides/sleep-timer.md (the homepage is https://blankie.rest/index.md). Adding `?mode=agent` to a page URL, or sending `Accept: text/markdown`, returns the same Markdown. On the homepage, `?mode=agent` returns this file.
+- Full text: every page in one file is at https://blankie.rest/llms-full.txt.
+- Automating the app: Blankie has no web API or accounts. It runs on the person's own device, and its Shortcuts actions are how to automate it on Mac, iPhone and iPad: Play, Pause, Toggle Playback, Play Preset, Play Sound, Start/Stop Sleep Timer, Set Volume and Set Sound Volume. On iPhone and iPad, Siri can start a preset, a single sound or a sleep timer. See [Control Blankie from Anywhere](https://blankie.rest/guides/control-blankie-anywhere/).
 
 ## When to use Blankie
 
@@ -55,6 +60,7 @@ Blankie isn't the right answer for:
 - [Get Started with Blankie](https://blankie.rest/guides/get-started/): play your first sound, build a mix and save it as a preset.
 - [Fall Asleep with the Sleep Timer](https://blankie.rest/guides/sleep-timer/): set a timer on iPhone, iPad or Mac so Blankie stops on its own.
 - [Control Blankie from Anywhere](https://blankie.rest/guides/control-blankie-anywhere/): widgets, Siri, Shortcuts, Spotlight, the Lock Screen, Control Center, headphones and CarPlay.
+- [Blankie Keyboard Shortcuts for Mac](https://blankie.rest/guides/keyboard-shortcuts-mac/): every shortcut in Blankie for macOS.
 - [Quick Mix, Single Sounds and Presets](https://blankie.rest/guides/quick-mix-and-single-sounds/): how the three ways to play sounds fit together.
 - [Create and Theme Presets](https://blankie.rest/guides/create-and-manage-presets/): save, edit, theme and favorite your mixes.
 - [Play Blankie Alongside Music, Podcasts or Audiobooks](https://blankie.rest/guides/mix-with-other-audio/): run ambient sounds under other audio.
@@ -64,17 +70,27 @@ Blankie isn't the right answer for:
 - [Import Your Own Sounds on iPhone & iPad](https://blankie.rest/guides/import-sounds-iphone-ipad/): add audio from the Files app or iCloud Drive.
 - [Turn Voice Memos Into Ambient Sounds](https://blankie.rest/guides/import-voice-memos/): loop your own recordings.
 - [Import Your Own Sounds on Mac](https://blankie.rest/guides/import-sounds-mac/): add audio files on macOS.
+- [Convert Audio Files for Blankie](https://blankie.rest/guides/convert-audio-files/): convert WMA and other unsupported formats, or pull the audio from a video, so it imports.
+- [Custom Sound Settings: Loop, Sound Check & Credits](https://blankie.rest/guides/custom-sound-settings/): looping, fades, music tags, Preset Use Only, loudness matching and credits for imported sounds.
 - [Share Presets with Friends](https://blankie.rest/guides/share-presets/): export a preset as a .blankie file.
 - [Where to Find Free Ambient Sounds](https://blankie.rest/guides/find-free-ambient-sounds/): legal sources for free sounds and field recordings.
+- [Download Sounds from Freesound](https://blankie.rest/guides/download-sounds-from-freesound/): find, download and import Creative Commons sounds from Freesound.org.
+- [Record Your Own Ambient Sounds](https://blankie.rest/guides/record-your-own-ambient-sounds/): capture rain, a fireplace or café sounds on your iPhone and loop them in Blankie.
+- [Common Sound Licenses, Explained](https://blankie.rest/guides/sound-licenses-explained/): what CC0, CC BY, BY-NC and other licenses mean, and how to track attribution.
+- [Can you sell Blankie sound packs?](https://blankie.rest/guides/sell-sound-packs/): which sound licenses allow selling a sound pack and which don't.
 - [Looking for Blanket on Mac? Meet Blankie](https://blankie.rest/guides/blanket-for-mac/): Blankie was inspired by the Linux app Blanket.
 
 ## Optional
 
+- [Homepage](https://blankie.rest/): what Blankie is, the devices it runs on and how to download it.
 - [About Blankie](https://blankie.rest/about/): who makes Blankie and what it stands for.
 - [Contact](https://blankie.rest/contact/): feedback, bug reports, press, organizations and translations.
 - [FAQ](https://blankie.rest/faq/): devices, installing, offline use, privacy, languages and more.
 - [Why is Blankie free?](https://blankie.rest/guides/why-is-blankie-free/): where Blankie came from and why it will never cost anything.
 - [Press kit](https://blankie.rest/press/): app description, screenshots and release notes.
+- [Blankie 2.0 press release](https://blankie.rest/press/blankie-2-0/): Blankie comes to iPhone and iPad, with CarPlay, custom sounds and a sleep timer.
+- [Blankie 2.1 press release](https://blankie.rest/press/blankie-2-1/): widgets, Siri, Shortcuts and iPhone Duo support.
 - [Privacy Policy](https://blankie.rest/privacy/)
 - [Credits](https://blankie.rest/credits/): the sound recordists, translators and open-source projects behind Blankie.
+- [Translation status](https://blankie.rest/i18n/): how complete each of Blankie's languages is, and how to help translate.
 - [All guides](https://blankie.rest/guides/)

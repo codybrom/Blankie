@@ -68,6 +68,8 @@ import {
   softwareAppLd,
   websiteLd,
   organizationLd,
+  videoLd,
+  itemListLd,
   ldGraph,
 } from "@/utils/schema";
 import { getTestimonial } from "@/utils/testimonials";
@@ -76,12 +78,6 @@ const title = "Free ambient sound mixer for iPhone, iPad and Mac";
 const appStore =
   "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
 
-// Structured data: the launched, free, multi-platform app and its App Store rating.
-const appJsonLd = ldGraph(
-  softwareAppLd({ withRating: true }),
-  websiteLd(),
-  organizationLd(),
-);
 
 // Award row, each stat flanked by laurel branches. Middle is the marquee.
 const awards = [
@@ -271,6 +267,33 @@ const moreFeatures = [
     sub: "Blankie is developed openly on GitHub and welcomes contributions from the community.",
   },
 ];
+
+// Structured data: the launched, free, multi-platform app and its App Store
+// rating, plus the hero screenshot, the iPhone Lock Screen video and the
+// feature cards the page shows.
+const appJsonLd = ldGraph(
+  softwareAppLd({
+    withRating: true,
+    screenshot: {
+      path: heroDevices.src,
+      caption: "Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo",
+    },
+  }),
+  websiteLd(),
+  organizationLd(),
+  videoLd({
+    name: "Blankie on the iPhone Lock Screen",
+    description:
+      "Blankie playing on the iPhone Lock Screen over animated rain artwork.",
+    path: iphoneLockVideo,
+    thumbnailPath: iphoneLockPoster,
+    uploadDate: "2026-10-28",
+  }),
+  itemListLd(
+    "Blankie features",
+    moreFeatures.map((f) => ({ name: f.title, description: f.sub })),
+  ),
+);
 
 const homeReviewIds = [
   "coworking",

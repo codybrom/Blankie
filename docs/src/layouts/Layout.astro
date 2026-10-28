@@ -4,6 +4,7 @@ import { type ImageMetadata } from "astro";
 import { getImage } from "astro:assets";
 import Nav from "@/components/Nav.astro";
 import Footer from "@/components/Footer.astro";
+import { markdownPathFor } from "@/utils/markdown-path";
 import "../styles/global.css";
 
 import favicon from "../assets/favicon.ico";
@@ -48,6 +49,10 @@ const socialAlt =
   customImageAlt ||
   "Blankie, free ambient sounds for sleep and focus, on a MacBook and an iPhone Duo";
 const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
+// Noindex pages (404, translation status) get no Markdown twin at build.
+const markdownUrl = noindex
+  ? undefined
+  : `${siteUrl}/${markdownPathFor(Astro.url.pathname)}`;
 ---
 
 <!doctype html>
@@ -98,13 +103,36 @@ const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
         imageAlt: socialAlt,
       }}
     />
+    {
+      markdownUrl && (
+        <link rel="alternate" type="text/markdown" href={markdownUrl} />
+      )
+    }
+    <link rel="ard" href="/.well-known/ard.json" />
   </head>
   <body class="overflow-x-hidden bg-navy-deep text-base">
+    <!-- For agents that read the HTML. Hidden on screen and from screen readers. -->
+    <div class="sr-only" aria-hidden="true">
+      For an index of every page on this site, see <a
+        href="/llms.txt"
+        tabindex="-1">llms.txt</a
+      >.{
+        markdownUrl && (
+          <>
+            {" "}
+            This page is also available as <a href={markdownUrl} tabindex="-1">
+              Markdown
+            </a>.
+          </>
+        )
+      }
+    </div>
     <Nav />
     <main>
       <slot />
     </main>
     <Footer />
     <script src="../scripts/nav.ts"></script>
+    <script src="../scripts/webmcp.ts"></script>
   </body>
 </html>

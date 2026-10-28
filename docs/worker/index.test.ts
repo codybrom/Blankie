@@ -7,7 +7,11 @@ const files: Record<string, { body: string; type: string }> = {
   "/faq/": { body: "<h1>FAQ</h1>", type: "text/html; charset=utf-8" },
   "/index.md": { body: "# Blankie", type: "text/markdown" },
   "/faq.md": { body: "# FAQ", type: "text/markdown" },
-  "/llms.txt": { body: "# Blankie", type: "text/plain" },
+  "/.well-known/ard.json": {
+    body: '{"entries":[]}',
+    type: "application/octet-stream",
+  },
+  "/llms.txt": { body: "# Blankie\n\n> Index", type: "text/plain" },
 };
 const pressKit = new Map<string, string>();
 const env = {
@@ -76,6 +80,56 @@ describe("worker", () => {
     );
     expect(res.headers.get("Vary")).toContain("Accept");
     expect(await res.text()).toBe("# Blankie");
+  });
+
+  it("serves llms.txt for the homepage with ?mode=agent", async () => {
+    const res = await get("/?mode=agent", "text/html");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe(
+      "text/markdown; charset=utf-8",
+    );
+    expect(res.headers.get("Link")).toBe(
+      '<https://blankie.rest/>; rel="canonical"',
+    );
+    expect(await res.text()).toBe("# Blankie\n\n> Index");
+  });
+
+  it("serves other pages' Markdown twins for ?mode=agent", async () => {
+    const res = await get("/faq?mode=agent", "text/html");
+    expect(res.headers.get("Content-Type")).toBe(
+      "text/markdown; charset=utf-8",
+    );
+    expect(res.headers.get("Link")).toBe(
+      '<https://blankie.rest/faq/>; rel="canonical"',
+    );
+    expect(await res.text()).toBe("# FAQ");
+  });
+
+  it("advertises the Markdown twin, llms.txt and sitemap on HTML pages", async () => {
+    const link = (await get("/faq/", "text/html")).headers.get("Link");
+    expect(link).toContain('</faq.md>; rel="alternate"; type="text/markdown"');
+    expect(link).toContain('</llms.txt>; rel="describedby"');
+    expect(link).toContain('</sitemap-index.xml>; rel="sitemap"');
+    const home = (await get("/", "text/html")).headers.get("Link");
+    expect(home).toContain('</index.md>; rel="alternate"');
+  });
+
+  it("serves the ARD catalog at both paths as JSON with open CORS", async () => {
+    for (const path of [
+      "/.well-known/ai-catalog.json",
+      "/.well-known/ard.json",
+    ]) {
+      const res = await get(path);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("Content-Type")).toBe("application/json");
+      expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+      expect(await res.text()).toBe('{"entries":[]}');
+    }
+  });
+
+  it("sends no Link header with the 404 page", async () => {
+    const res = await get("/nope/", "text/html");
+    expect(res.headers.get("Link")).toBeNull();
   });
 
   it("serves HTML to browsers with Vary: Accept", async () => {

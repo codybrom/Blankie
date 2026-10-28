@@ -1,4 +1,7 @@
+# Content Signals (https://contentsignals.org): this site may be used for
+# search results, for AI answers and for AI training.
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 
 # Certain social media sites are whitelisted to allow crawlers to access page markup when links to /assets are shared.

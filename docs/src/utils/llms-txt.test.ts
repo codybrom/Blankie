@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // Checks public/llms.txt against the llms.txt format (https://llmstxt.org).
@@ -29,6 +29,15 @@ describe("llms.txt", () => {
   it("links the About and Contact pages", () => {
     expect(llms).toContain("https://blankie.rest/about/");
     expect(llms).toContain("https://blankie.rest/contact/");
+  });
+
+  it("links every guide", () => {
+    const guides = readdirSync(
+      new URL("../content/guides/", import.meta.url),
+    ).map((file) => file.replace(/\.mdx?$/, ""));
+    expect(guides.length).toBeGreaterThan(20);
+    for (const slug of guides)
+      expect(llms).toContain(`https://blankie.rest/guides/${slug}/`);
   });
 
   it("has no em dashes or semicolons", () => {

@@ -22,9 +22,15 @@ const converter = new NodeHtmlMarkdown({
 
 export { markdownPathFor } from "./markdown-path";
 
+/** Points agents reading any page at the site index. */
+export const LLMS_TXT_DIRECTIVE =
+  "> For an index of every page on this site, see [llms.txt](https://blankie.rest/llms.txt). Every page also has a Markdown version like this one.";
+
 /**
- * Converts a built page's <main> to Markdown, or returns null for pages that
- * shouldn't get a twin (redirects, noindex pages and pages without <main>).
+ * Converts a built page's <main> to Markdown with a frontmatter block (title,
+ * description and canonical URL) and the llms.txt directive, or returns null
+ * for pages that shouldn't get a twin (redirects, noindex pages and pages
+ * without <main>).
  */
 export function pageToMarkdown(html: string, url: string): string | null {
   const root = parse(html);
@@ -35,8 +41,12 @@ export function pageToMarkdown(html: string, url: string): string | null {
   const main = root.querySelector("main");
   if (!main) return null;
 
-  // Decorative layers (background video, poster art) carry no content.
-  for (const el of main.querySelectorAll('[aria-hidden="true"]')) el.remove();
+  // Decorative layers (background video, poster art) carry no content, and
+  // data-markdown="skip" marks screen reader text that only describes them.
+  for (const el of main.querySelectorAll(
+    '[aria-hidden="true"], [data-markdown="skip"]',
+  ))
+    el.remove();
 
   // Absolute URLs keep links working when the Markdown is read on its own.
   const origin = new URL(url).origin;
@@ -58,10 +68,26 @@ export function pageToMarkdown(html: string, url: string): string | null {
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  if (!/^# /m.test(body)) {
-    const title = root.querySelector("title")?.text.trim();
-    if (title) body = `# ${title}\n\n${body}`;
-  }
+  const title = root.querySelector("title")?.text.trim();
+  if (!/^# /m.test(body) && title) body = `# ${title}\n\n${body}`;
 
-  return `${body}\n\nSource: ${url}\n`;
+  const description = root
+    .querySelector('meta[name="description"]')
+    ?.getAttribute("content");
+  const canonical =
+    root.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? url;
+  const frontmatter = [
+    title && `title: ${JSON.stringify(title)}`,
+    description && `description: ${JSON.stringify(description)}`,
+    `canonical: ${JSON.stringify(canonical)}`,
+  ].filter(Boolean);
+
+  return `---\n${frontmatter.join("\n")}\n---\n\n${LLMS_TXT_DIRECTIVE}\n\n${body}\n\nSource: ${url}\n`;
+}
+
+/** A page twin without its frontmatter and directive, for llms-full.txt. */
+export function markdownBody(markdown: string): string {
+  return markdown
+    .replace(/^---\n[\s\S]*?\n---\n\n/, "")
+    .replace(`${LLMS_TXT_DIRECTIVE}\n\n`, "");
 }

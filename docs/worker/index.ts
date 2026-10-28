@@ -1,7 +1,9 @@
 // Serves the built site from Workers static assets. Agents that ask for
-// Markdown (Accept: text/markdown) get each page's .md twin, including a
-// Markdown body for 404s. HTML pages carry Vary: Accept so caches keep the two
-// representations apart. Files too large for static assets (the press kit
+// Markdown (Accept: text/markdown or ?mode=agent) get each page's .md twin,
+// including a Markdown body for 404s, and the homepage with ?mode=agent gets
+// llms.txt. HTML pages carry Vary: Accept so caches keep the two
+// representations apart, and Link headers that point agents at the Markdown
+// twin, llms.txt and the sitemap. Files too large for static assets (the press kit
 // zip) are served from the blankie-assets R2 bucket. Each request is logged
 // with network- and bot-level fields only, never anything about the visitor.
 
@@ -20,6 +22,10 @@ interface Env {
 
 const MARKDOWN = "text/markdown; charset=utf-8";
 const PRESS_KIT_PATH = "/blankie-press-kit.zip";
+// The ARD manifest, also served at its older ai-catalog.json name. Agents
+// fetch it cross-origin, so it carries an open CORS header.
+const ARD_PATH = "/.well-known/ard.json";
+const AI_CATALOG_PATH = "/.well-known/ai-catalog.json";
 const PRESS_KIT_KEY = "press/blankie-press-kit.zip";
 
 /** True when Accept names text/markdown and ranks it above text/html. */
@@ -40,6 +46,21 @@ export function prefersMarkdown(accept: string | null): boolean {
 /** Page URLs end in a slash or have no file extension. */
 function isPage(pathname: string): boolean {
   return !/\.[a-z0-9]+$/i.test(pathname.split("/").pop() ?? "");
+}
+
+/** Canonical HTML URL for a page path, with the trailing slash. */
+function canonicalFor(url: URL): string {
+  const trimmed = url.pathname.replace(/^\/+|\/+$/g, "");
+  return `${url.origin}/${trimmed ? `${trimmed}/` : ""}`;
+}
+
+/** RFC 8288 Link header for an HTML page. */
+function pageLinks(url: URL): string {
+  return [
+    `</${markdownPathFor(url.pathname)}>; rel="alternate"; type="text/markdown"`,
+    '</llms.txt>; rel="describedby"; type="text/plain"',
+    '</sitemap-index.xml>; rel="sitemap"; type="application/xml"',
+  ].join(", ");
 }
 
 function withHeaders(response: Response, headers: Record<string, string>) {
@@ -120,17 +141,42 @@ async function serve(request: Request, env: Env): Promise<Response> {
     });
   }
 
+  if (
+    readable &&
+    (url.pathname === AI_CATALOG_PATH || url.pathname === ARD_PATH)
+  ) {
+    const catalog = await env.ASSETS.fetch(new URL(ARD_PATH, url));
+    return withHeaders(catalog, {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    });
+  }
+
   if (!readable || !isPage(url.pathname)) return env.ASSETS.fetch(request);
 
-  if (prefersMarkdown(request.headers.get("Accept"))) {
+  const agentMode = url.searchParams.get("mode") === "agent";
+  const canonical = `<${canonicalFor(url)}>; rel="canonical"`;
+
+  if (agentMode && url.pathname === "/") {
+    const index = await env.ASSETS.fetch(new URL("/llms.txt", url));
+    return withHeaders(index, { "Content-Type": MARKDOWN, Link: canonical });
+  }
+
+  if (agentMode || prefersMarkdown(request.headers.get("Accept"))) {
     const twin = await env.ASSETS.fetch(
       new URL(`/${markdownPathFor(url.pathname)}`, url),
     );
     if (!twin.ok) return markdownNotFound(url);
-    return withHeaders(twin, { "Content-Type": MARKDOWN, Vary: "Accept" });
+    return withHeaders(twin, {
+      "Content-Type": MARKDOWN,
+      Vary: "Accept",
+      Link: canonical,
+    });
   }
 
-  return withHeaders(await env.ASSETS.fetch(request), { Vary: "Accept" });
+  const page = await env.ASSETS.fetch(request);
+  if (page.status !== 200) return withHeaders(page, { Vary: "Accept" });
+  return withHeaders(page, { Vary: "Accept", Link: pageLinks(url) });
 }
 
 export default {

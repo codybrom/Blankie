@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { markdownPathFor, pageToMarkdown } from "./page-markdown";
+import {
+  LLMS_TXT_DIRECTIVE,
+  markdownBody,
+  markdownPathFor,
+  pageToMarkdown,
+} from "./page-markdown";
 
 describe("markdownPathFor", () => {
   it("swaps the trailing slash for .md", () => {
@@ -41,7 +46,29 @@ describe("pageToMarkdown", () => {
       page("<title>Blankie - Credits</title>", "<p>Thanks.</p>"),
       URL,
     );
-    expect(md?.startsWith("# Blankie - Credits")).toBe(true);
+    expect(markdownBody(md ?? "").startsWith("# Blankie - Credits")).toBe(true);
+  });
+
+  it("opens with frontmatter and the llms.txt directive", () => {
+    const md = pageToMarkdown(
+      page(
+        '<title>Blankie - Sleep Timer</title><meta name="description" content="Stop on its own."><link rel="canonical" href="https://blankie.rest/guides/sleep-timer/">',
+        "<h1>Sleep Timer</h1>",
+      ),
+      URL,
+    );
+    expect(
+      md?.startsWith(`---
+title: "Blankie - Sleep Timer"
+description: "Stop on its own."
+canonical: "https://blankie.rest/guides/sleep-timer/"
+---
+
+${LLMS_TXT_DIRECTIVE}
+
+# Sleep Timer`),
+    ).toBe(true);
+    expect(markdownBody(md ?? "").startsWith("# Sleep Timer")).toBe(true);
   });
 
   it("makes site-relative links and images absolute", () => {
@@ -60,12 +87,13 @@ describe("pageToMarkdown", () => {
     const md = pageToMarkdown(
       page(
         "<title>t</title>",
-        '<h1>t</h1><div aria-hidden="true"><div><p>Decor</p></div></div><nav><a href="#a">Jump</a></nav><script>x()</script><img src="/bg.webp" alt=""><p>Kept</p>',
+        '<h1>t</h1><div aria-hidden="true"><div><p>Decor</p></div></div><span class="sr-only" data-markdown="skip">Video of waves</span><nav><a href="#a">Jump</a></nav><script>x()</script><img src="/bg.webp" alt=""><p>Kept</p>',
       ),
       URL,
     );
     expect(md).toContain("Kept");
     expect(md).not.toContain("Decor");
+    expect(md).not.toContain("Video of waves");
     expect(md).not.toContain("Jump");
     expect(md).not.toContain("x()");
     expect(md).not.toContain("bg.webp");
