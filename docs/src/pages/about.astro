@@ -1,0 +1,67 @@
+---
+import ProsePage from "../layouts/ProsePage.astro";
+
+const title = "About Blankie";
+const description =
+  "Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac and CarPlay, made by independent developer Cody Bromley.";
+---
+
+<ProsePage title={title} description={description}>
+  <p>
+    Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac and
+    CarPlay. Turn on sounds like rain, ocean waves or a crackling fireplace, set
+    each one to its own volume and let the mix play while you sleep, focus or
+    unwind. It's made by independent developer <a
+      href="https://github.com/codybrom">Cody Bromley</a
+    > and inspired by <a href="https://apps.gnome.org/Blanket/">Blanket</a>, the
+    free, open-source Linux app by Rafael Mardojai and contributors.
+  </p>
+
+  <h2>What Blankie stands for</h2>
+
+  <ul>
+    <li>
+      <strong>Free for everyone, forever.</strong> Blankie was <a
+        href="/guides/why-is-blankie-free/">built on the idea</a
+      > that it's hard to fully relax if you're being charged, bombarded with ads
+      or having your privacy invaded. Every feature is included, with no ads, subscriptions
+      or in-app purchases.
+    </li>
+    <li>
+      <strong>Your data stays yours.</strong> There's no account, no analytics and
+      no tracking. Every sound is bundled in the app, so it plays offline, and your
+      presets, settings and imported sounds never leave your device.
+    </li>
+    <li>
+      <strong>Open to everyone.</strong> The code for the app and this website is
+      on <a href="https://github.com/codybrom/blankie">GitHub</a>, so anyone can
+      read it, change it or help make it better.
+    </li>
+    <li>
+      <strong>Credit where it's due.</strong> Blankie is built on openly licensed
+      sounds, volunteer translations and other open-source projects. Everyone who
+      made them is named on the <a href="/credits/">Credits</a> page, and keeping
+      Blankie free is how that generosity gets passed along.
+    </li>
+  </ul>
+
+  <h2>Who uses it</h2>
+
+  <p>
+    Blankie has been downloaded more than 25,000 times, and schools and
+    organizations have deployed it to more than 1,000 devices through Apple
+    School Manager and Apple Business Manager. It's available in 12 languages
+    and keeps getting better thanks to contributors and translators around the
+    world.
+  </p>
+
+  <h2>Learn more</h2>
+
+  <ul>
+    <li><a href="/guides/get-started/">Get Started with Blankie</a></li>
+    <li><a href="/faq/">Frequently asked questions</a></li>
+    <li><a href="/press/">Press kit</a></li>
+    <li><a href="/privacy/">Privacy Policy</a></li>
+    <li><a href="/contact/">Contact</a></li>
+  </ul>
+</ProsePage>

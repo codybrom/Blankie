@@ -1,0 +1,73 @@
+---
+import ProsePage from "../layouts/ProsePage.astro";
+import { SOCIAL_LINKS } from "@/utils/socials";
+
+const title = "Contact";
+const description =
+  "How to reach Blankie: feedback and bug reports, press, schools and organizations, translations and beta testing.";
+---
+
+<ProsePage title={title} description={description}>
+  <p>
+    Blankie is a passion project by <a href="https://github.com/codybrom"
+      >Cody Bromley</a
+    >. Here's the best ways to reach me depending on what you need.
+  </p>
+
+  <h2>Feedback and Bug Reports</h2>
+
+  <p>
+    The easiest way to share feedback or report a bug is <a
+      href="https://forms.gle/fRwxBEQqPK5qgH427">this short form</a
+    >. Your email address is optional and only used to reply to you. If you're
+    comfortable with GitHub, you can also open an issue on the <a
+      href="https://github.com/codybrom/blankie/issues">Blankie repository</a
+    >. If you're reporting a bug, please add as much detail as possible, including what happened and how to reproduce the issue.
+  </p>
+
+  <h2>Media, Journalists & Press</h2>
+
+  <p>
+    Email <a href="mailto:press@blankie.rest">press@blankie.rest</a>. The <a
+      href="/press/">press kit</a
+    > has facts about the app, screenshots and logos.
+  </p>
+
+  <h2>Schools, Organizations and Businesses</h2>
+
+  <p>
+    Blankie is available for free in Apple School Manager and Apple Business Manager. For
+    deployment questions, or a customized version with your organization's
+    branding, sounds or presets, email <a href="mailto:info@blankie.rest"
+      >info@blankie.rest</a
+    >.
+  </p>
+
+  <h2>Translations</h2>
+
+  <p>
+    To help translate Blankie or report a translation issue, email <a
+      href="mailto:i18n@blankie.rest">i18n@blankie.rest</a
+    > or start from the <a href="/i18n/">translations page</a>.
+  </p>
+
+  <h2>Beta testing</h2>
+
+  <p>
+    Try new features before they ship by joining the <a
+      href="https://testflight.apple.com/join/XgpBpWv8">public TestFlight</a
+    >. You can provide feedback using Feedback Assistant on your device or by using the above Feedback and Bug Reports form or GitHub issues.
+  </p>
+
+  <h2>Find Blankie Online</h2>
+
+  <ul>
+    {
+      SOCIAL_LINKS.map((s) => (
+        <li>
+          <a href={s.href}>{s.label}</a>
+        </li>
+      ))
+    }
+  </ul>
+</ProsePage>

@@ -1,0 +1,117 @@
+---
+// Plain text pages (Privacy, About, Contact, 404) styled like Credits: a
+// centered hero, then sections whose h2s get the same hairline rule as
+// SectionHeader.
+import Layout from "./Layout.astro";
+import Glow from "@/components/Glow.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Optional line under the title, like the Credits hero text. */
+  dek?: string;
+  /** Optional small line under the title, such as an effective date. */
+  meta?: string;
+  noindex?: boolean;
+}
+
+const { title, description, dek, meta, noindex } = Astro.props;
+---
+
+<Layout title={title} description={description} noindex={noindex}>
+  <section class="relative pt-33 pb-6 text-center">
+    <Glow
+      class="-top-30 left-1/2 h-140 w-215 -translate-x-1/2"
+      pct={26}
+      fade={68}
+    />
+    <div class="relative z-10 mx-auto max-w-5xl px-5">
+      <h1
+        class="text-[clamp(36px,5.4vw,64px)] leading-[1.02] font-semibold tracking-tighter text-balance"
+      >
+        {title}
+      </h1>
+      {
+        dek && (
+          <p class="text-fg-2 mx-auto mt-4.5 max-w-[60ch] text-lg/relaxed">
+            {dek}
+          </p>
+        )
+      }
+      {meta && <p class="text-fg-3 mt-4.5 text-sm">{meta}</p>}
+    </div>
+  </section>
+
+  {
+    Astro.slots.has("default") && (
+      <div class="page-body editorial-links relative z-10 mx-auto max-w-5xl px-5 pt-8 pb-20">
+        <slot />
+      </div>
+    )
+  }
+  <slot name="after" />
+</Layout>
+
+<style>
+  /* Slotted markup is authored in the page, so these reach it via :global. */
+  .page-body :global(h2) {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 2.75rem 0 1.25rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--color-fg-1);
+  }
+  .page-body :global(h2)::after {
+    content: "";
+    flex: 1;
+    min-width: 2rem;
+    height: 1px;
+    background: var(--color-hair);
+  }
+  .page-body > :global(:first-child) {
+    margin-top: 0;
+  }
+  .page-body :global(p),
+  .page-body :global(ul) {
+    margin: 0 0 1rem;
+    line-height: 1.625;
+    color: #d4d7ea;
+  }
+  .page-body :global(ul) {
+    list-style: disc;
+    padding-left: 1.25rem;
+  }
+  .page-body :global(li) {
+    margin: 0.5rem 0;
+  }
+  .page-body :global(li::marker) {
+    color: var(--color-fg-3);
+  }
+  .page-body :global(strong),
+  .page-body :global(b) {
+    font-weight: 600;
+    color: var(--color-fg-1);
+  }
+  /* Opaque like the download card, so the hero glow can't show through. */
+  .page-body :global(.markdown-alert) {
+    margin: 0 0 2rem;
+    background: var(--color-lift);
+    border: 1px solid var(--color-hair);
+  }
+  /* Same small-caps label as guide callouts (.prose-blankie .markdown-alert-title). */
+  .page-body :global(.markdown-alert-title) {
+    margin: 0 0 0.6em;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-ink);
+  }
+  .page-body :global(.markdown-alert > :last-child) {
+    margin-bottom: 0;
+  }
+</style>

@@ -18,6 +18,8 @@ interface Props {
   /** A page's hero art for its social card. Defaults to the site promo image. */
   image?: ImageMetadata;
   imageAlt?: string;
+  /** Keeps a page out of search results (it still follows links). */
+  noindex?: boolean;
 }
 
 const {
@@ -25,6 +27,7 @@ const {
   description: customDescription,
   image: customImage,
   imageAlt: customImageAlt,
+  noindex = false,
 } = Astro.props;
 const siteUrl = "https://blankie.rest";
 const description =
@@ -67,6 +70,7 @@ const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
       title={`Blankie - ${title}`}
       description={description}
       canonical={canonicalUrl}
+      noindex={noindex}
       openGraph={{
         basic: {
           title: `Blankie - ${title}`,

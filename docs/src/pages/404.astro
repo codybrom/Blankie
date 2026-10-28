@@ -1,0 +1,16 @@
+---
+import ProsePage from "../layouts/ProsePage.astro";
+import DownloadCTA from "@/components/DownloadCTA.astro";
+---
+
+<ProsePage
+  title="Page not found"
+  description="This page doesn't exist on blankie.rest."
+  dek="There's nothing at this address. The page may have moved, or the link may have a typo."
+  noindex
+>
+  <DownloadCTA
+    slot="after"
+    blurb="No ads, no paywalls and no privacy tradeoffs. Mix adjustable ambient sounds into your own soundscapes for sleep, rest and focus on iPhone, iPad, CarPlay and Mac."
+  />
+</ProsePage>

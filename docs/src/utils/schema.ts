@@ -2,8 +2,10 @@
 // <script is:inline type="application/ld+json"> in the page templates.
 
 import blankieLogo from "../assets/blankie-icon-v2.png";
+import { SOCIAL_LINKS } from "./socials";
 
 const SITE = "https://blankie.rest";
+const ORGANIZATION_ID = `${SITE}/#organization`;
 
 const publisher = {
   "@type": "Organization",
@@ -65,6 +67,8 @@ export function softwareAppLd(opts?: { withRating?: boolean }) {
   return {
     "@type": "SoftwareApplication",
     name: "Blankie",
+    description:
+      "Free, open-source ambient sound mixer for iPhone, iPad, Mac and CarPlay. Layer adjustable sounds like rain, waves and white noise for sleep and focus.",
     operatingSystem:
       "iOS 26.4 or later, macOS 26.0 or later, iPadOS 26.4 or later",
     applicationCategory: "Ambient sound mixer",
@@ -83,6 +87,27 @@ export function softwareAppLd(opts?: { withRating?: boolean }) {
     downloadUrl: "https://apps.apple.com/app/blankie/id6740096581",
     license: "https://opensource.org/license/mit",
     author,
+  };
+}
+
+/** The site itself, for the homepage. */
+export function websiteLd() {
+  return {
+    "@type": "WebSite",
+    name: "Blankie",
+    url: `${SITE}/`,
+    inLanguage: "en-US",
+    publisher: { "@id": ORGANIZATION_ID },
+  };
+}
+
+/** The Blankie project with its logo and the profiles linked in the footer. */
+export function organizationLd() {
+  return {
+    "@id": ORGANIZATION_ID,
+    ...publisher,
+    sameAs: SOCIAL_LINKS.map((s) => s.href),
+    founder: author,
   };
 }
 

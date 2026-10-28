@@ -52,5 +52,6 @@ Making people happy and helping people find rest and relaxation is worth a lot t
 ## Related guides
 
 - [Get Started with Blankie](/guides/get-started/)
+- [Looking for Blanket on Mac? Meet Blankie](/guides/blanket-for-mac/)
 - [Where to Find Free Ambient Sounds](/guides/find-free-ambient-sounds/)
 - [Common Sound Licenses, Explained](/guides/sound-licenses-explained/)

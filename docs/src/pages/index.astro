@@ -64,7 +64,12 @@ import {
   Terminal,
   MessageSquareText,
 } from "lucide-react";
-import { softwareAppLd, ldGraph } from "@/utils/schema";
+import {
+  softwareAppLd,
+  websiteLd,
+  organizationLd,
+  ldGraph,
+} from "@/utils/schema";
 import { getTestimonial } from "@/utils/testimonials";
 
 const title = "Ambient sounds for sleep and focus";
@@ -72,7 +77,11 @@ const appStore =
   "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
 
 // Structured data: the launched, free, multi-platform app and its App Store rating.
-const appJsonLd = ldGraph(softwareAppLd({ withRating: true }));
+const appJsonLd = ldGraph(
+  softwareAppLd({ withRating: true }),
+  websiteLd(),
+  organizationLd(),
+);
 
 // Award row, each stat flanked by laurel branches. Middle is the marquee.
 const awards = [
@@ -524,8 +533,8 @@ const typicalAppLimits = [
                     src={d.img}
                     alt={d.alt}
                     class="w-full rounded-lg"
-                    widths={[320, 540, 1080]}
-                    sizes="(min-width: 1024px) 540px, (min-width: 640px) 90vw, 100vw"
+                    widths={[320, 540, 720, 1080]}
+                    sizes="(min-width: 1024px) 540px, calc(100vw - 96px)"
                     quality={85}
                   />
                 )}
@@ -565,6 +574,8 @@ const typicalAppLimits = [
                 <Image
                   src={duoSeated}
                   alt="Blankie on iPhone Duo in the seated pose with artwork on the upright half and sound controls on the flat half"
+                  widths={[240, 360, 480, 720]}
+                  sizes="(min-width: 1024px) 240px, calc((100vw - 112px) * 0.41)"
                   loading="lazy"
                   class="w-full rounded-lg"
                 />
@@ -574,6 +585,8 @@ const typicalAppLimits = [
                 <Image
                   src={duoBook}
                   alt="Blankie on iPhone Duo in the book pose with Now Playing on the left page and the Sound Mixer on the right page"
+                  widths={[240, 360, 480, 720]}
+                  sizes="(min-width: 1024px) 340px, calc((100vw - 112px) * 0.59)"
                   loading="lazy"
                   class="w-full rounded-lg"
                 />

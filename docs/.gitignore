@@ -8,6 +8,8 @@ dist/
 public/*
 !public/images/
 !public/robots.txt
+!public/favicon.ico
+!public/llms.txt
 
 # dependencies
 node_modules/

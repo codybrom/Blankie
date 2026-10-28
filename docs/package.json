@@ -34,6 +34,8 @@
     "lucide-react": "^1.21.0",
     "marked": "^18.0.5",
     "marked-alert": "^2.1.2",
+    "node-html-markdown": "^2.0.0",
+    "node-html-parser": "^6.1.13",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "shadcn": "^4.23.0",

@@ -1,182 +1,160 @@
 ---
-import Layout from "../layouts/Layout.astro";
+import ProsePage from "../layouts/ProsePage.astro";
 
 const title = "Privacy Policy";
 const description =
   "Blankie's privacy policy: Blankie collects no personal data, runs no analytics or tracking and works 100% offline on Mac, iPhone, iPad and CarPlay.";
 ---
 
-<Layout title={title} description={description}>
-  <div class="prose prose-lg prose-invert mx-auto max-w-5xl px-5 pt-28 pb-10">
-    <section class="bg-black text-base">
-      <h1 class="mb-6 text-4xl font-semibold">Privacy Policy</h1>
-
-      <div
-        class="mb-8 rounded-lg border border-gray-700 bg-gray-900/50 px-6 text-gray-200">
-        <p class="leading-tight">
-          <b><i>Note: </i></b>
-          Blankie does <b>NOT</b> want your data. Your Blankie belongs to <i
-            >you</i
-          >.
-        </p>
-        <p class="leading-relaxed">
-          I maintain this privacy policy not just because it's required to be
-          part of Apple's ecosystem but because I strongly believe in
-          transparency. To put it plainly, your information never leaves your
-          device. The Blankie app doesn't run analytics or track you in any way,
-          and it never transmits your information anywhere. The only time it
-          reaches the internet is to download animated artwork on demand from
-          Apple, which sends no personal data. When you use a version of Blankie
-          distributed through Apple's platforms, Apple may provide us with some
-          basic anonymous statistics about downloads and crashes, but the app
-          itself (whether from GitHub, Homebrew or the App Store) never collects
-          or transmits any data directly back to Blankie's developers. The
-          formal policy below explains this in more detail, but that's really
-          all there is to it.<br />@codybrom
-        </p>
-      </div>
-    </section>
-
-    <p class="text-mid-gray mb-4">
-      <strong>Effective Date</strong>: June 7, 2026
-    </p>
-
-    <p class="text-mid-gray mb-4">
-      Your privacy is important to us. The Blankie app does not collect, store
-      or share any personal information and there are no tracking or analytics
-      frameworks implemented in the app as part of the source code.
-    </p>
-
-    <p class="text-mid-gray mb-4">
-      When you get Blankie through the App Store or join our public
-      TestFlight beta, Apple may collect some usage data (as explained in their
-      privacy policy). Apple never shares your identifiable personal information
-      with us. We (the developers of Blankie) do not have anything that
-      identifies you unless you explicitly share it.
-    </p>
-
-    <p class="text-mid-gray mb-4">
-      On a limited basis, trusted contributors may be granted access to
-      internal-only TestFlight betas. For these private betas, we need to share
-      an email address with Apple to facilitate an invitation. If necessary, the
-      collection of this email address is only used for the TestFlight
-      invitation process and is not shared with anyone else.
-    </p>
-
-    <p class="text-mid-gray mb-4">
-      Apple shares basic anonymous statistics with developers about how many
-      people downloaded the app, the store region they downloaded it from and if
-      it crashes. We use this information to make Blankie more stable and
-      reliable. You can learn more about Apple's data collection practices in
-      the
-      <a
-        href="https://www.apple.com/legal/privacy/data/en/app-store/"
-        class="text-yellow-500 transition-colors hover:text-yellow-700"
-        target="_blank"
-        rel="noopener noreferrer">App Store Privacy Policy</a
+<ProsePage
+  title={title}
+  description={description}
+  meta="Effective June 7, 2026"
+>
+  <div class="markdown-alert">
+    <p class="markdown-alert-title">A note from Blankie's creator</p>
+    <p>
+      Blankie does <b>NOT</b> want your data. Your Blankie belongs to <i>you</i
       >.
     </p>
-
-    <p class="text-mid-gray mb-4">
-      This privacy policy applies only to the Blankie app and its website. It
-      does not apply to any third-party services or websites that may be linked
-      to from the app or website.
+    <p>
+      I maintain this privacy policy not just because it's required to be part
+      of Apple's ecosystem but because I strongly believe in transparency. To
+      put it plainly, your information never leaves your device. The Blankie app
+      doesn't run analytics or track you in any way, and it never transmits your
+      information anywhere. The only time it reaches the internet is to download
+      animated artwork on demand from Apple, which never sends any personal data back to a Blankie server. When
+      you use a version of Blankie distributed through Apple's platforms, Apple
+      may provide us with some basic anonymous statistics about downloads and
+      crashes, but the app itself (whether from GitHub, Homebrew or the App
+      Store) never collects or transmits any data directly back to a Blankie server or Blankie's
+      developer. The formal policy below explains this in more detail, but
+      that's really all there is to it. Blankie has nothing to sell, and nothing to hide.
     </p>
-
-    <p class="text-mid-gray mb-4">
-      By using the Blankie app or website, you agree to the terms of this
-      policy. If you do not agree with this policy, please do not use the app or
-      website.
-    </p>
-
-    <p class="text-mid-gray mb-4">
-      The App Store, blankie.rest (this website), Homebrew, GitHub and
-      TestFlight are all considered official distribution channels of Blankie.
-      If you download the app from any other source, the makers of Blankie
-      cannot guarantee that it is safe or secure. We recommend only downloading
-      the app from the official channels listed above. Blankie is open source
-      and you can always build it from source if you want to verify the code
-      yourself. If you do this, you are responsible for your own privacy and
-      security.
-    </p>
-
-    <h2 class="mt-8 mb-3 text-2xl font-semibold">Data Collection</h2>
-    <ul class="text-mid-gray mb-4 list-disc pl-5">
-      <li>
-        <strong>Information You Provide</strong>: If you contribute code or
-        translations to the Blankie project and share your name or email address
-        with us, we may use them to either credit or contact you. You do not
-        need to share your name or email address with us to contribute to the
-        project (communicating publicly via GitHub issues and discussions is
-        actually our preference) and we will never sell your information or use
-        it for any other purpose.
-      </li>
-      <li>
-        <strong>No Data Collection in App</strong>: The Blankie app never asks
-        for or stores any personal data such as names, emails or physical
-        addresses. This is true whether you download the app from the Blankie
-        website, from GitHub, from Homebrew or from an Apple platform. The
-        official version of Blankie never collects or transmits any data back to
-        the developers and any usage statistics we receive come solely from
-        Apple's platform services.
-      </li>
-      <li>
-        <strong>No Analytics or Trackers</strong>: The official version of
-        Blankie does not use any third-party services, advertising networks,
-        analytics frameworks, libraries, SDKs or APIs that collect personal
-        data. Blankie does not include any analytics frameworks or trackers in
-        the app or on this website.
-      </li>
-      <li>
-        <strong>Third Parties</strong>: Platform providers like Apple, GitHub
-        and Homebrew may collect some anonymous usage data when you use their
-        platforms and services to interact with the Blankie project or download
-        Blankie. The data you share with these platforms may or may not be
-        shared with us, and in most cases we do not have access to it or control
-        over how these platforms may use your data. We recommend you review the
-        privacy policies of these platforms to understand how they handle your
-        data.
-      </li>
-    </ul>
-
-    <h2 class="mt-8 mb-3 text-2xl font-semibold">
-      Data Sharing and Disclosure
-    </h2>
-    <p class="text-mid-gray mb-4">
-      Since we do not collect any data, we cannot share anything with any third
-      party. However, if you download through Apple's platforms, GitHub or
-      Homebrew, please refer to their respective privacy policies regarding
-      their data collection practices.
-    </p>
-
-    <h2 class="mt-8 mb-3 text-2xl font-semibold">Updates</h2>
-    <p class="text-mid-gray mb-4">
-      While Blankie will always remain privacy-focused, Apple's developer
-      requirements and other legal standards may evolve. If we need to update
-      this policy to reflect such changes, you'll find the latest version here.
-      Our commitment to privacy won't change.
-    </p>
-
-    <h2 class="mt-8 mb-3 text-2xl font-semibold">Contact</h2>
-    <p class="text-mid-gray mb-4">
-      For questions or concerns regarding this policy, please open a
-      <a
-        href="https://github.com/codybrom/blankie/issues"
-        class="text-yellow-500 transition-colors hover:text-yellow-700"
-        >GitHub Issue</a
-      >.
-    </p>
-    <hr class="my-2 border-gray-700" />
-    <p class="text-sm text-fg-3">
-      Changes:
-      </p>
-    <ul class="text-sm text-fg-3 list-disc pl-5">
-      <li>
-        June 7, 2026: Changed "Mac App Store" to "App Store" now that Blankie is also available on iOS and iPadOS.
-      </li>
-      <li>
-        May 15, 2025: Initial version of the privacy policy.
-      </li>
-    </ul>
   </div>
-</Layout>
+
+  <p>
+    Your privacy is important to us. The Blankie app does not collect, store or
+    share any personal information and there are no tracking or analytics
+    frameworks implemented in the app as part of the source code.
+  </p>
+
+  <p>
+    When you get Blankie through the App Store or join our public TestFlight
+    beta, Apple may collect some usage data (as explained in their privacy
+    policy). Apple never shares your identifiable personal information with us.
+    We (the developers of Blankie) do not have anything that identifies you
+    unless you explicitly share it.
+  </p>
+
+  <p>
+    On a limited basis, trusted contributors may be granted access to
+    internal-only TestFlight betas. For these private betas, we need to share an
+    email address with Apple to facilitate an invitation. If necessary, the
+    collection of this email address is only used for the TestFlight invitation
+    process and is not shared with anyone else.
+  </p>
+
+  <p>
+    Apple shares basic anonymous statistics with developers about how many
+    people downloaded the app, the store region they downloaded it from and if
+    it crashes. We use this information to make Blankie more stable and
+    reliable. You can learn more about Apple's data collection practices in the{
+      " "
+    }
+    <a
+      href="https://www.apple.com/legal/privacy/data/en/app-store/"
+      target="_blank"
+      rel="noopener noreferrer">App Store Privacy Policy</a
+    >.
+  </p>
+
+  <p>
+    This privacy policy applies only to the Blankie app and its website. It does
+    not apply to any third-party services or websites that may be linked to from
+    the app or website.
+  </p>
+
+  <p>
+    By using the Blankie app or website, you agree to the terms of this policy.
+    If you do not agree with this policy, please do not use the app or website.
+  </p>
+
+  <p>
+    The App Store, blankie.rest (this website), Homebrew, GitHub and TestFlight
+    are all considered official distribution channels of Blankie. If you
+    download the app from any other source, the makers of Blankie cannot
+    guarantee that it is safe or secure. We recommend only downloading the app
+    from the official channels listed above. Blankie is open source and you can
+    always build it from source if you want to verify the code yourself. If you
+    do this, you are responsible for your own privacy and security.
+  </p>
+
+  <h2>Data Collection</h2>
+  <ul>
+    <li>
+      <strong>Information You Provide</strong>: If you contribute code or
+      translations to the Blankie project and share your name or email address
+      with us, we may use them to either credit or contact you. You do not need
+      to share your name or email address with us to contribute to the project
+      (communicating publicly via GitHub issues and discussions is actually our
+      preference) and we will never sell your information or use it for any
+      other purpose.
+    </li>
+    <li>
+      <strong>No Data Collection in App</strong>: The Blankie app never asks for
+      or stores any personal data such as names, emails or physical addresses.
+      This is true whether you download the app from the Blankie website, from
+      GitHub, from Homebrew or from an Apple platform. The official version of
+      Blankie never collects or transmits any data back to the developers and
+      any usage statistics we receive come solely from Apple's platform
+      services.
+    </li>
+    <li>
+      <strong>No Analytics or Trackers</strong>: The official version of Blankie
+      does not use any third-party services, advertising networks, analytics
+      frameworks, libraries, SDKs or APIs that collect personal data. Blankie
+      does not include any analytics frameworks or trackers in the app or on
+      this website.
+    </li>
+    <li>
+      <strong>Third Parties</strong>: Platform providers like Apple, GitHub and
+      Homebrew may collect some anonymous usage data when you use their
+      platforms and services to interact with the Blankie project or download
+      Blankie. The data you share with these platforms may or may not be shared
+      with us, and in most cases we do not have access to it or control over how
+      these platforms may use your data. We recommend you review the privacy
+      policies of these platforms to understand how they handle your data.
+    </li>
+  </ul>
+
+  <h2>Data Sharing and Disclosure</h2>
+  <p>
+    Since we do not collect any data, we cannot share anything with any third
+    party. However, if you download through Apple's platforms, GitHub or
+    Homebrew, please refer to their respective privacy policies regarding their
+    data collection practices.
+  </p>
+
+  <h2>Updates</h2>
+  <p>
+    While Blankie will always remain privacy-focused, Apple's developer
+    requirements and other legal standards may evolve. If we need to update this
+    policy to reflect such changes, you'll find the latest version here. Our
+    commitment to privacy won't change.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    For questions or concerns regarding this policy, please open a{" "}
+    <a href="https://github.com/codybrom/blankie/issues">GitHub Issue</a>.
+  </p>
+  <h2>Changes</h2>
+  <ul>
+    <li>
+      June 7, 2026: Changed "Mac App Store" to "App Store" now that Blankie is
+      also available on iOS and iPadOS.
+    </li>
+    <li>May 15, 2025: Initial version of the privacy policy.</li>
+  </ul>
+</ProsePage>

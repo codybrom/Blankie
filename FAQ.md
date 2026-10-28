@@ -142,6 +142,8 @@ Blankie is a native app for Apple platforms inspired by Blanket. It uses some of
 - Different sound mixing and playback technology
 - Different features and developers
 
+[Read our guide on moving from Blanket to Blankie](https://blankie.rest/guides/blanket-for-mac/)
+
 ### Is Blankie available in my language?
 
 Blankie is currently available in the following languages:

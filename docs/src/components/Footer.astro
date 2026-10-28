@@ -7,22 +7,16 @@ import igSVG from "../assets/instagram.svg";
 import fbSVG from "../assets/facebook.svg";
 import thSVG from "../assets/threads.svg";
 import phSVG from "../assets/producthunt.svg";
+import { SOCIAL_LINKS } from "@/utils/socials";
 
-const socials = [
-  { label: "GitHub", href: "https://github.com/codybrom/blankie", src: ghSVG },
-  {
-    label: "Instagram",
-    href: "https://instagram.com/blankie.rest",
-    src: igSVG,
-  },
-  { label: "Facebook", href: "https://facebook.com/blankie.rest", src: fbSVG },
-  { label: "Threads", href: "https://threads.com/@blankie.rest", src: thSVG },
-  {
-    label: "Product Hunt",
-    href: "https://producthunt.com/products/blankie",
-    src: phSVG,
-  },
-];
+const icons = {
+  GitHub: ghSVG,
+  Instagram: igSVG,
+  Facebook: fbSVG,
+  Threads: thSVG,
+  "Product Hunt": phSVG,
+};
+const socials = SOCIAL_LINKS.map((s) => ({ ...s, src: icons[s.label] }));
 
 const columns = [
   {
@@ -50,7 +44,7 @@ const columns = [
       <a href="/" class="flex items-center gap-3 text-white no-underline">
         <Image
           src={icon}
-          alt="Blankie"
+          alt=""
           width={34}
           height={34}
           class="size-8 rounded-[22%]"
@@ -109,6 +103,12 @@ const columns = [
     <div class="flex flex-col justify-between gap-2 sm:flex-row">
       <span>
         © 2026 Cody Bromley and contributors ·{" "}
+        <a href="/about/" class="underline transition-colors hover:text-white"
+          >About</a
+        > ·{" "}
+        <a href="/contact/" class="underline transition-colors hover:text-white"
+          >Contact</a
+        > ·{" "}
         <a
           href="/privacy/"
           class="underline transition-colors hover:text-white">Privacy Policy</a
@@ -122,7 +122,7 @@ const columns = [
         > for Linux
       </span>
     </div>
-    <p class="mt-4 text-xs text-gray-500">
+    <p class="text-fg-3 mt-4 text-xs">
       {APPLE_TRADEMARKS}
     </p>
   </div>
