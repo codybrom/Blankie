@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { globSync } from "glob";
 import { execSync } from "child_process";
+import os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -417,6 +418,10 @@ try {
     "ipad-store-2.png",
     "ipad-store-3.png",
     "ipad-store-4.png",
+    "guides/blankie-iphone-duo/closed.png",
+    "guides/blankie-iphone-duo/open-flat.png",
+    "guides/blankie-iphone-duo/book.png",
+    "guides/blankie-iphone-duo/seated.png",
   ];
   const present = pressFiles.filter((f) =>
     fs.existsSync(path.join(assetsDir, f)),
@@ -425,9 +430,20 @@ try {
     fs.mkdirSync(publicDir, { recursive: true });
     const zipPath = path.join(publicDir, "blankie-press-kit.zip");
     fs.rmSync(zipPath, { force: true });
-    const args = present.map((f) => `"${path.join(assetsDir, f)}"`).join(" ");
-    // -j flattens paths so the archive holds bare filenames, -q is quiet.
-    execSync(`zip -j -q "${zipPath}" ${args}`);
+    // Stage each file under a unique flat name (guides/blankie-iphone-duo/book.png
+    // becomes blankie-iphone-duo-book.png) so same-named guide shots can't collide.
+    const stage = fs.mkdtempSync(path.join(os.tmpdir(), "blankie-press-"));
+    try {
+      const names = present.map((f) => f.replace(/^guides\//, "").replaceAll("/", "-"));
+      present.forEach((f, i) =>
+        fs.copyFileSync(path.join(assetsDir, f), path.join(stage, names[i])),
+      );
+      const args = names.map((n) => `"${path.join(stage, n)}"`).join(" ");
+      // -j stores bare filenames, -q is quiet.
+      execSync(`zip -j -q "${zipPath}" ${args}`);
+    } finally {
+      fs.rmSync(stage, { recursive: true, force: true });
+    }
     console.log(
       `\n✨ Prebuild: Wrote press kit zip (${present.length} files) -> public/blankie-press-kit.zip`,
     );

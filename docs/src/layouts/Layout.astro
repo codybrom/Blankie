@@ -27,11 +27,11 @@ const {
 const siteUrl = "https://blankie.rest";
 const description =
   customDescription ||
-  "Free, open-source ambient sound mixer for Mac, iPhone, iPad and CarPlay. Mix sounds like rain, waves or white noise to sleep, focus or relax.";
-// og:image must be an absolute URL for page-specific images. The default
-// social card keeps its existing hashed-asset path.
-const socialSrc = customImage ? `${siteUrl}${customImage}` : socialImage.src;
+  "Free, open-source ambient sound mixer for Mac, iPhone, iPad and CarPlay. Layer adjustable sounds like rain, waves and white noise for sleep and focus.";
+// og:image must be an absolute URL for both page-specific and default images.
+const socialSrc = `${siteUrl}${customImage || socialImage.src}`;
 const socialAlt = customImageAlt || "Blankie Social Preview";
+const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
 ---
 
 <!doctype html>
@@ -53,12 +53,13 @@ const socialAlt = customImageAlt || "Blankie Social Preview";
     <SEO
       title={`Blankie - ${title}`}
       description={description}
+      canonical={canonicalUrl}
       openGraph={{
         basic: {
           title: `Blankie - ${title}`,
           type: "website",
           image: socialSrc,
-          url: `${siteUrl}${Astro.url.pathname}`,
+          url: canonicalUrl,
         },
         image: {
           alt: socialAlt,

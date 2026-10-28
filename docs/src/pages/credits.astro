@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { APPLE_TRADEMARKS } from "@/utils/trademarks";
 import soundsJSON from "../../../Blankie/Resources/sounds.json";
 import creditsJSON from "../../../Blankie/credits.json";
 import { Heart } from "@lucide/astro";
@@ -10,7 +11,7 @@ import DefRow from "@/components/DefRow.astro";
 
 const title = "Credits";
 const description =
-  "Credits for Blankie: sound sources and licenses, translators, dependencies, and acknowledgements.";
+  "Credits for Blankie: sound sources and licenses, translators, dependencies and acknowledgments.";
 
 
 
@@ -84,7 +85,7 @@ const licenseOf = (id: string) =>
           </p>
           <p class="mt-3.5 text-sm/relaxed text-fg-2">
             © 2025-2026 Cody Bromley and contributors. The Blankie logo and app
-            icons are © 2025-2026 Cody Bromley. Blankie, the Blankie logo,
+            icons are © 2025-2026 Cody Bromley. Blankie, the Blankie logo
             and Blankie's app icons (except where noted) are trademarks of Cody Bromley, all rights reserved.
           </p>
           <p class="mt-3.5 text-[13px] text-fg-3 italic">
@@ -100,7 +101,7 @@ const licenseOf = (id: string) =>
               href="https://choosealicense.com/licenses/mit/">MIT License</a
             >, but other components of Blankie (such as sounds, icons and
             libraries) may be covered by different licenses, as detailed below.
-            The MIT License does not grant any rights to the Blankie name, logo,
+            The MIT License does not grant any rights to the Blankie name, logo
             or other brand assets.
           </p>
           <details class="group mt-3.5">
@@ -229,7 +230,10 @@ const licenseOf = (id: string) =>
         <SectionHeader rule heading="Assets & Dependencies" class="mb-5" />
         <dl class="editorial-links grid [&_dd]:text-sm/relaxed [&_dd]:text-fg-2">
           <DefRow term="Brand" class="py-4.5">
-            The Blankie name, logo,  app icons and all other designed images are © 2026 <a href="https://github.com/codybrom">Cody Bromley</a> with all rights reserved. These items are not covered by the MIT License and may not be used in other projects without permission. See the project's <a href="https://github.com/codybrom/Blankie/tree/main?tab=contributing-ov-file#licensing">Contributing Guidelines</a> for more details.
+            The Blankie name, logo, app icons and all other designed images are © 2026 <a href="https://github.com/codybrom">Cody Bromley</a> with all rights reserved. These items are not covered by the MIT License and may not be used in other projects without permission. See the project's <a href="https://github.com/codybrom/Blankie/tree/main?tab=contributing-ov-file#licensing">Contributing Guidelines</a> for more details.
+          </DefRow>
+          <DefRow term="Trademarks" class="py-4.5">
+            {APPLE_TRADEMARKS}
           </DefRow>
           <DefRow term="Sound icons" class="py-4.5">
             <a href="https://developer.apple.com/sf-symbols/">SF Symbols</a> by

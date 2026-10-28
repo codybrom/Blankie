@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import { APPLE_TRADEMARKS } from "@/utils/trademarks";
 import icon from "../assets/blankie-icon-v2.png";
 import ghSVG from "../assets/github.svg";
 import igSVG from "../assets/instagram.svg";
@@ -8,18 +9,18 @@ import thSVG from "../assets/threads.svg";
 import phSVG from "../assets/producthunt.svg";
 
 const socials = [
-  { label: "GitHub", href: "https://github.com/codybrom/blankie", src: ghSVG.src },
+  { label: "GitHub", href: "https://github.com/codybrom/blankie", src: ghSVG },
   {
     label: "Instagram",
     href: "https://instagram.com/blankie.rest",
-    src: igSVG.src,
+    src: igSVG,
   },
-  { label: "Facebook", href: "https://facebook.com/blankie.rest", src: fbSVG.src },
-  { label: "Threads", href: "https://threads.com/@blankie.rest", src: thSVG.src },
+  { label: "Facebook", href: "https://facebook.com/blankie.rest", src: fbSVG },
+  { label: "Threads", href: "https://threads.com/@blankie.rest", src: thSVG },
   {
     label: "Product Hunt",
     href: "https://producthunt.com/products/blankie",
-    src: phSVG.src,
+    src: phSVG,
   },
 ];
 
@@ -57,7 +58,7 @@ const columns = [
         <span class="text-lg font-semibold tracking-tight">Blankie</span>
       </a>
       <p class="mt-3 text-gray-400">
-        Free and open source ambient sound mixer for macOS, iPhone, iPad and CarPlay.
+        Free and open-source ambient sound mixer for Mac, iPhone, iPad and CarPlay.
       </p>
       <div class="mt-5 flex items-center gap-4">
         {
@@ -69,7 +70,7 @@ const columns = [
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img
+              <Image
                 src={s.src}
                 alt={s.label}
                 width="20"
@@ -107,20 +108,22 @@ const columns = [
   <div class="mx-auto mt-12 max-w-6xl border-t border-white/10 pt-8 text-gray-400">
     <div class="flex flex-col justify-between gap-2 sm:flex-row">
       <span>
-        © 2026 Cody Bromley and contributors 
-·
+        © 2026 Cody Bromley and contributors ·{" "}
         <a
           href="/privacy/"
           class="underline transition-colors hover:text-white">Privacy Policy</a
         >
       </span>
       <span>
-        Inspired by
+        Inspired by{" "}
         <a
           href="https://apps.gnome.org/Blanket/"
           class="underline transition-colors hover:text-white">Blanket</a
         > for Linux
       </span>
     </div>
+    <p class="mt-4 text-xs text-gray-500">
+      {APPLE_TRADEMARKS}
+    </p>
   </div>
 </footer>

@@ -18,6 +18,10 @@ import ipadMockup from "../assets/ipad-mockup.png";
 import iphoneApp1 from "../assets/iphone-mockup-1.png";
 import iphoneApp2 from "../assets/iphone-mockup-2.png";
 // Live App Store store images (pulled via the asc CLI).
+import duoClosed from "../assets/guides/blankie-iphone-duo/closed.png";
+import duoOpen from "../assets/guides/blankie-iphone-duo/open-flat.png";
+import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
+import duoSeated from "../assets/guides/blankie-iphone-duo/seated.png";
 import mac1 from "../assets/mac-store-1.png";
 import mac2 from "../assets/mac-store-2.png";
 import mac3 from "../assets/mac-store-3.png";
@@ -34,7 +38,7 @@ import ipad4 from "../assets/ipad-store-4.png";
 
 const title = "Press Kit";
 const description =
-  "Press kit for Blankie, the free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay support. Facts, screenshots, logos, and contact information.";
+  "Press kit for Blankie, the free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay support. Facts, screenshots, logos and contact information.";
 
 
 // Stable, original-file download links (GitHub raw preserves filenames).
@@ -43,7 +47,7 @@ const raw =
 
 const quick: [string, string][] = [
   ["24", "Ambient sounds"],
-  ["10,000+", "All-time downloads"],
+  ["25,000+", "All-time downloads"],
   ["12", "Languages"],
   ["100% Free", "Price"],
 ];
@@ -71,9 +75,17 @@ const facts: { t: string; d?: string; m?: string }[] = [
   },
   {
     t: "Downloads",
-    d: "10,000+ all-time",
-    m: "across the App Store, GitHub, and Homebrew",
+    d: "25,000+ all-time",
+    m: "across the App Store, GitHub and Homebrew (Oct. 25, 2026)",
   },
+  {
+    t: "Schools and organizations",
+    d: "Deployed to 1,000+ devices worldwide",
+    m: "(Oct. 25, 2026)",
+  },
+  { t: "Rating", d: "4.9 out of 5", m: "global App Store rating (Oct. 25, 2026)" },
+  { t: "Charts", d: "Ranked in 92 countries", m: "on App Store charts in the 32 days to Oct. 25, 2026" },
+  { t: "GitHub", d: "389 stars", m: "(Oct. 25, 2026)" },
   { t: "License", d: "Open source under MIT", m: "(code) · openly licensed sounds" },
   {
     t: "Privacy",
@@ -98,8 +110,8 @@ const highlights = [
   "Customize presets with artwork, colors and your own sounds, then export and share.",
   "Built natively for iOS 26 with Liquid Glass.",
   "Every feature and sound free forever, with no ads, subscriptions or trackers.",
-  "Works 100% offline",
-  "Built in sleep timer",
+  "Works 100% offline.",
+  "Built-in sleep timer.",
   "Home Screen widgets on iPhone and iPad, plus Siri and Shortcuts actions.",
   "Find presets and sounds in Spotlight on Mac, iPhone and iPad.",
   "Fully accessible with VoiceOver and Dynamic Type.",
@@ -108,9 +120,15 @@ const highlights = [
 
 const coverage: { out: string; note: string; when: string; url?: string }[] = [
   {
+    out: "9to5Mac",
+    note: "Included in “Best CarPlay apps for iPhone”",
+    when: "October 2026",
+    url: "https://9to5mac.com/best-carplay-apps/",
+  },
+  {
     out: "ZDNET",
     note: "“…just fantastic.”",
-    when: "Jun 2025",
+    when: "June 2025",
     url: "https://www.zdnet.com/article/need-to-relax-these-sound-apps-do-the-trick-for-me-heres-how/",
   },
   {
@@ -131,16 +149,28 @@ const coverage: { out: string; note: string; when: string; url?: string }[] = [
     url: "https://www.heise.de/ratgeber/Voellig-kostenlos-21-Freeware-Perlen-fuer-den-Mac-11215455.html",
   },
   {
-    out: "iFun.de",
-    note: "“Freie Mac-App mischt individuelle Klanglandschaften”",
-    when: "Apr 2025",
-    url: "https://www.ifun.de/blankie-freie-mac-app-mischt-individuelle-klanglandschaften-252622/",
+    out: "AppAddict",
+    note: "Review: “A Breath of Fresh Air, Right in Your Ear”",
+    when: "July 2026",
+    url: "https://appaddict.app/post/blankie-a-free-and-open-source-ambient-sound-mixer-is-a-breath-of-fresh-air-right-in-your-ear",
   },
   {
     out: "MacGadget",
-    note: "“Kostenlose Mac-Software spielt Umgebungsgeräusche zum Entspannen ab”",
-    when: "Jan 2026",
-    url: "https://www.macgadget.de/News/2026/01/22/Blankie-Kostenlose-Mac-Software-spielt-Umgebungsgeraeusche-zum-Entspannen-ab",
+    note: "“Blankie 2.0: Kostenlose Mac-Software spielt Umgebungsgeräusche zum Entspannen ab”",
+    when: "June 2026",
+    url: "https://www.macgadget.de/News/2026/06/24/Blankie-20-Kostenlose-Mac-Software-spielt-Umgebungsgeraeusche-zum-Entspannen-ab",
+  },
+  {
+    out: "MaxiApple",
+    note: "“Ambiances Sonores et Bruits Blancs”",
+    when: "September 2025",
+    url: "https://www.maxiapple.com/2025/09/blankie-mac-macos-app-ambiance-sonore-bruits-blancs-gratuit.html",
+  },
+  {
+    out: "tchgdns",
+    note: "“Kostenlose Mac-App Blankie mixt Umgebungsgeräusche”",
+    when: "July 2025",
+    url: "https://tchgdns.de/blankie-open-source-ambient-sound-macos/",
   },
   {
     out: "AAPL Ch.",
@@ -148,20 +178,29 @@ const coverage: { out: string; note: string; when: string; url?: string }[] = [
     when: "May 2025",
     url: "https://applech2.com/archives/20250516-blankie-for-mac-ambient-sound.html",
   },
+  {
+    out: "iFun.de",
+    note: "“Freie Mac-App mischt individuelle Klanglandschaften”",
+    when: "April 2025",
+    url: "https://www.ifun.de/blankie-freie-mac-app-mischt-individuelle-klanglandschaften-252622/",
+  },
 ];
 
 // A handful of verbatim App Store reviews for the press kit (see testimonials.ts).
 // Ordered to interleave long and short quotes so the masonry columns balance.
 const reviewIds = [
-  "best-tool",
-  "very-apple",
-  "coworking",
+  "carplay-standout",
   "straightforward",
-  "macht-genau",
+  "no-paywall-sleep",
+  "grounded-at-work",
+  "pencil-neighbor",
   "youtube-tabs",
-  "free-quality",
-  "blanket-linux",
-  "simple-efficace"
+  "einfach-genial",
+  "mix-five-sounds",
+  "custom-soundscapes",
+  "coworking",
+  "macht-genau",
+  "simple-efficace",
 ];
 
 type Asset = {
@@ -216,6 +255,15 @@ const assetGroups: { title: string; items: Asset[] }[] = [
       { img: ipad4, file: "ipad-store-4.png", label: "App Store 4", tall: true },
     ],
   },
+  {
+    title: "iPhone Duo",
+    items: [
+      { img: duoClosed, file: "guides/blankie-iphone-duo/closed.png", label: "Closed", tall: true },
+      { img: duoOpen, file: "guides/blankie-iphone-duo/open-flat.png", label: "Open" },
+      { img: duoBook, file: "guides/blankie-iphone-duo/book.png", label: "Book" },
+      { img: duoSeated, file: "guides/blankie-iphone-duo/seated.png", label: "Seated", tall: true },
+    ],
+  },
 ];
 ---
 
@@ -256,8 +304,8 @@ const assetGroups: { title: string; items: Asset[] }[] = [
           <Button href="#assets">
             <Download size={17} stroke-width={1.75} /> Download assets
           </Button>
-          <Button href="/press/blankie-2-0/">
-            <FileText size={17} stroke-width={1.75} /> Read the launch release
+          <Button href="/press/blankie-2-1/">
+            <FileText size={17} stroke-width={1.75} /> Read the 2.1 release
           </Button>
         </div>
         <div
@@ -295,12 +343,14 @@ const assetGroups: { title: string; items: Asset[] }[] = [
           Short description
         </div>
         <p class="mt-2.5 max-w-[76ch] leading-relaxed text-[#d4d7ea]">
-          Blankie helps people all over the world focus, relax and sleep with
-          high-quality ambient sounds (rain, waves, fireplaces, coffee shops, and
-          more) mixed into custom soundscapes. In Blankie 2.0, listeners can now
-          import their own audio, set sleep timers, set animated lock-screen artwork
-          and take their mixes on the road with CarPlay. Blankie is open source,
-          localized in 12 languages, fully accessible with VoiceOver and free forever.
+          Blankie helps people sleep, relax and focus with 24 adjustable ambient
+          sounds (rain, waves, fireplaces, coffee shops and more) that can be mixed into
+          custom soundscapes. Listeners can import their own audio, set sleep
+          timers, pick animated Lock Screen artwork and use Blankie in the car
+          with CarPlay. Version 2.1 adds Home Screen widgets, Siri and Shortcuts
+          actions, Spotlight search and layouts for every pose of iPhone Duo.
+          Blankie is open source, translated into 12 languages, accessible with
+          VoiceOver and free forever.
         </p>
       </div>
     </section>
@@ -414,9 +464,17 @@ const assetGroups: { title: string; items: Asset[] }[] = [
             Free to use in coverage of Blankie. Need something specific? Localized
             screenshots and videos available on request.
           </p>
-          <Button size="sm" href="/blankie-press-kit.zip" download class="shrink-0">
-            <Download size={15} stroke-width={1.75} /> Download all
-          </Button>
+          <div class="flex shrink-0 flex-wrap gap-2">
+            <Button
+              size="sm"
+              href="https://github.com/codybrom/blankie/releases/download/press-screenshots/blankie-2.1-screenshots.zip"
+            >
+              <Download size={15} stroke-width={1.75} /> App Store screenshots
+            </Button>
+            <Button size="sm" href="/blankie-press-kit.zip" download>
+              <Download size={15} stroke-width={1.75} /> Download all
+            </Button>
+          </div>
         </div>
         {
           assetGroups.map((group) => {
@@ -490,7 +548,7 @@ const assetGroups: { title: string; items: Asset[] }[] = [
           problem elegantly. Blankie stays free forever with help from contributors
           and translators around the world. He's available for interviews and
           podcasts to talk about Blankie, indie development and why building free and
-          open source apps for the App Store matters.
+          open-source apps for the App Store matters.
         </p>
         <p class="mt-5 text-sm text-fg-3">
           <a

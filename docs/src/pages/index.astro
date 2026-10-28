@@ -11,7 +11,7 @@ import laurelLeft from "../assets/laurel-left.svg";
 import laurelRight from "../assets/laurel-right.svg";
 import appStoreBadge from "../assets/app-store-badge.svg";
 // Real 2.0 navy product shots.
-import products from "../assets/products.png";
+import heroDevices from "../assets/hero-devices.png";
 import macWindow from "../assets/mac-window-v2.png";
 import ipadShot from "../assets/ipad-landscape.png";
 import ipadPreset from "../assets/ipad-preset.png";
@@ -20,6 +20,14 @@ import iphoneLock from "../assets/iphone-animatedlock.png";
 import macCustomize from "../assets/mac-customize.png";
 import macMenubar from "../assets/mac-menubar.png";
 import carplayShot from "../assets/carplay-mockup.jpg";
+import duoSeated from "../assets/guides/blankie-iphone-duo/seated.png";
+import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
+import parodyClam from "../assets/parody/clam.svg";
+import parodyWorseSleep from "../assets/parody/worse-sleep.svg";
+import parodySpendel from "../assets/parody/spendel.svg";
+import parodyDarkPattern from "../assets/parody/dark-pattern.svg";
+import parodyNosey from "../assets/parody/nosey.svg";
+import parodyAdNoiseLite from "../assets/parody/ad-noise-lite.svg";
 import bg1 from "../assets/bg-1.png";
 import bg2 from "../assets/bg-2.png";
 import bg3 from "../assets/bg-3.png";
@@ -28,6 +36,7 @@ import {
   Smartphone,
   Monitor,
   Tablet,
+  BookOpen,
   AudioLines,
   FolderPlus,
   CloudRain,
@@ -41,13 +50,22 @@ import {
   SlidersHorizontal,
   GitBranch,
   Check,
+  X,
   Star,
   Lock,
   Languages,
+  ArrowRight,
+  Moon,
+  Timer,
+  Download,
+  Eye,
+  Terminal,
+  MessageSquareText,
 } from "lucide-react";
 import { softwareAppLd, ldGraph } from "@/utils/schema";
+import { getTestimonial } from "@/utils/testimonials";
 
-const title = "Ambient sounds for your flow state";
+const title = "Ambient sounds for sleep and focus";
 const appStore =
   "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
 
@@ -56,7 +74,7 @@ const appJsonLd = ldGraph(softwareAppLd({ withRating: true }));
 
 // Award row, each stat flanked by laurel branches. Middle is the marquee.
 const awards = [
-  { title: "4.8 out of 5.0", sub: "Global App Store rating", large: false },
+  { title: "4.9 out of 5.0", sub: "Global App Store rating", large: false },
   { title: 'Best New Apps & Updates', sub: "App Store · May 2025", large: true },
   {
     title: "#4 Product of the Month",
@@ -72,7 +90,7 @@ const features = [
     eyebrow: "Mix",
     heading: "Layer as many sounds as you like.",
     blurb:
-      "Blankie comes with 24 built-in sounds. Start with one, add another, and keep building your soundscape until the mix feels right.",
+      "Blankie comes with 24 built-in sounds, from steady rain and bedroom fans to coffee shops and brown noise. Start with one, layer in another and balance each volume until the mix feels right.",
     screen: macWindow,
     screenAlt: "Blankie on Mac with several ambient sounds playing at once",
     portrait: false,
@@ -80,46 +98,58 @@ const features = [
     points: [
       {
         icon: AudioLines,
-        title: "Simple controls for each sound",
-        sub: "Dial each one in until the mix feels right.",
+        title: "Individually adjustable volumes",
+        sub: "Every sound has its own slider so you can set each one as loud or quiet as you want.",
       },
       {
         icon: FolderPlus,
         title: "Bring your own sounds",
-        sub: "Mix and match until your soundscape is perfect.",
+        sub: "Import your own audio files and mix them alongside the built-in library.",
+      },
+    ],
+  },  
+  {
+    eyebrow: "Sleep timer",
+    heading: "Fall asleep without playing all night.",
+    blurb:
+      "Set a timer when you get into bed and Blankie pauses your mix on its own, or let it loop until morning.",
+    screen: iphoneTimer,
+    screenAlt: "Blankie's sleep timer on iPhone over warm artwork",
+    portrait: true,
+    bg: bg1,
+    points: [
+      {
+        icon: Timer,
+        title: "Short fade at bedtime",
+        sub: "When the timer ends, your sounds fade out instead of cutting off.",
+      },
+      {
+        icon: Moon,
+        title: "All-night loops",
+        sub: "Want your sounds to run until your alarm? Every built-in loop is cut to play all night without an audible seam.",
       },
     ],
   },
   {
     eyebrow: "Presets",
-    heading: "Save your perfect mixes.",
+    heading: "Save your mixes for sleep and work.",
     blurb:
-      "Make and save multiple mixes to revisit later. Star the ones you use most to keep them at the top.",
+      "Keep separate presets for falling asleep, winding down or tuning out a noisy room while you focus. Star your favorites to keep them one tap away.",
     screen: ipadPreset,
     screenAlt: "Blankie on iPad with a saved preset and its mix",
     portrait: false,
-    bg: bg1,
-    points: [
-      { icon: CloudRain, title: "Rainy Day Focus", sub: "Green Noise + Rain + Lo-Fi Beats" },
-      { icon: Waves, title: "Out on the Water", sub: "Waves + Wind + Boat" },
-      { icon: Flame, title: "Cozy Night In", sub: "Warm Piano + Fireplace + Wind" },
-    ],
-  },
-  {
-    eyebrow: "Sleep timer",
-    heading: "Rest all night without playing all night.",
-    blurb:
-      "Set how long you want Blankie to play and your sounds will fade down on their own.",
-    screen: iphoneTimer,
-    screenAlt: "Blankie's sleep timer on iPhone over warm artwork",
-    portrait: true,
     bg: bg2,
+    points: [
+      { icon: CloudRain, title: "Heavy Rain Sleep", sub: "Rain + Brown Noise + Fan" },
+      { icon: Flame, title: "Cozy Night In", sub: "Fireplace + Wind + Warm Piano" },
+      { icon: Waves, title: "Ocean Focus", sub: "Green Noise + Waves + Lo-Fi Beats" },
+    ],
   },
   {
     eyebrow: "Customize",
     heading: "Make it unmistakably yours.",
     blurb:
-      "",
+      "Give each preset its own background photo and accent color so your mixes look the part day or night.",
     screen: macCustomize,
     screenAlt: "Blankie's preset editor with a free-form accent color picker",
     portrait: false,
@@ -128,12 +158,12 @@ const features = [
       {
         icon: Palette,
         title: "Customize colors",
-        sub: "Set a unique accent color for each preset",
+        sub: "Set a unique accent color for each preset.",
       },
       {
         icon: ImageIcon,
         title: "Customize artwork",
-        sub: "Set album/background artwork for each preset.",
+        sub: "Choose background photos and Lock Screen animations for each mix.",
       },
     ],
   },
@@ -142,35 +172,35 @@ const features = [
 // "One Blankie, every screen": a device card per surface, with a real shot.
 const devices = [
   {
+    icon: Smartphone,
+    name: "iPhone",
+    heading: "Ready on your nightstand",
+    sub: "Start your bedtime preset from a Home Screen widget or Siri, set a sleep timer and give your Lock Screen a looping video backdrop while you wind down.",
+    img: iphoneLock,
+    alt: "Blankie playing on the iPhone Lock Screen over animated rain artwork",
+    portrait: true,
+  },
+  {
     icon: Monitor,
     name: "Mac",
     heading: "Mix from your menu bar",
-    sub: "Start, stop and adjust your mixes right from your Mac's menu bar. You can also hide the dock icon and run Blankie completely in the background.",
+    sub: "Start, stop and adjust your mixes right from the Mac menu bar while you read, work or wind down. You can also hide the Dock icon and run Blankie in the background.",
     img: macMenubar,
-    alt: "Blankie's menu-bar mixer popover on Mac",
-  },
-  {
-    icon: Smartphone,
-    name: "iPhone",
-    heading: "Animate your lock screen",
-    sub: "Give any preset its own looping lockscreen artwork for a little extra peace to settle into while you listen and relax.",
-    img: iphoneLock,
-    alt: "Blankie playing on iPhone's Lock Screen over animated rain artwork",
-    portrait: true,
+    alt: "Blankie's menu bar mixer popover on Mac",
   },
   {
     icon: Tablet,
     name: "iPad",
     heading: "Sidebar and mixer, side by side",
-    sub: "Your favorites and Quick Mix on the left, the full grid on the right.",
+    sub: "Your favorite presets and Quick Mix on the left, all your sound tiles and the sleep timer on the right.",
     img: ipadShot,
     alt: "Blankie on iPad",
   },
   {
     icon: Car,
     name: "CarPlay",
-    heading: "Take your peace on the road",
-    sub: "Access your favorite presets and sounds in the car, with simple now playing controls and Quick Mix.",
+    heading: "Calm drives and naptime rides",
+    sub: "Put rain, white noise or your favorite presets on the dashboard for late-night drives or a sleeping kid in the back seat.",
     img: carplayShot,
     alt: "Blankie on CarPlay in a car dashboard",
   },
@@ -212,32 +242,117 @@ const moreFeatures = [
   },
 ];
 
-const reviews = [
+const homeReviewIds = [
+  "no-paywall-sleep",
+  "mix-five-sounds",
+  "nightly-mixes",
+  "straightforward",
+  "carplay-standout",
+  "free-quality",
+  "youtube-tabs",
+  "custom-soundscapes",
+  "pencil-neighbor",
+];
+
+const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
+
+const blankieIncluded = [
   {
-    quote:
-      "I want rain sounds, it makes rain sounds. I don't want anything else, I don't have to have anything else. I wish more software was this straightforward.",
-    name: "App Store user",
+    title: "All 24 built-in sounds",
+    sub: "Including rain, waves, fireplace, noise colors and music loops",
   },
   {
-    quote:
-      "Perfect lightweight solution compared to having several YouTube tabs open.",
-    name: "Lily Caba",
+    title: "Unlimited adjustable layers",
+    sub: "Mix as many sounds together as you like, each with its own volume",
   },
   {
-    quote:
-      "It does exactly what it is meant to do in a simple, intuitive and effective way. Easy 5 stars.",
-    name: "Jeyxero",
+    title: "Import your own audio",
+    sub: "Automatically loudness-matched so nothing ruins the mix",
   },
   {
-    quote: "So happy to have found this app, as I also use Blanket on Linux.",
-    name: "itscodyh",
+    title: "CarPlay & iPhone Duo support",
+    sub: "Ready for your dashboard on the road and your nightstand at home",
+  },
+  {
+    title: "Widgets, Siri & Shortcuts",
+    sub: "Home Screen controls, Action Button and Focus automations",
+  },
+  {
+    title: "Sleep timer & Lock Screen art",
+    sub: "Short fade-out and looping video backdrops",
+  },
+  {
+    title: "Shareable presets",
+    sub: "Send custom mixes to friends as .blankie files with no accounts needed",
+  },
+  {
+    title: "100% offline & private",
+    sub: "Plays without an internet connection and collects no analytics",
+  },
+  {
+    title: "Translated into 12 languages",
+    sub: "Built with volunteer translators around the world",
+  },
+  {
+    title: "Every update, free",
+    sub: "No Pro tier, no upgrade screen, no unlocks to buy later",
   },
 ];
 
-const pills = [
-  "No ads",
-  "No upsells",
-  "No sneaky business model",
+// Parody app icons (src/assets/parody/) stand in for real apps
+const parodyApps = [
+  { id: "clam", name: "Clam", src: parodyClam, badges: [{ kind: "price", label: "$$" }, { kind: "tracking", label: "" }] },
+  { id: "worse-sleep", name: "Worse Sleep", src: parodyWorseSleep, badges: [{ kind: "price", label: "$$" }, { kind: "tracking", label: "" }] },
+  { id: "spendel", name: "Spendel", src: parodySpendel, badges: [{ kind: "price", label: "$$$" }, { kind: "tracking", label: "" }] },
+  { id: "dark-pattern", name: "Dark Pattern", src: parodyDarkPattern, badges: [{ kind: "price", label: "$" }] },
+  { id: "nosey", name: "Nosey", src: parodyNosey, badges: [{ kind: "tracking", label: "" }] },
+  { id: "ad-noise-lite", name: "Ad Noise Lite", src: parodyAdNoiseLite, badges: [{ kind: "tracking", label: "" }] },
+];
+// Corner badges on the parody icons: a $ scale for yearly price ($ under $40,
+// $$ under $100, $$$ above) and an eye for tracking, from each app's own App
+// Store privacy label or privacy policy.
+const badgeStyles: Record<string, string> = {
+  price: "bg-red-500 text-white",
+  tracking: "bg-violet-500 text-white",
+};
+// Each line is generic (true of at least two of the apps) and lists the parody
+// apps it applies to. Every claim comes from the apps' own App Store listings,
+// privacy labels and privacy policies, checked Oct. 2026.
+const typicalAppLimits = [
+  {
+    text: "Limit what you can listen to or do until you pay",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+  },
+  // Usage analytics: every app's label or policy lists it.
+  {
+    text: "Can monitor how you use the app",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+  },
+  {
+    text: "Can track your location",
+    apps: ["worse-sleep", "spendel", "ad-noise-lite"],
+  },
+  {
+    text: "Can track you across other apps and the web",
+    apps: ["clam", "worse-sleep", "spendel", "nosey", "ad-noise-lite"],
+  },
+  {
+    text: "Have free trials that start charging you automatically",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern"],
+  },
+  {
+    text: "Don't have a CarPlay app",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+  },
+  {
+    text: "Collect your personal information",
+    apps: ["clam", "worse-sleep", "spendel"],
+  },
+  {
+    text: "Can share your data with third-party advertisers",
+    apps: ["clam", "spendel", "nosey", "ad-noise-lite"],
+  }
+
 ];
 ---
 
@@ -255,18 +370,18 @@ const pills = [
     </div>
     <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-44 pb-20">
       <h1 class="mx-auto max-w-[14ch] text-4xl/[1.02] font-semibold tracking-tighter text-balance sm:text-6xl lg:text-7xl">
-        Ambient sounds for your <span class="grad-text">flow state.</span>
+        Ambient sounds for <span class="grad-text">sleep and focus.</span>
       </h1>
 
       <p class="text-fg-2 mt-6 text-xl font-medium tracking-tight">
-        Focus better. Work smarter. Rest deeper.
+        Rest deeper at night. Stay focused during the day.
       </p>
 
-      <!-- Real device family: Mac, iPhone and iPad -->
+      <!-- Real device family: iPad, Mac, iPhone, CarPlay and iPhone Duo -->
       <div class="mx-auto mt-12 w-full max-w-4xl">
         <Image
-          src={products}
-          alt="Blankie on Mac, iPhone and iPad"
+          src={heroDevices}
+          alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo"
           class="w-full"
           widths={[640, 896, 1792]}
           sizes="(min-width: 896px) 896px, 100vw"
@@ -299,8 +414,8 @@ const pills = [
         {
           awards.map((award) => (
             <div class="flex items-center gap-3.5">
-              <img
-                src={laurelLeft.src}
+              <Image
+                src={laurelLeft}
                 alt=""
                 loading="lazy"
                 width="18"
@@ -323,8 +438,8 @@ const pills = [
                   {award.sub}
                 </div>
               </div>
-              <img
-                src={laurelRight.src}
+              <Image
+                src={laurelRight}
                 alt=""
                 loading="lazy"
                 width="18"
@@ -336,6 +451,17 @@ const pills = [
           ))
         }
       </div>
+
+      <p class="mt-8 text-sm text-gray-400">
+        Covered by ZDNET, 9to5Mac and Mac &amp; i.
+        <a
+          href="/press/"
+          class="text-accent-ink ml-1 inline-flex items-center gap-1 font-semibold no-underline transition-colors hover:text-white"
+        >
+          <span>See the press page</span>
+          <ArrowRight className="size-4" strokeWidth={2} />
+        </a>
+      </p>
     </div>
   </section>
 
@@ -347,7 +473,7 @@ const pills = [
     </div>
     <div class="relative mx-auto max-w-6xl px-5 py-24">
       <div class="mb-12 max-w-2xl">
-        <SectionHeader eyebrow="New in 2.0" heading="A Blankie for every screen." />
+        <SectionHeader eyebrow="Every device" heading="A Blankie for every screen." />
       </div>
       <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         {
@@ -387,6 +513,55 @@ const pills = [
             </div>
           ))
         }
+
+        <!-- Full-width iPhone Duo showcase card -->
+        <div class="glass overflow-hidden rounded-2xl p-7 lg:col-span-2 lg:p-9">
+          <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_1.35fr]">
+            <div>
+              <div class="text-accent-ink flex flex-wrap items-center gap-2 text-sm font-semibold">
+                <BookOpen className="size-4" strokeWidth={1.75} />
+                <span>iPhone Duo</span>
+                <span class="border-accent-ink/30 text-accent-ink rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                  New in 2.1
+                </span>
+              </div>
+              <h3 class="mt-2.5 text-2xl font-semibold tracking-tight text-gray-100">
+                Works in every pose of iPhone Duo
+              </h3>
+              <p class="text-fg-2 mt-2.5 text-sm/relaxed">
+                Set it down half-folded on your nightstand and the upright screen shows your artwork while the flat half keeps your sound tiles and sleep timer within reach. Unfold it like a book to put Now Playing on the left page and your Sound Mixer on the right.
+              </p>
+              <a
+                href="/guides/blankie-iphone-duo/"
+                class="text-accent-ink mt-5 inline-flex items-center gap-1.5 text-sm font-semibold no-underline transition-colors hover:text-white"
+              >
+                <span>See every pose</span>
+                <ArrowRight className="size-4" strokeWidth={2} />
+              </a>
+            </div>
+            <!-- Each figure grows by its image's aspect ratio, so both render at the same height. -->
+            <div class="flex items-end gap-4">
+              <figure class="min-w-0 text-center" style="flex: 863 1 0">
+                <Image
+                  src={duoSeated}
+                  alt="Blankie on iPhone Duo in the seated pose with artwork on the upright half and sound controls on the flat half"
+                  loading="lazy"
+                  class="w-full rounded-lg"
+                />
+                <figcaption class="text-fg-3 mt-2 text-xs">Seated pose</figcaption>
+              </figure>
+              <figure class="min-w-0 text-center" style="flex: 1246 1 0">
+                <Image
+                  src={duoBook}
+                  alt="Blankie on iPhone Duo in the book pose with Now Playing on the left page and the Sound Mixer on the right page"
+                  loading="lazy"
+                  class="w-full rounded-lg"
+                />
+                <figcaption class="text-fg-3 mt-2 text-xs">Book pose</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -480,108 +655,278 @@ const pills = [
       </div>
 
       <div id="reviews" class="mt-24">
-        <SectionHeader
-          heading="What Blankie users are saying"
-          class="mb-12 max-w-2xl"
-        />
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-      {
-        reviews.map((review) => (
-          <figure class="glass relative overflow-hidden rounded-2xl p-7">
-            <span class="pointer-events-none absolute -top-4.5 right-3.5 z-0 font-serif text-[140px] leading-none font-bold text-accent-ink opacity-10" aria-hidden="true">
-              “
-            </span>
-            <div
-              class="relative z-10 mb-4 flex gap-0.5"
-              role="img"
-              aria-label="5 out of 5 stars"
-            >
+        <div class="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <SectionHeader
+            eyebrow="Reviews"
+            heading="Loved by listeners in 90+ countries."
+            class="max-w-2xl"
+          />
+          <div class="glass inline-flex w-fit items-center gap-3 rounded-full px-4 py-2.5 text-sm">
+            <div class="flex gap-0.5 text-yellow-400" aria-hidden="true">
               {Array.from({ length: 5 }).map(() => (
-                <Star
-                  className="size-4 text-yellow-400"
-                  fill="currentColor"
-                  strokeWidth={0}
-                />
+                <Star className="size-4" fill="currentColor" strokeWidth={0} />
               ))}
             </div>
-            <blockquote class="relative z-10 text-lg/relaxed text-pretty text-gray-100">
-              {review.quote}
-            </blockquote>
-            <figcaption class="relative z-10 mt-6 leading-tight">
-              <span class="block font-semibold text-gray-100">
-                {review.name}
-              </span>
-              <span class="text-fg-3 block text-xs">App Store</span>
-            </figcaption>
-          </figure>
-        ))
-      }
+            <span class="font-semibold whitespace-nowrap text-white">4.9 out of 5</span>
+            <span class="text-fg-3 whitespace-nowrap">· 25,000+ downloads</span>
+          </div>
+        </div>
+
+        <div class="columns-1 gap-5 md:columns-2 lg:columns-3">
+          {
+            homeReviews.map((review) => (
+              <figure class="glass mb-5 break-inside-avoid rounded-2xl p-6">
+                <div class="mb-3.5 flex items-center justify-between gap-3">
+                  <div
+                    class="flex gap-0.5"
+                    role="img"
+                    aria-label={`${review.stars} out of 5 stars`}
+                  >
+                    {Array.from({ length: review.stars }).map(() => (
+                      <Star
+                        className="size-3.5 text-yellow-400"
+                        fill="currentColor"
+                        strokeWidth={0}
+                      />
+                    ))}
+                  </div>
+                  <span class="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-fg-2">
+                    {review.store}
+                  </span>
+                </div>
+                <blockquote class="text-[15.5px]/relaxed text-pretty text-gray-100">
+                  “{review.translation ?? review.quote}”
+                </blockquote>
+                <figcaption class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/6 pt-3 text-xs text-fg-3">
+                  <span class="font-medium text-fg-2">
+                    {review.author ? `${review.author} · App Store` : "App Store review"}
+                  </span>
+                  {review.translation && (
+                    <span>Translated from {review.language}</span>
+                  )}
+                </figcaption>
+              </figure>
+            ))
+          }
+        </div>
+
+        <div class="mt-6 flex flex-col items-center gap-3 text-center">
+          <p class="text-sm font-semibold text-gray-100">Enjoying Blankie and want to help? Here are some ways you can support it:</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            {
+              [
+                { icon: MessageSquareText, label: "Leave a review", href: "https://apps.apple.com/app/id6740096581?action=write-review" },
+                { icon: Star, label: "Star on GitHub", href: "https://github.com/codybrom/blankie" },
+                { icon: Languages, label: "Help translate", href: "/i18n/" },
+              ].map((link) => (
+                <a
+                  href={link.href}
+                  class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-sm font-medium text-fg-2 no-underline transition-colors hover:border-white/20 hover:text-white"
+                >
+                  <link.icon className="size-4" strokeWidth={2} />
+                  {link.label}
+                </a>
+              ))
+            }
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Get Blankie: free pitch + download, merged -->
+  <!-- Pricing & Download: $0 forever comparison + download CTA -->
   <section class="relative overflow-hidden" id="download">
+    <div id="pricing" class="sr-only" aria-hidden="true"></div>
     <div
       class="pointer-events-none absolute inset-x-0 top-auto bottom-[-40%] z-0 h-150"
       style="background:radial-gradient(ellipse at 50% 100%,rgba(68,82,246,0.22),transparent 60%)"
       aria-hidden="true"
     >
     </div>
-    <div class="relative z-10 mx-auto max-w-3xl px-5 py-24 text-center">
-      <Image
-        src={icon}
-        alt=""
-        width={104}
-        height={104}
-        class="mx-auto mb-6 rounded-[22%] shadow-2xl"
-        quality={90}
-      />
-      <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
-          Blankie is 100% free, forever.
-      </h2>
-      <p class="text-fg-2 mx-auto mt-5 max-w-xl text-lg">
-       Don't rent your relaxation. While other apps charge for features, everything in Blankie is 100% free with no upsell and no data collection.</p>
-      <div class="mt-8 flex flex-wrap justify-center gap-2.5">
-        {
-          pills.map((pill) => (
-            <span class="glass text-fg-2 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm">
-              <Check className="size-4 text-green-400" strokeWidth={2} />
-              {pill}
-            </span>
-          ))
-        }
+    <div class="relative z-10 mx-auto max-w-6xl px-5 py-24">
+      <div class="mx-auto max-w-2xl text-center">
+        <Image
+          src={icon}
+          alt=""
+          width={96}
+          height={96}
+          class="mx-auto mb-6 rounded-[22%] shadow-2xl"
+          quality={90}
+        />
+        <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
+          Don't rent your relaxation.
+        </h2>
+        <p class="text-fg-2 mx-auto mt-4 max-w-3xl text-lg text-balance">
+          Other sleep and focus apps lock sounds and features behind paywalls.
+          <span class="sm:block">Blankie gives you everything free, forever.</span>
+        </p>
       </div>
 
-      <div class="mt-10 flex justify-center">
-        <a href={appStore} aria-label="Download Blankie on the App Store">
-          <Image
-            src={appStoreBadge}
-            alt="Download on the App Store"
-            class="h-14 w-auto"
-            loading="lazy"
-          />
-        </a>
+      <div class="mt-12 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.35fr_0.95fr]">
+        <!-- Blankie $0 Forever Card -->
+        <div class="glass flex flex-col justify-between rounded-3xl border-accent-ink/25 bg-[linear-gradient(180deg,rgba(76,141,255,0.10),rgba(255,255,255,0.03))] p-7 sm:p-9">
+          <div>
+            <div class="flex items-end justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2.5">
+                  <h3 class="text-3xl font-semibold tracking-tight text-white">
+                    Blankie
+                  </h3>
+                  <a
+                    href="/faq/#what-does-open-source-mean"
+                    class="border-accent-ink/30 text-accent-ink rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase no-underline transition-colors hover:border-accent-ink/60 hover:text-white"
+                  >
+                    Open Source
+                  </a>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-4xl font-bold tracking-tight text-white">
+                  $0
+                </div>
+                <div class="text-accent-ink text-xs font-semibold tracking-wide uppercase">
+                  Forever
+                </div>
+              </div>
+            </div>
+            <p class="text-fg-2 mt-3 border-b border-white/10 pb-6 text-sm">
+              Costs nothing, hides nothing. Get everything, everywhere, every time.
+            </p>
+
+            <ul class="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+              {
+                blankieIncluded.map((item) => (
+                  <li class="flex items-start gap-3">
+                    <span class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-green-500/15 text-green-400">
+                      <Check className="size-3.5" strokeWidth={2.5} />
+                    </span>
+                    <div>
+                      <div class="text-sm font-semibold text-gray-100">
+                        {item.title}
+                      </div>
+                      <div class="text-fg-3 text-xs/snug">{item.sub}</div>
+                    </div>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          <div class="mt-8 flex flex-col items-center gap-5 border-t border-white/10 pt-6 sm:flex-row sm:items-end sm:justify-between">
+            <div class="flex flex-col items-center gap-2 sm:items-start">
+              <a href={appStore} aria-label="Download Blankie on the App Store" class="transition hover:-translate-y-px">
+                <Image
+                  src={appStoreBadge}
+                  alt="Download on the App Store"
+                  class="h-14 w-auto"
+                  loading="lazy"
+                />
+              </a>
+              <span class="text-xs text-fg-2">Recommended, with automatic updates</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 sm:items-end">
+              <span class="text-xs text-fg-2">Other ways to install on Mac</span>
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <a
+                  href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
+                  class="inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 no-underline transition hover:border-white/30 hover:text-white"
+                >
+                  <Download className="size-4" strokeWidth={2} />
+                  Direct download
+                </a>
+                <button
+                  type="button"
+                  id="brew-open"
+                  class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 transition hover:border-white/30 hover:text-white"
+                >
+                  <Terminal className="size-4" strokeWidth={2} />
+                  Homebrew
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Typical Subscription Apps Card -->
+        <div class="flex flex-col justify-between rounded-3xl border border-white/8 bg-white/2 p-7 sm:p-9">
+          <div>
+            <div class="flex items-end justify-between gap-4">
+              <h3 class="min-w-0 text-3xl font-semibold tracking-tight text-white">Other apps</h3>
+              <div class="text-right">
+                <div class="text-4xl font-bold tracking-tight whitespace-nowrap text-white">
+                  $20–$120
+                </div>
+                <div class="text-xs font-semibold tracking-wide text-red-300 uppercase">
+                  Per year
+                </div>
+              </div>
+            </div>
+            <p class="text-fg-2 mt-3 border-b border-white/8 pb-6 text-sm">
+              Free to try, then worse until you buy.
+            </p>
+
+            <div
+              role="group"
+              class="parody-row mx-auto mt-6 grid max-w-sm grid-cols-3 gap-x-4 gap-y-5"
+              aria-label="Parody versions of other apps"
+            >
+              {
+                parodyApps.map((app, i) => (
+                  <figure
+                    class="parody-app flex cursor-default flex-col items-center rounded-xl py-1 outline-none transition-opacity duration-200 focus-visible:ring-2 focus-visible:ring-accent-ink/60 [&.is-dim]:opacity-35"
+                    data-app={app.id}
+                    tabindex="0"
+                  >
+                    <span
+                      class:list={[
+                        "relative size-16 rounded-[22.37%] shadow-[0_6px_14px_rgba(0,0,0,0.5)]",
+                        i % 2 === 0 ? "-rotate-6" : "rotate-6",
+                      ]}
+                    >
+                      <Image src={app.src} alt="" width={64} height={64} class="size-full rounded-[22.37%]" />
+                      <span class="absolute inset-0 rounded-[22.37%] bg-linear-to-b from-white/20 via-white/0 to-black/10 shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.22)]" />
+                      <span class="absolute -top-2 -right-3 z-10 flex items-center -space-x-px">
+                        {app.badges.map((badge, j) => (
+                          <span
+                            style={`z-index: ${j + 1}`}
+                            class:list={[
+                              "relative inline-flex h-4.75 min-w-4.75 items-center justify-center rounded-full px-1.25 text-[10px]/none font-extrabold tracking-tight whitespace-nowrap shadow-[0_2px_6px_rgba(0,0,0,0.45)] ring-2 ring-[#10152f]",
+                              badgeStyles[badge.kind],
+                            ]}
+                          >
+                            {badge.kind === "tracking" && <Eye className="size-2.75" strokeWidth={2.75} />}
+                            {badge.label}
+                          </span>
+                        ))}
+                      </span>
+                    </span>
+                    <figcaption class="mt-2 text-center text-xs/tight text-balance text-fg-2">
+                      {app.name}
+                    </figcaption>
+                  </figure>
+                ))
+              }
+            </div>
+
+            <ul class="mt-6 space-y-3.5">
+              {
+                typicalAppLimits.map((limit) => (
+                  <li
+                    class="parody-limit flex items-start gap-3 text-sm text-fg-2 transition-[opacity,color] duration-200 [&.is-dim]:opacity-30 [&.is-hit]:text-white"
+                    data-apps={limit.apps.join(" ")}
+                  >
+                    <span class="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-red-400/15 text-red-300">
+                      <X className="size-3.5" strokeWidth={2.5} />
+                    </span>
+                    <span>{limit.text}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </div>
       </div>
 
-      <div class="text-fg-3 mt-6 flex flex-col items-center gap-1 text-sm sm:flex-row sm:justify-center sm:gap-3">
-        <span>Prefer to install on Mac yourself?</span>
-        <a
-          href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
-          class="text-yellow-300 underline transition-colors hover:text-yellow-200"
-        >
-          Direct Download
-        </a>
-        <span class="hidden text-gray-600 sm:inline" aria-hidden="true">·</span>
-        <button
-          type="button"
-          id="brew-open"
-          class="text-yellow-300 underline transition-colors hover:text-yellow-200"
-        >
-          Homebrew
-        </button>
-      </div>
     </div>
   </section>
 
@@ -682,6 +1027,26 @@ const pills = [
       Download
     </a>
   </nav>
+
+  <script>
+    // Hovering or focusing a parody app highlights the lines that apply to it.
+    const parodyApps = document.querySelectorAll<HTMLElement>(".parody-app");
+    const parodyLimits = document.querySelectorAll<HTMLElement>(".parody-limit");
+    const showParody = (id: string | null) => {
+      parodyApps.forEach((el) => el.classList.toggle("is-dim", !!id && el.dataset.app !== id));
+      parodyLimits.forEach((el) => {
+        const hit = !!id && (el.dataset.apps ?? "").split(" ").includes(id);
+        el.classList.toggle("is-hit", hit);
+        el.classList.toggle("is-dim", !!id && !hit);
+      });
+    };
+    parodyApps.forEach((el) => {
+      el.addEventListener("pointerenter", () => showParody(el.dataset.app ?? null));
+      el.addEventListener("focus", () => showParody(el.dataset.app ?? null));
+      el.addEventListener("pointerleave", () => showParody(null));
+      el.addEventListener("blur", () => showParody(null));
+    });
+  </script>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
