@@ -1,5 +1,8 @@
 # build output
 dist/
+# local Wrangler state
+.wrangler/
+.dev.vars*
 # generated types
 .astro/
 
@@ -10,6 +13,7 @@ public/*
 !public/robots.txt
 !public/favicon.ico
 !public/llms.txt
+!public/.assetsignore
 
 # dependencies
 node_modules/

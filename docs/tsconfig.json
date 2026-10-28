@@ -3,19 +3,11 @@
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     },
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "dist",
-    "_site",
-    "node_modules"
-  ]
+  "include": ["src/**/*", "worker/**/*"],
+  "exclude": ["dist", "_site", "node_modules"]
 }

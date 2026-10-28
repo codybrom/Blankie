@@ -3,6 +3,9 @@
     "DavidAnson.vscode-markdownlint",
     "streetsidesoftware.code-spell-checker",
     "astro-build.astro-vscode",
+    "biomejs.biome"
+  ],
+  "unwantedRecommendations": [
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint"
   ]

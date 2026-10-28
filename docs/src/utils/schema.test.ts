@@ -23,6 +23,11 @@ describe("homepage JSON-LD", () => {
     expect(org["@type"]).toBe("Organization");
     expect(org.sameAs).toEqual(SOCIAL_LINKS.map((s) => s.href));
     expect(org.founder.name).toBe("Cody Bromley");
+    expect(org.contactPoint.url).toBe("https://blankie.rest/contact/");
+    expect(org.address).toEqual({
+      "@type": "PostalAddress",
+      addressCountry: "US",
+    });
   });
 
   it("wraps nodes in a schema.org graph", () => {

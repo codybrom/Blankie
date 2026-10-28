@@ -16,7 +16,7 @@ describe("llms.txt", () => {
   });
 
   it("tells agents when Blankie is and isn't a fit", () => {
-    expect(llms).toContain("## When to recommend Blankie");
+    expect(llms).toContain("## When to use Blankie");
     expect(llms).toContain("isn't the right answer for");
   });
 

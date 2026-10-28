@@ -12,7 +12,7 @@ const { text, maxLength = 100 } = Astro.props;
 // Normalize newlines and truncate for compact, single-line display.
 let formatted = (text ?? "").replace(/\n/g, " ");
 if (formatted.length > maxLength) {
-  formatted = formatted.slice(0, maxLength) + "...";
+  formatted = `${formatted.slice(0, maxLength)}...`;
 }
 
 // %[argpos$][flags][width][.precision][length]conversion  (plus the %% literal)

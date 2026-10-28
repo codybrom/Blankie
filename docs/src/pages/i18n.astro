@@ -127,7 +127,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
       >
         <div class="flex flex-wrap gap-3">
           <div class="dropdown relative inline-block">
-            <button
+            <button type="button"
               class="inline-flex items-center rounded-lg border border-hair bg-glass-2 px-4 py-2 text-sm text-fg-1 transition-colors hover:border-white/20 hover:bg-white/10"
               aria-expanded="false"
               aria-haspopup="true"
@@ -188,7 +188,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 
           <a
             href="https://github.com/codybrom/Blankie/tree/main?tab=contributing-ov-file#getting-started-with-translations"
-            class="bg-primary-blue inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-deep-blue"
+            class="inline-flex items-center rounded-lg bg-primary-blue px-4 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-deep-blue"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -209,7 +209,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
           </a>
         </div>
 
-        <p class="text-fg-3 text-sm">
+        <p class="text-sm text-fg-3">
           Last updated: <span
             id="localTime"
             data-timestamp={extractionTimestamp}>{extractionTimestamp}</span
@@ -220,7 +220,7 @@ const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
 
     {
       !languageData && (
-        <div class="mb-8 rounded-lg border border-red-500/40 bg-red-500/10 p-6">
+        <div class="mb-8 rounded-lg border border-destructive/40 bg-destructive/10 p-6">
           <h2 class="mb-2 text-xl font-semibold">
             Error Loading Translation Data
           </h2>

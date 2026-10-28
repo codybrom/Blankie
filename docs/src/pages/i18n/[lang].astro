@@ -107,7 +107,6 @@ if (langData?.strings) {
   groupedStrings.needsReview.sort(sortBySource);
   groupedStrings.needsTranslation.sort(sortBySource);
 }
-
 ---
 
 <Layout
@@ -141,7 +140,7 @@ if (langData?.strings) {
         <div class="flex items-center gap-2 text-lg italic">
           Blankie
           <Heart
-            class="inline size-4 text-red-500"
+            class="inline size-4 text-destructive-foreground"
             fill="currentColor"
             stroke-width={0}
           />
@@ -165,8 +164,9 @@ if (langData?.strings) {
     </div>
 
     {
+      
       !langData && (
-        <div class="mb-8 rounded-lg border border-red-500/40 bg-red-500/10 p-6">
+        <div class="mb-8 rounded-lg border border-destructive/40 bg-destructive/10 p-6">
           <h2 class="mb-2 text-xl font-semibold">
             Error Loading Translation Data
           </h2>
@@ -176,7 +176,7 @@ if (langData?.strings) {
             <a
               href={`/i18n/${lang}.json`}
               class="text-accent-ink underline hover:text-white"
-              target="_blank"
+              target="_blank" rel="noopener"
             >
               view the raw JSON file
             </a>
@@ -187,6 +187,7 @@ if (langData?.strings) {
     }
 
     {
+      
       langData && (
         <>
           {/* Statistics Card */}
@@ -299,9 +300,9 @@ if (langData?.strings) {
                 <a
                   href={`/i18n/${lang}.json`}
                   target="_blank"
-                  class="inline-flex items-center rounded-md border border-hair bg-lift px-4 py-2 text-sm text-accent-ink transition-colors hover:bg-white/10 hover:text-white"
+                  class="inline-flex items-center rounded-md border border-hair bg-lift px-4 py-2 text-sm text-accent-ink transition-colors hover:bg-white/10 hover:text-white" rel="noopener"
                 >
-                  <svg
+                  <svg aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     class="mr-2 size-4"
                     fill="none"
@@ -323,7 +324,7 @@ if (langData?.strings) {
                   download
                   class="inline-flex items-center rounded-md border border-hair bg-lift px-4 py-2 text-sm text-accent-ink transition-colors hover:bg-white/10 hover:text-white"
                 >
-                  <svg
+                  <svg aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     class="mr-2 size-4"
                     fill="none"
@@ -343,9 +344,9 @@ if (langData?.strings) {
 
               <a
                 href="/contributing/"
-                class="bg-primary-blue inline-flex items-center rounded-md px-5 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-deep-blue"
+                class="inline-flex items-center rounded-md bg-primary-blue px-5 py-2 text-sm font-medium text-white no-underline transition-colors hover:bg-deep-blue"
               >
-                <svg
+                <svg aria-hidden="true"
                   xmlns="http://www.w3.org/2000/svg"
                   class="mr-2 size-4"
                   fill="none"
@@ -367,7 +368,7 @@ if (langData?.strings) {
           {/* Tabs for different string categories */}
           <div class="mb-8">
             <div class="border-b border-hair">
-              <ul class="-mb-px flex flex-wrap" id="tabs" role="tablist">
+              <div class="-mb-px flex flex-wrap" id="tabs" role="tablist">
                 {[
                   {
                     id: "translated",
@@ -390,7 +391,7 @@ if (langData?.strings) {
                 ]
                   .sort((a, b) => b.count - a.count)
                   .map((tab) => (
-                    <li class="mr-2" role="presentation">
+                    <div class="mr-2">
                       <button
                         class={`inline-block rounded-t-lg border-b-2 p-4 ${
                           tab.count > 0
@@ -410,9 +411,9 @@ if (langData?.strings) {
                           {tab.count}
                         </span>
                       </button>
-                    </li>
+                    </div>
                   ))}
-              </ul>
+              </div>
             </div>
 
             <div id="tab-content">

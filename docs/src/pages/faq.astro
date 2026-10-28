@@ -29,7 +29,12 @@ const slugify = (s: string) =>
     .replace(/^-+|-+$/g, "");
 
 type FaqItem = { id: string; question: string; answer: string };
-type FaqSection = { id: string; title: string; intro: string; items: FaqItem[] };
+type FaqSection = {
+  id: string;
+  title: string;
+  intro: string;
+  items: FaqItem[];
+};
 
 const faqSections: FaqSection[] = body
   .split(/^##\s+/m)
@@ -78,6 +83,7 @@ const jsonLd = ldGraph(
             id="faqnav"
           >
             {
+              
               faqSections.map((sec) => (
                 <div
                   class="faq-navgroup max-[900px]:contents [&+&]:mt-0.5"
@@ -89,7 +95,7 @@ const jsonLd = ldGraph(
                   >
                     {sec.title}
                   </a>
-                  <div class="faq-navsub mt-0.5 mb-2 hidden border-l border-hair-soft max-[900px]:hidden! in-[.active]:block">
+                  <div class="faq-navsub mt-0.5 mb-2 hidden border-l border-hair-soft in-[.active]:block max-[900px]:hidden!">
                     {sec.items.map((item) => (
                       <a
                         class="faq-navq block py-1.25 pl-3.25 text-[13px] leading-snug text-fg-3 no-underline transition-colors hover:text-fg-1 [&.on]:-ml-px [&.on]:pl-3.5 [&.on]:text-white [&.on]:shadow-[inset_2px_0_0_var(--color-warm)]"
@@ -111,7 +117,7 @@ const jsonLd = ldGraph(
                 {title}
               </h1>
               <p
-                class="max-w-[60ch] text-fg-2 editorial-links"
+                class="editorial-links max-w-[60ch] text-fg-2"
                 set:html={faqDek}
               />
             </header>
@@ -179,17 +185,17 @@ const jsonLd = ldGraph(
 
       const secOf = new Map<string, string>();
       document.querySelectorAll<HTMLElement>(".faq-sec").forEach((s) => {
-        s.querySelectorAll<HTMLElement>(".faq-q").forEach((q) =>
-          secOf.set(q.id, s.dataset.sec || ""),
-        );
+        s.querySelectorAll<HTMLElement>(".faq-q").forEach((q) => {
+          secOf.set(q.id, s.dataset.sec || "");
+        });
       });
 
       const setActive = (qId: string) => {
         const secId = secOf.get(qId) || "";
-        groups.forEach((g) =>
-          g.classList.toggle("active", g.dataset.sec === secId),
-        );
-        qlinks.forEach((l) => l.classList.toggle("on", l.dataset.q === qId));
+        groups.forEach((g) => {
+          g.classList.toggle("active", g.dataset.sec === secId);
+        });
+        qlinks.forEach((l) => { l.classList.toggle("on", l.dataset.q === qId); });
       };
 
       const spy = new IntersectionObserver(
@@ -201,7 +207,7 @@ const jsonLd = ldGraph(
         },
         { rootMargin: "-20% 0px -70% 0px" },
       );
-      questions.forEach((q) => spy.observe(q));
+      questions.forEach((q) => { spy.observe(q); });
       setActive(questions[0].id);
     });
   </script>

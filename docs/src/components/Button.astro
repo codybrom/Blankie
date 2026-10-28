@@ -22,13 +22,7 @@ const button = cva(
   },
 );
 
-const {
-  href,
-  variant,
-  size,
-  class: className,
-  ...rest
-} = Astro.props;
+const { href, variant, size, class: className, ...rest } = Astro.props;
 ---
 
 <a href={href} class={cn(button({ variant, size }), className)} {...rest}>

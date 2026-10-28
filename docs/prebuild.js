@@ -3,13 +3,12 @@
  * string catalogs and builds the press kit zip.
  */
 
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
 import { globSync } from "glob";
-import { execSync } from "child_process";
-import os from "os";
+import { zipSync } from "fflate";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -418,7 +417,9 @@ try {
     const shots = fs
       .readdirSync(assetsDir)
       .filter((f) => f.startsWith(`${device}-store-`) && f.endsWith(".jpg"))
-      .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)));
+      .sort(
+        (a, b) => parseInt(a.match(/\d+/), 10) - parseInt(b.match(/\d+/), 10),
+      );
     pressFiles.push(...shots);
   }
   const present = pressFiles.filter((f) =>
@@ -427,23 +428,17 @@ try {
   if (present.length) {
     fs.mkdirSync(publicDir, { recursive: true });
     const zipPath = path.join(publicDir, "blankie-press-kit.zip");
-    fs.rmSync(zipPath, { force: true });
-    // Stage each file under a unique flat name (guides/blankie-iphone-duo/book.png
-    // becomes blankie-iphone-duo-book.png) so same-named guide shots can't collide.
-    const stage = fs.mkdtempSync(path.join(os.tmpdir(), "blankie-press-"));
-    try {
-      const names = present.map((f) =>
+    // Each file gets a unique flat name (guides/blankie-iphone-duo/book.png
+    // becomes blankie-iphone-duo-book.png) so same-named guide shots can't
+    // collide. Built in Node so it doesn't depend on a system zip command,
+    // which the Cloudflare build image doesn't have.
+    const entries = Object.fromEntries(
+      present.map((f) => [
         f.replace(/^guides\//, "").replaceAll("/", "-"),
-      );
-      present.forEach((f, i) =>
-        fs.copyFileSync(path.join(assetsDir, f), path.join(stage, names[i])),
-      );
-      const args = names.map((n) => `"${path.join(stage, n)}"`).join(" ");
-      // -j stores bare filenames, -q is quiet.
-      execSync(`zip -j -q "${zipPath}" ${args}`);
-    } finally {
-      fs.rmSync(stage, { recursive: true, force: true });
-    }
+        new Uint8Array(fs.readFileSync(path.join(assetsDir, f))),
+      ]),
+    );
+    fs.writeFileSync(zipPath, zipSync(entries));
     console.log(
       `\n✨ Prebuild: Wrote press kit zip (${present.length} files) -> public/blankie-press-kit.zip`,
     );

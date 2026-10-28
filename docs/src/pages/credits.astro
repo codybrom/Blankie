@@ -13,8 +13,6 @@ const title = "Credits";
 const description =
   "Credits for Blankie: sound sources and licenses, translators, dependencies and acknowledgments.";
 
-
-
 const contributors: string[] = creditsJSON.contributors ?? [];
 const translators: Record<string, string[]> = creditsJSON.translators ?? {};
 const dependencies = creditsJSON.dependencies ?? [];
@@ -32,9 +30,18 @@ interface Sound {
 const sounds: Sound[] = (soundsJSON?.sounds as Sound[]) ?? [];
 
 const LICENSE: Record<string, { text: string; url: string }> = {
-  cc0: { text: "CC0", url: "https://creativecommons.org/publicdomain/zero/1.0/" },
-  ccBy3: { text: "CC BY 3.0", url: "https://creativecommons.org/licenses/by/3.0/" },
-  ccBy4: { text: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" },
+  cc0: {
+    text: "CC0",
+    url: "https://creativecommons.org/publicdomain/zero/1.0/",
+  },
+  ccBy3: {
+    text: "CC BY 3.0",
+    url: "https://creativecommons.org/licenses/by/3.0/",
+  },
+  ccBy4: {
+    text: "CC BY 4.0",
+    url: "https://creativecommons.org/licenses/by/4.0/",
+  },
   publicDomain: {
     text: "Public Domain",
     url: "https://creativecommons.org/publicdomain/mark/1.0/",

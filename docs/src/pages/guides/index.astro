@@ -143,14 +143,14 @@ const sections = CATEGORIES.map((category) => ({
     document.addEventListener("DOMContentLoaded", () => {
       const links = document.querySelectorAll<HTMLAnchorElement>("#gxnav a");
       const byCat = new Map<string, HTMLAnchorElement>();
-      links.forEach((l) => byCat.set(l.dataset.cat || "", l));
+      links.forEach((l) => { byCat.set(l.dataset.cat || "", l); });
       const groups = document.querySelectorAll<HTMLElement>("#gxlist [data-cat]");
       if (!groups.length) return;
       const spy = new IntersectionObserver(
         (entries) => {
           entries.forEach((e) => {
             if (e.isIntersecting) {
-              links.forEach((l) => l.classList.remove("on"));
+              links.forEach((l) => { l.classList.remove("on"); });
               byCat
                 .get((e.target as HTMLElement).dataset.cat || "")
                 ?.classList.add("on");
@@ -159,7 +159,7 @@ const sections = CATEGORIES.map((category) => ({
         },
         { rootMargin: "-25% 0px -65% 0px" },
       );
-      groups.forEach((g) => spy.observe(g));
+      groups.forEach((g) => { spy.observe(g); });
     });
   </script>
 </Layout>

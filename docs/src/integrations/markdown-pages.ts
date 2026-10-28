@@ -1,7 +1,7 @@
 // Writes a Markdown twin of every built page (/faq/ gets /faq.md) so agents can
 // read clean text instead of parsing HTML.
 
-import type { AstroIntegration } from "astro";
+import { type AstroIntegration } from "astro";
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";

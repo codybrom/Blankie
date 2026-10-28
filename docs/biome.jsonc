@@ -1,0 +1,102 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/.astro",
+      "!public",
+      "!**/*.min.js",
+      "!**/*.md",
+      "!**/*.svg",
+      "!**/*.yml"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "all",
+      "semicolons": "always"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "html": {
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "enabled": false
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "useExhaustiveDependencies": "warn"
+      },
+      "style": {
+        "useImportType": {
+          "level": "warn",
+          "options": {
+            "style": "inlineType"
+          }
+        }
+      },
+      "suspicious": {
+        "noExplicitAny": "warn"
+      },
+      "nursery": {
+        "useTailwindSortedClasses": {
+          "level": "warn",
+          "fix": "safe"
+        },
+        "useTailwindShorthandClasses": "warn",
+        "noTailwindLegacyUtilities": "warn",
+        "noTailwindRawColors": "warn"
+      }
+    }
+  },
+  "tailwind": {
+    "stylesheet": "./src/styles/global.css",
+    "mergeFunctions": ["cn", "clsx"],
+    "variantFunctions": ["cva"]
+  },
+  "overrides": [
+    {
+      // Button renders its text through <slot />, which Biome can't see.
+      "includes": ["src/components/Button.astro"],
+      "linter": { "rules": { "a11y": { "useAnchorContent": "off" } } }
+    },
+    {
+      // The download link gets its href from a script when an image opens.
+      "includes": ["src/components/Lightbox.astro"],
+      "linter": { "rules": { "a11y": { "useValidAnchor": "off" } } }
+    },
+    {
+      // The parody app row is a labeled role="group" of tiles, not a form, so
+      // a <fieldset> would be the wrong element.
+      "includes": ["src/pages/index.astro"],
+      "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
+    }
+  ]
+}

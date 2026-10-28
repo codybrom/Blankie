@@ -29,6 +29,13 @@
   --color-fg-2: #aeb2cc;
   --color-fg-3: #8b90b3;
   --color-warm: #e7b24a;
+  /* Gold accent for hovered and current links (Tailwind's yellow-500 value). */
+  --color-gold: oklch(79.5% 0.184 86.047);
+  /* Light red for text on destructive tints (destructive itself is too dark for
+     text on navy). Tailwind's red-300 value. */
+  --color-destructive-foreground: oklch(80.8% 0.114 19.571);
+  /* Positive status text and tints. Tailwind's green-400 value. */
+  --color-success: oklch(79.2% 0.209 151.711);
 
   /* Translucent surface and hairline tokens, which back the bg-glass,
      bg-glass-2, border-hair and border-hair-soft utilities. */
@@ -133,37 +140,18 @@ body {
     font-weight: 600;
     margin-top: 1.5rem;
     margin-bottom: 1rem;
-
-    & a {
-      margin-left: 0.5rem;
-      opacity: 0;
-    }
   }
 
   & h4 {
     font-weight: 500;
     margin-top: 1rem;
     margin-bottom: 0.5rem;
-
-    & a {
-      margin-left: 0.5rem;
-      opacity: 0;
-    }
   }
 
   & ul,
   & ol {
     margin-top: 1rem;
     margin-bottom: 1rem;
-  }
-}
-
-.group:hover {
-  & .prose h3 a,
-  & .prose h4 a {
-    opacity: 100;
-    color: var(--color-yellow-700);
-    text-decoration: none;
   }
 }
 
@@ -353,14 +341,8 @@ body {
   margin-inline: auto;
   border-radius: 1rem;
 }
-.prose-blankie > a[data-zoom]:first-child > img {
-  margin-top: 0;
-}
-.prose-blankie a[data-zoom] {
-  display: block;
-  border-bottom: 0;
-  cursor: zoom-in;
-}
+/* Link rules run from least to most specific so later rules never lose to
+   earlier ones by specificity alone. */
 /* Links: accent-ink with a faint underline that solidifies on hover. The color
    override beats the privacy page's `.prose a` gold links. */
 .prose-blankie a {
@@ -369,6 +351,25 @@ body {
   border-bottom: 1px solid
     color-mix(in srgb, var(--accent-ink) 35%, transparent);
   transition: border-color 0.2s;
+}
+/* Editorial inline links in `set:html` blocks (FAQ dek, credits "About" and
+   asset values): accent-ink with a faint underline that solidifies on hover. */
+.editorial-links a {
+  @apply border-accent-ink/35 text-accent-ink border-b no-underline;
+}
+/* Hidden heading anchor links, revealed by the .group:hover rule below. */
+.prose h3 a,
+.prose h4 a {
+  margin-left: 0.5rem;
+  opacity: 0;
+}
+.prose-blankie > a[data-zoom]:first-child > img {
+  margin-top: 0;
+}
+.prose-blankie a[data-zoom] {
+  display: block;
+  border-bottom: 0;
+  cursor: zoom-in;
 }
 .prose-blankie a:hover {
   color: var(--accent-ink);
@@ -410,13 +411,19 @@ body {
   margin-bottom: 0;
 }
 
-/* Editorial inline links in `set:html` blocks (FAQ dek, credits "About" and
-   asset values): accent-ink with a faint underline that solidifies on hover. */
-.editorial-links a {
-  @apply border-accent-ink/35 text-accent-ink border-b no-underline;
-}
 .editorial-links a:hover {
   @apply border-accent-ink;
+}
+
+/* Reveals the heading anchor links on hover. It sits after the general link
+   rules above because it's more specific, so later is where it belongs. */
+.group:hover {
+  & .prose h3 a,
+  & .prose h4 a {
+    opacity: 100;
+    color: var(--color-yellow-700);
+    text-decoration: none;
+  }
 }
 
 @plugin "@tailwindcss/typography";

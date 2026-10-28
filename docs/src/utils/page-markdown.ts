@@ -20,11 +20,7 @@ const converter = new NodeHtmlMarkdown({
   maxConsecutiveNewlines: 2,
 });
 
-/** Output path for a page's Markdown twin, relative to the build directory. */
-export function markdownPathFor(pathname: string): string {
-  const trimmed = pathname.replace(/^\/+|\/+$/g, "");
-  return `${trimmed || "index"}.md`;
-}
+export { markdownPathFor } from "./markdown-path";
 
 /**
  * Converts a built page's <main> to Markdown, or returns null for pages that

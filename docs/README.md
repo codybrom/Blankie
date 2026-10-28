@@ -1,6 +1,6 @@
 # Blankie Website
 
-This is the website for [Blankie](https://blankie.rest), built with [Astro](https://astro.build) and deployed on GitHub Pages.
+This is the website for [Blankie](https://blankie.rest), built with [Astro](https://astro.build) and deployed on Cloudflare Workers.
 
 ## Production
 
@@ -77,13 +77,15 @@ If you prefer developing without Docker, open a terminal inside the `docs` direc
 Before opening a pull request, run the same checks CI expects:
 
 - `npm run check` - Astro and TypeScript type checking
-- `npm run lint` - ESLint
+- `npm run lint` - Biome lint and format check (`npm run lint:fix` applies safe fixes)
 - `npm run test` - Vitest unit tests
-- `npm run format` - Prettier formatting
+- `npm run format` - Biome formatting
 
 ## Deployment
 
-The site is automatically deployed to GitHub Pages at [https://blankie.rest](https://blankie.rest) when changes are pushed to the `main` branch that affect files in the `docs` directory or the GitHub Actions workflow file. The deployment is handled by the GitHub Actions workflow defined in `.github/workflows/pages.yml`.
+The site is deployed to Cloudflare Workers at [https://blankie.rest](https://blankie.rest) by Workers Builds, Cloudflare's Git integration (configured in the Cloudflare dashboard with `docs` as the root directory). Pushes to `main` that touch the site or the files it reads run `npm run lint && npm test && npm run build`, then `npm run deploy`, which uploads the press kit zip to the `blankie-assets` R2 bucket and runs `wrangler deploy`. Other branches get a preview deploy instead.
+
+The Worker in `worker/index.ts` serves the built site from static assets (configured in `wrangler.jsonc`). Requests with `Accept: text/markdown` get each page's Markdown version, and `www.blankie.rest` redirects to the apex domain. To try it locally, run `npm run build` and then `npx wrangler dev`.
 
 ## License
 

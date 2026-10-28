@@ -72,7 +72,7 @@ import {
 } from "@/utils/schema";
 import { getTestimonial } from "@/utils/testimonials";
 
-const title = "Ambient sounds for sleep and focus";
+const title = "Free ambient sound mixer for iPhone, iPad and Mac";
 const appStore =
   "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
 
@@ -86,14 +86,17 @@ const appJsonLd = ldGraph(
 // Award row, each stat flanked by laurel branches. Middle is the marquee.
 const awards = [
   { title: "4.9 out of 5.0", sub: "Global App Store rating", large: false },
-  { title: 'Best New Apps & Updates', sub: "App Store · May 2025", large: true },
+  {
+    title: "Best New Apps & Updates",
+    sub: "App Store · May 2025",
+    large: true,
+  },
   {
     title: "#4 Product of the Month",
     sub: "Product Hunt • Health & Fitness • May 2025",
     large: false,
   },
 ];
-
 
 // Alternating feature sections (kept from the current homepage), restyled navy.
 const features = [
@@ -118,7 +121,7 @@ const features = [
         sub: "Import your own audio files and mix them in with the built-in sounds.",
       },
     ],
-  },  
+  },
   {
     eyebrow: "Sleep timer",
     heading: "Fall asleep without playing all night.",
@@ -151,9 +154,21 @@ const features = [
     portrait: false,
     bg: bg2,
     points: [
-      { icon: CloudRain, title: "Heavy Rain Sleep", sub: "Rain + Brown Noise + Fan" },
-      { icon: Flame, title: "Cozy Night In", sub: "Fireplace + Wind + Warm Piano" },
-      { icon: Waves, title: "Ocean Focus", sub: "Green Noise + Waves + Lo-Fi Beats" },
+      {
+        icon: CloudRain,
+        title: "Heavy Rain Sleep",
+        sub: "Rain + Brown Noise + Fan",
+      },
+      {
+        icon: Flame,
+        title: "Cozy Night In",
+        sub: "Fireplace + Wind + Warm Piano",
+      },
+      {
+        icon: Waves,
+        title: "Ocean Focus",
+        sub: "Green Noise + Waves + Lo-Fi Beats",
+      },
     ],
   },
   {
@@ -227,18 +242,18 @@ const moreFeatures = [
     icon: Languages,
     title: "Localized in 12 languages",
     sub: "Blankie is available in 12 languages, with more added all the time by community translators.",
-  },  
-    {
+  },
+  {
     icon: SlidersHorizontal,
     title: "Control it everywhere",
     sub: "Use Home Screen widgets, Siri, Shortcuts or find presets and sounds in Spotlight. Control Center, headphones and media keys work too.",
   },
-    {
+  {
     icon: Lock,
     title: "Offline & private by design",
     sub: "Works fully offline and collects nothing about you. No ads, no subscriptions, no accounts, no tracking.",
   },
-{
+  {
     icon: Sparkles,
     title: "Apple Intelligence",
     tag: "Where available",
@@ -316,12 +331,51 @@ const blankieIncluded = [
 
 // Parody app icons (src/assets/parody/) stand in for real apps
 const parodyApps = [
-  { id: "clam", name: "Clam", src: parodyClam, badges: [{ kind: "price", label: "$$" }, { kind: "tracking", label: "" }] },
-  { id: "worse-sleep", name: "Worse Sleep", src: parodyWorseSleep, badges: [{ kind: "price", label: "$$" }, { kind: "tracking", label: "" }] },
-  { id: "spendel", name: "Spendel", src: parodySpendel, badges: [{ kind: "price", label: "$$$" }, { kind: "tracking", label: "" }] },
-  { id: "dark-pattern", name: "Dark Pattern", src: parodyDarkPattern, badges: [{ kind: "price", label: "$" }] },
-  { id: "nosey", name: "Nosey", src: parodyNosey, badges: [{ kind: "tracking", label: "" }] },
-  { id: "ad-noise-lite", name: "Ad Noise Lite", src: parodyAdNoiseLite, badges: [{ kind: "tracking", label: "" }] },
+  {
+    id: "clam",
+    name: "Clam",
+    src: parodyClam,
+    badges: [
+      { kind: "price", label: "$$" },
+      { kind: "tracking", label: "" },
+    ],
+  },
+  {
+    id: "worse-sleep",
+    name: "Worse Sleep",
+    src: parodyWorseSleep,
+    badges: [
+      { kind: "price", label: "$$" },
+      { kind: "tracking", label: "" },
+    ],
+  },
+  {
+    id: "spendel",
+    name: "Spendel",
+    src: parodySpendel,
+    badges: [
+      { kind: "price", label: "$$$" },
+      { kind: "tracking", label: "" },
+    ],
+  },
+  {
+    id: "dark-pattern",
+    name: "Dark Pattern",
+    src: parodyDarkPattern,
+    badges: [{ kind: "price", label: "$" }],
+  },
+  {
+    id: "nosey",
+    name: "Nosey",
+    src: parodyNosey,
+    badges: [{ kind: "tracking", label: "" }],
+  },
+  {
+    id: "ad-noise-lite",
+    name: "Ad Noise Lite",
+    src: parodyAdNoiseLite,
+    badges: [{ kind: "tracking", label: "" }],
+  },
 ];
 // Corner badges on the parody icons: a $ scale for yearly price ($ under $40,
 // $$ under $100, $$$ above) and an eye for tracking, from each app's own App
@@ -336,12 +390,26 @@ const badgeStyles: Record<string, string> = {
 const typicalAppLimits = [
   {
     text: "Limit what you can listen to or do until you pay",
-    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+    apps: [
+      "clam",
+      "worse-sleep",
+      "spendel",
+      "dark-pattern",
+      "nosey",
+      "ad-noise-lite",
+    ],
   },
   // Usage analytics: every app's label or policy lists it.
   {
     text: "Can monitor how you use the app",
-    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+    apps: [
+      "clam",
+      "worse-sleep",
+      "spendel",
+      "dark-pattern",
+      "nosey",
+      "ad-noise-lite",
+    ],
   },
   {
     text: "Can track your location",
@@ -357,7 +425,14 @@ const typicalAppLimits = [
   },
   {
     text: "Don't have a CarPlay app",
-    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+    apps: [
+      "clam",
+      "worse-sleep",
+      "spendel",
+      "dark-pattern",
+      "nosey",
+      "ad-noise-lite",
+    ],
   },
   {
     text: "Collect your personal information",
@@ -366,8 +441,7 @@ const typicalAppLimits = [
   {
     text: "Can share your data with third-party advertisers",
     apps: ["clam", "spendel", "nosey", "ad-noise-lite"],
-  }
-
+  },
 ];
 ---
 
@@ -380,7 +454,7 @@ const typicalAppLimits = [
       posterSrc={wavesPoster.src}
     />
     <div
-      class="from-navy-deep/80 via-navy-deep/70 to-navy-deep absolute inset-0 bg-linear-to-b"
+      class="absolute inset-0 bg-linear-to-b from-navy-deep/80 via-navy-deep/70 to-navy-deep"
     >
     </div>
     <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-44 pb-20">
@@ -388,7 +462,7 @@ const typicalAppLimits = [
         Ambient sounds for <span class="grad-text">sleep and focus.</span>
       </h1>
 
-      <p class="text-fg-2 mt-6 text-xl font-medium tracking-tight">
+      <p class="mt-6 text-xl font-medium tracking-tight text-fg-2">
         Rest deeper at night. Stay focused during the day.
       </p>
 
@@ -418,14 +492,14 @@ const typicalAppLimits = [
       </div>
 
       <div class="mt-5 flex justify-center">
-        <span class="bg-primary-blue inline-flex flex-wrap items-center justify-center gap-x-2.5 rounded-full px-6 py-3 text-center text-sm font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] sm:text-base">
+        <span class="inline-flex flex-wrap items-center justify-center gap-x-2.5 rounded-full bg-primary-blue px-6 py-3 text-center text-sm font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.2)] sm:text-base">
           <span>All features 100% free.</span>
           <span>No ads or subscriptions.</span>
         </span>
       </div>
 
       <!-- Award row: a 3-col grid so the middle stat stays page-centered -->
-      <div class="mt-12 grid grid-cols-1 items-center justify-items-center gap-x-6 gap-y-8 sm:grid-cols-[1fr_auto_1fr]">
+      <div class="mt-12 grid grid-cols-1 place-items-center gap-x-6 gap-y-8 sm:grid-cols-[1fr_auto_1fr]">
         {
           awards.map((award) => (
             <div class="flex items-center gap-3.5">
@@ -441,14 +515,14 @@ const typicalAppLimits = [
               <div class="text-center">
                 <div
                   class:list={[
-                    "font-semibold text-gray-100",
+                    "font-semibold text-fg-1",
                     award.large ? "text-xl sm:text-2xl" : "text-base",
                   ]}
                 >
                   {award.title}
                 </div>
                 <div
-                  class:list={["text-gray-400", award.large ? "text-sm" : "text-xs"]}
+                  class:list={["text-muted-foreground", award.large ? "text-sm" : "text-xs"]}
                 >
                   {award.sub}
                 </div>
@@ -467,11 +541,11 @@ const typicalAppLimits = [
         }
       </div>
 
-      <p class="mt-8 text-sm text-gray-400">
+      <p class="mt-8 text-sm text-muted-foreground">
         Covered by ZDNET, 9to5Mac and Dense Discovery.
         <a
           href="/press/"
-          class="text-accent-ink ml-1 inline-flex items-center gap-1 font-semibold no-underline transition-colors hover:text-white"
+          class="ml-1 inline-flex items-center gap-1 font-semibold text-accent-ink no-underline transition-colors hover:text-white"
         >
           <span>See the press page</span>
           <ArrowRight className="size-4" strokeWidth={2} />
@@ -484,7 +558,7 @@ const typicalAppLimits = [
   <section class="relative overflow-hidden border-b border-white/5" id="devices">
     <div class="absolute inset-0">
       <Image src={bg4} alt="" class="size-full object-cover opacity-50" />
-      <div class="bg-navy-deep/85 absolute inset-0"></div>
+      <div class="absolute inset-0 bg-navy-deep/85"></div>
     </div>
     <div class="relative mx-auto max-w-6xl px-5 py-24">
       <div class="mb-12 max-w-2xl">
@@ -492,16 +566,17 @@ const typicalAppLimits = [
       </div>
       <div class="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
         {
+          
           devices.map((d) => (
             <div class="glass flex flex-col overflow-hidden rounded-2xl p-7">
-              <div class="text-accent-ink flex items-center gap-2 text-sm font-semibold">
+              <div class="flex items-center gap-2 text-sm font-semibold text-accent-ink">
                 <d.icon className="size-4" strokeWidth={1.75} />
                 {d.name}
               </div>
-              <h3 class="mt-2 text-xl font-semibold tracking-tight text-gray-100">
+              <h3 class="mt-2 text-xl font-semibold tracking-tight text-fg-1">
                 {d.heading}
               </h3>
-              <p class="text-fg-2 mt-2 text-sm">{d.sub}</p>
+              <p class="mt-2 text-sm text-fg-2">{d.sub}</p>
               <div
                 class:list={[
                   "mt-6 grow",
@@ -547,22 +622,22 @@ const typicalAppLimits = [
         <div class="glass order-first overflow-hidden rounded-2xl p-7 lg:col-span-2 lg:p-9">
           <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_1.35fr]">
             <div>
-              <div class="text-accent-ink flex flex-wrap items-center gap-2 text-sm font-semibold">
+              <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-accent-ink">
                 <BookOpen className="size-4" strokeWidth={1.75} />
                 <span>iPhone Duo</span>
-                <span class="border-accent-ink/30 text-accent-ink rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase">
+                <span class="rounded-full border border-accent-ink/30 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-accent-ink uppercase">
                   New in 2.1
                 </span>
               </div>
-              <h3 class="mt-2.5 text-2xl font-semibold tracking-tight text-gray-100">
+              <h3 class="mt-2.5 text-2xl font-semibold tracking-tight text-fg-1">
                 Works in every pose of iPhone Duo
               </h3>
-              <p class="text-fg-2 mt-2.5 text-sm/relaxed">
+              <p class="mt-2.5 text-sm/relaxed text-fg-2">
                 Set it down half-folded on your nightstand and the upright screen shows what's playing with your sound and controls on the flat half. Unfold it like a book and Now Playing splits along the spine onto the left page with sound mixing on the right.
               </p>
               <a
                 href="/guides/blankie-iphone-duo/"
-                class="text-accent-ink mt-5 inline-flex items-center gap-1.5 text-sm font-semibold no-underline transition-colors hover:text-white"
+                class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink no-underline transition-colors hover:text-white"
               >
                 <span>See every pose</span>
                 <ArrowRight className="size-4" strokeWidth={2} />
@@ -579,7 +654,7 @@ const typicalAppLimits = [
                   loading="lazy"
                   class="w-full rounded-lg"
                 />
-                <figcaption class="text-fg-3 mt-2 text-xs">Seated pose</figcaption>
+                <figcaption class="mt-2 text-xs text-fg-3">Seated pose</figcaption>
               </figure>
               <figure class="min-w-0 text-center" style="flex: 1246 1 0">
                 <Image
@@ -590,7 +665,7 @@ const typicalAppLimits = [
                   loading="lazy"
                   class="w-full rounded-lg"
                 />
-                <figcaption class="text-fg-3 mt-2 text-xs">Book pose</figcaption>
+                <figcaption class="mt-2 text-xs text-fg-3">Book pose</figcaption>
               </figure>
             </div>
           </div>
@@ -601,6 +676,7 @@ const typicalAppLimits = [
 
   <!-- Alternating feature sections (kept) -->
   {
+    
     [features.slice(0, 2), features.slice(2)].map((row, rowIndex) => (
       <section
         id={rowIndex === 0 ? "features" : undefined}
@@ -608,7 +684,7 @@ const typicalAppLimits = [
       >
         <div class="absolute inset-0">
           <Image src={row[0].bg} alt="" class="size-full object-cover opacity-60" />
-          <div class="bg-navy-deep/85 absolute inset-0" />
+          <div class="absolute inset-0 bg-navy-deep/85" />
         </div>
         <div class="relative mx-auto max-w-6xl space-y-20 px-5 py-20 lg:space-y-28 lg:py-24">
           {row.map((feature, j) => {
@@ -620,18 +696,18 @@ const typicalAppLimits = [
                     eyebrow={feature.eyebrow}
                     heading={feature.heading}
                   />
-                  <p class="text-fg-2 mt-4 text-lg">{feature.blurb}</p>
+                  <p class="mt-4 text-lg text-fg-2">{feature.blurb}</p>
                   {feature.points && (
                     <ul class="mt-7 space-y-4">
                       {feature.points.map((point) => (
                         <li class="flex items-start gap-3">
                           <point.icon
-                            className="text-accent-ink mt-0.5 size-5 shrink-0"
+                            className="mt-0.5 size-5 shrink-0 text-accent-ink"
                             strokeWidth={1.75}
                           />
                           <div>
-                            <div class="font-semibold text-gray-100">{point.title}</div>
-                            <div class="text-fg-2 text-sm">{point.sub}</div>
+                            <div class="font-semibold text-fg-1">{point.title}</div>
+                            <div class="text-sm text-fg-2">{point.sub}</div>
                           </div>
                         </li>
                       ))}
@@ -660,7 +736,7 @@ const typicalAppLimits = [
   <section class="relative overflow-hidden border-b border-white/5">
     <div class="absolute inset-0">
       <Image src={bg3} alt="" class="size-full object-cover opacity-50" />
-      <div class="bg-navy-deep/85 absolute inset-0"></div>
+      <div class="absolute inset-0 bg-navy-deep/85"></div>
     </div>
     <div class="relative mx-auto max-w-5xl px-5 py-24">
       <div class="mb-12 max-w-2xl">
@@ -668,20 +744,21 @@ const typicalAppLimits = [
       </div>
       <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {
+          
           moreFeatures.map((f) => (
             <div class="glass rounded-2xl p-6">
               <div class="mb-4 grid size-10.5 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--color-accent-blue)_20%,transparent)]">
-                <f.icon className="text-accent-ink size-5" strokeWidth={1.75} />
+                <f.icon className="size-5 text-accent-ink" strokeWidth={1.75} />
               </div>
               <h3 class="text-lg font-semibold tracking-tight">
                 {f.title}
                 {f.tag && (
-                  <span class="border-accent-ink/30 text-accent-ink ml-1.5 inline-block rounded-full border px-1.5 py-px align-middle text-[9px] font-semibold tracking-wide whitespace-nowrap uppercase">
+                  <span class="ml-1.5 inline-block rounded-full border border-accent-ink/30 px-1.5 py-px align-middle text-[9px] font-semibold tracking-wide whitespace-nowrap text-accent-ink uppercase">
                     {f.tag}
                   </span>
                 )}
               </h3>
-              <p class="text-fg-2 mt-2 text-sm">{f.sub}</p>
+              <p class="mt-2 text-sm text-fg-2">{f.sub}</p>
             </div>
           ))
         }
@@ -695,13 +772,13 @@ const typicalAppLimits = [
             class="max-w-2xl"
           />
           <div class="glass inline-flex w-fit items-center gap-3 rounded-full px-4 py-2.5 text-sm">
-            <div class="flex gap-0.5 text-yellow-400" aria-hidden="true">
+            <div class="flex gap-0.5 text-gold" aria-hidden="true">
               {Array.from({ length: 5 }).map(() => (
                 <Star className="size-4" fill="currentColor" strokeWidth={0} />
               ))}
             </div>
             <span class="font-semibold whitespace-nowrap text-white">4.9 out of 5</span>
-            <span class="text-fg-3 whitespace-nowrap">· 25,000+ downloads</span>
+            <span class="whitespace-nowrap text-fg-3">· 25,000+ downloads</span>
           </div>
         </div>
 
@@ -717,7 +794,7 @@ const typicalAppLimits = [
                   >
                     {Array.from({ length: review.stars }).map(() => (
                       <Star
-                        className="size-3.5 text-yellow-400"
+                        className="size-3.5 text-gold"
                         fill="currentColor"
                         strokeWidth={0}
                       />
@@ -727,7 +804,7 @@ const typicalAppLimits = [
                     {review.store}
                   </span>
                 </div>
-                <blockquote class="text-[15.5px]/relaxed text-pretty text-gray-100">
+                <blockquote class="text-[15.5px]/relaxed text-pretty text-fg-1">
                   “{review.translation ?? review.quote}”
                 </blockquote>
                 <figcaption class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/6 pt-3 text-xs text-fg-3">
@@ -744,7 +821,7 @@ const typicalAppLimits = [
         </div>
 
         <div class="mt-6 flex flex-col items-center gap-3 text-center">
-          <p class="text-sm font-semibold text-gray-100">Enjoying Blankie and want to help? Here are some ways you can support it:</p>
+          <p class="text-sm font-semibold text-fg-1">Enjoying Blankie and want to help? Here are some ways you can support it:</p>
           <div class="flex flex-wrap justify-center gap-2">
             {
               [
@@ -775,7 +852,7 @@ const typicalAppLimits = [
         <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
           Don't rent your relaxation.
         </h2>
-        <p class="text-fg-2 mx-auto mt-4 max-w-3xl text-lg text-balance">
+        <p class="mx-auto mt-4 max-w-3xl text-lg text-balance text-fg-2">
           Other sleep and focus apps lock sounds and features behind paywalls.
           <span class="sm:block">Blankie gives you everything free, forever.</span>
         </p>
@@ -793,7 +870,7 @@ const typicalAppLimits = [
                   </h3>
                   <a
                     href="/faq/#what-does-open-source-mean"
-                    class="border-accent-ink/30 text-accent-ink rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase no-underline transition-colors hover:border-accent-ink/60 hover:text-white"
+                    class="rounded-full border border-accent-ink/30 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-accent-ink uppercase no-underline transition-colors hover:border-accent-ink/60 hover:text-white"
                   >
                     Open Source
                   </a>
@@ -803,12 +880,12 @@ const typicalAppLimits = [
                 <div class="text-4xl font-bold tracking-tight text-white">
                   $0
                 </div>
-                <div class="text-accent-ink text-xs font-semibold tracking-wide uppercase">
+                <div class="text-xs font-semibold tracking-wide text-accent-ink uppercase">
                   Forever
                 </div>
               </div>
             </div>
-            <p class="text-fg-2 mt-3 border-b border-white/10 pb-6 text-sm">
+            <p class="mt-3 border-b border-white/10 pb-6 text-sm text-fg-2">
               No ads, no upsells and no sneaky business model.{" "}
               <a
                 href="/guides/why-is-blankie-free/"
@@ -820,16 +897,17 @@ const typicalAppLimits = [
 
             <ul class="mt-8 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:gap-y-8">
               {
+                
                 blankieIncluded.map((item) => (
                   <li class="flex items-start gap-3">
-                    <span class="mt-0.5 grid size-5.5 shrink-0 place-items-center rounded-full bg-green-500/15 text-green-400">
+                    <span class="mt-0.5 grid size-5.5 shrink-0 place-items-center rounded-full bg-success/10 text-success">
                       <Check className="size-3.5" strokeWidth={2.5} />
                     </span>
                     <div>
-                      <div class="text-base font-semibold text-gray-100">
+                      <div class="text-base font-semibold text-fg-1">
                         {item.title}
                       </div>
-                      <div class="text-fg-3 mt-0.5 text-sm/snug">{item.sub}</div>
+                      <div class="mt-0.5 text-sm/snug text-fg-3">{item.sub}</div>
                     </div>
                   </li>
                 ))
@@ -839,7 +917,7 @@ const typicalAppLimits = [
         </div>
 
         <!-- Typical Subscription Apps Card (first on phones, so the comparison leads) -->
-        <div class="max-lg:order-first flex flex-col justify-between rounded-3xl border border-white/8 bg-white/2 p-7 sm:p-9">
+        <div class="flex flex-col justify-between rounded-3xl border border-white/8 bg-white/2 p-7 max-lg:order-first sm:p-9">
           <div>
             <div class="flex items-end justify-between gap-4">
               <h3 class="min-w-0 text-3xl font-semibold tracking-tight text-white">Other apps</h3>
@@ -847,12 +925,12 @@ const typicalAppLimits = [
                 <div class="text-4xl font-bold tracking-tight whitespace-nowrap text-white">
                   $20–$120
                 </div>
-                <div class="text-xs font-semibold tracking-wide text-red-300 uppercase">
+                <div class="text-xs font-semibold tracking-wide text-destructive-foreground uppercase">
                   Per year
                 </div>
               </div>
             </div>
-            <p class="text-fg-2 mt-3 border-b border-white/8 pb-6 text-sm">
+            <p class="mt-3 border-b border-white/8 pb-6 text-sm text-fg-2">
               Free to try, then worse until you buy.
             </p>
 
@@ -862,9 +940,10 @@ const typicalAppLimits = [
               aria-label="Parody versions of other apps"
             >
               {
+                
                 parodyApps.map((app, i) => (
                   <figure
-                    class="parody-app flex cursor-default flex-col items-center rounded-xl py-1 outline-none transition-opacity duration-200 focus-visible:ring-2 focus-visible:ring-accent-ink/60 [&.is-dim]:opacity-35"
+                    class="parody-app flex cursor-default flex-col items-center rounded-xl py-1 transition-opacity duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent-ink/60 [&.is-dim]:opacity-35"
                     data-app={app.id}
                     tabindex="0"
                   >
@@ -906,7 +985,7 @@ const typicalAppLimits = [
                     class="parody-limit flex items-start gap-3 text-sm text-fg-2 transition-[opacity,color] duration-200 [&.is-dim]:opacity-30 [&.is-hit]:text-white"
                     data-apps={limit.apps.join(" ")}
                   >
-                    <span class="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-red-400/15 text-red-300">
+                    <span class="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-destructive/15 text-destructive-foreground">
                       <X className="size-3.5" strokeWidth={2.5} />
                     </span>
                     <span>{limit.text}</span>
@@ -941,10 +1020,10 @@ const typicalAppLimits = [
       <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
         Download Blankie
       </h2>
-      <p class="text-fg-2 mx-auto mt-4 max-w-xl text-lg text-balance">
+      <p class="mx-auto mt-4 max-w-xl text-lg text-balance text-fg-2">
         Available now for iPhone, iPad and Mac.
       </p>
-      <p class="text-fg-3 mt-2 text-sm">Requires iOS/iPadOS 26.4 or later, or macOS 26 or later.</p>
+      <p class="mt-2 text-sm text-fg-3">Requires iOS/iPadOS 26.4 or later, or macOS 26 or later.</p>
       <div class="mt-9 flex flex-col items-center gap-2">
         <a href={appStore} aria-label="Download Blankie on the App Store" class="transition hover:-translate-y-px">
           <Image
@@ -961,7 +1040,7 @@ const typicalAppLimits = [
         <div class="flex flex-wrap items-center justify-center gap-2">
           <a
             href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
-            class="inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 no-underline transition hover:border-white/30 hover:text-white"
+            class="inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-fg-1 no-underline transition hover:border-white/30 hover:text-white"
           >
             <Download className="size-4" strokeWidth={2} />
             Direct download
@@ -969,13 +1048,13 @@ const typicalAppLimits = [
           <button
             type="button"
             id="brew-open"
-            class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 transition hover:border-white/30 hover:text-white"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-fg-1 transition hover:border-white/30 hover:text-white"
           >
             <Terminal className="size-4" strokeWidth={2} />
             Homebrew
           </button>
         </div>
-        <p class="text-fg-3 mt-3 text-xs">
+        <p class="mt-3 text-xs text-fg-3">
           Still on macOS 15 Sequoia?{" "}
           <a
             href="https://github.com/codybrom/blankie/releases/download/v1.0.13/Blankie.zip"
@@ -996,7 +1075,7 @@ const typicalAppLimits = [
   >
     <div class="w-110 max-w-[92vw] rounded-[18px] border border-white/10 bg-lift p-7 text-center shadow-[0_30px_70px_rgba(0,0,0,0.5)]">
       <h3 id="brew-title" class="text-lg font-semibold">Install with Homebrew</h3>
-      <p class="text-fg-2 mt-2 text-sm">Run this in Terminal:</p>
+      <p class="mt-2 text-sm text-fg-2">Run this in Terminal:</p>
       <div
         id="brew-command-container"
         class="mt-4 flex items-center gap-3 rounded-md bg-black py-3 pr-2 pl-4 text-white"
@@ -1005,10 +1084,10 @@ const typicalAppLimits = [
         <button
           type="button"
           id="brew-copy-button"
-          class="text-fg-3 shrink-0 rounded-md p-2 transition-colors hover:bg-neutral-800 hover:text-white"
+          class="shrink-0 rounded-md p-2 text-fg-3 transition-colors hover:bg-white/10 hover:text-white"
           aria-label="Copy install command to clipboard"
         >
-          <svg
+          <svg aria-hidden="true"
             id="brew-copy-icon"
             xmlns="http://www.w3.org/2000/svg"
             width="18"
@@ -1023,9 +1102,9 @@ const typicalAppLimits = [
             <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
             <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
           </svg>
-          <svg
+          <svg aria-hidden="true"
             id="brew-check-icon"
-            class="hidden text-green-400"
+            class="hidden text-success"
             xmlns="http://www.w3.org/2000/svg"
             width="18"
             height="18"
@@ -1040,10 +1119,10 @@ const typicalAppLimits = [
           </svg>
         </button>
       </div>
-      <p class="text-fg-3 mt-4 text-sm">
+      <p class="mt-4 text-sm text-fg-3">
         Requires Homebrew. Visit <a
           href="https://formulae.brew.sh/cask/blankie"
-          class="text-yellow-400 underline transition-colors hover:text-yellow-300"
+          class="text-gold underline transition-colors hover:text-b-yellow"
           >brew.sh</a
         > for more information.
       </p>
@@ -1062,6 +1141,7 @@ const typicalAppLimits = [
     aria-label="Page sections"
   >
     {
+      
       [
         ["devices", "Devices"],
         ["features", "Features"],
@@ -1070,7 +1150,7 @@ const typicalAppLimits = [
         <a
           href={`#${id}`}
           data-section={id}
-          class="rounded-full px-4 py-2 text-sm font-medium text-fg-2 no-underline transition-colors hover:text-white [&.active]:bg-white/8 [&.active]:text-white max-[480px]:px-3 max-[480px]:text-xs"
+          class="rounded-full px-4 py-2 text-sm font-medium text-fg-2 no-underline transition-colors hover:text-white max-[480px]:px-3 max-[480px]:text-xs [&.active]:bg-white/8 [&.active]:text-white"
         >
           {label}
         </a>
@@ -1080,7 +1160,7 @@ const typicalAppLimits = [
     <a
       href="#download"
       data-section="download"
-      class="rounded-full px-4 py-2 text-sm font-semibold text-white no-underline transition-colors [&.active]:bg-white/8 max-[480px]:px-3 max-[480px]:text-xs"
+      class="rounded-full px-4 py-2 text-sm font-semibold text-white no-underline transition-colors max-[480px]:px-3 max-[480px]:text-xs [&.active]:bg-white/8"
     >
       Download
     </a>
@@ -1101,7 +1181,7 @@ const typicalAppLimits = [
     const parodyApps = document.querySelectorAll<HTMLElement>(".parody-app");
     const parodyLimits = document.querySelectorAll<HTMLElement>(".parody-limit");
     const showParody = (id: string | null) => {
-      parodyApps.forEach((el) => el.classList.toggle("is-dim", !!id && el.dataset.app !== id));
+      parodyApps.forEach((el) => { el.classList.toggle("is-dim", !!id && el.dataset.app !== id); });
       parodyLimits.forEach((el) => {
         const hit = !!id && (el.dataset.apps ?? "").split(" ").includes(id);
         el.classList.toggle("is-hit", hit);
@@ -1175,12 +1255,12 @@ const typicalAppLimits = [
       // Floating section nav: highlight the link for the section in view.
       const links = document.querySelectorAll<HTMLAnchorElement>(".section-pill a[data-section]");
       const byId = new Map<string, HTMLAnchorElement>();
-      links.forEach((l) => byId.set(l.dataset.section || "", l));
+      links.forEach((l) => { byId.set(l.dataset.section || "", l); });
       const spy = new IntersectionObserver(
         (entries) => {
           entries.forEach((e) => {
             if (e.isIntersecting) {
-              links.forEach((l) => l.classList.remove("active"));
+              links.forEach((l) => { l.classList.remove("active"); });
               byId.get(e.target.id)?.classList.add("active");
             }
           });

@@ -1,8 +1,15 @@
 ---
-import type { ImageMetadata } from "astro";
+import { type ImageMetadata } from "astro";
 import { Image } from "astro:assets";
 import Layout from "../layouts/Layout.astro";
-import { Mail, Download, Check, ArrowRight, ArrowUpRight, FileText } from "@lucide/astro";
+import {
+  Mail,
+  Download,
+  Check,
+  ArrowRight,
+  ArrowUpRight,
+  FileText,
+} from "@lucide/astro";
 import Testimonial from "../components/Testimonial.astro";
 import SectionHeader from "@/components/SectionHeader.astro";
 import Glow from "@/components/Glow.astro";
@@ -28,7 +35,6 @@ import duoSeated from "../assets/guides/blankie-iphone-duo/seated.png";
 const title = "Press Kit";
 const description =
   "Press kit for Blankie, the free, open-source ambient sound mixer for Mac, iPad and iPhone with CarPlay support. Facts, screenshots, logos and contact information.";
-
 
 // Stable, original-file download links (GitHub raw preserves filenames).
 const raw =
@@ -72,10 +78,22 @@ const facts: { t: string; d?: string; m?: string }[] = [
     d: "Deployed to 1,000+ devices worldwide",
     m: "(Oct. 25, 2026)",
   },
-  { t: "Rating", d: "4.9 out of 5", m: "global App Store rating (Oct. 25, 2026)" },
-  { t: "Charts", d: "Ranked in 92 countries", m: "on App Store charts in the 32 days to Oct. 25, 2026" },
+  {
+    t: "Rating",
+    d: "4.9 out of 5",
+    m: "global App Store rating (Oct. 25, 2026)",
+  },
+  {
+    t: "Charts",
+    d: "Ranked in 92 countries",
+    m: "on App Store charts in the 32 days to Oct. 25, 2026",
+  },
   { t: "GitHub", d: "389 stars", m: "(Oct. 25, 2026)" },
-  { t: "License", d: "Open source under MIT", m: "(code) · openly licensed sounds" },
+  {
+    t: "License",
+    d: "Open source under MIT",
+    m: "(code) · openly licensed sounds",
+  },
   {
     t: "Privacy",
     d: "No data collection, no tracking, no analytics.",
@@ -109,7 +127,8 @@ const highlights = [
 
 const releases: { title: string; when: string; url: string }[] = [
   {
-    title: "Blankie 2.1 adds Home Screen widgets, Siri, Shortcuts and iPhone Duo support",
+    title:
+      "Blankie 2.1 adds Home Screen widgets, Siri, Shortcuts and iPhone Duo support",
     when: "Oct. 28, 2026",
     url: "/press/blankie-2-1/",
   },
@@ -238,7 +257,11 @@ const storeShots = import.meta.glob<{ default: ImageMetadata }>(
 );
 const storeItems = (device: string, tall: boolean): Asset[] =>
   Object.entries(storeShots)
-    .map(([path, mod]) => ({ path, n: Number(path.match(/-store-(\d+)\.jpg$/)?.[1]), img: mod.default }))
+    .map(([path, mod]) => ({
+      path,
+      n: Number(path.match(/-store-(\d+)\.jpg$/)?.[1]),
+      img: mod.default,
+    }))
     .filter(({ path }) => path.includes(`/${device}-store-`))
     .sort((a, b) => a.n - b.n)
     .map(({ path, n, img }) => ({
@@ -292,11 +315,33 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
     id: "iphone-duo",
     title: "iPhone Duo",
     items: [
-      { img: duoClosed, file: "guides/blankie-iphone-duo/closed.png", label: "Closed", tall: true },
-      { img: duoOpen, file: "guides/blankie-iphone-duo/open-flat.png", label: "Open" },
-      { img: duoBook, file: "guides/blankie-iphone-duo/book.png", label: "Book" },
-      { img: duoTent, file: "guides/blankie-iphone-duo/tent.png", label: "Tent" },
-      { img: duoSeated, file: "guides/blankie-iphone-duo/seated.png", label: "Seated", tall: true },
+      {
+        img: duoClosed,
+        file: "guides/blankie-iphone-duo/closed.png",
+        label: "Closed",
+        tall: true,
+      },
+      {
+        img: duoOpen,
+        file: "guides/blankie-iphone-duo/open-flat.png",
+        label: "Open",
+      },
+      {
+        img: duoBook,
+        file: "guides/blankie-iphone-duo/book.png",
+        label: "Book",
+      },
+      {
+        img: duoTent,
+        file: "guides/blankie-iphone-duo/tent.png",
+        label: "Tent",
+      },
+      {
+        img: duoSeated,
+        file: "guides/blankie-iphone-duo/seated.png",
+        label: "Seated",
+        tall: true,
+      },
       ...storeItems("duo", false),
     ],
   },
@@ -304,8 +349,18 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
     id: "iphone",
     title: "iPhone",
     items: [
-      { img: iphoneApp1, file: "iphone-mockup-1.png", label: "Now Playing", tall: true },
-      { img: iphoneApp2, file: "iphone-mockup-2.png", label: "Sound Mixer", tall: true },
+      {
+        img: iphoneApp1,
+        file: "iphone-mockup-1.png",
+        label: "Now Playing",
+        tall: true,
+      },
+      {
+        img: iphoneApp2,
+        file: "iphone-mockup-2.png",
+        label: "Sound Mixer",
+        tall: true,
+      },
       ...storeItems("iphone", true),
       ...guideItems("iphone"),
     ],

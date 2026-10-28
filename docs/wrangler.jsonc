@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "blankie-docs",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-28",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Pages go through the Worker for Markdown negotiation. Hashed build
+    // assets skip it and are served directly.
+    "run_worker_first": ["/*", "!/_astro/*"],
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  // Files over the 25 MiB static asset limit. The deploy workflow uploads a
+  // fresh press kit zip to press/ on every build.
+  "r2_buckets": [
+    {
+      "binding": "BLANKIE_ASSETS",
+      "bucket_name": "blankie-assets"
+    }
+  ],
+  // Workers Logs without the automatic invocation logs, which store each
+  // visitor's IP, location, user agent and TLS fingerprint. The Worker writes
+  // its own anonymous request line instead (see logRequest in worker/index.ts).
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false },
+    "redact_query_string": true
+  },
+  "routes": [
+    {
+      "pattern": "blankie.rest",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.blankie.rest",
+      "custom_domain": true
+    }
+  ]
+}

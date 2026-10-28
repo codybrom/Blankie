@@ -25,7 +25,7 @@ I was excited to have a desktop Mac at home again, but after moving all my files
 
 ## From Blanket to Blankie
 
-Blankie started life as a pure port of Blanket. I loved Blanket on my Linux box, so I didn't want an app that was "kind of" like it. I just wanted Blanket on my Mac.
+Blankie started life as my attempt to bring Blanket to the Mac. I loved Blanket on my Linux box, so I didn't want an app that was "kind of" like it. I just wanted Blanket on my Mac.
 
 The primary concepts of Blanket are so solid, clear and well designed that bringing them over went pretty fast. The more I used it, though, the more I realized there were a few things here and there that it was missing to feel like a proper Mac app. As I kept working around the edges and talking to people about the kinds of features they'd been looking for in an app like it, Blankie began to take shape. Pretty soon people started asking me when it would come to iPhone and then I had to start all over, because Blanket was designed for a desktop, not your finger.
 
@@ -37,7 +37,7 @@ There have always been ways to sort of do that using web technologies like React
 
 When I bought that first MacBook Pro, the first thing I did was load it up with a ton of cool freeware that people had made. Somewhere in the last 20 years, most of that cool freeware either vanished or became subscription software. I get it. It's hard out there for developers, and if you're going to sink hundreds or thousands of hours into something, it should probably have some kind of payoff.
 
-Charging has never once entered my mind for Blankie, though. For starters, Blanket is free and open source. Making a port or even a spiritual sibling of Blanket that I charged for just feels wrong. It only made sense to me that Blankie also be open source, and to me, the best kind of open is also free.
+Charging has never once entered my mind for Blankie, though. For starters, Blanket is free and open source. Making an app inspired by Blanket and then charging for it just feels wrong. It only made sense to me that Blankie also be open source, and to me, the best kind of open is also free.
 
 A lot of people's efforts have contributed to Blankie, from photographers and sound recordists to translators and other programmers. Most of them chose to release their work freely with permissive licenses so their work could be enjoyed by others (you can find them all on the [Credits](/credits/) page). Keeping Blankie free is how I pass that along.
 

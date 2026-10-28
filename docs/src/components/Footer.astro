@@ -30,7 +30,10 @@ const columns = [
   {
     title: "Sponsor the Project",
     links: [
-      { label: "GitHub Sponsors", href: "https://github.com/sponsors/codybrom" },
+      {
+        label: "GitHub Sponsors",
+        href: "https://github.com/sponsors/codybrom",
+      },
       { label: "Buy Me a Coffee", href: "https://buymeacoffee.com/codybrom" },
       { label: "Ko-fi", href: "https://ko-fi.com/codybrom" },
     ],
@@ -51,7 +54,7 @@ const columns = [
         />
         <span class="text-lg font-semibold tracking-tight">Blankie</span>
       </a>
-      <p class="mt-3 text-gray-400">
+      <p class="mt-3 text-muted-foreground">
         Free and open-source ambient sound mixer for Mac, iPhone, iPad and CarPlay.
       </p>
       <div class="mt-5 flex items-center gap-4">
@@ -82,13 +85,13 @@ const columns = [
       {
         columns.map((col) => (
           <div>
-            <h2 class="mb-3 text-xs font-semibold tracking-wide text-gray-400 uppercase">
+            <h2 class="mb-3 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               {col.title}
             </h2>
             {col.links.map((link) => (
               <a
                 href={link.href}
-                class="block py-1 text-gray-400 no-underline transition-colors hover:text-white"
+                class="block py-1 text-muted-foreground no-underline transition-colors hover:text-white"
               >
                 {link.label}
               </a>
@@ -99,7 +102,7 @@ const columns = [
     </div>
   </div>
 
-  <div class="mx-auto mt-12 max-w-6xl border-t border-white/10 pt-8 text-gray-400">
+  <div class="mx-auto mt-12 max-w-6xl border-t border-white/10 pt-8 text-muted-foreground">
     <div class="flex flex-col justify-between gap-2 sm:flex-row">
       <span>
         © 2026 Cody Bromley and contributors ·{" "}
@@ -122,7 +125,7 @@ const columns = [
         > for Linux
       </span>
     </div>
-    <p class="text-fg-3 mt-4 text-xs">
+    <p class="mt-4 text-xs text-fg-3">
       {APPLE_TRADEMARKS}
     </p>
   </div>

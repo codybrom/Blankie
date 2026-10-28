@@ -1,9 +1,46 @@
 {
-  "prettier.requireConfig": true,
-  "prettier.ignorePath": "docs/.prettierignore",
-  "[javascript][javascriptreact][typescript][typescriptreact][json][jsonc][astro][css]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "biome.lsp.bin": {
+    "darwin-arm64": "docs/node_modules/@biomejs/cli-darwin-arm64/biome",
+    "darwin-x64": "docs/node_modules/@biomejs/cli-darwin-x64/biome",
+    "linux-arm64": "docs/node_modules/@biomejs/cli-linux-arm64/biome",
+    "linux-x64": "docs/node_modules/@biomejs/cli-linux-x64/biome",
+    "win32-x64": "docs/node_modules/@biomejs/cli-win32-x64/biome.exe"
+  },
+  "biome.configurationPath": "docs/biome.jsonc",
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome",
     "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "[astro]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "[css]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": true
+  },
+  "[tailwindcss]": {
+    "editor.formatOnSave": false
   },
   "astro.content-intellisense": true,
   "astro.language-server.ls-path": "docs/node_modules/@astrojs/language-server/bin/nodeServer.js",
@@ -134,7 +171,7 @@
   ],
   "docker.lsp.experimental.vulnerabilityScanning": false,
   "files.associations": {
-    "*.css": "css"
+    "*.css": "tailwindcss"
   },
   "css.lint.unknownAtRules": "ignore",
   "tailwindCSS.experimental.configFile": {
@@ -144,7 +181,8 @@
     "strings": "on"
   },
   "editor.codeActionsOnSave": {
-    "source.fixAll": "always"
+    "source.fixAll": "always",
+    "source.fixAll.biome": "explicit"
   },
   "[swift]": {
     "editor.defaultFormatter": "swiftlang.swift-vscode",

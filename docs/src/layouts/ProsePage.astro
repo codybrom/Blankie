@@ -32,13 +32,14 @@ const { title, description, dek, meta, noindex } = Astro.props;
         {title}
       </h1>
       {
+        
         dek && (
-          <p class="text-fg-2 mx-auto mt-4.5 max-w-[60ch] text-lg/relaxed">
+          <p class="mx-auto mt-4.5 max-w-[60ch] text-lg/relaxed text-fg-2">
             {dek}
           </p>
         )
       }
-      {meta && <p class="text-fg-3 mt-4.5 text-sm">{meta}</p>}
+      {meta && <p class="mt-4.5 text-sm text-fg-3">{meta}</p>}
     </div>
   </section>
 

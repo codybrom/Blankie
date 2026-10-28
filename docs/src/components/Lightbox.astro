@@ -41,7 +41,7 @@ import { Download, X } from "@lucide/astro";
   const zoomImg = document.querySelector<HTMLImageElement>("#zoom-img");
   const zoomDownload = document.querySelector<HTMLAnchorElement>("#zoom-download");
   if (zoom && zoomImg && zoomDownload) {
-    document.querySelectorAll<HTMLAnchorElement>("a[data-zoom]").forEach((link) =>
+    document.querySelectorAll<HTMLAnchorElement>("a[data-zoom]").forEach((link) => {
       link.addEventListener("click", (event) => {
         event.preventDefault();
         zoomImg.src = link.href;
@@ -50,8 +50,8 @@ import { Download, X } from "@lucide/astro";
         zoomDownload.download = link.dataset.filename ?? "";
         document.documentElement.style.overflow = "hidden";
         zoom.showModal();
-      }),
-    );
+      });
+    });
     // Any tap closes it except on the image itself, so pinch-zooming stays safe.
     zoom.addEventListener("click", (event) => {
       if (event.target === zoom || (event.target as Element).closest("[data-zoom-close]")) zoom.close();

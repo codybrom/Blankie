@@ -1,0 +1,4 @@
+# Workers static assets cap each file at 25 MiB. The press kit zip is larger,
+# so the deploy workflow uploads it to the blankie-assets R2 bucket instead
+# and the Worker serves it.
+blankie-press-kit.zip

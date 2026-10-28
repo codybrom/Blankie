@@ -108,6 +108,13 @@ export function organizationLd() {
     ...publisher,
     sameAs: SOCIAL_LINKS.map((s) => s.href),
     founder: author,
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "info@blankie.rest",
+      url: `${SITE}/contact/`,
+    },
+    address: { "@type": "PostalAddress", addressCountry: "US" },
   };
 }
 

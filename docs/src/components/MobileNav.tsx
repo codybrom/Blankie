@@ -29,7 +29,7 @@ export function MobileNav({
     <Sheet>
       <SheetTrigger
         aria-label="Open navigation menu"
-        className="cursor-pointer p-2 text-white transition-colors duration-200 hover:text-yellow-500"
+        className="cursor-pointer p-2 text-white transition-colors duration-200 hover:text-gold"
       >
         <MenuIcon className="size-6" />
       </SheetTrigger>
@@ -48,8 +48,8 @@ export function MobileNav({
                 <a
                   href={l.href}
                   className={cn(
-                    "rounded-md px-3 py-2 text-base no-underline transition-colors hover:bg-white/5 hover:text-yellow-500",
-                    currentPath === l.href && "text-yellow-500",
+                    "rounded-md px-3 py-2 text-base no-underline transition-colors hover:bg-white/5 hover:text-gold",
+                    currentPath === l.href && "text-gold",
                   )}
                 >
                   {l.label}
@@ -70,7 +70,7 @@ export function MobileNav({
           </a>
           <a
             href="/?section=download"
-            className="bg-primary-blue hover:bg-deep-blue rounded-full px-6 py-2 text-center text-sm font-normal text-white no-underline transition-all duration-300"
+            className="rounded-full bg-primary-blue px-6 py-2 text-center text-sm font-normal text-white no-underline transition-all duration-300 hover:bg-deep-blue"
           >
             Download
           </a>
