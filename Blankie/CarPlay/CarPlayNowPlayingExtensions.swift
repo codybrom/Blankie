@@ -42,7 +42,7 @@ import os
       // Presets get favorite and edit. Quick Mix isn't favoritable, so it gets the timer only.
       if let singleSound = AudioManager.shared.singleSound {
         let favoriteButton = Self.favoriteButton(
-          for: GlobalSettings.singleToken(forFileName: singleSound.fileName)
+          for: PlayableItem.single(fileName: singleSound.fileName).token
         ) { [weak self] in self?.updateNowPlayingButtons() }
 
         nowPlayingTemplate.updateNowPlayingButtons([favoriteButton, timerButton])

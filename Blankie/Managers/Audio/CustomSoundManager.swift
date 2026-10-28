@@ -383,7 +383,7 @@ class CustomSoundManager {
       settings.setQuickMixSoundFileNames(
         settings.quickMixSoundFileNames.filter { $0 != fileName })
     }
-    let singleToken = GlobalSettings.singleToken(forFileName: fileName)
+    let singleToken = PlayableItem.single(fileName: fileName).token
     if settings.isStarred(singleToken) {
       settings.toggleStarred(singleToken)
     }
