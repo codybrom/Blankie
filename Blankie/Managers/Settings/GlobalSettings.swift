@@ -56,6 +56,7 @@ enum UserDefaultsKeys {
   static let hideDockWhenWindowClosed = "hideDockWhenWindowClosed"
   static let librarySoundsExpanded = "librarySoundsExpanded"
   static let libraryPresetsExpanded = "libraryPresetsExpanded"
+  static let lastSeenWhatsNewVersion = "lastSeenWhatsNewVersion"
 }
 
 /// Blur (in points) behind the mixer when "Blur Background" is on. Blur is
@@ -127,6 +128,8 @@ class GlobalSettings {
   /// Whether the Library's Sounds and Presets sections are expanded.
   var librarySoundsExpanded: Bool
   var libraryPresetsExpanded: Bool
+  /// The newest What's New version the user has opened. Nil until they open one.
+  var lastSeenWhatsNewVersion: String?
 
   /// Availability gate for the experimental spatial feature: shows the
   /// Spatial Mix entry on presets. Sessions themselves are started in-sheet.

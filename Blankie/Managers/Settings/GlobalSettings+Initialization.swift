@@ -97,6 +97,20 @@ extension GlobalSettings {
     libraryPresetsExpanded =
       UserDefaults.shared.object(forKey: UserDefaultsKeys.libraryPresetsExpanded) as? Bool ?? true
 
+    lastSeenWhatsNewVersion = UserDefaults.shared.string(
+      forKey: UserDefaultsKeys.lastSeenWhatsNewVersion)
+    #if !WIDGET_EXTENSION
+      // A fresh install has nothing to catch up on. A saved default preset means an
+      // earlier launch, so an update keeps the badge for its What's New.
+      if lastSeenWhatsNewVersion == nil,
+        UserDefaults.shared.data(forKey: PresetStorage.defaultPresetKey) == nil,
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+      {
+        lastSeenWhatsNewVersion = version
+        UserDefaults.shared.set(version, forKey: UserDefaultsKeys.lastSeenWhatsNewVersion)
+      }
+    #endif
+
     if let data = UserDefaults.shared.data(forKey: UserDefaultsKeys.defaultLockScreenArtwork),
       let ref = try? JSONDecoder().decode(AnimatedArtworkRef.self, from: data)
     {

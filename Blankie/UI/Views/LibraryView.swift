@@ -451,6 +451,9 @@ struct LibraryView: View {
   private let audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
   private let globalSettings = GlobalSettings.shared
+  private var hasUnseenWhatsNew: Bool {
+    WhatsNew.hasUnseen(lastSeen: globalSettings.lastSeenWhatsNewVersion)
+  }
   // Observed so the Sounds section updates when per-sound customizations change.
   private let customizationManager = SoundCustomizationManager.shared
   @State private var showingNewPresetSheet = false
@@ -942,6 +945,9 @@ struct LibraryView: View {
               Label("Settings", systemImage: "gearshape")
             }
             .tint(Color.primary)
+            // Marks an unopened What's New. A text badge draws as a dot, not a count.
+            .badge(hasUnseenWhatsNew ? Text(verbatim: "") : nil)
+            .accessibilityValue(hasUnseenWhatsNew ? Text("New") : Text(verbatim: ""))
           }
         }
       }
