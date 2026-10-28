@@ -112,7 +112,7 @@ const features = [
     eyebrow: "Sleep timer",
     heading: "Fall asleep without playing all night.",
     blurb:
-      "Set a timer when you get into bed and Blankie will gently fade your mix out on its own, or let it loop seamlessly until morning.",
+      "Set a timer when you get into bed and Blankie pauses your mix on its own, or let it loop until morning.",
     screen: iphoneTimer,
     screenAlt: "Blankie's sleep timer on iPhone over warm artwork",
     portrait: true,
@@ -120,12 +120,12 @@ const features = [
     points: [
       {
         icon: Timer,
-        title: "Soft fade-out at bedtime",
-        sub: "Your mix eases down gradually at the end of the timer so a sudden silence never wakes you up.",
+        title: "Short fade at bedtime",
+        sub: "When the timer ends, your sounds fade out instead of cutting off.",
       },
       {
         icon: Moon,
-        title: "Seamless all-night loops",
+        title: "All-night loops",
         sub: "Want your sounds to run until your alarm? Every built-in loop is cut to play all night without an audible seam.",
       },
     ],
@@ -279,7 +279,7 @@ const blankieIncluded = [
   },
   {
     title: "Sleep timer & Lock Screen art",
-    sub: "Gradual fade-out and looping video backdrops",
+    sub: "Short fade-out and looping video backdrops",
   },
   {
     title: "Shareable presets",
@@ -526,7 +526,7 @@ const typicalAppLimits = [
                 </span>
               </div>
               <h3 class="mt-2.5 text-2xl font-semibold tracking-tight text-gray-100">
-                Built for every pose on iPhone Duo
+                Works in every pose of iPhone Duo
               </h3>
               <p class="text-fg-2 mt-2.5 text-sm/relaxed">
                 Set it down half-folded on your nightstand and the upright screen shows your artwork while the flat half keeps your sound tiles and sleep timer within reach. Unfold it like a book to put Now Playing on the left page and your Sound Mixer on the right.
@@ -535,7 +535,7 @@ const typicalAppLimits = [
                 href="/guides/blankie-iphone-duo/"
                 class="text-accent-ink mt-5 inline-flex items-center gap-1.5 text-sm font-semibold no-underline transition-colors hover:text-white"
               >
-                <span>See every posture</span>
+                <span>See every pose</span>
                 <ArrowRight className="size-4" strokeWidth={2} />
               </a>
             </div>
@@ -544,20 +544,20 @@ const typicalAppLimits = [
               <figure class="min-w-0 text-center" style="flex: 863 1 0">
                 <Image
                   src={duoSeated}
-                  alt="Blankie on iPhone Duo in seated nightstand mode with artwork on the upright half and sound controls on the flat half"
+                  alt="Blankie on iPhone Duo in the seated pose with artwork on the upright half and sound controls on the flat half"
                   loading="lazy"
                   class="w-full rounded-lg"
                 />
-                <figcaption class="text-fg-3 mt-2 text-xs">Seated mode</figcaption>
+                <figcaption class="text-fg-3 mt-2 text-xs">Seated pose</figcaption>
               </figure>
               <figure class="min-w-0 text-center" style="flex: 1246 1 0">
                 <Image
                   src={duoBook}
-                  alt="Blankie on iPhone Duo in book posture with Now Playing on the left page and the Sound Mixer on the right page"
+                  alt="Blankie on iPhone Duo in the book pose with Now Playing on the left page and the Sound Mixer on the right page"
                   loading="lazy"
                   class="w-full rounded-lg"
                 />
-                <figcaption class="text-fg-3 mt-2 text-xs">Book mode</figcaption>
+                <figcaption class="text-fg-3 mt-2 text-xs">Book pose</figcaption>
               </figure>
             </div>
           </div>

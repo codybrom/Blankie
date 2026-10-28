@@ -3,7 +3,7 @@ title: "Quick Mix, Single Sounds and Presets"
 description: "How Blankie's presets, Quick Mix soundboard and single-sound playback work, and how to switch between them without overwriting your saved mixes."
 category: "basics"
 order: 35
-updated: 2026-10-26
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 

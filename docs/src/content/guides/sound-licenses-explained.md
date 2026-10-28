@@ -3,7 +3,7 @@ title: "Common Sound Licenses, Explained"
 description: "What CC0, CC BY, BY-NC and other licenses mean and how to track attribution with Blankie's Credits fields."
 category: "find"
 order: 12
-updated: 2026-10-26
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 
@@ -16,7 +16,7 @@ Read on to learn what the most common licenses actually mean for your Blankie li
 
 ## Licenses you're most likely to find
 
-For the most part, Creative Commons licenses can be described using modular groups of letters. The more letters it has, the more restrictions attached. Here are some of the most common ones used by free sound creators online:
+For the most part, Creative Commons licenses can be described using modular groups of letters. The more letters a license has, the more restrictions it carries. Here are some of the most common ones used by free sound creators online:
 
 - **[CC0 (public domain)](https://creativecommons.org/publicdomain/zero/1.0/)**: no strings whatsoever. A CC0 or public domain license means you can use it, remix it or share it with no credit needed (but often still appreciated).
 - **[CC BY (attribution)](https://creativecommons.org/licenses/by/4.0/)**: free to use, but credit the creator whenever you share or publish work that includes the sound, even if what you would use it for earns money.

@@ -3,7 +3,7 @@ title: "Import Your Own Sounds on iPhone & iPad"
 description: "Add your own audio files to Blankie on iPhone and iPad. Import sounds from the Files app, iCloud Drive or other storage providers in a few taps."
 category: "import"
 order: 2
-updated: 2026-06-06
+updated: 2026-10-27
 platforms: "iPhone and iPad"
 ---
 

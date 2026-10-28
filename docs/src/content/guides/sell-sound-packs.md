@@ -3,7 +3,7 @@ title: "Can you sell Blankie sound packs?"
 description: "Which sound licenses let you sell a Blankie sound pack, what's safe to charge for, what isn't and why royalty-free and stock-site sounds usually can't be resold."
 category: "presets"
 order: 23
-updated: 2026-06-17
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 
@@ -23,9 +23,9 @@ Before you charge for a pack, make sure every sound in it allows commercial use 
 
 ## What you shouldn't use in presets you sell
 
-- **Works licensed for "noncommercial use."** A CC BY-NC sound can't be used in monetized packs because noncommercial means not for sale. You'll need something else for a pack you'd charge for. Also, "NC" can also stack on top of another license, like `CC BY-NC-SA` or `CC BY-NC-ND`. Just know that if you spot NC anywhere in the license, that sound is off the table for anything you sell.
+- **Works licensed for "noncommercial use."** A CC BY-NC sound can't be used in monetized packs because noncommercial means not for sale. You'll need something else for a pack you'd charge for. "NC" can also stack on top of another license, like `CC BY-NC-SA` or `CC BY-NC-ND`. Just know that if you spot NC anywhere in the license, that sound is off the table for anything you sell.
 - **Someone else's copyrighted audio you don't have a license for.** Pretty straightforward here. Just because you found something free online doesn't mean you have a right to repackage it in a `.blankie` preset and sell it. Even if you bought a copy of the song you wanted to include or you owned a copy of the game or movie the sound comes from, that doesn't automatically grant you permission to resell it.
-- **Content from most "stock" sites.** Paid or free, many stock video/audio/image sites license sounds for use *inside* your own content, not for resale or redistribution on their own. Even Pixabay, which lets you use content for free with no attribution, [says it pretty plainly in their license terms](https://pixabay.com/service/license-summary/#:~:text=You%20cannot%20sell%20or%20distribute%20Content%20(either%20in%20digital%20or%20physical%20form)%20on%20a%20Standalone%20basis.%20Standalone%20means%20where%20no%20creative%20effort%20has%20been%20applied%20to%20the%20Content%20and%20it%20remains%20in%20substantially%20the%20same%20form%20as%20it%20exists%20on%20our%20website.): "You cannot sell or distribute Content (either in digital or physical form) on a Standalone basis," where standalone means content "where no creative effort has been applied to the Content and it remains in substantially the same form as it exists on our website."
+- **Content from most "stock" sites.** Paid or free, many stock video/audio/image sites license sounds for use *inside* your own content, not for resale or redistribution on their own. Even Pixabay, which lets you use content for free with no attribution, [says it pretty plainly in its license terms](https://pixabay.com/service/license-summary/#:~:text=You%20cannot%20sell%20or%20distribute%20Content%20(either%20in%20digital%20or%20physical%20form)%20on%20a%20Standalone%20basis.%20Standalone%20means%20where%20no%20creative%20effort%20has%20been%20applied%20to%20the%20Content%20and%20it%20remains%20in%20substantially%20the%20same%20form%20as%20it%20exists%20on%20our%20website.): "You cannot sell or distribute Content (either in digital or physical form) on a Standalone basis," where standalone means content "where no creative effort has been applied to the Content and it remains in substantially the same form as it exists on our website."
 
 ## Other considerations
 

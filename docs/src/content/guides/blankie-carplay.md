@@ -3,7 +3,7 @@ title: "Blankie on CarPlay"
 description: "Play ambient sounds while you drive. Blankie's CarPlay app keeps your presets, favorites, sleep timer and a quick sound mixer one tap away on the dashboard."
 category: "basics"
 order: 42
-updated: 2026-10-25
+updated: 2026-10-27
 platforms: "CarPlay"
 ---
 
@@ -16,7 +16,7 @@ Long drive with a sleeping kid in the back? Highway hum proving to be the *wrong
 Once Blankie is on your iPhone, it will [show up in CarPlay on its own](https://support.apple.com/guide/iphone/use-other-apps-with-carplay-iph206c570e3/ios). You'll see four tabs:
 
 - **Home**: what's playing now (or your most recent mix) and your favorite presets and sounds right there. It's the fastest way back to things you listen to the most.
-- **Presets**: *All Blankie Sounds* first, then all your presets, favorite or not, in alphabetical order. Tap one, it plays.
+- **Presets**: **All Blankie Sounds** first, then all your presets, favorite or not, in alphabetical order. Tap one, it plays.
 - **Sounds**: the full list of sounds. Tap any sound to play it on its own.
 - **Quick Mix**: a soundboard for putting a mix together on the spot.
 

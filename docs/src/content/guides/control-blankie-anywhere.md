@@ -3,7 +3,7 @@ title: "Control Blankie from Anywhere"
 description: "Control Blankie with widgets, Siri, Shortcuts, Spotlight, the Mac menu bar, headphones, media keys, the Lock Screen, Control Center and CarPlay."
 category: "basics"
 order: 41
-updated: 2026-10-25
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 

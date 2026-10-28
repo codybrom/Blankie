@@ -3,7 +3,7 @@ title: "Import Your Own Sounds on Mac"
 description: "Add your own audio files to Blankie on macOS. Import MP3, M4A, WAV, FLAC or OGG and mix them right in with the built-in ambient sounds."
 category: "import"
 order: 1
-updated: 2026-06-06
+updated: 2026-10-27
 platforms: "Mac"
 ---
 

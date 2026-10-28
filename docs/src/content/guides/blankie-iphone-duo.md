@@ -1,13 +1,13 @@
 ---
 title: "Blankie on iPhone Duo"
-description: "How Blankie adapts to iPhone Duo: Now Playing and the Sound Mixer side by side when unfolded, a book layout that stays clear of the crease and a nightstand mode when half-folded."
+description: "How Blankie adapts to iPhone Duo: Now Playing and the Sound Mixer side by side when unfolded, a book pose that stays clear of the crease and a seated pose when half-folded."
 category: "basics"
 order: 43
-updated: 2026-10-24
+updated: 2026-10-27
 platforms: "iPhone Duo"
 ---
 
-Blankie adapts its layout to how you hold or set down iPhone Duo, while keeping your audio playing uninterrupted whenever you fold, open or close the display.
+Blankie adapts its layout to how you hold or set down iPhone Duo, and your audio keeps playing when you fold, open or close the display.
 
 ## Closed
 
@@ -15,7 +15,7 @@ When closed, the outer display uses the standard iPhone layout: Now Playing up f
 
 ![Blankie on the outer display of iPhone Duo when closed: Now Playing for the Rainy Window preset, with the Sound Mixer, AirPlay and the sleep timer under the volume.](../../assets/guides/blankie-iphone-duo/closed.png)
 
-## Open flat
+## Open
 
 Unfold the phone and Blankie splits across the two halves of the screen:
 
@@ -28,19 +28,19 @@ If you're playing a single sound on its own, Now Playing uses both pages with th
 
 ![Blankie open flat on iPhone Duo: Now Playing for the Creekside preset on the left page, and the Sound Mixer on the right with Stream, Forest, Birds, Wind and Gentle Guitar playing.](../../assets/guides/blankie-iphone-duo/open-flat.png)
 
-## Book posture
+## Book pose
 
 Fold the display partway and hold it like a book. Now Playing stays on the left page and the Sound Mixer stays on the right, with the hinge crease between them so sliders and buttons stay on the flat parts of the screen.
 
 ![Blankie on iPhone Duo folded like a book: Now Playing for the Golden Hour preset on the left page, and its Waves, Gentle Guitar and Wind tiles on the right.](../../assets/guides/blankie-iphone-duo/book.png)
 
-## Tent posture
+## Tent pose
 
 Prop the phone half-open with the hinge at the top and the outer display facing you. Now Playing fills the screen in landscape, with your preset's artwork on one side and playback controls on the other.
 
 ![Blankie on iPhone Duo standing like a tent: the outer display shows Now Playing for the Downtown preset, with the artwork beside the controls.](../../assets/guides/blankie-iphone-duo/tent.png)
 
-## Seated nightstand mode
+## Seated pose
 
 Set the phone down half-folded with the hinge running horizontally, like a tiny laptop on a desk or nightstand. Blankie stacks the layout across the two halves (you get the same stacked layout if you hold the unfolded phone in this orientation):
 

@@ -153,12 +153,6 @@ export const testimonials: Testimonial[] = [
     store: "Spain",
   },
   {
-    id: "noizio-mixes",
-    quote: "I find the sound combinations more pleasing than even paid Noizio.",
-    stars: 4,
-    store: "United States",
-  },
-  {
     id: "free-quality",
     quote:
       "Super tolle App. 1. Kostenfrei ohne In-App-Käufe. :D 2. Qualitativ echt hochwertige Geräusche. :) 3. Nach belieben einstellbar. :D",

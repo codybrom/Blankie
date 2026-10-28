@@ -3,7 +3,7 @@ title: "Blankie Keyboard Shortcuts for Mac"
 description: "Every keyboard shortcut in Blankie for macOS: import sounds, toggle the sidebar, manage your library and control playback without the mouse."
 category: "basics"
 order: 44
-updated: 2026-10-26
+updated: 2026-10-27
 platforms: "Mac"
 ---
 
@@ -40,7 +40,7 @@ Blankie for Mac was designed to be keyboard friendly for both power users and pe
 
 ## A couple of things worth knowing
 
-- These shortcut keys work only while Blankie is your active/focused app. Blankie doesn't claim any system-wide hotkeys, so if you're off in another app, reach for your keyboard's media keys, the menu bar icon or [Control Center](/guides/control-blankie-anywhere/) to manage your mix.
+- These shortcut keys work only while Blankie is the active app. Blankie doesn't claim any system-wide hotkeys, so if you're off in another app, reach for your keyboard's media keys, the menu bar icon or [Control Center](/guides/control-blankie-anywhere/) to manage your mix.
 - {{kbd:⌘ S}} toggles the sidebar; it does not "save." Blankie saves all [preset changes instantly and automatically](/guides/create-and-manage-presets/).
 - {{kbd:⌘ I}} is the quickest way to import a sound, or to open a [.blankie preset file](/guides/share-presets/) a friend has sent you.
 - {{kbd:⌘ →}} and {{kbd:⌘ ←}} step through your [favorites](/guides/create-and-manage-presets/) in sidebar order. Your {{kbdicon:rewind}} and {{kbdicon:fast-forward}} media keys, headphone controls and Control Center all move through the same list.

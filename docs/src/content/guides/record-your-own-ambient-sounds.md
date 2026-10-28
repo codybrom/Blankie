@@ -3,7 +3,7 @@ title: "Record Your Own Ambient Sounds"
 description: "Field recording basics for anyone who loves ambient sound. Capture your own rain, fireplace or café sounds on your iPhone and loop them in Blankie."
 category: "find"
 order: 14
-updated: 2026-06-06
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 

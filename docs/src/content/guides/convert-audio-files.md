@@ -3,7 +3,7 @@ title: "Convert Audio Files for Blankie"
 description: "Convert WMA and other unsupported audio formats, or pull the audio from a video, so it imports into Blankie on Mac, iPhone and iPad."
 category: "import"
 order: 5
-updated: 2026-06-06
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 

@@ -3,7 +3,7 @@ title: "Fall Asleep with the Sleep Timer"
 description: "Drift off to rain, waves or white noise and let Blankie pause for you. Set the sleep timer on Mac, iPhone or iPad and it stops on its own."
 category: "basics"
 order: 40
-updated: 2026-10-26
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 
@@ -14,7 +14,7 @@ Falling asleep to rain or ocean waves is lovely. Having it run until morning isn
 1. Click the **timer** {{icon:timer}} button in the control bar at the bottom of the window.
 2. Set hours and minutes, then click **Start Timer**.
 
-Once it's counting down, the timer icon picks up your accent color and the window subtitle reads **"Pausing at [time]."** Changed your mind? Open the timer again and click **Stop Timer**.
+Once it's counting down, the timer icon picks up your accent color and the window subtitle reads **"Pausing at [time]."** Changed your mind? Open the timer again and click **Cancel Timer**.
 
 ![The sleep timer on Mac, set to 0 hours and 30 minutes with Start Timer, opened from the timer button in the bottom bar.](../../assets/guides/sleep-timer/timer-mac.png)
 

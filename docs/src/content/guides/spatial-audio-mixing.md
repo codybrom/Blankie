@@ -3,7 +3,7 @@ title: "Spatial Audio Mixing in Blankie"
 description: "Place your preset's ambient sounds around you in a 3D binaural space on headphones, with optional head tracking on compatible AirPods."
 category: "presets"
 order: 24
-updated: 2026-10-25
+updated: 2026-10-27
 platforms: "All Platforms"
 ---
 
