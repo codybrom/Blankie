@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { APPLE_TRADEMARKS } from "@/utils/trademarks";
 import soundsJSON from "../../../Blankie/Resources/sounds.json";
 import creditsJSON from "../../../Blankie/credits.json";
 import { Heart } from "@lucide/astro";
@@ -232,7 +233,7 @@ const licenseOf = (id: string) =>
             The Blankie name, logo, app icons and all other designed images are © 2026 <a href="https://github.com/codybrom">Cody Bromley</a> with all rights reserved. These items are not covered by the MIT License and may not be used in other projects without permission. See the project's <a href="https://github.com/codybrom/Blankie/tree/main?tab=contributing-ov-file#licensing">Contributing Guidelines</a> for more details.
           </DefRow>
           <DefRow term="Trademarks" class="py-4.5">
-            Apple, the Apple logo, AirDrop, AirPlay, AirPods, Apple Intelligence, CarPlay, Finder, iPad, iPadOS, iPhone, Mac, macOS, Quick Look, SF Symbols, Siri, Spotlight, TestFlight and VoiceOver are trademarks of Apple Inc., registered in the U.S. and other countries and regions. App Store and Mac App Store are service marks of Apple Inc.
+            {APPLE_TRADEMARKS}
           </DefRow>
           <DefRow term="Sound icons" class="py-4.5">
             <a href="https://developer.apple.com/sf-symbols/">SF Symbols</a> by

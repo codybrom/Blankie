@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import { APPLE_TRADEMARKS } from "@/utils/trademarks";
 import icon from "../assets/blankie-icon-v2.png";
 import ghSVG from "../assets/github.svg";
 import igSVG from "../assets/instagram.svg";
@@ -122,7 +123,7 @@ const columns = [
       </span>
     </div>
     <p class="mt-4 text-xs text-gray-500">
-      Apple, the Apple logo, AirDrop, AirPlay, AirPods, Apple Intelligence, CarPlay, Finder, iPad, iPadOS, iPhone, Mac, macOS, Quick Look, SF Symbols, Siri, Spotlight, TestFlight and VoiceOver are trademarks of Apple Inc., registered in the U.S. and other countries and regions. App Store is a service mark of Apple Inc.
+      {APPLE_TRADEMARKS}
     </p>
   </div>
 </footer>

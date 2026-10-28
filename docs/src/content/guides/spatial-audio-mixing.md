@@ -20,7 +20,7 @@ Turning this on adds a **Spatial Mix** button to your presets.
 
 1. Open a preset with a few sounds playing and tap or click the **Spatial Mix** button.
 2. At the top of the Spatial Mix view, switch from **Off** to **Fixed** (or **Head Tracked** when compatible AirPods are connected).
-3. Drag each sound's pin around the circular map. Moving a pin around the circle changes its direction; dragging it closer to or farther from the center changes its distance (from half a meter out to three meters).
+3. Drag each sound's pin around the circular map. Moving a pin around the circle changes its direction. Dragging it closer to or farther from the center changes its distance (from half a meter out to three meters).
 
 Two controls help you adjust the layout:
 

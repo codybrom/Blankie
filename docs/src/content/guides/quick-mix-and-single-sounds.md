@@ -16,7 +16,7 @@ A [preset](/guides/create-and-manage-presets/) saves a group of sounds, their in
 Blankie also comes with a default preset called **All Blankie Sounds**, which includes every sound in your library (except ones marked **Preset Use Only**) so you have a full soundboard to test mixes on.
 
 > [!TIP]
-> On iPhone, selecting a preset opens **Now Playing** first by default, with the **Sound Mixer** button right below the volume slider. If you want presets to open directly to the sound grid, turn off **Open to Now Playing** in **Settings → Display**.
+> On iPhone, selecting a preset opens **Now Playing** first by default, with the **Sound Mixer** button right below the volume slider. If you want presets to open directly to your sound tiles, turn off **Open to Now Playing** in **Settings → Display**.
 
 ## Quick Mix
 

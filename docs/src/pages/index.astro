@@ -192,7 +192,7 @@ const devices = [
     icon: Tablet,
     name: "iPad",
     heading: "Sidebar and mixer, side by side",
-    sub: "Your favorite presets and Quick Mix on the left, the full sound grid and sleep timer on the right.",
+    sub: "Your favorite presets and Quick Mix on the left, all your sound tiles and the sleep timer on the right.",
     img: ipadShot,
     alt: "Blankie on iPad",
   },
@@ -539,17 +539,18 @@ const typicalAppLimits = [
                 <ArrowRight className="size-4" strokeWidth={2} />
               </a>
             </div>
-            <div class="grid grid-cols-2 items-end gap-4">
-              <figure class="text-center">
+            <!-- Each figure grows by its image's aspect ratio, so both render at the same height. -->
+            <div class="flex items-end gap-4">
+              <figure class="min-w-0 text-center" style="flex: 863 1 0">
                 <Image
                   src={duoSeated}
                   alt="Blankie on iPhone Duo in seated nightstand mode with artwork on the upright half and sound controls on the flat half"
                   loading="lazy"
                   class="w-full rounded-lg"
                 />
-                <figcaption class="text-fg-3 mt-2 text-xs">Seated nightstand mode</figcaption>
+                <figcaption class="text-fg-3 mt-2 text-xs">Seated mode</figcaption>
               </figure>
-              <figure class="text-center">
+              <figure class="min-w-0 text-center" style="flex: 1246 1 0">
                 <Image
                   src={duoBook}
                   alt="Blankie on iPhone Duo in book posture with Now Playing on the left page and the Sound Mixer on the right page"
@@ -775,7 +776,7 @@ const typicalAppLimits = [
                     href="/faq/#what-does-open-source-mean"
                     class="border-accent-ink/30 text-accent-ink rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase no-underline transition-colors hover:border-accent-ink/60 hover:text-white"
                   >
-                    MIT Open Source
+                    Open Source
                   </a>
                 </div>
               </div>
@@ -865,6 +866,7 @@ const typicalAppLimits = [
             </p>
 
             <div
+              role="group"
               class="parody-row mx-auto mt-6 grid max-w-sm grid-cols-3 gap-x-4 gap-y-5"
               aria-label="Parody versions of other apps"
             >
