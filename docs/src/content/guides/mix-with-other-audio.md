@@ -28,7 +28,7 @@ With **Mix with Other Audio** turned on:
 
 macOS lets apps play audio at the same time by default, so there's no setting to toggle. To balance Blankie underneath another app on your Mac:
 
-- Use the **All Sounds** {{icon:speaker}} slider in the bottom control bar (or inside Blankie's menu bar popover) to lower Blankie's overall volume beneath your music or video app.
+- Use the volume {{icon:speaker}} slider in the bottom control bar (or inside Blankie's menu bar popover) to lower Blankie's overall volume beneath your music or video app.
 - Each sound tile keeps its own relative volume inside your mix.
 - If you want your mix to start as soon as you launch the app, turn on **Autoplay on Open** in **Settings → Playback & Sounds**.
 

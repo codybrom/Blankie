@@ -4,7 +4,7 @@ description: "How Blankie adapts to iPhone Duo: Now Playing and the Sound Mixer 
 category: "basics"
 order: 43
 updated: 2026-10-24
-platforms: "iPhone and iPad"
+platforms: "iPhone Duo"
 ---
 
 Blankie adapts its layout to how you hold or set down iPhone Duo, while keeping your audio playing uninterrupted whenever you fold, open or close the display.
@@ -56,10 +56,6 @@ Tap the back arrow on the left of the playback bar to swap the sound tiles for y
 ## Editing presets and sounds
 
 Tap the edit buttons above your sound tiles to open the sound or preset editor. Folding or unfolding the phone while an editor is open keeps the sheet open with your unsaved changes in place.
-
-## Wider layout on iPad
-
-On iPad, Blankie uses a wider layout with the Library in a sidebar, preset artwork in the header and a Now Playing view that can show your sound tiles or the sleep timer beside it.
 
 ## Related guides
 

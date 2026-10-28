@@ -16,7 +16,7 @@ Long drive with a sleeping kid in the back? Highway hum proving to be the *wrong
 Once Blankie is on your iPhone, it will [show up in CarPlay on its own](https://support.apple.com/guide/iphone/use-other-apps-with-carplay-iph206c570e3/ios). You'll see four tabs:
 
 - **Home**: what's playing now (or your most recent mix) and your favorite presets and sounds right there. It's the fastest way back to things you listen to the most.
-- **Presets**: all your presets, favorite or not, listed in alphabetical order. Tap one, it plays.
+- **Presets**: *All Blankie Sounds* first, then all your presets, favorite or not, in alphabetical order. Tap one, it plays.
 - **Sounds**: the full list of sounds. Tap any sound to play it on its own.
 - **Quick Mix**: a soundboard for putting a mix together on the spot.
 
@@ -28,11 +28,11 @@ Tap **Now Playing** in the top corner of CarPlay to reach the playback controls 
 
 - **Favorite** {{icon:star}}: star or unstar the current preset or sound so it stays on your **Home** tab.
 - **Sleep Timer** {{icon:timer}}: set a countdown or cancel a running timer without picking up your phone.
-- **Edit Preset Sounds**: when a preset is playing, tap the sliders button on Now Playing to turn sounds in that preset on or off from the dashboard.
+- **Edit sounds** {{icon:sliders}}: when a preset is selected, tap the sliders button to turn that preset's sounds on or off from the dashboard.
 
-![Blankie's Now Playing in CarPlay for the Rainy Night preset (Rain, Waves), with the Favorite, Sleep Timer and Edit Preset Sounds buttons under the controls.](../../assets/guides/blankie-carplay/now-playing.png)
+![Blankie's Now Playing in CarPlay for the Rainy Night preset (Rain, Waves), with the Favorite, Sleep Timer and sliders buttons under the controls.](../../assets/guides/blankie-carplay/now-playing.png)
 
-![Edit Preset Sounds in CarPlay for Golden Hour: Gentle Guitar playing at 40% volume, Waves at 55% and Wind at 20%.](../../assets/guides/blankie-carplay/edit-preset-sounds.png)
+![The sound list for Golden Hour in CarPlay, opened from the sliders button: Gentle Guitar playing at 40% volume, Waves at 55% and Wind at 20%.](../../assets/guides/blankie-carplay/edit-preset-sounds.png)
 
 ## Set up before you drive
 

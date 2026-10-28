@@ -11,7 +11,7 @@ import laurelLeft from "../assets/laurel-left.svg";
 import laurelRight from "../assets/laurel-right.svg";
 import appStoreBadge from "../assets/app-store-badge.svg";
 // Real 2.0 navy product shots.
-import products from "../assets/products.png";
+import heroDevices from "../assets/hero-devices.png";
 import macWindow from "../assets/mac-window-v2.png";
 import ipadShot from "../assets/ipad-landscape.png";
 import ipadPreset from "../assets/ipad-preset.png";
@@ -22,6 +22,12 @@ import macMenubar from "../assets/mac-menubar.png";
 import carplayShot from "../assets/carplay-mockup.jpg";
 import duoSeated from "../assets/guides/blankie-iphone-duo/seated.png";
 import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
+import parodyClam from "../assets/parody/clam.svg";
+import parodyWorseSleep from "../assets/parody/worse-sleep.svg";
+import parodySpendel from "../assets/parody/spendel.svg";
+import parodyDarkPattern from "../assets/parody/dark-pattern.svg";
+import parodyNosey from "../assets/parody/nosey.svg";
+import parodyAdNoiseLite from "../assets/parody/ad-noise-lite.svg";
 import bg1 from "../assets/bg-1.png";
 import bg2 from "../assets/bg-2.png";
 import bg3 from "../assets/bg-3.png";
@@ -51,6 +57,10 @@ import {
   ArrowRight,
   Moon,
   Timer,
+  Download,
+  Eye,
+  Terminal,
+  MessageSquareText,
 } from "lucide-react";
 import { softwareAppLd, ldGraph } from "@/utils/schema";
 import { getTestimonial } from "@/utils/testimonials";
@@ -132,7 +142,7 @@ const features = [
     points: [
       { icon: CloudRain, title: "Heavy Rain Sleep", sub: "Rain + Brown Noise + Fan" },
       { icon: Flame, title: "Cozy Night In", sub: "Fireplace + Wind + Warm Piano" },
-      { icon: Waves, title: "Rainy Day Focus", sub: "Green Noise + Rain + Lo-Fi Beats" },
+      { icon: Waves, title: "Ocean Focus", sub: "Green Noise + Waves + Lo-Fi Beats" },
     ],
   },
   {
@@ -249,7 +259,7 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
 const blankieIncluded = [
   {
     title: "All 24 built-in sounds",
-    sub: "Rain, waves, fireplace, noise colors and music loops",
+    sub: "Including rain, waves, fireplace, noise colors and music loops",
   },
   {
     title: "Unlimited adjustable layers",
@@ -257,11 +267,11 @@ const blankieIncluded = [
   },
   {
     title: "Import your own audio",
-    sub: "Automatically loudness-matched on import",
+    sub: "Automatically loudness-matched so nothing ruins the mix",
   },
   {
-    title: "CarPlay & iPhone Duo",
-    sub: "Dashboard mixes on the road and nightstand mode at home",
+    title: "CarPlay & iPhone Duo support",
+    sub: "Ready for your dashboard on the road and your nightstand at home",
   },
   {
     title: "Widgets, Siri & Shortcuts",
@@ -272,23 +282,77 @@ const blankieIncluded = [
     sub: "Gradual fade-out and looping video backdrops",
   },
   {
-    title: "Shareable .blankie presets",
-    sub: "Send custom mixes to friends with no account needed",
+    title: "Shareable presets",
+    sub: "Send custom mixes to friends as .blankie files with no accounts needed",
   },
   {
     title: "100% offline & private",
     sub: "Plays without an internet connection and collects no analytics",
   },
+  {
+    title: "Translated into 12 languages",
+    sub: "Built with volunteer translators around the world",
+  },
+  {
+    title: "Every update, free",
+    sub: "No Pro tier, no upgrade screen, no unlocks to buy later",
+  },
 ];
 
+// Parody app icons (src/assets/parody/) stand in for real apps
+const parodyApps = [
+  { id: "clam", name: "Clam", src: parodyClam, badges: [{ kind: "price", label: "$$" }, { kind: "tracking", label: "" }] },
+  { id: "worse-sleep", name: "Worse Sleep", src: parodyWorseSleep, badges: [{ kind: "price", label: "$$" }, { kind: "tracking", label: "" }] },
+  { id: "spendel", name: "Spendel", src: parodySpendel, badges: [{ kind: "price", label: "$$$" }, { kind: "tracking", label: "" }] },
+  { id: "dark-pattern", name: "Dark Pattern", src: parodyDarkPattern, badges: [{ kind: "price", label: "$" }] },
+  { id: "nosey", name: "Nosey", src: parodyNosey, badges: [{ kind: "tracking", label: "" }] },
+  { id: "ad-noise-lite", name: "Ad Noise Lite", src: parodyAdNoiseLite, badges: [{ kind: "tracking", label: "" }] },
+];
+// Corner badges on the parody icons: a $ scale for yearly price ($ under $40,
+// $$ under $100, $$$ above) and an eye for tracking, from each app's own App
+// Store privacy label or privacy policy.
+const badgeStyles: Record<string, string> = {
+  price: "bg-red-500 text-white",
+  tracking: "bg-violet-500 text-white",
+};
+// Each line is generic (true of at least two of the apps) and lists the parody
+// apps it applies to. Every claim comes from the apps' own App Store listings,
+// privacy labels and privacy policies, checked Oct. 2026.
 const typicalAppLimits = [
-  "Three to five free sounds, with the rest locked behind a trial screen",
-  "Layering more than two or three sounds requires a paid upgrade",
-  "No custom audio import at any price",
-  "Sleep timer and Lock Screen artwork locked after a seven-day trial",
-  "Home Screen widgets, Siri and Shortcuts gated behind a subscription",
-  "No CarPlay app",
-  "Account sign-up and tracking SDKs required before you hear a sound",
+  {
+    text: "Limit what you can listen to or do until you pay",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+  },
+  // Usage analytics: every app's label or policy lists it.
+  {
+    text: "Can monitor how you use the app",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+  },
+  {
+    text: "Can track your location",
+    apps: ["worse-sleep", "spendel", "ad-noise-lite"],
+  },
+  {
+    text: "Can track you across other apps and the web",
+    apps: ["clam", "worse-sleep", "spendel", "nosey", "ad-noise-lite"],
+  },
+  {
+    text: "Have free trials that start charging you automatically",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern"],
+  },
+  {
+    text: "Don't have a CarPlay app",
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "nosey", "ad-noise-lite"],
+  },
+  {
+    text: "Collect your personal information",
+    apps: ["clam", "worse-sleep", "spendel"],
+  },
+  {
+    text: "Can share your data with third-party advertisers",
+    apps: ["clam", "spendel", "nosey", "ad-noise-lite"],
+  }
+
 ];
 ---
 
@@ -313,11 +377,11 @@ const typicalAppLimits = [
         Rest deeper at night. Stay focused during the day.
       </p>
 
-      <!-- Real device family: Mac, iPhone and iPad -->
+      <!-- Real device family: iPad, Mac, iPhone, CarPlay and iPhone Duo -->
       <div class="mx-auto mt-12 w-full max-w-4xl">
         <Image
-          src={products}
-          alt="Blankie on Mac, iPhone and iPad"
+          src={heroDevices}
+          alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo"
           class="w-full"
           widths={[640, 896, 1792]}
           sizes="(min-width: 896px) 896px, 100vw"
@@ -350,8 +414,8 @@ const typicalAppLimits = [
         {
           awards.map((award) => (
             <div class="flex items-center gap-3.5">
-              <img
-                src={laurelLeft.src}
+              <Image
+                src={laurelLeft}
                 alt=""
                 loading="lazy"
                 width="18"
@@ -374,8 +438,8 @@ const typicalAppLimits = [
                   {award.sub}
                 </div>
               </div>
-              <img
-                src={laurelRight.src}
+              <Image
+                src={laurelRight}
                 alt=""
                 loading="lazy"
                 width="18"
@@ -602,8 +666,8 @@ const typicalAppLimits = [
                 <Star className="size-4" fill="currentColor" strokeWidth={0} />
               ))}
             </div>
-            <span class="font-semibold text-white">4.9 out of 5</span>
-            <span class="text-fg-3">· 25,000+ downloads</span>
+            <span class="font-semibold whitespace-nowrap text-white">4.9 out of 5</span>
+            <span class="text-fg-3 whitespace-nowrap">· 25,000+ downloads</span>
           </div>
         </div>
 
@@ -644,6 +708,27 @@ const typicalAppLimits = [
             ))
           }
         </div>
+
+        <div class="mt-6 flex flex-col items-center gap-3 text-center">
+          <p class="text-sm font-semibold text-gray-100">Enjoying Blankie and want to help? Here are some ways you can support it:</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            {
+              [
+                { icon: MessageSquareText, label: "Leave a review", href: "https://apps.apple.com/app/id6740096581?action=write-review" },
+                { icon: Star, label: "Star on GitHub", href: "https://github.com/codybrom/blankie" },
+                { icon: Languages, label: "Help translate", href: "/i18n/" },
+              ].map((link) => (
+                <a
+                  href={link.href}
+                  class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-2 text-sm font-medium text-fg-2 no-underline transition-colors hover:border-white/20 hover:text-white"
+                >
+                  <link.icon className="size-4" strokeWidth={2} />
+                  {link.label}
+                </a>
+              ))
+            }
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -667,14 +752,12 @@ const typicalAppLimits = [
           class="mx-auto mb-6 rounded-[22%] shadow-2xl"
           quality={90}
         />
-        <div class="text-accent-ink mb-2 text-xs font-bold tracking-[0.14em] uppercase">
-          Pricing
-        </div>
         <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
           Don't rent your relaxation.
         </h2>
-        <p class="text-fg-2 mx-auto mt-4 max-w-xl text-lg">
-          Other sleep and focus apps lock rain, white noise and sleep timers behind a $40 to $70 annual subscription. Blankie gives you everything for $0, forever.
+        <p class="text-fg-2 mx-auto mt-4 max-w-3xl text-lg text-balance">
+          Other sleep and focus apps lock sounds and features behind paywalls.
+          <span class="sm:block">Blankie gives you everything free, forever.</span>
         </p>
       </div>
 
@@ -682,22 +765,22 @@ const typicalAppLimits = [
         <!-- Blankie $0 Forever Card -->
         <div class="glass flex flex-col justify-between rounded-3xl border-accent-ink/25 bg-[linear-gradient(180deg,rgba(76,141,255,0.10),rgba(255,255,255,0.03))] p-7 sm:p-9">
           <div>
-            <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-white/10 pb-6">
+            <div class="flex items-end justify-between gap-4">
               <div>
                 <div class="flex items-center gap-2.5">
-                  <h3 class="text-2xl font-semibold tracking-tight text-white">
+                  <h3 class="text-3xl font-semibold tracking-tight text-white">
                     Blankie
                   </h3>
-                  <span class="border-accent-ink/30 text-accent-ink rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase">
+                  <a
+                    href="/faq/#what-does-open-source-mean"
+                    class="border-accent-ink/30 text-accent-ink rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase no-underline transition-colors hover:border-accent-ink/60 hover:text-white"
+                  >
                     MIT Open Source
-                  </span>
+                  </a>
                 </div>
-                <p class="text-fg-2 mt-1 text-sm">
-                  Every sound, every device, every update.
-                </p>
               </div>
               <div class="text-right">
-                <div class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                <div class="text-4xl font-bold tracking-tight text-white">
                   $0
                 </div>
                 <div class="text-accent-ink text-xs font-semibold tracking-wide uppercase">
@@ -705,6 +788,9 @@ const typicalAppLimits = [
                 </div>
               </div>
             </div>
+            <p class="text-fg-2 mt-3 border-b border-white/10 pb-6 text-sm">
+              Costs nothing, hides nothing. Get everything, everywhere, every time.
+            </p>
 
             <ul class="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
               {
@@ -725,31 +811,37 @@ const typicalAppLimits = [
             </ul>
           </div>
 
-          <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
-            <a href={appStore} aria-label="Download Blankie on the App Store">
-              <Image
-                src={appStoreBadge}
-                alt="Download on the App Store"
-                class="h-12 w-auto"
-                loading="lazy"
-              />
-            </a>
-            <div class="text-fg-3 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-sm">
-              <span>Mac install:</span>
-              <a
-                href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
-                class="text-yellow-300 underline transition-colors hover:text-yellow-200"
-              >
-                Direct Download
+          <div class="mt-8 flex flex-col items-center gap-5 border-t border-white/10 pt-6 sm:flex-row sm:items-end sm:justify-between">
+            <div class="flex flex-col items-center gap-2 sm:items-start">
+              <a href={appStore} aria-label="Download Blankie on the App Store" class="transition hover:-translate-y-px">
+                <Image
+                  src={appStoreBadge}
+                  alt="Download on the App Store"
+                  class="h-14 w-auto"
+                  loading="lazy"
+                />
               </a>
-              <span class="text-gray-600" aria-hidden="true">·</span>
-              <button
-                type="button"
-                id="brew-open"
-                class="cursor-pointer text-yellow-300 underline transition-colors hover:text-yellow-200"
-              >
-                Homebrew
-              </button>
+              <span class="text-xs text-fg-2">Recommended, with automatic updates</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 sm:items-end">
+              <span class="text-xs text-fg-2">Other ways to install on Mac</span>
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <a
+                  href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
+                  class="inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 no-underline transition hover:border-white/30 hover:text-white"
+                >
+                  <Download className="size-4" strokeWidth={2} />
+                  Direct download
+                </a>
+                <button
+                  type="button"
+                  id="brew-open"
+                  class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 transition hover:border-white/30 hover:text-white"
+                >
+                  <Terminal className="size-4" strokeWidth={2} />
+                  Homebrew
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -757,51 +849,82 @@ const typicalAppLimits = [
         <!-- Typical Subscription Apps Card -->
         <div class="flex flex-col justify-between rounded-3xl border border-white/8 bg-white/2 p-7 sm:p-9">
           <div>
-            <div class="flex flex-wrap items-baseline justify-between gap-4 border-b border-white/8 pb-6">
-              <div>
-                <h3 class="text-xl font-semibold tracking-tight text-fg-2">
-                  Typical sound & sleep apps
-                </h3>
-                <p class="text-fg-3 mt-1 text-sm">
-                  Free to install, paywalled when you try to listen.
-                </p>
-              </div>
+            <div class="flex items-end justify-between gap-4">
+              <h3 class="min-w-0 text-3xl font-semibold tracking-tight text-white">Other apps</h3>
               <div class="text-right">
-                <div class="text-2xl font-semibold tracking-tight text-fg-2 sm:text-3xl">
-                  $40–$70
+                <div class="text-4xl font-bold tracking-tight whitespace-nowrap text-white">
+                  $20–$120
                 </div>
-                <div class="text-fg-3 text-xs font-medium tracking-wide uppercase">
+                <div class="text-xs font-semibold tracking-wide text-red-300 uppercase">
                   Per year
                 </div>
               </div>
+            </div>
+            <p class="text-fg-2 mt-3 border-b border-white/8 pb-6 text-sm">
+              Free to try, then worse until you buy.
+            </p>
+
+            <div
+              class="parody-row mx-auto mt-6 grid max-w-sm grid-cols-3 gap-x-4 gap-y-5"
+              aria-label="Parody versions of other apps"
+            >
+              {
+                parodyApps.map((app, i) => (
+                  <figure
+                    class="parody-app flex cursor-default flex-col items-center rounded-xl py-1 outline-none transition-opacity duration-200 focus-visible:ring-2 focus-visible:ring-accent-ink/60 [&.is-dim]:opacity-35"
+                    data-app={app.id}
+                    tabindex="0"
+                  >
+                    <span
+                      class:list={[
+                        "relative size-16 rounded-[22.37%] shadow-[0_6px_14px_rgba(0,0,0,0.5)]",
+                        i % 2 === 0 ? "-rotate-6" : "rotate-6",
+                      ]}
+                    >
+                      <Image src={app.src} alt="" width={64} height={64} class="size-full rounded-[22.37%]" />
+                      <span class="absolute inset-0 rounded-[22.37%] bg-linear-to-b from-white/20 via-white/0 to-black/10 shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.22)]" />
+                      <span class="absolute -top-2 -right-3 z-10 flex items-center -space-x-px">
+                        {app.badges.map((badge, j) => (
+                          <span
+                            style={`z-index: ${j + 1}`}
+                            class:list={[
+                              "relative inline-flex h-4.75 min-w-4.75 items-center justify-center rounded-full px-1.25 text-[10px]/none font-extrabold tracking-tight whitespace-nowrap shadow-[0_2px_6px_rgba(0,0,0,0.45)] ring-2 ring-[#10152f]",
+                              badgeStyles[badge.kind],
+                            ]}
+                          >
+                            {badge.kind === "tracking" && <Eye className="size-2.75" strokeWidth={2.75} />}
+                            {badge.label}
+                          </span>
+                        ))}
+                      </span>
+                    </span>
+                    <figcaption class="mt-2 text-center text-xs/tight text-balance text-fg-2">
+                      {app.name}
+                    </figcaption>
+                  </figure>
+                ))
+              }
             </div>
 
             <ul class="mt-6 space-y-3.5">
               {
                 typicalAppLimits.map((limit) => (
-                  <li class="flex items-start gap-3 text-sm text-fg-3">
-                    <span class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-white/5 text-fg-3">
-                      <X className="size-3.5" strokeWidth={2} />
+                  <li
+                    class="parody-limit flex items-start gap-3 text-sm text-fg-2 transition-[opacity,color] duration-200 [&.is-dim]:opacity-30 [&.is-hit]:text-white"
+                    data-apps={limit.apps.join(" ")}
+                  >
+                    <span class="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-red-400/15 text-red-300">
+                      <X className="size-3.5" strokeWidth={2.5} />
                     </span>
-                    <span>{limit}</span>
+                    <span>{limit.text}</span>
                   </li>
                 ))
               }
             </ul>
           </div>
-
-          <p class="text-fg-3 mt-8 border-t border-white/8 pt-5 text-xs/relaxed">
-            Want to support Blankie? It's completely optional. You can star the project on{" "}
-            <a
-              href="https://github.com/codybrom/blankie"
-              class="text-fg-2 underline hover:text-white"
-            >
-              GitHub
-            </a>
-            , help translate or leave an App Store review.
-          </p>
         </div>
       </div>
+
     </div>
   </section>
 
@@ -902,6 +1025,26 @@ const typicalAppLimits = [
       Download
     </a>
   </nav>
+
+  <script>
+    // Hovering or focusing a parody app highlights the lines that apply to it.
+    const parodyApps = document.querySelectorAll<HTMLElement>(".parody-app");
+    const parodyLimits = document.querySelectorAll<HTMLElement>(".parody-limit");
+    const showParody = (id: string | null) => {
+      parodyApps.forEach((el) => el.classList.toggle("is-dim", !!id && el.dataset.app !== id));
+      parodyLimits.forEach((el) => {
+        const hit = !!id && (el.dataset.apps ?? "").split(" ").includes(id);
+        el.classList.toggle("is-hit", hit);
+        el.classList.toggle("is-dim", !!id && !hit);
+      });
+    };
+    parodyApps.forEach((el) => {
+      el.addEventListener("pointerenter", () => showParody(el.dataset.app ?? null));
+      el.addEventListener("focus", () => showParody(el.dataset.app ?? null));
+      el.addEventListener("pointerleave", () => showParody(null));
+      el.addEventListener("blur", () => showParody(null));
+    });
+  </script>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {

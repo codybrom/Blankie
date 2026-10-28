@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1442"/><stop offset="1" stop-color="#22449a"/></linearGradient>
+<radialGradient id="moon" cx="0.38" cy="0.34" r="0.75"><stop offset="0" stop-color="#fdfdf8"/><stop offset="1" stop-color="#c9ced6"/></radialGradient>
+<linearGradient id="far" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e3b25"/><stop offset="1" stop-color="#0f2218"/></linearGradient>
+<linearGradient id="near" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c6a35a"/><stop offset="1" stop-color="#7a5626"/></linearGradient>
+<linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a5418"/><stop offset="1" stop-color="#3f2a0a"/></linearGradient>
+<linearGradient id="cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0533e"/><stop offset="1" stop-color="#b52a1e"/></linearGradient>
+<filter id="soft" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="1.1"/></filter>
+<clipPath id="hill"><path d="M0 47c15-8.5 36-10 64-4V64H0z"/></clipPath>
+</defs>
+<rect width="64" height="64" fill="url(#sky)"/>
+<g fill="#fff"><circle cx="8" cy="9" r=".7" opacity=".9"/><circle cx="16" cy="5" r=".5" opacity=".7"/><circle cx="51" cy="7" r=".7" opacity=".9"/><circle cx="57" cy="15" r=".5" opacity=".7"/><circle cx="44" cy="12" r=".4" opacity=".6"/><circle cx="6" cy="22" r=".4" opacity=".6"/><circle cx="58" cy="27" r=".6" opacity=".8"/></g>
+<circle cx="29" cy="30" r="16" fill="url(#moon)"/>
+<g fill="none" stroke-linecap="round"><circle cx="24.4" cy="28" r="1.4" fill="#4a5060" stroke="none"/><circle cx="34" cy="28" r="1.4" fill="#4a5060" stroke="none"/><path d="M22.4 31q2 1 4 0M32 31q2 1 4 0" stroke="#a9a1c2" stroke-width="1.2"/><path d="M26.6 37.2q2.6-1.4 5.2 0" stroke="#6a7383" stroke-width="1.5"/></g>
+<path d="M0 47c15-8.5 36-10 64-4V64H0z" fill="url(#near)"/>
+<g transform="translate(47 46.5) scale(1.6)">
+<ellipse cx="0" cy=".6" rx="5" ry="1.1" fill="#000" opacity=".2"/>
+<path d="M0 .6C-.2-3-.4-5.8.6-8.2" fill="none" stroke="#4a3410" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M.6-8.2c2.6-.6 5 .8 5.8 4-2.6.4-5-1.2-5.8-4z" fill="url(#leaf)"/>
+<path d="M.4-6.4c-2.4-.2-4.6 1.4-5 4.4 2.4-.2 4.4-1.8 5-4.4z" fill="url(#leaf)"/>
+<path d="M.6-8.2c.6 2.6.2 5.4-1.4 7.4-.9-2.4-.4-5.4 1.4-7.4z" fill="#5a3c10"/>
+</g>
+</svg>

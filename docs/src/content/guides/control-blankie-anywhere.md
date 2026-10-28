@@ -42,7 +42,7 @@ Pinned Sound and Now Playing use the artwork and accent of the preset or sound t
 
 On iOS 27, the portrait **XL Favorites** widget shows up to 12 favorites with names. **XL Quick Mix** gives each sound its own row with **−** and **+** buttons so you can adjust its volume in 5% steps. Tap a sound tile to start Quick Mix; adjusting volume while paused leaves playback paused and doesn't change your saved presets.
 
-![The large Quick Mix widget on the iPhone Home Screen, with Rain and Fan turned on and minus and plus buttons beside every sound.](../../assets/guides/control-blankie-anywhere/quick-mix-widget.png)
+![The XL Quick Mix widget on the iPhone Home Screen, with Rain and Fan turned on and minus and plus buttons beside every sound.](../../assets/guides/control-blankie-anywhere/quick-mix-widget.png)
 
 ## Siri on iPhone and iPad
 

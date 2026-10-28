@@ -57,12 +57,11 @@
 .glass {
   @apply border-hair bg-glass border shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.05)];
   transition:
-    transform 0.25s var(--ease),
     border-color 0.25s,
     background 0.25s;
 }
 .glass:hover {
-  @apply -translate-y-0.75 border-white/16 bg-white/6;
+  @apply border-white/16 bg-white/6;
 }
 @media (prefers-reduced-motion: reduce) {
   .glass {

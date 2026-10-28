@@ -9,6 +9,7 @@ import play from "lucide-static/icons/play.svg?raw";
 import plus from "lucide-static/icons/plus.svg?raw";
 import settings from "lucide-static/icons/settings.svg?raw";
 import share from "lucide-static/icons/share.svg?raw";
+import slidersHorizontal from "lucide-static/icons/sliders-horizontal.svg?raw";
 import rewind from "lucide-static/icons/rewind.svg?raw";
 import fastForward from "lucide-static/icons/fast-forward.svg?raw";
 import star from "lucide-static/icons/star.svg?raw";
@@ -71,6 +72,7 @@ const symbolSvgs: Record<string, string> = Object.fromEntries(
     "star-fill": filled(star),
     timer,
     settings,
+    sliders: slidersHorizontal,
     more: ellipsis,
     play: filled(play),
     pause: filled(pause),
