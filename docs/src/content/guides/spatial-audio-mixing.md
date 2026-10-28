@@ -27,7 +27,7 @@ Two controls help you adjust the layout:
 - **Arrange:** if your pins are stacked on top of each other, tap **Arrange** to spread every active sound evenly around the circle.
 - **Off the Map:** tap any pin on the map to take it out of 3D space and move it to the **Off the Map** row below. A sound in **Off the Map** plays normally in stereo while the rest of your mix stays placed around you. Tap it again to put it back on the map. Taking the last pin off the map turns Spatial Mix off.
 
-![Spatial Mix on iPhone set to Fixed, with Rain, Fireplace and Wind placed around the listener and Porch Storm off the map.](../../assets/guides/spatial-audio-mixing/spatial-mix-iphone.png)
+![Spatial Mix on iPhone set to Fixed, with Rain, Fireplace and Wind placed around the listener and Porch Storm off the map.](../../assets/guides/spatial-audio-mixing/iphone-spatial-mix.png)
 
 ## Fixed vs. Head Tracked
 

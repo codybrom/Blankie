@@ -1,0 +1,64 @@
+---
+// Full-size image viewer for screenshots. Any <a data-zoom href="full.png">
+// on the page opens its target here instead of navigating. The Download button
+// saves data-download (the original file, defaulting to href) as data-filename.
+// Pinch-zoom works on phones, page scrolling is locked while open, and a tap
+// outside the image, Escape or the close button dismisses it.
+import { Download, X } from "@lucide/astro";
+---
+
+<dialog
+  id="zoom"
+  class="m-0 h-dvh max-h-none w-screen max-w-none items-center justify-center border-0 bg-black/92 p-4 backdrop:bg-black/80 open:flex sm:p-8"
+  aria-label="Full-size screenshot"
+>
+  <div class="fixed top-4 right-4 z-10 flex gap-2">
+    <a
+      id="zoom-download"
+      download
+      class="inline-flex h-10 items-center gap-2 rounded-full bg-white/12 px-4 text-sm font-semibold text-white no-underline backdrop-blur-sm transition-colors hover:bg-white/22"
+    >
+      <Download size={16} stroke-width={2} /> Download
+    </a>
+    <button
+      type="button"
+      data-zoom-close
+      class="grid size-10 cursor-pointer place-items-center rounded-full bg-white/12 text-white backdrop-blur-sm transition-colors hover:bg-white/22"
+      aria-label="Close"
+    >
+      <X size={20} stroke-width={2} />
+    </button>
+  </div>
+  <img
+    id="zoom-img"
+    alt=""
+    class="block max-h-full max-w-full touch-pinch-zoom rounded-lg object-contain"
+  />
+</dialog>
+
+<script>
+  const zoom = document.querySelector<HTMLDialogElement>("#zoom");
+  const zoomImg = document.querySelector<HTMLImageElement>("#zoom-img");
+  const zoomDownload = document.querySelector<HTMLAnchorElement>("#zoom-download");
+  if (zoom && zoomImg && zoomDownload) {
+    document.querySelectorAll<HTMLAnchorElement>("a[data-zoom]").forEach((link) =>
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        zoomImg.src = link.href;
+        zoomImg.alt = link.querySelector("img")?.alt ?? "";
+        zoomDownload.href = link.dataset.download ?? link.href;
+        zoomDownload.download = link.dataset.filename ?? "";
+        document.documentElement.style.overflow = "hidden";
+        zoom.showModal();
+      }),
+    );
+    // Any tap closes it except on the image itself, so pinch-zooming stays safe.
+    zoom.addEventListener("click", (event) => {
+      if (event.target === zoom || (event.target as Element).closest("[data-zoom-close]")) zoom.close();
+    });
+    zoom.addEventListener("close", () => {
+      zoomImg.removeAttribute("src");
+      document.documentElement.style.overflow = "";
+    });
+  }
+</script>

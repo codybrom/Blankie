@@ -399,30 +399,28 @@ try {
   const publicDir = path.join(__dirname, "public");
   const pressFiles = [
     "icon.png",
-    "promo.png",
-    "blankie-devices.png",
+    "press/blankie-2-1-widgets-duo.jpg",
+    "promo.jpg",
+    "hero-devices.png",
     "mac-mockup.png",
     "ipad-mockup.png",
     "iphone-mockup-1.png",
     "iphone-mockup-2.png",
-    "mac-store-1.png",
-    "mac-store-2.png",
-    "mac-store-3.png",
-    "mac-store-4.png",
-    "iphone-store-1.png",
-    "iphone-store-2.png",
-    "iphone-store-3.png",
-    "iphone-store-4.png",
-    "iphone-store-5.png",
-    "ipad-store-1.png",
-    "ipad-store-2.png",
-    "ipad-store-3.png",
-    "ipad-store-4.png",
+    "carplay-dash.png",
     "guides/blankie-iphone-duo/closed.png",
     "guides/blankie-iphone-duo/open-flat.png",
     "guides/blankie-iphone-duo/book.png",
+    "guides/blankie-iphone-duo/tent.png",
     "guides/blankie-iphone-duo/seated.png",
   ];
+  // The App Store screenshots, by device in page order.
+  for (const device of ["iphone", "ipad", "duo", "mac"]) {
+    const shots = fs
+      .readdirSync(assetsDir)
+      .filter((f) => f.startsWith(`${device}-store-`) && f.endsWith(".jpg"))
+      .sort((a, b) => parseInt(a.match(/\d+/)) - parseInt(b.match(/\d+/)));
+    pressFiles.push(...shots);
+  }
   const present = pressFiles.filter((f) =>
     fs.existsSync(path.join(assetsDir, f)),
   );
@@ -434,7 +432,9 @@ try {
     // becomes blankie-iphone-duo-book.png) so same-named guide shots can't collide.
     const stage = fs.mkdtempSync(path.join(os.tmpdir(), "blankie-press-"));
     try {
-      const names = present.map((f) => f.replace(/^guides\//, "").replaceAll("/", "-"));
+      const names = present.map((f) =>
+        f.replace(/^guides\//, "").replaceAll("/", "-"),
+      );
       present.forEach((f, i) =>
         fs.copyFileSync(path.join(assetsDir, f), path.join(stage, names[i])),
       );

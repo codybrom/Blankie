@@ -13,6 +13,7 @@ export function getLanguageName(localeCode: string): string {
 
     const regionVariants: Record<string, string> = {
       "en-GB": "English (United Kingdom)",
+      "en-CA": "English (Canada)",
       "pt-PT": "Portuguese (Portugal)",
       "zh-Hans": "Chinese, Simplified",
       "zh-Hant": "Chinese, Traditional",
@@ -33,6 +34,7 @@ export function getNativeLanguageName(localeCode: string): string {
     const nativeVariants: Record<string, string> = {
       en: "English",
       "en-GB": "English",
+      "en-CA": "English",
       "pt-PT": "Português",
       "zh-Hans": "简体中文",
       "zh-Hant": "繁體中文",

@@ -24,7 +24,7 @@ Everything it takes to rebuild your preset, the way you mixed it:
 
 You can share any custom preset you build.
 
-![The Edit Preset sheet on Mac for Downtown: name, creator, Favorite, the background artwork, its City, Coffee Shop and Lo-Fi Beats sounds, and Customize Theme, with the share button at the bottom.](../../assets/guides/shared/edit-preset-sheet-mac.png)
+![The Edit Preset sheet on Mac for Downtown: name, creator, Favorite, the background artwork, its City, Coffee Shop and Lo-Fi Beats sounds, and Customize Theme, with the share button at the bottom.](../../assets/guides/shared/mac-edit-preset-sheet.png)
 
 ## Import a preset someone sent you
 
@@ -33,7 +33,7 @@ You can share any custom preset you build.
 
 Blankie adds the preset to your Library and switches right to it. Any custom sounds bundled inside install on their own. If you already have a preset with the same name, the new one gets a numbered name so nothing gets overwritten.
 
-![The Library on iPhone with an imported preset, Sleep Mix, playing at the end of Presets.](../../assets/guides/share-presets/imported-preset-iphone.png)
+![The Library on iPhone with an imported preset, Sleep Mix, playing at the end of Presets.](../../assets/guides/share-presets/iphone-imported-preset.png)
 
 ## Related guides
 

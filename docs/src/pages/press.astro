@@ -2,39 +2,28 @@
 import type { ImageMetadata } from "astro";
 import { Image } from "astro:assets";
 import Layout from "../layouts/Layout.astro";
-import { Mail, Download, Check, ArrowUpRight, FileText } from "@lucide/astro";
+import { Mail, Download, Check, ArrowRight, ArrowUpRight, FileText } from "@lucide/astro";
 import Testimonial from "../components/Testimonial.astro";
 import SectionHeader from "@/components/SectionHeader.astro";
 import Glow from "@/components/Glow.astro";
 import Button from "@/components/Button.astro";
+import Lightbox from "@/components/Lightbox.astro";
 import DefRow from "@/components/DefRow.astro";
 import heroIcon from "../assets/blankie-icon-v2.png";
 import icon from "../assets/icon.png";
 import promo from "../assets/promo.jpg";
 // In-app product shots used across the site.
-import devicesShot from "../assets/blankie-devices.png";
+import devicesShot from "../assets/hero-devices.png";
 import macShot from "../assets/mac-mockup.png";
 import ipadMockup from "../assets/ipad-mockup.png";
 import iphoneApp1 from "../assets/iphone-mockup-1.png";
 import iphoneApp2 from "../assets/iphone-mockup-2.png";
-// Live App Store store images (pulled via the asc CLI).
+import carplayDash from "../assets/carplay-dash.png";
 import duoClosed from "../assets/guides/blankie-iphone-duo/closed.png";
 import duoOpen from "../assets/guides/blankie-iphone-duo/open-flat.png";
 import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
+import duoTent from "../assets/guides/blankie-iphone-duo/tent.png";
 import duoSeated from "../assets/guides/blankie-iphone-duo/seated.png";
-import mac1 from "../assets/mac-store-1.png";
-import mac2 from "../assets/mac-store-2.png";
-import mac3 from "../assets/mac-store-3.png";
-import mac4 from "../assets/mac-store-4.png";
-import iphone1 from "../assets/iphone-store-1.png";
-import iphone2 from "../assets/iphone-store-2.png";
-import iphone3 from "../assets/iphone-store-3.png";
-import iphone4 from "../assets/iphone-store-4.png";
-import iphone5 from "../assets/iphone-store-5.png";
-import ipad1 from "../assets/ipad-store-1.png";
-import ipad2 from "../assets/ipad-store-2.png";
-import ipad3 from "../assets/ipad-store-3.png";
-import ipad4 from "../assets/ipad-store-4.png";
 
 const title = "Press Kit";
 const description =
@@ -118,12 +107,37 @@ const highlights = [
   "Open source and actively maintained with contributors worldwide.",
 ];
 
+const releases: { title: string; when: string; url: string }[] = [
+  {
+    title: "Blankie 2.1 adds Home Screen widgets, Siri, Shortcuts and iPhone Duo support",
+    when: "Oct. 28, 2026",
+    url: "/press/blankie-2-1/",
+  },
+  {
+    title: "Blankie 2.0 comes to iPhone and iPad",
+    when: "June 23, 2026",
+    url: "/press/blankie-2-0/",
+  },
+];
+
 const coverage: { out: string; note: string; when: string; url?: string }[] = [
+  {
+    out: "Stephen Robles",
+    note: "Listed in the “iPhone Duo Apps” directory",
+    when: "October 2026",
+    url: "https://beardfm.app/duo-apps/",
+  },
   {
     out: "9to5Mac",
     note: "Included in “Best CarPlay apps for iPhone”",
     when: "October 2026",
     url: "https://9to5mac.com/best-carplay-apps/",
+  },
+  {
+    out: "Dense Discovery",
+    note: "Issue 402: “…Blankie stands out as a completely free, open-source app…”",
+    when: "October 2026",
+    url: "https://www.densediscovery.com/issues/402",
   },
   {
     out: "ZDNET",
@@ -147,6 +161,12 @@ const coverage: { out: string; note: string; when: string; url?: string }[] = [
     note: "#1 of “21 Freeware-Perlen für den Mac”",
     when: "Issue 1/2026",
     url: "https://www.heise.de/ratgeber/Voellig-kostenlos-21-Freeware-Perlen-fuer-den-Mac-11215455.html",
+  },
+  {
+    out: "Craig Neidel (YouTube)",
+    note: "Featured in “4 More macOS Apps To Use Every Day”",
+    when: "February 2026",
+    url: "https://www.youtube.com/watch?v=J4U5Z5EBqFM&t=881s",
   },
   {
     out: "AppAddict",
@@ -210,58 +230,110 @@ type Asset = {
   pad?: boolean;
   tall?: boolean;
 };
-const assetGroups: { title: string; items: Asset[] }[] = [
+// The 2.1 App Store screenshots, as {device}-store-{n}.jpg (full-quality JPEG;
+// the lossless PNGs are in the press-screenshots release zip).
+const storeShots = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/*-store-*.jpg",
+  { eager: true },
+);
+const storeItems = (device: string, tall: boolean): Asset[] =>
+  Object.entries(storeShots)
+    .map(([path, mod]) => ({ path, n: Number(path.match(/-store-(\d+)\.jpg$/)?.[1]), img: mod.default }))
+    .filter(({ path }) => path.includes(`/${device}-store-`))
+    .sort((a, b) => a.n - b.n)
+    .map(({ path, n, img }) => ({
+      img,
+      file: path.split("/").pop() ?? "",
+      label: `App Store ${n}`,
+      tall,
+    }));
+
+// Screenshots from the guides, grouped by the device prefix in their file name
+// (iphone-name.png). Files without one, like cover art and the Duo poses shown
+// above, stay out of these groups.
+const guideShots = import.meta.glob<{ default: ImageMetadata }>(
+  "../assets/guides/**/*.png",
+  { eager: true },
+);
+const guideItems = (device: string): Asset[] =>
+  Object.entries(guideShots)
+    .map(([path, mod]) => [path.split("/").pop() ?? "", path, mod] as const)
+    .filter(([fileName]) => fileName.startsWith(`${device}-`))
+    .map(([fileName, path, mod]) => {
+      const file = path.replace("../assets/", "");
+      const name = fileName
+        .slice(device.length + 1)
+        .replace(/\.png$/, "")
+        .replaceAll("-", " ");
+      return {
+        img: mod.default,
+        file,
+        label: name.charAt(0).toUpperCase() + name.slice(1),
+        tall: device === "iphone",
+      };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label));
+
+const assetGroups: { id: string; title: string; items: Asset[] }[] = [
   {
+    id: "brand",
     title: "Brand",
     items: [
       { img: icon, file: "icon.png", label: "App icon (1024px)", pad: true },
       { img: promo, file: "promo.jpg", label: "Promotional banner" },
       {
         img: devicesShot,
-        file: "blankie-devices.png",
+        file: "hero-devices.png",
         label: "All devices",
       },
     ],
   },
   {
-    title: "Mac",
-    items: [
-      { img: macShot, file: "mac-mockup.png", label: "App window" },
-      { img: mac1, file: "mac-store-1.png", label: "App Store 1" },
-      { img: mac2, file: "mac-store-2.png", label: "App Store 2" },
-      { img: mac3, file: "mac-store-3.png", label: "App Store 3" },
-      { img: mac4, file: "mac-store-4.png", label: "App Store 4" },
-    ],
-  },
-  {
-    title: "iPhone",
-    items: [
-      { img: iphoneApp1, file: "iphone-mockup-1.png", label: "Sounds", tall: true },
-      { img: iphoneApp2, file: "iphone-mockup-2.png", label: "Presets", tall: true },
-      { img: iphone1, file: "iphone-store-1.png", label: "App Store 1", tall: true },
-      { img: iphone2, file: "iphone-store-2.png", label: "App Store 2", tall: true },
-      { img: iphone3, file: "iphone-store-3.png", label: "App Store 3", tall: true },
-      { img: iphone4, file: "iphone-store-4.png", label: "App Store 4", tall: true },
-      { img: iphone5, file: "iphone-store-5.png", label: "App Store 5", tall: true },
-    ],
-  },
-  {
-    title: "iPad",
-    items: [
-      { img: ipadMockup, file: "ipad-mockup.png", label: "App window" },
-      { img: ipad1, file: "ipad-store-1.png", label: "App Store 1", tall: true },
-      { img: ipad2, file: "ipad-store-2.png", label: "App Store 2", tall: true },
-      { img: ipad3, file: "ipad-store-3.png", label: "App Store 3", tall: true },
-      { img: ipad4, file: "ipad-store-4.png", label: "App Store 4", tall: true },
-    ],
-  },
-  {
+    id: "iphone-duo",
     title: "iPhone Duo",
     items: [
       { img: duoClosed, file: "guides/blankie-iphone-duo/closed.png", label: "Closed", tall: true },
       { img: duoOpen, file: "guides/blankie-iphone-duo/open-flat.png", label: "Open" },
       { img: duoBook, file: "guides/blankie-iphone-duo/book.png", label: "Book" },
+      { img: duoTent, file: "guides/blankie-iphone-duo/tent.png", label: "Tent" },
       { img: duoSeated, file: "guides/blankie-iphone-duo/seated.png", label: "Seated", tall: true },
+      ...storeItems("duo", false),
+    ],
+  },
+  {
+    id: "iphone",
+    title: "iPhone",
+    items: [
+      { img: iphoneApp1, file: "iphone-mockup-1.png", label: "Now Playing", tall: true },
+      { img: iphoneApp2, file: "iphone-mockup-2.png", label: "Sound Mixer", tall: true },
+      ...storeItems("iphone", true),
+      ...guideItems("iphone"),
+    ],
+  },
+  {
+    id: "ipad",
+    title: "iPad",
+    items: [
+      { img: ipadMockup, file: "ipad-mockup.png", label: "App window" },
+      ...storeItems("ipad", true),
+      ...guideItems("ipad"),
+    ],
+  },
+  {
+    id: "mac",
+    title: "Mac",
+    items: [
+      { img: macShot, file: "mac-mockup.png", label: "App window" },
+      ...storeItems("mac", false),
+      ...guideItems("mac"),
+    ],
+  },
+  {
+    id: "carplay",
+    title: "CarPlay",
+    items: [
+      { img: carplayDash, file: "carplay-dash.png", label: "Dashboard" },
+      ...guideItems("carplay"),
     ],
   },
 ];
@@ -352,6 +424,34 @@ const assetGroups: { title: string; items: Asset[] }[] = [
           Blankie is open source, translated into 12 languages, accessible with
           VoiceOver and free forever.
         </p>
+      </div>
+    </section>
+
+    <!-- press releases -->
+    <section class="pt-14" id="releases">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Press Releases" class="mb-6" />
+        <div class="grid">
+          {
+            releases.map(({ title, when, url }) => (
+              <div class="grid grid-cols-1 items-baseline gap-1 border-t border-hair-soft py-4 first:border-t-0 sm:grid-cols-[1fr_auto] sm:gap-6">
+                <a
+                  class="group inline-flex items-center gap-1.5 font-semibold tracking-tight text-fg-1 no-underline transition-colors hover:text-accent-ink"
+                  href={url}
+                >
+                  {title}
+                  <ArrowRight
+                    class="shrink-0 text-fg-3 transition-colors group-hover:text-accent-ink"
+                    size={13}
+                  />
+                </a>
+                <span class="text-[11px] tracking-wide whitespace-nowrap text-fg-3 sm:text-right">
+                  {when}
+                </span>
+              </div>
+            ))
+          }
+        </div>
       </div>
     </section>
 
@@ -476,6 +576,19 @@ const assetGroups: { title: string; items: Asset[] }[] = [
             </Button>
           </div>
         </div>
+        <nav class="mb-8 flex flex-wrap gap-2" aria-label="Asset groups">
+          {
+            assetGroups.map((group) => (
+              <a
+                href={`#${group.id}`}
+                class="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm font-medium text-fg-2 no-underline transition-colors hover:border-white/20 hover:text-white"
+              >
+                {group.title}
+                <span class="ml-1.5 text-fg-3">{group.items.length}</span>
+              </a>
+            ))
+          }
+        </nav>
         {
           assetGroups.map((group) => {
             // Mixed-orientation groups (iPad: landscape window shot plus portrait
@@ -484,7 +597,7 @@ const assetGroups: { title: string; items: Asset[] }[] = [
               group.items.some((i) => i.tall) &&
               group.items.some((i) => !i.tall);
             return (
-              <div class="[&+&]:mt-9">
+              <div class="[&+&]:mt-9" id={group.id}>
                 <h3 class="mb-3.5 text-xs font-semibold tracking-wide text-fg-3 uppercase">
                   {group.title}
                 </h3>
@@ -508,15 +621,17 @@ const assetGroups: { title: string; items: Asset[] }[] = [
                           tall ? "aspect-3/4" : "aspect-16/10",
                         ]}
                       >
+                        <a href={img.src} data-zoom data-download={img.src} data-filename={`blankie-${file.split("/").pop()}`} class="contents">
                         <Image
                           src={img}
-                          alt={`${group.title} — ${label}`}
+                          alt={`${group.title}, ${label}`}
                           quality={82}
                           class:list={[
                             "max-h-full max-w-full object-contain",
                             pad ? "max-h-21 rounded-[22%]" : "rounded-md",
                           ]}
                         />
+                        </a>
                       </div>
                       <div class="flex items-center justify-between gap-2.5 border-t border-hair-soft px-4 py-3">
                         <span class="text-sm font-medium text-fg-1">{label}</span>
@@ -525,7 +640,7 @@ const assetGroups: { title: string; items: Asset[] }[] = [
                           href={`${raw}/${file}`}
                           download
                         >
-                          <Download size={12} /> PNG
+                          <Download size={12} /> {file.split(".").pop()?.toUpperCase()}
                         </a>
                       </div>
                     </div>
@@ -563,4 +678,5 @@ const assetGroups: { title: string; items: Asset[] }[] = [
       </div>
     </section>
   </div>
+  <Lightbox />
 </Layout>

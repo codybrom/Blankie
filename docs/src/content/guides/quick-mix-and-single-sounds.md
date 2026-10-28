@@ -28,9 +28,9 @@ If you want to turn on rain and a fan quickly without editing a saved preset or 
 
 You can also add the **Quick Mix widget** to your Home Screen ([Control Blankie from Anywhere](/guides/control-blankie-anywhere/)). On iOS 27, the portrait **XL Quick Mix** widget puts **−** and **+** buttons next to each sound so you can adjust individual volumes in 5% steps from your Home Screen.
 
-![Quick Mix on iPhone: eight sound tiles, with Rain and White Noise turned on.](../../assets/guides/quick-mix-and-single-sounds/quick-mix-iphone.png)
+![Quick Mix on iPhone: eight sound tiles, with Rain and White Noise turned on.](../../assets/guides/quick-mix-and-single-sounds/iphone-quick-mix.png)
 
-![Blankie's Quick Mix tab in CarPlay: eight sound buttons, with Waves, Stream and Birds turned on.](../../assets/guides/quick-mix-and-single-sounds/quick-mix-carplay.png)
+![Blankie's Quick Mix tab in CarPlay: eight sound buttons, with Waves, Stream and Birds turned on.](../../assets/guides/quick-mix-and-single-sounds/carplay-quick-mix.png)
 
 ## Single sounds
 
@@ -41,9 +41,9 @@ To play **White Noise**, **Rain** or **Warm Piano** with nothing else mixed in, 
 - Tap the **star** {{icon:star}} next to any sound in your Library to add it to **Favorites** alongside your starred presets. Starred sounds appear in the **Favorites** widget, on CarPlay's **Home** tab and when you press Previous or Next on your headphones or keyboard.
 - Asking Siri to ["Start a sound in Blankie"](/guides/control-blankie-anywhere/) also starts that sound on its own.
 
-![Now Playing on iPhone for Rain on its own, with its icon and the subtitle Soft, steady rainfall.](../../assets/guides/quick-mix-and-single-sounds/rain-now-playing-iphone.png)
+![Now Playing on iPhone for Rain on its own, with its icon and the subtitle Soft, steady rainfall.](../../assets/guides/quick-mix-and-single-sounds/iphone-rain-now-playing.png)
 
-![Now Playing in CarPlay for Forest on its own, with the subtitle Steady breeze through the pines.](../../assets/guides/quick-mix-and-single-sounds/forest-now-playing-carplay.png)
+![Now Playing in CarPlay for Forest on its own, with the subtitle Steady breeze through the pines.](../../assets/guides/quick-mix-and-single-sounds/carplay-forest-now-playing.png)
 
 ## Related guides
 

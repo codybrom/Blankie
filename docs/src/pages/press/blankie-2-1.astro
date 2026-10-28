@@ -1,14 +1,25 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import { ArrowLeft, Download } from "@lucide/astro";
+import { ArrowLeft, Download, Images } from "@lucide/astro";
+import { Image } from "astro:assets";
 import Glow from "@/components/Glow.astro";
+import Lightbox from "@/components/Lightbox.astro";
+import eventArt from "../../assets/press/blankie-2-1-widgets-duo.jpg";
+import widgetShot from "../../assets/guides/control-blankie-anywhere/iphone-quick-mix-widget.png";
+import duoSeated from "../../assets/guides/blankie-iphone-duo/seated.png";
+import duoBook from "../../assets/guides/blankie-iphone-duo/book.png";
 
 const title = "Blankie 2.1 adds widgets, Siri, Shortcuts and iPhone Duo support";
 const description =
   "Blankie 2.1 brings Home Screen widgets, Siri and Shortcuts actions, Spotlight search, a wider iPad layout and support for iPhone Duo to the free, open-source ambient sound mixer.";
 ---
 
-<Layout title={title} description={description}>
+<Layout
+  title={title}
+  description={description}
+  image={eventArt}
+  imageAlt="Paper-craft art of Blankie on iPhone Duo with its Home Screen widgets"
+>
   <article>
     <header class="relative pt-33">
       <Glow
@@ -42,6 +53,20 @@ const description =
     <div
       class="mx-auto max-w-3xl px-5 pt-9.5 pb-10 [&>p]:mb-5.5 [&>p]:text-[17.5px] [&>p]:leading-[1.74] [&>p]:text-[#d4d7ea] [&>p:first-of-type]:text-[19px] [&>p:first-of-type]:text-[#e6e8f2] [&_strong]:font-semibold [&_strong]:text-fg-1"
     >
+      <figure class="mb-8">
+        <a href={eventArt.src} data-zoom data-filename="blankie-2-1-widgets-duo.jpg" class="block cursor-zoom-in">
+          <Image
+            src={eventArt}
+            alt="Paper-craft illustration of Blankie on iPhone Duo, opened like a book with Now Playing and sound tiles, next to the XL Quick Mix, Favorites and Now Playing widgets"
+            widths={[720, 1200, 2400]}
+            sizes="(min-width: 48rem) 45rem, 100vw"
+            class="w-full rounded-2xl"
+            loading="eager"
+          />
+        </a>
+        <figcaption class="mt-1.5 text-right text-[11px] text-fg-3/60">Artwork by Cody Bromley</figcaption>
+      </figure>
+
       <p>
         <span class="font-semibold text-fg-3">TULSA, Okla., Oct. 28, 2026:</span> Blankie
         2.1 is out today for iPhone, iPad and Mac. The update adds Home Screen widgets on iPhone and iPad, Siri and Shortcuts actions, Spotlight search and support for Apple's new iPhone Duo to the open-source ambient sound mixer. Like every previous release, Blankie 2.1 is completely free.
@@ -51,6 +76,19 @@ const description =
         On iPhone and iPad, listeners can add four interactive <strong>Home Screen widgets</strong>: Now Playing, Favorites, Pinned Sound and Quick Mix. Favorites and Quick Mix support custom widget colors and, on iOS 27, portrait XL sizes, including per-sound volume buttons inside the XL Quick Mix widget.
       </p>
 
+      <figure class="mt-2 mb-7.5 text-center">
+        <a href={widgetShot.src} data-zoom data-filename="blankie-quick-mix-widget.png" class="inline-block cursor-zoom-in">
+          <Image
+            src={widgetShot}
+            alt="The XL Quick Mix widget on the iPhone Home Screen, with Rain and Fan turned on and minus and plus buttons beside every sound"
+            widths={[400, 800]}
+            sizes="18rem"
+            class="mx-auto max-h-112 w-auto rounded-xl"
+          />
+        </a>
+        <figcaption class="mt-2.5 text-sm text-fg-3">The XL Quick Mix widget on iOS 27</figcaption>
+      </figure>
+
       <p>
         Blankie 2.1 also works with <strong>Siri, Shortcuts and Spotlight</strong>. On iPhone and iPad, users can ask Siri to start a saved preset, play a single sound or set a sleep timer. In the Shortcuts app on Mac, iPhone and iPad, new actions for playback, presets, individual sounds, sleep timers and volume let people build their own automations, like starting a rain mix and a 45-minute timer automatically when Sleep Focus turns on. Presets and sounds also show up in Spotlight search.
       </p>
@@ -59,9 +97,22 @@ const description =
         On <strong>iPhone Duo</strong>, Blankie adapts to how you hold or set down the folding display. When iPhone Duo is held open like a book, Now Playing takes the left page and the Sound Mixer takes the right so the crease runs cleanly between them. When it's set down half-folded on a nightstand, the upright screen shows the preset's artwork and title while the flat half holds two rows of sound tiles and the playback bar. Users on iPad also get a wider two-column layout, and the Mac app now shows a preset's dimmed artwork behind the sound tiles.
       </p>
 
+      <!-- Each image grows by its aspect ratio, so both render at the same height. -->
+      <figure class="mt-2 mb-7.5">
+        <div class="flex items-end gap-4">
+          <a href={duoSeated.src} data-zoom data-filename="blankie-iphone-duo-seated.png" class="min-w-0 cursor-zoom-in" style="flex: 863 1 0">
+            <Image src={duoSeated} alt="Blankie on iPhone Duo in the seated pose, with artwork on the upright half and sound tiles and the playback bar on the flat half" widths={[480, 900]} sizes="20rem" class="w-full" />
+          </a>
+          <a href={duoBook.src} data-zoom data-filename="blankie-iphone-duo-book.png" class="min-w-0 cursor-zoom-in" style="flex: 1246 1 0">
+            <Image src={duoBook} alt="Blankie on iPhone Duo in the book pose, with Now Playing on the left page and the Sound Mixer on the right" widths={[600, 1200]} sizes="28rem" class="w-full" />
+          </a>
+        </div>
+        <figcaption class="mt-2.5 text-center text-sm text-fg-3">iPhone Duo in the seated and book poses</figcaption>
+      </figure>
+
       <blockquote class="my-7.5 border-l-[3px] border-warm py-0.5 pl-6">
-        <p class="mb-3.5 text-[20px] leading-[1.52] font-medium tracking-[-0.01em] text-white">
-          "Most of the time when I use Blankie, I just want my rain mix playing while I work or go to sleep without digging through menus. With 2.1, you can tap a widget on your Home Screen, tie a mix to your bedtime Shortcut or fold your phone on the nightstand and let it play."
+        <p class="mb-3.5 text-[20px] leading-[1.52] font-medium tracking-[-0.01em] text-pretty text-white">
+          "I've wanted widgets in Blankie since day one, and now that they're here, I can't stop using them. Lots of apps pester you to open them because that's how they make money. With Blankie's widgets, you might never open the app again, and that's okay! Blankie will always be free, with nothing to upsell and no reason&nbsp;to&nbsp;nag."
         </p>
         <cite class="text-sm font-semibold text-fg-3 not-italic">Cody Bromley, creator of Blankie</cite>
       </blockquote>
@@ -71,7 +122,7 @@ const description =
       </p>
 
       <p>
-        Blankie 2.1 is available now on the App Store for iPhone, iPad and Mac, as well as on GitHub and Homebrew for macOS. It requires iOS/iPadOS 26.4 or later, or macOS 26 or later.
+        Blankie is available now on the App Store for iPhone, iPad and Mac, as well as on Blankie.rest, GitHub and Homebrew for macOS. It requires iOS/iPadOS 26.4 or later, or macOS 26 or later.
       </p>
 
       <div class="mt-8.5 flex flex-wrap gap-3">
@@ -80,6 +131,12 @@ const description =
           href="https://apps.apple.com/app/blankie/id6740096581"
         >
           <Download size={17} stroke-width={1.75} /> Download on the App Store
+        </a>
+        <a
+          class="inline-flex items-center gap-2.5 rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-fg-1 no-underline transition hover:-translate-y-0.5 hover:border-white/30"
+          href="/press/#assets"
+        >
+          <Images size={17} stroke-width={1.75} /> Press images
         </a>
       </div>
 
@@ -127,4 +184,5 @@ const description =
       <div class="mt-11 mb-2 text-center font-bold tracking-[0.5em] text-fg-3">###</div>
     </div>
   </article>
+  <Lightbox />
 </Layout>

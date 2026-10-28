@@ -16,7 +16,7 @@ Blankie ships with a curated library of ambient sounds, but it's just as happy p
 3. On the import sheet, give your sound a name, pick an icon and have a listen.
 4. Tap **Save**. It lands right next to the built-in sounds, ready to mix.
 
-![The Import Sound sheet on iPhone for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound and Randomize Start turned on.](../../assets/guides/shared/import-sheet-iphone.png)
+![The Import Sound sheet on iPhone for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound and Randomize Start turned on.](../../assets/guides/shared/iphone-import-sheet.png)
 
 ## Supported formats and limits
 
@@ -33,7 +33,7 @@ Import a sound and Blankie measures its loudness, then quietly matches it to the
 
 Everything you've imported lives in **Settings → Manage Sounds**. Open it to rename a sound, swap its icon, change its options or clear out the ones you've moved on from.
 
-![Manage Sounds on iPhone, listing three imported sounds: Backyard Rain, Bedroom Fan and Office AC.](../../assets/guides/import-sounds-iphone-ipad/manage-sounds-iphone.png)
+![Manage Sounds on iPhone, listing three imported sounds: Backyard Rain, Bedroom Fan and Office AC.](../../assets/guides/import-sounds-iphone-ipad/iphone-manage-sounds.png)
 
 ## Related guides
 

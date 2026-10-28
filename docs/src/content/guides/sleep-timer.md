@@ -16,7 +16,7 @@ Falling asleep to rain or ocean waves is lovely. Having it run until morning isn
 
 Once it's counting down, the timer icon picks up your accent color and the window subtitle reads **"Pausing at [time]."** Changed your mind? Open the timer again and click **Cancel Timer**.
 
-![The sleep timer on Mac, set to 0 hours and 30 minutes with Start Timer, opened from the timer button in the bottom bar.](../../assets/guides/sleep-timer/timer-mac.png)
+![The sleep timer on Mac, set to 0 hours and 30 minutes with Start Timer, opened from the timer button in the bottom bar.](../../assets/guides/sleep-timer/mac-timer.png)
 
 ## On iPhone or iPad
 
@@ -29,7 +29,7 @@ Now Playing shows the countdown and **"Pausing at [time]"** while it runs. From 
 - **Add more time**: tap **+1 min** or **+5 min** to stretch a running timer instead of starting over
 - **Cancel Timer**: stop the countdown and keep the sound going
 
-![The Timer sheet on iPhone with a countdown running, pausing at 1:29 AM, with buttons to add 1 or 5 minutes and Cancel Timer.](../../assets/guides/sleep-timer/timer-iphone.png)
+![The Timer sheet on iPhone with a countdown running, pausing at 1:29 AM, with buttons to add 1 or 5 minutes and Cancel Timer.](../../assets/guides/sleep-timer/iphone-timer.png)
 
 ## In CarPlay
 
@@ -38,9 +38,9 @@ Now Playing shows the countdown and **"Pausing at [time]"** while it runs. From 
 
 While it runs, the same button shows when Blankie will pause. Tap **Cancel Timer** to stop it, or pick a new length under **Restart Timer** to start over.
 
-![The Timer list in CarPlay: Blankie will pause at the end of the timer, with 5, 10 and 15 minutes to choose from.](../../assets/guides/sleep-timer/timer-list-carplay.png)
+![The Timer list in CarPlay: Blankie will pause at the end of the timer, with 5, 10 and 15 minutes to choose from.](../../assets/guides/sleep-timer/carplay-timer-list.png)
 
-![A running timer in CarPlay: Cancel Timer, with Blankie pausing at 10:23 AM, and Restart Timer below it.](../../assets/guides/sleep-timer/timer-running-carplay.png)
+![A running timer in CarPlay: Cancel Timer, with Blankie pausing at 10:23 AM, and Restart Timer below it.](../../assets/guides/sleep-timer/carplay-timer-running.png)
 
 ## With Siri or Shortcuts
 

@@ -18,7 +18,7 @@ Blankie comes with a curated library of ambient sounds, but you're not stuck wit
 
 You can also choose **Blankie → Settings**, or press {{kbd:⌘ ,}}, then click **Manage Sounds** and hit **Import** from there.
 
-![Blankie's Import Sound sheet on Mac for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound, Randomize Start and Sound Check turned on.](../../assets/guides/shared/import-sheet-mac.png)
+![Blankie's Import Sound sheet on Mac for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound, Randomize Start and Sound Check turned on.](../../assets/guides/shared/mac-import-sheet.png)
 
 ## Supported formats and limits
 
@@ -27,7 +27,7 @@ You can also choose **Blankie → Settings**, or press {{kbd:⌘ ,}}, then click
 
 Import as many sounds as you like. They're yours, and they stay on your device.
 
-![Blankie on Mac with an imported sound, Camping Rain, playing among the built-in sounds like Rain, Waves, Stream and Fireplace.](../../assets/guides/shared/custom-sound-mac.png)
+![Blankie on Mac with an imported sound, Camping Rain, playing among the built-in sounds like Rain, Waves, Stream and Fireplace.](../../assets/guides/shared/mac-custom-sound.png)
 
 ## Automatic volume matching
 

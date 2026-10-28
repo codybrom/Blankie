@@ -13,10 +13,12 @@ import appStoreBadge from "../assets/app-store-badge.svg";
 // Real 2.0 navy product shots.
 import heroDevices from "../assets/hero-devices.png";
 import macWindow from "../assets/mac-window-v2.png";
-import ipadShot from "../assets/ipad-landscape.png";
+import ipadShot from "../assets/ipad-creekside.png";
 import ipadPreset from "../assets/ipad-preset.png";
 import iphoneTimer from "../assets/iphone-timer.png";
-import iphoneLock from "../assets/iphone-animatedlock.png";
+import iphoneLockVideo from "../assets/iphone-lockscreen.mp4?url";
+import iphoneLockPoster from "../assets/iphone-lockscreen-poster.jpg?url";
+import iphoneMask from "../assets/iphone-17-pro-mask.png?url";
 import macCustomize from "../assets/mac-customize.png";
 import macMenubar from "../assets/mac-menubar.png";
 import carplayShot from "../assets/carplay-mockup.jpg";
@@ -90,7 +92,7 @@ const features = [
     eyebrow: "Mix",
     heading: "Layer as many sounds as you like.",
     blurb:
-      "Blankie comes with 24 built-in sounds, from steady rain and bedroom fans to coffee shops and brown noise. Start with one, layer in another and balance each volume until the mix feels right.",
+      "Blankie comes with 24 built-in sounds, from steady rain and bedroom fans to coffee shops and brown noise. Start with one, layer in another and adjust each volume until you like how it sounds.",
     screen: macWindow,
     screenAlt: "Blankie on Mac with several ambient sounds playing at once",
     portrait: false,
@@ -99,12 +101,12 @@ const features = [
       {
         icon: AudioLines,
         title: "Individually adjustable volumes",
-        sub: "Every sound has its own slider so you can set each one as loud or quiet as you want.",
+        sub: "Every sound has its own slider, and each one can be as loud or quiet as you want.",
       },
       {
         icon: FolderPlus,
         title: "Bring your own sounds",
-        sub: "Import your own audio files and mix them alongside the built-in library.",
+        sub: "Import your own audio files and mix them in with the built-in sounds.",
       },
     ],
   },  
@@ -112,7 +114,7 @@ const features = [
     eyebrow: "Sleep timer",
     heading: "Fall asleep without playing all night.",
     blurb:
-      "Set a timer when you get into bed and Blankie pauses your mix on its own, or let it loop until morning.",
+      "Optionally set how long Blankie should play when you get into bed and it automatically stops when the timer ends.",
     screen: iphoneTimer,
     screenAlt: "Blankie's sleep timer on iPhone over warm artwork",
     portrait: true,
@@ -121,12 +123,12 @@ const features = [
       {
         icon: Timer,
         title: "Short fade at bedtime",
-        sub: "When the timer ends, your sounds fade out instead of cutting off.",
+        sub: "When the timer ends, sounds briefly fade instead of a hard stop.",
       },
       {
         icon: Moon,
         title: "All-night loops",
-        sub: "Want your sounds to run until your alarm? Every built-in loop is cut to play all night without an audible seam.",
+        sub: "Like to listen all night? Seamless loops are hand-tuned to play with no audible gaps.",
       },
     ],
   },
@@ -134,7 +136,7 @@ const features = [
     eyebrow: "Presets",
     heading: "Save your mixes for sleep and work.",
     blurb:
-      "Keep separate presets for falling asleep, winding down or tuning out a noisy room while you focus. Star your favorites to keep them one tap away.",
+      "Build separate presets for bedtime and drowning out a noisy office. Star favorites to quickly find them in widgets and CarPlay.",
     screen: ipadPreset,
     screenAlt: "Blankie on iPad with a saved preset and its mix",
     portrait: false,
@@ -149,7 +151,7 @@ const features = [
     eyebrow: "Customize",
     heading: "Make it unmistakably yours.",
     blurb:
-      "Give each preset its own background photo and accent color so your mixes look the part day or night.",
+      "Each preset can look the part with its own background photo and accent color.",
     screen: macCustomize,
     screenAlt: "Blankie's preset editor with a free-form accent color picker",
     portrait: false,
@@ -175,16 +177,20 @@ const devices = [
     icon: Smartphone,
     name: "iPhone",
     heading: "Ready on your nightstand",
-    sub: "Start your bedtime preset from a Home Screen widget or Siri, set a sleep timer and give your Lock Screen a looping video backdrop while you wind down.",
-    img: iphoneLock,
+    sub: "Start your bedtime preset from a Home Screen widget or Siri, set a sleep timer and give your Lock Screen a looping video backdrop.",
+    // Screen recording set in the iPhone 17 Pro bezel. The mask is the phone's
+    // silhouette, so the corners outside the bezel stay transparent.
+    video: { src: iphoneLockVideo, poster: iphoneLockPoster, mask: iphoneMask },
     alt: "Blankie playing on the iPhone Lock Screen over animated rain artwork",
-    portrait: true,
+    // Fills the space under the text and runs off the card's bottom edge, cut
+    // just below Now Playing.
+    fill: "h-[115%]",
   },
   {
     icon: Monitor,
     name: "Mac",
     heading: "Mix from your menu bar",
-    sub: "Start, stop and adjust your mixes right from the Mac menu bar while you read, work or wind down. You can also hide the Dock icon and run Blankie in the background.",
+    sub: "Start, stop and adjust your mixes from the Mac menu bar while you work. You can also hide the Dock icon and keep Blankie running in the background.",
     img: macMenubar,
     alt: "Blankie's menu bar mixer popover on Mac",
   },
@@ -192,15 +198,15 @@ const devices = [
     icon: Tablet,
     name: "iPad",
     heading: "Sidebar and mixer, side by side",
-    sub: "Your favorite presets and Quick Mix on the left, all your sound tiles and the sleep timer on the right.",
+    sub: "Your favorite presets and Quick Mix sit in a sidebar on the left, with sounds and controls on the right.",
     img: ipadShot,
-    alt: "Blankie on iPad",
+    alt: "Blankie on iPad with favorites, presets and sounds in the sidebar beside the Creekside mixer",
   },
   {
     icon: Car,
     name: "CarPlay",
     heading: "Calm drives and naptime rides",
-    sub: "Put rain, white noise or your favorite presets on the dashboard for late-night drives or a sleeping kid in the back seat.",
+    sub: "Mix rain, white noise or your favorite presets in the car when you need to focus or relax, or when it's nap time for a little one in the back seat.",
     img: carplayShot,
     alt: "Blankie on CarPlay in a car dashboard",
   },
@@ -243,7 +249,7 @@ const moreFeatures = [
 ];
 
 const homeReviewIds = [
-  "no-paywall-sleep",
+  "coworking",
   "mix-five-sounds",
   "nightly-mixes",
   "straightforward",
@@ -259,43 +265,43 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
 const blankieIncluded = [
   {
     title: "All 24 built-in sounds",
-    sub: "Including rain, waves, fireplace, noise colors and music loops",
+    sub: "Including classic sounds like rain and waves, four kinds of noise and music loops",
   },
   {
     title: "Unlimited adjustable layers",
-    sub: "Mix as many sounds together as you like, each with its own volume",
+    sub: "Mix as many simultaneous layers as you like with no limits",
   },
   {
     title: "Import your own audio",
-    sub: "Automatically loudness-matched so nothing ruins the mix",
+    sub: "Blankie automatically levels your imports so nothing gets lost in the mix",
   },
   {
     title: "CarPlay & iPhone Duo support",
-    sub: "Ready for your dashboard on the road and your nightstand at home",
+    sub: "In your car, or on your nightstand, Blankie is ready to go",
   },
   {
     title: "Widgets, Siri & Shortcuts",
-    sub: "Home Screen controls, Action Button and Focus automations",
+    sub: "Put Blankie on your Home Screen, or add Action Button and Focus automations",
   },
   {
     title: "Sleep timer & Lock Screen art",
-    sub: "Short fade-out and looping video backdrops",
+    sub: "A short fade when the timer ends, and looping video on the Lock Screen",
   },
   {
     title: "Shareable presets",
-    sub: "Send custom mixes to friends as .blankie files with no accounts needed",
+    sub: "Send mixes to friends as files they can open without an account",
   },
   {
     title: "100% offline & private",
-    sub: "Plays without an internet connection and collects no analytics",
+    sub: "Works in airplane mode and never collects your data",
   },
   {
     title: "Translated into 12 languages",
-    sub: "Built with volunteer translators around the world",
+    sub: "Thanks to volunteer translators from around the world",
   },
   {
-    title: "Every update, free",
-    sub: "No Pro tier, no upgrade screen, no unlocks to buy later",
+    title: "Every future update, free",
+    sub: "No paid tiers and nothing to unlock",
   },
 ];
 
@@ -453,7 +459,7 @@ const typicalAppLimits = [
       </div>
 
       <p class="mt-8 text-sm text-gray-400">
-        Covered by ZDNET, 9to5Mac and Mac &amp; i.
+        Covered by ZDNET, 9to5Mac and Dense Discovery.
         <a
           href="/press/"
           class="text-accent-ink ml-1 inline-flex items-center gap-1 font-semibold no-underline transition-colors hover:text-white"
@@ -475,7 +481,7 @@ const typicalAppLimits = [
       <div class="mb-12 max-w-2xl">
         <SectionHeader eyebrow="Every device" heading="A Blankie for every screen." />
       </div>
-      <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
+      <div class="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
         {
           devices.map((d) => (
             <div class="glass flex flex-col overflow-hidden rounded-2xl p-7">
@@ -489,33 +495,47 @@ const typicalAppLimits = [
               <p class="text-fg-2 mt-2 text-sm">{d.sub}</p>
               <div
                 class:list={[
-                  "mt-6 flex grow justify-center",
-                  d.portrait ? "-mb-7 items-end" : "items-end",
+                  "mt-6 grow",
+                  d.fill
+                    ? "relative -mb-7 min-h-112"
+                    : "flex items-end justify-center",
                 ]}
               >
-                <Image
-                  src={d.img}
-                  alt={d.alt}
-                  class:list={[
-                    d.portrait
-                      ? "mx-auto w-auto max-w-64 translate-y-10"
-                      : "w-full rounded-lg",
-                  ]}
-                  widths={d.portrait ? [256, 512] : [320, 540, 1080]}
-                  sizes={
-                    d.portrait
-                      ? "256px"
-                      : "(min-width: 1024px) 540px, (min-width: 640px) 90vw, 100vw"
-                  }
-                  quality={85}
-                />
+                {d.video ? (
+                  <video
+                    src={d.video.src}
+                    poster={d.video.poster}
+                    aria-label={d.alt}
+                    width="540"
+                    height="1104"
+                    autoplay
+                    muted
+                    loop
+                    playsinline
+                    data-device-video
+                    class:list={[
+                      "absolute top-0 left-1/2 block w-auto max-w-none -translate-x-1/2",
+                      d.fill,
+                    ]}
+                    style={`mask: url(${d.video.mask}) center / 100% 100% no-repeat; -webkit-mask: url(${d.video.mask}) center / 100% 100% no-repeat;`}
+                  />
+                ) : (
+                  <Image
+                    src={d.img}
+                    alt={d.alt}
+                    class="w-full rounded-lg"
+                    widths={[320, 540, 1080]}
+                    sizes="(min-width: 1024px) 540px, (min-width: 640px) 90vw, 100vw"
+                    quality={85}
+                  />
+                )}
               </div>
             </div>
           ))
         }
 
-        <!-- Full-width iPhone Duo showcase card -->
-        <div class="glass overflow-hidden rounded-2xl p-7 lg:col-span-2 lg:p-9">
+        <!-- Full-width iPhone Duo showcase card, shown first -->
+        <div class="glass order-first overflow-hidden rounded-2xl p-7 lg:col-span-2 lg:p-9">
           <div class="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_1.35fr]">
             <div>
               <div class="text-accent-ink flex flex-wrap items-center gap-2 text-sm font-semibold">
@@ -529,7 +549,7 @@ const typicalAppLimits = [
                 Works in every pose of iPhone Duo
               </h3>
               <p class="text-fg-2 mt-2.5 text-sm/relaxed">
-                Set it down half-folded on your nightstand and the upright screen shows your artwork while the flat half keeps your sound tiles and sleep timer within reach. Unfold it like a book to put Now Playing on the left page and your Sound Mixer on the right.
+                Set it down half-folded on your nightstand and the upright screen shows what's playing with your sound and controls on the flat half. Unfold it like a book and Now Playing splits along the spine onto the left page with sound mixing on the right.
               </p>
               <a
                 href="/guides/blankie-iphone-duo/"
@@ -699,7 +719,7 @@ const typicalAppLimits = [
                 </blockquote>
                 <figcaption class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/6 pt-3 text-xs text-fg-3">
                   <span class="font-medium text-fg-2">
-                    {review.author ? `${review.author} · App Store` : "App Store review"}
+                    App Store review
                   </span>
                   {review.translation && (
                     <span>Translated from {review.language}</span>
@@ -734,25 +754,11 @@ const typicalAppLimits = [
     </div>
   </section>
 
-  <!-- Pricing & Download: $0 forever comparison + download CTA -->
-  <section class="relative overflow-hidden" id="download">
+  <!-- Pricing: $0 forever comparison (linkable, but not in the section nav) -->
+  <section class="relative" id="compare">
     <div id="pricing" class="sr-only" aria-hidden="true"></div>
-    <div
-      class="pointer-events-none absolute inset-x-0 top-auto bottom-[-40%] z-0 h-150"
-      style="background:radial-gradient(ellipse at 50% 100%,rgba(68,82,246,0.22),transparent 60%)"
-      aria-hidden="true"
-    >
-    </div>
-    <div class="relative z-10 mx-auto max-w-6xl px-5 py-24">
+    <div class="relative z-10 mx-auto max-w-6xl px-5 pt-24 pb-12">
       <div class="mx-auto max-w-2xl text-center">
-        <Image
-          src={icon}
-          alt=""
-          width={96}
-          height={96}
-          class="mx-auto mb-6 rounded-[22%] shadow-2xl"
-          quality={90}
-        />
         <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
           Don't rent your relaxation.
         </h2>
@@ -762,9 +768,9 @@ const typicalAppLimits = [
         </p>
       </div>
 
-      <div class="mt-12 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.35fr_0.95fr]">
+      <div class="mt-12 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.25fr_1fr]">
         <!-- Blankie $0 Forever Card -->
-        <div class="glass flex flex-col justify-between rounded-3xl border-accent-ink/25 bg-[linear-gradient(180deg,rgba(76,141,255,0.10),rgba(255,255,255,0.03))] p-7 sm:p-9">
+        <div class="glass rounded-3xl border-accent-ink/25 bg-[linear-gradient(180deg,rgba(76,141,255,0.10),rgba(255,255,255,0.03))] p-7 sm:p-9">
           <div>
             <div class="flex items-end justify-between gap-4">
               <div>
@@ -790,65 +796,37 @@ const typicalAppLimits = [
               </div>
             </div>
             <p class="text-fg-2 mt-3 border-b border-white/10 pb-6 text-sm">
-              Costs nothing, hides nothing. Get everything, everywhere, every time.
+              No ads, no upsells and no sneaky business model.{" "}
+              <a
+                href="/guides/why-is-blankie-free/"
+                class="text-accent-ink underline underline-offset-2 transition-colors hover:text-white"
+              >
+                Why is Blankie free?
+              </a>
             </p>
 
-            <ul class="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+            <ul class="mt-8 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:gap-y-8">
               {
                 blankieIncluded.map((item) => (
                   <li class="flex items-start gap-3">
-                    <span class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-green-500/15 text-green-400">
+                    <span class="mt-0.5 grid size-5.5 shrink-0 place-items-center rounded-full bg-green-500/15 text-green-400">
                       <Check className="size-3.5" strokeWidth={2.5} />
                     </span>
                     <div>
-                      <div class="text-sm font-semibold text-gray-100">
+                      <div class="text-base font-semibold text-gray-100">
                         {item.title}
                       </div>
-                      <div class="text-fg-3 text-xs/snug">{item.sub}</div>
+                      <div class="text-fg-3 mt-0.5 text-sm/snug">{item.sub}</div>
                     </div>
                   </li>
                 ))
               }
             </ul>
           </div>
-
-          <div class="mt-8 flex flex-col items-center gap-5 border-t border-white/10 pt-6 sm:flex-row sm:items-end sm:justify-between">
-            <div class="flex flex-col items-center gap-2 sm:items-start">
-              <a href={appStore} aria-label="Download Blankie on the App Store" class="transition hover:-translate-y-px">
-                <Image
-                  src={appStoreBadge}
-                  alt="Download on the App Store"
-                  class="h-14 w-auto"
-                  loading="lazy"
-                />
-              </a>
-              <span class="text-xs text-fg-2">Recommended, with automatic updates</span>
-            </div>
-            <div class="flex flex-col items-center gap-2 sm:items-end">
-              <span class="text-xs text-fg-2">Other ways to install on Mac</span>
-              <div class="flex flex-wrap items-center justify-center gap-2">
-                <a
-                  href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
-                  class="inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 no-underline transition hover:border-white/30 hover:text-white"
-                >
-                  <Download className="size-4" strokeWidth={2} />
-                  Direct download
-                </a>
-                <button
-                  type="button"
-                  id="brew-open"
-                  class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 transition hover:border-white/30 hover:text-white"
-                >
-                  <Terminal className="size-4" strokeWidth={2} />
-                  Homebrew
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <!-- Typical Subscription Apps Card -->
-        <div class="flex flex-col justify-between rounded-3xl border border-white/8 bg-white/2 p-7 sm:p-9">
+        <!-- Typical Subscription Apps Card (first on phones, so the comparison leads) -->
+        <div class="max-lg:order-first flex flex-col justify-between rounded-3xl border border-white/8 bg-white/2 p-7 sm:p-9">
           <div>
             <div class="flex items-end justify-between gap-4">
               <h3 class="min-w-0 text-3xl font-semibold tracking-tight text-white">Other apps</h3>
@@ -927,6 +905,73 @@ const typicalAppLimits = [
         </div>
       </div>
 
+    </div>
+  </section>
+
+  <!-- Download: its own section so the nav's Download link lands past the comparison -->
+  <section class="relative overflow-hidden" id="download">
+    <div
+      class="pointer-events-none absolute inset-x-0 top-auto bottom-[-40%] z-0 h-150"
+      style="background:radial-gradient(ellipse at 50% 100%,rgba(68,82,246,0.22),transparent 60%)"
+      aria-hidden="true"
+    >
+    </div>
+    <div class="relative z-10 mx-auto max-w-2xl px-5 pt-12 pb-28 text-center">
+      <Image
+        src={icon}
+        alt=""
+        width={96}
+        height={96}
+        class="mx-auto mb-6 rounded-[22%] shadow-2xl"
+        quality={90}
+      />
+      <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
+        Download Blankie
+      </h2>
+      <p class="text-fg-2 mx-auto mt-4 max-w-xl text-lg text-balance">
+        Available now for iPhone, iPad and Mac.
+      </p>
+      <p class="text-fg-3 mt-2 text-sm">Requires iOS/iPadOS 26.4 or later, or macOS 26 or later.</p>
+      <div class="mt-9 flex flex-col items-center gap-2">
+        <a href={appStore} aria-label="Download Blankie on the App Store" class="transition hover:-translate-y-px">
+          <Image
+            src={appStoreBadge}
+            alt="Download on the App Store"
+            class="h-14 w-auto"
+            loading="lazy"
+          />
+        </a>
+        <span class="text-xs text-fg-2">Recommended (Automatically Updates)</span>
+      </div>
+      <div class="mt-8 flex flex-col items-center gap-2">
+        <span class="text-xs text-fg-2">Other ways to install on Mac</span>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <a
+            href="https://github.com/codybrom/blankie/releases/latest/download/Blankie.zip"
+            class="inline-flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 no-underline transition hover:border-white/30 hover:text-white"
+          >
+            <Download className="size-4" strokeWidth={2} />
+            Direct download
+          </a>
+          <button
+            type="button"
+            id="brew-open"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-sm font-medium text-gray-100 transition hover:border-white/30 hover:text-white"
+          >
+            <Terminal className="size-4" strokeWidth={2} />
+            Homebrew
+          </button>
+        </div>
+        <p class="text-fg-3 mt-3 text-xs">
+          Still on macOS 15 Sequoia?{" "}
+          <a
+            href="https://github.com/codybrom/blankie/releases/download/v1.0.13/Blankie.zip"
+            class="text-fg-2 underline underline-offset-2 transition-colors hover:text-white"
+          >
+            Get Blankie Classic</a
+          >
+        </p>
+      </div>
     </div>
   </section>
 
@@ -1029,6 +1074,16 @@ const typicalAppLimits = [
   </nav>
 
   <script>
+    // Device clips stay on their poster frame when the OS asks to reduce motion.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.querySelectorAll<HTMLVideoElement>("video[data-device-video]").forEach((v) => {
+        v.autoplay = false;
+        v.pause();
+      });
+    }
+  </script>
+
+  <script>
     // Hovering or focusing a parody app highlights the lines that apply to it.
     const parodyApps = document.querySelectorAll<HTMLElement>(".parody-app");
     const parodyLimits = document.querySelectorAll<HTMLElement>(".parody-limit");
@@ -1040,11 +1095,33 @@ const typicalAppLimits = [
         el.classList.toggle("is-dim", !!id && !hit);
       });
     };
+    // Mouse: hover highlights. Touch: a tap toggles the highlight, and it stays
+    // until another tap, so it doesn't flicker on and off as the finger lifts.
+    let tapped: string | null = null;
     parodyApps.forEach((el) => {
-      el.addEventListener("pointerenter", () => showParody(el.dataset.app ?? null));
-      el.addEventListener("focus", () => showParody(el.dataset.app ?? null));
-      el.addEventListener("pointerleave", () => showParody(null));
-      el.addEventListener("blur", () => showParody(null));
+      el.addEventListener("pointerenter", (e) => {
+        if (e.pointerType === "mouse") showParody(el.dataset.app ?? null);
+      });
+      el.addEventListener("pointerleave", (e) => {
+        if (e.pointerType === "mouse") showParody(null);
+      });
+      el.addEventListener("click", (e) => {
+        if ((e as PointerEvent).pointerType === "mouse") return;
+        tapped = tapped === el.dataset.app ? null : (el.dataset.app ?? null);
+        showParody(tapped);
+      });
+      el.addEventListener("focus", () => {
+        if (el.matches(":focus-visible")) showParody(el.dataset.app ?? null);
+      });
+      el.addEventListener("blur", () => {
+        if (!tapped) showParody(null);
+      });
+    });
+    document.addEventListener("click", (e) => {
+      if (tapped && !(e.target as Element).closest(".parody-app")) {
+        tapped = null;
+        showParody(null);
+      }
     });
   </script>
 

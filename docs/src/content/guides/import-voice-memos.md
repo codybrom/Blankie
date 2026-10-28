@@ -17,7 +17,7 @@ A thunderstorm you caught from the porch, the crackle of the campfire last summe
 4. Over in Blankie, tap {{icon:plus|Add}} **→ Import** and pick the recording you just saved.
 5. Give it a name and an icon, then tap **Save**.
 
-![The Import Sound sheet on iPhone for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound and Randomize Start turned on.](../../assets/guides/shared/import-sheet-iphone.png)
+![The Import Sound sheet on iPhone for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound and Randomize Start turned on.](../../assets/guides/shared/iphone-import-sheet.png)
 
 ## On Mac
 
@@ -33,7 +33,7 @@ A thunderstorm you caught from the porch, the crackle of the campfire last summe
 
 Once your trimmed recording is imported, read on about how you can use [Custom Sound Settings](/guides/custom-sound-settings/) to tweak it to your liking.
 
-![An imported recording, Porch Storm, playing alongside Rain and Fireplace in the Back Porch preset on iPhone.](../../assets/guides/import-voice-memos/porch-storm-iphone.png)
+![An imported recording, Porch Storm, playing alongside Rain and Fireplace in the Back Porch preset on iPhone.](../../assets/guides/import-voice-memos/iphone-porch-storm.png)
 
 ## Related guides
 

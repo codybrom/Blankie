@@ -20,6 +20,7 @@ describe("getLanguageName", () => {
     expect(getLanguageName("zh-Hant")).toBe("Chinese, Traditional");
     expect(getLanguageName("pt-PT")).toBe("Portuguese (Portugal)");
     expect(getLanguageName("en-GB")).toBe("English (United Kingdom)");
+    expect(getLanguageName("en-CA")).toBe("English (Canada)");
   });
 
   it("falls back to the raw code for unrecognized languages", () => {

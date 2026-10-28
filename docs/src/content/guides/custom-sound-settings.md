@@ -9,7 +9,7 @@ platforms: "All Platforms"
 
 When you import a sound, or edit one later in **Manage Sounds**, Blankie gives you a set of controls that decide how it behaves in a mix and where it shows up in the app. Here's what each one does.
 
-![The Edit Sound sheet on Mac for Bedroom Fan, with Loop Sound, Randomize Start and Sound Check turned on, and Add Credits under Credits.](../../assets/guides/custom-sound-settings/edit-sound-mac.png)
+![The Edit Sound sheet on Mac for Bedroom Fan, with Loop Sound, Randomize Start and Sound Check turned on, and Add Credits under Credits.](../../assets/guides/custom-sound-settings/mac-edit-sound.png)
 
 ## Name and icon suggestions
 
@@ -45,7 +45,7 @@ Recordings from different microphones and websites vary wildly in volume. **Soun
 
 Turn Sound Check off and a **Volume Adjustment** slider takes its place, letting you push the sound's base level from -50% up to +700% by hand.
 
-![The same Bedroom Fan sheet with Sound Check turned off, which shows the Volume Adjustment slider in its place.](../../assets/guides/custom-sound-settings/volume-adjustment-mac.png)
+![The same Bedroom Fan sheet with Sound Check turned off, which shows the Volume Adjustment slider in its place.](../../assets/guides/custom-sound-settings/mac-volume-adjustment.png)
 
 ## Add to Presets
 

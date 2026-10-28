@@ -31,7 +31,7 @@ Downloads need a free Freesound account. Files come in whatever format the uploa
 
 Crediting matters most for **CC BY** sounds, since those require attribution. It's also just the decent thing to do for any sound, especially once you [share the preset](/guides/share-presets/) with friends. Our [license guide](/guides/sound-licenses-explained/) has the details.
 
-![The Edit Sound sheet on Mac for Rain (Freesound), with its credits filled in: Original Work Rain, Author klankbeeld and License CC BY 4.0.](../../assets/guides/shared/sound-credits-mac.png)
+![The Edit Sound sheet on Mac for Rain (Freesound), with its credits filled in: Original Work Rain, Author klankbeeld and License CC BY 4.0.](../../assets/guides/shared/mac-sound-credits.png)
 
 ## Related guides
 

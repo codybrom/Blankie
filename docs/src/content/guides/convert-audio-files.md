@@ -9,7 +9,7 @@ platforms: "All Platforms"
 
 Blankie works with the most common audio formats on its own: M4A, MP3, WAV, FLAC, AIFF, OGG, CAF, AAC and AU. Two things still need a step first: a video you only want the sound from and a Windows Media (WMA) file. Here's how to handle each.
 
-![Blankie's Import Sound sheet on Mac for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound, Randomize Start and Sound Check turned on.](../../assets/guides/shared/import-sheet-mac.png)
+![Blankie's Import Sound sheet on Mac for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound, Randomize Start and Sound Check turned on.](../../assets/guides/shared/mac-import-sheet.png)
 
 ## Pull the audio out of a video
 

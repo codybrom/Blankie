@@ -15,7 +15,7 @@ Start by navigating to the **All Blankie Sounds** option in the Library (this is
 
 To stop playing a sound, tap it again. To temporarily stop all sounds, press the pause button. Pausing keeps your mix intact, so when you come back, every sound and volume stays right where you left it.
 
-![Blankie with the Rain tile turned on and playing.](../../assets/guides/get-started/first-sound.png)
+![Blankie with the Rain tile turned on and playing.](../../assets/guides/get-started/mac-first-sound.png)
 
 ## Build a mix
 

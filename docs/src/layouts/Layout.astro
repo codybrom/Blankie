@@ -1,5 +1,7 @@
 ---
 import { SEO } from "astro-seo";
+import type { ImageMetadata } from "astro";
+import { getImage } from "astro:assets";
 import Nav from "@/components/Nav.astro";
 import Footer from "@/components/Footer.astro";
 import "../styles/global.css";
@@ -13,8 +15,8 @@ import socialImage from "../assets/promo.jpg";
 interface Props {
   title: string;
   description?: string;
-  /** Site-absolute path (/images/...) for a page-specific social image. */
-  image?: string;
+  /** A page's hero art for its social card. Defaults to the site promo image. */
+  image?: ImageMetadata;
   imageAlt?: string;
 }
 
@@ -28,9 +30,20 @@ const siteUrl = "https://blankie.rest";
 const description =
   customDescription ||
   "Free, open-source ambient sound mixer for Mac, iPhone, iPad and CarPlay. Layer adjustable sounds like rain, waves and white noise for sleep and focus.";
-// og:image must be an absolute URL for both page-specific and default images.
-const socialSrc = `${siteUrl}${customImage || socialImage.src}`;
-const socialAlt = customImageAlt || "Blankie Social Preview";
+// Social cards are cropped to the standard 1200×630 JPEG. og:image must be an
+// absolute URL.
+const OG = { width: 1200, height: 630 };
+const social = await getImage({
+  src: customImage ?? socialImage,
+  ...OG,
+  fit: "cover",
+  format: "jpeg",
+  quality: 85,
+});
+const socialSrc = `${siteUrl}${social.src}`;
+const socialAlt =
+  customImageAlt ||
+  "Blankie, free ambient sounds for sleep and focus, on a MacBook and an iPhone Duo";
 const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
 ---
 
@@ -63,7 +76,7 @@ const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
         },
         image: {
           alt: socialAlt,
-          ...(customImage ? {} : { width: 1280, height: 800 }),
+          ...OG,
           type: "image/jpeg",
         },
         optional: {

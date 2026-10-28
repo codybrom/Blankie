@@ -17,7 +17,7 @@
     <a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/app-store-badge.svg" alt="Download on the App Store" width="202"></a>
   </p>
   <p align="center">
-    <img src="docs/src/assets/products.png" alt="Blankie on Mac, iPhone and iPad" style="max-width: 100%; height: auto;">
+    <img src="docs/src/assets/hero-devices.png" alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo" style="max-width: 100%; height: auto;">
   </p>
 </div>
 

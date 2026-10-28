@@ -33,11 +33,11 @@ Rocket launches, radio emissions from Jupiter, the ambient hum of the Internatio
 
 Blankie imports most audio formats, such as M4A, MP3, WAV, FLAC, AIFF, OGG and more. Almost anything these sites hand you works as-is. There's no size limit to worry about, but files over 150 MB are converted to AAC automatically to preserve memory.
 
-![Blankie's Import Sound sheet on Mac for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound, Randomize Start and Sound Check turned on.](../../assets/guides/shared/import-sheet-mac.png)
+![Blankie's Import Sound sheet on Mac for bedroom-fan.m4a, named Bedroom Fan with a fan icon, with Fade In and Out, Loop Sound, Randomize Start and Sound Check turned on.](../../assets/guides/shared/mac-import-sheet.png)
 
 Wherever you grab a sound, take note of its license. Some ask for credit, and Blankie has built-in [Credits fields](/guides/custom-sound-settings/) made for exactly that. Our [license guide](/guides/sound-licenses-explained/) breaks down what each one actually means.
 
-![The Edit Sound sheet on Mac for Rain (Freesound), with its credits filled in: Original Work Rain, Author klankbeeld and License CC BY 4.0.](../../assets/guides/shared/sound-credits-mac.png)
+![The Edit Sound sheet on Mac for Rain (Freesound), with its credits filled in: Original Work Rain, Author klankbeeld and License CC BY 4.0.](../../assets/guides/shared/mac-sound-credits.png)
 
 ## Related guides
 

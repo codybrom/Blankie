@@ -90,13 +90,16 @@ function getStatusVariant(stats: StringStats): LanguageRow["statusVariant"] {
   return "outline";
 }
 
+// Regional English locales read better by region than by their native name.
+const englishVariants: Record<string, { title: string; subtitle: string }> = {
+  "en-GB": { title: "English (United Kingdom)", subtitle: "English (UK)" },
+  "en-CA": { title: "English (Canada)", subtitle: "English (Canada)" },
+};
+
 const tableRows: LanguageRow[] = sortedLanguages.map(([langCode, stats]) => ({
   langCode,
-  title:
-    langCode === "en-GB"
-      ? "English (United Kingdom)"
-      : getNativeLanguageName(langCode),
-  subtitle: langCode === "en-GB" ? "English (UK)" : getLanguageName(langCode),
+  title: englishVariants[langCode]?.title ?? getNativeLanguageName(langCode),
+  subtitle: englishVariants[langCode]?.subtitle ?? getLanguageName(langCode),
   status: getStatusText(stats),
   statusVariant: getStatusVariant(stats),
   finalizedPct: stats.translationPercentage,

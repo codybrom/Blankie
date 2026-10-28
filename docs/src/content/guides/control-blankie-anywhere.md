@@ -42,7 +42,7 @@ Pinned Sound and Now Playing use the artwork and accent of the preset or sound t
 
 On iOS 27, the portrait **XL Favorites** widget shows up to 12 favorites with names. **XL Quick Mix** gives each sound its own row with **−** and **+** buttons so you can adjust its volume in 5% steps. Tap a sound tile to start Quick Mix; adjusting volume while paused leaves playback paused and doesn't change your saved presets.
 
-![The XL Quick Mix widget on the iPhone Home Screen, with Rain and Fan turned on and minus and plus buttons beside every sound.](../../assets/guides/control-blankie-anywhere/quick-mix-widget.png)
+![The XL Quick Mix widget on the iPhone Home Screen, with Rain and Fan turned on and minus and plus buttons beside every sound.](../../assets/guides/control-blankie-anywhere/iphone-quick-mix-widget.png)
 
 ## Siri on iPhone and iPad
 
@@ -64,7 +64,7 @@ In the **Shortcuts** app, add an action and search for **Blankie**. Actions incl
 
 On iPhone and iPad, **Set Volume** requires **[Mix with Other Audio](/guides/mix-with-other-audio/)** to be turned on in Blankie's Settings. Otherwise, use your device's volume buttons. **Set Sound Volume** adjusts an individual sound's slider inside your mix.
 
-![A Bedtime shortcut in the Shortcuts app with two Blankie actions: Play Rainy Night, then Stop Blankie in 45 minutes.](../../assets/guides/control-blankie-anywhere/bedtime-shortcut.png)
+![A Bedtime shortcut in the Shortcuts app with two Blankie actions: Play Rainy Night, then Stop Blankie in 45 minutes.](../../assets/guides/control-blankie-anywhere/iphone-bedtime-shortcut.png)
 
 ## Spotlight on Mac, iPhone and iPad
 

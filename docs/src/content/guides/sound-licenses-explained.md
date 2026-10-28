@@ -58,7 +58,7 @@ The license matters more once a sound leaves your device. [Share a preset](/guid
 
 Every sound you add to Blankie has optional **Credits** fields for the original work's name, author, URL to where you got it and what license it uses. Fill them in right after you import a sound (choose **Add Credits** in its settings) and you'll always know where it came from, and so will anyone you share a preset with.
 
-![The Edit Sound sheet on Mac for Rain (Freesound), with its credits filled in: Original Work Rain, Author klankbeeld and License CC BY 4.0.](../../assets/guides/shared/sound-credits-mac.png)
+![The Edit Sound sheet on Mac for Rain (Freesound), with its credits filled in: Original Work Rain, Author klankbeeld and License CC BY 4.0.](../../assets/guides/shared/mac-sound-credits.png)
 
 This is the same standard Blankie holds itself to. Every built-in sound is openly licensed, with full attribution in the app and on the [credits page](/credits/).
 

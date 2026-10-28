@@ -20,7 +20,7 @@ Once Blankie is on your iPhone, it will [show up in CarPlay on its own](https://
 - **Sounds**: the full list of sounds. Tap any sound to play it on its own.
 - **Quick Mix**: a soundboard for putting a mix together on the spot.
 
-![Blankie's Sounds tab in CarPlay, listing Warm Piano, Waves, White Noise and Wind, with Deep Noise playing on its own.](../../assets/guides/blankie-carplay/sounds-tab.png)
+![Blankie's Sounds tab in CarPlay, listing Warm Piano, Waves, White Noise and Wind, with Deep Noise playing on its own.](../../assets/guides/blankie-carplay/carplay-sounds-tab.png)
 
 ## Now Playing on the dashboard
 
@@ -30,9 +30,9 @@ Tap **Now Playing** in the top corner of CarPlay to reach the playback controls 
 - **Sleep Timer** {{icon:timer}}: set a countdown or cancel a running timer without picking up your phone.
 - **Edit sounds** {{icon:sliders}}: when a preset is selected, tap the sliders button to turn that preset's sounds on or off from the dashboard.
 
-![Blankie's Now Playing in CarPlay for the Rainy Night preset (Rain, Waves), with the Favorite, Sleep Timer and sliders buttons under the controls.](../../assets/guides/blankie-carplay/now-playing.png)
+![Blankie's Now Playing in CarPlay for the Rainy Night preset (Rain, Waves), with the Favorite, Sleep Timer and sliders buttons under the controls.](../../assets/guides/blankie-carplay/carplay-now-playing.png)
 
-![The sound list for Golden Hour in CarPlay, opened from the sliders button: Gentle Guitar playing at 40% volume, Waves at 55% and Wind at 20%.](../../assets/guides/blankie-carplay/edit-preset-sounds.png)
+![The sound list for Golden Hour in CarPlay, opened from the sliders button: Gentle Guitar playing at 40% volume, Waves at 55% and Wind at 20%.](../../assets/guides/blankie-carplay/carplay-edit-preset-sounds.png)
 
 ## Set up before you drive
 
@@ -42,7 +42,7 @@ A little bit of prep in the app helps before you pull out of the driveway:
 - **A good name makes it easy to find.** "Naptime Mix" is easier to find than "Preset 7."
 - **[Star the items you reach for most.](/guides/create-and-manage-presets/)** Favorites appear in the Home tab in the order you put them, and your car's Previous and Next controls step through them while playing.
 
-![Blankie's Presets tab in CarPlay: Creekside playing, then Golden Hour and Kid Nap Mix, each with its sounds listed.](../../assets/guides/blankie-carplay/presets-tab.png)
+![Blankie's Presets tab in CarPlay: Creekside playing, then Golden Hour and Kid Nap Mix, each with its sounds listed.](../../assets/guides/blankie-carplay/carplay-presets-tab.png)
 
 ## It's still just Blankie
 

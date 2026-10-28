@@ -1,8 +1,8 @@
-import { defineCollection } from "astro:content";
+import { defineCollection, type SchemaContext } from "astro:content";
 import { z } from "astro/zod";
 import { glob } from "astro/loaders";
 
-const guideSchema = z.object({
+const guideSchema = ({ image }: SchemaContext) => z.object({
   title: z.string(),
   description: z.string(),
   category: z.enum(["basics", "import", "find", "presets"]),
@@ -13,6 +13,11 @@ const guideSchema = z.object({
   // Optional device line for the article meta row, e.g. "iPhone, iPad and Mac".
   // Shown next to the read time and updated date when present.
   platforms: z.string().optional(),
+  // Optional byline for first-person pieces, shown first in the meta row.
+  author: z.string().optional(),
+  // Optional hero art, used as the page's social card image.
+  cover: image().optional(),
+  coverAlt: z.string().optional(),
 });
 
 // The FAQ is its own top-level page (src/pages/faq.astro), parsed from the

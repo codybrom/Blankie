@@ -15,11 +15,13 @@ import {
   Import,
   Search,
   Palette,
+  PenLine,
 } from "@lucide/astro";
 import DownloadCTA from "@/components/DownloadCTA.astro";
 import Prose from "@/components/Prose.astro";
 import Glow from "@/components/Glow.astro";
 import Card from "@/components/Card.astro";
+import Lightbox from "@/components/Lightbox.astro";
 import Badge from "@/components/Badge.astro";
 
 type Guide = CollectionEntry<"guides">;
@@ -53,7 +55,7 @@ const CAT_ICONS: Record<Guide["data"]["category"], typeof Compass> = {
 };
 
 const { guide } = Astro.props;
-const { title, description, category, updated, platforms } = guide.data;
+const { title, description, category, updated, platforms, author, cover, coverAlt } = guide.data;
 
 const EyebrowIcon = CAT_ICONS[category];
 
@@ -117,7 +119,13 @@ async function optimizeGuideImages(html: string): Promise<string> {
       /\bsrc="[^"]*"/,
       `src="${img.src}" srcset="${img.srcSet.attribute}" sizes="${img.attributes.sizes}" width="${meta.width}" height="${meta.height}"`,
     );
-    out = out.replace(tag, optimized);
+    // Link to the full-width rendition so a tap opens it in the lightbox (or,
+    // without JavaScript, on its own).
+    const full = img.srcSet.values.at(-1)?.url ?? img.src;
+    out = out.replace(
+      tag,
+      `<a href="${full}" data-zoom data-download="${meta.src}" data-filename="blankie-${href.split("/").pop()}">${optimized}</a>`,
+    );
   }
   return out;
 }
@@ -149,7 +157,7 @@ const jsonLd = ldGraph(
 );
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} image={cover} imageAlt={coverAlt}>
   <article>
     <section class="relative pt-31 text-center">
       <Glow
@@ -173,6 +181,13 @@ const jsonLd = ldGraph(
           {description}
         </p>
         <div class="mt-6 flex flex-wrap items-center justify-center text-[13px] text-fg-3 [&>span+span]:border-l [&>span+span]:border-hair-soft">
+          {
+            author && (
+              <span class="inline-flex items-center gap-1.5 px-3.5">
+                <PenLine size={14} /> By {author}
+              </span>
+            )
+          }
           <span class="inline-flex items-center gap-1.5 px-3.5">
             <BookOpen size={14} /> {read}
           </span>
@@ -240,6 +255,8 @@ const jsonLd = ldGraph(
       blurb="No ads, no paywalls and no privacy tradeoffs. Mix adjustable ambient sounds into your own soundscapes for sleep, rest and focus on iPhone, iPad, CarPlay and Mac."
     />
   </article>
+
+  <Lightbox />
 
   <script
     is:inline

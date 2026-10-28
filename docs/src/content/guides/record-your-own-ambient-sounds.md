@@ -9,7 +9,7 @@ platforms: "All Platforms"
 
 The very best ambient sounds transport you to places you feel safe to relax and focus: rain on *your* roof, *your* crackling fireplace, *your* favorite café. Capturing your own versions of these ambient classics doesn't even require a fancy recording setup. The phone in your hand can pick up ambient sounds far better than you'd guess.
 
-![Blankie on Mac with an imported sound, Camping Rain, playing among the built-in sounds like Rain, Waves, Stream and Fireplace.](../../assets/guides/shared/custom-sound-mac.png)
+![Blankie on Mac with an imported sound, Camping Rain, playing among the built-in sounds like Rain, Waves, Stream and Fireplace.](../../assets/guides/shared/mac-custom-sound.png)
 
 ## What makes a good ambient recording
 
@@ -30,7 +30,7 @@ The very best ambient sounds transport you to places you feel safe to relax and 
 
 Got a take you like? Trim the fumbling off each end and bring it in. The [Voice Memos guide](/guides/import-voice-memos/) covers the exact steps on iPhone, iPad and Mac. Flip on **Loop Sound** and **Randomize Start**, give it a fitting icon and it lives right next to the built-ins.
 
-![The Edit Sound sheet on Mac for My Porch Rain, with a rain icon and Loop Sound and Randomize Start turned on.](../../assets/guides/record-your-own-ambient-sounds/my-porch-rain-mac.png)
+![The Edit Sound sheet on Mac for My Porch Rain, with a rain icon and Loop Sound and Randomize Start turned on.](../../assets/guides/record-your-own-ambient-sounds/mac-my-porch-rain.png)
 
 ## Related guides
 

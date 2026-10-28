@@ -90,6 +90,9 @@ html {
      viewport. Clip the sideways overflow site-wide on the document scroller
      (clip, not hidden, so it doesn't break sticky/anchor scrolling). */
   overflow-x: clip;
+  /* No double-tap-to-zoom (it fires on quick taps of cards and icons). Pinch
+     zoom still works. */
+  touch-action: manipulation;
 
   & [id] {
     scroll-margin-top: 100px;
@@ -104,6 +107,9 @@ html {
 }
 
 body {
+  /* iOS Safari widens the page to fit anything that overflows, even when the
+     root clips it, so clip on body too. */
+  overflow-x: clip;
   font-family:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons",
     "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -338,6 +344,22 @@ body {
   --tw-prose-pre-bg: rgba(0, 0, 0, 0.35);
   --tw-prose-th-borders: var(--hair);
   --tw-prose-td-borders: var(--hair-soft);
+}
+/* Screenshots: tall phone captures cap at a comfortable height and center,
+   instead of stretching to the full article width. */
+.prose-blankie img {
+  width: auto;
+  max-height: min(70vh, 36rem);
+  margin-inline: auto;
+  border-radius: 1rem;
+}
+.prose-blankie > a[data-zoom]:first-child > img {
+  margin-top: 0;
+}
+.prose-blankie a[data-zoom] {
+  display: block;
+  border-bottom: 0;
+  cursor: zoom-in;
 }
 /* Links: accent-ink with a faint underline that solidifies on hover. The color
    override beats the privacy page's `.prose a` gold links. */

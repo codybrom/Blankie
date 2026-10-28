@@ -4,7 +4,11 @@
 
 ### What devices can run Blankie?
 
-Blankie runs on **Mac** (macOS 26 Tahoe or later), **iPhone** (iOS 26.4 or later) and **iPad** (iPadOS 26.4 or later).
+Blankie runs on **Mac** (macOS 26 Tahoe or later), **iPhone** (iOS 26.4 or later) and **iPad** (iPadOS 26.4 or later). **CarPlay** is available when you connected a compatible iPhone to a CarPlay-enabled vehicle.
+
+### Can I use Blankie on older versions of macOS?
+
+If your Mac is on macOS 15 Sequoia or macOS 14 Sonoma (14.6 or later), you can [download Blankie Classic](https://github.com/codybrom/blankie/releases/download/v1.0.13/Blankie.zip), the final release of Blankie v1. Classic doesn't have the same features as the current version and won't get new features or updates, but it's still free and still works offline.
 
 ### How do I install Blankie?
 
@@ -34,15 +38,17 @@ The only time it connects to the internet is to fetch animated Lock Screen artwo
 
 ### Can my school or organization deploy Blankie?
 
-Yes. Schools and organizations have already deployed Blankie to 1,000+ devices worldwide. Blankie is free in Apple School Manager and Apple Business Manager, so you can install it in bulk on managed Mac, iPad and iPhone devices. It works well on locked-down devices because there's no account to create, and the app never collects or sends personal or usage data.
+Yes. Schools and organizations have already deployed Blankie to 1,000+ devices worldwide. Blankie is available for free in Apple School Manager and Apple Business Manager and can be installed in bulk on managed Mac, iPad and iPhone devices.
 
-Interested in a custom version of Blankie with your organization's branding, sounds or presets? Email <info@blankie.rest>.
+Blankie is a great fit for locked-down, educational and organizational devices because there's no account to create and the app never collects or sends any personal or usage data whatsoever.
+
+If your organization is interested in a customized or white-labeled version of Blankie with your organization's branding, sounds or presets, email <info@blankie.rest> for licensing.
 
 ## Sounds and presets
 
 ### Can I add my own sounds?
 
-Yes! As of Blankie 2.0 you can import your own audio files (M4A, MP3, WAV, FLAC, OGG and more) and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-ins, and you can give each one its own name, icon and loop settings.
+Yes! As of Blankie 2.0 you can import your own audio files (M4A, MP3, WAV, FLAC, OGG and more) and play them alongside the built-in library. Imported sounds are automatically loudness-matched so they sit at a comparable volume to the built-in sounds, and you can give each imported sound its own name, icon and loop settings.
 
 To import a sound, choose **File → Import** on Mac, or tap the **+** button in your Library on iPhone and iPad. For step-by-step instructions (including how to turn a Voice Memo into a Blankie sound), see our [import guides](https://blankie.rest/guides).
 
@@ -56,9 +62,9 @@ To rename or delete a preset, right-click it on Mac (or touch and hold on iPhone
 
 ### What customization options are available?
 
-- Import your own sounds and give any sound a custom SF Symbol icon
+- You can import your own sounds and assign an icon to each one
 - Give each preset its own accent color and Now Playing artwork
-- Set a grid or list layout for your sounds (iOS Only)
+- Set a grid or list layout for your sounds (iPhone and iPad)
 - Star presets as favorites
 - Set a sleep timer to stop playback automatically
 - Set whether to auto-play on launch
@@ -102,9 +108,9 @@ Open Settings by clicking the gear button at the bottom of the sidebar on Mac, o
 
 ### Is Blankie free?
 
-Yes! Blankie is completely free (and open source). You can download and use Blankie at no cost, forever.
+Yes! Blankie is both [free as in beer](https://en.wiktionary.org/wiki/free_as_in_beer) ***and*** [free as in freedom](https://www.gnu.org/philosophy/free-sw.html). It costs nothing to download and use, forever, and it's [open source](#what-does-open-source-mean), so anyone can read, change and share the code.
 
-Blankie is a passion project. I wanted a good ambient mixer that didn't cost anything or track me, so I built it and gave it away. It keeps getting better thanks to contributors and translators around the world.
+Blankie is my passion project. I'm [Cody Bromley](https://github.com/codybrom), the independent developer who makes it. I wanted a good ambient mixer that didn't suck, so I built one and I'm happy to give it away (read the full story in [Why is Blankie free?](https://blankie.rest/guides/why-is-blankie-free/)). It keeps getting better thanks to contributors and translators around the world.
 
 While Blankie will always remain free, if you'd like to support development you can:
 
@@ -140,7 +146,7 @@ Blankie is a native app for Apple platforms inspired by Blanket. It uses some of
 
 Blankie is currently available in the following languages:
 
-- English - Default (en, en-GB)
+- English - Default (en, en-GB, en-CA)
 - Deutsch (de)
 - Español (es)
 - Français (fr)

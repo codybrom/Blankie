@@ -9,7 +9,7 @@ platforms: "Mac"
 
 Blankie for Mac was designed to be keyboard friendly for both power users and people who rely on accessibility tools like [VoiceOver](https://support.apple.com/guide/voiceover/get-started-vo4be8816d70/mac) and [Full Keyboard Access](https://support.apple.com/guide/mac-help/use-full-keyboard-access-mchlc06d1059/mac). The core actions all have shortcuts. Here's the full list, but you can also find it inside the app under **Help → Keyboard Shortcuts**.
 
-![Blankie's Keyboard Shortcuts panel on Mac, listing each command with its shortcut.](../../assets/guides/keyboard-shortcuts-mac/shortcuts-panel.png)
+![Blankie's Keyboard Shortcuts panel on Mac, listing each command with its shortcut.](../../assets/guides/keyboard-shortcuts-mac/mac-shortcuts-panel.png)
 
 ## The shortcuts
 
@@ -36,7 +36,7 @@ Blankie for Mac was designed to be keyboard friendly for both power users and pe
 
 {{kbd:Space}} starts and stops your whole mix, just like other media apps, with one exception: if a single sound tile has keyboard focus (the sound has a white ring around it), {{kbd:Space}} toggles just that single sound (the same as clicking a sound). To exit keyboard focus, press {{kbd:Esc}} and then {{kbd:Space}} will control Play/Pause for the entire Blankie app again. For all the other ways to start and stop without touching the window, see [Control Blankie from Anywhere](/guides/control-blankie-anywhere/).
 
-![Blankie on Mac playing Downtown: City and Lo-Fi Beats are on, and Coffee Shop has the white keyboard focus ring.](../../assets/guides/keyboard-shortcuts-mac/focused-sound.png)
+![Blankie on Mac playing Downtown: City and Lo-Fi Beats are on, and Coffee Shop has the white keyboard focus ring.](../../assets/guides/keyboard-shortcuts-mac/mac-focused-sound.png)
 
 ## A couple of things worth knowing
 

@@ -16,9 +16,6 @@ export interface Testimonial {
   stars: 1 | 2 | 3 | 4 | 5;
   /** Storefront the review was left on, displayed as written. */
   store: string;
-  /** Reviewer nickname, kept only when it reads like a name. Otherwise the
-   * attribution falls back to "App Store review". */
-  author?: string;
 }
 
 // Curated from public App Store reviews (App Store Connect export, Oct 2026).
@@ -36,7 +33,6 @@ export const testimonials: Testimonial[] = [
       "Car Play feature seems to be what makes this app really stand out, especially once I realized I didn’t have to pay for any subscriptions anymore. Very cool.",
     stars: 5,
     store: "United States",
-    author: "KC.Linda",
   },
   {
     id: "no-paywall-sleep",
@@ -51,7 +47,6 @@ export const testimonials: Testimonial[] = [
       "Wish I could rate it higher, perfect lightweight solution compared to having several YouTube tabs open",
     stars: 5,
     store: "United States",
-    author: "Lily Caba",
   },
   {
     id: "mix-five-sounds",
@@ -66,7 +61,6 @@ export const testimonials: Testimonial[] = [
       "Very slick and easy to mix together custom soundscapes. And incredibly customizable to make it your own. I can’t believe it’s free!",
     stars: 5,
     store: "United States",
-    author: "Old Man Nik",
   },
   {
     id: "grounded-at-work",
@@ -105,7 +99,6 @@ export const testimonials: Testimonial[] = [
       "It does exactly what it is meant to do in a simple, intuitive and effective way. Easy 5 stars.",
     stars: 5,
     store: "United States",
-    author: "Jeyxero",
   },
   {
     id: "coworking",
@@ -134,7 +127,6 @@ export const testimonials: Testimonial[] = [
     quote: "Enjoying using this a lot, it’s very 'Apple'…",
     stars: 5,
     store: "United Kingdom",
-    author: "Brad Haynes",
   },
   {
     id: "blanket-linux",
@@ -161,7 +153,6 @@ export const testimonials: Testimonial[] = [
     language: "German",
     stars: 5,
     store: "Germany",
-    author: "Lex G.",
   },
   {
     id: "simple-efficace",
@@ -216,7 +207,7 @@ const starsRow = (stars: number) => {
 export function renderTestimonial(t: Testimonial): string {
   const quote = t.translation ?? t.quote;
   const attribution = [
-    t.author ? `${esc(t.author)} • App Store` : "App Store review",
+    "App Store review",
     esc(t.store),
     ...(t.translation ? [`translated from ${esc(t.language ?? "")}`] : []),
   ].join(" • ");
