@@ -310,7 +310,7 @@ struct SingleSoundPickerRow: View {
   }
 
   private var starToken: String {
-    GlobalSettings.singleToken(forFileName: sound.fileName)
+    PlayableItem.single(fileName: sound.fileName).token
   }
 
   private var accent: Color {
@@ -480,7 +480,7 @@ struct LibraryView: View {
   private var singleSounds: [Sound] {
     audioManager.sounds
       .filter { !$0.isPresetUseOnly }
-      .filter { !globalSettings.isStarred(GlobalSettings.singleToken(forFileName: $0.fileName)) }
+      .filter { !globalSettings.isStarred(PlayableItem.single(fileName: $0.fileName).token) }
       .sortedByLocalizedTitle()
   }
 

@@ -981,7 +981,7 @@ import SwiftUI
     /// nil for Quick Mix, which can't be a favorite.
     private var favoriteToken: String? {
       if let single = audioManager.singleSound {
-        return GlobalSettings.singleToken(forFileName: single.fileName)
+        return PlayableItem.single(fileName: single.fileName).token
       }
       guard !audioManager.isQuickMix, let preset = presetManager.currentPreset else { return nil }
       return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString

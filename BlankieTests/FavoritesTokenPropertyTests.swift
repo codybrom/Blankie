@@ -165,7 +165,7 @@ private enum Gen {
   private func pool(_ rng: inout SeededGenerator) -> [String] {
     var tokens = [GlobalSettings.allSoundsToken, GlobalSettings.quickMixToken]
     tokens += (0..<4).map { _ in Gen.uuid(&rng).uuidString }
-    tokens += ["rain", "waves", "a:b", ""].map(GlobalSettings.singleToken(forFileName:))
+    tokens += ["rain", "waves", "a:b", ""].map { PlayableItem.single(fileName: $0).token }
     return tokens
   }
 

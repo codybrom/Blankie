@@ -72,11 +72,6 @@ class GlobalSettings {
   static let allSoundsToken = PlayableItem.allSounds.token
   static let quickMixToken = PlayableItem.quickMix.token
 
-  /// The starred token for playing the given sound file on its own.
-  static func singleToken(forFileName fileName: String) -> String {
-    PlayableItem.single(fileName: fileName).token
-  }
-
   /// The sound file name encoded in a single sound token, or nil if it isn't one.
   static func singleFileName(fromToken token: String) -> String? {
     if case .single(let fileName) = PlayableItem(token: token) { return fileName }
@@ -112,7 +107,7 @@ class GlobalSettings {
   var quickMixSoundFileNames: [String]
   /// Starred items in display order, shown in the iPad sidebar and CarPlay.
   /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
-  /// single-sound token (`singleToken(forFileName:)`).
+  /// single-sound token (`PlayableItem.single(fileName:).token`).
   var starredItems: [String]
   var availableLanguages: [Language] = []
   var lockScreenBackgroundEnabled: Bool
