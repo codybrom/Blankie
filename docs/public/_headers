@@ -1,0 +1,5 @@
+# Cloudflare applies these to static assets it serves directly (not through
+# the Worker). Astro gives every file in /_astro/ a content hash in its name,
+# so a changed file always gets a new URL and these can be cached for a year.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
