@@ -13060,6 +13060,90 @@
         }
       }
     },
+    "Deep, smooth rumble" : {
+      "comment" : "A short character caption for a built-in ambient sound, shown beneath its name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Tiefes, sanftes Grollen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep, smooth rumble"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep, smooth rumble"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Retumbo grave y suave"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Grondement grave et doux"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mély, lágy morajlás"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rombo profondo e morbido"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "深くなめらかな響き"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "깊고 부드러운 울림"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Głęboki, łagodny pomruk"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Rumor grave e suave"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Derin ve yumuşak uğultu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "低沉柔和的轰鸣"
+          }
+        }
+      }
+    },
     "Default" : {
       "comment" : "The 'Default' label, used for both the default preset and the default app icon.",
       "extractionState" : "manual",
@@ -23717,90 +23801,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "循环播放音效"
-          }
-        }
-      }
-    },
-    "Low and heavy brown noise" : {
-      "comment" : "A short character caption for a built-in ambient sound, shown beneath its name.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Tiefes, schweres braunes Rauschen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Low and heavy brown noise"
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Low and heavy brown noise"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ruido marrón, grave y profundo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Bruit brun, grave et profond"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Mély, súlyos barna zaj"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Rumore marrone, grave e profondo"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "低く沈むブラウンノイズ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "낮고 묵직한 브라운 노이즈"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Niski, głęboki brązowy szum"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Ruído castanho, grave e profundo"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Derin ve ağır kahverengi gürültü"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "低沉厚重的棕色噪音"
           }
         }
       }
@@ -38617,13 +38617,13 @@
       }
     },
     "sound.brown-noise" : {
-      "comment" : "Display name of the built-in 'Deep Noise' sound (brown noise / deep static)).",
+      "comment" : "Display name of the built-in 'Brown Noise' sound (brown noise static).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Tiefes Rauschen"
+            "value" : "Braunes Rauschen"
           }
         },
         "en" : {
@@ -38641,61 +38641,61 @@
         "es" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ruido profundo"
+            "value" : "Ruido marrón"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bruit profond"
+            "value" : "Bruit brun"
           }
         },
         "hu" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Mély zaj"
+            "value" : "Barna zaj"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Rumore Profondo"
+            "value" : "Rumore Marrone"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "ディープノイズ"
+            "value" : "ブラウンノイズ"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "딥 노이즈"
+            "value" : "브라운 노이즈"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Głęboki szum"
+            "value" : "Brązowy szum"
           }
         },
         "pt-PT" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Ruído profundo"
+            "value" : "Ruído castanho"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Derin Gürültü"
+            "value" : "Kahverengi Gürültü"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "深噪声"
+            "value" : "棕噪声"
           }
         }
       }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Brown Noise in every language** - Brown Noise now goes by its own name in every language Blankie supports, not just English, with a new subtitle: "Deep, smooth rumble."
+
 ### Fixed
 
 - Tapping Pause on a widget after Blankie was force-quit no longer starts playback.
