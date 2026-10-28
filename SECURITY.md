@@ -4,8 +4,8 @@
 
 | Version | Supported |
 | ------- | --------- |
-| 2.0.x   | ✅        |
-| < 2.0   | ❌        |
+| 2.1.x   | ✅        |
+| < 2.0.x | ❌        |
 
 Security fixes ship in the latest release on the App Store and Homebrew. Update
 to the current 2.x release to stay covered. Older versions are no longer maintained.
