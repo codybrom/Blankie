@@ -203,8 +203,7 @@ struct PresetOnboardingSheet: View {
 
       ScrollView {
         LazyVStack(spacing: 12) {
-          ForEach(audioManager.sounds.filter { !$0.isCustom }.sorted { $0.title < $1.title }) {
-            sound in
+          ForEach(audioManager.sounds.filter { !$0.isCustom }.sortedByLocalizedTitle()) { sound in
             soundSelectionRow(for: sound)
           }
         }
@@ -483,9 +482,9 @@ struct PresetOnboardingSheet: View {
   }
 
   private func generateInitialNameSuggestion() async {
-    let selectedTitles = audioManager.sounds
+    let selectedTitles = audioManager.sounds.sortedByLocalizedTitle()
       .filter { selectedSounds.contains($0.fileName) }
-      .map { $0.title }
+      .map(\.localizedTitle)
     guard !selectedTitles.isEmpty else { return }
 
     isGeneratingName = true
@@ -501,9 +500,9 @@ struct PresetOnboardingSheet: View {
 
   private func regenerateNameSuggestion() async {
     guard !isGeneratingName else { return }
-    let selectedTitles = audioManager.sounds
+    let selectedTitles = audioManager.sounds.sortedByLocalizedTitle()
       .filter { selectedSounds.contains($0.fileName) }
-      .map { $0.title }
+      .map(\.localizedTitle)
     guard !selectedTitles.isEmpty else { return }
 
     isGeneratingName = true
@@ -520,7 +519,7 @@ struct PresetOnboardingSheet: View {
       do {
         let currentVersion =
           Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-        let orderedSounds = audioManager.sounds.sorted { $0.title < $1.title }
+        let orderedSounds = audioManager.sounds.sortedByLocalizedTitle()
         let selectedSoundStates =
           orderedSounds
           .filter { selectedSounds.contains($0.fileName) }

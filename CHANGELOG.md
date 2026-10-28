@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- First-run setup and the sound credits in About now sort sounds by the names you see.
+
 ## [2.1.0] - 2026-10-28
 
 Blankie 2.1 adds Home Screen widgets on iPhone and iPad, Siri and Shortcuts actions, Spotlight search, a wider iPad layout and support for iPhone Duo.
