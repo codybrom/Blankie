@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **What's New** - Each update's highlights now live in **Settings → What's New**, and a dot on the Settings button points you there when there's something you haven't read. If Blankie is set to another language, the notes are translated on your device. You can also open the page from a `blankie://whatsnew` link.
+- **Translate the software license** - When Blankie runs in another language, **About → Software License** has a **Translate** button that shows Apple's translation next to the English text.
 
 ### Changed
 
