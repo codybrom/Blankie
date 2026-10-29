@@ -58,14 +58,73 @@ import Testing
 
   // MARK: - 2^32+ frames
 
-  /// A file too long for one buffer can't narrow to AVAudioFrameCount.
-  @Test func wholeFileAnalysisDeclinesHugeFiles() async throws {
+  /// Peak and RMS read in chunks, so a file too long for one buffer still analyzes.
+  @Test func chunkedAnalysisReadsHugeFiles() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
     let url = try makeHugeCAF(in: dir)
 
-    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == nil)
-    #expect(await AudioAnalyzer.analyzeRMSLevel(at: url) == nil)
+    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == 0)
+    #expect(await AudioAnalyzer.analyzeRMSLevel(at: url) == 0)
+  }
+
+  // MARK: - Chunked reads (#144)
+
+  /// Writes a stereo Float32 CAF that spans several analysis chunks, with a lone
+  /// spike past the first chunk boundary. Returns the file and its samples.
+  private func makeMultiChunkCAF(in dir: URL) throws -> (URL, [[Float]]) {
+    let url = dir.appendingPathComponent("multichunk.caf")
+    let frames = Int(AudioAnalyzer.analysisChunkFrames) * 3 + 1234
+    let format = try #require(
+      AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2))
+    let buffer = try #require(
+      AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)))
+    buffer.frameLength = AVAudioFrameCount(frames)
+    var samples: [[Float]] = [[], []]
+    for channel in 0..<2 {
+      let data = try #require(buffer.floatChannelData?[channel])
+      for frame in 0..<frames {
+        // Amplitude swells across the file so every bar differs.
+        let amplitude = 0.1 + 0.4 * Float(frame) / Float(frames)
+        data[frame] = amplitude * sin(Float(frame) * 0.013 * Float(channel + 1))
+      }
+      samples[channel] = Array(UnsafeBufferPointer(start: data, count: frames))
+    }
+    buffer.floatChannelData![1][60_001] = -0.95
+    samples[1][60_001] = -0.95
+
+    let file = try AVAudioFile(forWriting: url, settings: format.settings)
+    try file.write(from: buffer)
+    return (url, samples)
+  }
+
+  @Test func chunkedPeakAndRMSMatchWholeFileValues() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (url, samples) = try makeMultiChunkCAF(in: dir)
+
+    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == 0.95)
+
+    let expectedRMS =
+      samples.map { channel in
+        Float(sqrt(channel.reduce(0.0) { $0 + Double($1 * $1) } / Double(channel.count)))
+      }.reduce(0, +) / 2
+    let rms = try #require(await AudioAnalyzer.analyzeRMSLevel(at: url))
+    #expect(abs(rms - expectedRMS) < 1e-5)
+  }
+
+  /// Bars that straddle chunk boundaries match the in-memory downsample.
+  @Test func streamedWaveformMatchesInMemoryDownsample() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (url, samples) = try makeMultiChunkCAF(in: dir)
+
+    for barCount in [1, 97, 240] {
+      let streamed = try await SoundWaveformView.waveformBars(from: url, barCount: barCount)
+      let expected = SoundWaveformView.downsample(samples[0], to: barCount)
+      #expect(streamed.count == expected.count)
+      #expect(zip(streamed, expected).allSatisfy { abs($0 - $1) < 1e-4 })
+    }
   }
 
   /// The remaining frame count must be clamped before it narrows to AVAudioFrameCount.

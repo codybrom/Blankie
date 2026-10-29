@@ -42,36 +42,34 @@ nonisolated class AudioAnalyzer {
   /// Caps the normalization boost. Attenuation is uncapped.
   static let maxGainDB: Float = 18.0
 
+  /// Frames per read for the file-level passes. Imports have no length cap, so a
+  /// whole-file buffer can run to gigabytes (#144).
+  static let analysisChunkFrames: AVAudioFrameCount = 48000
+
   /// Peak sample magnitude (0 to 1), or nil if the file can't be read.
   @concurrent static func analyzePeakLevel(at url: URL) async -> Float? {
     do {
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
-      // UInt32(_:) traps on files of 2^32+ frames (~25 h at 48 kHz), and imports have no
-      // length cap.
-      guard let frameCount = AVAudioFrameCount(exactly: file.length) else { return nil }
-
-      guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+      guard
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: analysisChunkFrames)
+      else {
         Logger.app.error("AudioAnalyzer: Failed to create buffer")
         return nil
       }
 
-      try file.read(into: buffer)
-      buffer.frameLength = frameCount
-
       var peakLevel: Float = 0.0
 
-      for channel in 0..<Int(format.channelCount) {
-        guard let channelData = buffer.floatChannelData?[channel] else { continue }
+      while file.framePosition < file.length {
+        try file.read(into: buffer, frameCount: analysisChunkFrames)
+        guard buffer.frameLength > 0 else { break }
 
-        var peak: Float = 0
-        vDSP_maxv(channelData, 1, &peak, vDSP_Length(frameCount))
-
-        var minPeak: Float = 0
-        vDSP_minv(channelData, 1, &minPeak, vDSP_Length(frameCount))
-
-        let channelPeak = max(abs(peak), abs(minPeak))
-        peakLevel = max(peakLevel, channelPeak)
+        for channel in 0..<Int(format.channelCount) {
+          guard let channelData = buffer.floatChannelData?[channel] else { continue }
+          var channelPeak: Float = 0
+          vDSP_maxmgv(channelData, 1, &channelPeak, vDSP_Length(buffer.frameLength))
+          peakLevel = max(peakLevel, channelPeak)
+        }
       }
 
       Logger.app.debug("AudioAnalyzer: Peak level for \(url.lastPathComponent): \(peakLevel)")
@@ -117,30 +115,35 @@ nonisolated class AudioAnalyzer {
     do {
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
-      guard let frameCount = AVAudioFrameCount(exactly: file.length) else { return nil }
-
-      guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+      guard
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: analysisChunkFrames)
+      else {
         return nil
       }
 
-      try file.read(into: buffer)
-      buffer.frameLength = frameCount
-
-      var totalRMS: Float = 0.0
       let channelCount = Int(format.channelCount)
+      // Double, since a Float sum over hours of samples stops absorbing small terms.
+      var squaredSums = [Double](repeating: 0, count: channelCount)
+      var framesRead: Int64 = 0
 
-      for channel in 0..<channelCount {
-        guard let channelData = buffer.floatChannelData?[channel] else { continue }
+      while file.framePosition < file.length {
+        try file.read(into: buffer, frameCount: analysisChunkFrames)
+        guard buffer.frameLength > 0 else { break }
 
-        var squaredSum: Float = 0
-        vDSP_svesq(channelData, 1, &squaredSum, vDSP_Length(frameCount))
-
-        let meanSquare = squaredSum / Float(frameCount)
-        let rms = sqrt(meanSquare)
-
-        totalRMS += rms
+        for channel in 0..<channelCount {
+          guard let channelData = buffer.floatChannelData?[channel] else { continue }
+          var squaredSum: Float = 0
+          vDSP_svesq(channelData, 1, &squaredSum, vDSP_Length(buffer.frameLength))
+          squaredSums[channel] += Double(squaredSum)
+        }
+        framesRead += Int64(buffer.frameLength)
       }
 
+      guard framesRead > 0, channelCount > 0 else { return nil }
+
+      let totalRMS = squaredSums.reduce(Float(0)) { total, sum in
+        total + Float(sqrt(sum / Double(framesRead)))
+      }
       let averageRMS = totalRMS / Float(channelCount)
 
       Logger.app.debug("AudioAnalyzer: RMS level for \(url.lastPathComponent): \(averageRMS)")

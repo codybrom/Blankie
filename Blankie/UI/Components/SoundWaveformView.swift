@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import Accelerate
 import SwiftUI
 import os
 
@@ -106,25 +107,56 @@ struct SoundWaveformView: View {
     async throws
     -> [Float]
   {
+    let barCount = Int((targetWidth + barSpacing) / (barWidth + barSpacing))
+    return try await Self.waveformBars(from: url, barCount: barCount)
+  }
+
+  /// Streams channel 0 in chunks and returns the same bars as `downsample` would for
+  /// the whole file, without holding the file in memory (#144).
+  nonisolated static func waveformBars(from url: URL, barCount: Int) async throws -> [Float] {
     let file = try AVAudioFile(forReading: url)
-    let format = file.processingFormat
-    guard let frameCount = AVAudioFrameCount(exactly: file.length),
-      let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount)
+    let chunkFrames = AudioAnalyzer.analysisChunkFrames
+    guard barCount > 0, file.length > 0,
+      let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: chunkFrames)
     else {
       return []
     }
 
-    try file.read(into: buffer)
-
-    guard let channelData = buffer.floatChannelData else {
-      return []
+    // Too short for one frame per bar. A single chunk holds it all.
+    if file.length <= Int64(barCount) {
+      try file.read(into: buffer, frameCount: AVAudioFrameCount(file.length))
+      guard let channel = buffer.floatChannelData?[0] else { return [] }
+      return downsample(
+        Array(UnsafeBufferPointer(start: channel, count: Int(buffer.frameLength))), to: barCount)
     }
 
-    let samples = Array(UnsafeBufferPointer(start: channelData[0], count: Int(buffer.frameLength)))
+    // Like `downsample`, each bar covers `framesPerBar` frames and the remainder is dropped.
+    let framesPerBar = file.length / Int64(barCount)
+    let usableFrames = framesPerBar * Int64(barCount)
+    var squaredSums = [Double](repeating: 0, count: barCount)
+    var position: Int64 = 0
 
-    let barCount = Int((targetWidth + barSpacing) / (barWidth + barSpacing))
+    while position < usableFrames {
+      // A width change cancels this task, so stop decoding for a stale width.
+      try Task.checkCancellation()
+      try file.read(into: buffer, frameCount: chunkFrames)
+      guard buffer.frameLength > 0, let channel = buffer.floatChannelData?[0] else { break }
 
-    return Self.downsample(samples, to: barCount)
+      let count = Int(min(Int64(buffer.frameLength), usableFrames - position))
+      var offset = 0
+      while offset < count {
+        let frame = position + Int64(offset)
+        let bar = Int(frame / framesPerBar)
+        let run = Int(min(Int64(count - offset), Int64(bar + 1) * framesPerBar - frame))
+        var sum: Float = 0
+        vDSP_svesq(channel + offset, 1, &sum, vDSP_Length(run))
+        squaredSums[bar] += Double(sum)
+        offset += run
+      }
+      position += Int64(count)
+    }
+
+    return squaredSums.map { min(Float(sqrt($0 / Double(framesPerBar))) * 3, 1.0) }
   }
 
   nonisolated static func downsample(_ samples: [Float], to targetCount: Int) -> [Float] {

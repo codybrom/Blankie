@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.1.1] - Unreleased
 
-A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in every language and two fixes.
+A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in every language and three fixes.
 
 ### Added
 
@@ -24,6 +24,7 @@ A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in 
 
 - Tapping Pause on a widget after Blankie was force-quit no longer starts playback.
 - First-run setup and the sound credits in About now sort sounds by the names you see.
+- Importing a custom sound that runs for hours no longer crashes Blankie on iPhone and iPad.
 
 ## [2.1.0] - 2026-10-28
 
