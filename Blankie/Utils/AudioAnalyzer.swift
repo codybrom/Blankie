@@ -158,11 +158,14 @@ nonisolated class AudioAnalyzer {
   // MARK: - Comprehensive Analysis
 
   /// Runs LUFS, peak, RMS, true peak and duration analysis and picks the
-  /// normalization factor (LUFS first, peak as the fallback).
-  @concurrent static func comprehensiveAnalysis(at url: URL) async -> AudioAnalysisResult {
+  /// normalization factor (LUFS first, peak as the fallback). `progress` receives the
+  /// fraction decoded, from 0 to 1.
+  @concurrent static func comprehensiveAnalysis(
+    at url: URL, progress: (@Sendable (Double) -> Void)? = nil
+  ) async -> AudioAnalysisResult {
     Logger.app.debug("AudioAnalyzer: Starting comprehensive analysis for \(url.lastPathComponent)")
 
-    let levels = measureLevels(at: url)
+    let levels = measureLevels(at: url, progress: progress)
     let peakLevel = levels?.peak
     let rmsLevel = levels?.rms
     let truePeakdBTP = levels?.truePeakdBTP
@@ -217,8 +220,11 @@ nonisolated class AudioAnalyzer {
   }
 
   /// Measures peak, RMS, true peak and integrated LUFS in one pass. The chunks match
-  /// the single-measurement functions above, so each value matches theirs.
-  private static func measureLevels(at url: URL) -> Levels? {
+  /// the single-measurement functions above, so each value matches theirs. Returns nil
+  /// if the task is cancelled.
+  private static func measureLevels(
+    at url: URL, progress: (@Sendable (Double) -> Void)?
+  ) -> Levels? {
     do {
       let file = try AVAudioFile(forReading: url)
       let format = file.processingFormat
@@ -235,8 +241,16 @@ nonisolated class AudioAnalyzer {
       var squaredSums = [Double](repeating: 0, count: channelCount)
       var framesRead: Int64 = 0
       var loudnessMeasurements: [Float] = []
+      // Report about every 1%, so the UI isn't flooded on long files.
+      let reportEvery = max(1, file.length / 100)
+      var nextReport: Int64 = 0
 
       while file.framePosition < file.length {
+        if Task.isCancelled { return nil }
+        if let progress, framesRead >= nextReport {
+          progress(Double(framesRead) / Double(file.length))
+          nextReport = framesRead + reportEvery
+        }
         try file.read(into: buffer, frameCount: analysisChunkFrames)
         let frameLength = buffer.frameLength
         guard frameLength > 0 else { break }

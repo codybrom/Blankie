@@ -12,6 +12,7 @@
 import AVFoundation
 import Foundation
 import Testing
+import os
 
 @testable import Blankie
 
@@ -145,6 +146,37 @@ import Testing
     #expect(
       !CustomSoundManager.importRequiresConversion(
         bytes: CustomSoundManager.maxRawImportBytes, fileExtension: "wav"))
+  }
+
+  /// Analysis progress starts at 0 and only moves forward.
+  @Test func analysisReportsProgressInOrder() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (url, _) = try makeMultiChunkCAF(in: dir)
+
+    let reports = OSAllocatedUnfairLock(initialState: [Double]())
+    _ = await AudioAnalyzer.comprehensiveAnalysis(at: url) { fraction in
+      reports.withLock { $0.append(fraction) }
+    }
+    let fractions = reports.withLock { $0 }
+    #expect(fractions.first == 0)
+    #expect(fractions.count > 1)
+    #expect(zip(fractions, fractions.dropFirst()).allSatisfy { $0 < $1 })
+    #expect(fractions.allSatisfy { $0 < 1 })
+  }
+
+  /// A cancelled import stops its AAC encode instead of finishing the file.
+  @Test func cancelledTranscodeThrowsCancellation() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (source, _) = try makeMultiChunkCAF(in: dir)
+    let destination = dir.appendingPathComponent("out.m4a")
+
+    let task = Task {
+      withUnsafeCurrentTask { $0?.cancel() }
+      try await CustomSoundManager.transcodeToAAC(source: source, destination: destination)
+    }
+    await #expect(throws: CancellationError.self) { try await task.value }
   }
 
   /// The remaining frame count must be clamped before it narrows to AVAudioFrameCount.

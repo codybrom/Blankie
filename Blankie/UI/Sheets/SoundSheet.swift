@@ -28,6 +28,9 @@ struct SoundSheet: View {
   @State var importError: Error?
   @State var showingError = false
   @State var isProcessing = false
+  /// Import only: the running import, so Cancel can stop it, and its progress.
+  @State var importTask: Task<Void, Never>?
+  @State var importProgress: CustomSoundManager.ImportProgress?
   @State var randomizeStartPosition: Bool = true
   @State var normalizeAudio: Bool = true
   @State var volumeAdjustment: Float = 1.0

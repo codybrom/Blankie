@@ -24,7 +24,7 @@ A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in 
 
 - Tapping Pause on a widget after Blankie was force-quit no longer starts playback.
 - First-run setup and the sound credits in About now sort sounds by the names you see.
-- Importing a custom sound that runs for hours no longer crashes Blankie on iPhone and iPad, and long imports finish much faster. Large MP3 and AAC files now keep their original audio instead of being converted again.
+- Importing a custom sound that runs for hours no longer crashes Blankie on iPhone and iPad, and long imports finish much faster, with a progress bar and a Cancel button. Large MP3 and AAC files now keep their original audio instead of being converted again.
 
 ## [2.1.0] - 2026-10-28
 

@@ -21,6 +21,18 @@ class CustomSoundManager {
   /// are stream-transcoded to AAC on import (see `importRequiresConversion`).
   static let maxRawImportBytes: Int64 = 150 * 1024 * 1024
 
+  /// A running import's stage and overall completion (0 to 1), for the sheet's
+  /// progress bar.
+  nonisolated struct ImportProgress: Sendable, Equatable {
+    enum Stage: Sendable { case converting, measuring }
+    let stage: Stage
+    let fraction: Double
+  }
+
+  /// The part of the progress bar that converting fills when an import converts.
+  /// Encoding takes about four times as long as measuring loudness.
+  nonisolated private static let conversionShare = 0.8
+
   private var modelContext: ModelContext?
 
   private init() {
@@ -65,10 +77,11 @@ class CustomSoundManager {
   // MARK: - Sound Import
 
   /// Copies (or transcodes) a sound file into app storage and saves its record.
+  /// Cancelling the task stops the import and removes anything it wrote.
   @MainActor
   func importSound(
     from sourceURL: URL, title: String, iconName: String, randomizeStartPosition: Bool = true,
-    convertToAAC: Bool = false
+    convertToAAC: Bool = false, progress: (@Sendable (ImportProgress) -> Void)? = nil
   ) async -> Result<
     CustomSoundData, CustomSoundError
   > {
@@ -107,14 +120,20 @@ class CustomSoundManager {
         (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
       let conversionRequired = Self.importRequiresConversion(
         bytes: sourceBytes, fileExtension: fileExtension)
+      let converts = convertToAAC || conversionRequired
       let copiedURL: URL
       let storedExtension: String
-      if convertToAAC || conversionRequired {
+      if converts {
         guard let directoryURL = getCustomSoundsDirectoryURL() else {
           throw CustomSoundError.fileCopyFailed
         }
         let destinationURL = directoryURL.appendingPathComponent("\(uniqueFileName).m4a")
-        try await Self.transcodeToAAC(source: sourceURL, destination: destinationURL)
+        // Set before encoding so a failed or cancelled encode is removed too.
+        copiedURLForCleanup = destinationURL
+        try await Self.transcodeToAAC(source: sourceURL, destination: destinationURL) {
+          progress?(ImportProgress(stage: .converting, fraction: $0 * Self.conversionShare))
+        }
+        try Task.checkCancellation()
         copiedURL = destinationURL
         storedExtension = "m4a"
         Logger.sounds.debug(
@@ -132,7 +151,13 @@ class CustomSoundManager {
         uniqueFileName: uniqueFileName, fileExtension: storedExtension,
         randomizeStartPosition: randomizeStartPosition
       )
-      let customSound = try await createCustomSoundRecord(from: importData)
+      let measuringStart = converts ? Self.conversionShare : 0
+      let customSound = try await createCustomSoundRecord(from: importData) {
+        progress?(
+          ImportProgress(
+            stage: .measuring, fraction: measuringStart + $0 * (1 - measuringStart)))
+      }
+      try Task.checkCancellation()
       try saveCustomSoundToDatabase(customSound)
       writeMirror(for: customSound)
       copiedURLForCleanup = nil
@@ -143,6 +168,9 @@ class CustomSoundManager {
 
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
+    } catch is CancellationError {
+      Logger.sounds.debug("CustomSoundManager: Import cancelled")
+      return .failure(.invalidAudioFile(CancellationError()))
     } catch {
       Logger.sounds.error("CustomSoundManager: Failed to import sound: \(error, privacy: .public)")
       return .failure(.invalidAudioFile(error))
@@ -171,11 +199,13 @@ class CustomSoundManager {
 
   /// Builds the `CustomSoundData` record for a freshly imported file (analysis,
   /// hash, ID3, credits). Not private so the sha256/profile wiring is unit tested.
+  /// `progress` receives the fraction of the file analyzed, from 0 to 1.
   @MainActor
-  func createCustomSoundRecord(from importData: SoundImportData) async throws
-    -> CustomSoundData
-  {
-    let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: importData.copiedURL)
+  func createCustomSoundRecord(
+    from importData: SoundImportData, progress: (@Sendable (Double) -> Void)? = nil
+  ) async throws -> CustomSoundData {
+    let analysis = await AudioAnalyzer.comprehensiveAnalysis(
+      at: importData.copiedURL, progress: progress)
     let lufsResult =
       analysis.lufs != nil
       ? (lufs: analysis.lufs!, normalizationFactor: analysis.normalizationFactor) : nil
