@@ -622,7 +622,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minuteur de %1$lld h %2$lld min"
+            "value" : "Minuterie de %1$lld h %2$lld min"
           }
         },
         "hu" : {
@@ -699,7 +699,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minuteur de %lld h"
+            "value" : "Minuterie de %lld h"
           }
         },
         "hu" : {
@@ -853,7 +853,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minuteur de %lld min"
+            "value" : "Minuterie de %lld min"
           }
         },
         "hu" : {
@@ -5296,83 +5296,6 @@
         }
       }
     },
-    "Audio files larger than 150 MB must be converted to preserve memory." : {
-      "comment" : "An explanatory message shown when a large imported audio file must be converted to save memory.",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Audiodateien über 150 MB müssen umgewandelt werden, um Speicherplatz zu sparen."
-          }
-        },
-        "en-GB" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio files larger than 150 MB must be converted to preserve memory."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Los archivos de audio de más de 150 MB deben convertirse para ahorrar memoria."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Les fichiers audio de plus de 150 Mo doivent être convertis pour économiser la mémoire."
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "A 150 MB-nál nagyobb hangfájlokat a memória kímélése érdekében át kell alakítani."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "I file audio più grandi di 150 MB devono essere convertiti per risparmiare memoria."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "150 MBを超えるオーディオファイルは、メモリを節約するために変換が必要です。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "150 MB보다 큰 오디오 파일은 메모리를 아끼기 위해 변환해야 해요."
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Pliki dźwiękowe większe niż 150 MB muszą zostać przekonwertowane, aby oszczędzić pamięć."
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Os ficheiros de áudio com mais de 150 MB têm de ser convertidos para poupar memória."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "150 MB'tan büyük ses dosyaları, bellekten tasarruf için dönüştürülmelidir."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "大于 150 MB 的音频文件必须经过转换以节省内存。"
-          }
-        }
-      }
-    },
     "Author" : {
       "comment" : "Label for the author of a sound.",
       "localizations" : {
@@ -6538,7 +6461,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie se mettra en pause à la fin du minuteur"
+            "value" : "Blankie se mettra en pause à la fin de la minuterie"
           }
         },
         "hu" : {
@@ -6616,7 +6539,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Blankie se mettra en pause à la fin du minuteur"
+            "value" : "Blankie se mettra en pause à la fin de la minuterie"
           }
         },
         "hu" : {
@@ -7769,7 +7692,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Annuler le minuteur"
+            "value" : "Annuler la minuterie"
           }
         },
         "hu" : {
@@ -18696,7 +18619,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Masque les barres de progression des sons et des préréglages dans En cours de lecture et dans le lecteur. Le compte à rebours du minuteur de veille reste visible."
+            "value" : "Masque les barres de progression des sons et des préréglages dans En cours de lecture et dans le lecteur. Le compte à rebours de la minuterie de veille reste visible."
           }
         },
         "hu" : {
@@ -34455,7 +34378,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Redémarrer le minuteur"
+            "value" : "Redémarrer la minuterie"
           }
         },
         "hu" : {
@@ -35454,7 +35377,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Réglez un minuteur pour un fondu automatique"
+            "value" : "Réglez une minuterie pour un fondu automatique"
           }
         },
         "hu" : {
@@ -35591,8 +35514,87 @@
       }
     },
     "Set Playback" : {
-      "comment" : "The name of the intent that lets a widget set playback.",
-      "isCommentAutoGenerated" : true
+      "comment" : "Title of the hidden widget action that plays or pauses Blankie.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Wiedergabe festlegen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set Playback"
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Set Playback"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ajustar reproducción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Régler la lecture"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lejátszás beállítása"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Imposta riproduzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "再生を設定"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "재생 설정"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Ustaw odtwarzanie"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Definir reprodução"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Çalmayı Ayarla"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "设置播放"
+          }
+        }
+      }
     },
     "Set Sound Volume" : {
       "comment" : "Title of the intent to set the volume of a specific sound.",
@@ -37519,7 +37521,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minuteur de veille"
+            "value" : "Minuterie de veille"
           }
         },
         "hu" : {
@@ -41667,7 +41669,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Démarrer le minuteur"
+            "value" : "Démarrer la minuterie"
           }
         },
         "hu" : {
@@ -45091,7 +45093,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minuteur"
+            "value" : "Minuterie"
           }
         },
         "hu" : {
@@ -45169,7 +45171,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Minuteur en cours"
+            "value" : "Minuterie en cours"
           }
         },
         "hu" : {
@@ -46187,6 +46189,89 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "关闭此音效"
+          }
+        }
+      }
+    },
+    "Uncompressed and lossless files larger than 150 MB are converted to save space." : {
+      "comment" : "Shown under the locked Convert to AAC toggle when an imported file over 150 MB isn't AAC or MP3.",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Unkomprimierte und Lossless-Dateien über 150 MB werden umgewandelt, um Speicherplatz zu sparen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uncompressed and lossless files larger than 150 MB are converted to save space."
+          }
+        },
+        "en-GB" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uncompressed and lossless files larger than 150 MB are converted to save space."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Los archivos sin comprimir y sin pérdida de más de 150 MB se convierten para ahorrar espacio."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Les fichiers non compressés et Lossless de plus de 150 Mo sont convertis pour économiser de l'espace."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "A 150 MB-nál nagyobb tömörítetlen és veszteségmentes fájlokat a Blankie átalakítja, hogy helyet takarítson meg."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "I file non compressi e Lossless più grandi di 150 MB vengono convertiti per risparmiare spazio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "150 MBを超える非圧縮およびロスレスのファイルは、容量を節約するために変換されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "150 MB보다 큰 비압축 및 무손실 파일은 공간을 아끼기 위해 변환돼요."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pliki nieskompresowane i Lossless większe niż 150 MB są konwertowane, aby zaoszczędzić miejsce."
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Os ficheiros não comprimidos e sem perdas com mais de 150 MB são convertidos para poupar espaço."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "150 MB'tan büyük sıkıştırılmamış ve kayıpsız dosyalar, yerden tasarruf için dönüştürülür."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "大于 150 MB 的未压缩和无损文件会被转换以节省空间。"
           }
         }
       }

@@ -133,12 +133,12 @@ extension SoundSheetForm {
       .disabled(!isCustomSound)
 
       // Import only: offer re-encoding to AAC to save space. Hidden when there's
-      // nothing to gain. Locked on over the size ceiling to bound memory use.
+      // nothing to gain. Locked on for large files that aren't already AAC or MP3.
       if mode.isAdd, importConvertForced || importConvertEstimate != nil {
         Toggle(isOn: importConvertForced ? .constant(true) : $convertToAACOnImport) {
           Text("Convert to AAC")
           if importConvertForced {
-            Text("Audio files larger than 150 MB must be converted to preserve memory.")
+            Text("Uncompressed and lossless files larger than 150 MB are converted to save space.")
           } else if let estimate = importConvertEstimate {
             Text(
               "Would use about \(estimate.savedFraction.formatted(.percent.precision(.fractionLength(0)))) less space with minimal quality loss."
