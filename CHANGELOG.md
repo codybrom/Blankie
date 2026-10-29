@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-10-28
+
+A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in every language and two fixes.
+
 ### Added
 
 - **Highlights** - Each update's highlights now live in **Settings → Highlights**, and a dot on the Settings button points you there when there's something you haven't read. If Blankie is set to another language, the notes are translated on your device. You can also open the page from a `blankie://highlights` link.
@@ -340,7 +344,8 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/codybrom/blankie/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/codybrom/blankie/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1
