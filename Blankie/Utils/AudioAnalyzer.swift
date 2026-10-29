@@ -155,50 +155,6 @@ nonisolated class AudioAnalyzer {
     }
   }
 
-  // MARK: - True Peak Analysis
-
-  /// True peak in dBTP, with 4x oversampling to catch intersample peaks.
-  @concurrent static func analyzeTruePeak(at url: URL) async -> Float? {
-    do {
-      let file = try AVAudioFile(forReading: url)
-      let format = file.processingFormat
-      let chunkSize: AVAudioFrameCount = 48000
-      var globalTruePeak: Float = 0.0
-      var position: AVAudioFramePosition = 0
-
-      while position < file.length {
-        // Clamp before narrowing, since the remainder alone can exceed UInt32.
-        let framesToRead = AVAudioFrameCount(
-          min(AVAudioFramePosition(chunkSize), file.length - position))
-
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: framesToRead) else {
-          position += AVAudioFramePosition(framesToRead)
-          continue
-        }
-
-        file.framePosition = position
-        try file.read(into: buffer)
-
-        for channel in 0..<Int(format.channelCount) {
-          guard let channelData = buffer.floatChannelData?[channel] else { continue }
-          let peak = oversampledPeak(channelData: channelData, frameLength: buffer.frameLength)
-          globalTruePeak = max(globalTruePeak, peak)
-        }
-
-        position += AVAudioFramePosition(framesToRead)
-      }
-
-      let truePeakdBTP = globalTruePeak > 0 ? 20 * log10(globalTruePeak) : -Float.infinity
-      Logger.app.debug(
-        "AudioAnalyzer: True peak for \(url.lastPathComponent): \(truePeakdBTP) dBTP")
-      return truePeakdBTP
-
-    } catch {
-      Logger.app.error("AudioAnalyzer: Failed to analyze true peak: \(error, privacy: .public)")
-      return nil
-    }
-  }
-
   // MARK: - Comprehensive Analysis
 
   /// Runs LUFS, peak, RMS, true peak and duration analysis and picks the
@@ -206,12 +162,13 @@ nonisolated class AudioAnalyzer {
   @concurrent static func comprehensiveAnalysis(at url: URL) async -> AudioAnalysisResult {
     Logger.app.debug("AudioAnalyzer: Starting comprehensive analysis for \(url.lastPathComponent)")
 
-    let peakLevel = await analyzePeakLevel(at: url)
-    let rmsLevel = await analyzeRMSLevel(at: url)
-
-    let truePeakdBTP = await analyzeTruePeak(at: url)
-
-    let lufsResult = await analyzeLUFS(at: url)
+    let levels = measureLevels(at: url)
+    let peakLevel = levels?.peak
+    let rmsLevel = levels?.rms
+    let truePeakdBTP = levels?.truePeakdBTP
+    let lufsResult = levels?.lufs.map {
+      (lufs: $0, normalizationFactor: calculateLUFSNormalizationFactor(lufs: $0))
+    }
 
     let duration = getDuration(at: url)
 
@@ -249,6 +206,80 @@ nonisolated class AudioAnalyzer {
       needsLimiter: needsLimiter,
       duration: duration
     )
+  }
+
+  /// The levels `comprehensiveAnalysis` needs, from one sequential decode.
+  private struct Levels {
+    let peak: Float
+    let rms: Float?
+    let truePeakdBTP: Float
+    let lufs: Float?
+  }
+
+  /// Measures peak, RMS, true peak and integrated LUFS in one pass. The chunks match
+  /// the single-measurement functions above, so each value matches theirs.
+  private static func measureLevels(at url: URL) -> Levels? {
+    do {
+      let file = try AVAudioFile(forReading: url)
+      let format = file.processingFormat
+      let channelCount = Int(format.channelCount)
+      guard
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: analysisChunkFrames)
+      else {
+        return nil
+      }
+
+      let filterCoefficients = getKWeightingCoefficients()
+      var peak: Float = 0
+      var truePeak: Float = 0
+      var squaredSums = [Double](repeating: 0, count: channelCount)
+      var framesRead: Int64 = 0
+      var loudnessMeasurements: [Float] = []
+
+      while file.framePosition < file.length {
+        try file.read(into: buffer, frameCount: analysisChunkFrames)
+        let frameLength = buffer.frameLength
+        guard frameLength > 0 else { break }
+
+        for channel in 0..<channelCount {
+          guard let channelData = buffer.floatChannelData?[channel] else { continue }
+          var channelPeak: Float = 0
+          vDSP_maxmgv(channelData, 1, &channelPeak, vDSP_Length(frameLength))
+          peak = max(peak, channelPeak)
+
+          var squaredSum: Float = 0
+          vDSP_svesq(channelData, 1, &squaredSum, vDSP_Length(frameLength))
+          squaredSums[channel] += Double(squaredSum)
+
+          truePeak = max(
+            truePeak, oversampledPeak(channelData: channelData, frameLength: frameLength))
+        }
+
+        if let loudness = processAudioChunk(
+          buffer, channelCount: format.channelCount, filterCoefficients: filterCoefficients)
+        {
+          loudnessMeasurements.append(loudness)
+        }
+        framesRead += Int64(frameLength)
+      }
+
+      var rms: Float?
+      if framesRead > 0, channelCount > 0 {
+        let totalRMS = squaredSums.reduce(Float(0)) { total, sum in
+          total + Float(sqrt(sum / Double(framesRead)))
+        }
+        rms = totalRMS / Float(channelCount)
+      }
+
+      return Levels(
+        peak: peak,
+        rms: rms,
+        truePeakdBTP: truePeak > 0 ? 20 * log10(truePeak) : -Float.infinity,
+        lufs: calculateIntegratedLUFS(from: loudnessMeasurements))
+    } catch {
+      Logger.app.error("AudioAnalyzer: Failed to measure levels: \(error, privacy: .public)")
+      return nil
+    }
   }
 
   // MARK: - Buffer-Based Analysis

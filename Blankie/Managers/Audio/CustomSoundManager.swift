@@ -17,9 +17,8 @@ class CustomSoundManager {
 
   let customSoundsDirectory = "CustomSounds"
 
-  /// Files at or below this size import as-is. Larger ones are still allowed but
-  /// stream-transcoded to AAC on import: copying the raw bytes loads the whole
-  /// file into memory, and very large uncompressed audio strains playback.
+  /// Files at or below this size import as-is. Larger uncompressed or lossless files
+  /// are stream-transcoded to AAC on import (see `importRequiresConversion`).
   static let maxRawImportBytes: Int64 = 150 * 1024 * 1024
 
   private var modelContext: ModelContext?
@@ -104,12 +103,13 @@ class CustomSoundManager {
     do {
       try await validateImportableAudioFile(at: sourceURL)
 
-      // Transcode when the user opted in or the file exceeds `maxRawImportBytes`.
       let sourceBytes =
         (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
+      let conversionRequired = Self.importRequiresConversion(
+        bytes: sourceBytes, fileExtension: fileExtension)
       let copiedURL: URL
       let storedExtension: String
-      if convertToAAC || sourceBytes > Self.maxRawImportBytes {
+      if convertToAAC || conversionRequired {
         guard let directoryURL = getCustomSoundsDirectoryURL() else {
           throw CustomSoundError.fileCopyFailed
         }
@@ -118,7 +118,7 @@ class CustomSoundManager {
         copiedURL = destinationURL
         storedExtension = "m4a"
         Logger.sounds.debug(
-          "CustomSoundManager: import converted to AAC (\(sourceBytes) bytes, forced: \(sourceBytes > Self.maxRawImportBytes))"
+          "CustomSoundManager: import converted to AAC (\(sourceBytes) bytes, forced: \(conversionRequired))"
         )
       } else {
         copiedURL = try copyFileForImport(
@@ -254,12 +254,14 @@ class CustomSoundManager {
         )
       }
 
-      Logger.sounds.debug("CustomSoundManager: Reading source file data...")
-      let data = try Data(contentsOf: source)
-      Logger.sounds.debug("CustomSoundManager: Read \(data.count) bytes from source file")
-
-      // Atomic, so a full disk mid-write can't leave a truncated file.
-      try data.write(to: destinationURL, options: .atomic)
+      // copyItem streams (or clones on APFS), so memory stays flat at any size. A
+      // failed copy is removed so a full disk can't leave a truncated file behind.
+      do {
+        try FileManager.default.copyItem(at: source, to: destinationURL)
+      } catch {
+        try? FileManager.default.removeItem(at: destinationURL)
+        throw error
+      }
       Logger.sounds.debug("CustomSoundManager: Successfully copied file to \(destinationURL.path)")
 
       if FileManager.default.fileExists(atPath: destinationURL.path) {

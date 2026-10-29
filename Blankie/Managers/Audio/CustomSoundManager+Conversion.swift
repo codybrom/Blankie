@@ -22,6 +22,12 @@ extension CustomSoundManager {
   /// is offered only for uncompressed or lossless sources (WAV, AIFF, CAF, FLAC).
   private static let lossyExtensions: Set<String> = ["mp3", "m4a", "aac", "m4b", "aax", "m4r"]
 
+  /// True when an import must be transcoded: a file over `maxRawImportBytes` that isn't
+  /// already lossy. Re-encoding a lossy file costs time and quality and saves little.
+  static func importRequiresConversion(bytes: Int64, fileExtension: String) -> Bool {
+    bytes > maxRawImportBytes && !lossyExtensions.contains(fileExtension.lowercased())
+  }
+
   /// The before and after of an offered conversion, in bytes.
   struct CompressionEstimate: Equatable {
     let currentBytes: Int64

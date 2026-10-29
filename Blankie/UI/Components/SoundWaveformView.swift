@@ -132,6 +132,9 @@ struct SoundWaveformView: View {
 
     // Like `downsample`, each bar covers `framesPerBar` frames and the remainder is dropped.
     let framesPerBar = file.length / Int64(barCount)
+    if Double(file.length) > sampledWaveformSeconds * file.processingFormat.sampleRate {
+      return try sampledBars(of: file, into: buffer, barCount: barCount, framesPerBar: framesPerBar)
+    }
     let usableFrames = framesPerBar * Int64(barCount)
     var squaredSums = [Double](repeating: 0, count: barCount)
     var position: Int64 = 0
@@ -157,6 +160,37 @@ struct SoundWaveformView: View {
     }
 
     return squaredSums.map { min(Float(sqrt($0 / Double(framesPerBar))) * 3, 1.0) }
+  }
+
+  /// Files longer than this draw from short windows instead of decoding every frame.
+  nonisolated static let sampledWaveformSeconds: Double = 10 * 60
+
+  /// Bars from a few evenly spaced 4,096-frame windows per bar. At this length each
+  /// bar spans many seconds, so the sampled level matches the full one closely.
+  nonisolated private static func sampledBars(
+    of file: AVAudioFile, into buffer: AVAudioPCMBuffer, barCount: Int, framesPerBar: Int64
+  ) throws -> [Float] {
+    let windowFrames: AVAudioFrameCount = 4096
+    let windowsPerBar: Int64 = 4
+    var bars: [Float] = []
+    bars.reserveCapacity(barCount)
+
+    for bar in 0..<Int64(barCount) {
+      try Task.checkCancellation()
+      var squaredSum: Double = 0
+      var frames: Int64 = 0
+      for window in 0..<windowsPerBar {
+        file.framePosition = bar * framesPerBar + window * framesPerBar / windowsPerBar
+        try file.read(into: buffer, frameCount: windowFrames)
+        guard buffer.frameLength > 0, let channel = buffer.floatChannelData?[0] else { continue }
+        var sum: Float = 0
+        vDSP_svesq(channel, 1, &sum, vDSP_Length(buffer.frameLength))
+        squaredSum += Double(sum)
+        frames += Int64(buffer.frameLength)
+      }
+      bars.append(frames > 0 ? min(Float(sqrt(squaredSum / Double(frames))) * 3, 1.0) : 0)
+    }
+    return bars
   }
 
   nonisolated static func downsample(_ samples: [Float], to targetCount: Int) -> [Float] {

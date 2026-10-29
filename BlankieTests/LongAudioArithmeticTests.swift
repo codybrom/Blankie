@@ -127,6 +127,26 @@ import Testing
     }
   }
 
+  /// Long files sample windows per bar, including seeks past 2^32 frames.
+  @Test func longWaveformSamplesEveryBar() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let bars = try await SoundWaveformView.waveformBars(
+      from: try makeHugeCAF(in: dir), barCount: 50)
+    #expect(bars == [Float](repeating: 0, count: 50))
+  }
+
+  /// Only large files that aren't already lossy are forced through AAC on import.
+  @Test func lossyImportsSkipForcedConversion() {
+    let large = CustomSoundManager.maxRawImportBytes + 1
+    #expect(!CustomSoundManager.importRequiresConversion(bytes: large, fileExtension: "m4a"))
+    #expect(!CustomSoundManager.importRequiresConversion(bytes: large, fileExtension: "MP3"))
+    #expect(CustomSoundManager.importRequiresConversion(bytes: large, fileExtension: "wav"))
+    #expect(
+      !CustomSoundManager.importRequiresConversion(
+        bytes: CustomSoundManager.maxRawImportBytes, fileExtension: "wav"))
+  }
+
   /// The remaining frame count must be clamped before it narrows to AVAudioFrameCount.
   @Test func streamingSchedulesTheFirstChunkOfHugeFiles() throws {
     let dir = TestSupport.makeTempDir()
