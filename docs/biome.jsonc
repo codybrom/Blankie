@@ -14,7 +14,9 @@
       "!**/*.min.js",
       "!**/*.md",
       "!**/*.svg",
-      "!**/*.yml"
+      "!**/*.yml",
+      // blankifi writes sounds.json with JSONEncoder. Formatting it here would undo that.
+      "!**/sounds.json"
     ]
   },
   "formatter": {

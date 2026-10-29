@@ -237,7 +237,7 @@ nonisolated class AudioAnalyzer {
 
       let filterCoefficients = getKWeightingCoefficients()
       var peak: Float = 0
-      var truePeak: Float = 0
+      var truePeakMeters = [TruePeakMeter](repeating: TruePeakMeter(), count: channelCount)
       var squaredSums = [Double](repeating: 0, count: channelCount)
       var framesRead: Int64 = 0
       var loudnessMeasurements: [Float] = []
@@ -265,8 +265,7 @@ nonisolated class AudioAnalyzer {
           vDSP_svesq(channelData, 1, &squaredSum, vDSP_Length(frameLength))
           squaredSums[channel] += Double(squaredSum)
 
-          truePeak = max(
-            truePeak, oversampledPeak(channelData: channelData, frameLength: frameLength))
+          truePeakMeters[channel].process(channelData, count: Int(frameLength))
         }
 
         if let loudness = processAudioChunk(
@@ -285,6 +284,9 @@ nonisolated class AudioAnalyzer {
         rms = totalRMS / Float(channelCount)
       }
 
+      for channel in truePeakMeters.indices { truePeakMeters[channel].finish() }
+      let truePeak = truePeakMeters.map(\.peak).max() ?? 0
+
       return Levels(
         peak: peak,
         rms: rms,
@@ -298,38 +300,75 @@ nonisolated class AudioAnalyzer {
 
   // MARK: - Buffer-Based Analysis
 
-  /// Per-channel 4x linear-oversampled magnitude peak, shared by the URL and
-  /// buffer true-peak paths.
-  static func oversampledPeak(
-    channelData: UnsafeMutablePointer<Float>,
-    frameLength: AVAudioFrameCount
-  ) -> Float {
-    guard frameLength > 1 else {
-      var peak: Float = 0
-      vDSP_maxmgv(channelData, 1, &peak, vDSP_Length(frameLength))
-      return peak
+  /// True-peak meter from ITU-R BS.1770 Annex 2: 4x oversampling through the standard's
+  /// 48-tap polyphase interpolation filter. Use one per channel and feed it chunks in
+  /// order, since the filter history carries across them.
+  nonisolated private struct TruePeakMeter {
+    /// The Annex 2 coefficients, one row per phase, reversed so `vDSP_conv`
+    /// (a correlation) computes the convolution.
+    private static let reversedPhases: [[Float]] = [
+      [
+        0.0017089843750, 0.0109863281250, -0.0196533203125, 0.0332031250000,
+        -0.0594482421875, 0.1373291015625, 0.9721679687500, -0.1022949218750,
+        0.0476074218750, -0.0266113281250, 0.0148925781250, -0.0083007812500,
+      ],
+      [
+        -0.0291748046875, 0.0292968750000, -0.0517578125000, 0.0891113281250,
+        -0.1665039062500, 0.4650878906250, 0.7797851562500, -0.2003173828125,
+        0.1015625000000, -0.0582275390625, 0.0330810546875, -0.0189208984375,
+      ],
+      [
+        -0.0189208984375, 0.0330810546875, -0.0582275390625, 0.1015625000000,
+        -0.2003173828125, 0.7797851562500, 0.4650878906250, -0.1665039062500,
+        0.0891113281250, -0.0517578125000, 0.0292968750000, -0.0291748046875,
+      ],
+      [
+        -0.0083007812500, 0.0148925781250, -0.0266113281250, 0.0476074218750,
+        -0.1022949218750, 0.9721679687500, 0.1373291015625, -0.0594482421875,
+        0.0332031250000, -0.0196533203125, 0.0109863281250, 0.0017089843750,
+      ],
+    ].map { $0.reversed() }
+    private static let tapCount = 12
+
+    /// The largest magnitude seen, never below the sample peak.
+    private(set) var peak: Float = 0
+    private var history = [Float](repeating: 0, count: tapCount - 1)
+    private var input: [Float] = []
+    private var output: [Float] = []
+
+    mutating func process(_ samples: UnsafePointer<Float>, count: Int) {
+      guard count > 0 else { return }
+      var samplePeak: Float = 0
+      vDSP_maxmgv(samples, 1, &samplePeak, vDSP_Length(count))
+      peak = max(peak, samplePeak)
+
+      input.removeAll(keepingCapacity: true)
+      input.append(contentsOf: history)
+      input.append(contentsOf: UnsafeBufferPointer(start: samples, count: count))
+      if output.count < count { output = [Float](repeating: 0, count: count) }
+
+      input.withUnsafeBufferPointer { input in
+        output.withUnsafeMutableBufferPointer { output in
+          for taps in Self.reversedPhases {
+            taps.withUnsafeBufferPointer { taps in
+              vDSP_conv(
+                input.baseAddress!, 1, taps.baseAddress!, 1, output.baseAddress!, 1,
+                vDSP_Length(count), vDSP_Length(Self.tapCount))
+            }
+            var phasePeak: Float = 0
+            vDSP_maxmgv(output.baseAddress!, 1, &phasePeak, vDSP_Length(count))
+            peak = max(peak, phasePeak)
+          }
+        }
+      }
+      history = Array(input.suffix(Self.tapCount - 1))
     }
 
-    let oversampledLength = Int(frameLength) * 4
-    var oversampledData = [Float](repeating: 0, count: oversampledLength)
-
-    for index in 0..<Int(frameLength - 1) {
-      let sample1 = channelData[index]
-      let sample2 = channelData[index + 1]
-      let delta = (sample2 - sample1) / 4.0
-
-      oversampledData[index * 4] = sample1
-      oversampledData[index * 4 + 1] = sample1 + delta
-      oversampledData[index * 4 + 2] = sample1 + delta * 2
-      oversampledData[index * 4 + 3] = sample1 + delta * 3
+    /// Runs the filter tail so peaks between the final samples are measured.
+    mutating func finish() {
+      let silence = [Float](repeating: 0, count: Self.tapCount - 1)
+      silence.withUnsafeBufferPointer { process($0.baseAddress!, count: $0.count) }
     }
-    // The loop stops one sample short. Write the final source sample so a
-    // peak on the last frame isn't missed.
-    oversampledData[(Int(frameLength) - 1) * 4] = channelData[Int(frameLength) - 1]
-
-    var peak: Float = 0
-    vDSP_maxmgv(oversampledData, 1, &peak, vDSP_Length(oversampledLength))
-    return peak
   }
 
   /// Integrated LUFS of an in-memory buffer, reusing the exact chunk pipeline
@@ -374,7 +413,7 @@ nonisolated class AudioAnalyzer {
     return calculateIntegratedLUFS(from: measurements)
   }
 
-  /// True peak (dBTP) of an in-memory buffer via the shared oversampling helper.
+  /// True peak (dBTP) of an in-memory buffer, measured the same way as files.
   static func truePeakdBTP(buffer: AVAudioPCMBuffer) -> Float? {
     guard buffer.frameLength > 0, let channelData = buffer.floatChannelData else {
       return nil
@@ -382,9 +421,10 @@ nonisolated class AudioAnalyzer {
 
     var globalTruePeak: Float = 0
     for channel in 0..<Int(buffer.format.channelCount) {
-      let peak = oversampledPeak(
-        channelData: channelData[channel], frameLength: buffer.frameLength)
-      globalTruePeak = max(globalTruePeak, peak)
+      var meter = TruePeakMeter()
+      meter.process(channelData[channel], count: Int(buffer.frameLength))
+      meter.finish()
+      globalTruePeak = max(globalTruePeak, meter.peak)
     }
 
     return globalTruePeak > 0 ? 20 * log10(globalTruePeak) : -Float.infinity
