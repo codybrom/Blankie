@@ -18,6 +18,7 @@ struct HighlightsView: View {
   @State private var showsOriginal = false
   @State private var availability: LanguageAvailability.Status?
   @State private var configuration: TranslationSession.Configuration?
+  @State private var translationFailed = false
 
   private static let english = Locale.Language(identifier: "en")
 
@@ -50,7 +51,8 @@ struct HighlightsView: View {
     // Off the main actor: the session isn't Sendable and translates concurrently.
     .translationTask(configuration) {
       @concurrent [
-        sources = Array(Set(Highlights.allText)), translations = $translations
+        sources = Array(Set(Highlights.allText)), translations = $translations,
+        failed = $translationFailed
       ] session in
       let requests = sources.map {
         TranslationSession.Request(sourceText: $0, clientIdentifier: $0)
@@ -62,8 +64,10 @@ struct HighlightsView: View {
         }
         await MainActor.run { translations.wrappedValue = result }
       } catch {
-        // A declined download or unsupported pair leaves the English in place.
+        // A declined download or unsupported pair leaves the English in place,
+        // and the footer offers Translate again.
         Logger.ui.error("Highlights translation failed: \(error, privacy: .public)")
+        await MainActor.run { failed.wrappedValue = true }
       }
     }
     .onAppear { globalSettings.setLastSeenHighlightsVersion(Highlights.latestVersion) }
@@ -110,10 +114,16 @@ struct HighlightsView: View {
       }
       .font(.footnote)
       .foregroundStyle(.secondary)
-    } else if availability == .supported, configuration == nil {
+    } else if translationFailed || (availability == .supported && configuration == nil) {
       Button {
-        configuration = TranslationSession.Configuration(
-          source: Self.english, target: appLanguage)
+        translationFailed = false
+        if configuration == nil {
+          configuration = TranslationSession.Configuration(
+            source: Self.english, target: appLanguage)
+        } else {
+          // Runs the translation task again with the same languages.
+          configuration?.invalidate()
+        }
       } label: {
         Label(
           "Translate to \(Locale.current.localizedString(forIdentifier: appLanguage.minimalIdentifier) ?? appLanguage.minimalIdentifier)",
