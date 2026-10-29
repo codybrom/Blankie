@@ -410,8 +410,10 @@ struct SingleSoundPickerRow: View {
       onSelection?()
       return
     }
-    LibraryView.leavingUnsavedMix(presentation: presentation) {
-      Task { @MainActor in
+    // Don't Save and the action run in one turn, so the restored preset can't start
+    // playing in between.
+    Task { @MainActor in
+      LibraryView.leavingUnsavedMix(presentation: presentation) {
         audioManager.toggleSingleSound(for: sound)
         if dismissOnSelect { dismiss() }
         onSelection?()
@@ -429,11 +431,6 @@ struct LibraryView: View {
     case sidebar
     case page
     case menuBar
-  }
-
-  /// Rows above the presets: the unsaved mix while there is one.
-  static func leadingPresetTokens(unsavedMix: UnsavedMix?) -> [String] {
-    unsavedMix == nil ? [] : [PlayableItem.unsavedMix.token]
   }
 
   /// Plays a preset from a Library row, asking first when an unsaved mix would be lost.
@@ -699,10 +696,6 @@ struct LibraryView: View {
           }
         #endif
       }
-    case .unsavedMix:
-      if let unsavedMix = audioManager.unsavedMix {
-        unsavedMixRow(unsavedMix)
-      }
     case .quickMix, .none:
       EmptyView()
     }
@@ -777,8 +770,8 @@ struct LibraryView: View {
   private var quickMixRow: some View {
     let accent = globalSettings.customAccentColor ?? .accentColor
     return Button {
-      Self.leavingUnsavedMix(presentation: presentation) {
-        Task { @MainActor in
+      Task { @MainActor in
+        Self.leavingUnsavedMix(presentation: presentation) {
           if audioManager.singleSound != nil {
             audioManager.exitSingleSoundWithoutResuming()
           }
@@ -928,8 +921,8 @@ struct LibraryView: View {
 
         // Quick Mix and All Blankie Sounds are fixed. Only custom presets reorder.
         Section(isExpanded: presetsExpandedBinding) {
-          ForEach(Self.leadingPresetTokens(unsavedMix: audioManager.unsavedMix), id: \.self) {
-            tokenRow($0)
+          if let unsavedMix = audioManager.unsavedMix {
+            unsavedMixRow(unsavedMix)
           }
 
           // Quick Mix can't be a favorite.

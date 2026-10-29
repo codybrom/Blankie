@@ -139,10 +139,9 @@ extension AudioManager {
   }
 
   /// The `starredItems` token for `activeItem` (single sound, then Quick Mix, then preset).
-  /// Nil for an unsaved mix, which can't be a favorite.
   @MainActor
   var currentFavoriteToken: String? {
-    activeItem == .unsavedMix ? nil : activeItem?.token
+    activeItem?.token
   }
 
   /// Resolves a `starredItems` token to widget display info. Items without their

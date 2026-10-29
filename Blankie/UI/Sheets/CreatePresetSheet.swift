@@ -15,8 +15,9 @@ struct CreatePresetSheet: View {
   var initialSelectedSounds: Set<String> = []
   /// Fills the name field, such as an unsaved mix's name, instead of suggesting one.
   var initialName: String?
-  /// Blocks Create while the name matches an existing preset.
-  var blocksDuplicateNames = false
+  /// Saves the unsaved mix, which keeps playing as the new preset. Blocks Create while
+  /// the name matches an existing preset.
+  var savesUnsavedMix = false
   /// Fired after the new preset is created and applied so the owner can
   /// navigate to it (iPhone Library pushes the mixer). Nil at the mixer.
   var onCreated: (() -> Void)?
@@ -53,7 +54,7 @@ struct CreatePresetSheet: View {
   }
 
   private var isDuplicateName: Bool {
-    blocksDuplicateNames && presetManager.hasPreset(named: presetName)
+    savesUnsavedMix && presetManager.hasPreset(named: presetName)
   }
 
   private var canCreate: Bool {
@@ -309,8 +310,7 @@ extension CreatePresetSheet {
           await presetManager.cacheThumbnail(for: newPreset)
         }
 
-        if audioManager.unsavedMix != nil {
-          // Saving an unsaved mix keeps it playing as the new preset.
+        if savesUnsavedMix, audioManager.unsavedMix != nil {
           audioManager.adoptUnsavedMix(as: newPreset)
         } else {
           // Leave single sound/Quick Mix first, like a Library row tap, so the prior

@@ -121,13 +121,11 @@ private enum Gen {
       switch PlayableItem(token: token) {
       case .allSounds: #expect(token == "allSounds", "step \(step)")
       case .quickMix: #expect(token == "quickMix", "step \(step)")
-      case .unsavedMix: #expect(token == "unsavedMix", "step \(step)")
       case .single(let fileName): #expect(token == "solo:" + fileName, "step \(step)")
       case .preset(let id): #expect(UUID(uuidString: token) == id, "step \(step)")
       case nil:
         #expect(
-          token != "allSounds" && token != "quickMix" && token != "unsavedMix"
-            && !token.hasPrefix("solo:")
+          token != "allSounds" && token != "quickMix" && !token.hasPrefix("solo:")
             && UUID(uuidString: token) == nil, "step \(step): \(token.debugDescription)")
       }
     }

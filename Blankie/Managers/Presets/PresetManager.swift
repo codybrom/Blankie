@@ -53,7 +53,7 @@ class PresetManager {
     switch AudioManager.shared.activeItem {
     case .preset, .allSounds:
       return currentPreset
-    case .single, .quickMix, .unsavedMix, .none:
+    case .single, .quickMix, .none:
       return nil
     }
   }
@@ -345,6 +345,14 @@ extension PresetManager {
 // MARK: - Preset Names
 
 extension PresetManager {
+  /// `name`, or the first "name (2)", "name (3)" and so on that no custom preset uses.
+  func uniquePresetName(_ name: String) -> String {
+    guard hasPreset(named: name) else { return name }
+    var counter = 2
+    while hasPreset(named: "\(name) (\(counter))") { counter += 1 }
+    return "\(name) (\(counter))"
+  }
+
   /// Whether a custom preset already has this name, ignoring case and surrounding spaces.
   func hasPreset(named name: String) -> Bool {
     let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)

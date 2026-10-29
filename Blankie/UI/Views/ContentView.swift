@@ -431,14 +431,16 @@ import UniformTypeIdentifiers
       }
     }
 
-    /// Persists a reorder. Indices are into `filteredSounds`. The complete order
-    /// goes to the custom preset or the default order (mirrors `MixerView.moveItems`).
+    /// Persists a reorder. Indices are into `filteredSounds`. The order goes to the unsaved
+    /// mix, the custom preset or the default order (mirrors `MixerView.moveItems`).
     private func moveSounds(from source: IndexSet, to destination: Int) {
       var newOrder = filteredSounds.map(\.fileName)
       newOrder.move(fromOffsets: source, toOffset: destination)
       let displayed = Set(newOrder)
 
-      if let preset = presetManager.currentPreset, !preset.isDefault {
+      if audioManager.unsavedMix != nil {
+        audioManager.reorderUnsavedMix(newOrder)
+      } else if let preset = presetManager.currentPreset, !preset.isDefault {
         // Hidden preset sounds keep a place at the end.
         var complete = newOrder
         for state in preset.soundStates where !displayed.contains(state.fileName) {

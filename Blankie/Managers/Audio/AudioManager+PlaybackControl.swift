@@ -29,9 +29,6 @@ extension AudioManager {
       setGlobalPlaybackState(true)
     } else {
       sound.toggle()
-      if !collapseUnsavedMixIfOneSound() {
-        refreshUnsavedMixName()
-      }
     }
   }
 

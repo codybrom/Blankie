@@ -44,8 +44,15 @@ struct MixSoundsPicker: View {
         .navigationTitle("Sounds")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-          ToolbarItem(placement: .confirmationAction) {
-            Button("Done") { dismiss() }
+          // Each tap applies, so there's nothing to confirm. A leading Close, like Timer.
+          ToolbarItem(placement: .topBarLeading) {
+            Button {
+              dismiss()
+            } label: {
+              Image(systemName: "xmark")
+            }
+            .tint(Color.primary)
+            .accessibilityLabel(Text("Close"))
           }
         }
       }

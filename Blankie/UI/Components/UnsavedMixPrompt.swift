@@ -62,17 +62,19 @@ private struct UnsavedMixPrompt: ViewModifier {
       } message: { leaving in
         Text("\(leaving.mixName) isn't saved yet. If you don't save it, it's gone.")
       }
-      .saveMixSheet(isPresented: $showingSave, onDismiss: { actionAfterSave = nil }) {
-        let action = actionAfterSave
-        actionAfterSave = nil
-        action?()
-      }
+      .saveMixSheet(
+        isPresented: $showingSave, onDismiss: { actionAfterSave = nil },
+        onSaved: {
+          let action = actionAfterSave
+          actionAfterSave = nil
+          action?()
+        })
   }
 }
 
 extension View {
-  /// New Preset for the unsaved mix: its sounds and name filled in, and an existing
-  /// preset's name blocked.
+  /// New Preset for the unsaved mix: its sounds filled in, and its name made unique the
+  /// way an import's is.
   func saveMixSheet(
     isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil,
     onSaved: (() -> Void)? = nil
@@ -82,8 +84,10 @@ extension View {
         isPresented: isPresented,
         initialSelectedSounds: Set(
           AudioManager.shared.unsavedMixSounds.filter(\.isSelected).map(\.fileName)),
-        initialName: AudioManager.shared.unsavedMix?.name,
-        blocksDuplicateNames: true,
+        initialName: AudioManager.shared.unsavedMix.map {
+          PresetManager.shared.uniquePresetName($0.name)
+        },
+        savesUnsavedMix: true,
         onCreated: onSaved)
     }
   }

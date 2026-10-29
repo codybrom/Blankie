@@ -15,11 +15,6 @@ import Testing
   @Test func nameJoinsTheFirstTwoTitles() {
     #expect(UnsavedMix.generatedName(first: "Rain", second: "Waves") == "Rain + Waves Mix")
   }
-
-  @Test func unsavedMixTokenRoundTrips() {
-    #expect(PlayableItem.unsavedMix.token == "unsavedMix")
-    #expect(PlayableItem(token: "unsavedMix") == .unsavedMix)
-  }
 }
 
 @Suite(.serialized) @MainActor final class UnsavedMixTests {
@@ -112,7 +107,6 @@ import Testing
     #expect(audioManager.unsavedMix?.originSoundFileName == "test-mix-rain")
     #expect(audioManager.singleSound == nil)
     #expect(presetManager.currentPreset == nil)
-    #expect(audioManager.activeItem == .unsavedMix)
     #expect(sounds.rain.isSelected)
     #expect(sounds.waves.isSelected)
     #expect(!sounds.fan.isSelected)
@@ -145,6 +139,9 @@ import Testing
 
     audioManager.addToUnsavedMix(sounds.waves)
     audioManager.toggleOrResume(sounds.rain)
+    await sandbox.waitUntil {
+      self.audioManager.unsavedMix?.name != String(localized: "Custom Mix")
+    }
     #expect(
       audioManager.unsavedMix?.name
         == UnsavedMix.generatedName(first: "test-mix-fan", second: "test-mix-waves"))
@@ -174,6 +171,46 @@ import Testing
     let listed = audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     #expect(listed.map(\.fileName) == ["test-mix-rain", "test-mix-waves", "test-mix-fan"])
     stop()
+  }
+
+  @Test func aPausedTapRenamesTheMix() async {
+    let sounds = makeSounds()
+    startMix(sounds)
+    audioManager.addToUnsavedMix(sounds.fan)
+    audioManager.toggleOrResume(sounds.fan)
+    await sandbox.waitUntil { self.audioManager.unsavedMix?.name == self.expectedName }
+    audioManager.setGlobalPlaybackState(false)
+
+    // Paused, a tap switches the sound on and resumes.
+    audioManager.toggleOrResume(sounds.fan)
+    await sandbox.waitUntil {
+      self.audioManager.unsavedMix?.name == String(localized: "Custom Mix")
+    }
+    #expect(audioManager.unsavedMix?.name == String(localized: "Custom Mix"))
+    stop()
+  }
+
+  @Test func reorderingTheMixLeavesAllSoundsAlone() async {
+    let sounds = makeSounds()
+    startMix(sounds)
+    audioManager.addToUnsavedMix(sounds.fan)
+    let allSoundsOrder = audioManager.defaultSoundOrder
+
+    audioManager.reorderUnsavedMix(["test-mix-fan", "test-mix-rain", "test-mix-waves"])
+
+    #expect(
+      audioManager.orderedVisibleSounds(for: nil).map(\.fileName)
+        == ["test-mix-fan", "test-mix-rain", "test-mix-waves"])
+    #expect(audioManager.defaultSoundOrder == allSoundsOrder)
+    stop()
+  }
+
+  @Test func aSecondCustomMixGetsANumber() async {
+    let existing = PresetFactory.makePreset(name: "custom mix ")
+    presetManager.setPresets([existing])
+
+    #expect(presetManager.uniquePresetName("Custom Mix") == "Custom Mix (2)")
+    #expect(presetManager.uniquePresetName("Rain + Waves Mix") == "Rain + Waves Mix")
   }
 
   // MARK: - Never written into a preset
@@ -215,6 +252,47 @@ import Testing
   }
 
   /// Once let go, the mix's single sound is no longer what a relaunch comes back to.
+  @Test func discardAfterThePresetIsDeletedRestoresAllSounds() async {
+    let sounds = makeSounds()
+    _ = await installPreset(sounds)
+    let defaultPreset = PresetFactory.makePreset(name: "Default", isDefault: true)
+    startMix(sounds)
+    presetManager.setPresets([defaultPreset])
+
+    audioManager.discardUnsavedMix()
+
+    #expect(presetManager.currentPreset?.id == defaultPreset.id)
+    stop()
+  }
+
+  @Test func discardBringsBackTheEditedPreset() async {
+    let sounds = makeSounds()
+    var preset = await installPreset(sounds)
+    startMix(sounds)
+    preset.name = "Renamed During Mix"
+    presetManager.setPresets([preset])
+
+    audioManager.discardUnsavedMix()
+
+    #expect(presetManager.currentPreset?.name == "Renamed During Mix")
+    stop()
+  }
+
+  @Test func nextFromAMixCountsFromItsSound() async {
+    let sounds = makeSounds()
+    let preset = await installPreset(sounds)
+    GlobalSettings.shared.setStarredItems([
+      "solo:test-mix-rain", preset.id.uuidString, "solo:test-mix-fan",
+    ])
+    startMix(sounds)
+
+    audioManager.navigateToNextPreset()
+
+    #expect(audioManager.singleSound == nil)
+    #expect(presetManager.currentPreset?.id == preset.id)
+    stop()
+  }
+
   @Test func discardForgetsTheOriginSingleSound() async {
     let sounds = makeSounds()
     _ = await installPreset(sounds)
@@ -409,9 +487,11 @@ import Testing
 
     // Two of three still on stays a mix.
     audioManager.toggleOrResume(sounds.rain)
+    await sandbox.settle()
     #expect(audioManager.unsavedMix != nil)
 
     audioManager.toggleOrResume(sounds.waves)
+    await sandbox.waitUntil { self.audioManager.unsavedMix == nil }
     #expect(audioManager.unsavedMix == nil)
     #expect(audioManager.singleSound?.fileName == "test-mix-fan")
     #expect(presetManager.currentPreset?.id == preset.id)
@@ -453,15 +533,6 @@ import Testing
     #expect(audioManager.unsavedMix == nil)
     #expect(audioManager.singleSound != nil)
     stop()
-  }
-
-  // MARK: - Library
-
-  @Test func unsavedMixListsFirstUnderPresets() async {
-    let mix = UnsavedMix(
-      name: "Rain + Waves Mix", originSoundFileName: "rain", soundFileNames: ["rain"])
-    #expect(LibraryView.leadingPresetTokens(unsavedMix: mix) == ["unsavedMix"])
-    #expect(LibraryView.leadingPresetTokens(unsavedMix: nil).isEmpty)
   }
 
   // MARK: - Coming back

@@ -84,7 +84,7 @@ import SwiftUI
     private var artworkTaskID: String {
       let single = audioManager.singleSound?.id.uuidString ?? ""
       let preset = presetManager.currentPreset?.id.uuidString ?? ""
-      let mix = audioManager.unsavedMix?.name ?? ""
+      let mix = audioManager.unsavedMix?.originSoundFileName ?? ""
       return "\(single)-\(preset)-\(mix)"
     }
 
@@ -1011,8 +1011,7 @@ import SwiftUI
       if let single = audioManager.singleSound {
         return PlayableItem.single(fileName: single.fileName).token
       }
-      guard !audioManager.isQuickMix, audioManager.unsavedMix == nil,
-        let preset = presetManager.currentPreset else { return nil }
+      guard !audioManager.isQuickMix, let preset = presetManager.currentPreset else { return nil }
       return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
     }
 
@@ -1162,7 +1161,8 @@ import SwiftUI
     /// What's playing, so its artwork and title can transition when it changes.
     private var itemKey: String {
       if let single = audioManager.singleSound { return "sound:\(single.fileName)" }
-      if let mix = audioManager.unsavedMix { return "unsavedMix:\(mix.name)" }
+      // The mix's name changes as sounds come and go, so it's keyed by its first sound.
+      if let mix = audioManager.unsavedMix { return "unsavedMix:\(mix.originSoundFileName)" }
       if audioManager.isQuickMix { return "quickMix" }
       return "preset:\(presetManager.currentPreset?.id.uuidString ?? "none")"
     }

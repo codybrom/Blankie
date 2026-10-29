@@ -130,6 +130,26 @@ extension AudioManager {
     nowPlayingManager.updateInfo(presetName: name, isPlaying: isGloballyPlaying)
   }
 
+  /// Puts the mix's sounds in the order a drag in the mixer leaves them.
+  @MainActor
+  func reorderUnsavedMix(_ fileNames: [String]) {
+    guard var unsavedMix else { return }
+    let members = Set(unsavedMix.soundFileNames)
+    let moved = fileNames.filter(members.contains)
+    unsavedMix.soundFileNames = moved + unsavedMix.soundFileNames.filter { !moved.contains($0) }
+    self.unsavedMix = unsavedMix
+    refreshUnsavedMixName()
+  }
+
+  /// After a sound is switched on or off: with one left on it plays on its own, and
+  /// otherwise the name follows. Runs from the coalesced sound refresh.
+  @MainActor
+  func reconcileUnsavedMix() {
+    if !collapseUnsavedMixIfOneSound() {
+      refreshUnsavedMixName()
+    }
+  }
+
   /// Takes a sound out of the mix and switches it off. The last sound stays.
   @MainActor
   func removeFromUnsavedMix(_ sound: Sound) {
@@ -139,9 +159,7 @@ extension AudioManager {
     unsavedMix.soundFileNames.remove(at: index)
     self.unsavedMix = unsavedMix
     sound.isSelected = false
-    if !collapseUnsavedMixIfOneSound() {
-      refreshUnsavedMixName()
-    }
+    reconcileUnsavedMix()
   }
 
   /// With one sound left on, the mix turns back into that sound on its own, which keeps
@@ -172,8 +190,10 @@ extension AudioManager {
     unsavedMix = nil
     unsavedMixOriginalStates = []
     pendingLeave = nil
-    PresetManager.shared.setCurrentPreset(preUnsavedMixPreset)
-    preUnsavedMixPreset = nil
+    let (preset, changed) = takeStashedPreset()
+    PresetManager.shared.setCurrentPreset(preset)
+    // Leaving the single sound re-applies a preset that changed during the mix.
+    if changed { PresetManager.shared.presetStatesApplied = false }
     GlobalSettings.shared.saveSingleSound(fileName: remaining.fileName)
     updateNextPreviousCommandState()
     nowPlayingManager.updateInfo(presetName: remaining.title, isPlaying: isGloballyPlaying)
@@ -212,13 +232,26 @@ extension AudioManager {
     GlobalSettings.shared.saveSingleSound(fileName: nil)
 
     let presetManager = PresetManager.shared
-    presetManager.setCurrentPreset(preUnsavedMixPreset)
-    // A launch into single sound skipped the preset's apply, as exitSingleSound re-syncs.
-    if !presetManager.presetStatesApplied, let preset = preUnsavedMixPreset {
+    let (preset, changed) = takeStashedPreset()
+    presetManager.setCurrentPreset(preset)
+    // A launch into single sound skipped the preset's apply (as exitSingleSound re-syncs),
+    // and one edited or deleted during the mix no longer matches the restored sounds.
+    if let preset, changed || !presetManager.presetStatesApplied {
       presetManager.applySoundStates(preset.soundStates)
     }
-    preUnsavedMixPreset = nil
     updateNextPreviousCommandState()
+  }
+
+  /// Clears the preset from before the mix and returns it as saved now, so an edit during
+  /// the mix sticks. One deleted during the mix falls back to All Blankie Sounds.
+  /// `changed` is whether it differs from the copy taken when the mix started.
+  @MainActor
+  private func takeStashedPreset() -> (preset: Preset?, changed: Bool) {
+    guard let stash = preUnsavedMixPreset else { return (nil, false) }
+    preUnsavedMixPreset = nil
+    let presets = PresetManager.shared.presets
+    let preset = presets.first { $0.id == stash.id } ?? presets.first(where: \.isDefault)
+    return (preset, preset != stash)
   }
 
   /// Makes `preset`, just saved from the mix, the current preset. The mix keeps playing

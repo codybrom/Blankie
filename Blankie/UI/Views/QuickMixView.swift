@@ -95,12 +95,10 @@ import SwiftUI
             sound: sound,
             isActive: audioManager.isQuickMix && sound.isSelected,
             onTap: {
-              audioManager.leaveUnsavedMixAsking {
-                if !audioManager.isQuickMix {
-                  audioManager.enterQuickMix()
-                }
-                audioManager.toggleQuickMixSound(sound)
+              if !audioManager.isQuickMix {
+                audioManager.enterQuickMix()
               }
+              audioManager.toggleQuickMixSound(sound)
             }
           )
         },

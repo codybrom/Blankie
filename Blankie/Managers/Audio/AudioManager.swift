@@ -209,6 +209,7 @@ extension AudioManager {
     soundChangeCoalesceTask = Task { @MainActor in
       try? await Task.sleep(for: .milliseconds(100))
       guard !Task.isCancelled else { return }
+      reconcileUnsavedMix()
       updateHasSelectedSounds()
       PresetManager.shared.updateCurrentPresetState()
       if isQuickMix { publishCurrentWidgetSnapshot() }
