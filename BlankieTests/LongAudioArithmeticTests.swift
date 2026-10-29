@@ -114,6 +114,24 @@ import os
     #expect(abs(rms - expectedRMS) < 1e-5)
   }
 
+  /// The true-peak filter carries its history across chunk boundaries, so a file
+  /// read in chunks measures the same as the whole buffer.
+  @Test func chunkedTruePeakMatchesWholeBuffer() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (url, _) = try makeMultiChunkCAF(in: dir)
+
+    let file = try AVAudioFile(forReading: url)
+    let buffer = try #require(
+      AVAudioPCMBuffer(
+        pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)))
+    try file.read(into: buffer)
+
+    let whole = try #require(AudioAnalyzer.truePeakdBTP(buffer: buffer))
+    let chunked = try #require(await AudioAnalyzer.comprehensiveAnalysis(at: url).truePeakdBTP)
+    #expect(chunked == whole)
+  }
+
   /// Bars that straddle chunk boundaries match the in-memory downsample.
   @Test func streamedWaveformMatchesInMemoryDownsample() async throws {
     let dir = TestSupport.makeTempDir()
@@ -152,14 +170,23 @@ import os
       return url
     }
     let aac = try write(
-      "aac.m4a", [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44_100,
-        AVNumberOfChannelsKey: 2])
+      "aac.m4a",
+      [
+        AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2,
+      ])
     let alac = try write(
-      "alac.m4a", [AVFormatIDKey: kAudioFormatAppleLossless, AVSampleRateKey: 44_100,
-        AVNumberOfChannelsKey: 2, AVEncoderBitDepthHintKey: 16])
+      "alac.m4a",
+      [
+        AVFormatIDKey: kAudioFormatAppleLossless, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2, AVEncoderBitDepthHintKey: 16,
+      ])
     let wav = try write(
-      "pcm.wav", [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 44_100,
-        AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false])
+      "pcm.wav",
+      [
+        AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false,
+      ])
 
     let large = CustomSoundManager.maxRawImportBytes + 1
     #expect(!CustomSoundManager.importRequiresConversion(bytes: large, url: aac))
