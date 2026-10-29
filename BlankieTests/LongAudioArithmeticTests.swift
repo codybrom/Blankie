@@ -137,15 +137,37 @@ import os
     #expect(bars == [Float](repeating: 0, count: 50))
   }
 
-  /// Only large files that aren't already lossy are forced through AAC on import.
-  @Test func lossyImportsSkipForcedConversion() {
+  /// Only large files whose audio isn't already AAC or MP3 are forced through AAC on
+  /// import. The codec decides, so an Apple Lossless .m4a still converts.
+  @Test func lossyImportsSkipForcedConversion() throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    func write(_ name: String, _ settings: [String: Any]) throws -> URL {
+      let url = dir.appendingPathComponent(name)
+      let file = try AVAudioFile(forWriting: url, settings: settings)
+      let buffer = try #require(
+        AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 4096))
+      buffer.frameLength = 4096
+      try file.write(from: buffer)
+      return url
+    }
+    let aac = try write(
+      "aac.m4a", [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2])
+    let alac = try write(
+      "alac.m4a", [AVFormatIDKey: kAudioFormatAppleLossless, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2, AVEncoderBitDepthHintKey: 16])
+    let wav = try write(
+      "pcm.wav", [AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false])
+
     let large = CustomSoundManager.maxRawImportBytes + 1
-    #expect(!CustomSoundManager.importRequiresConversion(bytes: large, fileExtension: "m4a"))
-    #expect(!CustomSoundManager.importRequiresConversion(bytes: large, fileExtension: "MP3"))
-    #expect(CustomSoundManager.importRequiresConversion(bytes: large, fileExtension: "wav"))
+    #expect(!CustomSoundManager.importRequiresConversion(bytes: large, url: aac))
+    #expect(CustomSoundManager.importRequiresConversion(bytes: large, url: alac))
+    #expect(CustomSoundManager.importRequiresConversion(bytes: large, url: wav))
     #expect(
       !CustomSoundManager.importRequiresConversion(
-        bytes: CustomSoundManager.maxRawImportBytes, fileExtension: "wav"))
+        bytes: CustomSoundManager.maxRawImportBytes, url: wav))
   }
 
   /// Analysis progress starts at 0 and only moves forward.

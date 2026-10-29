@@ -118,8 +118,7 @@ class CustomSoundManager {
 
       let sourceBytes =
         (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
-      let conversionRequired = Self.importRequiresConversion(
-        bytes: sourceBytes, fileExtension: fileExtension)
+      let conversionRequired = Self.importRequiresConversion(bytes: sourceBytes, url: sourceURL)
       let converts = convertToAAC || conversionRequired
       let copiedURL: URL
       let storedExtension: String
@@ -140,7 +139,7 @@ class CustomSoundManager {
           "CustomSoundManager: import converted to AAC (\(sourceBytes) bytes, forced: \(conversionRequired))"
         )
       } else {
-        copiedURL = try copyFileForImport(
+        copiedURL = try await copyFileForImport(
           sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension
         )
         storedExtension = fileExtension
@@ -185,10 +184,10 @@ class CustomSoundManager {
   }
 
   private func copyFileForImport(_ sourceURL: URL, uniqueFileName: String, fileExtension: String)
-    throws -> URL
+    async throws -> URL
   {
     guard
-      let copiedURL = try copyToCustomSoundsDirectory(
+      let copiedURL = try await copyToCustomSoundsDirectory(
         source: sourceURL, filename: uniqueFileName, extension: fileExtension
       )
     else {
@@ -232,7 +231,9 @@ class CustomSoundManager {
     // Hash the stored file so re-importing the same audio dedupes and the mirror
     // persists a real integrity hash.
     do {
-      customSound.sha256Hash = try FileHashUtility.sha256Hash(for: importData.copiedURL)
+      customSound.sha256Hash = try await FileHashUtility.sha256Hash(for: importData.copiedURL)
+    } catch is CancellationError {
+      throw CancellationError()
     } catch {
       Logger.sounds.error(
         "CustomSoundManager: Failed to hash imported file for dedup: \(error, privacy: .public)")
@@ -261,7 +262,7 @@ class CustomSoundManager {
   }
 
   private func copyToCustomSoundsDirectory(source: URL, filename: String, extension ext: String)
-    throws -> URL?
+    async throws -> URL?
   {
     guard let directoryURL = getCustomSoundsDirectoryURL() else {
       Logger.sounds.error("CustomSoundManager: Could not get custom sounds directory URL")
@@ -284,10 +285,13 @@ class CustomSoundManager {
         )
       }
 
-      // copyItem streams (or clones on APFS), so memory stays flat at any size. A
-      // failed copy is removed so a full disk can't leave a truncated file behind.
+      // copyItem streams (or clones on APFS), so memory stays flat at any size. It runs
+      // off the main actor so a copy that can't clone doesn't freeze the sheet. A failed
+      // copy is removed so a full disk can't leave a truncated file behind.
       do {
-        try FileManager.default.copyItem(at: source, to: destinationURL)
+        try await Task.detached(priority: .userInitiated) {
+          try FileManager.default.copyItem(at: source, to: destinationURL)
+        }.value
       } catch {
         try? FileManager.default.removeItem(at: destinationURL)
         throw error

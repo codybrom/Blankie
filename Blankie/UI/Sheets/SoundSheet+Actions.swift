@@ -35,6 +35,8 @@ extension SoundSheet {
 
     isProcessing = true
     importProgress = nil
+    let attempt = UUID()
+    importAttempt = attempt
 
     // Capture values before Task to avoid sendability issues
     let file = selectedFile
@@ -57,8 +59,9 @@ extension SoundSheet {
         convertToAAC: convert
       ) { progress in
         Task { @MainActor in
-          // Updates hop to the main actor separately, so drop any that arrive late.
-          if progress.fraction >= importProgress?.fraction ?? 0 {
+          // Updates hop to the main actor separately, so drop any that arrive late or
+          // come from an import that was cancelled.
+          if importAttempt == attempt, progress.fraction >= importProgress?.fraction ?? 0 {
             importProgress = progress
           }
         }
@@ -113,6 +116,7 @@ extension SoundSheet {
   func cancelImport() {
     importTask?.cancel()
     importTask = nil
+    importAttempt = nil
     importProgress = nil
     isProcessing = false
   }
