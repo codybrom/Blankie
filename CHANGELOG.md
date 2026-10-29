@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.1.1] - 2026-10-28
+## [2.1.1] - Unreleased
 
 A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in every language and two fixes.
 
