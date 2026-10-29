@@ -73,7 +73,7 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
       }
       try PresetManager.shared.playPreset(preset)
       return .result()
-    case nil:
+    case .unsavedMix, nil:
       throw BlankieIntentError.presetNotFound
     }
   }

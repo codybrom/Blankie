@@ -183,7 +183,7 @@ struct SoundSelectionView: View {
       }
     } icon: {
       Image(systemName: sound.systemIconName)
-        .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+        .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
     }
   }
 }

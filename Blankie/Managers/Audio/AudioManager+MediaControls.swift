@@ -82,7 +82,7 @@ extension AudioManager {
         return sound(fileName: fileName).map { NavigableItem.single($0) }
       case .allSounds:
         return presets.first { $0.isDefault }.map { NavigableItem.preset($0) }
-      case .quickMix:
+      case .quickMix, .unsavedMix:
         return nil
       case .preset(let id):
         return presets.first { $0.id == id }.map { NavigableItem.preset($0) }
@@ -141,6 +141,8 @@ extension AudioManager {
 
   @MainActor
   func navigateToNextPreset() {
+    // Nothing outside the app can ask to save it, so an unsaved mix is let go.
+    discardUnsavedMix()
     let items = navigableItems
     guard !items.isEmpty else { return }
     // With no current item, start at the first.
@@ -150,6 +152,7 @@ extension AudioManager {
 
   @MainActor
   func navigateToPreviousPreset() {
+    discardUnsavedMix()
     let items = navigableItems
     guard !items.isEmpty else { return }
     // With no current item, start at the last.

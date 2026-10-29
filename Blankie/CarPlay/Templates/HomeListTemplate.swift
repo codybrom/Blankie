@@ -116,7 +116,7 @@ import os
         case .preset(let id):
           guard let preset = presets.first(where: { $0.id == id }) else { return nil }
           return PresetListTemplate.createPresetListItem(preset)
-        case .none:
+        case .unsavedMix, .none:
           return nil
         }
       }

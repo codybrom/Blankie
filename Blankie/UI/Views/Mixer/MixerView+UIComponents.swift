@@ -20,6 +20,10 @@ import SwiftUI
         return ""
       }
 
+      if let unsavedMix = audioManager.unsavedMix {
+        return unsavedMix.name
+      }
+
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")
       }
@@ -120,6 +124,16 @@ import SwiftUI
           .tint(.primary)
         }
 
+        // A single sound's inline Now Playing has its own + in the action row.
+        if audioManager.canAddSound, audioManager.singleSound == nil {
+          Button {
+            showingAddSound = true
+          } label: {
+            Label("Add Sound", systemImage: "plus")
+          }
+          .tint(.primary)
+        }
+
         Button {
           target?.action()
         } label: {
@@ -138,10 +152,13 @@ import SwiftUI
     }
 
     /// The default preset has no editor, so its slot becomes New Preset (seeded
-    /// with the playing sounds). `nil` renders the button disabled.
+    /// with the playing sounds), and an unsaved mix's becomes Save. `nil` renders the
+    /// button disabled.
     var editTarget: (icon: String, label: String, action: () -> Void)? {
       if let singleSound = audioManager.singleSound {
         return ("slider.vertical.3", "Edit Sound", { soundToEdit = singleSound })
+      } else if audioManager.unsavedMix != nil {
+        return ("rectangle.stack.badge.plus", "Save Mix", { showingSaveMix = true })
       } else if audioManager.isQuickMix {
         return ("slider.vertical.3", "Edit Quick Mix", { showingQuickMixEditor = true })
       } else if let currentPreset = presetManager.currentPreset {

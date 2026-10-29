@@ -11,7 +11,7 @@
 
 import Foundation
 
-/// The four mutually exclusive things a favorite token can refer to.
+/// The mutually exclusive things a token can refer to.
 nonisolated enum PlayableItem: Equatable, Hashable {
   /// The default preset ("All Blankie Sounds").
   case allSounds
@@ -21,23 +21,28 @@ nonisolated enum PlayableItem: Equatable, Hashable {
   case quickMix
   /// A single sound, identified by its stable `fileName`.
   case single(fileName: String)
+  /// The in-memory unsaved mix. It's never a favorite, so this token is never persisted.
+  case unsavedMix
 
   // Canonical token strings. These are persisted, so never change them.
   private static let allSoundsToken = "allSounds"
   private static let quickMixToken = "quickMix"
+  private static let unsavedMixToken = "unsavedMix"
   /// A single sound is stored as `"solo:<fileName>"`. Keep the "solo" spelling, or every
   /// starred single sound is lost.
   static let singleTokenPrefix = "solo:"
 
   /// Decodes a persisted `starredItems` token, or nil if it isn't a valid one.
   /// The special tokens and the single sound prefix are checked before falling back to a
-  /// preset UUID, so the four shapes stay mutually exclusive.
+  /// preset UUID, so the shapes stay mutually exclusive.
   init?(token: String) {
     switch token {
     case Self.allSoundsToken:
       self = .allSounds
     case Self.quickMixToken:
       self = .quickMix
+    case Self.unsavedMixToken:
+      self = .unsavedMix
     default:
       if token.hasPrefix(Self.singleTokenPrefix) {
         self = .single(fileName: String(token.dropFirst(Self.singleTokenPrefix.count)))
@@ -56,6 +61,8 @@ nonisolated enum PlayableItem: Equatable, Hashable {
       return Self.allSoundsToken
     case .quickMix:
       return Self.quickMixToken
+    case .unsavedMix:
+      return Self.unsavedMixToken
     case .single(let fileName):
       return Self.singleTokenPrefix + fileName
     case .preset(let id):

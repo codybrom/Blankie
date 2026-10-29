@@ -186,7 +186,7 @@ extension GlobalSettings {
         return validSoundFileNames?.contains(fileName) ?? true
       case .preset(let id):
         return validPresetIDs.contains(id.uuidString)
-      case nil:
+      case .unsavedMix, nil:
         return false
       }
     }

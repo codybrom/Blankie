@@ -49,13 +49,13 @@ import SwiftUI
         // Cycles favorites (starred presets and single sounds), the same path CarPlay
         // and the Now Playing remote use.
         Button("Next Favorite") {
-          audioManager.navigateToNextPreset()
+          audioManager.leaveUnsavedMixAsking(then: audioManager.navigateToNextPreset)
         }
         .keyboardShortcut(.nextFavorite)
         .disabled(!audioManager.canNavigateNextPrevious)
 
         Button("Previous Favorite") {
-          audioManager.navigateToPreviousPreset()
+          audioManager.leaveUnsavedMixAsking(then: audioManager.navigateToPreviousPreset)
         }
         .keyboardShortcut(.previousFavorite)
         .disabled(!audioManager.canNavigateNextPrevious)

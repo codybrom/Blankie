@@ -32,6 +32,8 @@ import SwiftData
   private let originalQuickMix: Bool
   private let originalQuickMixStates: [AudioManager.QuickMixState]
   private let originalPreQuickMixPreset: Preset?
+  private let originalUnsavedMix: UnsavedMix?
+  private let originalPreUnsavedMixPreset: Preset?
   private let originalContext: ModelContext?
   private let defaults: DefaultsSnapshot
   private let soundNames: [String]
@@ -58,6 +60,8 @@ import SwiftData
     originalQuickMix = audioManager.isQuickMix
     originalQuickMixStates = audioManager.quickMixOriginalStates
     originalPreQuickMixPreset = audioManager.preQuickMixPreset
+    originalUnsavedMix = audioManager.unsavedMix
+    originalPreUnsavedMixPreset = audioManager.preUnsavedMixPreset
     originalContext = audioManager.modelContext
     defaults = DefaultsSnapshot([
       PresetStorage.defaultPresetKey,
@@ -79,6 +83,8 @@ import SwiftData
     audioManager.singleSound = nil
     audioManager.previewModeSound = nil
     audioManager.isQuickMix = false
+    audioManager.unsavedMix = nil
+    audioManager.preUnsavedMixPreset = nil
     // Tests install their own presets. Starting empty keeps the user's out of
     // reach of cleanup and save paths.
     presetManager.setPresets([])
@@ -143,6 +149,9 @@ import SwiftData
     audioManager.isQuickMix = originalQuickMix
     audioManager.quickMixOriginalStates = originalQuickMixStates
     audioManager.preQuickMixPreset = originalPreQuickMixPreset
+    audioManager.unsavedMix = originalUnsavedMix
+    audioManager.pendingLeave = nil
+    audioManager.preUnsavedMixPreset = originalPreUnsavedMixPreset
     audioManager.sounds = originalSounds
     audioManager.defaultSoundOrder = originalDefaultSoundOrder
     presetManager.setPresets(originalPresets)

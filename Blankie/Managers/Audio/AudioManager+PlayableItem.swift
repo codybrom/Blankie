@@ -21,12 +21,16 @@ struct PlayableItemDisplay {
 }
 
 extension AudioManager {
-  /// What drives the mixer: single sound, then Quick Mix, then the current preset (the
-  /// default reads as `.allSounds`). `PresetManager.themingPreset` uses the same order.
+  /// What drives the mixer: single sound, then an unsaved mix, then Quick Mix, then the
+  /// current preset (the default reads as `.allSounds`). `PresetManager.themingPreset` uses
+  /// the same order.
   @MainActor
   var activeItem: PlayableItem? {
     if let singleSound = singleSound {
       return .single(fileName: singleSound.fileName)
+    }
+    if unsavedMix != nil {
+      return .unsavedMix
     }
     if isQuickMix {
       return .quickMix
@@ -75,6 +79,8 @@ extension AudioManager {
         subtitle: presetSubtitle(for: preset),
         accentColorName: preset.accentColorName,
         thumbnailKey: "preset_thumb_\(preset.id.uuidString)")
+    case .unsavedMix:
+      return nil
     }
   }
 }

@@ -44,6 +44,8 @@ private enum IPhonePage: Hashable {
     @State var showingNewPresetConfirmation = false
     @State var showingNewPresetSheet = false
     @State var showingSpatialMixer = false
+    @State var showingAddSound = false
+    @State var showingSaveMix = false
     @State var showingNowPlaying = false
     /// iPhone: the Sound Mixer sheet the floating bar opens over Now Playing.
     @State private var showingMixerSheet = false
@@ -253,7 +255,7 @@ private enum IPhonePage: Hashable {
     private var editorIsOpen: Bool {
       soundToEdit != nil || presetToEdit != nil || showingQuickMixEditor
         || showingSpatialMixer || showingNewPresetSheet || showingPageTimer
-        || showingNewPresetConfirmation
+        || showingNewPresetConfirmation || showingAddSound || showingSaveMix
     }
 
     /// Closes the mixer sheet from code (a layout change, single sound, Quick Mix),
@@ -311,6 +313,12 @@ private enum IPhonePage: Hashable {
             initialSelectedSounds: Set(audioManager.sounds.filter { $0.isSelected }.map(\.fileName))
           )
         }
+        .sheet(isPresented: gated($showingAddSound, hosts)) {
+          MixSoundsPicker()
+        }
+        .saveMixSheet(isPresented: gated($showingSaveMix, hosts))
+        // Now Playing hosts its own prompt while it's up.
+        .unsavedMixPrompt(isActive: hosts && !showingNowPlaying)
         .sheet(item: gated($presetToEdit, hosts)) { preset in
           EditPresetSheet(preset: preset, isPresented: $presetToEdit)
             .modifier(EditorPlacement(layout: currentLayout))
@@ -652,6 +660,18 @@ private enum IPhonePage: Hashable {
           .buttonBorderShape(.circle)
           .tint(.primary)
         }
+        if audioManager.canAddSound {
+          Button {
+            showingAddSound = true
+          } label: {
+            Label("Add Sound", systemImage: "plus")
+              .labelStyle(.iconOnly)
+              .frame(width: 44, height: 44)
+          }
+          .buttonStyle(.glass)
+          .buttonBorderShape(.circle)
+          .tint(.primary)
+        }
         let target = editTarget
         Button {
           target?.action()
@@ -763,6 +783,14 @@ private enum IPhonePage: Hashable {
                 systemImage: starred ? "star.fill" : "star")
             }
             .tint(starred ? accent : .primary)
+          } else if showsFavorite, audioManager.unsavedMix != nil {
+            // An unsaved mix can't be a favorite, so Save takes the star's place.
+            Button {
+              showingSaveMix = true
+            } label: {
+              Label("Save Mix", systemImage: "rectangle.stack.badge.plus")
+            }
+            .tint(.primary)
           }
 
           AirPlayRouteButton(activeColor: accent, inactiveColor: .primary)
