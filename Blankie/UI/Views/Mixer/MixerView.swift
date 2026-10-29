@@ -231,6 +231,10 @@ private enum IPhonePage: Hashable {
           Logger.ui.debug("MixerView: SoundManagementView closed")
         }
       }
+      // `blankie://highlights` opens Settings, which pushes Highlights.
+      .onChange(of: appState.showingSettingsHighlightsPage) { _, showing in
+        if showing { showingSettings = true }
+      }
       .sheet(isPresented: $showingSettings) {
         SettingsView()
           .presentationSizing(.page)

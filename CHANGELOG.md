@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Highlights** - Each update's highlights now live in **Settings → Highlights**, and a dot on the Settings button points you there when there's something you haven't read. If Blankie is set to another language, the notes are translated on your device. You can also open the page from a `blankie://highlights` link.
+- **Translate the software license** - When Blankie runs in another language, **About → Software License** has a **Translate** button that shows Apple's translation next to the English text.
+
 ### Changed
 
 - **Brown Noise in every language** - Brown Noise now goes by its own name in every language Blankie supports, not just English, with a new subtitle: "Deep, smooth rumble."
