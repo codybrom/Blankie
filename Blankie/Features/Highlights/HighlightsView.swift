@@ -49,7 +49,9 @@ struct HighlightsView: View {
     .task { await prepareTranslation() }
     // Off the main actor: the session isn't Sendable and translates concurrently.
     .translationTask(configuration) {
-      @concurrent [sources = Array(Set(Highlights.allText)), translations = $translations] session in
+      @concurrent [
+        sources = Array(Set(Highlights.allText)), translations = $translations
+      ] session in
       let requests = sources.map {
         TranslationSession.Request(sourceText: $0, clientIdentifier: $0)
       }
