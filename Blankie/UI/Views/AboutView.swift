@@ -55,6 +55,13 @@ struct AboutView: View {
     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
   private let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
 
+  /// Credits in the order the reader sees them, by localized sound name.
+  private var sortedCredits: [SoundCredit] {
+    creditsManager.credits.map { ($0, $0.localizedName) }
+      .sorted { $0.1.localizedStandardCompare($1.1) == .orderedAscending }
+      .map(\.0)
+  }
+
   // Shown only as a Settings sub-page: pushed in the iOS settings sheet's
   // stack, swapped into the macOS Settings pane.
   var body: some View {
@@ -178,7 +185,7 @@ extension AboutView {
             ],
             alignment: .leading, spacing: 12
           ) {
-            ForEach(creditsManager.credits, id: \.name) { credit in
+            ForEach(sortedCredits, id: \.name) { credit in
               CreditRow(credit: credit)
                 .padding(12)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -190,7 +197,7 @@ extension AboutView {
           }
         #else
           VStack(alignment: .leading, spacing: 4) {
-            ForEach(creditsManager.credits, id: \.name) { credit in
+            ForEach(sortedCredits, id: \.name) { credit in
               CreditRow(credit: credit)
             }
           }

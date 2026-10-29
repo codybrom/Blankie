@@ -310,7 +310,7 @@ struct SingleSoundPickerRow: View {
   }
 
   private var starToken: String {
-    GlobalSettings.singleToken(forFileName: sound.fileName)
+    PlayableItem.single(fileName: sound.fileName).token
   }
 
   private var accent: Color {
@@ -451,6 +451,9 @@ struct LibraryView: View {
   private let audioManager = AudioManager.shared
   @ObservedObject private var onboardingManager = OnboardingManager.shared
   private let globalSettings = GlobalSettings.shared
+  private var hasUnseenHighlights: Bool {
+    Highlights.hasUnseen(lastSeen: globalSettings.lastSeenHighlightsVersion)
+  }
   // Observed so the Sounds section updates when per-sound customizations change.
   private let customizationManager = SoundCustomizationManager.shared
   @State private var showingNewPresetSheet = false
@@ -480,7 +483,7 @@ struct LibraryView: View {
   private var singleSounds: [Sound] {
     audioManager.sounds
       .filter { !$0.isPresetUseOnly }
-      .filter { !globalSettings.isStarred(GlobalSettings.singleToken(forFileName: $0.fileName)) }
+      .filter { !globalSettings.isStarred(PlayableItem.single(fileName: $0.fileName).token) }
       .sortedByLocalizedTitle()
   }
 
@@ -942,6 +945,10 @@ struct LibraryView: View {
               Label("Settings", systemImage: "gearshape")
             }
             .tint(Color.primary)
+            // Marks unread Highlights. A text badge draws as a dot, not a count.
+            .badge(hasUnseenHighlights ? Text(verbatim: "") : nil)
+            // A bar button drops accessibility values, so VoiceOver hears "New" in the label.
+            .accessibilityLabel(hasUnseenHighlights ? Text("Settings, New") : Text("Settings"))
           }
         }
       }

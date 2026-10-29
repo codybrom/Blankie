@@ -22,6 +22,21 @@ extension CustomSoundManager {
   /// is offered only for uncompressed or lossless sources (WAV, AIFF, CAF, FLAC).
   private static let lossyExtensions: Set<String> = ["mp3", "m4a", "aac", "m4b", "aax", "m4r"]
 
+  /// AAC and MP3 codecs. Checked by codec because an .m4a can also hold Apple Lossless.
+  private static let lossyFormatIDs: Set<AudioFormatID> = [
+    kAudioFormatMPEG4AAC, kAudioFormatMPEG4AAC_HE, kAudioFormatMPEG4AAC_HE_V2,
+    kAudioFormatMPEG4AAC_LD, kAudioFormatMPEG4AAC_ELD, kAudioFormatMPEGLayer3,
+  ]
+
+  /// True when an import must be transcoded: a file over `maxRawImportBytes` whose audio
+  /// isn't already AAC or MP3. Re-encoding a lossy file costs time and quality and saves
+  /// little. A file AVAudioFile can't open is converted, as before.
+  static func importRequiresConversion(bytes: Int64, url: URL) -> Bool {
+    guard bytes > maxRawImportBytes else { return false }
+    let formatID = (try? AVAudioFile(forReading: url))?.fileFormat.settings[AVFormatIDKey]
+    return (formatID as? AudioFormatID).map { !lossyFormatIDs.contains($0) } ?? true
+  }
+
   /// The before and after of an offered conversion, in bytes.
   struct CompressionEstimate: Equatable {
     let currentBytes: Int64
@@ -168,9 +183,14 @@ extension CustomSoundManager {
 
   /// Streams `source` through an AAC encoder into `destination` (.m4a) at the library
   /// bit rate, keeping memory bounded. Static so it runs off the main actor without
-  /// sending `self`. importSound also uses it for oversized imports.
-  @concurrent static func transcodeToAAC(source: URL, destination: URL) async throws {
+  /// sending `self`. importSound also uses it for oversized imports. `progress`
+  /// receives the fraction encoded, from 0 to 1. Cancelling the task stops the encode
+  /// and throws `CancellationError`.
+  @concurrent static func transcodeToAAC(
+    source: URL, destination: URL, progress: (@Sendable (Double) -> Void)? = nil
+  ) async throws {
     let asset = AVURLAsset(url: source)
+    let totalSeconds = (try? await asset.load(.duration)).map(CMTimeGetSeconds) ?? 0
     guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
       throw ConversionError.noAudioTrack
     }
@@ -236,35 +256,56 @@ extension CustomSoundManager {
     writer.startSession(atSourceTime: .zero)
 
     let queue = DispatchQueue(label: "com.codybrom.blankie.aac-convert")
-    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-      writerInput.requestMediaDataWhenReady(on: queue) {
-        while writerInput.isReadyForMoreMediaData {
-          if reader.status == .reading, let buffer = readerOutput.copyNextSampleBuffer() {
-            if !writerInput.append(buffer) {
+    // Touched only on `queue`, like the reader and writer.
+    nonisolated(unsafe) var nextReport = 0.0
+    let cancelled = OSAllocatedUnfairLock(initialState: false)
+    try await withTaskCancellationHandler {
+      try await withCheckedThrowingContinuation {
+        (continuation: CheckedContinuation<Void, Error>) in
+        writerInput.requestMediaDataWhenReady(on: queue) {
+          while writerInput.isReadyForMoreMediaData {
+            if cancelled.withLock({ $0 }) {
               reader.cancelReading()
               writer.cancelWriting()
-              continuation.resume(throwing: ConversionError.encodingFailed)
+              continuation.resume(throwing: CancellationError())
               return
             }
-          } else {
-            // A nil buffer means the reader is drained (or it stopped). Finalize.
-            writerInput.markAsFinished()
-            if reader.status == .failed {
-              writer.cancelWriting()
-              continuation.resume(throwing: ConversionError.encodingFailed)
-            } else {
-              writer.finishWriting {
-                if writer.status == .completed {
-                  continuation.resume()
-                } else {
-                  continuation.resume(throwing: ConversionError.encodingFailed)
+            if reader.status == .reading, let buffer = readerOutput.copyNextSampleBuffer() {
+              if let progress, totalSeconds > 0 {
+                let seconds = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(buffer))
+                if seconds >= nextReport {
+                  progress(min(seconds / totalSeconds, 1))
+                  nextReport = seconds + totalSeconds / 100
                 }
               }
+              if !writerInput.append(buffer) {
+                reader.cancelReading()
+                writer.cancelWriting()
+                continuation.resume(throwing: ConversionError.encodingFailed)
+                return
+              }
+            } else {
+              // A nil buffer means the reader is drained (or it stopped). Finalize.
+              writerInput.markAsFinished()
+              if reader.status == .failed {
+                writer.cancelWriting()
+                continuation.resume(throwing: ConversionError.encodingFailed)
+              } else {
+                writer.finishWriting {
+                  if writer.status == .completed {
+                    continuation.resume()
+                  } else {
+                    continuation.resume(throwing: ConversionError.encodingFailed)
+                  }
+                }
+              }
+              return
             }
-            return
           }
         }
       }
+    } onCancel: {
+      cancelled.withLock { $0 = true }
     }
   }
 }

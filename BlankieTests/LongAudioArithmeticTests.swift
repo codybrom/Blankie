@@ -12,6 +12,7 @@
 import AVFoundation
 import Foundation
 import Testing
+import os
 
 @testable import Blankie
 
@@ -58,14 +59,196 @@ import Testing
 
   // MARK: - 2^32+ frames
 
-  /// A file too long for one buffer can't narrow to AVAudioFrameCount.
-  @Test func wholeFileAnalysisDeclinesHugeFiles() async throws {
+  /// Peak and RMS read in chunks, so a file too long for one buffer still analyzes.
+  @Test func chunkedAnalysisReadsHugeFiles() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
     let url = try makeHugeCAF(in: dir)
 
-    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == nil)
-    #expect(await AudioAnalyzer.analyzeRMSLevel(at: url) == nil)
+    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == 0)
+    #expect(await AudioAnalyzer.analyzeRMSLevel(at: url) == 0)
+  }
+
+  // MARK: - Chunked reads (#144)
+
+  /// Writes a stereo Float32 CAF that spans several analysis chunks, with a lone
+  /// spike past the first chunk boundary. Returns the file and its samples.
+  private func makeMultiChunkCAF(in dir: URL) throws -> (URL, [[Float]]) {
+    let url = dir.appendingPathComponent("multichunk.caf")
+    let frames = Int(AudioAnalyzer.analysisChunkFrames) * 3 + 1234
+    let format = try #require(
+      AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2))
+    let buffer = try #require(
+      AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)))
+    buffer.frameLength = AVAudioFrameCount(frames)
+    var samples: [[Float]] = [[], []]
+    for channel in 0..<2 {
+      let data = try #require(buffer.floatChannelData?[channel])
+      for frame in 0..<frames {
+        // Amplitude swells across the file so every bar differs.
+        let amplitude = 0.1 + 0.4 * Float(frame) / Float(frames)
+        data[frame] = amplitude * sin(Float(frame) * 0.013 * Float(channel + 1))
+      }
+      samples[channel] = Array(UnsafeBufferPointer(start: data, count: frames))
+    }
+    buffer.floatChannelData![1][60_001] = -0.95
+    samples[1][60_001] = -0.95
+
+    let file = try AVAudioFile(forWriting: url, settings: format.settings)
+    try file.write(from: buffer)
+    return (url, samples)
+  }
+
+  @Test func chunkedPeakAndRMSMatchWholeFileValues() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (url, samples) = try makeMultiChunkCAF(in: dir)
+
+    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == 0.95)
+
+    let expectedRMS =
+      samples.map { channel in
+        Float(sqrt(channel.reduce(0.0) { $0 + Double($1 * $1) } / Double(channel.count)))
+      }.reduce(0, +) / 2
+    let rms = try #require(await AudioAnalyzer.analyzeRMSLevel(at: url))
+    #expect(abs(rms - expectedRMS) < 1e-5)
+  }
+
+  /// The true-peak filter carries its history across chunks. A short burst sits on the
+  /// first chunk boundary, so its peaks between samples need samples from both chunks.
+  @Test func truePeakSpansChunkBoundaries() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let url = dir.appendingPathComponent("boundary.caf")
+    let frames = Int(AudioAnalyzer.analysisChunkFrames) * 2
+    let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
+    let buffer = try #require(
+      AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)))
+    buffer.frameLength = AVAudioFrameCount(frames)
+    let samples = try #require(buffer.floatChannelData?[0])
+    samples.update(repeating: 0, count: frames)
+    func write() throws {
+      let file = try AVAudioFile(forWriting: url, settings: format.settings)
+      try file.write(from: buffer)
+    }
+
+    // AVAudioFile can return fewer frames than the analyzer asks for, so read the
+    // silent file once the same way to find where the first chunk really ends.
+    try write()
+    let reader = try AVAudioFile(forReading: url)
+    let chunk = try #require(
+      AVAudioPCMBuffer(
+        pcmFormat: reader.processingFormat, frameCapacity: AudioAnalyzer.analysisChunkFrames))
+    try reader.read(into: chunk, frameCount: AudioAnalyzer.analysisChunkFrames)
+    let boundary = Int(chunk.frameLength)
+
+    // A quarter-rate burst sampled 45 degrees off its crests, four frames each side.
+    for frame in (boundary - 4)..<(boundary + 4) {
+      samples[frame] = Float(0.9 * sin(Double.pi / 2 * Double(frame) + Double.pi / 4))
+    }
+    try write()
+
+    let whole = try #require(AudioAnalyzer.truePeakdBTP(buffer: buffer))
+    let samplePeak = 20 * log10(Float(0.9 * sin(Double.pi / 4)))
+    #expect(whole > samplePeak + 2, "The burst's peak lies between samples")
+    let chunked = try #require(await AudioAnalyzer.comprehensiveAnalysis(at: url).truePeakdBTP)
+    #expect(chunked == whole)
+  }
+
+  /// Bars that straddle chunk boundaries match the in-memory downsample.
+  @Test func streamedWaveformMatchesInMemoryDownsample() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (url, samples) = try makeMultiChunkCAF(in: dir)
+
+    for barCount in [1, 97, 240] {
+      let streamed = try await SoundWaveformView.waveformBars(from: url, barCount: barCount)
+      let expected = SoundWaveformView.downsample(samples[0], to: barCount)
+      #expect(streamed.count == expected.count)
+      #expect(zip(streamed, expected).allSatisfy { abs($0 - $1) < 1e-4 })
+    }
+  }
+
+  /// Long files sample windows per bar, including seeks past 2^32 frames.
+  @Test func longWaveformSamplesEveryBar() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let bars = try await SoundWaveformView.waveformBars(
+      from: try makeHugeCAF(in: dir), barCount: 50)
+    #expect(bars == [Float](repeating: 0, count: 50))
+  }
+
+  /// Only large files whose audio isn't already AAC or MP3 are forced through AAC on
+  /// import. The codec decides, so an Apple Lossless .m4a still converts.
+  @Test func lossyImportsSkipForcedConversion() throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    func write(_ name: String, _ settings: [String: Any]) throws -> URL {
+      let url = dir.appendingPathComponent(name)
+      let file = try AVAudioFile(forWriting: url, settings: settings)
+      let buffer = try #require(
+        AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 4096))
+      buffer.frameLength = 4096
+      try file.write(from: buffer)
+      return url
+    }
+    let aac = try write(
+      "aac.m4a",
+      [
+        AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2,
+      ])
+    let alac = try write(
+      "alac.m4a",
+      [
+        AVFormatIDKey: kAudioFormatAppleLossless, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2, AVEncoderBitDepthHintKey: 16,
+      ])
+    let wav = try write(
+      "pcm.wav",
+      [
+        AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false,
+      ])
+
+    let large = CustomSoundManager.maxRawImportBytes + 1
+    #expect(!CustomSoundManager.importRequiresConversion(bytes: large, url: aac))
+    #expect(CustomSoundManager.importRequiresConversion(bytes: large, url: alac))
+    #expect(CustomSoundManager.importRequiresConversion(bytes: large, url: wav))
+    #expect(
+      !CustomSoundManager.importRequiresConversion(
+        bytes: CustomSoundManager.maxRawImportBytes, url: wav))
+  }
+
+  /// Analysis progress starts at 0 and only moves forward.
+  @Test func analysisReportsProgressInOrder() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (url, _) = try makeMultiChunkCAF(in: dir)
+
+    let reports = OSAllocatedUnfairLock(initialState: [Double]())
+    _ = await AudioAnalyzer.comprehensiveAnalysis(at: url) { fraction in
+      reports.withLock { $0.append(fraction) }
+    }
+    let fractions = reports.withLock { $0 }
+    #expect(fractions.first == 0)
+    #expect(fractions.count > 1)
+    #expect(zip(fractions, fractions.dropFirst()).allSatisfy { $0 < $1 })
+    #expect(fractions.allSatisfy { $0 < 1 })
+  }
+
+  /// A cancelled import stops its AAC encode instead of finishing the file.
+  @Test func cancelledTranscodeThrowsCancellation() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let (source, _) = try makeMultiChunkCAF(in: dir)
+    let destination = dir.appendingPathComponent("out.m4a")
+
+    let task = Task {
+      withUnsafeCurrentTask { $0?.cancel() }
+      try await CustomSoundManager.transcodeToAAC(source: source, destination: destination)
+    }
+    await #expect(throws: CancellationError.self) { try await task.value }
   }
 
   /// The remaining frame count must be clamped before it narrows to AVAudioFrameCount.

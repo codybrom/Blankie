@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - Unreleased
+
+A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in every language and three fixes.
+
+### Added
+
+- **Highlights** - Each update's highlights now live in **Settings → Highlights**, and a dot on the Settings button points you there when there's something you haven't read. If Blankie is set to another language, the notes are translated on your device. You can also open the page from a `blankie://highlights` link.
+- **Translate the software license** - When Blankie runs in another language, **About → Software License** has a **Translate** button that shows Apple's translation next to the English text.
+
+### Changed
+
+- **Brown Noise in every language** - Brown Noise now goes by its own name in every language Blankie supports, not just English, with a new subtitle: "Deep, smooth rumble."
+- **One name for the French sleep timer** - In French, the sleep timer is now called "minuterie" everywhere, the same word Apple Books uses.
+
+### Fixed
+
+- Tapping Pause on a widget after Blankie was force-quit no longer starts playback.
+- First-run setup and the sound credits in About now sort sounds by the names you see.
+- Importing a custom sound that runs for hours no longer crashes Blankie on iPhone and iPad, and long imports finish much faster, with a progress bar and a Cancel button. Large MP3 and AAC files now keep their original audio instead of being converted again.
+
 ## [2.1.0] - 2026-10-28
 
 Blankie 2.1 adds Home Screen widgets on iPhone and iPad, Siri and Shortcuts actions, Spotlight search, a wider iPad layout and support for iPhone Duo.
@@ -326,7 +346,8 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/codybrom/blankie/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/codybrom/blankie/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1

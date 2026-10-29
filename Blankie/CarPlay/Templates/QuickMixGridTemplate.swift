@@ -61,7 +61,7 @@ import os
         sound.playbackState == .playing && AudioManager.shared.isQuickMix
         && AudioManager.shared.singleSound == nil
 
-      let titles = [CarPlaySoundNames.name(of: sound)]
+      let titles = [sound.localizedTitle]
 
       let button = CPGridButton(
         titleVariants: titles,

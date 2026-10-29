@@ -17,15 +17,6 @@ extension AudioAnalyzer {
     do {
       Logger.app.debug("AudioAnalyzer: Starting LUFS analysis for \(url.lastPathComponent)")
 
-      // Peak and RMS are logged for comparison only.
-      if let peakLevel = await analyzePeakLevel(at: url) {
-        Logger.app.debug("AudioAnalyzer: Peak level: \(peakLevel) (\(20 * log10(peakLevel)) dBFS)")
-      }
-
-      if let rmsLevel = await analyzeRMSLevel(at: url) {
-        Logger.app.debug("AudioAnalyzer: RMS level: \(rmsLevel) (\(20 * log10(rmsLevel)) dBFS)")
-      }
-
       let file = try AVAudioFile(forReading: url)
       let measurements = try await processAudioFileForLUFS(file)
       let integratedLUFS = calculateIntegratedLUFS(from: measurements)
