@@ -26,6 +26,8 @@ import SwiftUI
     /// Presented from inside the cover, since a sheet on the base hierarchy
     /// can't present over a fullScreenCover.
     @State private var showingTimer = false
+    @State private var showingAddSound = false
+    @State private var showingSaveMix = false
     var backgroundImage: PlatformImage?
 
     /// Inline in the mixer: no drag handle, sheet background or close chevron.
@@ -82,7 +84,8 @@ import SwiftUI
     private var artworkTaskID: String {
       let single = audioManager.singleSound?.id.uuidString ?? ""
       let preset = presetManager.currentPreset?.id.uuidString ?? ""
-      return "\(single)-\(preset)"
+      let mix = audioManager.unsavedMix?.originSoundFileName ?? ""
+      return "\(single)-\(preset)-\(mix)"
     }
 
     var body: some View {
@@ -171,6 +174,12 @@ import SwiftUI
             .presentationDetents([.medium, .large])
         }
       }
+      .sheet(isPresented: $showingAddSound) {
+        MixSoundsPicker()
+      }
+      .saveMixSheet(isPresented: $showingSaveMix)
+      // Inline, the root view's prompt covers it.
+      .unsavedMixPrompt(isActive: !inline)
     }
 
     // MARK: - Now Playing View
@@ -402,8 +411,8 @@ import SwiftUI
       .modifier(SettlesRows(item: itemKey, showsProgress: showsProgressRow))
     }
 
-    /// Sound Mixer, then AirPlay (open Duo only), then Timer. `fills` stretches
-    /// the Sound Mixer button to the row's width.
+    /// Sound Mixer (+ for a single sound), then AirPlay (open Duo only), then Timer.
+    /// `fills` stretches the Sound Mixer button to the row's width.
     @ViewBuilder
     private func playerActionRow(fills: Bool = false) -> some View {
       if let onOpenMixer {
@@ -442,6 +451,8 @@ import SwiftUI
               }
             }
             .accessibilityValue(silentPresetMessage.map { Text($0) } ?? Text(verbatim: ""))
+          } else {
+            addSoundButton(size: 48)
           }
 
           #if os(iOS)
@@ -554,11 +565,31 @@ import SwiftUI
           #endif
           Spacer(minLength: 0)
           panelToggle(.timer, symbol: "timer", label: Text("Timer"))
-          panelToggle(.sounds, symbol: "slider.horizontal.3", label: Text("Sounds"))
-            .disabled(audioManager.singleSound != nil || soundsPanel == nil)
+          if audioManager.singleSound != nil {
+            addSoundButton(size: 56)
+          } else {
+            panelToggle(.sounds, symbol: "slider.horizontal.3", label: Text("Sounds"))
+              .disabled(soundsPanel == nil)
+          }
         }
         .padding(.horizontal, 32)
       }
+    }
+
+    /// Starts a mix from the single sound.
+    private func addSoundButton(size: CGFloat) -> some View {
+      Button {
+        showingAddSound = true
+      } label: {
+        Image(systemName: "plus")
+          .font(.system(size: 20, weight: .medium))
+          .foregroundStyle(.white)
+          .frame(width: size, height: size)
+          .contentShape(Circle())
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(Text("Add Sound"))
+      .glassEffect(.regular.interactive(), in: .circle)
     }
 
     private func panelToggle(_ target: NowPlayingPanel, symbol: String, label: Text)
@@ -762,10 +793,7 @@ import SwiftUI
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         } else {
           FallbackArtwork(
-            glyph: .playback(
-              isQuickMix: audioManager.isQuickMix,
-              isDefaultPreset: presetManager.currentPreset?.isDefault ?? true,
-              icons: audioManager.playingSoundIcons()),
+            glyph: NowPlayingDisplay.mixFallbackGlyph(),
             accent: presetManager.currentPreset?.accentColor
               ?? globalSettings.customAccentColor ?? .accentColor,
             size: size,
@@ -978,7 +1006,7 @@ import SwiftUI
 
     // MARK: - Helper Properties
 
-    /// nil for Quick Mix, which can't be a favorite.
+    /// nil for Quick Mix and an unsaved mix, which can't be favorites.
     private var favoriteToken: String? {
       if let single = audioManager.singleSound {
         return PlayableItem.single(fileName: single.fileName).token
@@ -1038,6 +1066,8 @@ import SwiftUI
       Group {
         if let singleSound = audioManager.singleSound {
           Text(singleSound.localizedTitle)
+        } else if let unsavedMix = audioManager.unsavedMix {
+          Text(verbatim: unsavedMix.name)
         } else if let preset = presetManager.currentPreset {
           Text(verbatim: preset.displayName)
         } else {
@@ -1049,7 +1079,8 @@ import SwiftUI
       .foregroundColor(.white)
     }
 
-    /// A built-in sound's caption, a custom sound's author, or a preset's creator.
+    /// A built-in sound's caption, a custom sound's author, or a preset's creator. An unsaved
+    /// mix has none.
     private var infoSubtitle: Text? {
       let text: Text?
       if let singleSound = audioManager.singleSound {
@@ -1060,6 +1091,8 @@ import SwiftUI
         } else {
           text = nil
         }
+      } else if audioManager.unsavedMix != nil {
+        text = nil
       } else if let creatorName = presetManager.currentPreset?.creatorName,
         !creatorName.isEmpty
       {
@@ -1072,7 +1105,24 @@ import SwiftUI
 
     @ViewBuilder
     private var favoriteButton: some View {
-      if let token = favoriteToken, !favoriteInToolbar {
+      if audioManager.unsavedMix != nil, !favoriteInToolbar {
+        // An unsaved mix can't be a favorite, so Save takes the star's place.
+        Button {
+          showingSaveMix = true
+        } label: {
+          Text("Save")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.black)
+            .padding(.horizontal, 14)
+            .frame(height: 32)
+            .background(accentColor, in: .capsule)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Save Mix"))
+        #if os(iOS)
+          .frame(minHeight: 44, alignment: .trailing)
+        #endif
+      } else if let token = favoriteToken, !favoriteInToolbar {
         let starred = globalSettings.isStarred(token)
         Button {
           globalSettings.toggleStarred(token)
@@ -1111,6 +1161,8 @@ import SwiftUI
     /// What's playing, so its artwork and title can transition when it changes.
     private var itemKey: String {
       if let single = audioManager.singleSound { return "sound:\(single.fileName)" }
+      // The mix's name changes as sounds come and go, so it's keyed by its first sound.
+      if let mix = audioManager.unsavedMix { return "unsavedMix:\(mix.originSoundFileName)" }
       if audioManager.isQuickMix { return "quickMix" }
       return "preset:\(presetManager.currentPreset?.id.uuidString ?? "none")"
     }
@@ -1155,7 +1207,9 @@ import SwiftUI
 
         if canNavigate {
           Button {
-            performNavigation(from: .leading, audioManager.navigateToPreviousPreset)
+            audioManager.leaveUnsavedMixAsking {
+              performNavigation(from: .leading, audioManager.navigateToPreviousPreset)
+            }
           } label: {
             Image(systemName: "backward.fill")
               .font(.system(size: 32))
@@ -1186,7 +1240,9 @@ import SwiftUI
 
         if canNavigate {
           Button {
-            performNavigation(from: .trailing, audioManager.navigateToNextPreset)
+            audioManager.leaveUnsavedMixAsking {
+              performNavigation(from: .trailing, audioManager.navigateToNextPreset)
+            }
           } label: {
             Image(systemName: "forward.fill")
               .font(.system(size: 32))

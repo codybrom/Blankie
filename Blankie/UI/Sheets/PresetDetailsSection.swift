@@ -32,6 +32,8 @@ struct PresetDetailsSection: View {
   /// In-flight flag for AI naming, owned by the parent so the auto-suggest on
   /// open and the sparkles button share one guard.
   @Binding var isGeneratingName: Bool
+  /// Shown under the details, such as a clash with an existing name.
+  var nameNote: LocalizedStringKey?
 
   @State private var aiAvailable = false
   private let globalSettings = GlobalSettings.shared
@@ -47,6 +49,11 @@ struct PresetDetailsSection: View {
       creatorRow
       if let starToken {
         favoriteRow(starToken)
+      }
+    } footer: {
+      if let nameNote {
+        Text(nameNote)
+          .foregroundStyle(.red)
       }
     }
     .onAppear {

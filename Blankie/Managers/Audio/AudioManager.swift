@@ -83,6 +83,13 @@ class AudioManager {
   @ObservationIgnored var quickMixOriginalStates: [QuickMixState] = []
   @ObservationIgnored var preQuickMixPreset: Preset?
 
+  /// The mix grown from a single sound, held only in memory until it's saved.
+  var unsavedMix: UnsavedMix?
+  @ObservationIgnored var unsavedMixOriginalStates: [QuickMixState] = []
+  @ObservationIgnored var preUnsavedMixPreset: Preset?
+  /// What to do once the save prompt is answered (`unsavedMixPrompt()` presents it).
+  var pendingLeave: (@MainActor () -> Void)?
+
   /// Selected-sound set last published to Now Playing, so the sound list
   /// republishes only when the selection changes.
   @ObservationIgnored private var lastPublishedSelectionSignature: String?
@@ -202,6 +209,7 @@ extension AudioManager {
     soundChangeCoalesceTask = Task { @MainActor in
       try? await Task.sleep(for: .milliseconds(100))
       guard !Task.isCancelled else { return }
+      reconcileUnsavedMix()
       updateHasSelectedSounds()
       PresetManager.shared.updateCurrentPresetState()
       if isQuickMix { publishCurrentWidgetSnapshot() }
@@ -346,6 +354,8 @@ extension AudioManager {
   /// preset-use-only sounds by `defaultSoundOrder`. Unknown sounds sort last.
   @MainActor
   func orderedVisibleSounds(for preset: Preset?) -> [Sound] {
+    // An unsaved mix has no preset but lists only its own sounds.
+    if preset == nil, unsavedMix != nil { return unsavedMixSounds }
     let visible = sounds.filter { sound in
       if let preset, !preset.isDefault {
         return preset.soundStates.contains { $0.fileName == sound.fileName }

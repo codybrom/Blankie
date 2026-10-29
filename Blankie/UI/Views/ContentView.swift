@@ -26,6 +26,8 @@ import UniformTypeIdentifiers
     @State private var presetToEdit: Preset?
     /// Confirm-then-create flow replacing Edit Preset on the default preset.
     @State private var showingNewPresetConfirmation = false
+    @State private var showingAddSound = false
+    @State private var showingSaveMix = false
     @State private var showingNewPresetSheet = false
     @State private var showingColorPicker = false
     @State private var showingPreferences = false
@@ -75,6 +77,9 @@ import UniformTypeIdentifiers
       // singleLayoutSound keeps the title steady while sheet preview exits single sound.
       if let singleSound = singleLayoutSound {
         return singleSound.localizedTitle
+      }
+      if let unsavedMix = audioManager.unsavedMix {
+        return unsavedMix.name
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")
@@ -282,8 +287,28 @@ import UniformTypeIdentifiers
             .accessibilityLabel(Text("Spatial Mix"))
           }
         }
+        if audioManager.canAddSound, !appState.showingSettingsPane {
+          ToolbarItem(placement: .primaryAction) {
+            Button {
+              showingAddSound = true
+            } label: {
+              Image(systemName: "plus")
+            }
+            .accessibilityLabel(Text("Add Sound"))
+            .popover(isPresented: $showingAddSound, arrowEdge: .bottom) {
+              MixSoundsPicker()
+            }
+          }
+        }
+        // An unsaved mix's slot is Save.
+        if audioManager.unsavedMix != nil, !appState.showingSettingsPane {
+          ToolbarItem(placement: .primaryAction) {
+            Button("Save") { showingSaveMix = true }
+              .accessibilityLabel(Text("Save Mix"))
+          }
+        }
         // Mirrors iOS's editToolbarItems, including New Preset on the default preset.
-        if !appState.showingSettingsPane {
+        if audioManager.unsavedMix == nil, !appState.showingSettingsPane {
           ToolbarItem(placement: .primaryAction) {
             let onDefaultPreset =
               audioManager.singleSound == nil
@@ -319,6 +344,7 @@ import UniformTypeIdentifiers
         SoundSheet(mode: .edit(sound))
           .interactiveDismissDisabled()
       }
+      .saveMixSheet(isPresented: $showingSaveMix)
       // Capture the single sound backdrop for the sheet's lifetime (mirrors MixerView).
       .onChange(of: soundToEdit) { oldValue, newValue in
         if newValue != nil {
@@ -405,14 +431,16 @@ import UniformTypeIdentifiers
       }
     }
 
-    /// Persists a reorder. Indices are into `filteredSounds`. The complete order
-    /// goes to the custom preset or the default order (mirrors `MixerView.moveItems`).
+    /// Persists a reorder. Indices are into `filteredSounds`. The order goes to the unsaved
+    /// mix, the custom preset or the default order (mirrors `MixerView.moveItems`).
     private func moveSounds(from source: IndexSet, to destination: Int) {
       var newOrder = filteredSounds.map(\.fileName)
       newOrder.move(fromOffsets: source, toOffset: destination)
       let displayed = Set(newOrder)
 
-      if let preset = presetManager.currentPreset, !preset.isDefault {
+      if audioManager.unsavedMix != nil {
+        audioManager.reorderUnsavedMix(newOrder)
+      } else if let preset = presetManager.currentPreset, !preset.isDefault {
         // Hidden preset sounds keep a place at the end.
         var complete = newOrder
         for state in preset.soundStates where !displayed.contains(state.fileName) {

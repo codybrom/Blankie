@@ -11,10 +11,11 @@ import os
 extension AudioManager {
   // MARK: - Quick Mix Mode
 
-  /// Exits single sound, then Quick Mix, before a preset switch. The pre-Quick-Mix mix
+  /// Exits an unsaved mix, single sound, then Quick Mix, before a preset switch. The pre-Quick-Mix mix
   /// is dropped unless `restoringQuickMix` is set, since the preset replaces it.
   @MainActor
   func leaveTransientModes(restoringQuickMix: Bool = false) {
+    discardUnsavedMix()
     exitSingleSoundWithoutResuming()
     exitQuickMix(restoring: restoringQuickMix)
   }
@@ -24,6 +25,7 @@ extension AudioManager {
     Logger.audio.debug("AudioManager: Entering Quick Mix mode")
 
     exitPreviewMode(resuming: false)
+    discardUnsavedMix()
 
     // Persist a pending (coalesced) mix edit before Quick Mix clears the preset.
     PresetManager.shared.updateCurrentPresetState()
