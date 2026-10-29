@@ -947,7 +947,8 @@ struct LibraryView: View {
             .tint(Color.primary)
             // Marks an unopened What's New. A text badge draws as a dot, not a count.
             .badge(hasUnseenWhatsNew ? Text(verbatim: "") : nil)
-            .accessibilityValue(hasUnseenWhatsNew ? Text("New") : Text(verbatim: ""))
+            // A bar button drops accessibility values, so VoiceOver hears "New" in the label.
+            .accessibilityLabel(hasUnseenWhatsNew ? Text("Settings, New") : Text("Settings"))
           }
         }
       }

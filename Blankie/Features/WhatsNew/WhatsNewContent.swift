@@ -7,17 +7,40 @@
 
 import Foundation
 
+#if canImport(UIKit)
+  import UIKit
+#endif
+
 /// One release's highlights on the What's New page.
 struct WhatsNewRelease: Identifiable {
   let version: String
   let items: [WhatsNewItem]
   var id: String { version }
+
+  /// Keeps only the items that apply to this device.
+  init(version: String, items: [WhatsNewItem]) {
+    self.version = version
+    self.items = items.filter { $0.platforms.contains(.current) }
+  }
 }
 
 struct WhatsNewItem: Identifiable {
+  enum Platform {
+    case iPhone, iPad, mac
+
+    static var current: Platform {
+      #if os(macOS)
+        .mac
+      #else
+        UIDevice.current.userInterfaceIdiom == .phone ? .iPhone : .iPad
+      #endif
+    }
+  }
+
   let systemImage: String
   let title: String
   let detail: String
+  var platforms: Set<Platform> = [.iPhone, .iPad, .mac]
   var id: String { title }
 }
 
@@ -43,98 +66,59 @@ enum WhatsNew {
     releases.flatMap { $0.items.flatMap { [$0.title, $0.detail] } }
   }
 
-  private static var items211: [WhatsNewItem] {
-    var items = [
-      WhatsNewItem(
-        systemImage: "sparkles", title: "What's New, right here",
-        detail:
-          "Each update's highlights now live in Settings. If Blankie is set to another language, they're translated right on your device."
-      ),
-      WhatsNewItem(
-        systemImage: "waveform.low", title: "Brown Noise in your language",
-        detail:
-          "Brown Noise now goes by its own name in every language Blankie supports, with a new subtitle: \"Deep, smooth rumble.\""
-      ),
-    ]
-    #if os(macOS)
-      items.append(
-        WhatsNewItem(
-          systemImage: "wrench.and.screwdriver", title: "Fixes",
-          detail: "First-run setup and the sound credits in About now sort sounds in your language."
-        ))
-    #else
-      items.append(
-        WhatsNewItem(
-          systemImage: "wrench.and.screwdriver", title: "Fixes",
-          detail:
-            "A Pause button left showing on a widget after Blankie closed no longer starts playback, and first-run setup sorts sounds in your language."
-        ))
-    #endif
-    return items
-  }
+  private static let items211 = [
+    WhatsNewItem(
+      systemImage: "sparkles", title: "Update Highlights",
+      detail:
+        "You found it! When you install an update, a little dot on Settings will let you know there's new features and highlights to read. Blankie's release highlights are written in English but your device will offer to translate them if needed."
+    )
+  ]
 
-  private static var items21: [WhatsNewItem] {
-    #if os(macOS)
-      [
-        WhatsNewItem(
-          systemImage: "square.stack.3d.up", title: "Shortcuts and Spotlight",
-          detail:
-            "Use Blankie in the Shortcuts app to play or pause, start a preset or sound, set a sleep timer or change the volume. Find your presets and sounds in Spotlight."
-        ),
-        WhatsNewItem(
-          systemImage: "photo.on.rectangle", title: "Preset artwork on the Mac",
-          detail:
-            "A preset's background artwork now shows behind your sound tiles, dimmed so they stay readable."
-        ),
-        WhatsNewItem(
-          systemImage: "captions.bubble", title: "Sound subtitles",
-          detail:
-            "Every built-in sound now has a short subtitle (\"Soft, steady rainfall\") that tells you what you're about to hear."
-        ),
-        WhatsNewItem(
-          systemImage: "wrench.and.screwdriver", title: "Fixes",
-          detail:
-            "Fixes for playback, the sleep timer, preset imports, custom sounds, the window background, Autoplay on Open and the menu bar icon."
-        ),
-      ]
-    #else
-      [
-        WhatsNewItem(
-          systemImage: "widget.small", title: "Home Screen widgets",
-          detail:
-            "Start a favorite, Quick Mix or a single sound in one tap, or play and pause from Now Playing."
-        ),
-        WhatsNewItem(
-          systemImage: "mic.fill", title: "Siri, Shortcuts and Spotlight",
-          detail:
-            "Ask Siri to play a preset or sound, build your own actions in the Shortcuts app, and find your presets in Spotlight."
-        ),
-        WhatsNewItem(
-          systemImage: "rectangle.split.2x1", title: "Support for iPhone Duo",
-          detail:
-            "Now Playing on one screen and the Sound Mixer on the other, in any pose. Fold or close it and you keep your place."
-        ),
-        WhatsNewItem(
-          systemImage: "play.circle", title: "Now Playing opens first on iPhone",
-          detail:
-            "Picking a preset or sound now takes you to what's playing, and Quick Mix still opens to its tiles. To go straight to the mixer instead, turn off Open to Now Playing in Settings."
-        ),
-        WhatsNewItem(
-          systemImage: "ipad.landscape", title: "Wider layout on iPad",
-          detail:
-            "A preset's page now shows its artwork at the top. Preset and sound editors open in a side panel (iPadOS 27), so the page you're changing stays in view."
-        ),
-        WhatsNewItem(
-          systemImage: "captions.bubble", title: "Sound subtitles",
-          detail:
-            "Every built-in sound now has a short subtitle (\"Soft, steady rainfall\"), shown in the app, on the Lock Screen and in CarPlay."
-        ),
-        WhatsNewItem(
-          systemImage: "wrench.and.screwdriver", title: "Fixes",
-          detail:
-            "Fixes for playback, the sleep timer, preset imports, custom sounds, CarPlay and the Lock Screen."
-        ),
-      ]
-    #endif
-  }
+  private static let items21 = [
+    WhatsNewItem(
+      systemImage: "photo.on.rectangle", title: "Preset artwork on the Mac",
+      detail:
+        "A preset's background artwork now shows behind your sound tiles, dimmed so they stay readable.",
+      platforms: [.mac]
+    ),
+    WhatsNewItem(
+      systemImage: "widget.small", title: "Home Screen widgets",
+      detail:
+        "Start a favorite, Quick Mix or a single sound in one tap, or play and pause from Now Playing.",
+      platforms: [.iPhone, .iPad]
+    ),
+    WhatsNewItem(
+      systemImage: "rectangle.split.2x1", title: "Support for iPhone Duo",
+      detail:
+        "Lucky enough to get your hand on Apple's newest iPhone? If so, you can enjoy an experience fully optimized for every pose.",
+      platforms: [.iPhone]
+    ),
+    WhatsNewItem(
+      systemImage: "square.stack.3d.up", title: "Shortcuts Support",
+      detail:
+        "Create workflows using Blankie in the Shortcuts app to play or pause, start a preset or sound, set a sleep timer or change the volume."
+    ),
+    WhatsNewItem(
+      systemImage: "mic.fill", title: "Ask Siri to Play Blankie",
+      detail:
+        "Ask Siri to play a preset or sound without opening the app."
+    ),
+    WhatsNewItem(
+      systemImage: "play.circle", title: "Now Playing opens first on iPhone",
+      detail:
+        "Picking a preset or sound now takes you to what's playing, and Quick Mix still opens to its tiles. To go straight to the mixer instead, turn off Open to Now Playing in Settings.",
+      platforms: [.iPhone]
+    ),
+    WhatsNewItem(
+      systemImage: "ipad.landscape", title: "Wider layout on iPad",
+      detail:
+        "A preset's page now shows its artwork at the top. Preset and sound editors open in a side panel (iPadOS 27), so the page you're changing stays in view.",
+      platforms: [.iPad]
+    ),
+    WhatsNewItem(
+      systemImage: "captions.bubble", title: "Sound subtitles",
+      detail:
+        "Every built-in sound now has a short subtitle that appears wherever the sound is played, including the app, on the Lock Screen, and in CarPlay."
+    ),
+  ]
 }
