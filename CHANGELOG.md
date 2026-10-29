@@ -19,6 +19,7 @@ A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in 
 ### Changed
 
 - **Brown Noise in every language** - Brown Noise now goes by its own name in every language Blankie supports, not just English, with a new subtitle: "Deep, smooth rumble."
+- **One name for the French sleep timer** - In French, the sleep timer is now called "minuterie" everywhere, the same word Apple Books uses.
 
 ### Fixed
 
