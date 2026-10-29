@@ -71,10 +71,10 @@ extension GlobalSettings {
   }
 
   @MainActor
-  func setLastSeenWhatsNewVersion(_ version: String) {
-    guard lastSeenWhatsNewVersion != version else { return }
-    lastSeenWhatsNewVersion = version
-    UserDefaults.shared.set(version, forKey: UserDefaultsKeys.lastSeenWhatsNewVersion)
+  func setLastSeenHighlightsVersion(_ version: String) {
+    guard lastSeenHighlightsVersion != version else { return }
+    lastSeenHighlightsVersion = version
+    UserDefaults.shared.set(version, forKey: UserDefaultsKeys.lastSeenHighlightsVersion)
   }
 
   @MainActor

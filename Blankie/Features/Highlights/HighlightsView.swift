@@ -1,5 +1,5 @@
 //
-//  WhatsNewView.swift
+//  HighlightsView.swift
 //  Blankie
 //
 //  Created by Cody Bromley on 10/28/26.
@@ -12,7 +12,7 @@ import os
 /// Release highlights in English, translated on device when the app runs in another
 /// language. An installed language translates on open. Otherwise a button asks
 /// first, since translating starts the system's language download prompt.
-struct WhatsNewView: View {
+struct HighlightsView: View {
   private let globalSettings = GlobalSettings.shared
   @State private var translations: [String: String] = [:]
   @State private var showsOriginal = false
@@ -33,7 +33,7 @@ struct WhatsNewView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 28) {
-        ForEach(WhatsNew.releases) { release in
+        ForEach(Highlights.releases) { release in
           releaseSection(release)
         }
         translationFooter
@@ -42,14 +42,14 @@ struct WhatsNewView: View {
       .frame(maxWidth: 600, alignment: .leading)
       .frame(maxWidth: .infinity)
     }
-    .navigationTitle("What's New")
+    .navigationTitle("Highlights")
     #if os(iOS)
       .navigationBarTitleDisplayMode(.inline)
     #endif
     .task { await prepareTranslation() }
     // Off the main actor: the session isn't Sendable and translates concurrently.
     .translationTask(configuration) {
-      @concurrent [sources = Array(Set(WhatsNew.allText)), translations = $translations] session in
+      @concurrent [sources = Array(Set(Highlights.allText)), translations = $translations] session in
       let requests = sources.map {
         TranslationSession.Request(sourceText: $0, clientIdentifier: $0)
       }
@@ -61,13 +61,13 @@ struct WhatsNewView: View {
         await MainActor.run { translations.wrappedValue = result }
       } catch {
         // A declined download or unsupported pair leaves the English in place.
-        Logger.ui.error("What's New translation failed: \(error, privacy: .public)")
+        Logger.ui.error("Highlights translation failed: \(error, privacy: .public)")
       }
     }
-    .onAppear { globalSettings.setLastSeenWhatsNewVersion(WhatsNew.latestVersion) }
+    .onAppear { globalSettings.setLastSeenHighlightsVersion(Highlights.latestVersion) }
   }
 
-  private func releaseSection(_ release: WhatsNewRelease) -> some View {
+  private func releaseSection(_ release: HighlightsRelease) -> some View {
     VStack(alignment: .leading, spacing: 18) {
       Text(verbatim: "Blankie \(release.version)")
         .font(.title2.weight(.bold))
@@ -137,5 +137,5 @@ struct WhatsNewView: View {
 }
 
 #Preview {
-  NavigationStack { WhatsNewView() }
+  NavigationStack { HighlightsView() }
 }

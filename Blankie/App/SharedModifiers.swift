@@ -47,11 +47,11 @@ struct SharedAppModifiers: ViewModifier {
       .onOpenURL { url in
         // App links. Unknown ones are ignored rather than treated as a file import.
         if url.scheme == "blankie" {
-          if url.host() == "whatsnew" {
+          if url.host() == "highlights" {
             #if os(macOS)
               AppState.shared.showingSettingsPane = true
             #endif
-            AppState.shared.showingSettingsWhatsNewPage = true
+            AppState.shared.showingSettingsHighlightsPage = true
           } else {
             Logger.app.debug("Ignoring unknown app link \(url.absoluteString)")
           }

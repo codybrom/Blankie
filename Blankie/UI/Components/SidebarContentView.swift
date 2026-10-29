@@ -24,8 +24,8 @@ struct SidebarContentView: View {
   /// The sidebar follows the theming preset: its accent, then the app-wide
   /// custom accent, then the system accent. `themingPreset` is nil during
   /// single sound / Quick Mix, so those use the app accent.
-  private var hasUnseenWhatsNew: Bool {
-    WhatsNew.hasUnseen(lastSeen: globalSettings.lastSeenWhatsNewVersion)
+  private var hasUnseenHighlights: Bool {
+    Highlights.hasUnseen(lastSeen: globalSettings.lastSeenHighlightsVersion)
   }
 
   private var activeAccent: Color {
@@ -68,11 +68,11 @@ struct SidebarContentView: View {
             Label {
               Text("Settings")
             } icon: {
-              // A footer button has no system badge, so an unopened What's New
-              // draws its own dot.
+              // A footer button has no system badge, so unread Highlights draw
+              // their own dot.
               Image(systemName: "gearshape")
                 .overlay(alignment: .topTrailing) {
-                  if hasUnseenWhatsNew {
+                  if hasUnseenHighlights {
                     Circle()
                       .fill(activeAccent)
                       .frame(width: 7, height: 7)
@@ -81,7 +81,7 @@ struct SidebarContentView: View {
                 }
             }
           }
-          .accessibilityValue(hasUnseenWhatsNew ? Text("New") : Text(verbatim: ""))
+          .accessibilityValue(hasUnseenHighlights ? Text("New") : Text(verbatim: ""))
           .buttonStyle(.borderless)
           .foregroundStyle(appState.showingSettingsPane ? activeAccent : .secondary)
           Spacer()

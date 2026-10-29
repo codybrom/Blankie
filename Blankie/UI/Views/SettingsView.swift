@@ -45,7 +45,7 @@ struct SettingsView: View {
     @State private var showingAppIconPicker = false
   #endif
   /// Holds the sub-page flags, app-level so About Blankie in the menu bar and
-  /// `blankie://whatsnew` can open straight to their pages.
+  /// `blankie://highlights` can open straight to their pages.
   @ObservedObject private var appState = AppState.shared
   #if os(macOS)
     @State private var showingRestartAlert = false
@@ -68,10 +68,10 @@ struct SettingsView: View {
     }
   }
 
-  private var whatsNewRowLabel: some View {
+  private var highlightsRowLabel: some View {
     HStack {
       Label {
-        Text("What's New")
+        Text("Highlights")
           .foregroundColor(.primary)
       } icon: {
         Image(systemName: "sparkles")
@@ -79,7 +79,7 @@ struct SettingsView: View {
           .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
       }
       Spacer()
-      if WhatsNew.hasUnseen(lastSeen: globalSettings.lastSeenWhatsNewVersion) {
+      if Highlights.hasUnseen(lastSeen: globalSettings.lastSeenHighlightsVersion) {
         newBadge
       }
     }
@@ -125,8 +125,8 @@ struct SettingsView: View {
           if appState.showingSettingsAboutPage {
             AboutView()
               .toolbar { paneSubPageToolbar }
-          } else if appState.showingSettingsWhatsNewPage {
-            WhatsNewView()
+          } else if appState.showingSettingsHighlightsPage {
+            HighlightsView()
               .toolbar { paneSubPageToolbar }
           } else if appState.showingSettingsManageSoundsPage {
             SoundManagementView()
@@ -143,22 +143,22 @@ struct SettingsView: View {
         .onDisappear {
           appState.showingSettingsAboutPage = false
           appState.showingSettingsManageSoundsPage = false
-          appState.showingSettingsWhatsNewPage = false
+          appState.showingSettingsHighlightsPage = false
         }
       #endif
     } else {
       NavigationStack {
         settingsForm
           #if !os(macOS)
-            .navigationDestination(isPresented: $appState.showingSettingsWhatsNewPage) {
-              WhatsNewView()
+            .navigationDestination(isPresented: $appState.showingSettingsHighlightsPage) {
+              HighlightsView()
             }
           #endif
       }
       #if os(macOS)
         .frame(width: 500, height: 640)
       #else
-        .onDisappear { appState.showingSettingsWhatsNewPage = false }
+        .onDisappear { appState.showingSettingsHighlightsPage = false }
       #endif
     }
   }
@@ -171,7 +171,7 @@ struct SettingsView: View {
         Button {
           appState.showingSettingsAboutPage = false
           appState.showingSettingsManageSoundsPage = false
-          appState.showingSettingsWhatsNewPage = false
+          appState.showingSettingsHighlightsPage = false
         } label: {
           Label("Back", systemImage: "chevron.left")
         }
@@ -338,10 +338,10 @@ struct SettingsView: View {
 
         #if os(macOS)
           Button {
-            appState.showingSettingsWhatsNewPage = true
+            appState.showingSettingsHighlightsPage = true
           } label: {
             HStack {
-              whatsNewRowLabel
+              highlightsRowLabel
               Image(systemName: "chevron.right")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
@@ -352,9 +352,9 @@ struct SettingsView: View {
           .formRowButtonStyle()
         #else
           NavigationLink {
-            WhatsNewView()
+            HighlightsView()
           } label: {
-            whatsNewRowLabel
+            highlightsRowLabel
           }
         #endif
 

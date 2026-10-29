@@ -18827,6 +18827,84 @@
         }
       }
     },
+    "Highlights" : {
+      "comment" : "The Settings page and row listing each update's highlights.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Highlights"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Highlights"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Destacados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Temps forts"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Kiemelések"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Punti salienti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ハイライト"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "하이라이트"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Najważniejsze"
+          }
+        },
+        "pt-PT" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Destaques"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Öne Çıkanlar"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "亮点"
+          }
+        }
+      }
+    },
     "Hours" : {
       "comment" : "Label for the hours component of the sleep-timer duration picker.",
       "localizations" : {
@@ -25199,7 +25277,7 @@
       }
     },
     "New" : {
-      "comment" : "Badge on the What's New row in Settings when there's an update the user hasn't read. Also read by VoiceOver on the Settings button.",
+      "comment" : "Badge on the Highlights row in Settings when there's an update the user hasn't read. Also read by VoiceOver on the Settings button.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -28095,7 +28173,7 @@
       }
     },
     "Original English" : {
-      "comment" : "Shown under What's New while the user is viewing the English notes instead of the on-device translation.",
+      "comment" : "Shown under Highlights while the user is viewing the English notes instead of the on-device translation.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -35779,7 +35857,7 @@
       }
     },
     "Settings, New" : {
-      "comment" : "VoiceOver label for the Settings button while an unread What's New dot is showing.",
+      "comment" : "VoiceOver label for the Settings button while an unread Highlights dot is showing.",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -36400,7 +36478,7 @@
       }
     },
     "Show Original" : {
-      "comment" : "Button in What's New that switches from the translation back to the English notes.",
+      "comment" : "Button in Highlights that switches from the translation back to the English notes.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -36715,7 +36793,7 @@
       }
     },
     "Show Translation" : {
-      "comment" : "Button in What's New that switches from the English notes back to the translation.",
+      "comment" : "Button in Highlights that switches from the English notes back to the translation.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -45556,7 +45634,7 @@
       }
     },
     "Translate to %@" : {
-      "comment" : "Button in What's New that translates the English notes on device. %@ is the app's language, named in that language (for example \"Deutsch\").",
+      "comment" : "Button in Highlights that translates the English notes on device. %@ is the app's language, named in that language (for example \"Deutsch\").",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -45634,7 +45712,7 @@
       }
     },
     "Translated on your device" : {
-      "comment" : "Shown under What's New when its English notes were machine-translated on device.",
+      "comment" : "Shown under Highlights when its English notes were machine-translated on device.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -47580,84 +47658,6 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "温暖的原声吉他"
-          }
-        }
-      }
-    },
-    "What's New" : {
-      "comment" : "The Settings page and row listing each update's highlights.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Neue Funktionen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What's New"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Novedades"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nouveautés"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Újdonságok"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Novità"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "新機能"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "새로운 기능"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Nowości"
-          }
-        },
-        "pt-PT" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Novidades"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Yenilikler"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "新功能"
           }
         }
       }
