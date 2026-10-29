@@ -114,20 +114,43 @@ import os
     #expect(abs(rms - expectedRMS) < 1e-5)
   }
 
-  /// The true-peak filter carries its history across chunk boundaries, so a file
-  /// read in chunks measures the same as the whole buffer.
-  @Test func chunkedTruePeakMatchesWholeBuffer() async throws {
+  /// The true-peak filter carries its history across chunks. A short burst sits on the
+  /// first chunk boundary, so its peaks between samples need samples from both chunks.
+  @Test func truePeakSpansChunkBoundaries() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
-    let (url, _) = try makeMultiChunkCAF(in: dir)
-
-    let file = try AVAudioFile(forReading: url)
+    let url = dir.appendingPathComponent("boundary.caf")
+    let frames = Int(AudioAnalyzer.analysisChunkFrames) * 2
+    let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
     let buffer = try #require(
+      AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)))
+    buffer.frameLength = AVAudioFrameCount(frames)
+    let samples = try #require(buffer.floatChannelData?[0])
+    samples.update(repeating: 0, count: frames)
+    func write() throws {
+      let file = try AVAudioFile(forWriting: url, settings: format.settings)
+      try file.write(from: buffer)
+    }
+
+    // AVAudioFile can return fewer frames than the analyzer asks for, so read the
+    // silent file once the same way to find where the first chunk really ends.
+    try write()
+    let reader = try AVAudioFile(forReading: url)
+    let chunk = try #require(
       AVAudioPCMBuffer(
-        pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)))
-    try file.read(into: buffer)
+        pcmFormat: reader.processingFormat, frameCapacity: AudioAnalyzer.analysisChunkFrames))
+    try reader.read(into: chunk, frameCount: AudioAnalyzer.analysisChunkFrames)
+    let boundary = Int(chunk.frameLength)
+
+    // A quarter-rate burst sampled 45 degrees off its crests, four frames each side.
+    for frame in (boundary - 4)..<(boundary + 4) {
+      samples[frame] = Float(0.9 * sin(Double.pi / 2 * Double(frame) + Double.pi / 4))
+    }
+    try write()
 
     let whole = try #require(AudioAnalyzer.truePeakdBTP(buffer: buffer))
+    let samplePeak = 20 * log10(Float(0.9 * sin(Double.pi / 4)))
+    #expect(whole > samplePeak + 2, "The burst's peak lies between samples")
     let chunked = try #require(await AudioAnalyzer.comprehensiveAnalysis(at: url).truePeakdBTP)
     #expect(chunked == whole)
   }
