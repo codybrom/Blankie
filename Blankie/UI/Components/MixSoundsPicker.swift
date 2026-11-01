@@ -35,9 +35,10 @@ struct MixSoundsPicker: View {
       NavigationStack {
         List(selection: selection) {
           ForEach(Self.candidates(from: audioManager.sounds), id: \.fileName) { sound in
-            // The last sound keeps its check, and unchecking it does nothing.
+            // The last sound keeps its check and can't be tapped.
             row(sound)
               .tag(sound.fileName)
+              .selectionDisabled(isLastSound(sound))
           }
         }
         .environment(\.editMode, .constant(.active))

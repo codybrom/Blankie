@@ -139,7 +139,8 @@ struct CreatePresetSheet: View {
             SoundSelectionView(
               selectedSounds: $selectedSounds,
               orderedSounds: orderedSounds,
-              editingPreset: nil
+              editingPreset: nil,
+              editsPlayingMix: savesUnsavedMix
             )
             .toolbar {
               ToolbarItem(placement: .confirmationAction) {
@@ -212,7 +213,8 @@ extension CreatePresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: nil
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: nil,
+            editsPlayingMix: savesUnsavedMix
           )
         ) {
           LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
@@ -314,7 +316,8 @@ extension CreatePresetSheet {
           audioManager.adoptUnsavedMix(as: newPreset)
         } else {
           // Leave single sound/Quick Mix first, like a Library row tap, so the prior
-          // mix doesn't linger as the current selection.
+          // mix doesn't linger as the current selection. An unsaved mix was asked about
+          // before the sheet opened.
           audioManager.leaveTransientModes()
           try presetManager.applyPreset(newPreset)
         }
@@ -355,6 +358,13 @@ extension CreatePresetSheet {
         )
       }
 
+    // A saved mix keeps the order its tiles were dragged into. Sounds added here go last.
+    var soundOrder: [String]?
+    if savesUnsavedMix, let mixOrder = audioManager.unsavedMix?.soundFileNames {
+      let names = selectedSoundStates.map(\.fileName)
+      soundOrder = mixOrder.filter(names.contains) + names.filter { !mixOrder.contains($0) }
+    }
+
     let presetId = UUID()
     let artworkId = await saveArtworkIfPresent(for: presetId)
 
@@ -367,7 +377,7 @@ extension CreatePresetSheet {
       isDefault: false,
       createdVersion: currentVersion,
       lastModifiedVersion: currentVersion,
-      soundOrder: nil,
+      soundOrder: soundOrder,
       creatorName: creatorName.isEmpty ? nil : creatorName,
       artworkId: artworkId,
       animatedArtwork: animatedArtwork,

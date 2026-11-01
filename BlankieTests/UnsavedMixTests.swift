@@ -27,6 +27,7 @@ import Testing
   init() async {
     sandbox = await SingletonSandbox.make(soundNames: [
       "test-mix-rain", "test-mix-waves", "test-mix-fan", "test-mix-lofi", "test-mix-guitar",
+      "test-mix-imported",
     ])
     originalStarredItems = GlobalSettings.shared.starredItems
     originalQuickMixSounds = GlobalSettings.shared.quickMixSoundFileNames
@@ -248,6 +249,22 @@ import Testing
     #expect(!sounds.waves.isSelected)
     #expect(sounds.waves.volume == 0.5)
     #expect(sounds.rain.volume == 0.5)
+    stop()
+  }
+
+  /// A sound imported during the mix wasn't in the preset, so a discard switches it off.
+  @Test func discardSwitchesOffASoundLoadedDuringTheMix() async {
+    let sounds = makeSounds()
+    _ = await installPreset(sounds)
+    startMix(sounds)
+    let imported = TestSound(fileName: "test-mix-imported")
+    audioManager.sounds.append(imported)
+    audioManager.addToUnsavedMix(imported)
+
+    audioManager.discardUnsavedMix()
+
+    #expect(!imported.isSelected)
+    #expect(sounds.fan.isSelected)
     stop()
   }
 
@@ -535,6 +552,20 @@ import Testing
     stop()
   }
 
+  /// A sound switched off in the mixer shows unchecked, and checking it switches it back on.
+  @Test func checklistLeavesASwitchedOffSoundUnchecked() async {
+    let sounds = makeSounds()
+    startMix(sounds)
+    audioManager.addToUnsavedMix(sounds.fan)
+    audioManager.toggleOrResume(sounds.fan)
+    await sandbox.settle()
+    #expect(audioManager.soundsInCurrentMix == ["test-mix-rain", "test-mix-waves"])
+
+    audioManager.setMixSounds(["test-mix-rain", "test-mix-waves", "test-mix-fan"])
+    #expect(sounds.fan.isSelected)
+    stop()
+  }
+
   // MARK: - Coming back
 
   /// Don't Save restores the preset paused, so tapping it in the Library has to re-apply it.
@@ -584,6 +615,35 @@ import Testing
     audioManager.leaveUnsavedMixAsking {}
     audioManager.adoptUnsavedMix(as: preset)
     #expect(audioManager.pendingLeave == nil)
+    stop()
+  }
+
+  /// Switching sounds off from the Save Mix sheet leaves the mix a mix, even with one on.
+  @Test func savingKeepsTheMixWithOneSoundOn() async {
+    let sounds = makeSounds()
+    startMix(sounds)
+    audioManager.isSavingUnsavedMix = true
+    defer { audioManager.isSavingUnsavedMix = false }
+
+    sounds.waves.isSelected = false
+    await sandbox.settle()
+
+    #expect(audioManager.unsavedMix?.name == expectedName)
+    #expect(audioManager.singleSound == nil)
+    stop()
+  }
+
+  /// Down to one sound from elsewhere, nothing is left to save, so the waiting control runs.
+  @Test func droppingToOneSoundRunsTheWaitingControl() async {
+    let sounds = makeSounds()
+    startMix(sounds)
+    var ran = false
+    audioManager.leaveUnsavedMixAsking { ran = true }
+
+    audioManager.removeFromUnsavedMix(sounds.waves)
+    #expect(audioManager.pendingLeave == nil)
+    await sandbox.waitUntil { ran }
+    #expect(ran)
     stop()
   }
 }

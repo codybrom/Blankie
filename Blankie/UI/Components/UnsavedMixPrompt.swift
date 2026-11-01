@@ -30,6 +30,7 @@ private struct UnsavedMixPrompt: ViewModifier {
   @State private var showingSave = false
   /// The held action, run once the mix is saved. Cancelling the save keeps the mix.
   @State private var actionAfterSave: (@MainActor () -> Void)?
+  @State private var didSave = false
 
   private var isAsking: Binding<Bool> {
     Binding(
@@ -54,21 +55,25 @@ private struct UnsavedMixPrompt: ViewModifier {
           actionAfterSave = leaving.action
           showingSave = true
         }
+        // The action lets the mix go itself (New Preset on Create), so next and previous
+        // count from the mix's sound.
         Button("Don't Save", role: .destructive) {
-          audioManager.discardUnsavedMix()
           leaving.action()
         }
         Button("Cancel", role: .cancel) {}
       } message: { leaving in
         Text("\(leaving.mixName) isn't saved yet. If you don't save it, it's gone.")
       }
+      // The action runs once the sheet is gone, so it can open a sheet of its own.
       .saveMixSheet(
-        isPresented: $showingSave, onDismiss: { actionAfterSave = nil },
-        onSaved: {
-          let action = actionAfterSave
+        isPresented: $showingSave,
+        onDismiss: {
+          let action = didSave ? actionAfterSave : nil
           actionAfterSave = nil
+          didSave = false
           action?()
-        })
+        },
+        onSaved: { didSave = true })
   }
 }
 
@@ -88,7 +93,11 @@ extension View {
           PresetManager.shared.uniquePresetName($0.name)
         },
         savesUnsavedMix: true,
-        onCreated: onSaved)
+        onCreated: onSaved
+      )
+      // Switching sounds off in the sheet leaves the mix a mix, even with one sound on.
+      .onAppear { AudioManager.shared.isSavingUnsavedMix = true }
+      .onDisappear { AudioManager.shared.isSavingUnsavedMix = false }
     }
   }
 }

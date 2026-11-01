@@ -64,6 +64,8 @@ import SwiftUI
     var actionRowIncludesTimer = true
     /// The Duo cover's side bar carries the favorite star, which leaves the title row.
     var favoriteInToolbar = false
+    /// Inline, the mixer hosts the + checklist, since adding a sound swaps this player out.
+    var onAddSound: (() -> Void)?
 
     /// Which panel sits beside the player on wide screens. It survives folding,
     /// rotating and re-presenting.
@@ -579,7 +581,11 @@ import SwiftUI
     /// Starts a mix from the single sound.
     private func addSoundButton(size: CGFloat) -> some View {
       Button {
-        showingAddSound = true
+        if let onAddSound {
+          onAddSound()
+        } else {
+          showingAddSound = true
+        }
       } label: {
         Image(systemName: "plus")
           .font(.system(size: 20, weight: .medium))

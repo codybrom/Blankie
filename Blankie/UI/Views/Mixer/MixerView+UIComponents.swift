@@ -124,8 +124,11 @@ import SwiftUI
           .tint(.primary)
         }
 
-        // A single sound's inline Now Playing has its own + in the action row.
-        if audioManager.canAddSound, audioManager.singleSound == nil {
+        // A single sound's inline Now Playing has its own + in the action row, except
+        // spread across the open Duo, which has no action row.
+        if audioManager.canAddSound,
+          audioManager.singleSound == nil || currentLayout == .pages
+        {
           Button {
             showingAddSound = true
           } label: {

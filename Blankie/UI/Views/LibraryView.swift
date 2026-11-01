@@ -809,7 +809,11 @@ struct LibraryView: View {
   @ViewBuilder
   private var addMenuContent: some View {
     Button {
-      showingNewPresetSheet = true
+      // A new preset replaces an unsaved mix, so ask before the sheet opens. The mix plays
+      // on until Create, and cancelling the sheet keeps it.
+      Self.leavingUnsavedMix(presentation: presentation) {
+        showingNewPresetSheet = true
+      }
     } label: {
       Label("New Preset", systemImage: "rectangle.stack.badge.plus")
     }

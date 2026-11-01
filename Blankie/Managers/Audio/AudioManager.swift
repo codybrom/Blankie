@@ -106,6 +106,10 @@ class AudioManager {
   /// True while a preset's sound states are applied. Suppresses
   /// `deselectOtherMusicSounds` so it can't undo the preset's own selection.
   @ObservationIgnored var isApplyingPresetStates = false
+  /// True while a discarded mix restores its preset's sounds, which come back without playing.
+  @ObservationIgnored var isRestoringSelections = false
+  /// True while the Save Mix sheet is up. The mix stays a mix however many sounds are on.
+  @ObservationIgnored var isSavingUnsavedMix = false
   /// The launch bootstrap shared by every `loadCustomSoundsWhenReady()` caller.
   @ObservationIgnored @MainActor var launchBootstrapTask: Task<Void, Never>?
   /// Bumped per installed bootstrap task. `Task` has no identity, so waiters

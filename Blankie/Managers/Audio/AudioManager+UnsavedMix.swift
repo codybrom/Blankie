@@ -16,9 +16,7 @@ extension AudioManager {
   @MainActor
   var unsavedMixSounds: [Sound] {
     guard let unsavedMix else { return [] }
-    return unsavedMix.soundFileNames.compactMap { name in
-      sounds.first { $0.fileName == name }
-    }
+    return unsavedMix.soundFileNames.compactMap(sound(fileName:))
   }
 
   /// The + button: a single sound becomes a mix, and a mix grows. Saved presets add
@@ -38,11 +36,12 @@ extension AudioManager {
     singleSound != nil || unsavedMix != nil
   }
 
-  /// The sounds the + checklist shows checked.
+  /// The sounds the + checklist shows checked. One switched off in the mixer is unchecked,
+  /// so checking it switches it back on.
   @MainActor
   var soundsInCurrentMix: Set<String> {
     if let singleSound { return [singleSound.fileName] }
-    return Set(unsavedMix?.soundFileNames ?? [])
+    return Set(unsavedMixSounds.filter(\.isSelected).map(\.fileName))
   }
 
   /// The checklist's edit: adds the newly checked sounds and removes the unchecked ones.
@@ -168,7 +167,9 @@ extension AudioManager {
   @discardableResult
   func collapseUnsavedMixIfOneSound() -> Bool {
     let playing = unsavedMixSounds.filter(\.isSelected)
-    guard unsavedMix != nil, playing.count == 1, let remaining = playing.first else {
+    guard unsavedMix != nil, !isSavingUnsavedMix, playing.count == 1,
+      let remaining = playing.first
+    else {
       return false
     }
     Logger.audio.debug("AudioManager: Unsaved mix is down to '\(remaining.fileName)'")
@@ -176,10 +177,7 @@ extension AudioManager {
     // Single sound comes first so the preset's sounds restored below stay silent.
     singleSound = remaining
     let originals = unsavedMixOriginalStates
-    for state in originals where state.sound.id != remaining.id {
-      state.sound.volume = state.volume
-      state.sound.isSelected = state.isSelected
-    }
+    restoreOriginalSelection(except: remaining)
     let original = originals.first { $0.sound.id == remaining.id }
     singleSoundOriginalVolume = original?.volume ?? remaining.volume
     singleSoundOriginalSelection = original?.isSelected ?? false
@@ -189,6 +187,7 @@ extension AudioManager {
 
     unsavedMix = nil
     unsavedMixOriginalStates = []
+    let pending = pendingLeave
     pendingLeave = nil
     let (preset, changed) = takeStashedPreset()
     PresetManager.shared.setCurrentPreset(preset)
@@ -197,10 +196,17 @@ extension AudioManager {
     GlobalSettings.shared.saveSingleSound(fileName: remaining.fileName)
     updateNextPreviousCommandState()
     nowPlayingManager.updateInfo(presetName: remaining.title, isPlaying: isGloballyPlaying)
+    // A control waiting on the save prompt has no mix left to lose, so it runs. Next turn,
+    // since this can run inside a sound change.
+    if let pending {
+      Task { @MainActor in pending() }
+    }
     return true
   }
 
   /// Runs `action` now, or with an unsaved mix, holds it until the save prompt is answered.
+  /// Don't Save runs `action` with the mix still there, so `action` ends it (New Preset ends
+  /// it on Create).
   /// For in-app controls only. Siri, widgets and other outside paths discard instead.
   @MainActor
   func leaveUnsavedMixAsking(then action: @escaping @MainActor () -> Void) {
@@ -221,10 +227,10 @@ extension AudioManager {
     for sound in sounds {
       sound.pause()
     }
-    for state in unsavedMixOriginalStates {
-      state.sound.volume = state.volume
-      state.sound.isSelected = state.isSelected
-    }
+    // Whatever runs next (a preset, single sound, Quick Mix) starts its own playback.
+    isRestoringSelections = true
+    defer { isRestoringSelections = false }
+    restoreOriginalSelection()
     unsavedMixOriginalStates = []
     unsavedMix = nil
     pendingLeave = nil
@@ -240,6 +246,21 @@ extension AudioManager {
       presetManager.applySoundStates(preset.soundStates)
     }
     updateNextPreviousCommandState()
+  }
+
+  /// Puts back each sound's volume and selection from before the mix. A sound loaded during
+  /// the mix (a custom import) wasn't in the preset, so it's switched off.
+  @MainActor
+  private func restoreOriginalSelection(except kept: Sound? = nil) {
+    let originals = unsavedMixOriginalStates
+    let known = Set(originals.map(\.sound.id))
+    for sound in sounds where sound.isSelected && sound.id != kept?.id {
+      if !known.contains(sound.id) { sound.isSelected = false }
+    }
+    for state in originals where state.sound.id != kept?.id {
+      state.sound.volume = state.volume
+      state.sound.isSelected = state.isSelected
+    }
   }
 
   /// Clears the preset from before the mix and returns it as saved now, so an edit during

@@ -554,6 +554,9 @@ struct PresetOnboardingSheet: View {
         PresetManager.shared.updateCustomPresetStatus()
         PresetManager.shared.savePresets()
 
+        // Rerun from Settings, an unsaved mix, single sound or Quick Mix may be playing.
+        // Leave them first, like an import, so the new preset applies cleanly.
+        AudioManager.shared.leaveTransientModes()
         try PresetManager.shared.applyPreset(newPreset)
 
         onboardingManager.completeOnboarding()
