@@ -220,11 +220,12 @@
       audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
-    /// Mixer title: single sound, Quick Mix, or the preset name.
+    /// Mixer title: single sound, an unsaved mix, Quick Mix, or the preset name.
     private var mixerTitle: String {
       if let single = audioManager.singleSound {
         return single.localizedTitle
       }
+      if let unsavedMix = audioManager.unsavedMix { return unsavedMix.name }
       if audioManager.isQuickMix { return String(localized: "Quick Mix") }
       return presetManager.currentPreset?.displayName ?? "Blankie"
     }

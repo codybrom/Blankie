@@ -44,12 +44,16 @@ private enum IPhonePage: Hashable {
     @State var showingNewPresetConfirmation = false
     @State var showingNewPresetSheet = false
     @State var showingSpatialMixer = false
+    @State var showingAddSound = false
+    @State var showingSaveMix = false
     @State var showingNowPlaying = false
     /// iPhone: the Sound Mixer sheet the floating bar opens over Now Playing.
     @State private var showingMixerSheet = false
     /// The mixer sheet was asked to close while an editor sat on it. It closes
     /// once that editor does, so the editor's unsaved draft isn't thrown away.
     @State private var closesMixerSheetAfterEditor = false
+    /// A Highlights link closed Now Playing or the mixer sheet. Settings opens once it's gone.
+    @State private var opensSettingsAfterDismiss = false
     @State private var showingPageTimer = false
     /// iPhone Duo's cover has a vertical toolbar rail. AirPlay and Timer move onto it.
     @State private var hasToolbarRail = false
@@ -113,7 +117,8 @@ private enum IPhonePage: Hashable {
         NowPlayingPresentation(
           isPresented: $showingNowPlaying,
           coversFullScreen: isLargeDevice,
-          namespace: nowPlayingNamespace
+          namespace: nowPlayingNamespace,
+          onDismiss: openSettingsIfWaiting
         ) {
           NowPlayingSheet(
             onDismiss: { showingNowPlaying = false },
@@ -148,7 +153,7 @@ private enum IPhonePage: Hashable {
       .onChange(of: showingMixerSheet) { _, showing in
         if !showing { closesMixerSheetAfterEditor = false }
       }
-      .sheet(isPresented: $showingMixerSheet) {
+      .sheet(isPresented: $showingMixerSheet, onDismiss: openSettingsIfWaiting) {
         mixerSheet
           .presentationSizing(.page)
           .presentationDragIndicator(.hidden)
@@ -233,7 +238,7 @@ private enum IPhonePage: Hashable {
       }
       // `blankie://highlights` opens Settings, which pushes Highlights.
       .onChange(of: appState.showingSettingsHighlightsPage) { _, showing in
-        if showing { showingSettings = true }
+        if showing { openSettingsForHighlights() }
       }
       .sheet(isPresented: $showingSettings) {
         SettingsView()
@@ -253,7 +258,30 @@ private enum IPhonePage: Hashable {
     private var editorIsOpen: Bool {
       soundToEdit != nil || presetToEdit != nil || showingQuickMixEditor
         || showingSpatialMixer || showingNewPresetSheet || showingPageTimer
-        || showingNewPresetConfirmation
+        || showingNewPresetConfirmation || showingAddSound || showingSaveMix
+    }
+
+    /// Settings can't present over another sheet. Now Playing and the mixer sheet close
+    /// first. With an editor, Save Mix (Now Playing hosts its own) or Manage Sounds open,
+    /// the link is dropped so it can't push Highlights later.
+    private func openSettingsForHighlights() {
+      if showingSettings { return }
+      if editorIsOpen || audioManager.isSavingUnsavedMix || showingSoundManagement {
+        appState.showingSettingsHighlightsPage = false
+      } else if showingNowPlaying || showingMixerSheet {
+        opensSettingsAfterDismiss = true
+        showingNowPlaying = false
+        showingMixerSheet = false
+      } else {
+        showingSettings = true
+      }
+    }
+
+    /// The second half of `openSettingsForHighlights`, once the sheet it closed is gone.
+    private func openSettingsIfWaiting() {
+      guard opensSettingsAfterDismiss else { return }
+      opensSettingsAfterDismiss = false
+      showingSettings = true
     }
 
     /// Closes the mixer sheet from code (a layout change, single sound, Quick Mix),
@@ -311,6 +339,12 @@ private enum IPhonePage: Hashable {
             initialSelectedSounds: Set(audioManager.sounds.filter { $0.isSelected }.map(\.fileName))
           )
         }
+        .sheet(isPresented: gated($showingAddSound, hosts)) {
+          MixSoundsPicker()
+        }
+        .saveMixSheet(isPresented: gated($showingSaveMix, hosts))
+        // Now Playing hosts its own prompt while it's up.
+        .unsavedMixPrompt(isActive: hosts && !showingNowPlaying)
         .sheet(item: gated($presetToEdit, hosts)) { preset in
           EditPresetSheet(preset: preset, isPresented: $presetToEdit)
             .modifier(EditorPlacement(layout: currentLayout))
@@ -466,7 +500,7 @@ private enum IPhonePage: Hashable {
       }
     }
 
-    private var currentLayout: MixerLayout {
+    var currentLayout: MixerLayout {
       MixerLayout.resolve(isRegularWidth: isLargeDevice, fold: windowFold)
     }
 
@@ -492,7 +526,8 @@ private enum IPhonePage: Hashable {
               if libraryOpen {
                 NowPlayingSheet(
                   backgroundImage: backgroundImage, inline: true, showsActions: false,
-                  onOpenMixer: { iPhonePath = [.mixer] }, actionRowIncludesAirPlay: true
+                  onOpenMixer: { iPhonePath = [.mixer] }, actionRowIncludesAirPlay: true,
+                  onAddSound: { showingAddSound = true }
                 )
                 .environment(\.horizontalSizeClass, .compact)
               } else {
@@ -652,6 +687,18 @@ private enum IPhonePage: Hashable {
           .buttonBorderShape(.circle)
           .tint(.primary)
         }
+        if audioManager.canAddSound {
+          Button {
+            showingAddSound = true
+          } label: {
+            Label("Add Sound", systemImage: "plus")
+              .labelStyle(.iconOnly)
+              .frame(width: 44, height: 44)
+          }
+          .buttonStyle(.glass)
+          .buttonBorderShape(.circle)
+          .tint(.primary)
+        }
         let target = editTarget
         Button {
           target?.action()
@@ -717,7 +764,8 @@ private enum IPhonePage: Hashable {
             onOpenMixer: showsMixerButton ? { showingMixerSheet = true } : nil,
             actionRowIncludesAirPlay: !hasToolbarRail,
             actionRowIncludesTimer: !hasToolbarRail,
-            favoriteInToolbar: hasToolbarRail
+            favoriteInToolbar: hasToolbarRail,
+            onAddSound: { showingAddSound = true }
           )
         }
       }
@@ -763,6 +811,14 @@ private enum IPhonePage: Hashable {
                 systemImage: starred ? "star.fill" : "star")
             }
             .tint(starred ? accent : .primary)
+          } else if showsFavorite, audioManager.unsavedMix != nil {
+            // An unsaved mix can't be a favorite, so Save takes the star's place.
+            Button {
+              showingSaveMix = true
+            } label: {
+              Label("Save Mix", systemImage: "rectangle.stack.badge.plus")
+            }
+            .tint(.primary)
           }
 
           AirPlayRouteButton(activeColor: accent, inactiveColor: .primary)
@@ -964,12 +1020,15 @@ private enum IPhonePage: Hashable {
     func singleSoundView(for singleSound: Sound) -> some View {
       // Single sound renders the full player inline. Next/previous onto a preset opens
       // the Now Playing sheet.
-      NowPlayingSheet(inline: true, onNavigateToPreset: { swapNowPlaying(showSheet: true) })
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // The mini player is hidden during single sound, so the zoom starts here. The
-        // two are never on screen together, so the id stays unique.
-        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
-        .transition(.opacity)
+      NowPlayingSheet(
+        inline: true, onNavigateToPreset: { swapNowPlaying(showSheet: true) },
+        onAddSound: { showingAddSound = true }
+      )
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      // The mini player is hidden during single sound, so the zoom starts here. The
+      // two are never on screen together, so the id stays unique.
+      .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+      .transition(.opacity)
     }
 
     /// The mixer beside wide Now Playing: Quick Mix's tiles or the preset's
@@ -1052,16 +1111,17 @@ private enum IPhonePage: Hashable {
     @Binding var isPresented: Bool
     let coversFullScreen: Bool
     let namespace: Namespace.ID
+    let onDismiss: () -> Void
     @ViewBuilder var sheetBody: () -> SheetBody
 
     func body(content: Content) -> some View {
       if coversFullScreen {
-        content.fullScreenCover(isPresented: $isPresented) {
+        content.fullScreenCover(isPresented: $isPresented, onDismiss: onDismiss) {
           sheetBody()
             .navigationTransition(.zoom(sourceID: "nowPlaying", in: namespace))
         }
       } else {
-        content.sheet(isPresented: $isPresented) {
+        content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
           sheetBody()
             .presentationSizing(.page)
             .presentationDragIndicator(.hidden)

@@ -93,9 +93,10 @@ extension AudioManager {
   }
 
   /// Index of the single sound, else the current preset, in `items`. Nil when it
-  /// isn't favorited.
+  /// isn't favorited. An unsaved mix counts as the single sound it grew from.
   private func currentNavigableIndex(in items: [NavigableItem]) -> Int? {
-    if let single = singleSound {
+    let mixOrigin = unsavedMix.flatMap { sound(fileName: $0.originSoundFileName) }
+    if let single = singleSound ?? mixOrigin {
       return items.firstIndex {
         if case .single(let sound) = $0 { return sound.id == single.id }
         return false
@@ -142,19 +143,24 @@ extension AudioManager {
   @MainActor
   func navigateToNextPreset() {
     let items = navigableItems
+    let current = currentNavigableIndex(in: items)
+    // Nothing outside the app can ask to save it, so an unsaved mix is let go.
+    discardUnsavedMix()
     guard !items.isEmpty else { return }
     // With no current item, start at the first.
-    let nextIndex = currentNavigableIndex(in: items).map { ($0 + 1) % items.count } ?? 0
+    let nextIndex = current.map { ($0 + 1) % items.count } ?? 0
     apply(items[nextIndex])
   }
 
   @MainActor
   func navigateToPreviousPreset() {
     let items = navigableItems
+    let current = currentNavigableIndex(in: items)
+    discardUnsavedMix()
     guard !items.isEmpty else { return }
     // With no current item, start at the last.
     let previousIndex: Int
-    if let index = currentNavigableIndex(in: items) {
+    if let index = current {
       previousIndex = index > 0 ? index - 1 : items.count - 1
     } else {
       previousIndex = items.count - 1
