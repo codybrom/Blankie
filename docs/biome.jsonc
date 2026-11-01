@@ -1,15 +1,18 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  // Reading docs/.gitignore crashes the Biome LSP when VS Code opens the repo root.
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": false
   },
   "files": {
     "includes": [
       "**",
       "!**/dist",
       "!**/.astro",
+      "!**/.wrangler",
+      "!**/.vercel",
       "!public",
       "!**/*.min.js",
       "!**/*.md",
