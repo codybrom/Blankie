@@ -262,11 +262,11 @@ private enum IPhonePage: Hashable {
     }
 
     /// Settings can't present over another sheet. Now Playing and the mixer sheet close
-    /// first. With an editor or Manage Sounds open, the link is dropped so it can't
-    /// push Highlights later.
+    /// first. With an editor, Save Mix (Now Playing hosts its own) or Manage Sounds open,
+    /// the link is dropped so it can't push Highlights later.
     private func openSettingsForHighlights() {
       if showingSettings { return }
-      if editorIsOpen || showingSoundManagement {
+      if editorIsOpen || audioManager.isSavingUnsavedMix || showingSoundManagement {
         appState.showingSettingsHighlightsPage = false
       } else if showingNowPlaying || showingMixerSheet {
         opensSettingsAfterDismiss = true

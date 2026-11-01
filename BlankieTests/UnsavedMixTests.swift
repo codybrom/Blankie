@@ -619,6 +619,7 @@ import Testing
   }
 
   /// Switching sounds off from the Save Mix sheet leaves the mix a mix, even with one on.
+  /// Closing the sheet then turns it back into that single sound.
   @Test func savingKeepsTheMixWithOneSoundOn() async {
     let sounds = makeSounds()
     startMix(sounds)
@@ -630,6 +631,12 @@ import Testing
 
     #expect(audioManager.unsavedMix?.name == expectedName)
     #expect(audioManager.singleSound == nil)
+
+    // What the sheet's onDisappear does after a cancel.
+    audioManager.isSavingUnsavedMix = false
+    audioManager.reconcileUnsavedMix()
+    #expect(audioManager.unsavedMix == nil)
+    #expect(audioManager.singleSound?.fileName == "test-mix-rain")
     stop()
   }
 

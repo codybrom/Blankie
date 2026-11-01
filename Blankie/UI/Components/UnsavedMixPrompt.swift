@@ -96,8 +96,12 @@ extension View {
         onCreated: onSaved
       )
       // Switching sounds off in the sheet leaves the mix a mix, even with one sound on.
+      // Cancelled with one left on, it goes back to that single sound once the sheet closes.
       .onAppear { AudioManager.shared.isSavingUnsavedMix = true }
-      .onDisappear { AudioManager.shared.isSavingUnsavedMix = false }
+      .onDisappear {
+        AudioManager.shared.isSavingUnsavedMix = false
+        AudioManager.shared.reconcileUnsavedMix()
+      }
     }
   }
 }
