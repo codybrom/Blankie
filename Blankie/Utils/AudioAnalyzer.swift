@@ -46,41 +46,6 @@ nonisolated class AudioAnalyzer {
   /// whole-file buffer can run to gigabytes (#144).
   static let analysisChunkFrames: AVAudioFrameCount = 48000
 
-  /// Peak sample magnitude (0 to 1), or nil if the file can't be read.
-  @concurrent static func analyzePeakLevel(at url: URL) async -> Float? {
-    do {
-      let file = try AVAudioFile(forReading: url)
-      let format = file.processingFormat
-      guard
-        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: analysisChunkFrames)
-      else {
-        Logger.app.error("AudioAnalyzer: Failed to create buffer")
-        return nil
-      }
-
-      var peakLevel: Float = 0.0
-
-      while file.framePosition < file.length {
-        try file.read(into: buffer, frameCount: analysisChunkFrames)
-        guard buffer.frameLength > 0 else { break }
-
-        for channel in 0..<Int(format.channelCount) {
-          guard let channelData = buffer.floatChannelData?[channel] else { continue }
-          var channelPeak: Float = 0
-          vDSP_maxmgv(channelData, 1, &channelPeak, vDSP_Length(buffer.frameLength))
-          peakLevel = max(peakLevel, channelPeak)
-        }
-      }
-
-      Logger.app.debug("AudioAnalyzer: Peak level for \(url.lastPathComponent): \(peakLevel)")
-      return peakLevel
-
-    } catch {
-      Logger.app.error("AudioAnalyzer: Failed to analyze audio file: \(error, privacy: .public)")
-      return nil
-    }
-  }
-
   /// Peak-based normalization factor toward `targetLevel` (0.8 leaves headroom).
   static func calculateNormalizationFactor(peakLevel: Float, targetLevel: Float = 0.8) -> Float {
     guard peakLevel > 0 else { return 1.0 }
@@ -108,51 +73,6 @@ nonisolated class AudioAnalyzer {
     let limitedGainDB = min(requiredGainDB, maxGainDB)
 
     return pow(10, limitedGainDB / 20)
-  }
-
-  /// Mean per-channel RMS level (0 to 1), or nil if the file can't be read.
-  @concurrent static func analyzeRMSLevel(at url: URL) async -> Float? {
-    do {
-      let file = try AVAudioFile(forReading: url)
-      let format = file.processingFormat
-      guard
-        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: analysisChunkFrames)
-      else {
-        return nil
-      }
-
-      let channelCount = Int(format.channelCount)
-      // Double, since a Float sum over hours of samples stops absorbing small terms.
-      var squaredSums = [Double](repeating: 0, count: channelCount)
-      var framesRead: Int64 = 0
-
-      while file.framePosition < file.length {
-        try file.read(into: buffer, frameCount: analysisChunkFrames)
-        guard buffer.frameLength > 0 else { break }
-
-        for channel in 0..<channelCount {
-          guard let channelData = buffer.floatChannelData?[channel] else { continue }
-          var squaredSum: Float = 0
-          vDSP_svesq(channelData, 1, &squaredSum, vDSP_Length(buffer.frameLength))
-          squaredSums[channel] += Double(squaredSum)
-        }
-        framesRead += Int64(buffer.frameLength)
-      }
-
-      guard framesRead > 0, channelCount > 0 else { return nil }
-
-      let totalRMS = squaredSums.reduce(Float(0)) { total, sum in
-        total + Float(sqrt(sum / Double(framesRead)))
-      }
-      let averageRMS = totalRMS / Float(channelCount)
-
-      Logger.app.debug("AudioAnalyzer: RMS level for \(url.lastPathComponent): \(averageRMS)")
-      return averageRMS
-
-    } catch {
-      Logger.app.error("AudioAnalyzer: Failed to analyze RMS: \(error, privacy: .public)")
-      return nil
-    }
   }
 
   // MARK: - Comprehensive Analysis
@@ -220,8 +140,8 @@ nonisolated class AudioAnalyzer {
   }
 
   /// Measures peak, RMS, true peak and integrated LUFS in one pass. The chunks match
-  /// the single-measurement functions above, so each value matches theirs. Returns nil
-  /// if the task is cancelled.
+  /// `processAudioFileForLUFS`, so its LUFS matches this one. Returns nil if the task is
+  /// cancelled.
   private static func measureLevels(
     at url: URL, progress: (@Sendable (Double) -> Void)?
   ) -> Levels? {

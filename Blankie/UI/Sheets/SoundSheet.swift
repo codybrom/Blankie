@@ -253,6 +253,12 @@ struct SoundSheet: View {
       stopPreview()
     }
 
+    // Closed mid-import (Cancel or a swipe): stop it, so it doesn't save the sound or
+    // add it to presets. A finished import clears `importTask` before it dismisses.
+    if importTask != nil {
+      cancelImport()
+    }
+
     // Edits here (name, icon, preset-only) change what widgets, Siri, and
     // Spotlight list. Both refreshes skip when nothing changed.
     AudioManager.shared.republishWidgetCatalog()

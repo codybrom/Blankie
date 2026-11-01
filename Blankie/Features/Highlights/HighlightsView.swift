@@ -21,11 +21,7 @@ struct HighlightsView: View {
   @State private var translationFailed = false
 
   private static let english = Locale.Language(identifier: "en")
-
-  /// The app's language, which a per-app language setting can set apart from the system's.
-  private var appLanguage: Locale.Language {
-    Locale.Language(identifier: Bundle.main.preferredLocalizations.first ?? "en")
-  }
+  private let appLanguage = Bundle.main.appLanguage
 
   private var isTranslated: Bool { !translations.isEmpty && !showsOriginal }
 
@@ -131,6 +127,11 @@ struct HighlightsView: View {
       }
       .buttonStyle(.bordered)
       .handCursor()
+    } else if availability == .unsupported {
+      // Apple can't translate this language (Hungarian today), so say the English is on purpose.
+      Label("Original English", systemImage: "translate")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
     }
   }
 

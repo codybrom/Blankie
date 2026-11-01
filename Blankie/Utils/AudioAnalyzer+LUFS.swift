@@ -40,28 +40,21 @@ extension AudioAnalyzer {
   nonisolated static func processAudioFileForLUFS(_ file: AVAudioFile) async throws -> [Float] {
     let format = file.processingFormat
     let channelCount = format.channelCount
-    let chunkSize: AVAudioFrameCount = 48000
     var measurements: [Float] = []
-    var position: AVAudioFramePosition = 0
 
     Logger.app.debug(
       "AudioAnalyzer: Processing file for LUFS - Length: \(file.length) frames, Channels: \(channelCount), Sample Rate: \(format.sampleRate)"
     )
 
     let filterCoefficients = getKWeightingCoefficients()
+    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: analysisChunkFrames)
+    else { return [] }
 
-    while position < file.length {
-      // Clamp before narrowing, since the remainder alone can exceed UInt32.
-      let framesToRead = AVAudioFrameCount(
-        min(AVAudioFramePosition(chunkSize), file.length - position))
-
-      guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: framesToRead) else {
-        position += AVAudioFramePosition(framesToRead)
-        continue
-      }
-
-      file.framePosition = position
-      try file.read(into: buffer)
+    // Reads in sequence, like `measureLevels`, so both measure the same chunks. A read can
+    // return fewer frames than asked, and seeking past them would skip audio.
+    while file.framePosition < file.length {
+      try file.read(into: buffer, frameCount: analysisChunkFrames)
+      guard buffer.frameLength > 0 else { break }
 
       if let loudness = processAudioChunk(
         buffer, channelCount: channelCount, filterCoefficients: filterCoefficients)
@@ -71,8 +64,6 @@ extension AudioAnalyzer {
           Logger.app.debug("AudioAnalyzer: Chunk \(measurements.count) loudness: \(loudness) LUFS")
         }
       }
-
-      position += AVAudioFramePosition(framesToRead)
     }
 
     return measurements

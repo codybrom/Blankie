@@ -56,8 +56,8 @@ enum Highlights {
   static var latestVersion: String { releases[0].version }
 
   /// True until the user opens the newest release's page.
-  static func hasUnseen(lastSeen: String?) -> Bool {
-    guard let lastSeen else { return true }
+  static var hasUnseen: Bool {
+    guard let lastSeen = GlobalSettings.shared.lastSeenHighlightsVersion else { return true }
     return latestVersion.compare(lastSeen, options: .numeric) == .orderedDescending
   }
 
@@ -70,7 +70,7 @@ enum Highlights {
     HighlightItem(
       systemImage: "sparkles", title: "Update Highlights",
       detail:
-        "You found it! When you install an update, a little dot on Settings will let you know there's new features and highlights to read. Blankie's release highlights are written in English but your device will offer to translate them if needed."
+        "You found it! When you install an update, a little dot on Settings will let you know there are new features and highlights to read. Blankie's release highlights are written in English but your device will offer to translate them if needed."
     )
   ]
 
@@ -90,7 +90,7 @@ enum Highlights {
     HighlightItem(
       systemImage: "rectangle.split.2x1", title: "Support for iPhone Duo",
       detail:
-        "Lucky enough to get your hand on Apple's newest iPhone? If so, you can enjoy an experience fully optimized for every pose.",
+        "Lucky enough to get your hands on Apple's newest iPhone? If so, you can enjoy an experience fully optimized for every pose.",
       platforms: [.iPhone]
     ),
     HighlightItem(

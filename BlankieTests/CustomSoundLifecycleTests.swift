@@ -54,6 +54,40 @@ import Testing
     return entries.filter { $0.hasPrefix("\(fileName)-aac-") }
   }
 
+  // MARK: - Importing
+
+  /// The import works on a file in tmp and moves it into CustomSounds once it's measured.
+  @Test func importMovesTheStagedFileIntoCustomSounds() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let source = dir.appendingPathComponent("tone.wav")
+    let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1))
+    let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
+    buffer.frameLength = 44_100
+    let samples = try #require(buffer.floatChannelData?[0])
+    for frame in 0..<44_100 { samples[frame] = 0.3 * sin(Float(frame) * 0.06) }
+    do {
+      let settings: [String: Any] = [
+        AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 44_100,
+        AVNumberOfChannelsKey: 1, AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false,
+      ]
+      let file = try AVAudioFile(forWriting: source, settings: settings)
+      try file.write(from: buffer)
+    }
+
+    let result = await CustomSoundManager.shared.importSound(
+      from: source, title: "Test Import", iconName: "waveform")
+    let sound = try result.get()
+    sandbox.trackCustomSound(named: sound.fileName)
+
+    let stored = try sandbox.customSoundsDirectory()
+      .appendingPathComponent("\(sound.fileName).wav")
+    let staged = FileManager.default.temporaryDirectory
+      .appendingPathComponent("\(sound.fileName).wav")
+    #expect(FileManager.default.fileExists(atPath: stored.path))
+    #expect(!FileManager.default.fileExists(atPath: staged.path))
+  }
+
   // MARK: - Adds and deletes keep live instances
 
   /// Single sound holds a `Sound` instance, so an add must not rebuild the others.

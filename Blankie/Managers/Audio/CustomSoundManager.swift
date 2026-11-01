@@ -120,33 +120,28 @@ class CustomSoundManager {
         (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
       let conversionRequired = Self.importRequiresConversion(bytes: sourceBytes, url: sourceURL)
       let converts = convertToAAC || conversionRequired
-      let copiedURL: URL
-      let storedExtension: String
+      // The copy or encode and the measuring work on a file in tmp, which moves into
+      // CustomSounds just before the record saves. An import killed partway (iOS ending
+      // its background time) leaves nothing in CustomSounds, and the system clears tmp.
+      let storedExtension = converts ? "m4a" : fileExtension
+      let stagedURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent("\(uniqueFileName).\(storedExtension)")
+      // Set first so a failed or cancelled copy or encode is removed too.
+      copiedURLForCleanup = stagedURL
       if converts {
-        guard let directoryURL = getCustomSoundsDirectoryURL() else {
-          throw CustomSoundError.fileCopyFailed
-        }
-        let destinationURL = directoryURL.appendingPathComponent("\(uniqueFileName).m4a")
-        // Set before encoding so a failed or cancelled encode is removed too.
-        copiedURLForCleanup = destinationURL
-        try await Self.transcodeToAAC(source: sourceURL, destination: destinationURL) {
+        try await Self.transcodeToAAC(source: sourceURL, destination: stagedURL) {
           progress?(ImportProgress(stage: .converting, fraction: $0 * Self.conversionShare))
         }
-        try Task.checkCancellation()
-        copiedURL = destinationURL
-        storedExtension = "m4a"
         Logger.sounds.debug(
           "CustomSoundManager: import converted to AAC (\(sourceBytes) bytes, forced: \(conversionRequired))"
         )
       } else {
-        copiedURL = try await copyFileForImport(
-          sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension
-        )
-        storedExtension = fileExtension
+        try await copyForImport(from: sourceURL, to: stagedURL)
       }
-      copiedURLForCleanup = copiedURL
+      // Cancel can't stop a copy midway, so it lands here once the copy finishes.
+      try Task.checkCancellation()
       let importData = SoundImportData(
-        sourceURL: sourceURL, copiedURL: copiedURL, title: title, iconName: iconName,
+        sourceURL: sourceURL, copiedURL: stagedURL, title: title, iconName: iconName,
         uniqueFileName: uniqueFileName, fileExtension: storedExtension,
         randomizeStartPosition: randomizeStartPosition
       )
@@ -157,6 +152,12 @@ class CustomSoundManager {
             stage: .measuring, fraction: measuringStart + $0 * (1 - measuringStart)))
       }
       try Task.checkCancellation()
+      guard let directoryURL = getCustomSoundsDirectoryURL() else {
+        throw CustomSoundError.fileCopyFailed
+      }
+      let storedURL = directoryURL.appendingPathComponent("\(uniqueFileName).\(storedExtension)")
+      try FileManager.default.moveItem(at: stagedURL, to: storedURL)
+      copiedURLForCleanup = storedURL
       try saveCustomSoundToDatabase(customSound)
       writeMirror(for: customSound)
       copiedURLForCleanup = nil
@@ -183,17 +184,18 @@ class CustomSoundManager {
     }
   }
 
-  private func copyFileForImport(_ sourceURL: URL, uniqueFileName: String, fileExtension: String)
-    async throws -> URL
-  {
-    guard
-      let copiedURL = try await copyToCustomSoundsDirectory(
-        source: sourceURL, filename: uniqueFileName, extension: fileExtension
-      )
-    else {
-      throw CustomSoundError.fileCopyFailed
+  /// copyItem streams (or clones on APFS), so memory stays flat at any size. It runs off
+  /// the main actor so a copy that can't clone doesn't freeze the sheet.
+  private func copyForImport(from source: URL, to destination: URL) async throws {
+    guard FileManager.default.fileExists(atPath: source.path) else {
+      throw CustomSoundError.invalidAudioFile(
+        NSError(
+          domain: "CustomSoundManager", code: -1,
+          userInfo: [NSLocalizedDescriptionKey: "Source file not found"]))
     }
-    return copiedURL
+    try await Task.detached(priority: .userInitiated) {
+      try FileManager.default.copyItem(at: source, to: destination)
+    }.value
   }
 
   /// Builds the `CustomSoundData` record for a freshly imported file (analysis,
@@ -259,59 +261,6 @@ class CustomSoundManager {
     }
     modelContext.insert(customSound)
     try modelContext.save()
-  }
-
-  private func copyToCustomSoundsDirectory(source: URL, filename: String, extension ext: String)
-    async throws -> URL?
-  {
-    guard let directoryURL = getCustomSoundsDirectoryURL() else {
-      Logger.sounds.error("CustomSoundManager: Could not get custom sounds directory URL")
-      return nil
-    }
-
-    Logger.sounds.debug("CustomSoundManager: Copying from \(source.path) to CustomSounds directory")
-
-    let destinationURL = directoryURL.appendingPathComponent("\(filename).\(ext)")
-    Logger.sounds.debug("CustomSoundManager: Target destination: \(destinationURL.path)")
-
-    do {
-      guard FileManager.default.fileExists(atPath: source.path) else {
-        Logger.sounds.debug("CustomSoundManager: Source file does not exist at \(source.path)")
-        throw CustomSoundError.invalidAudioFile(
-          NSError(
-            domain: "CustomSoundManager", code: -1,
-            userInfo: [NSLocalizedDescriptionKey: "Source file not found"]
-          )
-        )
-      }
-
-      // copyItem streams (or clones on APFS), so memory stays flat at any size. It runs
-      // off the main actor so a copy that can't clone doesn't freeze the sheet. A failed
-      // copy is removed so a full disk can't leave a truncated file behind.
-      do {
-        try await Task.detached(priority: .userInitiated) {
-          try FileManager.default.copyItem(at: source, to: destinationURL)
-        }.value
-      } catch {
-        try? FileManager.default.removeItem(at: destinationURL)
-        throw error
-      }
-      Logger.sounds.debug("CustomSoundManager: Successfully copied file to \(destinationURL.path)")
-
-      if FileManager.default.fileExists(atPath: destinationURL.path) {
-        Logger.sounds.debug("CustomSoundManager: Verified copied file exists at destination")
-      } else {
-        Logger.sounds.debug(
-          "CustomSoundManager: File copy appeared successful but file not found at destination")
-      }
-
-      return destinationURL
-    } catch {
-      Logger.sounds.error(
-        "CustomSoundManager: Failed to copy file from \(source.path) to \(destinationURL.path): \(error.localizedDescription, privacy: .public)"
-      )
-      throw error
-    }
   }
 
   // MARK: - Sound Retrieval
