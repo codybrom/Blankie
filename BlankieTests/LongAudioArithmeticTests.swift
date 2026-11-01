@@ -59,8 +59,15 @@ import os
 
   // MARK: - 2^32+ frames
 
-  /// Analysis reads in chunks, so a file too long for one buffer still analyzes.
-  @Test func chunkedAnalysisReadsHugeFiles() async throws {
+  /// Analysis reads in chunks, so a file too long for one buffer still analyzes. It decodes
+  /// all 2^32 frames (about 30 s), so it runs only with BLANKIE_RUN_STRESS_TESTS=1 (from
+  /// xcodebuild, pass TEST_RUNNER_BLANKIE_RUN_STRESS_TESTS=1). The multi-chunk tests below
+  /// cover the chunked reads on every run.
+  @Test(
+    .enabled(
+      if: ProcessInfo.processInfo.environment["BLANKIE_RUN_STRESS_TESTS"] == "1",
+      "Decodes 2^32 frames"))
+  func chunkedAnalysisReadsHugeFiles() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
     let url = try makeHugeCAF(in: dir)
