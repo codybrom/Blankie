@@ -30,10 +30,10 @@ struct HighlightsView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 28) {
+        translationControl
         ForEach(Highlights.releases) { release in
           releaseSection(release)
         }
-        translationFooter
       }
       .padding(24)
       .frame(maxWidth: 600, alignment: .leading)
@@ -61,7 +61,7 @@ struct HighlightsView: View {
         await MainActor.run { translations.wrappedValue = result }
       } catch {
         // A declined download or unsupported pair leaves the English in place,
-        // and the footer offers Translate again.
+        // and the Translate button comes back.
         Logger.ui.error("Highlights translation failed: \(error, privacy: .public)")
         await MainActor.run { failed.wrappedValue = true }
       }
@@ -96,7 +96,7 @@ struct HighlightsView: View {
   }
 
   @ViewBuilder
-  private var translationFooter: some View {
+  private var translationControl: some View {
     if !translations.isEmpty {
       HStack(spacing: 6) {
         Image(systemName: "translate")
