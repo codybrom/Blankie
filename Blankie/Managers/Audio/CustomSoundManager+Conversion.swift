@@ -22,19 +22,19 @@ extension CustomSoundManager {
   /// is offered only for uncompressed or lossless sources (WAV, AIFF, CAF, FLAC).
   private static let lossyExtensions: Set<String> = ["mp3", "m4a", "aac", "m4b", "aax", "m4r"]
 
-  /// AAC and MP3 codecs. Checked by codec because an .m4a can also hold Apple Lossless.
-  private static let lossyFormatIDs: Set<AudioFormatID> = [
-    kAudioFormatMPEG4AAC, kAudioFormatMPEG4AAC_HE, kAudioFormatMPEG4AAC_HE_V2,
-    kAudioFormatMPEG4AAC_LD, kAudioFormatMPEG4AAC_ELD, kAudioFormatMPEGLayer3,
+  /// Uncompressed and lossless codecs. Checked by codec because an .m4a can hold Apple
+  /// Lossless as well as AAC.
+  private static let losslessFormatIDs: Set<AudioFormatID> = [
+    kAudioFormatLinearPCM, kAudioFormatAppleLossless, kAudioFormatFLAC,
   ]
 
   /// True when an import must be transcoded: a file over `maxRawImportBytes` whose audio
-  /// isn't already AAC or MP3. Re-encoding a lossy file costs time and quality and saves
-  /// little. A file AVAudioFile can't open is converted, as before.
+  /// is uncompressed or lossless. Re-encoding a lossy file (AAC, MP3, Opus) costs time and
+  /// quality and saves little. A file AVAudioFile can't open is converted, as before.
   static func importRequiresConversion(bytes: Int64, url: URL) -> Bool {
     guard bytes > maxRawImportBytes else { return false }
     let formatID = (try? AVAudioFile(forReading: url))?.fileFormat.settings[AVFormatIDKey]
-    return (formatID as? AudioFormatID).map { !lossyFormatIDs.contains($0) } ?? true
+    return (formatID as? AudioFormatID).map(losslessFormatIDs.contains) ?? true
   }
 
   /// The before and after of an offered conversion, in bytes.

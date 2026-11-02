@@ -292,10 +292,8 @@ struct SoftwareLicenseSection: View {
     "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
   ]
 
-  private var appUsesEnglish: Bool {
-    Locale.Language(identifier: Bundle.main.preferredLocalizations.first ?? "en").languageCode
-      == .english
-  }
+  /// Set once Apple's translation is known to support the app's language. English needs none.
+  @State private var canTranslate = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -303,7 +301,7 @@ struct SoftwareLicenseSection: View {
         Text(verbatim: paragraph)
           .font(.aboutCaption)
       }
-      if !appUsesEnglish {
+      if canTranslate {
         Button("Translate", systemImage: "translate") {
           showingTranslation = true
         }
@@ -321,6 +319,13 @@ struct SoftwareLicenseSection: View {
       .foregroundStyle(.tint)
       .font(.aboutCaption)
       .handCursor()
+    }
+    .task {
+      let language = Bundle.main.appLanguage
+      guard language.languageCode != .english else { return }
+      let status = await LanguageAvailability().status(
+        from: Locale.Language(identifier: "en"), to: language)
+      canTranslate = status != .unsupported
     }
   }
 }

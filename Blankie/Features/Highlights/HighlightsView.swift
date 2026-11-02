@@ -21,11 +21,7 @@ struct HighlightsView: View {
   @State private var translationFailed = false
 
   private static let english = Locale.Language(identifier: "en")
-
-  /// The app's language, which a per-app language setting can set apart from the system's.
-  private var appLanguage: Locale.Language {
-    Locale.Language(identifier: Bundle.main.preferredLocalizations.first ?? "en")
-  }
+  private let appLanguage = Bundle.main.appLanguage
 
   private var isTranslated: Bool { !translations.isEmpty && !showsOriginal }
 
@@ -34,10 +30,10 @@ struct HighlightsView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 28) {
+        translationControl
         ForEach(Highlights.releases) { release in
           releaseSection(release)
         }
-        translationFooter
       }
       .padding(24)
       .frame(maxWidth: 600, alignment: .leading)
@@ -65,7 +61,7 @@ struct HighlightsView: View {
         await MainActor.run { translations.wrappedValue = result }
       } catch {
         // A declined download or unsupported pair leaves the English in place,
-        // and the footer offers Translate again.
+        // and the Translate button comes back.
         Logger.ui.error("Highlights translation failed: \(error, privacy: .public)")
         await MainActor.run { failed.wrappedValue = true }
       }
@@ -100,7 +96,7 @@ struct HighlightsView: View {
   }
 
   @ViewBuilder
-  private var translationFooter: some View {
+  private var translationControl: some View {
     if !translations.isEmpty {
       HStack(spacing: 6) {
         Image(systemName: "translate")
@@ -131,6 +127,11 @@ struct HighlightsView: View {
       }
       .buttonStyle(.bordered)
       .handCursor()
+    } else if availability == .unsupported {
+      // Apple can't translate this language (Hungarian today), so say the English is on purpose.
+      Label("Original English", systemImage: "translate")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
     }
   }
 
