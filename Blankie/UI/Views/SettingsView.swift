@@ -44,11 +44,9 @@ struct SettingsView: View {
   #if os(iOS)
     @State private var showingAppIconPicker = false
   #endif
-  #if os(macOS)
-    /// Holds the sub-page flags, app-level so About Blankie in the menu bar can
-    /// open straight to About.
-    @ObservedObject private var appState = AppState.shared
-  #endif
+  /// Holds the sub-page flags, app-level so About Blankie in the menu bar and
+  /// `blankie://highlights` can open straight to their pages.
+  @ObservedObject private var appState = AppState.shared
   #if os(macOS)
     @State private var showingRestartAlert = false
   #endif
@@ -68,6 +66,33 @@ struct SettingsView: View {
         .symbolRenderingMode(.hierarchical)
         .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
     }
+  }
+
+  private var highlightsRowLabel: some View {
+    HStack {
+      Label {
+        Text("Highlights")
+          .foregroundColor(.primary)
+      } icon: {
+        Image(systemName: "sparkles")
+          .symbolRenderingMode(.hierarchical)
+          .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
+      }
+      Spacer()
+      if Highlights.hasUnseen(lastSeen: globalSettings.lastSeenHighlightsVersion) {
+        newBadge
+      }
+    }
+  }
+
+  private var newBadge: some View {
+    Text("New")
+      .font(.caption2.weight(.semibold))
+      .textCase(.uppercase)
+      .foregroundColor(.white)
+      .padding(.horizontal, 6)
+      .padding(.vertical, 2)
+      .background(Capsule().fill(globalSettings.customAccentColor ?? .accentColor))
   }
 
   private var overriddenByPresetBadge: some View {
@@ -100,6 +125,9 @@ struct SettingsView: View {
           if appState.showingSettingsAboutPage {
             AboutView()
               .toolbar { paneSubPageToolbar }
+          } else if appState.showingSettingsHighlightsPage {
+            HighlightsView()
+              .toolbar { paneSubPageToolbar }
           } else if appState.showingSettingsManageSoundsPage {
             SoundManagementView()
               .toolbar { paneSubPageToolbar }
@@ -115,13 +143,23 @@ struct SettingsView: View {
         .onDisappear {
           appState.showingSettingsAboutPage = false
           appState.showingSettingsManageSoundsPage = false
+          appState.showingSettingsHighlightsPage = false
         }
       #endif
     } else {
-      NavigationStack { settingsForm }
-        #if os(macOS)
-          .frame(width: 500, height: 640)
-        #endif
+      NavigationStack {
+        settingsForm
+          #if !os(macOS)
+            .navigationDestination(isPresented: $appState.showingSettingsHighlightsPage) {
+              HighlightsView()
+            }
+          #endif
+      }
+      #if os(macOS)
+        .frame(width: 500, height: 640)
+      #else
+        .onDisappear { appState.showingSettingsHighlightsPage = false }
+      #endif
     }
   }
 
@@ -133,6 +171,7 @@ struct SettingsView: View {
         Button {
           appState.showingSettingsAboutPage = false
           appState.showingSettingsManageSoundsPage = false
+          appState.showingSettingsHighlightsPage = false
         } label: {
           Label("Back", systemImage: "chevron.left")
         }
@@ -294,6 +333,28 @@ struct SettingsView: View {
             AboutView()
           } label: {
             aboutRowLabel
+          }
+        #endif
+
+        #if os(macOS)
+          Button {
+            appState.showingSettingsHighlightsPage = true
+          } label: {
+            HStack {
+              highlightsRowLabel
+              Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
+            }
+            .formRowLabel()
+          }
+          .formRowButtonStyle()
+        #else
+          NavigationLink {
+            HighlightsView()
+          } label: {
+            highlightsRowLabel
           }
         #endif
 

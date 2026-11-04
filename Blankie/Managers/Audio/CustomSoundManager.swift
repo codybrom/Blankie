@@ -17,10 +17,21 @@ class CustomSoundManager {
 
   let customSoundsDirectory = "CustomSounds"
 
-  /// Files at or below this size import as-is. Larger ones are still allowed but
-  /// stream-transcoded to AAC on import: copying the raw bytes loads the whole
-  /// file into memory, and very large uncompressed audio strains playback.
+  /// Files at or below this size import as-is. Larger uncompressed or lossless files
+  /// are stream-transcoded to AAC on import (see `importRequiresConversion`).
   static let maxRawImportBytes: Int64 = 150 * 1024 * 1024
+
+  /// A running import's stage and overall completion (0 to 1), for the sheet's
+  /// progress bar.
+  nonisolated struct ImportProgress: Sendable, Equatable {
+    enum Stage: Sendable { case converting, measuring }
+    let stage: Stage
+    let fraction: Double
+  }
+
+  /// The part of the progress bar that converting fills when an import converts.
+  /// Encoding takes about four times as long as measuring loudness.
+  nonisolated private static let conversionShare = 0.8
 
   private var modelContext: ModelContext?
 
@@ -66,10 +77,11 @@ class CustomSoundManager {
   // MARK: - Sound Import
 
   /// Copies (or transcodes) a sound file into app storage and saves its record.
+  /// Cancelling the task stops the import and removes anything it wrote.
   @MainActor
   func importSound(
     from sourceURL: URL, title: String, iconName: String, randomizeStartPosition: Bool = true,
-    convertToAAC: Bool = false
+    convertToAAC: Bool = false, progress: (@Sendable (ImportProgress) -> Void)? = nil
   ) async -> Result<
     CustomSoundData, CustomSoundError
   > {
@@ -104,24 +116,30 @@ class CustomSoundManager {
     do {
       try await validateImportableAudioFile(at: sourceURL)
 
-      // Transcode when the user opted in or the file exceeds `maxRawImportBytes`.
       let sourceBytes =
         (try? sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
+      let conversionRequired = Self.importRequiresConversion(bytes: sourceBytes, url: sourceURL)
+      let converts = convertToAAC || conversionRequired
       let copiedURL: URL
       let storedExtension: String
-      if convertToAAC || sourceBytes > Self.maxRawImportBytes {
+      if converts {
         guard let directoryURL = getCustomSoundsDirectoryURL() else {
           throw CustomSoundError.fileCopyFailed
         }
         let destinationURL = directoryURL.appendingPathComponent("\(uniqueFileName).m4a")
-        try await Self.transcodeToAAC(source: sourceURL, destination: destinationURL)
+        // Set before encoding so a failed or cancelled encode is removed too.
+        copiedURLForCleanup = destinationURL
+        try await Self.transcodeToAAC(source: sourceURL, destination: destinationURL) {
+          progress?(ImportProgress(stage: .converting, fraction: $0 * Self.conversionShare))
+        }
+        try Task.checkCancellation()
         copiedURL = destinationURL
         storedExtension = "m4a"
         Logger.sounds.debug(
-          "CustomSoundManager: import converted to AAC (\(sourceBytes) bytes, forced: \(sourceBytes > Self.maxRawImportBytes))"
+          "CustomSoundManager: import converted to AAC (\(sourceBytes) bytes, forced: \(conversionRequired))"
         )
       } else {
-        copiedURL = try copyFileForImport(
+        copiedURL = try await copyFileForImport(
           sourceURL, uniqueFileName: uniqueFileName, fileExtension: fileExtension
         )
         storedExtension = fileExtension
@@ -132,7 +150,13 @@ class CustomSoundManager {
         uniqueFileName: uniqueFileName, fileExtension: storedExtension,
         randomizeStartPosition: randomizeStartPosition
       )
-      let customSound = try await createCustomSoundRecord(from: importData)
+      let measuringStart = converts ? Self.conversionShare : 0
+      let customSound = try await createCustomSoundRecord(from: importData) {
+        progress?(
+          ImportProgress(
+            stage: .measuring, fraction: measuringStart + $0 * (1 - measuringStart)))
+      }
+      try Task.checkCancellation()
       try saveCustomSoundToDatabase(customSound)
       writeMirror(for: customSound)
       copiedURLForCleanup = nil
@@ -143,6 +167,9 @@ class CustomSoundManager {
 
       NotificationCenter.default.post(name: .customSoundAdded, object: nil)
       return .success(customSound)
+    } catch is CancellationError {
+      Logger.sounds.debug("CustomSoundManager: Import cancelled")
+      return .failure(.invalidAudioFile(CancellationError()))
     } catch {
       Logger.sounds.error("CustomSoundManager: Failed to import sound: \(error, privacy: .public)")
       return .failure(.invalidAudioFile(error))
@@ -157,10 +184,10 @@ class CustomSoundManager {
   }
 
   private func copyFileForImport(_ sourceURL: URL, uniqueFileName: String, fileExtension: String)
-    throws -> URL
+    async throws -> URL
   {
     guard
-      let copiedURL = try copyToCustomSoundsDirectory(
+      let copiedURL = try await copyToCustomSoundsDirectory(
         source: sourceURL, filename: uniqueFileName, extension: fileExtension
       )
     else {
@@ -171,11 +198,13 @@ class CustomSoundManager {
 
   /// Builds the `CustomSoundData` record for a freshly imported file (analysis,
   /// hash, ID3, credits). Not private so the sha256/profile wiring is unit tested.
+  /// `progress` receives the fraction of the file analyzed, from 0 to 1.
   @MainActor
-  func createCustomSoundRecord(from importData: SoundImportData) async throws
-    -> CustomSoundData
-  {
-    let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: importData.copiedURL)
+  func createCustomSoundRecord(
+    from importData: SoundImportData, progress: (@Sendable (Double) -> Void)? = nil
+  ) async throws -> CustomSoundData {
+    let analysis = await AudioAnalyzer.comprehensiveAnalysis(
+      at: importData.copiedURL, progress: progress)
     let lufsResult =
       analysis.lufs != nil
       ? (lufs: analysis.lufs!, normalizationFactor: analysis.normalizationFactor) : nil
@@ -202,7 +231,9 @@ class CustomSoundManager {
     // Hash the stored file so re-importing the same audio dedupes and the mirror
     // persists a real integrity hash.
     do {
-      customSound.sha256Hash = try FileHashUtility.sha256Hash(for: importData.copiedURL)
+      customSound.sha256Hash = try await FileHashUtility.sha256Hash(for: importData.copiedURL)
+    } catch is CancellationError {
+      throw CancellationError()
     } catch {
       Logger.sounds.error(
         "CustomSoundManager: Failed to hash imported file for dedup: \(error, privacy: .public)")
@@ -231,7 +262,7 @@ class CustomSoundManager {
   }
 
   private func copyToCustomSoundsDirectory(source: URL, filename: String, extension ext: String)
-    throws -> URL?
+    async throws -> URL?
   {
     guard let directoryURL = getCustomSoundsDirectoryURL() else {
       Logger.sounds.error("CustomSoundManager: Could not get custom sounds directory URL")
@@ -254,12 +285,17 @@ class CustomSoundManager {
         )
       }
 
-      Logger.sounds.debug("CustomSoundManager: Reading source file data...")
-      let data = try Data(contentsOf: source)
-      Logger.sounds.debug("CustomSoundManager: Read \(data.count) bytes from source file")
-
-      // Atomic, so a full disk mid-write can't leave a truncated file.
-      try data.write(to: destinationURL, options: .atomic)
+      // copyItem streams (or clones on APFS), so memory stays flat at any size. It runs
+      // off the main actor so a copy that can't clone doesn't freeze the sheet. A failed
+      // copy is removed so a full disk can't leave a truncated file behind.
+      do {
+        try await Task.detached(priority: .userInitiated) {
+          try FileManager.default.copyItem(at: source, to: destinationURL)
+        }.value
+      } catch {
+        try? FileManager.default.removeItem(at: destinationURL)
+        throw error
+      }
       Logger.sounds.debug("CustomSoundManager: Successfully copied file to \(destinationURL.path)")
 
       if FileManager.default.fileExists(atPath: destinationURL.path) {
@@ -383,7 +419,7 @@ class CustomSoundManager {
       settings.setQuickMixSoundFileNames(
         settings.quickMixSoundFileNames.filter { $0 != fileName })
     }
-    let singleToken = GlobalSettings.singleToken(forFileName: fileName)
+    let singleToken = PlayableItem.single(fileName: fileName).token
     if settings.isStarred(singleToken) {
       settings.toggleStarred(singleToken)
     }

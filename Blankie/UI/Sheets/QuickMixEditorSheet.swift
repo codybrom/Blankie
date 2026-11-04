@@ -56,7 +56,7 @@ import SwiftUI
                 if let sound = audioManager.sounds.first(where: { $0.fileName == fileName }) {
                   HStack(spacing: 12) {
                     Image(systemName: sound.systemIconName)
-                      .foregroundColor(.accentColor)
+                      .foregroundStyle(.primary)
                       .frame(width: 20)
                       .accessibilityHidden(true)
                     Text(sound.localizedTitle)
@@ -156,7 +156,7 @@ import SwiftUI
           } label: {
             HStack(spacing: 12) {
               Image(systemName: sound.systemIconName)
-                .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+                .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                 .frame(width: 20)
                 .accessibilityHidden(true)
               Text(sound.localizedTitle)

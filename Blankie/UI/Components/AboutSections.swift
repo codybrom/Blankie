@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Translation
 import os
 
 // The About content is shared with the compact iOS sheet. macOS resolves text
@@ -280,28 +281,39 @@ struct InspirationSection: View {
 }
 
 struct SoftwareLicenseSection: View {
+  @State private var showingTranslation = false
+
+  // The English text is the license, so it stays on screen. Other languages get
+  // Apple's translation popover for reading along.
+  private static let paragraphs = [
+    "This application comes with absolutely no warranty. This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.",
+    "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:",
+    "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.",
+    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.",
+  ]
+
+  private var appUsesEnglish: Bool {
+    Locale.Language(identifier: Bundle.main.preferredLocalizations.first ?? "en").languageCode
+      == .english
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text(
-        verbatim:
-          "This application comes with absolutely no warranty. This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.",
-      )
-      .font(.aboutCaption)
-      Text(
-        verbatim:
-          "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:"
-      )
-      .font(.aboutCaption)
-      Text(
-        verbatim:
-          "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software."
-      )
-      .font(.aboutCaption)
-      Text(
-        verbatim:
-          "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
-      )
-      .font(.aboutCaption)
+      ForEach(Self.paragraphs, id: \.self) { paragraph in
+        Text(verbatim: paragraph)
+          .font(.aboutCaption)
+      }
+      if !appUsesEnglish {
+        Button("Translate", systemImage: "translate") {
+          showingTranslation = true
+        }
+        .buttonStyle(.borderless)
+        .font(.aboutCaption)
+        .handCursor()
+        .translationPresentation(
+          isPresented: $showingTranslation,
+          text: Self.paragraphs.joined(separator: "\n\n"))
+      }
       Link(
         "Learn more about the MIT License",
         destination: URL(string: "https://opensource.org/licenses/MIT")!

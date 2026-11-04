@@ -264,6 +264,31 @@ import Testing
     audioManager.exitSingleSoundWithoutResuming()
   }
 
+  /// A Pause still showing on the active tile after the app was killed pauses the
+  /// cold app instead of toggling it into playback. Its Play glyph still resumes.
+  @Test func activeTileFollowsItsDrawnGlyph() async throws {
+    let (a, b) = makeSounds()
+    await install([preset("Entry Stale Pause", selecting: [a.fileName], from: [a, b])])
+    audioManager.setGlobalPlaybackState(false)
+    let token = try #require(audioManager.currentFavoriteToken)
+
+    _ = try await WidgetPlayFavoriteIntent(favoriteToken: token, pauses: true).perform()
+    #expect(!audioManager.isGloballyPlaying)
+
+    _ = try await WidgetPlayFavoriteIntent(favoriteToken: token).perform()
+    #expect(audioManager.isGloballyPlaying)
+    audioManager.setGlobalPlaybackState(false)
+  }
+
+  /// The Now Playing widget's stale Pause can't start playback either.
+  @Test func widgetPauseButtonNeverStartsPlayback() async throws {
+    _ = makeSounds()
+    audioManager.setGlobalPlaybackState(false)
+
+    _ = try await WidgetSetPlaybackIntent(play: false).perform()
+    #expect(!audioManager.isGloballyPlaying)
+  }
+
   // MARK: - Siri and single sound
 
   /// Siri plays a sound on its own the way Favorites does, without adding it to the active preset

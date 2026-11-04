@@ -20,12 +20,17 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
   @Parameter(title: "Favorite")
   var favoriteToken: String
 
+  /// Set when the widget drew this item as playing, so the tap only pauses.
+  @Parameter(title: "Pause", default: false)
+  var pauses: Bool
+
   init() {}
 
   /// Explicit init: the synthesized memberwise init for a `@Parameter`
   /// property doesn't accept its plain wrapped-value type here.
-  init(favoriteToken: String) {
+  init(favoriteToken: String, pauses: Bool = false) {
     self.favoriteToken = favoriteToken
+    self.pauses = pauses
   }
 
   @MainActor
@@ -33,9 +38,14 @@ struct WidgetPlayFavoriteIntent: AppIntent, AudioPlaybackIntent {
     await AppSetup.ensureManagersReadyForIntents()
     let audio = AudioManager.shared
 
-    // Tapping the active tile toggles playback, matching its play/pause glyph.
+    // Follows the glyph the widget drew rather than toggling, so a Pause left
+    // showing after the app was killed can't start audio in the cold app.
+    if pauses {
+      audio.setGlobalPlaybackState(false)
+      return .result()
+    }
     if favoriteToken == audio.currentFavoriteToken {
-      audio.togglePlayback()
+      audio.setGlobalPlaybackState(true)
       return .result()
     }
 

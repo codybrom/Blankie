@@ -24,6 +24,10 @@ struct SidebarContentView: View {
   /// The sidebar follows the theming preset: its accent, then the app-wide
   /// custom accent, then the system accent. `themingPreset` is nil during
   /// single sound / Quick Mix, so those use the app accent.
+  private var hasUnseenHighlights: Bool {
+    Highlights.hasUnseen(lastSeen: globalSettings.lastSeenHighlightsVersion)
+  }
+
   private var activeAccent: Color {
     presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor ?? .accentColor
   }
@@ -61,8 +65,23 @@ struct SidebarContentView: View {
           Button {
             appState.showingSettingsPane.toggle()
           } label: {
-            Label("Settings", systemImage: "gearshape")
+            Label {
+              Text("Settings")
+            } icon: {
+              // A footer button has no system badge, so unread Highlights draw
+              // their own dot.
+              Image(systemName: "gearshape")
+                .overlay(alignment: .topTrailing) {
+                  if hasUnseenHighlights {
+                    Circle()
+                      .fill(activeAccent)
+                      .frame(width: 7, height: 7)
+                      .offset(x: 3, y: -2)
+                  }
+                }
+            }
           }
+          .accessibilityValue(hasUnseenHighlights ? Text("New") : Text(verbatim: ""))
           .buttonStyle(.borderless)
           .foregroundStyle(appState.showingSettingsPane ? activeAccent : .secondary)
           Spacer()

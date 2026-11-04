@@ -66,7 +66,7 @@ import Testing
       ],
       pinnableItems: [
         WidgetFavorite(
-          token: GlobalSettings.singleToken(forFileName: "rain"), displayName: "Rain",
+          token: PlayableItem.single(fileName: "rain").token, displayName: "Rain",
           systemIconName: "cloud.rain", thumbnailKey: "preset_thumb_xyz",
           accentColorName: "orange", subtitle: "Nature")
       ],

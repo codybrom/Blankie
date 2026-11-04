@@ -7,6 +7,7 @@
 //  AudioAnalyzer loudness and gain arithmetic. EngineLoudnessTests covers file decoding.
 //
 
+import AVFoundation
 import Foundation
 import Testing
 
@@ -22,6 +23,23 @@ import Testing
       isClose(AudioAnalyzer.calculateNormalizationFactor(peakLevel: 0.4, targetLevel: 0.8), 2.0))
     // A very quiet peak would need 8x but is capped at 3x so noise isn't amplified.
     #expect(AudioAnalyzer.calculateNormalizationFactor(peakLevel: 0.1, targetLevel: 0.8) == 3.0)
+  }
+
+  // MARK: - True peak (ITU-R BS.1770 Annex 2)
+
+  /// A quarter-rate sine sampled 45 degrees off its peak reads 0.707 at every sample,
+  /// but its waveform reaches 1.0 between them. True peak must find the 0 dB crest.
+  @Test func truePeakFindsPeaksBetweenSamples() throws {
+    let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
+    let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4800))
+    buffer.frameLength = 4800
+    let samples = try #require(buffer.floatChannelData?[0])
+    for frame in 0..<4800 {
+      samples[frame] = Float(sin(Double.pi / 2 * Double(frame) + Double.pi / 4))
+    }
+
+    let truePeak = try #require(AudioAnalyzer.truePeakdBTP(buffer: buffer))
+    #expect(abs(truePeak) < 0.2, "Expected about 0 dBTP, got \(truePeak)")
   }
 
   // MARK: - LUFS normalization (two-way, capped boost)

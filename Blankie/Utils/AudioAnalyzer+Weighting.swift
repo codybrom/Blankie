@@ -39,19 +39,11 @@ extension AudioAnalyzer {
     filterCoefficients: KWeightingCoefficients,
     channelIndex: Int
   ) -> Float {
-    var workingData = Array(UnsafeBufferPointer(start: channelData, count: Int(frameLength)))
-
-    workingData = applyBiquadFilter(
-      input: workingData,
-      filterB: filterCoefficients.preFilterB,
-      filterA: filterCoefficients.preFilterA
-    )
-
-    workingData = applyBiquadFilter(
-      input: workingData,
-      filterB: filterCoefficients.rlbFilterB,
-      filterA: filterCoefficients.rlbFilterA
-    )
+    var workingData = [Float](repeating: 0, count: Int(frameLength))
+    guard kWeight(channelData, into: &workingData, coefficients: filterCoefficients) else {
+      Logger.app.error("AudioAnalyzer: Failed to create the K-weighting filter")
+      return 0
+    }
 
     var power: Float = 0
     vDSP_measqv(workingData, 1, &power, vDSP_Length(frameLength))
@@ -72,40 +64,24 @@ extension AudioAnalyzer {
     return power * channelWeight
   }
 
-  nonisolated static func applyBiquadFilter(input: [Float], filterB: [Float], filterA: [Float])
-    -> [Float]
-  {
-    var output = [Float](repeating: 0, count: input.count)
+  /// Runs the pre-filter and RLB stages as one two-section `vDSP_biquad` cascade. The
+  /// delay line starts at zero on every call, so filter state resets per chunk.
+  /// Returns false if the filter setup can't be created.
+  nonisolated static func kWeight(
+    _ input: UnsafePointer<Float>, into output: inout [Float],
+    coefficients: KWeightingCoefficients
+  ) -> Bool {
+    let sections = [
+      coefficients.preFilterB[0], coefficients.preFilterB[1], coefficients.preFilterB[2],
+      coefficients.preFilterA[1], coefficients.preFilterA[2],
+      coefficients.rlbFilterB[0], coefficients.rlbFilterB[1], coefficients.rlbFilterB[2],
+      coefficients.rlbFilterA[1], coefficients.rlbFilterA[2],
+    ].map(Double.init)
+    guard let setup = vDSP_biquad_CreateSetup(sections, 2) else { return false }
+    defer { vDSP_biquad_DestroySetup(setup) }
 
-    var prevInput1: Float = 0
-    var prevInput2: Float = 0
-    var prevOutput1: Float = 0
-    var prevOutput2: Float = 0
-
-    // Extract coefficients (filterA[0] is assumed to be 1.0)
-    let coeff0B = filterB[0]
-    let coeff1B = filterB[1]
-    let coeff2B = filterB[2]
-    let coeff1A = filterA[1]
-    let coeff2A = filterA[2]
-
-    for index in 0..<input.count {
-      let currentInput = input[index]
-
-      // Direct Form I:
-      // y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
-      let currentOutput =
-        coeff0B * currentInput + coeff1B * prevInput1 + coeff2B * prevInput2 - coeff1A * prevOutput1
-        - coeff2A * prevOutput2
-
-      output[index] = currentOutput
-
-      prevInput2 = prevInput1
-      prevInput1 = currentInput
-      prevOutput2 = prevOutput1
-      prevOutput1 = currentOutput
-    }
-
-    return output
+    var delay = [Float](repeating: 0, count: 2 * 2 + 2)
+    vDSP_biquad(setup, &delay, input, 1, &output, 1, vDSP_Length(output.count))
+    return true
   }
 }

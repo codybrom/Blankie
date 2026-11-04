@@ -9,8 +9,9 @@ import CryptoKit
 import Foundation
 
 enum FileHashUtility {
-  /// Hex-encoded SHA-256 of the file at `url`, read in chunks.
-  static func sha256Hash(for url: URL) throws -> String {
+  /// Hex-encoded SHA-256 of the file at `url`, read in chunks off the main actor.
+  /// Throws `CancellationError` between reads once the task is cancelled.
+  @concurrent static func sha256Hash(for url: URL) async throws -> String {
     let bufferSize = 1024 * 1024  // 1MB buffer for streaming
 
     guard let inputStream = InputStream(url: url) else {
@@ -25,6 +26,7 @@ enum FileHashUtility {
     defer { buffer.deallocate() }
 
     while inputStream.hasBytesAvailable {
+      try Task.checkCancellation()
       let bytesRead = inputStream.read(buffer, maxLength: bufferSize)
       if bytesRead > 0 {
         hasher.update(bufferPointer: UnsafeRawBufferPointer(start: buffer, count: bytesRead))

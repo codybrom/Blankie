@@ -65,7 +65,7 @@ import SwiftUI
 
         if audioManager.canNavigateNextPrevious {
           Button {
-            audioManager.navigateToPreviousPreset()
+            audioManager.leaveUnsavedMixAsking(then: audioManager.navigateToPreviousPreset)
           } label: {
             Image(systemName: "backward.fill").frame(width: 44, height: 44).contentShape(.rect)
           }
@@ -74,7 +74,7 @@ import SwiftUI
         barePlayPause
         if audioManager.canNavigateNextPrevious {
           Button {
-            audioManager.navigateToNextPreset()
+            audioManager.leaveUnsavedMixAsking(then: audioManager.navigateToNextPreset)
           } label: {
             Image(systemName: "forward.fill").frame(width: 44, height: 44).contentShape(.rect)
           }
@@ -228,7 +228,7 @@ import SwiftUI
           // the app accent (themingPreset is nil during single sound and Quick Mix).
           accentColor: presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor,
           playingIcons: audioManager.playingSoundIcons(),
-          isDefaultPreset: presetManager.currentPreset?.isDefault ?? true
+          isDefaultPreset: NowPlayingDisplay.mixShowsBrandArtwork
         )
       )
       .accessibilityHidden(true)
@@ -254,6 +254,9 @@ import SwiftUI
     private var title: String {
       if let singleSound = audioManager.singleSound {
         return singleSound.localizedTitle
+      }
+      if let unsavedMix = audioManager.unsavedMix {
+        return unsavedMix.name
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")

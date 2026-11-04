@@ -273,7 +273,7 @@ final class NowPlayingManager: NowPlayingPublishing {
 
   private func updateBasicInfo(displayInfo: (title: String, artist: String)) {
     nowPlayingInfo[MPMediaItemPropertyTitle] = displayInfo.title
-    nowPlayingInfo[MPMediaItemPropertyArtist] = displayInfo.artist
+    nowPlayingInfo[MPMediaItemPropertyArtist] = displayInfo.artist.isEmpty ? nil : displayInfo.artist
   }
 
   private func updateAlbumAndDuration(creatorName: String?) {
