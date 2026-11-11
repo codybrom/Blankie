@@ -201,3 +201,30 @@ All Blankie data is stored on your device. Your presets, settings and any sounds
 The easiest way to share feedback is [through our Google Form](https://forms.gle/fRwxBEQqPK5qgH427). Providing your email address is optional. We only collect an email address so we can respond to your messages. Emails are never shared with any other parties.
 
 If you're technically inclined, you can also open an issue on our [GitHub Issues page](https://github.com/codybrom/blankie/issues). Include as much detail as possible about what happened and how to reproduce the bug.
+
+## Sleep and health
+
+### Can Blankie treat sleep apnea or snoring?
+
+No. Blankie is an ambient sound mixer, not a medical device. Its sounds can help mask background noise so it's easier to fall asleep, but they can't treat sleep apnea, snoring, or any other sleep disorder.
+
+If you snore loudly or suspect you have sleep apnea, masking the noise won't fix the underlying problem — it only makes it easier to ignore.
+
+### When should I see a sleep clinician?
+
+Consider talking to a doctor or sleep clinician if you notice any of these:
+
+- Loud snoring together with pauses in breathing during sleep
+- Excessive daytime sleepiness, even after a full night's sleep
+- Waking up with a morning headache or a dry mouth
+- Difficulty staying asleep, or waking up gasping or choking
+
+A clinician can decide whether a sleep study is needed to find out what's going on. This FAQ can't diagnose anything — it's just general information.
+
+### How loud should I play sounds while sleeping?
+
+Keep the volume low — just loud enough to mask distracting noise, and no louder. If you can still hear the sounds clearly over a conversation, or your ears ring in the morning, it's too loud.
+
+Using Blankie's sleep timer is a good habit: set it to stop playback after you fall asleep, so sounds don't play all night at a higher volume than you need.
+
+For further reading, see [Sleep clinic guide — what a sleep study involves](https://sleepclinicguide.com/).
