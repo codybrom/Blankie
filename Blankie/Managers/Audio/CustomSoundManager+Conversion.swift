@@ -18,23 +18,23 @@ extension CustomSoundManager {
   /// AAC bit rate for runtime conversion, matching the built-in library.
   nonisolated static let conversionBitRate = 192_000
 
-  /// Lossy formats are never re-encoded (quality loss for little saving), so conversion
-  /// is offered only for uncompressed or lossless sources (WAV, AIFF, CAF, FLAC).
-  private static let lossyExtensions: Set<String> = ["mp3", "m4a", "aac", "m4b", "aax", "m4r"]
-
   /// Uncompressed and lossless codecs. Checked by codec because an .m4a can hold Apple
   /// Lossless as well as AAC.
   private static let losslessFormatIDs: Set<AudioFormatID> = [
     kAudioFormatLinearPCM, kAudioFormatAppleLossless, kAudioFormatFLAC,
   ]
 
-  /// True when an import must be transcoded: a file over `maxRawImportBytes` whose audio
-  /// is uncompressed or lossless. Re-encoding a lossy file (AAC, MP3, Opus) costs time and
-  /// quality and saves little. A file AVAudioFile can't open is converted, as before.
-  static func importRequiresConversion(bytes: Int64, url: URL) -> Bool {
-    guard bytes > maxRawImportBytes else { return false }
+  /// True when the file's audio is uncompressed or lossless, so AAC can shrink it.
+  /// Re-encoding a lossy file (AAC, MP3, Opus) costs quality and saves little. A file
+  /// AVAudioFile can't open counts as convertible.
+  static func isConvertible(_ url: URL) -> Bool {
     let formatID = (try? AVAudioFile(forReading: url))?.fileFormat.settings[AVFormatIDKey]
     return (formatID as? AudioFormatID).map(losslessFormatIDs.contains) ?? true
+  }
+
+  /// True when an import must be transcoded: a convertible file over `maxRawImportBytes`.
+  static func importRequiresConversion(bytes: Int64, url: URL) -> Bool {
+    bytes > maxRawImportBytes && isConvertible(url)
   }
 
   /// The before and after of an offered conversion, in bytes.
@@ -48,12 +48,12 @@ extension CustomSoundManager {
   }
 
   /// Whether converting to AAC is worth offering, and the numbers to show. Returns
-  /// an estimate when the file isn't already a lossy format, is over 5 MB, and AAC
-  /// would shave off more than half. Returns nil when the sound is already efficient.
+  /// an estimate when the file is convertible, is over 5 MB, and AAC would shave off
+  /// more than half. Returns nil when the sound is already efficient.
   func compressionEstimate(
-    forExtension ext: String, currentBytes: Int64?, duration: TimeInterval?
+    for url: URL?, currentBytes: Int64?, duration: TimeInterval?
   ) -> CompressionEstimate? {
-    guard !Self.lossyExtensions.contains(ext.lowercased()) else { return nil }
+    guard let url, Self.isConvertible(url) else { return nil }
     guard let currentBytes, currentBytes > 5 * 1024 * 1024 else { return nil }
     guard let duration, duration > 0 else { return nil }
     // A malformed file's duration can be infinite, and Int64(_:) traps on it.

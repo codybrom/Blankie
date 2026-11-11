@@ -139,9 +139,9 @@ nonisolated class AudioAnalyzer {
     let lufs: Float?
   }
 
-  /// Measures peak, RMS, true peak and integrated LUFS in one pass. The chunks match
-  /// `processAudioFileForLUFS`, so its LUFS matches this one. Returns nil if the task is
-  /// cancelled.
+  /// Measures peak, RMS, true peak and integrated LUFS in one pass. Every file-level
+  /// analysis goes through this one decode, so all callers measure the same chunks.
+  /// Returns nil if the task is cancelled.
   private static func measureLevels(
     at url: URL, progress: (@Sendable (Double) -> Void)?
   ) -> Levels? {

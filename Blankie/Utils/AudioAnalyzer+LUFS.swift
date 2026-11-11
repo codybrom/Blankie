@@ -11,64 +11,6 @@ import os
 
 extension AudioAnalyzer {
 
-  @concurrent static func analyzeLUFS(at url: URL) async -> (
-    lufs: Float, normalizationFactor: Float
-  )? {
-    do {
-      Logger.app.debug("AudioAnalyzer: Starting LUFS analysis for \(url.lastPathComponent)")
-
-      let file = try AVAudioFile(forReading: url)
-      let measurements = try await processAudioFileForLUFS(file)
-      let integratedLUFS = calculateIntegratedLUFS(from: measurements)
-
-      guard let lufs = integratedLUFS else {
-        Logger.app.debug("AudioAnalyzer: No measurements above gating threshold")
-        return nil
-      }
-
-      let normalizationFactor = calculateLUFSNormalizationFactor(lufs: lufs)
-      Logger.app.debug(
-        "AudioAnalyzer: \(url.lastPathComponent) - LUFS: \(lufs), Factor: \(normalizationFactor)")
-
-      return (lufs: lufs, normalizationFactor: normalizationFactor)
-    } catch {
-      Logger.app.error("AudioAnalyzer: Failed to analyze LUFS: \(error, privacy: .public)")
-      return nil
-    }
-  }
-
-  nonisolated static func processAudioFileForLUFS(_ file: AVAudioFile) async throws -> [Float] {
-    let format = file.processingFormat
-    let channelCount = format.channelCount
-    var measurements: [Float] = []
-
-    Logger.app.debug(
-      "AudioAnalyzer: Processing file for LUFS - Length: \(file.length) frames, Channels: \(channelCount), Sample Rate: \(format.sampleRate)"
-    )
-
-    let filterCoefficients = getKWeightingCoefficients()
-    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: analysisChunkFrames)
-    else { return [] }
-
-    // Reads in sequence, like `measureLevels`, so both measure the same chunks. A read can
-    // return fewer frames than asked, and seeking past them would skip audio.
-    while file.framePosition < file.length {
-      try file.read(into: buffer, frameCount: analysisChunkFrames)
-      guard buffer.frameLength > 0 else { break }
-
-      if let loudness = processAudioChunk(
-        buffer, channelCount: channelCount, filterCoefficients: filterCoefficients)
-      {
-        measurements.append(loudness)
-        if measurements.count <= 5 {
-          Logger.app.debug("AudioAnalyzer: Chunk \(measurements.count) loudness: \(loudness) LUFS")
-        }
-      }
-    }
-
-    return measurements
-  }
-
   nonisolated static func processAudioChunk(
     _ buffer: AVAudioPCMBuffer,
     channelCount: UInt32,

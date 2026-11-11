@@ -321,10 +321,7 @@ struct SoftwareLicenseSection: View {
       .handCursor()
     }
     .task {
-      let language = Bundle.main.appLanguage
-      guard language.languageCode != .english else { return }
-      let status = await LanguageAvailability().status(
-        from: Locale.Language(identifier: "en"), to: language)
+      guard let status = await Bundle.main.englishTranslationStatus() else { return }
       canTranslate = status != .unsupported
     }
   }

@@ -300,17 +300,18 @@ import os
   // MARK: - Non-finite durations
 
   /// A malformed file's duration can be infinite or too large for Int64(_:).
-  @Test func compressionEstimateDeclinesNonFiniteDurations() {
+  @Test func compressionEstimateDeclinesNonFiniteDurations() throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let wav = dir.appendingPathComponent("tone.wav")
+    try TestAudio.writeTone(to: wav, seconds: 1)
     let manager = CustomSoundManager.shared
     let bytes: Int64 = 50 * 1024 * 1024
     for duration in [TimeInterval.infinity, .nan, 1e300] {
-      #expect(
-        manager.compressionEstimate(forExtension: "wav", currentBytes: bytes, duration: duration)
-          == nil)
+      #expect(manager.compressionEstimate(for: wav, currentBytes: bytes, duration: duration) == nil)
     }
     // A real long WAV still gets an estimate.
-    #expect(
-      manager.compressionEstimate(forExtension: "wav", currentBytes: bytes, duration: 60) != nil)
+    #expect(manager.compressionEstimate(for: wav, currentBytes: bytes, duration: 60) != nil)
   }
 
   /// Int(_:) traps on non-finite or huge values.

@@ -244,7 +244,7 @@ extension SoundSheetForm {
     let seconds = (try? await AVURLAsset(url: url).load(.duration)).map(CMTimeGetSeconds)
     importConvertForced = CustomSoundManager.importRequiresConversion(bytes: bytes, url: url)
     importConvertEstimate = CustomSoundManager.shared.compressionEstimate(
-      forExtension: url.pathExtension, currentBytes: bytes, duration: seconds)
+      for: url, currentBytes: bytes, duration: seconds)
   }
 }
 

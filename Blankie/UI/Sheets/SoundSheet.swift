@@ -159,6 +159,8 @@ struct SoundSheet: View {
           processingOverlay
         }
       }
+      // Closing cancels an import, so only Cancel can stop one, not a stray swipe.
+      .interactiveDismissDisabled(isProcessing)
       .modifier(
         SoundSheetChangeHandlers(
           isPreviewing: $isPreviewing,
@@ -253,8 +255,8 @@ struct SoundSheet: View {
       stopPreview()
     }
 
-    // Closed mid-import (Cancel or a swipe): stop it, so it doesn't save the sound or
-    // add it to presets. A finished import clears `importTask` before it dismisses.
+    // Closed mid-import with Cancel: stop it, so it doesn't save the sound or add it to
+    // presets. A finished import clears `importTask` before it dismisses.
     if importTask != nil {
       cancelImport()
     }

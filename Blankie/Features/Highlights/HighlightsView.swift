@@ -20,7 +20,6 @@ struct HighlightsView: View {
   @State private var configuration: TranslationSession.Configuration?
   @State private var translationFailed = false
 
-  private static let english = Locale.Language(identifier: "en")
   private let appLanguage = Bundle.main.appLanguage
 
   private var isTranslated: Bool { !translations.isEmpty && !showsOriginal }
@@ -115,7 +114,7 @@ struct HighlightsView: View {
         translationFailed = false
         if configuration == nil {
           configuration = TranslationSession.Configuration(
-            source: Self.english, target: appLanguage)
+            source: .english, target: appLanguage)
         } else {
           // Runs the translation task again with the same languages.
           configuration?.invalidate()
@@ -140,12 +139,24 @@ struct HighlightsView: View {
   }
 
   private func prepareTranslation() async {
-    guard appLanguage.languageCode != .english else { return }
-    let status = await LanguageAvailability().status(from: Self.english, to: appLanguage)
+    guard let status = await Bundle.main.englishTranslationStatus() else { return }
     availability = status
     if status == .installed {
-      configuration = TranslationSession.Configuration(source: Self.english, target: appLanguage)
+      configuration = TranslationSession.Configuration(source: .english, target: appLanguage)
     }
+  }
+}
+
+extension Locale.Language {
+  nonisolated static let english = Locale.Language(identifier: "en")
+}
+
+extension Bundle {
+  /// Whether Apple can translate English into the app's language. Nil when the app runs
+  /// in English.
+  func englishTranslationStatus() async -> LanguageAvailability.Status? {
+    guard appLanguage.languageCode != .english else { return nil }
+    return await LanguageAvailability().status(from: .english, to: appLanguage)
   }
 }
 

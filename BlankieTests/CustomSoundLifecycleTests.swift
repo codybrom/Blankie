@@ -61,31 +61,26 @@ import Testing
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
     let source = dir.appendingPathComponent("tone.wav")
-    let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1))
-    let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 44_100))
-    buffer.frameLength = 44_100
-    let samples = try #require(buffer.floatChannelData?[0])
-    for frame in 0..<44_100 { samples[frame] = 0.3 * sin(Float(frame) * 0.06) }
-    do {
-      let settings: [String: Any] = [
-        AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: 44_100,
-        AVNumberOfChannelsKey: 1, AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false,
-      ]
-      let file = try AVAudioFile(forWriting: source, settings: settings)
-      try file.write(from: buffer)
-    }
+    try TestAudio.writeTone(to: source, seconds: 1)
 
     let result = await CustomSoundManager.shared.importSound(
       from: source, title: "Test Import", iconName: "waveform")
     let sound = try result.get()
     sandbox.trackCustomSound(named: sound.fileName)
 
-    let stored = try sandbox.customSoundsDirectory()
-      .appendingPathComponent("\(sound.fileName).wav")
+    let directory = try sandbox.customSoundsDirectory()
+    let stored = directory.appendingPathComponent("\(sound.fileName).wav")
     let staged = FileManager.default.temporaryDirectory
       .appendingPathComponent("\(sound.fileName).wav")
     #expect(FileManager.default.fileExists(atPath: stored.path))
     #expect(!FileManager.default.fileExists(atPath: staged.path))
+
+    // The sidecar is written in the background. Wait for it, so restore() removes it
+    // instead of the write landing afterward in the real CustomSounds folder.
+    let sidecar = directory.appendingPathComponent(
+      "\(sound.fileName)\(CustomSoundManager.mirrorSuffix)")
+    await sandbox.waitUntil { FileManager.default.fileExists(atPath: sidecar.path) }
+    #expect(FileManager.default.fileExists(atPath: sidecar.path))
   }
 
   // MARK: - Adds and deletes keep live instances
