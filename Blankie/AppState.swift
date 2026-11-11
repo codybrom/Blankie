@@ -30,6 +30,8 @@ class AppState: ObservableObject {
   /// Set when onboarding creates and applies a preset. Each platform's root navigates
   /// to it (iPhone pushes the mixer, macOS closes the Settings pane) and resets it.
   @Published var onboardingCreatedPreset = false
+  /// macOS: a Kaleidoscope's glass fills the screen with every control put away.
+  @Published var kaleidoscopeFullScreen = false
 
   private init() {}
 }
