@@ -61,6 +61,9 @@ private enum IPhonePage: Hashable {
     @State private var isLandscape = false
     // Insets the Library lists, which the stack's safeAreaBar doesn't reach.
     @State private var nowPlayingBarHeight: CGFloat = 0
+    @State private var onSearchTab = false
+    /// The iPhone Library's chosen tab, kept between launches.
+    @AppStorage("libraryTab") private var libraryTabName = LibraryView.Tab.home.rawValue
     /// The fold in window space (decides the propped-up layout) and in the
     /// playback bar's space (keeps the bar off a bent crease).
     @State private var windowFold = FoldInfo.none
@@ -423,29 +426,121 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     private var iPhoneLayout: some View {
-      // The Library is the root, so it has no back button competing with the
-      // Settings gear. Launch pushes the mixer on top.
-      NavigationStack(path: $iPhonePath) {
-        LibraryView(
-          presentation: .page,
-          onOpenSettings: { showingSettings = true },
-          onSelection: { iPhonePath = [.mixer] },
-          bottomBarHeight: nowPlayingBarHeight
-        )
-        .navigationDestination(for: IPhonePage.self) { _ in
-          if opensNowPlaying {
-            nowPlayingPage(drawsBackdrop: true, showsMixerButton: true)
-          } else {
-            mixerPage
+      // Home holds favorites and mixes. Kaleidoscopes and Sounds each list their own.
+      // Each tab is its own stack with the Library at its root, so the Library has
+      // no back button competing with the Settings gear. Launch pushes the mixer on
+      // top. The tab bar shrinks away on scroll, and the controller rides above it.
+      TabView(selection: iPhoneTabSelection) {
+        ForEach(LibraryView.Tab.allCases) { tab in
+          Tab(tab.title, systemImage: tab.systemImage, value: IPhoneTab.library(tab)) {
+            NavigationStack(path: iPhonePath(for: .library(tab))) {
+              LibraryView(
+                presentation: .page,
+                tab: tab,
+                onOpenSettings: { showingSettings = true },
+                onSelection: { iPhonePath = [.mixer] },
+                // Room for the tab bar and the controller above it.
+                bottomBarHeight: 64
+              )
+              .toolbarVisibility(iPhoneTabBarVisibility, for: .tabBar)
+              .navigationDestination(for: IPhonePage.self) { _ in
+                iPhonePlayerPage
+              }
+            }
+          }
+        }
+        // Search takes the tab bar's separate trailing spot, as in Music.
+        Tab(value: IPhoneTab.search, role: .search) {
+          NavigationStack(path: iPhonePath(for: .search)) {
+            LibrarySearchView(onSelection: { iPhonePath = [.mixer] })
+              .toolbarVisibility(iPhoneTabBarVisibility, for: .tabBar)
+              .navigationDestination(for: IPhonePage.self) { _ in
+                iPhonePlayerPage
+              }
           }
         }
       }
-      // On the stack so the bar persists across the Library and the mixer.
+      .tabBarMinimizeBehavior(.onScrollDown)
+      // Choosing Search puts the cursor straight in its field.
+      .tabViewSearchActivation(.searchTabSelection)
+      // On the Library the tab view carries the controller. The pushed page has its own.
+      .tabViewBottomAccessory(isEnabled: iPhonePath.isEmpty) {
+        NowPlayingBar(showsMixer: !opensNowPlaying) {
+          iPhonePath = [.mixer]
+        }
+        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+      }
+    }
+
+    /// The pushed player covers the tab bar. Set on each tab's root and tied to the
+    /// path, so the bar returns as the player starts to leave, not after it has gone.
+    private var iPhoneTabBarVisibility: Visibility {
+      iPhonePath.isEmpty ? .automatic : .hidden
+    }
+
+    private enum IPhoneTab: Hashable {
+      case library(LibraryView.Tab)
+      case search
+    }
+
+    /// Search is never the tab the app reopens to, so only the Library's are kept.
+    private var iPhoneTabSelection: Binding<IPhoneTab> {
+      Binding(
+        get: { onSearchTab ? .search : .library(libraryTabSelection.wrappedValue) },
+        set: { choice in
+          switch choice {
+          case .library(let tab):
+            onSearchTab = false
+            libraryTabSelection.wrappedValue = tab
+          case .search:
+            onSearchTab = true
+          }
+        })
+    }
+
+    /// Only the tab on screen follows the path, so the mixer is pushed once.
+    private func iPhonePath(for tab: IPhoneTab) -> Binding<[IPhonePage]> {
+      Binding(
+        get: { iPhoneTabSelection.wrappedValue == tab ? iPhonePath : [] },
+        set: { if iPhoneTabSelection.wrappedValue == tab { iPhonePath = $0 } })
+    }
+
+    /// The mixer or player, pushed over the Library. It covers the tab bar.
+    private var iPhonePlayerPage: some View {
+      // A Kaleidoscope is turned by dragging, so the swipe back to the
+      // Library is off while one plays alone. The back button still works.
+      let turnsByDrag = audioManager.singleSound is KaleidoscopeSound
+      return Group {
+        if opensNowPlaying {
+          nowPlayingPage(drawsBackdrop: true, showsMixerButton: true)
+        } else {
+          mixerPage
+        }
+      }
+      .navigationBarBackButtonHidden(turnsByDrag)
+      .toolbar {
+        if turnsByDrag {
+          ToolbarItem(placement: .topBarLeading) {
+            Button {
+              iPhonePath.removeAll()
+            } label: {
+              Label("Back", systemImage: "chevron.backward")
+            }
+            .tint(.primary)
+          }
+        }
+      }
       .nowPlayingBottomBar {
         if !hidesNowPlayingBarForSingleSound {
           nowPlayingBar
         }
       }
+    }
+
+    private var libraryTabSelection: Binding<LibraryView.Tab> {
+      Binding(
+        get: { LibraryView.Tab(rawValue: libraryTabName) ?? .home },
+        set: { libraryTabName = $0.rawValue })
     }
 
     /// On the iPhone Library, a bar tap pushes the mixer. Everywhere else it
