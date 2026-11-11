@@ -79,7 +79,7 @@ struct SettingsView: View {
           .foregroundColor(globalSettings.customAccentColor ?? .accentColor)
       }
       Spacer()
-      if Highlights.hasUnseen(lastSeen: globalSettings.lastSeenHighlightsVersion) {
+      if Highlights.hasUnseen {
         newBadge
       }
     }

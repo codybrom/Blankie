@@ -112,8 +112,9 @@ struct SoundWaveformView: View {
   }
 
   /// Streams channel 0 in chunks and returns the same bars as `downsample` would for
-  /// the whole file, without holding the file in memory (#144).
-  nonisolated static func waveformBars(from url: URL, barCount: Int) async throws -> [Float] {
+  /// the whole file, without holding the file in memory (#144). `@concurrent` keeps the
+  /// decode off the main actor the view's task runs on.
+  @concurrent static func waveformBars(from url: URL, barCount: Int) async throws -> [Float] {
     let file = try AVAudioFile(forReading: url)
     let chunkFrames = AudioAnalyzer.analysisChunkFrames
     guard barCount > 0, file.length > 0,

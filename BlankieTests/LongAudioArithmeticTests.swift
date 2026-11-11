@@ -59,14 +59,22 @@ import os
 
   // MARK: - 2^32+ frames
 
-  /// Peak and RMS read in chunks, so a file too long for one buffer still analyzes.
-  @Test func chunkedAnalysisReadsHugeFiles() async throws {
+  /// Analysis reads in chunks, so a file too long for one buffer still analyzes. It decodes
+  /// all 2^32 frames (about 30 s), so it runs only with BLANKIE_RUN_STRESS_TESTS=1 (from
+  /// xcodebuild, pass TEST_RUNNER_BLANKIE_RUN_STRESS_TESTS=1). The multi-chunk tests below
+  /// cover the chunked reads on every run.
+  @Test(
+    .enabled(
+      if: ProcessInfo.processInfo.environment["BLANKIE_RUN_STRESS_TESTS"] == "1",
+      "Decodes 2^32 frames"))
+  func chunkedAnalysisReadsHugeFiles() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
     let url = try makeHugeCAF(in: dir)
 
-    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == 0)
-    #expect(await AudioAnalyzer.analyzeRMSLevel(at: url) == 0)
+    let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: url)
+    #expect(analysis.peakLevel == 0)
+    #expect(analysis.rmsLevel == 0)
   }
 
   // MARK: - Chunked reads (#144)
@@ -104,13 +112,14 @@ import os
     defer { try? FileManager.default.removeItem(at: dir) }
     let (url, samples) = try makeMultiChunkCAF(in: dir)
 
-    #expect(await AudioAnalyzer.analyzePeakLevel(at: url) == 0.95)
+    let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: url)
+    #expect(analysis.peakLevel == 0.95)
 
     let expectedRMS =
       samples.map { channel in
         Float(sqrt(channel.reduce(0.0) { $0 + Double($1 * $1) } / Double(channel.count)))
       }.reduce(0, +) / 2
-    let rms = try #require(await AudioAnalyzer.analyzeRMSLevel(at: url))
+    let rms = try #require(analysis.rmsLevel)
     #expect(abs(rms - expectedRMS) < 1e-5)
   }
 
@@ -152,7 +161,8 @@ import os
     let samplePeak = 20 * log10(Float(0.9 * sin(Double.pi / 4)))
     #expect(whole > samplePeak + 2, "The burst's peak lies between samples")
     let chunked = try #require(await AudioAnalyzer.comprehensiveAnalysis(at: url).truePeakdBTP)
-    #expect(chunked == whole)
+    // vDSP can vectorize differently for other buffer lengths, so allow a rounding error.
+    #expect(abs(chunked - whole) < 1e-4)
   }
 
   /// Bars that straddle chunk boundaries match the in-memory downsample.
@@ -211,8 +221,13 @@ import os
         AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 16, AVLinearPCMIsFloatKey: false,
       ])
 
+    let opus = try write(
+      "opus.caf",
+      [AVFormatIDKey: kAudioFormatOpus, AVSampleRateKey: 48_000, AVNumberOfChannelsKey: 2])
+
     let large = CustomSoundManager.maxRawImportBytes + 1
     #expect(!CustomSoundManager.importRequiresConversion(bytes: large, url: aac))
+    #expect(!CustomSoundManager.importRequiresConversion(bytes: large, url: opus))
     #expect(CustomSoundManager.importRequiresConversion(bytes: large, url: alac))
     #expect(CustomSoundManager.importRequiresConversion(bytes: large, url: wav))
     #expect(
@@ -285,17 +300,18 @@ import os
   // MARK: - Non-finite durations
 
   /// A malformed file's duration can be infinite or too large for Int64(_:).
-  @Test func compressionEstimateDeclinesNonFiniteDurations() {
+  @Test func compressionEstimateDeclinesNonFiniteDurations() throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let wav = dir.appendingPathComponent("tone.wav")
+    try TestAudio.writeTone(to: wav, seconds: 1)
     let manager = CustomSoundManager.shared
     let bytes: Int64 = 50 * 1024 * 1024
     for duration in [TimeInterval.infinity, .nan, 1e300] {
-      #expect(
-        manager.compressionEstimate(forExtension: "wav", currentBytes: bytes, duration: duration)
-          == nil)
+      #expect(manager.compressionEstimate(for: wav, currentBytes: bytes, duration: duration) == nil)
     }
     // A real long WAV still gets an estimate.
-    #expect(
-      manager.compressionEstimate(forExtension: "wav", currentBytes: bytes, duration: 60) != nil)
+    #expect(manager.compressionEstimate(for: wav, currentBytes: bytes, duration: 60) != nil)
   }
 
   /// Int(_:) traps on non-finite or huge values.
