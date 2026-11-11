@@ -57,6 +57,13 @@ struct SoundSheetForm: View {
     return true
   }
 
+  /// Kaleidoscopes have no file to draw and never repeat, so the waveform, Loop
+  /// Sound and Randomize Start don't apply.
+  var isKaleidoscope: Bool {
+    if case .edit(let sound) = mode { return sound is KaleidoscopeSound }
+    return false
+  }
+
   var body: some View {
     Form {
       if case .add = mode {

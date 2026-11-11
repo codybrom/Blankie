@@ -44,7 +44,7 @@ final class AudioEngineManager {
 
   /// Registered players keyed by identity. `Sound` owns removal via `detach`.
   /// An explicit registry lets rebuilds enumerate every node.
-  private(set) var registered: [ObjectIdentifier: SoundPlayer] = [:]
+  private(set) var registered: [ObjectIdentifier: any EngineSoundPlayer] = [:]
 
   /// Set once the main mixer, limiter and output are wired.
   private var limiterConnected = false
@@ -110,17 +110,17 @@ final class AudioEngineManager {
 
   /// Attaches a player and wires its chain (idempotent). Spatial players feed the
   /// environment (mono, HRTF-positioned). Others feed their gain node, then the
-  /// main mixer in the file's format (the mixer converts sample rate).
-  func attach(_ player: SoundPlayer) {
+  /// main mixer in the player's format (the mixer converts sample rate).
+  func attach(_ player: any EngineSoundPlayer) {
     let key = ObjectIdentifier(player)
     // Trust the registry only while the node is attached. A teardown can leave
     // a detached node with a stale entry, and playing a detached node crashes.
-    if registered[key] != nil, player.node.engine != nil {
+    if registered[key] != nil, player.engineNode.engine != nil {
       return
     }
 
-    if player.node.engine == nil {
-      engine.attach(player.node)
+    if player.engineNode.engine == nil {
+      engine.attach(player.engineNode)
     }
     connectPlayerChain(player)
 
@@ -128,8 +128,8 @@ final class AudioEngineManager {
   }
 
   /// Wires (or re-wires after a rebuild) a player's output chain.
-  func connectPlayerChain(_ player: SoundPlayer) {
-    if player.isSpatial {
+  func connectPlayerChain(_ player: any EngineSoundPlayer) {
+    if let player = player as? SoundPlayer, player.isSpatial {
       // Buffered spatial sounds carry their mono fold. Streamed ones play a
       // rendered mono cache, so the file's own format is already mono.
       let format: AVAudioFormat
@@ -145,20 +145,20 @@ final class AudioEngineManager {
       if player.gain.engine == nil {
         engine.attach(player.gain)
       }
-      let format = player.file.processingFormat
-      engine.connect(player.node, to: player.gain, format: format)
+      let format = player.connectionFormat
+      engine.connect(player.engineNode, to: player.gain, format: format)
       engine.connect(player.gain, to: engine.mainMixerNode, format: format)
     }
   }
 
   /// Stops a player, disconnects and detaches its nodes, and forgets it.
-  func detach(_ player: SoundPlayer) {
+  func detach(_ player: any EngineSoundPlayer) {
     let key = ObjectIdentifier(player)
     guard registered[key] != nil else { return }
 
     player.stop()
-    engine.disconnectNodeOutput(player.node)
-    engine.detach(player.node)
+    engine.disconnectNodeOutput(player.engineNode)
+    engine.detach(player.engineNode)
     if player.gain.engine != nil {
       engine.disconnectNodeOutput(player.gain)
       engine.detach(player.gain)

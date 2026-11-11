@@ -15,7 +15,7 @@ import os
 ///
 /// Call public methods on the main thread. Node completions hop to main before
 /// touching state, and `generation` fences stale ones.
-final class SoundPlayer {
+final class SoundPlayer: EngineSoundPlayer {
 
   /// Files at or below this duration decode fully into a looping buffer.
   /// Longer files stream in chunks to bound memory.
@@ -32,6 +32,8 @@ final class SoundPlayer {
   let node: AVAudioPlayerNode
   let gain: AVAudioUnitEQ
   let file: AVAudioFile
+  var engineNode: AVAudioNode { node }
+  var connectionFormat: AVAudioFormat { file.processingFormat }
   let totalFrames: AVAudioFramePosition
   let sampleRate: Double
   let mode: Mode
@@ -290,7 +292,7 @@ final class SoundPlayer {
 
   /// Starts playback from `fromFrame`, flushing any prior schedule so a resume is a
   /// clean reschedule even after an engine stop or rebuild. Needs a running engine.
-  func play(fromFrame: AVAudioFramePosition, completion: (() -> Void)? = nil) {
+  func play(fromFrame: AVAudioFramePosition) {
     // -[AVAudioPlayerNode play] raises an Obj-C exception (uncatchable in Swift) when
     // the node isn't attached to a running engine. Callers attach() and ensureRunning()
     // first. This guard turns a stale graph into a no-op.
@@ -306,7 +308,6 @@ final class SoundPlayer {
     let start = max(0, min(fromFrame, max(totalFrames - 1, 0)))
     segmentBaseFrame = start
     lastKnownFrame = start
-    if let completion { onPlaybackFinished = completion }
 
     let scheduleGeneration = generation
 
