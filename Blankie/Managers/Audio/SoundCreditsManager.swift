@@ -44,6 +44,17 @@ class SoundCreditsManager: ObservableObject {
           soundUrl: URL(string: sound.soundUrl)
         )
       }
+      // Kaleidoscopes credit the recordings their tones were measured from.
+      credits += KaleidoscopeRecipe.bundled.map { recipe in
+        SoundCredit(
+          name: recipe.title,
+          fileName: recipe.fileName,
+          soundName: recipe.source.title,
+          author: recipe.source.author,
+          license: License(rawValue: recipe.source.license.lowercased()) ?? .cc0,
+          soundUrl: URL(string: recipe.source.url)
+        )
+      }
     } catch {
       Logger.sounds.error("Error loading sounds.json: \(error, privacy: .public)")
       loadError = error
@@ -76,6 +87,9 @@ struct ResolvedSoundCredit {
   let author: String?
   let license: License?
   let customLicenseUrl: URL?
+  /// True when the sound is a new work made from the credited one, so the credit
+  /// names what it was remixed from and not the sound itself.
+  var isRemix = false
 
   /// The canonical license URL, or the user-supplied one for custom licenses.
   var licenseUrl: URL? {
@@ -139,6 +153,8 @@ extension Sound {
 
     guard let credit = SoundCreditsManager.shared.credits.first(where: { $0.name == originalTitle })
     else { return nil }
+    // A Kaleidoscope plays tones measured from a recording, never the recording.
+    let isRemix = self is KaleidoscopeSound
     return ResolvedSoundCredit(
       description: nonEmpty(SoundCreditsManager.shared.getDescription(for: originalTitle))
         .map { NSLocalizedString($0, comment: "Built-in sound description") },
@@ -146,7 +162,8 @@ extension Sound {
       workUrl: credit.soundUrl,
       author: credit.author,
       license: credit.license,
-      customLicenseUrl: nil
+      customLicenseUrl: nil,
+      isRemix: isRemix
     )
   }
 
