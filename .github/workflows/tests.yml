@@ -58,9 +58,9 @@ jobs:
         run: |
           echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
-          # The image's default Xcode.app is the release build. The newest
-          # installed one is a beta, so don't pick by version.
-          sudo xcode-select -s /Applications/Xcode.app
+          # Pinned to the Xcode the app is built with. The image's default
+          # Xcode.app is older.
+          sudo xcode-select -s /Applications/Xcode_27.2.app
           xcodebuild -version
       - name: Run unit tests
         run: |
