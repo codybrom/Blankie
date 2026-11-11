@@ -294,6 +294,16 @@ struct SoftwareLicenseSection: View {
   /// Set once Apple's translation is known to support the app's language. English needs none.
   @State private var canTranslate = false
 
+  /// The bundled GPL text, with each hard-wrapped paragraph rejoined to wrap at the view's width.
+  private static let fullLicenseParagraphs: [String] = {
+    guard let url = Bundle.main.url(forResource: "GPL-3.0", withExtension: "txt"),
+      let text = try? String(contentsOf: url, encoding: .utf8)
+    else { return [] }
+    return text.components(separatedBy: "\n\n")
+      .map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+      .filter { !$0.isEmpty }
+  }()
+
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
       ForEach(Self.paragraphs, id: \.self) { paragraph in
@@ -310,6 +320,20 @@ struct SoftwareLicenseSection: View {
         .translationPresentation(
           isPresented: $showingTranslation,
           text: Self.paragraphs.joined(separator: "\n\n"))
+      }
+      if !Self.fullLicenseParagraphs.isEmpty {
+        DisclosureGroup("Full License Text") {
+          LazyVStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(Self.fullLicenseParagraphs.enumerated()), id: \.offset) { _, paragraph in
+              Text(verbatim: paragraph)
+                .font(.aboutCaption)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+          }
+          .textSelection(.enabled)
+          .padding(.top, 8)
+        }
+        .font(.aboutCaption)
       }
       Link(
         "Learn more about the GNU General Public License",

@@ -130,7 +130,7 @@ Even if you don't write code, Blankie being open source benefits you in several 
 
 - **Community:** Blankie exists thanks to a collaborative ecosystem. From sounds, to translations, to developer resources and inspirations, Blankie builds upon contributions from creators around the world who've shared their work openly. By also being open source, Blankie honors this tradition and ensures it can continue to evolve even if the original developer moves on.
 
-- **Freedom:** Blankie's code is open source under the GPL (version 3 or later), so Blankie is free to use now and in the future. It also means you can make your own version of Blankie or reuse portions of its code in your own projects as long as you also share your source code under the same license.
+- **Freedom:** Blankie's code is open source under the GPL (version 3 or later), so Blankie is free to use now and in the future. It also means you can make your own version of Blankie or reuse portions of its code in your own projects. If you release your version, it has to be open source too, under the same license. Anything you build just for yourself can stay private.
 
 Blankie's complete source code, including both the Blankie app and this entire website, is available on [GitHub](https://github.com/codybrom/blankie) for anyone to explore, use or contribute to.
 
