@@ -142,17 +142,19 @@ enum NowPlayingDisplay {
     if let singleSound = AudioManager.shared.singleSound {
       anchorSound = singleSound
     } else {
-      // The longest selected sound (not only playing ones), so time still tracks
-      // while paused.
+      // The longest selected loop (not only playing ones), so time still tracks
+      // while paused. Kaleidoscopes never loop, so they can't anchor progress.
       anchorSound =
         AudioManager.shared.sounds
-        .filter { $0.isSelected }
+        .filter { $0.isSelected && $0.playbackDuration.isFinite }
         .max { $0.playbackDuration < $1.playbackDuration }
     }
 
     // Under a second, a 0.25 s position poll can't see the wrap (it needs a
     // 0.5 s drop), so the bar would run past the end. Show it indeterminate.
-    guard let anchorSound, anchorSound.playbackDuration >= 1 else { return nil }
+    guard let anchorSound, anchorSound.playbackDuration.isFinite,
+      anchorSound.playbackDuration >= 1
+    else { return nil }
     return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
 
@@ -203,7 +205,9 @@ enum NowPlayingDisplay {
   /// A single sound's lock-screen artwork: its SF Symbol in the accent on the
   /// dark tinted card, mirroring the in-app placeholder.
   static func singleFallbackImage(for sound: Sound) -> PlatformImage? {
-    fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
+    // A Kaleidoscope's artwork is a picture of its own glass.
+    if let artwork = (sound as? KaleidoscopeSound)?.artwork { return artwork }
+    return fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
   }
 
   /// The fallback for a mix without custom or animated artwork, matching its library
