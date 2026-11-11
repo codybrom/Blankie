@@ -32,7 +32,6 @@ jobs:
     name: Analyze (swift)
     # Don't scan draft PRs (push/schedule are unaffected)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    # The Xcode 27 image, since the app needs the iOS 27 SDK to compile.
     runs-on: xcode-27
     timeout-minutes: 120
     permissions:
@@ -52,9 +51,9 @@ jobs:
         run: |
           echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
-          # Pinned to the Xcode the app is built with. The image's default
-          # Xcode.app is older.
-          sudo xcode-select -s /Applications/Xcode_27.2.app
+          LATEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST"
           xcodebuild -version
       - name: Build Swift project
         run: |

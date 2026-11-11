@@ -58,9 +58,9 @@ jobs:
         run: |
           echo "Installed Xcode versions:"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
-          # Pinned to the Xcode the app is built with. The image's default
-          # Xcode.app is older.
-          sudo xcode-select -s /Applications/Xcode_27.2.app
+          LATEST=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Selecting $LATEST"
+          sudo xcode-select -s "$LATEST"
           xcodebuild -version
       - name: Run unit tests
         run: |
