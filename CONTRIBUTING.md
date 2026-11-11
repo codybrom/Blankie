@@ -196,7 +196,7 @@ There are undoubtedly other ways to contribute to Blankie that aren't covered ab
 
 ## Licensing
 
-Blankie respects the rights of creators and the open source community, and we expect the same from our contributors. By contributing to Blankie, you agree that any contributions will be licensed under the same terms as Blankie itself. You also confirm that you have the right to license any code, content, or other materials you contribute. Contributors are expected to follow Blankie's [License](LICENSE) and [Code of Conduct](CODE_OF_CONDUCT.md). Any contributions that violate these terms are subject to removal.
+Blankie respects the rights of creators and the open source community, and we expect the same from our contributors. By contributing to Blankie, you agree that any contributions will be licensed under the same terms as Blankie itself (GPL-3.0-or-later). You also give Cody Bromley permission to distribute your contributions as part of Blankie through the App Store and similar distribution platforms, whose terms may otherwise conflict with the GPL. You also confirm that you have the right to license any code, content or other materials you contribute. Contributors are expected to follow Blankie's [License](LICENSE) and [Code of Conduct](CODE_OF_CONDUCT.md). Any contributions that violate these terms are subject to removal.
 
 If you're unsure about the licensability of content you wish to contribute, please ask before submitting a PR. This includes:
 
@@ -209,7 +209,7 @@ As part of the open source community, we take licensing and attribution seriousl
 
 ### Use of Blankie's Name and Branding
 
-The MIT License covers Blankie's source code, but not its name or visual identity. "Blankie," the Blankie logo, and Blankie's app icons (except where noted) are trademarks of Cody Bromley and are not part of the open source license. This is the same approach open-source projects like Firefox, WordPress and Docker take.
+The GPL covers Blankie's source code, but not its name or visual identity. "Blankie," the Blankie logo, and Blankie's app icons (except where noted) are trademarks of Cody Bromley and are not part of the open source license. This is the same approach open-source projects like Firefox, WordPress and Docker take.
 
 If you're contributing to Blankie itself, there's nothing extra to worry about here.
 

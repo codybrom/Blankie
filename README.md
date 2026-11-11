@@ -99,11 +99,12 @@ See our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF
 
 ## License
 
-© 2026 Cody Bromley and contributors. All rights reserved.
+© 2025-2026 Cody Bromley and contributors. All rights reserved.
 
-- **Source code**: [MIT License](LICENSE)
-- **Name, logo and app icons**: © Cody Bromley, all rights reserved. These are trademarks, are not covered by the MIT License and may not be reused without permission (see [credits](https://blankie.rest/credits)).
+- **Source code**: [GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later). Some earlier versions of Blankie were released under the MIT License. Check the LICENSE file in each version for details.
+- **Name, logo and app icons**: © Cody Bromley, all rights reserved. These are trademarks, are not covered by the GPL and may not be reused without permission (see [credits](https://blankie.rest/credits)).
 - **Sounds**: Various open licenses (see [credits](https://blankie.rest/credits))
+- **Animated artwork**: Cropped and trimmed from videos shared under the [Pexels License](https://www.pexels.com/license/), which is separate from the GPL (see [credits](https://blankie.rest/credits))
 
 ## Support
 

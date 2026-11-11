@@ -89,4 +89,4 @@ The Worker in `worker/index.ts` serves the built site from static assets (config
 
 ## License
 
-The documentation website is included under the project's MIT License. See the [LICENSE](../LICENSE) file for details.
+The documentation website is included under the project's GPL-3.0-or-later license. See the [LICENSE](../LICENSE) file for details.
