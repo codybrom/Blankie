@@ -57,6 +57,12 @@ Before implementing changes that might alter core functionality in serious ways:
    * Document any breaking changes thoroughly in pull requests
    * Consider phased rollouts for major changes
 
+## Spam, self-promotion and automated pull requests
+
+Unsolicited pull requests that add links to outside websites, products or services **will** be closed without review. The accounts that open them **will** be blocked and reported to GitHub as spam.
+
+Pull requests should come only from real people who believe in and understand the changes they propose. Before opening one, test your changes and be ready to answer questions about them. If an account opening a pull request appears to be an AI agent, it will be treated as spam.
+
 ## Translation Contributions
 
 Blankie aims to be accessible to users around the world, which means we need help translating the app into different languages. You don't need to be a programmer to contribute translations!
