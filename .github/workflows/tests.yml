@@ -86,9 +86,19 @@ jobs:
             -testPlan Blankie \
             -destination "platform=iOS Simulator,name=$DEVICE" \
             -configuration Debug \
+            -resultBundlePath "$RUNNER_TEMP/Blankie.xcresult" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             ENABLE_DEBUG_DYLIB=NO \
             "OTHER_LDFLAGS=\$(inherited) -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker $ENTITLEMENTS"
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: |
+            ${{ runner.temp }}/Blankie.xcresult
+            ~/Library/Logs/DiagnosticReports
+          if-no-files-found: ignore
