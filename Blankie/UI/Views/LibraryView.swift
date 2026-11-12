@@ -1154,7 +1154,10 @@ struct LibraryView: View {
           .transition(.move(edge: .leading))
       }
     }
-    .clipped()
+    // Only the Mac slides its lists, and clipping would cut an iPhone list off at its bars.
+    #if os(macOS)
+      .clipped()
+    #endif
     .navigationDestination(isPresented: pushesKaleidoscopes) { kaleidoscopesPage }
     // The sidebar leaves its bar to the controls.
     .navigationTitle(
