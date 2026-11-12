@@ -34,6 +34,8 @@ import UniformTypeIdentifiers
     @State private var fullScreenExitTask: Task<Void, Never>?
     /// True when going full screen also put the window into the system's full screen.
     @State private var enteredSystemFullScreen = false
+    /// The window the glass took over, so leaving restores that one and not the key window.
+    @State private var glassWindow: NSWindow?
     @State private var presetToEdit: Preset?
     /// Confirm-then-create flow replacing Edit Preset on the default preset.
     @State private var showingNewPresetConfirmation = false
@@ -141,6 +143,7 @@ import UniformTypeIdentifiers
     private func enterGlassFullScreen() {
       appState.kaleidoscopeFullScreen = true
       guard let window = NSApp.keyWindow else { return }
+      glassWindow = window
       // Hiding the window's own toolbar gives its strip of the screen to the glass.
       window.toolbar?.isVisible = false
       if !window.styleMask.contains(.fullScreen) {
@@ -149,15 +152,19 @@ import UniformTypeIdentifiers
       }
     }
 
-    /// Brings the controls back, and leaves the system's full screen if this entered it.
-    private func exitGlassFullScreen() {
+    /// Brings the controls back. Leaves the system's full screen too if this entered it,
+    /// unless `stayingFullScreen` keeps the window there for whatever plays next.
+    private func exitGlassFullScreen(stayingFullScreen: Bool = false) {
       guard appState.kaleidoscopeFullScreen else { return }
       appState.kaleidoscopeFullScreen = false
       fullScreenExitTask?.cancel()
       showsFullScreenExit = false
-      let window = NSApp.keyWindow ?? NSApp.mainWindow
+      let window = glassWindow
+      glassWindow = nil
       window?.toolbar?.isVisible = true
-      if enteredSystemFullScreen, let window, window.styleMask.contains(.fullScreen) {
+      if enteredSystemFullScreen, !stayingFullScreen, let window,
+        window.styleMask.contains(.fullScreen)
+      {
         window.toggleFullScreen(nil)
       }
       enteredSystemFullScreen = false
@@ -477,9 +484,9 @@ import UniformTypeIdentifiers
         if case .active = phase, glassFullScreen { revealFullScreenExit() }
       }
       .onExitCommand { exitGlassFullScreen() }
-      // Full screen ends with the Kaleidoscope, and with the system's own full screen.
+      // When the Kaleidoscope ends, the window stays full screen and gets its controls back.
       .onChange(of: glassKaleidoscope == nil) { _, isGone in
-        if isGone { exitGlassFullScreen() }
+        if isGone { exitGlassFullScreen(stayingFullScreen: true) }
       }
       .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification))
       {
