@@ -352,7 +352,27 @@ import SwiftUI
       }
     }
 
+    @ViewBuilder
     private func displayOnlyNowPlaying(in size: CGSize) -> some View {
+      if audioManager.singleSound is KaleidoscopeSound {
+        kaleidoscopeDisplay
+      } else {
+        artworkDisplay(in: size)
+      }
+    }
+
+    /// A Kaleidoscope's glass has the whole pane. Its title is on the playback bar.
+    private var kaleidoscopeDisplay: some View {
+      Color.clear
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Out to the screen's edges, so the middle of the pane is the middle of the glass.
+        .ignoresSafeArea()
+        // The glass centers on the pane, and a drag anywhere across it turns the glass.
+        .anchorPreference(key: KaleidoscopeArtworkKey.self, value: .bounds) { $0 }
+        .modifier(turnsGlass)
+    }
+
+    private func artworkDisplay(in size: CGSize) -> some View {
       let artworkSize = max(min(size.height - 64, size.width * 0.4), 100)
       return HStack(spacing: 24) {
         artworkView(size: artworkSize)
@@ -774,8 +794,11 @@ import SwiftUI
           .frame(width: split.leading)
           .frame(maxHeight: .infinity)
           .overlay {
-            changesWithItem(
-              artworkContent(size: max(split.leading, size.height) + 120, cornerRadius: 0))
+            // A Kaleidoscope's glass is already turning behind the page.
+            if !(audioManager.singleSound is KaleidoscopeSound) {
+              changesWithItem(
+                artworkContent(size: max(split.leading, size.height) + 120, cornerRadius: 0))
+            }
           }
           .clipped()
           .mask {
@@ -785,6 +808,11 @@ import SwiftUI
           }
           .ignoresSafeArea(edges: .vertical)
           .accessibilityHidden(true)
+          // The glass centers on this page, and a drag across it turns the glass.
+          .anchorPreference(key: KaleidoscopeArtworkKey.self, value: .bounds) {
+            audioManager.singleSound is KaleidoscopeSound ? $0 : nil
+          }
+          .modifier(turnsGlass)
         Color.clear
           .frame(width: split.gap)
         VStack(spacing: 0) {
@@ -939,7 +967,10 @@ import SwiftUI
     private func kaleidoscopeBackdrop(_ sound: KaleidoscopeSound) -> some View {
       KaleidoscopeBackdrop(
         sound: sound, isPlaying: audioManager.isGloballyPlaying, artworkFrame: artworkPlace.frame,
-        dimsForControls: !showsOnlyKaleidoscope, touch: kaleidoscopeTouch,
+        // With no artwork to sit behind, the glass centers on the screen.
+        centersOnPicture: displayOnly,
+        // With no controls over the glass there is nothing to dim behind.
+        dimsForControls: !showsOnlyKaleidoscope && !displayOnly, touch: kaleidoscopeTouch,
         isTouched: kaleidoscopeTouched
       )
       .accessibilityHidden(true)
@@ -965,8 +996,8 @@ import SwiftUI
     private func artworkContent(size: CGFloat, cornerRadius: CGFloat = 12) -> some View {
       Group {
         if let still = (audioManager.singleSound as? KaleidoscopeSound)?.artwork {
-          // Where a Kaleidoscope's artwork is shown as a picture (a thumbnail, or the
-          // page before iPhone Duo's fold), it is a still of its own glass.
+          // Where a Kaleidoscope's artwork is shown as a picture, such as a thumbnail,
+          // it is a still of its own glass.
           Image(uiImage: still)
             .resizable()
             .aspectRatio(contentMode: .fill)

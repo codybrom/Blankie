@@ -625,6 +625,9 @@ private enum IPhonePage: Hashable {
                   onAddSound: { showingAddSound = true }
                 )
                 .environment(\.horizontalSizeClass, .compact)
+                // A Kaleidoscope's glass reaches past this page into the safe areas. It
+                // stops at the fold, so the Library keeps its page.
+                .mask { Rectangle().padding([.vertical, .trailing], -1000) }
               } else {
                 pagesMixer
               }
@@ -675,7 +678,7 @@ private enum IPhonePage: Hashable {
     /// The upright half shows what's playing. The flat half holds the sounds
     /// and controls.
     private var proppedUpLayout: some View {
-      let showsLibrary = proppedShowsLibrary || singleLayoutSound != nil
+      let showsLibrary = proppedShowsLibrary
       return ZStack(alignment: .top) {
         presetBackgroundView
         volumeHUDSuppressor
@@ -684,6 +687,25 @@ private enum IPhonePage: Hashable {
           // does it share the screen with what's playing.
           if showsLibrary && !windowFold.isActive {
             proppedUpLibrary
+          } else if singleLayoutSound is KaleidoscopeSound {
+            // A Kaleidoscope's glass keeps the whole screen, centered on the fold. Seated,
+            // an open Library covers the flat half.
+            NowPlayingSheet(backgroundImage: backgroundImage, inline: true, displayOnly: true)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .overlay {
+                if showsLibrary {
+                  VStack(spacing: 0) {
+                    Color.clear
+                      .frame(height: max(windowFold.frame.maxY, 0))
+                      .allowsHitTesting(false)
+                    proppedUpLibrary
+                  }
+                }
+              }
+          } else if singleLayoutSound != nil && !windowFold.isActive {
+            // A single sound has no tiles, so held flat it gets the whole screen.
+            NowPlayingSheet(backgroundImage: backgroundImage, inline: true, displayOnly: true)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
           } else {
             NowPlayingSheet(backgroundImage: backgroundImage, inline: true, displayOnly: true)
               .frame(height: max(windowFold.frame.minY, 0))
@@ -742,8 +764,11 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     private var proppedUpLower: some View {
-      if proppedShowsLibrary || singleLayoutSound != nil {
+      if proppedShowsLibrary {
         proppedUpLibrary
+      } else if singleLayoutSound != nil {
+        // A single sound has no tiles. With the Library away, the flat half is clear.
+        Color.clear
       } else if audioManager.isQuickMix {
         QuickMixView(columns: 4)
       } else {
@@ -753,23 +778,28 @@ private enum IPhonePage: Hashable {
 
     private var proppedUpBar: some View {
       HStack(spacing: 8) {
-        if singleLayoutSound == nil {
-          Button {
-            proppedShowsLibrary.toggle()
-          } label: {
-            Label(
-              proppedShowsLibrary ? "Sounds" : "Library",
-              systemImage: proppedShowsLibrary ? "square.grid.2x2" : "chevron.backward"
-            )
-            .labelStyle(.iconOnly)
-            .frame(width: 44, height: 44)
-          }
-          .buttonStyle(.glass)
-          .buttonBorderShape(.circle)
-          .tint(.primary)
+        Button {
+          proppedShowsLibrary.toggle()
+        } label: {
+          // A single sound has no tiles to go back to, so its open Library closes.
+          let closes = singleLayoutSound != nil
+          Label(
+            proppedShowsLibrary ? (closes ? "Close" : "Sounds") : "Library",
+            systemImage: proppedShowsLibrary
+              ? (closes ? "xmark" : "square.grid.2x2") : "chevron.backward"
+          )
+          .labelStyle(.iconOnly)
+          .frame(width: 44, height: 44)
         }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .tint(.primary)
         // The timer opens as a popover so it stays on the flat half.
-        NowPlayingBar(style: .bare, showsExpand: false, timerAsPopover: true) {}
+        // A Kaleidoscope's glass fills the screen, so the bar carries its title.
+        NowPlayingBar(
+          style: .bare, showsExpand: false, timerAsPopover: true,
+          showsTitle: singleLayoutSound is KaleidoscopeSound
+        ) {}
         if globalSettings.enableSpatialAudio, singleLayoutSound == nil, !audioManager.isQuickMix {
           Button {
             showingSpatialMixer = true

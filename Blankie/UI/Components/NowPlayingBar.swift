@@ -26,6 +26,8 @@ import SwiftUI
     var showsMixer = false
     /// Opens the timer as a popover over the bar.
     var timerAsPopover = false
+    /// Leads the bare bar with the title, where nothing else on screen shows it.
+    var showsTitle = false
     /// Set inside a tab view's bottom accessory, which brings its own glass capsule.
     @Environment(\.tabViewBottomAccessoryPlacement) private var accessoryPlacement
     let onTap: () -> Void
@@ -63,6 +65,16 @@ import SwiftUI
           }
           .accessibilityLabel(Text("Now Playing"))
           .accessibilityHint(Text("Opens the full player"))
+        }
+
+        if showsTitle {
+          // The volume slider gives up its width before the title would shrink.
+          Text(title)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .fixedSize()
+            .padding(.leading, 10)
+            .padding(.trailing, 4)
         }
 
         if audioManager.canNavigateNextPrevious {
