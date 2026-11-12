@@ -15,6 +15,8 @@ struct KaleidoscopeBackdrop: View {
   var isPlaying: Bool
   /// Where the artwork would sit, in global coordinates.
   var artworkFrame: CGRect?
+  /// Centers the glass on the middle of the picture, whatever the artwork's place.
+  var centersOnPicture = false
   /// Off when the controls are put away, so the whole picture shows at full strength.
   var dimsForControls = true
   /// The turn a finger has given the chamber. It is read fresh on every frame, so
@@ -90,6 +92,16 @@ struct KaleidoscopeBackdrop: View {
   @State private var glass: Glass?
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.scenePhase) private var scenePhase
+  @Environment(\.displayScale) private var displayScale
+
+  /// The widest layer the fold can work on, in pixels, with a little room to spare.
+  private static var largestTexture: Double {
+    #if os(macOS)
+      16000
+    #else
+      8000
+    #endif
+  }
 
   private struct Glass {
     let chamber: KaleidoscopeChamber
@@ -112,10 +124,25 @@ struct KaleidoscopeBackdrop: View {
 
   private func picture(chamber: KaleidoscopeChamber, tumbler: KaleidoscopeTumbler) -> some View {
     GeometryReader { proxy in
-      let size = proxy.size
+      let full = proxy.size
+      // The fold reads a full picture away in every direction, so the layer it works on
+      // is three pictures wide and tall. Past the largest texture, nothing is drawn. A
+      // big screen draws the picture a little smaller and scales it back up.
+      let shrink = min(
+        1, Self.largestTexture / max(3 * max(full.width, full.height) * displayScale, 1))
+      let size = CGSize(width: full.width * shrink, height: full.height * shrink)
       let frame = proxy.frame(in: .global)
+      let side = min(size.width, size.height) * 0.84
+      let middle = CGRect(
+        x: (size.width - side) / 2, y: (size.height - side) / 2, width: side, height: side)
       let art =
-        artworkFrame?.offsetBy(dx: -frame.minX, dy: -frame.minY)
+        centersOnPicture
+        ? middle
+        : artworkFrame.map {
+          CGRect(
+            x: ($0.minX - frame.minX) * shrink, y: ($0.minY - frame.minY) * shrink,
+            width: $0.width * shrink, height: $0.height * shrink)
+        }
         ?? CGRect(
           x: size.width * 0.08, y: size.height * 0.17, width: size.width * 0.84,
           height: size.width * 0.84)
@@ -175,7 +202,11 @@ struct KaleidoscopeBackdrop: View {
             .float2(center), .float(Float(chamber.folds)), .float2(apex),
             .float2(axis.dx, axis.dy), .float(span), .float(Float(KaleidoscopeChamber.wall)),
             .float3(chamber.wash[0], chamber.wash[1], chamber.wash[2])),
-          maxSampleOffset: CGSize(width: size.width, height: size.height))
+          maxSampleOffset: CGSize(width: size.width, height: size.height)
+        )
+        .frame(width: size.width, height: size.height)
+        .scaleEffect(1 / shrink, anchor: .topLeading)
+        .frame(width: full.width, height: full.height, alignment: .topLeading)
 
       }
       // Dims behind the title and controls for contrast, without hiding the glass.
