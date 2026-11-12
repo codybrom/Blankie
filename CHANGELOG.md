@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Start a mix from any sound** - Playing one sound on its own? Tap **+** to add another and hear them together. Save it as a preset, or let it go.
 
-## [2.1.1] - Unreleased
+## [2.2.0] - Unreleased
 
 A quick follow-up to 2.1 with a new Highlights page in Settings, Brown Noise in every language and three fixes.
 
@@ -351,8 +351,8 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.1...HEAD
-[2.1.1]: https://github.com/codybrom/blankie/compare/v2.1.0...v2.1.1
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/codybrom/blankie/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/codybrom/blankie/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1
