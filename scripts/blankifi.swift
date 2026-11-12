@@ -627,6 +627,23 @@ func parseFlag(_ args: [String], _ name: String, default def: Double) -> Double 
   return def
 }
 
+/// Window and hop in samples. Fails on values that would give an empty window, a hop
+/// that never advances, or a recording too short to fill one window.
+func windowedSizes(sampleRate: Double, winSec: Double, hopSec: Double, samples: Int) -> (
+  win: Int, hop: Int
+) {
+  guard winSec.isFinite, hopSec.isFinite, winSec > 0, hopSec > 0 else {
+    fail("--win-sec and --hop-sec must be positive numbers")
+  }
+  let win = Int(sampleRate * winSec)
+  let hop = Int(sampleRate * hopSec)
+  guard win >= 1, hop >= 1 else { fail("--win-sec and --hop-sec must cover at least one sample") }
+  guard samples >= win else {
+    fail(String(format: "recording is shorter than the %.1f-second window", winSec))
+  }
+  return (win, hop)
+}
+
 /// Spectral centroid / rolloff85 / flux / RMS per hop. Prints CSV plus a
 /// median summary. Maps shimmer and filter motion to automation points.
 func cmdSpectrumOverTime(_ args: [String]) {
@@ -639,8 +656,8 @@ func cmdSpectrumOverTime(_ args: [String]) {
     fail("read failed")
   }
   let mono = toMono(channels)
-  let win = Int(sr * winSec), hop = Int(sr * hopSec)
   let n = mono.count
+  let (win, hop) = windowedSizes(sampleRate: sr, winSec: winSec, hopSec: hopSec, samples: n)
   let fftN = nextPow2(win)
   let window = hann(win)
   var prev: [Float]?
@@ -709,8 +726,8 @@ func cmdChroma(_ args: [String]) {
     fail("read failed")
   }
   let mono = toMono(channels)
-  let win = Int(sr * winSec), hop = Int(sr * hopSec)
   let n = mono.count
+  let (win, hop) = windowedSizes(sampleRate: sr, winSec: winSec, hopSec: hopSec, samples: n)
   let fftN = nextPow2(win)
   let window = hann(win)
   let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -763,7 +780,8 @@ func cmdModulation(_ args: [String]) {
     fail("read failed")
   }
   let mono = toMono(channels)
-  let env = rmsEnvelope(mono[0...], win: Int(sr * 0.02))
+  let env = rmsEnvelope(mono[0...], win: max(1, Int(sr * 0.02)))
+  guard env.count >= 2 else { fail("recording is too short to measure modulation") }
   let fs = 50.0
   let mean = env.reduce(0, +) / Float(env.count)
   let detrended = env.map { $0 - mean }
@@ -800,6 +818,7 @@ func cmdWidth(_ args: [String]) {
   }
   let hop = Int(sr * 1.0)
   let n = channels[0].count
+  guard hop >= 1, n >= hop else { fail("width needs at least one second of audio") }
   var widths = [Float](), corrs = [Float]()
   print("time_s,width_db,correlation")
   var t = 0.0
