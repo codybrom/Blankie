@@ -988,13 +988,17 @@ import SwiftUI
         return (max(0, elapsed), timerManager.selectedDuration)
       }
 
+      // Kaleidoscopes never loop, so a mix tracks its longest file sound and a
+      // Kaleidoscope alone has no progress.
       let anchorSound =
         audioManager.singleSound
         ?? audioManager.sounds
-        .filter { $0.isSelected }
+        .filter { $0.isSelected && $0.playbackDuration.isFinite }
         .max { $0.playbackDuration < $1.playbackDuration }
 
-      guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
+      guard let anchorSound, anchorSound.playbackDuration.isFinite,
+        anchorSound.playbackDuration > 0
+      else { return nil }
       return (anchorSound.playbackPosition, anchorSound.playbackDuration)
     }
 
