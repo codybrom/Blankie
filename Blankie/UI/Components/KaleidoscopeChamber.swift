@@ -9,7 +9,7 @@ import Foundation
 
 /// The glass a recipe puts in a kaleidoscope's chamber. Each piece is
 /// one of the sound's tones, and glows as that tone swells.
-struct KaleidoscopeChamber {
+nonisolated struct KaleidoscopeChamber {
   struct Piece {
     var tone: Int
     var radius: Double
@@ -197,7 +197,7 @@ struct KaleidoscopeChamber {
 /// Loose glass in a round, oil-filled chamber. Gravity pulls the pieces
 /// into a pile, the turning chamber carries them up one side, and they slide and
 /// tumble back down over each other.
-final class KaleidoscopeTumbler {
+nonisolated final class KaleidoscopeTumbler {
   struct Body {
     var x: Double
     var y: Double
@@ -212,6 +212,14 @@ final class KaleidoscopeTumbler {
   private var lastDate: Date?
   private var lastTurn = 0.0
   private var turnSpeed = 0.0
+
+  // Which pieces are near which, rebuilt every step so only neighbors are compared.
+  private let largestRadius: Double
+  private var cellOf: [Int]
+  private var cellStart = [Int]()
+  private var cellPieces: [Int]
+  private var neighborStart: [Int]
+  private var neighbors = [Int]()
 
   /// Downward pull, in spans a second squared.
   static let gravity = 7.0
@@ -256,7 +264,17 @@ final class KaleidoscopeTumbler {
         x: slot.0, y: slot.1, lastX: slot.0, lastY: slot.1,
         angle: KaleidoscopePlayer.nextUnit(&seed) * 2 * .pi, radius: piece.radius * Self.overlap)
     }
+    largestRadius = bodies.map(\.radius).max() ?? 0.1
+    cellOf = [Int](repeating: 0, count: bodies.count)
+    cellPieces = [Int](repeating: 0, count: bodies.count)
+    neighborStart = [Int](repeating: 0, count: bodies.count + 1)
     for _ in 0..<90 { step(turnSpeed: 0) }
+  }
+
+  /// Builds and settles the glass off the main thread, so the screen never waits on it.
+  @concurrent static func settled(chamber: KaleidoscopeChamber) async -> sending KaleidoscopeTumbler
+  {
+    KaleidoscopeTumbler(chamber: chamber)
   }
 
   /// Steps the glass up to a moment, given how far the chamber has turned by then.
@@ -305,9 +323,11 @@ final class KaleidoscopeTumbler {
       body.angle += turnSpeed * dt + speedX * dt / body.radius * 0.25
       bodies[index] = body
     }
+    findNeighbors()
     for _ in 0..<4 {
       for first in bodies.indices {
-        for second in (first + 1)..<bodies.count {
+        for slot in neighborStart[first]..<neighborStart[first + 1] {
+          let second = neighbors[slot]
           let dx = bodies[second].x - bodies[first].x
           let dy = bodies[second].y - bodies[first].y
           let reach = bodies[first].radius + bodies[second].radius
@@ -359,5 +379,52 @@ final class KaleidoscopeTumbler {
         }
       }
     }
+  }
+
+  /// Lists, for every piece, the later pieces close enough to touch it this step. The
+  /// margin is a whole piece wide, which keeps the result the same as comparing them all.
+  private func findNeighbors() {
+    let margin = largestRadius
+    let cell = largestRadius * 2 + margin
+    let columns = Int((2 * wall / cell).rounded(.up)) + 2
+    let count = bodies.count
+    if cellStart.count != columns * columns + 2 {
+      cellStart = [Int](repeating: 0, count: columns * columns + 2)
+    }
+    for index in cellStart.indices { cellStart[index] = 0 }
+    for index in 0..<count {
+      let column = min(max(Int((bodies[index].x + wall) / cell) + 1, 0), columns - 1)
+      let row = min(max(Int((bodies[index].y + wall) / cell) + 1, 0), columns - 1)
+      cellOf[index] = row * columns + column
+      cellStart[cellOf[index] + 2] += 1
+    }
+    // After this, a cell's pieces sit between cellStart[cell + 1] and cellStart[cell + 2].
+    for index in 1..<cellStart.count { cellStart[index] += cellStart[index - 1] }
+    for index in 0..<count {
+      cellPieces[cellStart[cellOf[index] + 1]] = index
+      cellStart[cellOf[index] + 1] += 1
+    }
+    neighbors.removeAll(keepingCapacity: true)
+    for first in 0..<count {
+      neighborStart[first] = neighbors.count
+      let row = cellOf[first] / columns
+      let column = cellOf[first] % columns
+      for nearRow in max(row - 1, 0)...min(row + 1, columns - 1) {
+        for nearColumn in max(column - 1, 0)...min(column + 1, columns - 1) {
+          let near = nearRow * columns + nearColumn
+          for slot in cellStart[near]..<cellStart[near + 1] {
+            let second = cellPieces[slot]
+            guard second > first else { continue }
+            let dx = bodies[second].x - bodies[first].x
+            let dy = bodies[second].y - bodies[first].y
+            let reach = bodies[first].radius + bodies[second].radius + margin
+            if dx * dx + dy * dy < reach * reach { neighbors.append(second) }
+          }
+        }
+      }
+      // Lowest first, the order the pieces would be met comparing them all.
+      neighbors[neighborStart[first]...].sort()
+    }
+    neighborStart[count] = neighbors.count
   }
 }

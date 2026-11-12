@@ -86,20 +86,31 @@ struct KaleidoscopeBackdrop: View {
     }
   }
 
-  /// The loose glass, kept between frames. It is built the first time it is needed.
-  @State private var glass = Glass()
+  /// The loose glass, kept between frames. Nothing is drawn until it has settled.
+  @State private var glass: Glass?
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.scenePhase) private var scenePhase
 
-  private final class Glass {
-    var chamber: KaleidoscopeChamber?
-    var tumbler: KaleidoscopeTumbler?
+  private struct Glass {
+    let chamber: KaleidoscopeChamber
+    let tumbler: KaleidoscopeTumbler
   }
 
   var body: some View {
-    let chamber = glass.chamber ?? KaleidoscopeChamber(recipe: sound.recipe)
-    let tumbler = glass.tumbler ?? KaleidoscopeTumbler(chamber: chamber)
-    let _ = (glass.chamber = chamber, glass.tumbler = tumbler)
+    ZStack {
+      Color.black
+      if let glass {
+        picture(chamber: glass.chamber, tumbler: glass.tumbler)
+      }
+    }
+    .task {
+      guard glass == nil else { return }
+      let chamber = KaleidoscopeChamber(recipe: sound.recipe)
+      glass = Glass(chamber: chamber, tumbler: await KaleidoscopeTumbler.settled(chamber: chamber))
+    }
+  }
+
+  private func picture(chamber: KaleidoscopeChamber, tumbler: KaleidoscopeTumbler) -> some View {
     GeometryReader { proxy in
       let size = proxy.size
       let frame = proxy.frame(in: .global)

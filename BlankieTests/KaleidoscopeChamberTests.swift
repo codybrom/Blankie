@@ -13,13 +13,15 @@ import Testing
 /// The glass a recipe builds for its kaleidoscope, and how that glass tumbles.
 @Suite struct KaleidoscopeChamberTests {
 
-  private static func recipe(fileName: String = "kaleidoscope-test") -> KaleidoscopeRecipe {
+  private static func recipe(
+    fileName: String = "kaleidoscope-test", layers layerCount: Int = 5, tones toneCount: Int = 4
+  ) -> KaleidoscopeRecipe {
     let swell = (0..<32).map { 20 * log10(1.0 + Double($0) / 32.0) }
     // Small, so the tumbling tests stay quick in a debug build.
-    let layers = (0..<5).map { index in
+    let layers = (0..<layerCount).map { index in
       KaleidoscopeRecipe.Layer(
         name: "Layer \(index)",
-        tones: (0..<4).map { tone in
+        tones: (0..<toneCount).map { tone in
           KaleidoscopeRecipe.Tone(
             hz: 55 * pow(2, Double(index)) + Double(tone), db: -Double(tone) * 3, wobble: swell)
         })
@@ -85,6 +87,28 @@ import Testing
       #expect(body.x.isFinite && body.y.isFinite && body.angle.isFinite)
       #expect(hypot(body.x, body.y) <= KaleidoscopeChamber.wall - body.radius + 1e-6)
     }
+  }
+
+  /// The bundled recipes run to about 137 tones, which is over 400 pieces of glass.
+  @Test func aFullChamberStaysInsideAndApart() {
+    let chamber = KaleidoscopeChamber(recipe: Self.recipe(layers: 9, tones: 15))
+    #expect(chamber.pieces.count == 405)
+    let tumbler = KaleidoscopeTumbler(chamber: chamber)
+    for step in 0..<240 { tumbler.step(turnSpeed: step < 120 ? 0.5 : -2.4) }
+    // A hard spin lets the wall's grip slide a piece a hair past it, and no further.
+    let past = tumbler.bodies.map { hypot($0.x, $0.y) + $0.radius - KaleidoscopeChamber.wall }
+    #expect(past.allSatisfy { $0.isFinite })
+    #expect((past.max() ?? 0) < 0.01)
+    // Neighbors are pushed apart, so no two pieces sit deep inside each other.
+    var deepest = 0.0
+    for first in tumbler.bodies.indices {
+      for second in (first + 1)..<tumbler.bodies.count {
+        let a = tumbler.bodies[first]
+        let b = tumbler.bodies[second]
+        deepest = max(deepest, (a.radius + b.radius - hypot(b.x - a.x, b.y - a.y)) / (a.radius + b.radius))
+      }
+    }
+    #expect(deepest < 0.5)
   }
 
   @Test func settledGlassLiesStill() {
