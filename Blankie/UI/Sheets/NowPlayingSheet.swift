@@ -160,6 +160,23 @@ import SwiftUI
         }
     }
 
+    /// Lets a drag that starts on a row's empty space turn the glass behind it. Buttons
+    /// and sliders in the row keep their own touches.
+    private var turnsGlass: some ViewModifier {
+      TurnsGlass(
+        gesture: kaleidoscopeTurnGesture,
+        isEnabled: audioManager.singleSound is KaleidoscopeSound)
+    }
+
+    private struct TurnsGlass<Turn: Gesture>: ViewModifier {
+      let gesture: Turn
+      let isEnabled: Bool
+
+      func body(content: Content) -> some View {
+        content.contentShape(.rect).gesture(gesture, isEnabled: isEnabled)
+      }
+    }
+
     private var showsOnlyKaleidoscope: Bool {
       hidesControls && inline && audioManager.singleSound is KaleidoscopeSound
     }
@@ -1031,10 +1048,10 @@ import SwiftUI
 
         if audioManager.isGloballyPlaying && duration > 0 {
           TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
-            playbackBar(duration: duration, inset: inset)
+            playbackBar(duration: duration, inset: inset).modifier(turnsGlass)
           }
         } else {
-          playbackBar(duration: duration, inset: inset)
+          playbackBar(duration: duration, inset: inset).modifier(turnsGlass)
         }
       }
     }
@@ -1242,6 +1259,7 @@ import SwiftUI
         }
       }
       .padding(.horizontal, inset)
+      .modifier(turnsGlass)
     }
 
     private var infoTitle: some View {
@@ -1380,6 +1398,11 @@ import SwiftUI
 
     @ViewBuilder
     private func transportControls(spread: Bool = false) -> some View {
+      transportButtons(spread: spread).modifier(turnsGlass)
+    }
+
+    @ViewBuilder
+    private func transportButtons(spread: Bool) -> some View {
       let canNavigate = audioManager.canNavigateNextPrevious
       // Play would be silent with nothing selected, but pause is always available.
       let canPlayPause = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
