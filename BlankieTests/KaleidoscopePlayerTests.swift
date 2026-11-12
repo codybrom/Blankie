@@ -219,6 +219,26 @@ import Testing
     #expect(abs(wrapped - mid) < 1e-9)
   }
 
+  // MARK: - Transport
+
+  @Test @MainActor func seekAndStopReportTheirPositionBeforeTheNextCallback() {
+    let player = KaleidoscopePlayer(recipe: Self.testRecipe())
+    player.seek(toFrame: 96_000)
+    #expect(player.currentFrame == 96_000)
+    player.stop()
+    #expect(player.currentFrame == 0)
+  }
+
+  @Test func reseedKeepsItsBuffersAndChangesThePhases() {
+    var rng: UInt64 = 7
+    var voices = KaleidoscopePlayer.VoiceState.seeded(count: 4, rng: &rng)
+    let before = voices.phasesL
+    voices.reseed()
+    #expect(voices.phasesL.count == 4)
+    #expect(voices.gainsL.count == 4)
+    #expect(voices.phasesL != before)
+  }
+
   @Test func fastSinMatchesSin() {
     for step in 0..<1000 {
       let x = Double(step) / 1000 * 2 * .pi

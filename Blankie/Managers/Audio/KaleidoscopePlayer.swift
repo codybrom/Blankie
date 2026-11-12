@@ -7,14 +7,15 @@
 
 import AVFoundation
 import Foundation
+import Synchronization
 import os
 
 /// Plays a `KaleidoscopeRecipe` live through an `AVAudioSourceNode`: a bank of detuned sine
 /// tones shaped by each layer's motion, slow auto-pan, and an attack ramp.
 /// It feeds the same gain stage as `SoundPlayer`, so volume, boost and fades match.
 ///
-/// Threading: the render block reads `Renderer` and owns `VoiceBox`. The main thread
-/// only writes `Renderer` fields, and never touches the voices after init.
+/// Threading: the render block owns `VoiceBox`, including the frame counter. The main
+/// thread only talks to it through the atomics in `Renderer`.
 final class KaleidoscopePlayer: EngineSoundPlayer {
 
   /// Oscillator parameters. Each tone plays as two detuned voices, so `increments`
@@ -33,39 +34,61 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
     var sampleRate: Double
   }
 
-  /// Oscillator phases per channel, plus the RNG that seeds them.
+  /// Oscillator phases and gain scratch per channel, plus the RNG that seeds the phases.
   struct VoiceState: Sendable {
     var phasesL: [Double] = []
     var phasesR: [Double] = []
+    /// Filled in place for every gain block, so rendering never allocates.
+    var gainsL: [Double] = []
+    var gainsR: [Double] = []
     var rng: UInt64 = 0x9E37_79B9_7F4A_7C15
 
     nonisolated static func seeded(count: Int, rng: inout UInt64) -> VoiceState {
-      VoiceState(
-        phasesL: (0..<count).map { _ in KaleidoscopePlayer.nextUnit(&rng) * 2 * .pi },
-        phasesR: (0..<count).map { _ in KaleidoscopePlayer.nextUnit(&rng) * 2 * .pi },
-        rng: rng)
+      let zeros = [Double](repeating: 0, count: count)
+      var voices = VoiceState(
+        phasesL: zeros, phasesR: zeros, gainsL: zeros, gainsR: zeros, rng: rng)
+      voices.reseed()
+      rng = voices.rng
+      return voices
     }
 
-    /// New random phases, so no two plays beat alike.
+    /// New random phases, written in place, so no two plays beat alike.
     nonisolated mutating func reseed() {
-      self = Self.seeded(count: phasesL.count, rng: &rng)
+      for index in phasesL.indices {
+        phasesL[index] = KaleidoscopePlayer.nextUnit(&rng) * 2 * .pi
+      }
+      for index in phasesR.indices {
+        phasesR[index] = KaleidoscopePlayer.nextUnit(&rng) * 2 * .pi
+      }
     }
   }
 
-  /// Scalars shared with the render block. Writes are word-sized and happen between
-  /// callbacks, so a stale read only delays a change by one buffer.
-  final class Renderer: @unchecked Sendable {
-    nonisolated(unsafe) var rendering = false
-    nonisolated(unsafe) var volume: Float = 1
-    nonisolated(unsafe) var renderedFrames: AVAudioFramePosition = 0
+  /// What the main thread and the render block hand each other, all atomic.
+  final class Renderer: Sendable {
+    nonisolated static let noSeek: AVAudioFramePosition = -1
+
+    let rendering = Atomic<Bool>(false)
+    let volume = Atomic<Float>(1)
     /// Asks the render block to reseed its voices on the next callback.
-    nonisolated(unsafe) var pendingReseed = false
+    let pendingReseed = Atomic<Bool>(false)
+    /// A frame the main thread wants playback moved to, or `noSeek`.
+    let pendingSeek = Atomic<AVAudioFramePosition>(noSeek)
+    /// The render block's frame counter, published after every callback.
+    let position = Atomic<AVAudioFramePosition>(0)
+
+    /// A pending seek is the position until the render block picks it up.
+    nonisolated var currentFrame: AVAudioFramePosition {
+      let seek = pendingSeek.load(ordering: .sequentiallyConsistent)
+      return seek == Self.noSeek ? position.load(ordering: .sequentiallyConsistent) : seek
+    }
+
+    nonisolated init() {}
   }
 
-  /// Voices owned by the render block. Reseeding them from the main thread raced
-  /// the IO thread, so reseeds go through `Renderer.pendingReseed`.
+  /// Voices and the frame counter, owned by the render block.
   final class VoiceBox: @unchecked Sendable {
     nonisolated(unsafe) var voices: VoiceState
+    nonisolated(unsafe) var frame: AVAudioFramePosition = 0
     nonisolated init(_ voices: VoiceState) {
       self.voices = voices
     }
@@ -91,7 +114,7 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
     get { baseVolume }
     set {
       baseVolume = newValue
-      renderer.volume = baseVolume * fadeLevel
+      renderer.volume.store(baseVolume * fadeLevel, ordering: .sequentiallyConsistent)
     }
   }
 
@@ -101,7 +124,7 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
   var duration: TimeInterval { .infinity }
   var totalFrames: AVAudioFramePosition { .max / 4 }
   var sampleRate: Double { connectionFormat.sampleRate }
-  var currentFrame: AVAudioFramePosition { renderer.renderedFrames }
+  var currentFrame: AVAudioFramePosition { renderer.currentFrame }
   var currentTime: TimeInterval { Double(currentFrame) / sampleRate }
 
   init(recipe: KaleidoscopeRecipe) {
@@ -133,16 +156,17 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
     }
     let from = max(0, fromFrame)
     if from == 0 {
-      renderer.pendingReseed = true
+      renderer.pendingReseed.store(true, ordering: .sequentiallyConsistent)
     }
-    renderer.renderedFrames = from
-    renderer.volume = baseVolume * fadeLevel
-    renderer.rendering = true
+    // The seek goes in before `rendering`, so the first audible callback starts from it.
+    renderer.pendingSeek.store(from, ordering: .sequentiallyConsistent)
+    renderer.volume.store(baseVolume * fadeLevel, ordering: .sequentiallyConsistent)
+    renderer.rendering.store(true, ordering: .sequentiallyConsistent)
     isPlaying = true
   }
 
   func pause() {
-    renderer.rendering = false
+    renderer.rendering.store(false, ordering: .sequentiallyConsistent)
     isPlaying = false
   }
 
@@ -150,15 +174,15 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
     fadeTimer?.invalidate()
     fadeCompletion = nil
     isFadingToSilence = false
-    renderer.rendering = false
-    renderer.renderedFrames = 0
-    renderer.pendingReseed = true
+    renderer.rendering.store(false, ordering: .sequentiallyConsistent)
+    renderer.pendingSeek.store(0, ordering: .sequentiallyConsistent)
+    renderer.pendingReseed.store(true, ordering: .sequentiallyConsistent)
     isPlaying = false
   }
 
   func seek(toFrame frame: AVAudioFramePosition) {
-    renderer.rendering = false
-    renderer.renderedFrames = max(0, frame)
+    renderer.rendering.store(false, ordering: .sequentiallyConsistent)
+    renderer.pendingSeek.store(max(0, frame), ordering: .sequentiallyConsistent)
     isPlaying = false
   }
 
@@ -217,7 +241,7 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
 
   private func applyFadeLevel(_ level: Float) {
     fadeLevel = max(0, min(level, 1))
-    renderer.volume = baseVolume * fadeLevel
+    renderer.volume.store(baseVolume * fadeLevel, ordering: .sequentiallyConsistent)
   }
 
   // MARK: - Rendering
@@ -277,28 +301,29 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
       let blockLength = min(gainBlockFrames, frameCount - blockStart)
       let base = Double(startFrame) + Double(blockStart)
       let mid = base + Double(blockLength) * 0.5
-      let (gainsL, gainsR) = voiceGains(state: state, frameL: mid, frameR: mid - lagFrames)
+      fillVoiceGains(
+        state: state, frameL: mid, frameR: mid - lagFrames,
+        gainsL: &voices.gainsL, gainsR: &voices.gainsR)
       for offset in 0..<blockLength {
         let scale =
           attackFactor(absoluteFrame: base + Double(offset), state: state)
           * Double(volume) * headroom
         let frame = blockStart + offset
         left[frame] = Float(
-          mixVoices(phases: &voices.phasesL, gains: gainsL, increments: state.increments) * scale)
+          mixVoices(phases: &voices.phasesL, gains: voices.gainsL, increments: state.increments) * scale)
         right[frame] = Float(
-          mixVoices(phases: &voices.phasesR, gains: gainsR, increments: state.increments) * scale)
+          mixVoices(phases: &voices.phasesR, gains: voices.gainsR, increments: state.increments) * scale)
       }
       blockStart += blockLength
     }
   }
 
   /// Per-voice gains: level × pan × motion. The right ear hears the motion late.
-  nonisolated private static func voiceGains(
-    state: RenderState, frameL: Double, frameR: Double
-  ) -> (l: [Double], r: [Double]) {
+  nonisolated private static func fillVoiceGains(
+    state: RenderState, frameL: Double, frameR: Double,
+    gainsL: inout [Double], gainsR: inout [Double]
+  ) {
     let seconds = frameL / state.sampleRate * state.driftSpeed
-    var gainsL = [Double](repeating: 0, count: state.increments.count)
-    var gainsR = [Double](repeating: 0, count: state.increments.count)
     for partial in 0..<state.motion.count {
       let period = panPeriods[partial % panPeriods.count]
       let pan =
@@ -315,7 +340,6 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
         gainsR[index] = level * panR * envelopeR
       }
     }
-    return (gainsL, gainsR)
   }
 
   /// Sums one frame of the oscillator bank, advancing the phases.
@@ -389,11 +413,19 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
   ) -> AVAudioSourceNode {
     AVAudioSourceNode(format: format) { _, _, frameCount, audioBufferList in
       let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
-      if renderer.pendingReseed {
-        renderer.pendingReseed = false
+      let isRendering = renderer.rendering.load(ordering: .sequentiallyConsistent)
+      let seek = renderer.pendingSeek.load(ordering: .sequentiallyConsistent)
+      if seek != Renderer.noSeek {
+        voices.frame = seek
+        renderer.position.store(seek, ordering: .sequentiallyConsistent)
+        // A newer seek from the main thread stays pending for the next callback.
+        _ = renderer.pendingSeek.compareExchange(
+          expected: seek, desired: Renderer.noSeek, ordering: .sequentiallyConsistent)
+      }
+      if renderer.pendingReseed.exchange(false, ordering: .sequentiallyConsistent) {
         voices.voices.reseed()
       }
-      guard renderer.rendering, buffers.count >= 2,
+      guard isRendering, buffers.count >= 2,
         let leftData = buffers[0].mData, let rightData = buffers[1].mData
       else {
         for buffer in buffers {
@@ -403,13 +435,14 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
       }
       let frames = Int(frameCount)
       Self.render(
-        state: state, voices: &voices.voices, startFrame: renderer.renderedFrames,
-        volume: renderer.volume,
+        state: state, voices: &voices.voices, startFrame: voices.frame,
+        volume: renderer.volume.load(ordering: .sequentiallyConsistent),
         left: UnsafeMutableBufferPointer(
           start: leftData.assumingMemoryBound(to: Float.self), count: frames),
         right: UnsafeMutableBufferPointer(
           start: rightData.assumingMemoryBound(to: Float.self), count: frames))
-      renderer.renderedFrames += AVAudioFramePosition(frameCount)
+      voices.frame += AVAudioFramePosition(frameCount)
+      renderer.position.store(voices.frame, ordering: .sequentiallyConsistent)
       return noErr
     }
   }
