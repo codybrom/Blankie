@@ -241,7 +241,7 @@ open class Sound: NSObject, Identifiable {
     }
   }
 
-  @ObservationIgnored var player: SoundPlayer?
+  @ObservationIgnored var player: (any EngineSoundPlayer)?
 
   /// Explicit playback lifecycle. `var` because Sound+Playback maintains it from another file.
   var playbackState: PlaybackState = .stopped
@@ -418,9 +418,11 @@ open class Sound: NSObject, Identifiable {
   @MainActor
   func setSpatialPlacement(angleDegrees: Float, distance: Float, persist: Bool) {
     let point = AudioEngineManager.point(angleDegrees: angleDegrees, distance: distance)
-    player?.spatialPosition = point
-    if let player, player.isSpatial {
-      player.node.position = point
+    if let player = player as? SoundPlayer {
+      player.spatialPosition = point
+      if player.isSpatial {
+        player.node.position = point
+      }
     }
     if persist {
       SpatialSessionManager.shared.setPlacement(

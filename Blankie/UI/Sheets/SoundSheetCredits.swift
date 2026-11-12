@@ -15,13 +15,16 @@ extension SoundSheetForm {
     if case .edit(let sound) = mode {
       let credit = sound.resolvedCredit
       if credit != nil || sound.isCustom {
-        Section(header: Text("Credits")) {
+        Section {
           if let credit {
             creditRows(credit)
           }
           if sound.isCustom {
             editCreditsRow(for: sound, hasCredit: credit != nil)
           }
+        } header: {
+          // A remix credits what it was made from, not a recording of itself.
+          credit?.isRemix == true ? Text("Remixed From") : Text("Credits")
         }
       }
     }
@@ -33,7 +36,7 @@ extension SoundSheetForm {
       LabeledContent {
         linkOrText(workTitle, url: credit.workUrl, hint: Text("Opens the sound source"))
       } label: {
-        Text("Original Work")
+        credit.isRemix ? Text("Original Recording") : Text("Original Work")
       }
     }
 

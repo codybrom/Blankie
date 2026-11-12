@@ -90,8 +90,9 @@ extension Sound {
     }
 
     // Random starts only make sense for looping beds (the loop wraps). A
-    // one-shot started mid-file just loses its beginning.
-    if shouldRandomizeStart && player.loops {
+    // one-shot started mid-file just loses its beginning. Kaleidoscopes have no
+    // timeline, so they always rewind.
+    if shouldRandomizeStart && player.loops && player.duration.isFinite {
       guard player.duration > 0, player.duration.isFinite else {
         Logger.sounds.error(
           "Sound: Cannot randomize start position for '\(self.fileName, privacy: .public)' - invalid duration: \(player.duration, privacy: .public)"

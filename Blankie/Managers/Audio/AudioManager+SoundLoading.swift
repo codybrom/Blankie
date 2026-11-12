@@ -24,9 +24,8 @@ extension AudioManager {
       Logger.audio.debug("AudioManager: Loaded default sound order with \(savedOrder.count) sounds")
 
       // Append built-in sounds added since the order was saved.
-      let currentSoundFileNames = Set(sounds.map(\.fileName))
       let savedOrderSet = Set(savedOrder)
-      let newSounds = currentSoundFileNames.subtracting(savedOrderSet)
+      let newSounds = sounds.map(\.fileName).filter { !savedOrderSet.contains($0) }
 
       if !newSounds.isEmpty {
         defaultSoundOrder.append(contentsOf: newSounds)
@@ -60,6 +59,7 @@ extension AudioManager {
         .map { createSoundFromData($0) }
 
       sounds.append(contentsOf: builtInSounds)
+      sounds.append(contentsOf: KaleidoscopeRecipe.bundled.map(KaleidoscopeSound.init))
 
       migrateUserPreferences(for: builtInSounds)
 

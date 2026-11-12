@@ -71,7 +71,30 @@ enum Highlights {
       systemImage: "sparkles", title: "Update Highlights",
       detail:
         "You found it! When you install an update, a little dot on Settings will let you know there are new features and highlights to read. Blankie's release highlights are written in English but your device will offer to translate them if needed."
-    )
+    ),
+    HighlightItem(
+      systemImage: "circle.hexagongrid.fill", title: "Musical Kaleidoscopes",
+      detail:
+        "A kaleidoscope makes endless patterns using mirrors, lenses and colorful glass. Blankie now does something similar with sound. Using more than 130 layers of sound, each one brightening and fading on its own, Blankie's Kaleidoscope keeps the sound shifting into something new. What you hear is created live, no loops, and is best experienced with headphones."
+    ),
+    HighlightItem(
+      systemImage: "hand.draw", title: "A visual kaleidoscope to play with too",
+      detail:
+        "Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that turns in time with the sound. Drag to turn it yourself, or tap it to focus and hide the controls.",
+      platforms: [.iPhone]
+    ),
+    HighlightItem(
+      systemImage: "hand.draw", title: "A visual kaleidoscope to play with too",
+      detail:
+        "Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that turns in time with the sound. Drag to turn it yourself, or go full screen.",
+      platforms: [.mac]
+    ),
+    HighlightItem(
+      systemImage: "magnifyingglass", title: "A Library with tabs and search",
+      detail:
+        "Home keeps your favorites, presets and Quick Mix. Kaleidoscopes and Sounds each get a tab of their own, and Search finds anything by name.",
+      platforms: [.iPhone]
+    ),
   ]
 
   private static let items21 = [

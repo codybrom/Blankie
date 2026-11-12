@@ -14,6 +14,51 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
 
+  /// Carries the artwork's place up to the kaleidoscope behind the player.
+  private struct KaleidoscopeArtworkKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+      value = value ?? nextValue()
+    }
+  }
+
+  /// Where the artwork sits right now, and where it was held when the
+  /// controls were put away. A turned phone lets go of the hold.
+  private final class KaleidoscopeArtworkPlace {
+    var live: CGRect?
+    var container = CGSize.zero
+    var held: (frame: CGRect, width: CGFloat)?
+
+    private var releasing = false
+
+    func update(_ frame: CGRect?, in size: CGSize) {
+      live = frame ?? live
+      container = size
+      guard let held else { return }
+      let turned = abs(held.width - size.width) > 1
+      let settled =
+        releasing
+        && live.map { abs($0.midY - held.frame.midY) < 0.5 && abs($0.midX - held.frame.midX) < 0.5 }
+          ?? false
+      if turned || settled {
+        self.held = nil
+        releasing = false
+      }
+    }
+
+    func hold() {
+      releasing = false
+      if let live { held = (live, container.width) }
+    }
+
+    /// Lets go once the artwork is back where it was held, so nothing jumps.
+    func release() {
+      releasing = true
+    }
+
+    var frame: CGRect? { held?.frame ?? live }
+  }
+
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
@@ -82,6 +127,59 @@ import SwiftUI
     @State private var favoriteHapticTrigger = 0
     @State private var navigationEdge: Edge = .trailing
     @State private var artworkExpanded = false
+    /// Where the artwork would sit, so the kaleidoscope centers there.
+    @State private var artworkPlace = KaleidoscopeArtworkPlace()
+    /// Tapping the kaleidoscope puts the controls away.
+    @State private var hidesControls = false
+
+    /// How far a finger has turned the chamber, and its coast after letting go.
+    @State private var kaleidoscopeTouch = KaleidoscopeBackdrop.TouchBox()
+    /// True from the start of a turn until its coast has died away.
+    @State private var kaleidoscopeTouched = false
+
+    /// Dragging around the kaleidoscope turns its chamber, like twisting the end of
+    /// a real one. Letting go leaves it coasting to a stop while it plays on.
+    private var kaleidoscopeTurnGesture: some Gesture {
+      DragGesture(minimumDistance: 6, coordinateSpace: .global)
+        .onChanged { value in
+          guard let frame = artworkPlace.frame else { return }
+          let center = CGPoint(x: frame.midX, y: frame.midY)
+          if kaleidoscopeTouch.drag(to: value.location, about: center, at: value.time),
+            !kaleidoscopeTouched
+          {
+            kaleidoscopeTouched = true
+          }
+        }
+        .onEnded { _ in
+          let released = kaleidoscopeTouch.release()
+          // Once the coast has died away, a paused picture can rest again.
+          Task {
+            try? await Task.sleep(for: .seconds(7))
+            if kaleidoscopeTouch.hasSettled(since: released) { kaleidoscopeTouched = false }
+          }
+        }
+    }
+
+    /// Lets a drag that starts on a row's empty space turn the glass behind it. Buttons
+    /// and sliders in the row keep their own touches.
+    private var turnsGlass: some ViewModifier {
+      TurnsGlass(
+        gesture: kaleidoscopeTurnGesture,
+        isEnabled: audioManager.singleSound is KaleidoscopeSound)
+    }
+
+    private struct TurnsGlass<Turn: Gesture>: ViewModifier {
+      let gesture: Turn
+      let isEnabled: Bool
+
+      func body(content: Content) -> some View {
+        content.contentShape(.rect).gesture(gesture, isEnabled: isEnabled)
+      }
+    }
+
+    private var showsOnlyKaleidoscope: Bool {
+      hidesControls && inline && audioManager.singleSound is KaleidoscopeSound
+    }
 
     private var artworkTaskID: String {
       let single = audioManager.singleSound?.id.uuidString ?? ""
@@ -103,16 +201,41 @@ import SwiftUI
             }
             .ignoresSafeArea(.container, edges: .bottom)
           }
+          .opacity(showsOnlyKaleidoscope ? 0 : 1)
+          .allowsHitTesting(!showsOnlyKaleidoscope)
+          .overlay {
+            // With the controls away, a tap anywhere brings them back.
+            if showsOnlyKaleidoscope {
+              Color.clear.contentShape(.rect).ignoresSafeArea()
+                .onTapGesture {
+                  // The hold lets go once the page has settled back into place.
+                  artworkPlace.release()
+                  withAnimation(.smooth(duration: 0.5)) { hidesControls = false }
+                }
+                .gesture(kaleidoscopeTurnGesture)
+                .accessibilityLabel(Text("Show Controls"))
+                .accessibilityAddTraits(.isButton)
+            }
+          }
+          .backgroundPreferenceValue(KaleidoscopeArtworkKey.self) { anchor in
+            kaleidoscopeLayer(artwork: anchor)
+          }
+          .toolbarVisibility(showsOnlyKaleidoscope ? .hidden : .automatic, for: .navigationBar)
+          .statusBarHidden(showsOnlyKaleidoscope)
+          .persistentSystemOverlays(showsOnlyKaleidoscope ? .hidden : .automatic)
         } else {
           // Sized to the sheet, which is shorter than the window at the large
           // detent. The outer reader respects the safe area to report the insets.
           GeometryReader { safe in
             GeometryReader { proxy in
               ZStack {
-                // Rounded top corners show during the zoom transition.
-                Color.black
+                // Rounded top corners show during the zoom transition. A Kaleidoscope on
+                // its own leaves this clear, so its glass shows from behind.
+                (audioManager.singleSound is KaleidoscopeSound ? Color.clear : Color.black)
                   .overlay {
-                    if audioManager.singleSound == nil && !audioManager.isQuickMix,
+                    if audioManager.singleSound is KaleidoscopeSound {
+                      Color.clear
+                    } else if audioManager.singleSound == nil && !audioManager.isQuickMix,
                       let image = backgroundImage
                     {
                       Image(uiImage: image)
@@ -160,6 +283,13 @@ import SwiftUI
                 .padding(.trailing, insets.trailing)
               }
               .frame(width: proxy.size.width, height: proxy.size.height)
+              .backgroundPreferenceValue(KaleidoscopeArtworkKey.self) { anchor in
+                kaleidoscopeLayer(artwork: anchor)
+                  .clipShape(
+                    UnevenRoundedRectangle(
+                      topLeadingRadius: 38, bottomLeadingRadius: 0, bottomTrailingRadius: 0,
+                      topTrailingRadius: 38, style: .continuous))
+              }
             }
             .ignoresSafeArea()
           }
@@ -762,9 +892,60 @@ import SwiftUI
 
     // MARK: - Shared Components
 
-    @ViewBuilder
     /// Paused, the artwork shrinks back, except beside a column it lines up with.
+    @ViewBuilder
     private func artworkView(size: CGFloat, shrinksWhenPaused: Bool = true) -> some View {
+      if audioManager.singleSound is KaleidoscopeSound {
+        // A Kaleidoscope on its own shows its backdrop where the artwork would be.
+        Color.clear.frame(width: size, height: size)
+          .contentShape(.rect)
+          .onTapGesture {
+            // Only the inline player can put its controls away.
+            guard inline else { return }
+            // Putting the controls away reflows the page. The picture holds its place.
+            artworkPlace.hold()
+            withAnimation(.smooth(duration: 0.5)) { hidesControls = true }
+          }
+          .gesture(kaleidoscopeTurnGesture)
+          .accessibilityLabel(Text("Hide Controls"))
+          .accessibilityAddTraits(.isButton)
+          .anchorPreference(key: KaleidoscopeArtworkKey.self, value: .bounds) { $0 }
+      } else {
+        artworkCard(size: size, shrinksWhenPaused: shrinksWhenPaused)
+      }
+    }
+
+    /// The glass behind the player while a Kaleidoscope plays on its own. It reads
+    /// where the artwork would sit fresh on every layout, and each Kaleidoscope
+    /// dissolves into the next.
+    private func kaleidoscopeLayer(artwork anchor: Anchor<CGRect>?) -> some View {
+      GeometryReader { proxy in
+        let origin = proxy.frame(in: .global).origin
+        let _ = artworkPlace.update(
+          anchor.map { proxy[$0].offsetBy(dx: origin.x, dy: origin.y) }, in: proxy.size)
+        ZStack {
+          if let kaleidoscope = audioManager.singleSound as? KaleidoscopeSound {
+            kaleidoscopeBackdrop(kaleidoscope)
+              .id(kaleidoscope.fileName)
+              .transition(.opacity)
+          }
+        }
+        .animation(.easeInOut(duration: 1.6), value: audioManager.singleSound?.fileName)
+        .ignoresSafeArea()
+      }
+    }
+
+    /// The kaleidoscope, centered on the artwork's place.
+    private func kaleidoscopeBackdrop(_ sound: KaleidoscopeSound) -> some View {
+      KaleidoscopeBackdrop(
+        sound: sound, isPlaying: audioManager.isGloballyPlaying, artworkFrame: artworkPlace.frame,
+        dimsForControls: !showsOnlyKaleidoscope, touch: kaleidoscopeTouch,
+        isTouched: kaleidoscopeTouched
+      )
+      .accessibilityHidden(true)
+    }
+
+    private func artworkCard(size: CGFloat, shrinksWhenPaused: Bool) -> some View {
       changesWithItem(artworkContent(size: size))
         .scaleEffect(audioManager.isGloballyPlaying || !shrinksWhenPaused ? 1.0 : 0.85)
         .shadow(
@@ -783,7 +964,15 @@ import SwiftUI
     @ViewBuilder
     private func artworkContent(size: CGFloat, cornerRadius: CGFloat = 12) -> some View {
       Group {
-        if let singleSound = audioManager.singleSound {
+        if let still = (audioManager.singleSound as? KaleidoscopeSound)?.artwork {
+          // Where a Kaleidoscope's artwork is shown as a picture (a thumbnail, or the
+          // page before iPhone Duo's fold), it is a still of its own glass.
+          Image(uiImage: still)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        } else if let singleSound = audioManager.singleSound {
           FallbackArtwork(
             glyph: .symbol(singleSound.systemIconName),
             accent: globalSettings.customAccentColor ?? .accentColor,
@@ -816,13 +1005,17 @@ import SwiftUI
         return (max(0, elapsed), timerManager.selectedDuration)
       }
 
+      // Kaleidoscopes never loop, so a mix tracks its longest file sound and a
+      // Kaleidoscope alone has no progress.
       let anchorSound =
         audioManager.singleSound
         ?? audioManager.sounds
-        .filter { $0.isSelected }
+        .filter { $0.isSelected && $0.playbackDuration.isFinite }
         .max { $0.playbackDuration < $1.playbackDuration }
 
-      guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
+      guard let anchorSound, anchorSound.playbackDuration.isFinite,
+        anchorSound.playbackDuration > 0
+      else { return nil }
       return (anchorSound.playbackPosition, anchorSound.playbackDuration)
     }
 
@@ -855,10 +1048,10 @@ import SwiftUI
 
         if audioManager.isGloballyPlaying && duration > 0 {
           TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
-            playbackBar(duration: duration, inset: inset)
+            playbackBar(duration: duration, inset: inset).modifier(turnsGlass)
           }
         } else {
-          playbackBar(duration: duration, inset: inset)
+          playbackBar(duration: duration, inset: inset).modifier(turnsGlass)
         }
       }
     }
@@ -1066,6 +1259,7 @@ import SwiftUI
         }
       }
       .padding(.horizontal, inset)
+      .modifier(turnsGlass)
     }
 
     private var infoTitle: some View {
@@ -1204,6 +1398,11 @@ import SwiftUI
 
     @ViewBuilder
     private func transportControls(spread: Bool = false) -> some View {
+      transportButtons(spread: spread).modifier(turnsGlass)
+    }
+
+    @ViewBuilder
+    private func transportButtons(spread: Bool) -> some View {
       let canNavigate = audioManager.canNavigateNextPrevious
       // Play would be silent with nothing selected, but pause is always available.
       let canPlayPause = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds

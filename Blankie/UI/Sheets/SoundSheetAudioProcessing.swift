@@ -49,7 +49,7 @@ extension SoundSheetForm {
             isPlaying: isPreviewing
           )
           .accessibilityHidden(true)
-        } else if case .edit(let sound) = mode {
+        } else if case .edit(let sound) = mode, !isKaleidoscope {
           if sound.isCustom,
             let customSoundDataID = sound.customSoundDataID,
             let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID),
@@ -88,10 +88,12 @@ extension SoundSheetForm {
         )
       }
 
-      Toggle(isOn: $loopSound) {
-        Text(
-          "Loop Sound"
-        )
+      if !isKaleidoscope {
+        Toggle(isOn: $loopSound) {
+          Text(
+            "Loop Sound"
+          )
+        }
       }
 
       // Non-looping one-shots are always preset-only, so the toggle locks on
@@ -110,15 +112,17 @@ extension SoundSheetForm {
 
       // Random start only applies to loops (on a one-shot it would cut off the start),
       // so playback ignores it there and the disabled toggle explains why.
-      Toggle(isOn: $randomizeStartPosition) {
-        Text(
-          "Randomize Start"
-        )
-        if !loopSound {
-          Text("Only applies when Loop Sound is on.")
+      if !isKaleidoscope {
+        Toggle(isOn: $randomizeStartPosition) {
+          Text(
+            "Randomize Start"
+          )
+          if !loopSound {
+            Text("Only applies when Loop Sound is on.")
+          }
         }
+        .disabled(!loopSound)
       }
-      .disabled(!loopSound)
 
       // A preset plays at most one music sound, so starting another stops this one.
       // Built-ins take their music tag from sounds.json, so the toggle is disabled for them.
