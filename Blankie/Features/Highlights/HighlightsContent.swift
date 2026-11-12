@@ -49,7 +49,7 @@ struct HighlightItem: Identifiable {
 /// Adding a release here badges the Settings gear until its page is opened.
 enum Highlights {
   static let releases: [HighlightsRelease] = [
-    HighlightsRelease(version: "2.1.1", items: items211),
+    HighlightsRelease(version: "2.2", items: items22),
     HighlightsRelease(version: "2.1", items: items21),
   ]
 
@@ -66,7 +66,7 @@ enum Highlights {
     releases.flatMap { $0.items.flatMap { [$0.title, $0.detail] } }
   }
 
-  private static let items211 = [
+  private static let items22 = [
     HighlightItem(
       systemImage: "sparkles", title: "Update Highlights",
       detail:
