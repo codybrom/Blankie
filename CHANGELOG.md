@@ -9,9 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Kaleidoscopes** - 15 new ambient sounds: Air, Calm, Dawn, Depth, Dreaming, Gentleness, Haze, Hush, Lull, Mist, Radiance, Stillness, Undertone, Velvet and Warmth. Blankie plays each one live instead of from a recording, with slow movement between your ears that's at its best on headphones. Each is remixed from an original recording, credited under **Remixed From** when you edit the sound.
-- **A glass kaleidoscope to watch (iPhone and Mac)** - Play a Kaleidoscope on its own and a glass kaleidoscope turns behind the player in time with the sound. Drag to turn it yourself. On iPhone, tap it to put the controls away. On Mac, the button beside the sleep timer takes it full screen, and the menu bar shows it too.
-- **Artwork for every Kaleidoscope** - Each Kaleidoscope has its own picture on the Lock Screen, in Control Center and in CarPlay.
+- **Musical Kaleidoscopes** - A kaleidoscope makes endless patterns using mirrors, lenses and colorful glass. Blankie now does something similar with sound. Using more than 130 layers of sound, each one brightening and fading on its own, Blankie's Kaleidoscope keeps the sound shifting into something new. What you hear is created live, no loops, and is best experienced with headphones.
+  - **A visual kaleidoscope to play with too (iPhone and Mac)** - Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that turns  in time with the sound. Drag to turn it yourself. On iPhone, tap it to focus and hide the controls, and on Mac go full screen.
 - **Search the Library (iPhone)** - A new **Search** tab finds any preset, Kaleidoscope or sound by name.
 - **Start a mix from any sound** - Playing one sound on its own? Tap **+** to add another and hear them together. Save it as a preset, or let it go.
 
