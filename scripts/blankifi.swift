@@ -502,10 +502,9 @@ func cmdReanalyze(_ args: [String]) async {
     rest.remove(at: i)
   }
 
-  guard var text = try? String(contentsOfFile: jsonPath, encoding: .utf8),
-    let data = text.data(using: .utf8),
-    let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-    let sounds = obj["sounds"] as? [[String: Any]]
+  guard let data = FileManager.default.contents(atPath: jsonPath),
+    case .object(var root)? = try? JSONDecoder().decode(JSONValue.self, from: data),
+    case .array(var sounds)? = root["sounds"]
   else { fail("could not read/parse \(jsonPath)") }
 
   print(
@@ -514,8 +513,10 @@ func cmdReanalyze(_ args: [String]) async {
     padR("sound", 16) + padL("oldLUFS", 9) + padL("newLUFS", 9) + padL("ΔLUFS", 8)
       + padL("oldFac", 9) + padL("newFac", 9) + padL("truePk", 9) + padL("predPeak", 10) + "  flags")
   var changed = 0
-  for s in sounds {
-    guard let fileName = s["fileName"] as? String else { continue }
+  for index in sounds.indices {
+    guard case .object(var s) = sounds[index], case .string(let fileName)? = s["fileName"] else {
+      continue
+    }
     let fileURL = ["m4a", "wav", "mp3", "aiff"].lazy
       .map { URL(fileURLWithPath: "\(soundsDir)/\(fileName).\($0)") }
       .first { FileManager.default.fileExists(atPath: $0.path) }
@@ -528,8 +529,8 @@ func cmdReanalyze(_ args: [String]) async {
       print("\(fileName): analysis failed")
       continue
     }
-    let oldLufs = (s["lufs"] as? NSNumber)?.floatValue ?? 0
-    let oldFac = (s["normalizationFactor"] as? NSNumber)?.floatValue ?? 0
+    let oldLufs = s["lufs"]?.float ?? 0
+    let oldFac = s["normalizationFactor"]?.float ?? 0
     let newFac = r.normalizationFactor
     let truePeak = r.truePeakdBTP ?? -.infinity
     let needsLimiter = r.needsLimiter
@@ -544,21 +545,22 @@ func cmdReanalyze(_ args: [String]) async {
         + padL(String(format: "%.2f", truePeak), 9) + padL(String(format: "%.2f", predPeak), 10)
         + "  " + flags)
     if write {
-      text = upsertField(text, fileName: fileName, key: "lufs", value: "\(newLufs)", before: nil)
-      text = upsertField(
-        text, fileName: fileName, key: "needsLimiter", value: needsLimiter ? "true" : "false",
-        before: "normalizationFactor")
-      text = upsertField(
-        text, fileName: fileName, key: "normalizationFactor", value: "\(newFac)", before: nil)
-      if truePeak.isFinite {
-        text = upsertField(
-          text, fileName: fileName, key: "truePeakdBTP", value: "\(truePeak)", before: nil)
-      }
+      s["lufs"] = JSONValue(newLufs)
+      s["needsLimiter"] = .bool(needsLimiter)
+      s["normalizationFactor"] = JSONValue(newFac)
+      if truePeak.isFinite { s["truePeakdBTP"] = JSONValue(truePeak) }
+      sounds[index] = .object(s)
       changed += 1
     }
   }
   if write {
-    do { try text.write(toFile: jsonPath, atomically: true, encoding: .utf8) } catch {
+    root["sounds"] = .array(sounds)
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+    do {
+      try encoder.encode(JSONValue.object(root)).write(
+        to: URL(fileURLWithPath: jsonPath), options: .atomic)
+    } catch {
       fail("write failed: \(error)")
     }
     print("\n✅ wrote \(changed) updated entries to \(jsonPath)")
@@ -567,50 +569,51 @@ func cmdReanalyze(_ args: [String]) async {
   }
 }
 
-/// Set `key` to `value` inside the JSON object that contains
-/// `"fileName": "<fileName>"`, preserving all other text and formatting. If the
-/// key exists its value is replaced. Otherwise a new line is inserted before
-/// `beforeKey` (to keep sorted order), or appended as the last field if
-/// `beforeKey` is nil. `value` is the raw JSON token (number / true / false).
-func upsertField(_ text: String, fileName: String, key: String, value: String, before beforeKey: String?)
-  -> String
-{
-  guard let anchor = text.range(of: "\"fileName\": \"\(fileName)\"") else { return text }
-  guard
-    let objStart = text.range(
-      of: "{", options: .backwards, range: text.startIndex..<anchor.lowerBound),
-    let objEnd = text.range(of: "}", range: anchor.upperBound..<text.endIndex)
-  else { return text }
-  let objRange = objStart.lowerBound..<objEnd.upperBound
-  var obj = String(text[objRange])
+/// Any JSON value, so `reanalyze` can update `sounds.json` without a model of every field.
+enum JSONValue: Codable {
+  case string(String)
+  case number(Double)
+  case bool(Bool)
+  case array([JSONValue])
+  case object([String: JSONValue])
+  case null
 
-  // Replace if the key already exists (value runs to end of its line).
-  if let re = try? NSRegularExpression(pattern: "(\"\(key)\"\\s*:\\s*)[^,\\n]+"),
-    re.firstMatch(in: obj, range: NSRange(obj.startIndex..., in: obj)) != nil
-  {
-    let ns = obj as NSString
-    obj = re.stringByReplacingMatches(
-      in: obj, range: NSRange(location: 0, length: ns.length), withTemplate: "$1\(value)")
-    return text.replacingCharacters(in: objRange, with: obj)
+  /// Stores the Float's printed value, so the file keeps its short decimals.
+  init(_ value: Float) { self = .number(Double("\(value)") ?? Double(value)) }
+
+  var float: Float? {
+    if case .number(let value) = self { return Float(value) }
+    return nil
   }
 
-  if let beforeKey = beforeKey, let kr = obj.range(of: "\"\(beforeKey)\"") {
-    // Insert a new field line before beforeKey's line, matching its indentation.
-    let nl = obj[obj.startIndex..<kr.lowerBound].lastIndex(of: "\n") ?? obj.startIndex
-    let lineStart = obj.index(after: nl)
-    let indent = String(obj[lineStart..<kr.lowerBound])
-    obj.insert(contentsOf: "\(indent)\"\(key)\": \(value),\n", at: lineStart)
-  } else {
-    // Append as the last field: add a comma to the current last field, then a new line.
-    guard let brace = obj.range(of: "}", options: .backwards) else { return text }
-    let beforeBrace = obj[obj.startIndex..<brace.lowerBound]
-    guard let braceNl = beforeBrace.lastIndex(of: "\n") else { return text }
-    let lastFieldStart =
-      obj.index(after: beforeBrace[beforeBrace.startIndex..<braceNl].lastIndex(of: "\n") ?? braceNl)
-    let indent = String(obj[lastFieldStart..<(obj[lastFieldStart...].firstIndex(of: "\"") ?? lastFieldStart)])
-    obj.insert(contentsOf: ",\n\(indent)\"\(key)\": \(value)", at: braceNl)
+  init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    if container.decodeNil() {
+      self = .null
+    } else if let value = try? container.decode(Bool.self) {
+      self = .bool(value)
+    } else if let value = try? container.decode(Double.self) {
+      self = .number(value)
+    } else if let value = try? container.decode(String.self) {
+      self = .string(value)
+    } else if let value = try? container.decode([JSONValue].self) {
+      self = .array(value)
+    } else {
+      self = .object(try container.decode([String: JSONValue].self))
+    }
   }
-  return text.replacingCharacters(in: objRange, with: obj)
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    switch self {
+    case .string(let value): try container.encode(value)
+    case .number(let value): try container.encode(value)
+    case .bool(let value): try container.encode(value)
+    case .array(let value): try container.encode(value)
+    case .object(let value): try container.encode(value)
+    case .null: try container.encodeNil()
+    }
+  }
 }
 
 // MARK: - Entry

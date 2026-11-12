@@ -121,7 +121,8 @@ struct PinnedItemWidgetEntryView: View {
       NowPlayingSmallCard(
         title: item.displayName, subtitle: item.subtitle,
         thumbnailKey: item.thumbnailKey, fallbackIcon: item.systemIconName, accentColor: accent,
-        isPlaying: isPlaying, playIntent: WidgetPlayFavoriteIntent(favoriteToken: item.token)
+        isPlaying: isPlaying,
+        playIntent: WidgetPlayFavoriteIntent(favoriteToken: item.token, pauses: isPlaying)
       )
       .containerBackground(for: .widget) {
         widgetAccentGradient(accent, colorScheme: colorScheme)

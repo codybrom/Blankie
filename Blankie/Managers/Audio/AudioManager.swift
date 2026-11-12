@@ -83,6 +83,13 @@ class AudioManager {
   @ObservationIgnored var quickMixOriginalStates: [QuickMixState] = []
   @ObservationIgnored var preQuickMixPreset: Preset?
 
+  /// The mix grown from a single sound, held only in memory until it's saved.
+  var unsavedMix: UnsavedMix?
+  @ObservationIgnored var unsavedMixOriginalStates: [QuickMixState] = []
+  @ObservationIgnored var preUnsavedMixPreset: Preset?
+  /// What to do once the save prompt is answered (`unsavedMixPrompt()` presents it).
+  var pendingLeave: (@MainActor () -> Void)?
+
   /// Selected-sound set last published to Now Playing, so the sound list
   /// republishes only when the selection changes.
   @ObservationIgnored private var lastPublishedSelectionSignature: String?
@@ -99,6 +106,10 @@ class AudioManager {
   /// True while a preset's sound states are applied. Suppresses
   /// `deselectOtherMusicSounds` so it can't undo the preset's own selection.
   @ObservationIgnored var isApplyingPresetStates = false
+  /// True while a discarded mix restores its preset's sounds, which come back without playing.
+  @ObservationIgnored var isRestoringSelections = false
+  /// True while the Save Mix sheet is up. The mix stays a mix however many sounds are on.
+  @ObservationIgnored var isSavingUnsavedMix = false
   /// The launch bootstrap shared by every `loadCustomSoundsWhenReady()` caller.
   @ObservationIgnored @MainActor var launchBootstrapTask: Task<Void, Never>?
   /// Bumped per installed bootstrap task. `Task` has no identity, so waiters
@@ -202,6 +213,7 @@ extension AudioManager {
     soundChangeCoalesceTask = Task { @MainActor in
       try? await Task.sleep(for: .milliseconds(100))
       guard !Task.isCancelled else { return }
+      reconcileUnsavedMix()
       updateHasSelectedSounds()
       PresetManager.shared.updateCurrentPresetState()
       if isQuickMix { publishCurrentWidgetSnapshot() }
@@ -346,6 +358,8 @@ extension AudioManager {
   /// preset-use-only sounds by `defaultSoundOrder`. Unknown sounds sort last.
   @MainActor
   func orderedVisibleSounds(for preset: Preset?) -> [Sound] {
+    // An unsaved mix has no preset but lists only its own sounds.
+    if preset == nil, unsavedMix != nil { return unsavedMixSounds }
     let visible = sounds.filter { sound in
       if let preset, !preset.isDefault {
         return preset.soundStates.contains { $0.fileName == sound.fileName }

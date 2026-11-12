@@ -83,6 +83,7 @@ extension AudioManager {
     Logger.audio.debug("AudioManager: Entering single-sound mode for '\(sound.title)'")
 
     exitPreviewMode(resuming: false)
+    discardUnsavedMix()
 
     // Persist a pending (coalesced) mix edit before single sound stops preset saves.
     PresetManager.shared.updateCurrentPresetState()

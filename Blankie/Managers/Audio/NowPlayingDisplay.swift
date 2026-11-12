@@ -31,6 +31,8 @@ enum NowPlayingDisplay {
         singleSound.localizedSubtitle ?? (singleSound.isCustom ? singleSound.creditedAuthor : nil)
         ?? "Blankie"
       return (title: singleSound.localizedTitle, artist: artist)
+    } else if let unsavedMix = AudioManager.shared.unsavedMix {
+      return (title: unsavedMix.name, artist: "")
     } else if AudioManager.shared.isQuickMix {
       // Quick Mix has no preset, so name it explicitly (not "Custom Mix").
       let artistInfo = soundNameSummary(currentMixSoundTitles())
@@ -113,6 +115,8 @@ enum NowPlayingDisplay {
   static func widgetSubtitle(resolvedCreatorName: String?) -> String? {
     if let singleSound = AudioManager.shared.singleSound {
       return singleSound.isCustom ? singleSound.creditedAuthor : nil
+    } else if AudioManager.shared.unsavedMix != nil {
+      return nil
     } else if let creator = resolvedCreatorName, !AudioManager.shared.isQuickMix {
       return creator
     } else {
@@ -215,7 +219,13 @@ enum NowPlayingDisplay {
   static func mixFallbackGlyph() -> FallbackArtwork.Glyph {
     .playback(
       isQuickMix: AudioManager.shared.isQuickMix,
-      isDefaultPreset: PresetManager.shared.currentPreset?.isDefault ?? true,
+      isDefaultPreset: mixShowsBrandArtwork,
       icons: AudioManager.shared.playingSoundIcons())
+  }
+
+  /// The default preset, or no preset at all, shows the Blankie mark. An unsaved mix has no
+  /// preset but gets a montage of its sounds, like a custom preset.
+  static var mixShowsBrandArtwork: Bool {
+    PresetManager.shared.currentPreset?.isDefault ?? (AudioManager.shared.unsavedMix == nil)
   }
 }

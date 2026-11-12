@@ -17,4 +17,10 @@ extension Bundle {
     }
     return version
   }
+
+  /// The language the app runs in, which a per-app language setting can set apart from
+  /// the system's.
+  nonisolated var appLanguage: Locale.Language {
+    Locale.Language(identifier: preferredLocalizations.first ?? "en")
+  }
 }

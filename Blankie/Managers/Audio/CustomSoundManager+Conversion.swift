@@ -18,9 +18,24 @@ extension CustomSoundManager {
   /// AAC bit rate for runtime conversion, matching the built-in library.
   nonisolated static let conversionBitRate = 192_000
 
-  /// Lossy formats are never re-encoded (quality loss for little saving), so conversion
-  /// is offered only for uncompressed or lossless sources (WAV, AIFF, CAF, FLAC).
-  private static let lossyExtensions: Set<String> = ["mp3", "m4a", "aac", "m4b", "aax", "m4r"]
+  /// Uncompressed and lossless codecs. Checked by codec because an .m4a can hold Apple
+  /// Lossless as well as AAC.
+  private static let losslessFormatIDs: Set<AudioFormatID> = [
+    kAudioFormatLinearPCM, kAudioFormatAppleLossless, kAudioFormatFLAC,
+  ]
+
+  /// True when the file's audio is uncompressed or lossless, so AAC can shrink it.
+  /// Re-encoding a lossy file (AAC, MP3, Opus) costs quality and saves little. A file
+  /// AVAudioFile can't open counts as convertible.
+  static func isConvertible(_ url: URL) -> Bool {
+    let formatID = (try? AVAudioFile(forReading: url))?.fileFormat.settings[AVFormatIDKey]
+    return (formatID as? AudioFormatID).map(losslessFormatIDs.contains) ?? true
+  }
+
+  /// True when an import must be transcoded: a convertible file over `maxRawImportBytes`.
+  static func importRequiresConversion(bytes: Int64, url: URL) -> Bool {
+    bytes > maxRawImportBytes && isConvertible(url)
+  }
 
   /// The before and after of an offered conversion, in bytes.
   struct CompressionEstimate: Equatable {
@@ -33,12 +48,12 @@ extension CustomSoundManager {
   }
 
   /// Whether converting to AAC is worth offering, and the numbers to show. Returns
-  /// an estimate when the file isn't already a lossy format, is over 5 MB, and AAC
-  /// would shave off more than half. Returns nil when the sound is already efficient.
+  /// an estimate when the file is convertible, is over 5 MB, and AAC would shave off
+  /// more than half. Returns nil when the sound is already efficient.
   func compressionEstimate(
-    forExtension ext: String, currentBytes: Int64?, duration: TimeInterval?
+    for url: URL?, currentBytes: Int64?, duration: TimeInterval?
   ) -> CompressionEstimate? {
-    guard !Self.lossyExtensions.contains(ext.lowercased()) else { return nil }
+    guard let url, Self.isConvertible(url) else { return nil }
     guard let currentBytes, currentBytes > 5 * 1024 * 1024 else { return nil }
     guard let duration, duration > 0 else { return nil }
     // A malformed file's duration can be infinite, and Int64(_:) traps on it.
@@ -168,9 +183,14 @@ extension CustomSoundManager {
 
   /// Streams `source` through an AAC encoder into `destination` (.m4a) at the library
   /// bit rate, keeping memory bounded. Static so it runs off the main actor without
-  /// sending `self`. importSound also uses it for oversized imports.
-  @concurrent static func transcodeToAAC(source: URL, destination: URL) async throws {
+  /// sending `self`. importSound also uses it for oversized imports. `progress`
+  /// receives the fraction encoded, from 0 to 1. Cancelling the task stops the encode
+  /// and throws `CancellationError`.
+  @concurrent static func transcodeToAAC(
+    source: URL, destination: URL, progress: (@Sendable (Double) -> Void)? = nil
+  ) async throws {
     let asset = AVURLAsset(url: source)
+    let totalSeconds = (try? await asset.load(.duration)).map(CMTimeGetSeconds) ?? 0
     guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
       throw ConversionError.noAudioTrack
     }
@@ -236,35 +256,56 @@ extension CustomSoundManager {
     writer.startSession(atSourceTime: .zero)
 
     let queue = DispatchQueue(label: "com.codybrom.blankie.aac-convert")
-    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-      writerInput.requestMediaDataWhenReady(on: queue) {
-        while writerInput.isReadyForMoreMediaData {
-          if reader.status == .reading, let buffer = readerOutput.copyNextSampleBuffer() {
-            if !writerInput.append(buffer) {
+    // Touched only on `queue`, like the reader and writer.
+    nonisolated(unsafe) var nextReport = 0.0
+    let cancelled = OSAllocatedUnfairLock(initialState: false)
+    try await withTaskCancellationHandler {
+      try await withCheckedThrowingContinuation {
+        (continuation: CheckedContinuation<Void, Error>) in
+        writerInput.requestMediaDataWhenReady(on: queue) {
+          while writerInput.isReadyForMoreMediaData {
+            if cancelled.withLock({ $0 }) {
               reader.cancelReading()
               writer.cancelWriting()
-              continuation.resume(throwing: ConversionError.encodingFailed)
+              continuation.resume(throwing: CancellationError())
               return
             }
-          } else {
-            // A nil buffer means the reader is drained (or it stopped). Finalize.
-            writerInput.markAsFinished()
-            if reader.status == .failed {
-              writer.cancelWriting()
-              continuation.resume(throwing: ConversionError.encodingFailed)
-            } else {
-              writer.finishWriting {
-                if writer.status == .completed {
-                  continuation.resume()
-                } else {
-                  continuation.resume(throwing: ConversionError.encodingFailed)
+            if reader.status == .reading, let buffer = readerOutput.copyNextSampleBuffer() {
+              if let progress, totalSeconds > 0 {
+                let seconds = CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(buffer))
+                if seconds >= nextReport {
+                  progress(min(seconds / totalSeconds, 1))
+                  nextReport = seconds + totalSeconds / 100
                 }
               }
+              if !writerInput.append(buffer) {
+                reader.cancelReading()
+                writer.cancelWriting()
+                continuation.resume(throwing: ConversionError.encodingFailed)
+                return
+              }
+            } else {
+              // A nil buffer means the reader is drained (or it stopped). Finalize.
+              writerInput.markAsFinished()
+              if reader.status == .failed {
+                writer.cancelWriting()
+                continuation.resume(throwing: ConversionError.encodingFailed)
+              } else {
+                writer.finishWriting {
+                  if writer.status == .completed {
+                    continuation.resume()
+                  } else {
+                    continuation.resume(throwing: ConversionError.encodingFailed)
+                  }
+                }
+              }
+              return
             }
-            return
           }
         }
       }
+    } onCancel: {
+      cancelled.withLock { $0 = true }
     }
   }
 }

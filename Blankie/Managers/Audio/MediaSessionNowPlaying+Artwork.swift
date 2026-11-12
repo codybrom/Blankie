@@ -210,10 +210,7 @@
 
     /// Everything about the drawn fallback that changes the rendered image.
     private static func fallbackArtworkSource() -> NowPlayingSessionMapping.ArtworkSource {
-      let glyph = FallbackArtwork.Glyph.playback(
-        isQuickMix: AudioManager.shared.isQuickMix,
-        isDefaultPreset: PresetManager.shared.currentPreset?.isDefault ?? true,
-        icons: AudioManager.shared.playingSoundIcons())
+      let glyph = NowPlayingDisplay.mixFallbackGlyph()
       switch glyph {
       case .symbol(let name): return .fallback(kind: name, icons: [])
       case .brand: return .fallback(kind: "brand", icons: [])

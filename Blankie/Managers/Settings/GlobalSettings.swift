@@ -56,6 +56,7 @@ enum UserDefaultsKeys {
   static let hideDockWhenWindowClosed = "hideDockWhenWindowClosed"
   static let librarySoundsExpanded = "librarySoundsExpanded"
   static let libraryPresetsExpanded = "libraryPresetsExpanded"
+  static let lastSeenHighlightsVersion = "lastSeenHighlightsVersion"
 }
 
 /// Blur (in points) behind the mixer when "Blur Background" is on. Blur is
@@ -71,11 +72,6 @@ class GlobalSettings {
   /// These forward to `PlayableItem`, the single codec for the token grammar.
   static let allSoundsToken = PlayableItem.allSounds.token
   static let quickMixToken = PlayableItem.quickMix.token
-
-  /// The starred token for playing the given sound file on its own.
-  static func singleToken(forFileName fileName: String) -> String {
-    PlayableItem.single(fileName: fileName).token
-  }
 
   /// The sound file name encoded in a single sound token, or nil if it isn't one.
   static func singleFileName(fromToken token: String) -> String? {
@@ -112,7 +108,7 @@ class GlobalSettings {
   var quickMixSoundFileNames: [String]
   /// Starred items in display order, shown in the iPad sidebar and CarPlay.
   /// Tokens: `allSoundsToken`, `quickMixToken`, a preset's UUID string, or a
-  /// single-sound token (`singleToken(forFileName:)`).
+  /// single-sound token (`PlayableItem.single(fileName:).token`).
   var starredItems: [String]
   var availableLanguages: [Language] = []
   var lockScreenBackgroundEnabled: Bool
@@ -132,6 +128,8 @@ class GlobalSettings {
   /// Whether the Library's Sounds and Presets sections are expanded.
   var librarySoundsExpanded: Bool
   var libraryPresetsExpanded: Bool
+  /// The newest Highlights version the user has opened. Nil until they open one.
+  var lastSeenHighlightsVersion: String?
 
   /// Availability gate for the experimental spatial feature: shows the
   /// Spatial Mix entry on presets. Sessions themselves are started in-sheet.

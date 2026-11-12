@@ -61,8 +61,23 @@ struct SidebarContentView: View {
           Button {
             appState.showingSettingsPane.toggle()
           } label: {
-            Label("Settings", systemImage: "gearshape")
+            Label {
+              Text("Settings")
+            } icon: {
+              // A footer button has no system badge, so unread Highlights draw
+              // their own dot.
+              Image(systemName: "gearshape")
+                .overlay(alignment: .topTrailing) {
+                  if Highlights.hasUnseen {
+                    Circle()
+                      .fill(activeAccent)
+                      .frame(width: 7, height: 7)
+                      .offset(x: 3, y: -2)
+                  }
+                }
+            }
           }
+          .accessibilityValue(Highlights.hasUnseen ? Text("New") : Text(verbatim: ""))
           .buttonStyle(.borderless)
           .foregroundStyle(appState.showingSettingsPane ? activeAccent : .secondary)
           Spacer()

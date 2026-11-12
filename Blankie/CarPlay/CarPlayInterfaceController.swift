@@ -293,7 +293,7 @@ import os
         for await _ in Observations({
           AudioManager.shared.sounds.map {
             (
-              $0.playbackState == .playing, $0.isPresetUseOnly, CarPlaySoundNames.name(of: $0),
+              $0.playbackState == .playing, $0.isPresetUseOnly, $0.localizedTitle,
               $0.systemIconName
             )
           }

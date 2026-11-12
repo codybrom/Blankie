@@ -55,13 +55,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       - name: Select Xcode
-        run: |
-          echo "Installed Xcode versions:"
-          ls -d /Applications/Xcode*.app 2>/dev/null || true
-          # The image's default Xcode.app is the release build. The newest
-          # installed one is a beta, so don't pick by version.
-          sudo xcode-select -s /Applications/Xcode.app
-          xcodebuild -version
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
       - name: Run unit tests
         run: |
           if [ ! -f "Configuration.xcconfig" ]; then
@@ -90,9 +86,19 @@ jobs:
             -testPlan Blankie \
             -destination "platform=iOS Simulator,name=$DEVICE" \
             -configuration Debug \
+            -resultBundlePath "$RUNNER_TEMP/Blankie.xcresult" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             ENABLE_DEBUG_DYLIB=NO \
             "OTHER_LDFLAGS=\$(inherited) -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker $ENTITLEMENTS"
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: |
+            ${{ runner.temp }}/Blankie.xcresult
+            ~/Library/Logs/DiagnosticReports
+          if-no-files-found: ignore

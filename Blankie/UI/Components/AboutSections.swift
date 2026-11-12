@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Translation
 import os
 
 // The About content is shared with the compact iOS sheet. macOS resolves text
@@ -280,35 +281,71 @@ struct InspirationSection: View {
 }
 
 struct SoftwareLicenseSection: View {
+  @State private var showingTranslation = false
+
+  // The English text is the license notice, so it stays on screen. Other languages get
+  // Apple's translation popover for reading along.
+  private static let paragraphs = [
+    "Copyright © 2025-2026 Cody Bromley and contributors.",
+    "This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.",
+    "This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.",
+  ]
+
+  /// Set once Apple's translation is known to support the app's language. English needs none.
+  @State private var canTranslate = false
+
+  /// The bundled GPL text, with each hard-wrapped paragraph rejoined to wrap at the view's width.
+  private static let fullLicenseParagraphs: [String] = {
+    guard let url = Bundle.main.url(forResource: "GPL-3.0", withExtension: "txt"),
+      let text = try? String(contentsOf: url, encoding: .utf8)
+    else { return [] }
+    return text.components(separatedBy: "\n\n")
+      .map { $0.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+      .filter { !$0.isEmpty }
+  }()
+
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text(
-        verbatim:
-          "This application comes with absolutely no warranty. This program is free software: you can redistribute it and/or modify it under the terms of the MIT License.",
-      )
-      .font(.aboutCaption)
-      Text(
-        verbatim:
-          "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:"
-      )
-      .font(.aboutCaption)
-      Text(
-        verbatim:
-          "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software."
-      )
-      .font(.aboutCaption)
-      Text(
-        verbatim:
-          "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
-      )
-      .font(.aboutCaption)
+      ForEach(Self.paragraphs, id: \.self) { paragraph in
+        Text(verbatim: paragraph)
+          .font(.aboutCaption)
+      }
+      if canTranslate {
+        Button("Translate", systemImage: "translate") {
+          showingTranslation = true
+        }
+        .buttonStyle(.borderless)
+        .font(.aboutCaption)
+        .handCursor()
+        .translationPresentation(
+          isPresented: $showingTranslation,
+          text: Self.paragraphs.joined(separator: "\n\n"))
+      }
+      if !Self.fullLicenseParagraphs.isEmpty {
+        DisclosureGroup("Full License Text") {
+          LazyVStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(Self.fullLicenseParagraphs.enumerated()), id: \.offset) { _, paragraph in
+              Text(verbatim: paragraph)
+                .font(.aboutCaption)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+          }
+          .textSelection(.enabled)
+          .padding(.top, 8)
+        }
+        .font(.aboutCaption)
+      }
       Link(
-        "Learn more about the MIT License",
-        destination: URL(string: "https://opensource.org/licenses/MIT")!
+        "Learn more about the GNU General Public License",
+        destination: URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!
       )
       .foregroundStyle(.tint)
       .font(.aboutCaption)
       .handCursor()
+    }
+    .task {
+      guard let status = await Bundle.main.englishTranslationStatus() else { return }
+      canTranslate = status != .unsupported
     }
   }
 }

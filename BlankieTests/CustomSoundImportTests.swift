@@ -34,7 +34,7 @@ struct CustomSoundImportTests {
     let record = try await CustomSoundManager.shared.createCustomSoundRecord(from: importData)
     defer { PlaybackProfileStore.shared.removeProfile(for: "test-imported") }
 
-    let expected = try FileHashUtility.sha256Hash(for: copied)
+    let expected = try await FileHashUtility.sha256Hash(for: copied)
     #expect(record.sha256Hash == expected)
     #expect(record.sha256Hash != nil)
   }

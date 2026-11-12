@@ -266,18 +266,9 @@ struct PresetPickerRow: View {
   }
 
   private func applyPreset() {
-    Task {
-      do {
-        // Single sound pauses the preset's sounds but keeps `currentPreset`, so
-        // returning to the same preset has to force a re-apply.
-        let wasSingle = audioManager.singleSound != nil
-        audioManager.leaveTransientModes()
-        try presetManager.applyPreset(preset, forceReapply: wasSingle)
-        if dismissOnSelect { dismiss() }
-        onSelection?()
-      } catch {
-        Logger.ui.error("Error applying preset: \(error, privacy: .public)")
-      }
+    LibraryView.playPreset(preset, presentation: presentation) { _ in
+      if dismissOnSelect { dismiss() }
+      onSelection?()
     }
   }
 }
@@ -310,7 +301,7 @@ struct SingleSoundPickerRow: View {
   }
 
   private var starToken: String {
-    GlobalSettings.singleToken(forFileName: sound.fileName)
+    PlayableItem.single(fileName: sound.fileName).token
   }
 
   private var accent: Color {
@@ -419,10 +410,14 @@ struct SingleSoundPickerRow: View {
       onSelection?()
       return
     }
+    // Don't Save and the action run in one turn, so the restored preset can't start
+    // playing in between.
     Task { @MainActor in
-      audioManager.toggleSingleSound(for: sound)
-      if dismissOnSelect { dismiss() }
-      onSelection?()
+      LibraryView.leavingUnsavedMix(presentation: presentation) {
+        audioManager.toggleSingleSound(for: sound)
+        if dismissOnSelect { dismiss() }
+        onSelection?()
+      }
     }
   }
 }
@@ -436,6 +431,39 @@ struct LibraryView: View {
     case sidebar
     case page
     case menuBar
+  }
+
+  /// Plays a preset from a Library row, asking first when an unsaved mix would be lost.
+  /// `completion` gets whether the preset was applied.
+  static func playPreset(
+    _ preset: Preset, presentation: Presentation,
+    completion: @escaping @MainActor (Bool) -> Void
+  ) {
+    let audioManager = AudioManager.shared
+    // Single sound and an unsaved mix pause the preset's sounds. Single sound keeps
+    // `currentPreset` and a discarded mix restores it, so the same preset re-applies.
+    // Read before asking, since Don't Save ends the mix first.
+    let wasTransient = audioManager.singleSound != nil || audioManager.unsavedMix != nil
+    leavingUnsavedMix(presentation: presentation) {
+      audioManager.leaveTransientModes()
+      do {
+        completion(try PresetManager.shared.applyPreset(preset, forceReapply: wasTransient))
+      } catch {
+        Logger.ui.error("Error applying preset: \(error, privacy: .public)")
+      }
+    }
+  }
+
+  /// Asks to save an unsaved mix before `action`. The menu bar popover can't host the
+  /// prompt, so there the mix is let go, as from outside the app.
+  static func leavingUnsavedMix(
+    presentation: Presentation, _ action: @escaping @MainActor () -> Void
+  ) {
+    if presentation == .menuBar {
+      action()
+    } else {
+      AudioManager.shared.leaveUnsavedMixAsking(then: action)
+    }
   }
 
   var presentation: Presentation = .sheet
@@ -480,7 +508,7 @@ struct LibraryView: View {
   private var singleSounds: [Sound] {
     audioManager.sounds
       .filter { !$0.isPresetUseOnly }
-      .filter { !globalSettings.isStarred(GlobalSettings.singleToken(forFileName: $0.fileName)) }
+      .filter { !globalSettings.isStarred(PlayableItem.single(fileName: $0.fileName).token) }
       .sortedByLocalizedTitle()
   }
 
@@ -670,6 +698,39 @@ struct LibraryView: View {
     }
   }
 
+  /// Always the current item, so tapping it does nothing. Saving clears the badge.
+  private func unsavedMixRow(_ unsavedMix: UnsavedMix) -> some View {
+    let accent = globalSettings.customAccentColor ?? .accentColor
+    return HStack(spacing: 10) {
+      PresetThumbnail(
+        artworkId: nil,
+        preset: nil,
+        fallbackSystemImage: "square.stack.3d.up",
+        tint: accent,
+        compositeIcons: audioManager.playingSoundIcons()
+      )
+      .accessibilityHidden(true)
+      Text(verbatim: unsavedMix.name)
+        .foregroundColor(
+          LibraryRowStyle.titleColor(isCurrent: true, accent: accent, presentation: presentation))
+      Spacer()
+      Text("Unsaved")
+        .font(.caption2.weight(.bold))
+        .foregroundStyle(.black)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(accent, in: .capsule)
+      LibraryRowStyle.nowPlayingIndicator(
+        isCurrent: true, isPlaying: audioManager.isGloballyPlaying, accent: accent)
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(.isSelected)
+    .deleteDisabled(true)
+    .moveDisabled(true)
+    .listRowBackground(
+      LibraryRowStyle.rowBackground(isCurrent: true, accent: accent, presentation: presentation))
+  }
+
   /// Edit any sound, delete custom ones, with the same menu and swipe as preset rows.
   @ViewBuilder
   private func singleRow(_ sound: Sound) -> some View {
@@ -707,13 +768,15 @@ struct LibraryView: View {
     let accent = globalSettings.customAccentColor ?? .accentColor
     return Button {
       Task { @MainActor in
-        if audioManager.singleSound != nil {
-          audioManager.exitSingleSoundWithoutResuming()
+        Self.leavingUnsavedMix(presentation: presentation) {
+          if audioManager.singleSound != nil {
+            audioManager.exitSingleSoundWithoutResuming()
+          }
+          if !audioManager.isQuickMix {
+            audioManager.enterQuickMix()
+          }
+          onSelect?()
         }
-        if !audioManager.isQuickMix {
-          audioManager.enterQuickMix()
-        }
-        onSelect?()
       }
     } label: {
       HStack(spacing: 10) {
@@ -743,7 +806,11 @@ struct LibraryView: View {
   @ViewBuilder
   private var addMenuContent: some View {
     Button {
-      showingNewPresetSheet = true
+      // A new preset replaces an unsaved mix, so ask before the sheet opens. The mix plays
+      // on until Create, and cancelling the sheet keeps it.
+      Self.leavingUnsavedMix(presentation: presentation) {
+        showingNewPresetSheet = true
+      }
     } label: {
       Label("New Preset", systemImage: "rectangle.stack.badge.plus")
     }
@@ -855,6 +922,10 @@ struct LibraryView: View {
 
         // Quick Mix and All Blankie Sounds are fixed. Only custom presets reorder.
         Section(isExpanded: presetsExpandedBinding) {
+          if let unsavedMix = audioManager.unsavedMix {
+            unsavedMixRow(unsavedMix)
+          }
+
           // Quick Mix can't be a favorite.
           #if !os(macOS)
             quickMixRow
@@ -942,6 +1013,10 @@ struct LibraryView: View {
               Label("Settings", systemImage: "gearshape")
             }
             .tint(Color.primary)
+            // Marks unread Highlights. A text badge draws as a dot, not a count.
+            .badge(Highlights.hasUnseen ? Text(verbatim: "") : nil)
+            // A bar button drops accessibility values, so VoiceOver hears "New" in the label.
+            .accessibilityLabel(Highlights.hasUnseen ? Text("Settings, New") : Text("Settings"))
           }
         }
       }

@@ -242,9 +242,9 @@ extension SoundSheetForm {
     defer { if didScope { url.stopAccessingSecurityScopedResource() } }
     let bytes = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map(Int64.init) ?? 0
     let seconds = (try? await AVURLAsset(url: url).load(.duration)).map(CMTimeGetSeconds)
-    importConvertForced = bytes > CustomSoundManager.maxRawImportBytes
+    importConvertForced = CustomSoundManager.importRequiresConversion(bytes: bytes, url: url)
     importConvertEstimate = CustomSoundManager.shared.compressionEstimate(
-      forExtension: url.pathExtension, currentBytes: bytes, duration: seconds)
+      for: url, currentBytes: bytes, duration: seconds)
   }
 }
 

@@ -24,7 +24,7 @@ import Testing
         == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
   }
 
-  @Test func fileHashMatchesDataHash() throws {
+  @Test func fileHashMatchesDataHash() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
 
@@ -32,7 +32,7 @@ import Testing
     let url = dir.appendingPathComponent("sample.bin")
     try bytes.write(to: url)
 
-    #expect(try FileHashUtility.sha256Hash(for: url) == FileHashUtility.sha256Hash(for: bytes))
+    #expect(try await FileHashUtility.sha256Hash(for: url) == FileHashUtility.sha256Hash(for: bytes))
   }
 
   @Test func differentContentDiffers() {
@@ -42,7 +42,7 @@ import Testing
   }
 
   /// Larger than the 1 MB streaming buffer, so it covers the chunked-read loop.
-  @Test func largePayloadStreamsAcrossBuffers() throws {
+  @Test func largePayloadStreamsAcrossBuffers() async throws {
     let dir = TestSupport.makeTempDir()
     defer { try? FileManager.default.removeItem(at: dir) }
 
@@ -52,6 +52,20 @@ import Testing
     let url = dir.appendingPathComponent("large.bin")
     try bytes.write(to: url)
 
-    #expect(try FileHashUtility.sha256Hash(for: url) == FileHashUtility.sha256Hash(for: bytes))
+    #expect(try await FileHashUtility.sha256Hash(for: url) == FileHashUtility.sha256Hash(for: bytes))
+  }
+
+  /// A cancelled import stops hashing at the next read.
+  @Test func cancelledHashThrowsCancellation() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let url = dir.appendingPathComponent("large.bin")
+    try Data(count: 3 * 1024 * 1024).write(to: url)
+
+    let task = Task {
+      withUnsafeCurrentTask { $0?.cancel() }
+      return try await FileHashUtility.sha256Hash(for: url)
+    }
+    await #expect(throws: CancellationError.self) { try await task.value }
   }
 }
