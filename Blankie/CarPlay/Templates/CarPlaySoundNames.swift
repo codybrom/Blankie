@@ -9,22 +9,12 @@
 
   import UIKit
 
-  /// Sound names as CarPlay shows them. Templates read and sort names only through
-  /// here, so built-in sounds follow the app's language.
+  /// Sound-name lists and the Sounds tab's index sections, in the app's language.
   @MainActor
   enum CarPlaySoundNames {
-    static func name(of sound: Sound) -> String {
-      sound.localizedTitle
-    }
-
     /// Comma-separated names for a row's detail text.
     static func list(_ sounds: [Sound]) -> String {
-      sounds.map(name).joined(separator: ", ")
-    }
-
-    /// Sounds in the current language's reading order.
-    static func sorted(_ sounds: [Sound]) -> [Sound] {
-      collationSorted(sounds.map(CollationItem.init))
+      sounds.map(\.localizedTitle).joined(separator: ", ")
     }
 
     /// Sounds grouped into the current language's index sections (letters, kana rows,
@@ -38,12 +28,14 @@
           .append(item)
       }
       return zip(collation.sectionTitles, buckets).compactMap { title, items in
-        items.isEmpty ? nil : (indexTitle: title, sounds: collationSorted(items))
+        items.isEmpty ? nil : (indexTitle: title, sounds: sorted(items, by: collation))
       }
     }
 
-    private static func collationSorted(_ items: [CollationItem]) -> [Sound] {
-      UILocalizedIndexedCollation.current()
+    private static func sorted(
+      _ items: [CollationItem], by collation: UILocalizedIndexedCollation
+    ) -> [Sound] {
+      collation
         .sortedArray(from: items, collationStringSelector: CollationItem.selector)
         .compactMap { ($0 as? CollationItem)?.sound }
     }
@@ -57,7 +49,7 @@
 
       init(_ sound: Sound) {
         self.sound = sound
-        self.name = CarPlaySoundNames.name(of: sound)
+        self.name = sound.localizedTitle
       }
     }
   }

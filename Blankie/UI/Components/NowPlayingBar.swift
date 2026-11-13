@@ -26,6 +26,10 @@ import SwiftUI
     var showsMixer = false
     /// Opens the timer as a popover over the bar.
     var timerAsPopover = false
+    /// Leads the bare bar with the title, where nothing else on screen shows it.
+    var showsTitle = false
+    /// Set inside a tab view's bottom accessory, which brings its own glass capsule.
+    @Environment(\.tabViewBottomAccessoryPlacement) private var accessoryPlacement
     let onTap: () -> Void
 
     @State private var audioManager = AudioManager.shared
@@ -63,9 +67,19 @@ import SwiftUI
           .accessibilityHint(Text("Opens the full player"))
         }
 
+        if showsTitle {
+          // The volume slider gives up its width before the title would shrink.
+          Text(title)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .fixedSize()
+            .padding(.leading, 10)
+            .padding(.trailing, 4)
+        }
+
         if audioManager.canNavigateNextPrevious {
           Button {
-            audioManager.navigateToPreviousPreset()
+            audioManager.leaveUnsavedMixAsking(then: audioManager.navigateToPreviousPreset)
           } label: {
             Image(systemName: "backward.fill").frame(width: 44, height: 44).contentShape(.rect)
           }
@@ -74,7 +88,7 @@ import SwiftUI
         barePlayPause
         if audioManager.canNavigateNextPrevious {
           Button {
-            audioManager.navigateToNextPreset()
+            audioManager.leaveUnsavedMixAsking(then: audioManager.navigateToNextPreset)
           } label: {
             Image(systemName: "forward.fill").frame(width: 44, height: 44).contentShape(.rect)
           }
@@ -171,9 +185,17 @@ import SwiftUI
     /// Capsule bar plus a standalone play/pause circle trailing it, two glass shapes
     /// that read as separate controls.
     private var barContent: some View {
-      HStack(spacing: 12) {
+      HStack(spacing: accessoryPlacement == nil ? 12 : 0) {
         openButton
-        playPauseButton
+        if accessoryPlacement == nil {
+          playPauseButton
+        } else {
+          // Above a tab bar the slot is one capsule, so play/pause sits inside it.
+          barePlayPause
+            .buttonStyle(.plain)
+            .frame(width: 44)
+            .padding(.trailing, 10)
+        }
       }
       #if os(iOS)
         .dynamicTypeSize(...DynamicTypeSize.accessibility3)
@@ -193,7 +215,9 @@ import SwiftUI
             Spacer(minLength: 0)
           }
           .padding(.leading, 12)
-          .frame(height: 58)
+          // The accessory slot sets its own height.
+          .frame(height: accessoryPlacement == nil ? 58 : nil)
+          .frame(maxHeight: accessoryPlacement == nil ? nil : .infinity)
           .contentShape(.rect)
         }
         .buttonStyle(.plain)
@@ -201,6 +225,8 @@ import SwiftUI
         .accessibilityHint(showsMixer ? Text("Shows the mixer") : Text("Opens the full player"))
 
         #if os(iOS)
+          // Above a tab bar the controller leaves AirPlay to the player.
+          if accessoryPlacement == nil {
           AirPlayRouteButton(
             activeColor: accentColor,
             inactiveColor: Color(.secondaryLabel)
@@ -208,6 +234,7 @@ import SwiftUI
           .frame(width: 44, height: 44)
           .accessibilityLabel(Text("AirPlay"))
           .padding(.trailing, 6)
+          }
         #endif
       }
       .modifier(NowPlayingBarGlass())
@@ -228,7 +255,7 @@ import SwiftUI
           // the app accent (themingPreset is nil during single sound and Quick Mix).
           accentColor: presetManager.themingPreset?.accentColor ?? globalSettings.customAccentColor,
           playingIcons: audioManager.playingSoundIcons(),
-          isDefaultPreset: presetManager.currentPreset?.isDefault ?? true
+          isDefaultPreset: NowPlayingDisplay.mixShowsBrandArtwork
         )
       )
       .accessibilityHidden(true)
@@ -254,6 +281,9 @@ import SwiftUI
     private var title: String {
       if let singleSound = audioManager.singleSound {
         return singleSound.localizedTitle
+      }
+      if let unsavedMix = audioManager.unsavedMix {
+        return unsavedMix.name
       }
       if audioManager.isQuickMix {
         return String(localized: "Quick Mix")
@@ -347,8 +377,14 @@ import SwiftUI
 
   /// Liquid Glass capsule
   private struct NowPlayingBarGlass: ViewModifier {
+    @Environment(\.tabViewBottomAccessoryPlacement) private var accessoryPlacement
+
     func body(content: Content) -> some View {
-      content.glassEffect(.regular.interactive(), in: .capsule)
+      if accessoryPlacement == nil {
+        content.glassEffect(.regular.interactive(), in: .capsule)
+      } else {
+        content
+      }
     }
   }
 
@@ -394,7 +430,16 @@ import SwiftUI
 
     var body: some View {
       Group {
-        if let singleSound = properties.singleSound {
+        if let still = (properties.singleSound as? KaleidoscopeSound)?.artwork {
+          // A Kaleidoscope shows the middle of a still of its own glass.
+          Image(uiImage: still)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: 36, height: 36)
+            .scaleEffect(2.4)
+            .frame(width: 36, height: 36)
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        } else if let singleSound = properties.singleSound {
           FallbackArtwork(
             glyph: .symbol(singleSound.systemIconName),
             accent: properties.accentColor ?? .accentColor,

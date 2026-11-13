@@ -14,6 +14,51 @@ import SwiftUI
 
 #if os(iOS) || os(visionOS)
 
+  /// Carries the artwork's place up to the kaleidoscope behind the player.
+  private struct KaleidoscopeArtworkKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+      value = value ?? nextValue()
+    }
+  }
+
+  /// Where the artwork sits right now, and where it was held when the
+  /// controls were put away. A turned phone lets go of the hold.
+  private final class KaleidoscopeArtworkPlace {
+    var live: CGRect?
+    var container = CGSize.zero
+    var held: (frame: CGRect, width: CGFloat)?
+
+    private var releasing = false
+
+    func update(_ frame: CGRect?, in size: CGSize) {
+      live = frame ?? live
+      container = size
+      guard let held else { return }
+      let turned = abs(held.width - size.width) > 1
+      let settled =
+        releasing
+        && live.map { abs($0.midY - held.frame.midY) < 0.5 && abs($0.midX - held.frame.midX) < 0.5 }
+          ?? false
+      if turned || settled {
+        self.held = nil
+        releasing = false
+      }
+    }
+
+    func hold() {
+      releasing = false
+      if let live { held = (live, container.width) }
+    }
+
+    /// Lets go once the artwork is back where it was held, so nothing jumps.
+    func release() {
+      releasing = true
+    }
+
+    var frame: CGRect? { held?.frame ?? live }
+  }
+
   struct NowPlayingSheet: View {
     var onDismiss: (() -> Void)?
     @Environment(\.dismiss) private var dismiss
@@ -26,6 +71,8 @@ import SwiftUI
     /// Presented from inside the cover, since a sheet on the base hierarchy
     /// can't present over a fullScreenCover.
     @State private var showingTimer = false
+    @State private var showingAddSound = false
+    @State private var showingSaveMix = false
     var backgroundImage: PlatformImage?
 
     /// Inline in the mixer: no drag handle, sheet background or close chevron.
@@ -62,6 +109,8 @@ import SwiftUI
     var actionRowIncludesTimer = true
     /// The Duo cover's side bar carries the favorite star, which leaves the title row.
     var favoriteInToolbar = false
+    /// Inline, the mixer hosts the + checklist, since adding a sound swaps this player out.
+    var onAddSound: (() -> Void)?
 
     /// Which panel sits beside the player on wide screens. It survives folding,
     /// rotating and re-presenting.
@@ -78,11 +127,65 @@ import SwiftUI
     @State private var favoriteHapticTrigger = 0
     @State private var navigationEdge: Edge = .trailing
     @State private var artworkExpanded = false
+    /// Where the artwork would sit, so the kaleidoscope centers there.
+    @State private var artworkPlace = KaleidoscopeArtworkPlace()
+    /// Tapping the kaleidoscope puts the controls away.
+    @State private var hidesControls = false
+
+    /// How far a finger has turned the chamber, and its coast after letting go.
+    @State private var kaleidoscopeTouch = KaleidoscopeBackdrop.TouchBox()
+    /// True from the start of a turn until its coast has died away.
+    @State private var kaleidoscopeTouched = false
+
+    /// Dragging around the kaleidoscope turns its chamber, like twisting the end of
+    /// a real one. Letting go leaves it coasting to a stop while it plays on.
+    private var kaleidoscopeTurnGesture: some Gesture {
+      DragGesture(minimumDistance: 6, coordinateSpace: .global)
+        .onChanged { value in
+          guard let frame = artworkPlace.frame else { return }
+          let center = CGPoint(x: frame.midX, y: frame.midY)
+          if kaleidoscopeTouch.drag(to: value.location, about: center, at: value.time),
+            !kaleidoscopeTouched
+          {
+            kaleidoscopeTouched = true
+          }
+        }
+        .onEnded { _ in
+          let released = kaleidoscopeTouch.release()
+          // Once the coast has died away, a paused picture can rest again.
+          Task {
+            try? await Task.sleep(for: .seconds(7))
+            if kaleidoscopeTouch.hasSettled(since: released) { kaleidoscopeTouched = false }
+          }
+        }
+    }
+
+    /// Lets a drag that starts on a row's empty space turn the glass behind it. Buttons
+    /// and sliders in the row keep their own touches.
+    private var turnsGlass: some ViewModifier {
+      TurnsGlass(
+        gesture: kaleidoscopeTurnGesture,
+        isEnabled: audioManager.singleSound is KaleidoscopeSound)
+    }
+
+    private struct TurnsGlass<Turn: Gesture>: ViewModifier {
+      let gesture: Turn
+      let isEnabled: Bool
+
+      func body(content: Content) -> some View {
+        content.contentShape(.rect).gesture(gesture, isEnabled: isEnabled)
+      }
+    }
+
+    private var showsOnlyKaleidoscope: Bool {
+      hidesControls && inline && audioManager.singleSound is KaleidoscopeSound
+    }
 
     private var artworkTaskID: String {
       let single = audioManager.singleSound?.id.uuidString ?? ""
       let preset = presetManager.currentPreset?.id.uuidString ?? ""
-      return "\(single)-\(preset)"
+      let mix = audioManager.unsavedMix?.originSoundFileName ?? ""
+      return "\(single)-\(preset)-\(mix)"
     }
 
     var body: some View {
@@ -98,16 +201,41 @@ import SwiftUI
             }
             .ignoresSafeArea(.container, edges: .bottom)
           }
+          .opacity(showsOnlyKaleidoscope ? 0 : 1)
+          .allowsHitTesting(!showsOnlyKaleidoscope)
+          .overlay {
+            // With the controls away, a tap anywhere brings them back.
+            if showsOnlyKaleidoscope {
+              Color.clear.contentShape(.rect).ignoresSafeArea()
+                .onTapGesture {
+                  // The hold lets go once the page has settled back into place.
+                  artworkPlace.release()
+                  withAnimation(.smooth(duration: 0.5)) { hidesControls = false }
+                }
+                .gesture(kaleidoscopeTurnGesture)
+                .accessibilityLabel(Text("Show Controls"))
+                .accessibilityAddTraits(.isButton)
+            }
+          }
+          .backgroundPreferenceValue(KaleidoscopeArtworkKey.self) { anchor in
+            kaleidoscopeLayer(artwork: anchor)
+          }
+          .toolbarVisibility(showsOnlyKaleidoscope ? .hidden : .automatic, for: .navigationBar)
+          .statusBarHidden(showsOnlyKaleidoscope)
+          .persistentSystemOverlays(showsOnlyKaleidoscope ? .hidden : .automatic)
         } else {
           // Sized to the sheet, which is shorter than the window at the large
           // detent. The outer reader respects the safe area to report the insets.
           GeometryReader { safe in
             GeometryReader { proxy in
               ZStack {
-                // Rounded top corners show during the zoom transition.
-                Color.black
+                // Rounded top corners show during the zoom transition. A Kaleidoscope on
+                // its own leaves this clear, so its glass shows from behind.
+                (audioManager.singleSound is KaleidoscopeSound ? Color.clear : Color.black)
                   .overlay {
-                    if audioManager.singleSound == nil && !audioManager.isQuickMix,
+                    if audioManager.singleSound is KaleidoscopeSound {
+                      Color.clear
+                    } else if audioManager.singleSound == nil && !audioManager.isQuickMix,
                       let image = backgroundImage
                     {
                       Image(uiImage: image)
@@ -155,6 +283,13 @@ import SwiftUI
                 .padding(.trailing, insets.trailing)
               }
               .frame(width: proxy.size.width, height: proxy.size.height)
+              .backgroundPreferenceValue(KaleidoscopeArtworkKey.self) { anchor in
+                kaleidoscopeLayer(artwork: anchor)
+                  .clipShape(
+                    UnevenRoundedRectangle(
+                      topLeadingRadius: 38, bottomLeadingRadius: 0, bottomTrailingRadius: 0,
+                      topTrailingRadius: 38, style: .continuous))
+              }
             }
             .ignoresSafeArea()
           }
@@ -171,6 +306,12 @@ import SwiftUI
             .presentationDetents([.medium, .large])
         }
       }
+      .sheet(isPresented: $showingAddSound) {
+        MixSoundsPicker()
+      }
+      .saveMixSheet(isPresented: $showingSaveMix)
+      // Inline, the root view's prompt covers it.
+      .unsavedMixPrompt(isActive: !inline)
     }
 
     // MARK: - Now Playing View
@@ -211,7 +352,27 @@ import SwiftUI
       }
     }
 
+    @ViewBuilder
     private func displayOnlyNowPlaying(in size: CGSize) -> some View {
+      if audioManager.singleSound is KaleidoscopeSound {
+        kaleidoscopeDisplay
+      } else {
+        artworkDisplay(in: size)
+      }
+    }
+
+    /// A Kaleidoscope's glass has the whole pane. Its title is on the playback bar.
+    private var kaleidoscopeDisplay: some View {
+      Color.clear
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Out to the screen's edges, so the middle of the pane is the middle of the glass.
+        .ignoresSafeArea()
+        // The glass centers on the pane, and a drag anywhere across it turns the glass.
+        .anchorPreference(key: KaleidoscopeArtworkKey.self, value: .bounds) { $0 }
+        .modifier(turnsGlass)
+    }
+
+    private func artworkDisplay(in size: CGSize) -> some View {
       let artworkSize = max(min(size.height - 64, size.width * 0.4), 100)
       return HStack(spacing: 24) {
         artworkView(size: artworkSize)
@@ -402,8 +563,8 @@ import SwiftUI
       .modifier(SettlesRows(item: itemKey, showsProgress: showsProgressRow))
     }
 
-    /// Sound Mixer, then AirPlay (open Duo only), then Timer. `fills` stretches
-    /// the Sound Mixer button to the row's width.
+    /// Sound Mixer (+ for a single sound), then AirPlay (open Duo only), then Timer.
+    /// `fills` stretches the Sound Mixer button to the row's width.
     @ViewBuilder
     private func playerActionRow(fills: Bool = false) -> some View {
       if let onOpenMixer {
@@ -442,6 +603,8 @@ import SwiftUI
               }
             }
             .accessibilityValue(silentPresetMessage.map { Text($0) } ?? Text(verbatim: ""))
+          } else {
+            addSoundButton(size: 48)
           }
 
           #if os(iOS)
@@ -554,11 +717,35 @@ import SwiftUI
           #endif
           Spacer(minLength: 0)
           panelToggle(.timer, symbol: "timer", label: Text("Timer"))
-          panelToggle(.sounds, symbol: "slider.horizontal.3", label: Text("Sounds"))
-            .disabled(audioManager.singleSound != nil || soundsPanel == nil)
+          if audioManager.singleSound != nil {
+            addSoundButton(size: 56)
+          } else {
+            panelToggle(.sounds, symbol: "slider.horizontal.3", label: Text("Sounds"))
+              .disabled(soundsPanel == nil)
+          }
         }
         .padding(.horizontal, 32)
       }
+    }
+
+    /// Starts a mix from the single sound.
+    private func addSoundButton(size: CGFloat) -> some View {
+      Button {
+        if let onAddSound {
+          onAddSound()
+        } else {
+          showingAddSound = true
+        }
+      } label: {
+        Image(systemName: "plus")
+          .font(.system(size: 20, weight: .medium))
+          .foregroundStyle(.white)
+          .frame(width: size, height: size)
+          .contentShape(Circle())
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(Text("Add Sound"))
+      .glassEffect(.regular.interactive(), in: .circle)
     }
 
     private func panelToggle(_ target: NowPlayingPanel, symbol: String, label: Text)
@@ -607,8 +794,11 @@ import SwiftUI
           .frame(width: split.leading)
           .frame(maxHeight: .infinity)
           .overlay {
-            changesWithItem(
-              artworkContent(size: max(split.leading, size.height) + 120, cornerRadius: 0))
+            // A Kaleidoscope's glass is already turning behind the page.
+            if !(audioManager.singleSound is KaleidoscopeSound) {
+              changesWithItem(
+                artworkContent(size: max(split.leading, size.height) + 120, cornerRadius: 0))
+            }
           }
           .clipped()
           .mask {
@@ -618,6 +808,11 @@ import SwiftUI
           }
           .ignoresSafeArea(edges: .vertical)
           .accessibilityHidden(true)
+          // The glass centers on this page, and a drag across it turns the glass.
+          .anchorPreference(key: KaleidoscopeArtworkKey.self, value: .bounds) {
+            audioManager.singleSound is KaleidoscopeSound ? $0 : nil
+          }
+          .modifier(turnsGlass)
         Color.clear
           .frame(width: split.gap)
         VStack(spacing: 0) {
@@ -725,9 +920,63 @@ import SwiftUI
 
     // MARK: - Shared Components
 
-    @ViewBuilder
     /// Paused, the artwork shrinks back, except beside a column it lines up with.
+    @ViewBuilder
     private func artworkView(size: CGFloat, shrinksWhenPaused: Bool = true) -> some View {
+      if audioManager.singleSound is KaleidoscopeSound {
+        // A Kaleidoscope on its own shows its backdrop where the artwork would be.
+        Color.clear.frame(width: size, height: size)
+          .contentShape(.rect)
+          .onTapGesture {
+            // Only the inline player can put its controls away.
+            guard inline else { return }
+            // Putting the controls away reflows the page. The picture holds its place.
+            artworkPlace.hold()
+            withAnimation(.smooth(duration: 0.5)) { hidesControls = true }
+          }
+          .gesture(kaleidoscopeTurnGesture)
+          .accessibilityLabel(Text("Hide Controls"))
+          .accessibilityAddTraits(.isButton)
+          .anchorPreference(key: KaleidoscopeArtworkKey.self, value: .bounds) { $0 }
+      } else {
+        artworkCard(size: size, shrinksWhenPaused: shrinksWhenPaused)
+      }
+    }
+
+    /// The glass behind the player while a Kaleidoscope plays on its own. It reads
+    /// where the artwork would sit fresh on every layout, and each Kaleidoscope
+    /// dissolves into the next.
+    private func kaleidoscopeLayer(artwork anchor: Anchor<CGRect>?) -> some View {
+      GeometryReader { proxy in
+        let origin = proxy.frame(in: .global).origin
+        let _ = artworkPlace.update(
+          anchor.map { proxy[$0].offsetBy(dx: origin.x, dy: origin.y) }, in: proxy.size)
+        ZStack {
+          if let kaleidoscope = audioManager.singleSound as? KaleidoscopeSound {
+            kaleidoscopeBackdrop(kaleidoscope)
+              .id(kaleidoscope.fileName)
+              .transition(.opacity)
+          }
+        }
+        .animation(.easeInOut(duration: 1.6), value: audioManager.singleSound?.fileName)
+        .ignoresSafeArea()
+      }
+    }
+
+    /// The kaleidoscope, centered on the artwork's place.
+    private func kaleidoscopeBackdrop(_ sound: KaleidoscopeSound) -> some View {
+      KaleidoscopeBackdrop(
+        sound: sound, isPlaying: audioManager.isGloballyPlaying, artworkFrame: artworkPlace.frame,
+        // With no artwork to sit behind, the glass centers on the screen.
+        centersOnPicture: displayOnly,
+        // With no controls over the glass there is nothing to dim behind.
+        dimsForControls: !showsOnlyKaleidoscope && !displayOnly, touch: kaleidoscopeTouch,
+        isTouched: kaleidoscopeTouched
+      )
+      .accessibilityHidden(true)
+    }
+
+    private func artworkCard(size: CGFloat, shrinksWhenPaused: Bool) -> some View {
       changesWithItem(artworkContent(size: size))
         .scaleEffect(audioManager.isGloballyPlaying || !shrinksWhenPaused ? 1.0 : 0.85)
         .shadow(
@@ -746,7 +995,15 @@ import SwiftUI
     @ViewBuilder
     private func artworkContent(size: CGFloat, cornerRadius: CGFloat = 12) -> some View {
       Group {
-        if let singleSound = audioManager.singleSound {
+        if let still = (audioManager.singleSound as? KaleidoscopeSound)?.artwork {
+          // Where a Kaleidoscope's artwork is shown as a picture, such as a thumbnail,
+          // it is a still of its own glass.
+          Image(uiImage: still)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        } else if let singleSound = audioManager.singleSound {
           FallbackArtwork(
             glyph: .symbol(singleSound.systemIconName),
             accent: globalSettings.customAccentColor ?? .accentColor,
@@ -762,10 +1019,7 @@ import SwiftUI
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         } else {
           FallbackArtwork(
-            glyph: .playback(
-              isQuickMix: audioManager.isQuickMix,
-              isDefaultPreset: presetManager.currentPreset?.isDefault ?? true,
-              icons: audioManager.playingSoundIcons()),
+            glyph: NowPlayingDisplay.mixFallbackGlyph(),
             accent: presetManager.currentPreset?.accentColor
               ?? globalSettings.customAccentColor ?? .accentColor,
             size: size,
@@ -782,13 +1036,17 @@ import SwiftUI
         return (max(0, elapsed), timerManager.selectedDuration)
       }
 
+      // Kaleidoscopes never loop, so a mix tracks its longest file sound and a
+      // Kaleidoscope alone has no progress.
       let anchorSound =
         audioManager.singleSound
         ?? audioManager.sounds
-        .filter { $0.isSelected }
+        .filter { $0.isSelected && $0.playbackDuration.isFinite }
         .max { $0.playbackDuration < $1.playbackDuration }
 
-      guard let anchorSound, anchorSound.playbackDuration > 0 else { return nil }
+      guard let anchorSound, anchorSound.playbackDuration.isFinite,
+        anchorSound.playbackDuration > 0
+      else { return nil }
       return (anchorSound.playbackPosition, anchorSound.playbackDuration)
     }
 
@@ -821,10 +1079,10 @@ import SwiftUI
 
         if audioManager.isGloballyPlaying && duration > 0 {
           TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { _ in
-            playbackBar(duration: duration, inset: inset)
+            playbackBar(duration: duration, inset: inset).modifier(turnsGlass)
           }
         } else {
-          playbackBar(duration: duration, inset: inset)
+          playbackBar(duration: duration, inset: inset).modifier(turnsGlass)
         }
       }
     }
@@ -978,10 +1236,10 @@ import SwiftUI
 
     // MARK: - Helper Properties
 
-    /// nil for Quick Mix, which can't be a favorite.
+    /// nil for Quick Mix and an unsaved mix, which can't be favorites.
     private var favoriteToken: String? {
       if let single = audioManager.singleSound {
-        return GlobalSettings.singleToken(forFileName: single.fileName)
+        return PlayableItem.single(fileName: single.fileName).token
       }
       guard !audioManager.isQuickMix, let preset = presetManager.currentPreset else { return nil }
       return preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
@@ -1032,12 +1290,15 @@ import SwiftUI
         }
       }
       .padding(.horizontal, inset)
+      .modifier(turnsGlass)
     }
 
     private var infoTitle: some View {
       Group {
         if let singleSound = audioManager.singleSound {
           Text(singleSound.localizedTitle)
+        } else if let unsavedMix = audioManager.unsavedMix {
+          Text(verbatim: unsavedMix.name)
         } else if let preset = presetManager.currentPreset {
           Text(verbatim: preset.displayName)
         } else {
@@ -1049,7 +1310,8 @@ import SwiftUI
       .foregroundColor(.white)
     }
 
-    /// A built-in sound's caption, a custom sound's author, or a preset's creator.
+    /// A built-in sound's caption, a custom sound's author, or a preset's creator. An unsaved
+    /// mix has none.
     private var infoSubtitle: Text? {
       let text: Text?
       if let singleSound = audioManager.singleSound {
@@ -1060,6 +1322,8 @@ import SwiftUI
         } else {
           text = nil
         }
+      } else if audioManager.unsavedMix != nil {
+        text = nil
       } else if let creatorName = presetManager.currentPreset?.creatorName,
         !creatorName.isEmpty
       {
@@ -1072,7 +1336,24 @@ import SwiftUI
 
     @ViewBuilder
     private var favoriteButton: some View {
-      if let token = favoriteToken, !favoriteInToolbar {
+      if audioManager.unsavedMix != nil, !favoriteInToolbar {
+        // An unsaved mix can't be a favorite, so Save takes the star's place.
+        Button {
+          showingSaveMix = true
+        } label: {
+          Text("Save")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.black)
+            .padding(.horizontal, 14)
+            .frame(height: 32)
+            .background(accentColor, in: .capsule)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Save Mix"))
+        #if os(iOS)
+          .frame(minHeight: 44, alignment: .trailing)
+        #endif
+      } else if let token = favoriteToken, !favoriteInToolbar {
         let starred = globalSettings.isStarred(token)
         Button {
           globalSettings.toggleStarred(token)
@@ -1111,6 +1392,8 @@ import SwiftUI
     /// What's playing, so its artwork and title can transition when it changes.
     private var itemKey: String {
       if let single = audioManager.singleSound { return "sound:\(single.fileName)" }
+      // The mix's name changes as sounds come and go, so it's keyed by its first sound.
+      if let mix = audioManager.unsavedMix { return "unsavedMix:\(mix.originSoundFileName)" }
       if audioManager.isQuickMix { return "quickMix" }
       return "preset:\(presetManager.currentPreset?.id.uuidString ?? "none")"
     }
@@ -1146,6 +1429,11 @@ import SwiftUI
 
     @ViewBuilder
     private func transportControls(spread: Bool = false) -> some View {
+      transportButtons(spread: spread).modifier(turnsGlass)
+    }
+
+    @ViewBuilder
+    private func transportButtons(spread: Bool) -> some View {
       let canNavigate = audioManager.canNavigateNextPrevious
       // Play would be silent with nothing selected, but pause is always available.
       let canPlayPause = audioManager.isGloballyPlaying || audioManager.hasSelectedSounds
@@ -1155,7 +1443,9 @@ import SwiftUI
 
         if canNavigate {
           Button {
-            performNavigation(from: .leading, audioManager.navigateToPreviousPreset)
+            audioManager.leaveUnsavedMixAsking {
+              performNavigation(from: .leading, audioManager.navigateToPreviousPreset)
+            }
           } label: {
             Image(systemName: "backward.fill")
               .font(.system(size: 32))
@@ -1186,7 +1476,9 @@ import SwiftUI
 
         if canNavigate {
           Button {
-            performNavigation(from: .trailing, audioManager.navigateToNextPreset)
+            audioManager.leaveUnsavedMixAsking {
+              performNavigation(from: .trailing, audioManager.navigateToNextPreset)
+            }
           } label: {
             Image(systemName: "forward.fill")
               .font(.system(size: 32))

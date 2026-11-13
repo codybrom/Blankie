@@ -342,6 +342,28 @@ extension PresetManager {
   }
 }
 
+// MARK: - Preset Names
+
+extension PresetManager {
+  /// `name`, or the first "name (2)", "name (3)" and so on that no custom preset uses.
+  func uniquePresetName(_ name: String) -> String {
+    guard hasPreset(named: name) else { return name }
+    var counter = 2
+    while hasPreset(named: "\(name) (\(counter))") { counter += 1 }
+    return "\(name) (\(counter))"
+  }
+
+  /// Whether a custom preset already has this name, ignoring case and surrounding spaces.
+  func hasPreset(named name: String) -> Bool {
+    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    return presets.contains { preset in
+      !preset.isDefault
+        && preset.name.trimmingCharacters(in: .whitespacesAndNewlines)
+          .localizedCaseInsensitiveCompare(trimmed) == .orderedSame
+    }
+  }
+}
+
 // MARK: - Preset State Management
 
 extension PresetManager {
@@ -354,11 +376,11 @@ extension PresetManager {
   func updateCurrentPresetState() {
     if isInitializing { return }
 
-    // Skip while the mixer doesn't reflect the preset (single sound, preview, or none
-    // applied yet). Preview forces the previewed sound to volume 1.0, which must
-    // not bleed into the saved preset.
-    if AudioManager.shared.singleSound != nil || AudioManager.shared.previewModeSound != nil
-      || !presetStatesApplied
+    // Skip while the mixer doesn't reflect the preset (single sound, an unsaved mix,
+    // preview, or none applied yet). Preview forces the previewed sound to volume 1.0,
+    // which must not bleed into the saved preset.
+    if AudioManager.shared.singleSound != nil || AudioManager.shared.unsavedMix != nil
+      || AudioManager.shared.previewModeSound != nil || !presetStatesApplied
     {
       return
     }
@@ -1050,10 +1072,10 @@ extension PresetManager {
 
   @MainActor
   private func updateCurrentPresetBeforeSave() {
-    // Skip while the mixer doesn't reflect the preset (single sound, preview, or none
-    // applied yet). Preview forces the previewed sound to volume 1.0.
-    guard AudioManager.shared.singleSound == nil, AudioManager.shared.previewModeSound == nil,
-      presetStatesApplied
+    // Skip while the mixer doesn't reflect the preset (single sound, an unsaved mix,
+    // preview, or none applied yet). Preview forces the previewed sound to volume 1.0.
+    guard AudioManager.shared.singleSound == nil, AudioManager.shared.unsavedMix == nil,
+      AudioManager.shared.previewModeSound == nil, presetStatesApplied
     else { return }
 
     if let currentPreset = currentPreset,

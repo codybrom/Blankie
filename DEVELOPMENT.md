@@ -6,6 +6,7 @@ This guide will help you set up your development environment for contributing to
 
 - macOS 26 or later (required for certain Xcode 26 features used in the project)
 - Xcode 26 or later
+- Xcode's Metal toolchain, which compiles the Kaleidoscope shaders. Install it once with `xcodebuild -downloadComponent MetalToolchain`
 - An Apple Developer account (free or paid)
 
 ## Setup Instructions

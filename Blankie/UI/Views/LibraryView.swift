@@ -266,18 +266,9 @@ struct PresetPickerRow: View {
   }
 
   private func applyPreset() {
-    Task {
-      do {
-        // Single sound pauses the preset's sounds but keeps `currentPreset`, so
-        // returning to the same preset has to force a re-apply.
-        let wasSingle = audioManager.singleSound != nil
-        audioManager.leaveTransientModes()
-        try presetManager.applyPreset(preset, forceReapply: wasSingle)
-        if dismissOnSelect { dismiss() }
-        onSelection?()
-      } catch {
-        Logger.ui.error("Error applying preset: \(error, privacy: .public)")
-      }
+    LibraryView.playPreset(preset, presentation: presentation) { _ in
+      if dismissOnSelect { dismiss() }
+      onSelection?()
     }
   }
 }
@@ -310,7 +301,7 @@ struct SingleSoundPickerRow: View {
   }
 
   private var starToken: String {
-    GlobalSettings.singleToken(forFileName: sound.fileName)
+    PlayableItem.single(fileName: sound.fileName).token
   }
 
   private var accent: Color {
@@ -358,7 +349,9 @@ struct SingleSoundPickerRow: View {
           preset: nil,
           fallbackSystemImage: sound.systemIconName,
           tint: accent,
-          isCircular: true
+          isCircular: true,
+          // A Kaleidoscope's row shows its own glass.
+          still: (sound as? KaleidoscopeSound)?.artwork
         )
         .accessibilityHidden(true)
 
@@ -419,10 +412,14 @@ struct SingleSoundPickerRow: View {
       onSelection?()
       return
     }
+    // Don't Save and the action run in one turn, so the restored preset can't start
+    // playing in between.
     Task { @MainActor in
-      audioManager.toggleSingleSound(for: sound)
-      if dismissOnSelect { dismiss() }
-      onSelection?()
+      LibraryView.leavingUnsavedMix(presentation: presentation) {
+        audioManager.toggleSingleSound(for: sound)
+        if dismissOnSelect { dismiss() }
+        onSelection?()
+      }
     }
   }
 }
@@ -438,7 +435,66 @@ struct LibraryView: View {
     case menuBar
   }
 
+  /// Plays a preset from a Library row, asking first when an unsaved mix would be lost.
+  /// `completion` gets whether the preset was applied.
+  static func playPreset(
+    _ preset: Preset, presentation: Presentation,
+    completion: @escaping @MainActor (Bool) -> Void
+  ) {
+    let audioManager = AudioManager.shared
+    // Single sound and an unsaved mix pause the preset's sounds. Single sound keeps
+    // `currentPreset` and a discarded mix restores it, so the same preset re-applies.
+    // Read before asking, since Don't Save ends the mix first.
+    let wasTransient = audioManager.singleSound != nil || audioManager.unsavedMix != nil
+    leavingUnsavedMix(presentation: presentation) {
+      audioManager.leaveTransientModes()
+      do {
+        completion(try PresetManager.shared.applyPreset(preset, forceReapply: wasTransient))
+      } catch {
+        Logger.ui.error("Error applying preset: \(error, privacy: .public)")
+      }
+    }
+  }
+
+  /// Asks to save an unsaved mix before `action`. The menu bar popover can't host the
+  /// prompt, so there the mix is let go, as from outside the app.
+  static func leavingUnsavedMix(
+    presentation: Presentation, _ action: @escaping @MainActor () -> Void
+  ) {
+    if presentation == .menuBar {
+      action()
+    } else {
+      AudioManager.shared.leaveUnsavedMixAsking(then: action)
+    }
+  }
+
+  /// The iPhone Library's three tabs. Home holds favorites and mixes, and
+  /// Kaleidoscopes and Sounds each list their own.
+  enum Tab: String, CaseIterable, Identifiable {
+    case home, kaleidoscopes, sounds
+
+    var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+      switch self {
+      case .home: "Home"
+      case .kaleidoscopes: "Kaleidoscopes"
+      case .sounds: "Sounds"
+      }
+    }
+
+    var systemImage: String {
+      switch self {
+      case .home: "house.fill"
+      case .kaleidoscopes: "circle.hexagongrid.fill"
+      case .sounds: "waveform"
+      }
+    }
+  }
+
   var presentation: Presentation = .sheet
+  /// Which tab to show. nil shows everything in one list, as sections.
+  var tab: Tab?
   /// Leading toolbar gear. nil in the sheet presentation.
   var onOpenSettings: (() -> Void)?
   /// Page-only: lets the owner push the mixer after a selection.
@@ -477,11 +533,35 @@ struct LibraryView: View {
 
   /// Non-favorited sounds, alphabetical. Favorites show in their own section.
   /// Preset-use-only sounds can't play on their own.
-  private var singleSounds: [Sound] {
-    audioManager.sounds
-      .filter { !$0.isPresetUseOnly }
-      .filter { !globalSettings.isStarred(GlobalSettings.singleToken(forFileName: $0.fileName)) }
+  /// The sounds one list shows, by name: the Kaleidoscopes or every other sound. A
+  /// tab lists all of its own, starred or not, since Favorites sits on another tab.
+  /// In one list, a starred sound shows under Favorites only.
+  static func listed(
+    _ sounds: [Sound], kaleidoscopes: Bool, tab: Tab?, isStarred: (Sound) -> Bool
+  ) -> [Sound] {
+    sounds
+      .filter { ($0 is KaleidoscopeSound) == kaleidoscopes && !$0.isPresetUseOnly }
+      .filter { tab != nil || !isStarred($0) }
       .sortedByLocalizedTitle()
+  }
+
+  /// True when a name contains what was typed in search, ignoring case, accents and
+  /// stray spaces. Nothing typed matches nothing.
+  static func nameMatches(_ title: String, query: String) -> Bool {
+    let typed = query.trimmingCharacters(in: .whitespaces)
+    return !typed.isEmpty && title.localizedStandardContains(typed)
+  }
+
+  private func isStarred(_ sound: Sound) -> Bool {
+    globalSettings.isStarred(PlayableItem.single(fileName: sound.fileName).token)
+  }
+
+  private var singleSounds: [Sound] {
+    Self.listed(audioManager.sounds, kaleidoscopes: false, tab: tab, isStarred: isStarred)
+  }
+
+  private var kaleidoscopes: [Sound] {
+    Self.listed(audioManager.sounds, kaleidoscopes: true, tab: tab, isStarred: isStarred)
   }
 
   // MARK: - Favorites / Presets model
@@ -670,6 +750,39 @@ struct LibraryView: View {
     }
   }
 
+  /// Always the current item, so tapping it does nothing. Saving clears the badge.
+  private func unsavedMixRow(_ unsavedMix: UnsavedMix) -> some View {
+    let accent = globalSettings.customAccentColor ?? .accentColor
+    return HStack(spacing: 10) {
+      PresetThumbnail(
+        artworkId: nil,
+        preset: nil,
+        fallbackSystemImage: "square.stack.3d.up",
+        tint: accent,
+        compositeIcons: audioManager.playingSoundIcons()
+      )
+      .accessibilityHidden(true)
+      Text(verbatim: unsavedMix.name)
+        .foregroundColor(
+          LibraryRowStyle.titleColor(isCurrent: true, accent: accent, presentation: presentation))
+      Spacer()
+      Text("Unsaved")
+        .font(.caption2.weight(.bold))
+        .foregroundStyle(.black)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(accent, in: .capsule)
+      LibraryRowStyle.nowPlayingIndicator(
+        isCurrent: true, isPlaying: audioManager.isGloballyPlaying, accent: accent)
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(.isSelected)
+    .deleteDisabled(true)
+    .moveDisabled(true)
+    .listRowBackground(
+      LibraryRowStyle.rowBackground(isCurrent: true, accent: accent, presentation: presentation))
+  }
+
   /// Edit any sound, delete custom ones, with the same menu and swipe as preset rows.
   @ViewBuilder
   private func singleRow(_ sound: Sound) -> some View {
@@ -707,13 +820,15 @@ struct LibraryView: View {
     let accent = globalSettings.customAccentColor ?? .accentColor
     return Button {
       Task { @MainActor in
-        if audioManager.singleSound != nil {
-          audioManager.exitSingleSoundWithoutResuming()
+        Self.leavingUnsavedMix(presentation: presentation) {
+          if audioManager.singleSound != nil {
+            audioManager.exitSingleSoundWithoutResuming()
+          }
+          if !audioManager.isQuickMix {
+            audioManager.enterQuickMix()
+          }
+          onSelect?()
         }
-        if !audioManager.isQuickMix {
-          audioManager.enterQuickMix()
-        }
-        onSelect?()
       }
     } label: {
       HStack(spacing: 10) {
@@ -743,7 +858,11 @@ struct LibraryView: View {
   @ViewBuilder
   private var addMenuContent: some View {
     Button {
-      showingNewPresetSheet = true
+      // A new preset replaces an unsaved mix, so ask before the sheet opens. The mix plays
+      // on until Create, and cancelling the sheet keeps it.
+      Self.leavingUnsavedMix(presentation: presentation) {
+        showingNewPresetSheet = true
+      }
     } label: {
       Label("New Preset", systemImage: "rectangle.stack.badge.plus")
     }
@@ -760,7 +879,12 @@ struct LibraryView: View {
       case .sheet:
         NavigationStack { libraryList }
       case .sidebar:
-        libraryList
+        #if os(macOS)
+          libraryList
+        #else
+          // A stack of its own, so Kaleidoscopes can push a list onto the sidebar.
+          NavigationStack { libraryList.listStyle(.sidebar) }
+        #endif
       case .page:
         libraryList
           .scrollContentBackground(.hidden)
@@ -795,10 +919,125 @@ struct LibraryView: View {
     )
   }
 
+  /// True while a list with no tabs shows its Kaleidoscopes, one layer down.
+  @State private var showingKaleidoscopes = false
+
+  /// The Mac has no stack to push onto, so its Kaleidoscopes slide in over the list.
+  private var slidesKaleidoscopes: Bool {
+    #if os(macOS)
+      true
+    #else
+      false
+    #endif
+  }
+
+  private var pushesKaleidoscopes: Binding<Bool> {
+    Binding(
+      get: { showingKaleidoscopes && !slidesKaleidoscopes },
+      set: { showingKaleidoscopes = $0 }
+    )
+  }
+
+  /// The Kaleidoscopes as a pushed list, dressed like the list they came from.
   @ViewBuilder
-  private var libraryList: some View {
+  private var kaleidoscopesPage: some View {
+    let list = List {
+      ForEach(allKaleidoscopes, id: \.id) { sound in
+        singleRow(sound)
+      }
+    }
+    .navigationTitle(Text("Kaleidoscopes"))
+    #if os(iOS)
+      .navigationBarTitleDisplayMode(.inline)
+    #endif
+    switch presentation {
+    case .page:
+      list
+        .scrollContentBackground(.hidden)
+        .background { pageBackground }
+        .contentMargins(.bottom, bottomBarHeight + 8, for: .scrollContent)
+        .environment(\.colorScheme, .dark)
+    case .sidebar:
+      list.listStyle(.sidebar)
+    case .sheet, .menuBar:
+      list
+    }
+  }
+
+  /// Every Kaleidoscope by name, starred or not.
+  private var allKaleidoscopes: [Sound] {
+    Self.listed(
+      audioManager.sounds, kaleidoscopes: true, tab: .kaleidoscopes, isStarred: isStarred)
+  }
+
+  /// Opens the Kaleidoscopes in place of the list.
+  private var kaleidoscopesRow: some View {
+    let accent = globalSettings.customAccentColor ?? .accentColor
+    let isCurrent = audioManager.singleSound is KaleidoscopeSound
+    return Button {
+      withAnimation(.snappy) { showingKaleidoscopes = true }
+    } label: {
+      HStack(spacing: 10) {
+        PresetThumbnail(
+          artworkId: nil,
+          preset: nil,
+          fallbackSystemImage: Tab.kaleidoscopes.systemImage,
+          tint: accent
+        )
+        .accessibilityHidden(true)
+        Text("Kaleidoscopes")
+          .foregroundColor(
+            LibraryRowStyle.titleColor(
+              isCurrent: false, accent: accent, presentation: presentation))
+        LibraryRowStyle.nowPlayingIndicator(
+          isCurrent: isCurrent, isPlaying: audioManager.isGloballyPlaying, accent: accent)
+        Spacer()
+        Image(systemName: "chevron.forward")
+          .font(.footnote.weight(.semibold))
+          .foregroundStyle(.tertiary)
+          .accessibilityHidden(true)
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .listRowBackground(
+      LibraryRowStyle.rowBackground(
+        isCurrent: false, accent: accent, presentation: presentation))
+  }
+
+  /// Mac only: heads the Kaleidoscopes and leads back to the whole list.
+  private var kaleidoscopesBackRow: some View {
+    Button {
+      withAnimation(.snappy) { showingKaleidoscopes = false }
+    } label: {
+      HStack(spacing: 6) {
+        Image(systemName: "chevron.backward")
+          .font(.body.weight(.semibold))
+        Text("Kaleidoscopes")
+          .font(.headline)
+        Spacer()
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(Text("Back"))
+    .listRowBackground(Color.clear)
+  }
+
+  @ViewBuilder
+  private var rootList: some View {
     List {
-      if presetManager.isLoading {
+      if tab == .kaleidoscopes {
+        ForEach(kaleidoscopes, id: \.id) { sound in
+          singleRow(sound)
+        }
+      } else if tab == .sounds {
+        ForEach(singleSounds, id: \.id) { sound in
+          singleRow(sound)
+            .deleteDisabled(!sound.isCustom)
+        }
+        .onDelete(perform: deleteSounds)
+      } else if presetManager.isLoading {
         HStack {
           Spacer()
           ProgressView("Loading Presets...")
@@ -853,8 +1092,19 @@ struct LibraryView: View {
           Text("Favorites")
         }
 
+        // Kaleidoscopes open a list of their own, above the mixes.
+        if tab == nil, !allKaleidoscopes.isEmpty {
+          Section {
+            kaleidoscopesRow
+          }
+        }
+
         // Quick Mix and All Blankie Sounds are fixed. Only custom presets reorder.
         Section(isExpanded: presetsExpandedBinding) {
+          if let unsavedMix = audioManager.unsavedMix {
+            unsavedMixRow(unsavedMix)
+          }
+
           // Quick Mix can't be a favorite.
           #if !os(macOS)
             quickMixRow
@@ -874,23 +1124,48 @@ struct LibraryView: View {
         }
 
         // Alphabetical and not reorderable. Only custom sounds can be deleted.
-        Section(isExpanded: soundsExpandedBinding) {
-          ForEach(singleSounds, id: \.id) { sound in
-            singleRow(sound)
-              .deleteDisabled(!sound.isCustom)
+        if tab == nil {
+          Section(isExpanded: soundsExpandedBinding) {
+            ForEach(singleSounds, id: \.id) { sound in
+              singleRow(sound)
+                .deleteDisabled(!sound.isCustom)
+            }
+            .onDelete(perform: deleteSounds)
+          } header: {
+            Text("Sounds")
           }
-          .onDelete(perform: deleteSounds)
-        } header: {
-          Text("Sounds")
         }
       }
     }
+  }
+
+  private var libraryList: some View {
+    ZStack {
+      if slidesKaleidoscopes, showingKaleidoscopes {
+        List {
+          kaleidoscopesBackRow
+          ForEach(allKaleidoscopes, id: \.id) { sound in
+            singleRow(sound)
+          }
+        }
+        .transition(.move(edge: .trailing))
+      } else {
+        rootList
+          .transition(.move(edge: .leading))
+      }
+    }
+    // Only the Mac slides its lists, and clipping would cut an iPhone list off at its bars.
+    #if os(macOS)
+      .clipped()
+    #endif
+    .navigationDestination(isPresented: pushesKaleidoscopes) { kaleidoscopesPage }
     // The sidebar leaves its bar to the controls.
     .navigationTitle(
       {
         switch presentation {
         case .sidebar: return Text(verbatim: "")
-        case .page: return Text(verbatim: "Blankie")
+        // A tab's page is headed by its own name. A page with no tabs has no heading.
+        case .page: return tab.map { Text($0.title) } ?? Text(verbatim: "")
         case .sheet, .menuBar: return Text("Library")
         }
       }()
@@ -942,6 +1217,10 @@ struct LibraryView: View {
               Label("Settings", systemImage: "gearshape")
             }
             .tint(Color.primary)
+            // Marks unread Highlights. A text badge draws as a dot, not a count.
+            .badge(Highlights.hasUnseen ? Text(verbatim: "") : nil)
+            // A bar button drops accessibility values, so VoiceOver hears "New" in the label.
+            .accessibilityLabel(Highlights.hasUnseen ? Text("Settings, New") : Text("Settings"))
           }
         }
       }
@@ -1071,6 +1350,8 @@ struct PresetThumbnail: View {
   var compositeIcons: [String]? = nil
   /// All Blankie Sounds always shows the Blankie mark.
   var useBrand = false
+  /// A ready-made picture to show when there is no stored artwork.
+  var still: PlatformImage? = nil
 
   @Environment(\.displayScale) private var displayScale
   @State private var image: PlatformImage?
@@ -1094,6 +1375,12 @@ struct PresetThumbnail: View {
         platformImage(image)
           .resizable()
           .aspectRatio(contentMode: .fill)
+      } else if let still {
+        // Zoomed in on the middle of the picture, which is what still reads at this size.
+        platformImage(still)
+          .resizable()
+          .aspectRatio(contentMode: .fill)
+          .scaleEffect(2.4)
       } else {
         FallbackArtwork(
           glyph: glyphForFallback,

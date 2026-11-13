@@ -24,9 +24,14 @@ class AppState: ObservableObject {
   /// macOS: the Settings pane's Manage Sounds sub-page, swapped in-pane like About
   /// because a NavigationLink push escapes the pane. Same onDisappear reset.
   @Published var showingSettingsManageSoundsPage = false
+  /// The Settings Highlights page: swapped in-pane on macOS, pushed in the settings
+  /// sheet on iOS. `blankie://highlights` opens Settings to it.
+  @Published var showingSettingsHighlightsPage = false
   /// Set when onboarding creates and applies a preset. Each platform's root navigates
   /// to it (iPhone pushes the mixer, macOS closes the Settings pane) and resets it.
   @Published var onboardingCreatedPreset = false
+  /// macOS: a Kaleidoscope's glass fills the screen with every control put away.
+  @Published var kaleidoscopeFullScreen = false
 
   private init() {}
 }

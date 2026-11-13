@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - Unreleased
+
+Blankie 2.2 adds Kaleidoscopes, a new kind of sound that Blankie creates live, with a visual kaleidoscope you can turn. There's also a Library with tabs and search on iPhone, and a new Highlights page in Settings.
+
+### Added
+
+- **Musical Kaleidoscopes** - A kaleidoscope makes endless patterns using mirrors, lenses and colorful glass. Blankie now does something similar with sound. Using more than 130 layers of sound, each one brightening and fading on its own, Blankie's Kaleidoscope keeps the sound shifting into something new. What you hear is created live, no loops, and is best experienced with headphones.
+  - **A visual kaleidoscope to play with too (iPhone and Mac)** - Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that turns in time with the sound. Drag to turn it yourself. On iPhone, tap it to focus and hide the controls, and on Mac go full screen.
+- **Search the Library (iPhone)** - A new **Search** tab finds any preset, Kaleidoscope or sound by name.
+- **Start a mix from any sound** - Playing one sound on its own? Tap **+** to add another and hear them together. Save it as a preset, or let it go.
+- **Highlights** - Each update's highlights now live in **Settings → Highlights**, and a dot on the Settings button points you there when there's something you haven't read. If Blankie is set to another language, the notes are translated on your device. You can also open the page from a `blankie://highlights` link.
+- **Translate the software license** - When Blankie runs in another language, **About → Software License** has a **Translate** button that shows Apple's translation next to the English text.
+
+### Changed
+
+- **The Library has tabs on iPhone** - **Home** keeps your favorites, presets and Quick Mix. **Kaleidoscopes** and **Sounds** each get a tab of their own, and the playback controls sit just above the tab bar. On iPad and Mac, Kaleidoscopes open from their own row in the sidebar.
+- **Frosted title and control bars (Mac)** - The top and bottom of the Mac window now blur whatever artwork is behind them.
+- **Brown Noise in every language** - Brown Noise now goes by its own name in every language Blankie supports, not just English, with a new subtitle: "Deep, smooth rumble."
+- **One name for the French sleep timer** - In French, the sleep timer is now called "minuterie" everywhere, the same word Apple Books uses.
+- **New license** - Blankie's source code is now open source under the GPL (version 3 or later).
+
+### Fixed
+
+- Tapping Pause on a widget after Blankie was force-quit no longer starts playback.
+- First-run setup and the sound credits in About now sort sounds by the names you see.
+- Importing a custom sound that runs for hours no longer crashes Blankie on iPhone and iPad, and long imports finish much faster, with a progress bar and a Cancel button. Large MP3 and AAC files now keep their original audio instead of being converted again.
+
 ## [2.1.0] - 2026-10-28
 
 Blankie 2.1 adds Home Screen widgets on iPhone and iPad, Siri and Shortcuts actions, Spotlight search, a wider iPad layout and support for iPhone Duo.
@@ -326,7 +353,8 @@ Blankie 2 brings Blankie to iPhone and iPad, adds CarPlay, and rebuilds the Mac 
 - Initial alpha release
 - TestFlight availability
 
-[Unreleased]: https://github.com/codybrom/blankie/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/codybrom/blankie/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/codybrom/blankie/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/codybrom/blankie/compare/v2.0.2...v2.1.0
 [2.0.2]: https://github.com/codybrom/blankie/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/codybrom/blankie/compare/v2.0.0...v2.0.1

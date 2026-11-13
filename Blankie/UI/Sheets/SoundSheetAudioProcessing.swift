@@ -49,7 +49,7 @@ extension SoundSheetForm {
             isPlaying: isPreviewing
           )
           .accessibilityHidden(true)
-        } else if case .edit(let sound) = mode {
+        } else if case .edit(let sound) = mode, !isKaleidoscope {
           if sound.isCustom,
             let customSoundDataID = sound.customSoundDataID,
             let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID),
@@ -88,10 +88,12 @@ extension SoundSheetForm {
         )
       }
 
-      Toggle(isOn: $loopSound) {
-        Text(
-          "Loop Sound"
-        )
+      if !isKaleidoscope {
+        Toggle(isOn: $loopSound) {
+          Text(
+            "Loop Sound"
+          )
+        }
       }
 
       // Non-looping one-shots are always preset-only, so the toggle locks on
@@ -110,15 +112,17 @@ extension SoundSheetForm {
 
       // Random start only applies to loops (on a one-shot it would cut off the start),
       // so playback ignores it there and the disabled toggle explains why.
-      Toggle(isOn: $randomizeStartPosition) {
-        Text(
-          "Randomize Start"
-        )
-        if !loopSound {
-          Text("Only applies when Loop Sound is on.")
+      if !isKaleidoscope {
+        Toggle(isOn: $randomizeStartPosition) {
+          Text(
+            "Randomize Start"
+          )
+          if !loopSound {
+            Text("Only applies when Loop Sound is on.")
+          }
         }
+        .disabled(!loopSound)
       }
-      .disabled(!loopSound)
 
       // A preset plays at most one music sound, so starting another stops this one.
       // Built-ins take their music tag from sounds.json, so the toggle is disabled for them.
@@ -133,12 +137,12 @@ extension SoundSheetForm {
       .disabled(!isCustomSound)
 
       // Import only: offer re-encoding to AAC to save space. Hidden when there's
-      // nothing to gain. Locked on over the size ceiling to bound memory use.
+      // nothing to gain. Locked on for large files that aren't already AAC or MP3.
       if mode.isAdd, importConvertForced || importConvertEstimate != nil {
         Toggle(isOn: importConvertForced ? .constant(true) : $convertToAACOnImport) {
           Text("Convert to AAC")
           if importConvertForced {
-            Text("Audio files larger than 150 MB must be converted to preserve memory.")
+            Text("Uncompressed and lossless files larger than 150 MB are converted to save space.")
           } else if let estimate = importConvertEstimate {
             Text(
               "Would use about \(estimate.savedFraction.formatted(.percent.precision(.fractionLength(0)))) less space with minimal quality loss."

@@ -44,12 +44,16 @@ private enum IPhonePage: Hashable {
     @State var showingNewPresetConfirmation = false
     @State var showingNewPresetSheet = false
     @State var showingSpatialMixer = false
+    @State var showingAddSound = false
+    @State var showingSaveMix = false
     @State var showingNowPlaying = false
     /// iPhone: the Sound Mixer sheet the floating bar opens over Now Playing.
     @State private var showingMixerSheet = false
     /// The mixer sheet was asked to close while an editor sat on it. It closes
     /// once that editor does, so the editor's unsaved draft isn't thrown away.
     @State private var closesMixerSheetAfterEditor = false
+    /// A Highlights link closed Now Playing or the mixer sheet. Settings opens once it's gone.
+    @State private var opensSettingsAfterDismiss = false
     @State private var showingPageTimer = false
     /// iPhone Duo's cover has a vertical toolbar rail. AirPlay and Timer move onto it.
     @State private var hasToolbarRail = false
@@ -57,6 +61,9 @@ private enum IPhonePage: Hashable {
     @State private var isLandscape = false
     // Insets the Library lists, which the stack's safeAreaBar doesn't reach.
     @State private var nowPlayingBarHeight: CGFloat = 0
+    @State private var onSearchTab = false
+    /// The iPhone Library's chosen tab, kept between launches.
+    @AppStorage("libraryTab") private var libraryTabName = LibraryView.Tab.home.rawValue
     /// The fold in window space (decides the propped-up layout) and in the
     /// playback bar's space (keeps the bar off a bent crease).
     @State private var windowFold = FoldInfo.none
@@ -113,7 +120,8 @@ private enum IPhonePage: Hashable {
         NowPlayingPresentation(
           isPresented: $showingNowPlaying,
           coversFullScreen: isLargeDevice,
-          namespace: nowPlayingNamespace
+          namespace: nowPlayingNamespace,
+          onDismiss: openSettingsIfWaiting
         ) {
           NowPlayingSheet(
             onDismiss: { showingNowPlaying = false },
@@ -148,7 +156,7 @@ private enum IPhonePage: Hashable {
       .onChange(of: showingMixerSheet) { _, showing in
         if !showing { closesMixerSheetAfterEditor = false }
       }
-      .sheet(isPresented: $showingMixerSheet) {
+      .sheet(isPresented: $showingMixerSheet, onDismiss: openSettingsIfWaiting) {
         mixerSheet
           .presentationSizing(.page)
           .presentationDragIndicator(.hidden)
@@ -231,6 +239,10 @@ private enum IPhonePage: Hashable {
           Logger.ui.debug("MixerView: SoundManagementView closed")
         }
       }
+      // `blankie://highlights` opens Settings, which pushes Highlights.
+      .onChange(of: appState.showingSettingsHighlightsPage) { _, showing in
+        if showing { openSettingsForHighlights() }
+      }
       .sheet(isPresented: $showingSettings) {
         SettingsView()
           .presentationSizing(.page)
@@ -249,7 +261,30 @@ private enum IPhonePage: Hashable {
     private var editorIsOpen: Bool {
       soundToEdit != nil || presetToEdit != nil || showingQuickMixEditor
         || showingSpatialMixer || showingNewPresetSheet || showingPageTimer
-        || showingNewPresetConfirmation
+        || showingNewPresetConfirmation || showingAddSound || showingSaveMix
+    }
+
+    /// Settings can't present over another sheet. Now Playing and the mixer sheet close
+    /// first. With an editor, Save Mix (Now Playing hosts its own) or Manage Sounds open,
+    /// the link is dropped so it can't push Highlights later.
+    private func openSettingsForHighlights() {
+      if showingSettings { return }
+      if editorIsOpen || audioManager.isSavingUnsavedMix || showingSoundManagement {
+        appState.showingSettingsHighlightsPage = false
+      } else if showingNowPlaying || showingMixerSheet {
+        opensSettingsAfterDismiss = true
+        showingNowPlaying = false
+        showingMixerSheet = false
+      } else {
+        showingSettings = true
+      }
+    }
+
+    /// The second half of `openSettingsForHighlights`, once the sheet it closed is gone.
+    private func openSettingsIfWaiting() {
+      guard opensSettingsAfterDismiss else { return }
+      opensSettingsAfterDismiss = false
+      showingSettings = true
     }
 
     /// Closes the mixer sheet from code (a layout change, single sound, Quick Mix),
@@ -307,6 +342,12 @@ private enum IPhonePage: Hashable {
             initialSelectedSounds: Set(audioManager.sounds.filter { $0.isSelected }.map(\.fileName))
           )
         }
+        .sheet(isPresented: gated($showingAddSound, hosts)) {
+          MixSoundsPicker()
+        }
+        .saveMixSheet(isPresented: gated($showingSaveMix, hosts))
+        // Now Playing hosts its own prompt while it's up.
+        .unsavedMixPrompt(isActive: hosts && !showingNowPlaying)
         .sheet(item: gated($presetToEdit, hosts)) { preset in
           EditPresetSheet(preset: preset, isPresented: $presetToEdit)
             .modifier(EditorPlacement(layout: currentLayout))
@@ -385,29 +426,121 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     private var iPhoneLayout: some View {
-      // The Library is the root, so it has no back button competing with the
-      // Settings gear. Launch pushes the mixer on top.
-      NavigationStack(path: $iPhonePath) {
-        LibraryView(
-          presentation: .page,
-          onOpenSettings: { showingSettings = true },
-          onSelection: { iPhonePath = [.mixer] },
-          bottomBarHeight: nowPlayingBarHeight
-        )
-        .navigationDestination(for: IPhonePage.self) { _ in
-          if opensNowPlaying {
-            nowPlayingPage(drawsBackdrop: true, showsMixerButton: true)
-          } else {
-            mixerPage
+      // Home holds favorites and mixes. Kaleidoscopes and Sounds each list their own.
+      // Each tab is its own stack with the Library at its root, so the Library has
+      // no back button competing with the Settings gear. Launch pushes the mixer on
+      // top. The tab bar shrinks away on scroll, and the controller rides above it.
+      TabView(selection: iPhoneTabSelection) {
+        ForEach(LibraryView.Tab.allCases) { tab in
+          Tab(tab.title, systemImage: tab.systemImage, value: IPhoneTab.library(tab)) {
+            NavigationStack(path: iPhonePath(for: .library(tab))) {
+              LibraryView(
+                presentation: .page,
+                tab: tab,
+                onOpenSettings: { showingSettings = true },
+                onSelection: { iPhonePath = [.mixer] },
+                // Room for the tab bar and the controller above it.
+                bottomBarHeight: 64
+              )
+              .toolbarVisibility(iPhoneTabBarVisibility, for: .tabBar)
+              .navigationDestination(for: IPhonePage.self) { _ in
+                iPhonePlayerPage
+              }
+            }
+          }
+        }
+        // Search takes the tab bar's separate trailing spot, as in Music.
+        Tab(value: IPhoneTab.search, role: .search) {
+          NavigationStack(path: iPhonePath(for: .search)) {
+            LibrarySearchView(onSelection: { iPhonePath = [.mixer] })
+              .toolbarVisibility(iPhoneTabBarVisibility, for: .tabBar)
+              .navigationDestination(for: IPhonePage.self) { _ in
+                iPhonePlayerPage
+              }
           }
         }
       }
-      // On the stack so the bar persists across the Library and the mixer.
+      .tabBarMinimizeBehavior(.onScrollDown)
+      // Choosing Search puts the cursor straight in its field.
+      .tabViewSearchActivation(.searchTabSelection)
+      // On the Library the tab view carries the controller. The pushed page has its own.
+      .tabViewBottomAccessory(isEnabled: iPhonePath.isEmpty) {
+        NowPlayingBar(showsMixer: !opensNowPlaying) {
+          iPhonePath = [.mixer]
+        }
+        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+      }
+    }
+
+    /// The pushed player covers the tab bar. Set on each tab's root and tied to the
+    /// path, so the bar returns as the player starts to leave, not after it has gone.
+    private var iPhoneTabBarVisibility: Visibility {
+      iPhonePath.isEmpty ? .automatic : .hidden
+    }
+
+    private enum IPhoneTab: Hashable {
+      case library(LibraryView.Tab)
+      case search
+    }
+
+    /// Search is never the tab the app reopens to, so only the Library's are kept.
+    private var iPhoneTabSelection: Binding<IPhoneTab> {
+      Binding(
+        get: { onSearchTab ? .search : .library(libraryTabSelection.wrappedValue) },
+        set: { choice in
+          switch choice {
+          case .library(let tab):
+            onSearchTab = false
+            libraryTabSelection.wrappedValue = tab
+          case .search:
+            onSearchTab = true
+          }
+        })
+    }
+
+    /// Only the tab on screen follows the path, so the mixer is pushed once.
+    private func iPhonePath(for tab: IPhoneTab) -> Binding<[IPhonePage]> {
+      Binding(
+        get: { iPhoneTabSelection.wrappedValue == tab ? iPhonePath : [] },
+        set: { if iPhoneTabSelection.wrappedValue == tab { iPhonePath = $0 } })
+    }
+
+    /// The mixer or player, pushed over the Library. It covers the tab bar.
+    private var iPhonePlayerPage: some View {
+      // A Kaleidoscope is turned by dragging, so the swipe back to the
+      // Library is off while one plays alone. The back button still works.
+      let turnsByDrag = audioManager.singleSound is KaleidoscopeSound
+      return Group {
+        if opensNowPlaying {
+          nowPlayingPage(drawsBackdrop: true, showsMixerButton: true)
+        } else {
+          mixerPage
+        }
+      }
+      .navigationBarBackButtonHidden(turnsByDrag)
+      .toolbar {
+        if turnsByDrag {
+          ToolbarItem(placement: .topBarLeading) {
+            Button {
+              iPhonePath.removeAll()
+            } label: {
+              Label("Back", systemImage: "chevron.backward")
+            }
+            .tint(.primary)
+          }
+        }
+      }
       .nowPlayingBottomBar {
         if !hidesNowPlayingBarForSingleSound {
           nowPlayingBar
         }
       }
+    }
+
+    private var libraryTabSelection: Binding<LibraryView.Tab> {
+      Binding(
+        get: { LibraryView.Tab(rawValue: libraryTabName) ?? .home },
+        set: { libraryTabName = $0.rawValue })
     }
 
     /// On the iPhone Library, a bar tap pushes the mixer. Everywhere else it
@@ -462,7 +595,7 @@ private enum IPhonePage: Hashable {
       }
     }
 
-    private var currentLayout: MixerLayout {
+    var currentLayout: MixerLayout {
       MixerLayout.resolve(isRegularWidth: isLargeDevice, fold: windowFold)
     }
 
@@ -488,9 +621,13 @@ private enum IPhonePage: Hashable {
               if libraryOpen {
                 NowPlayingSheet(
                   backgroundImage: backgroundImage, inline: true, showsActions: false,
-                  onOpenMixer: { iPhonePath = [.mixer] }, actionRowIncludesAirPlay: true
+                  onOpenMixer: { iPhonePath = [.mixer] }, actionRowIncludesAirPlay: true,
+                  onAddSound: { showingAddSound = true }
                 )
                 .environment(\.horizontalSizeClass, .compact)
+                // A Kaleidoscope's glass reaches past this page into the safe areas. It
+                // stops at the fold, so the Library keeps its page.
+                .mask { Rectangle().padding([.vertical, .trailing], -1000) }
               } else {
                 pagesMixer
               }
@@ -541,7 +678,7 @@ private enum IPhonePage: Hashable {
     /// The upright half shows what's playing. The flat half holds the sounds
     /// and controls.
     private var proppedUpLayout: some View {
-      let showsLibrary = proppedShowsLibrary || singleLayoutSound != nil
+      let showsLibrary = proppedShowsLibrary
       return ZStack(alignment: .top) {
         presetBackgroundView
         volumeHUDSuppressor
@@ -550,6 +687,25 @@ private enum IPhonePage: Hashable {
           // does it share the screen with what's playing.
           if showsLibrary && !windowFold.isActive {
             proppedUpLibrary
+          } else if singleLayoutSound is KaleidoscopeSound {
+            // A Kaleidoscope's glass keeps the whole screen, centered on the fold. Seated,
+            // an open Library covers the flat half.
+            NowPlayingSheet(backgroundImage: backgroundImage, inline: true, displayOnly: true)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .overlay {
+                if showsLibrary {
+                  VStack(spacing: 0) {
+                    Color.clear
+                      .frame(height: max(windowFold.frame.maxY, 0))
+                      .allowsHitTesting(false)
+                    proppedUpLibrary
+                  }
+                }
+              }
+          } else if singleLayoutSound != nil && !windowFold.isActive {
+            // A single sound has no tiles, so held flat it gets the whole screen.
+            NowPlayingSheet(backgroundImage: backgroundImage, inline: true, displayOnly: true)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
           } else {
             NowPlayingSheet(backgroundImage: backgroundImage, inline: true, displayOnly: true)
               .frame(height: max(windowFold.frame.minY, 0))
@@ -608,8 +764,11 @@ private enum IPhonePage: Hashable {
 
     @ViewBuilder
     private var proppedUpLower: some View {
-      if proppedShowsLibrary || singleLayoutSound != nil {
+      if proppedShowsLibrary {
         proppedUpLibrary
+      } else if singleLayoutSound != nil {
+        // A single sound has no tiles. With the Library away, the flat half is clear.
+        Color.clear
       } else if audioManager.isQuickMix {
         QuickMixView(columns: 4)
       } else {
@@ -619,28 +778,45 @@ private enum IPhonePage: Hashable {
 
     private var proppedUpBar: some View {
       HStack(spacing: 8) {
-        if singleLayoutSound == nil {
-          Button {
-            proppedShowsLibrary.toggle()
-          } label: {
-            Label(
-              proppedShowsLibrary ? "Sounds" : "Library",
-              systemImage: proppedShowsLibrary ? "square.grid.2x2" : "chevron.backward"
-            )
-            .labelStyle(.iconOnly)
-            .frame(width: 44, height: 44)
-          }
-          .buttonStyle(.glass)
-          .buttonBorderShape(.circle)
-          .tint(.primary)
+        Button {
+          proppedShowsLibrary.toggle()
+        } label: {
+          // A single sound has no tiles to go back to, so its open Library closes.
+          let closes = singleLayoutSound != nil
+          Label(
+            proppedShowsLibrary ? (closes ? "Close" : "Sounds") : "Library",
+            systemImage: proppedShowsLibrary
+              ? (closes ? "xmark" : "square.grid.2x2") : "chevron.backward"
+          )
+          .labelStyle(.iconOnly)
+          .frame(width: 44, height: 44)
         }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .tint(.primary)
         // The timer opens as a popover so it stays on the flat half.
-        NowPlayingBar(style: .bare, showsExpand: false, timerAsPopover: true) {}
+        // A Kaleidoscope's glass fills the screen, so the bar carries its title.
+        NowPlayingBar(
+          style: .bare, showsExpand: false, timerAsPopover: true,
+          showsTitle: singleLayoutSound is KaleidoscopeSound
+        ) {}
         if globalSettings.enableSpatialAudio, singleLayoutSound == nil, !audioManager.isQuickMix {
           Button {
             showingSpatialMixer = true
           } label: {
             Label("Spatial Mix", systemImage: "speaker.wave.1.arrowtriangles.up.right.down.left")
+              .labelStyle(.iconOnly)
+              .frame(width: 44, height: 44)
+          }
+          .buttonStyle(.glass)
+          .buttonBorderShape(.circle)
+          .tint(.primary)
+        }
+        if audioManager.canAddSound {
+          Button {
+            showingAddSound = true
+          } label: {
+            Label("Add Sound", systemImage: "plus")
               .labelStyle(.iconOnly)
               .frame(width: 44, height: 44)
           }
@@ -713,7 +889,8 @@ private enum IPhonePage: Hashable {
             onOpenMixer: showsMixerButton ? { showingMixerSheet = true } : nil,
             actionRowIncludesAirPlay: !hasToolbarRail,
             actionRowIncludesTimer: !hasToolbarRail,
-            favoriteInToolbar: hasToolbarRail
+            favoriteInToolbar: hasToolbarRail,
+            onAddSound: { showingAddSound = true }
           )
         }
       }
@@ -759,6 +936,14 @@ private enum IPhonePage: Hashable {
                 systemImage: starred ? "star.fill" : "star")
             }
             .tint(starred ? accent : .primary)
+          } else if showsFavorite, audioManager.unsavedMix != nil {
+            // An unsaved mix can't be a favorite, so Save takes the star's place.
+            Button {
+              showingSaveMix = true
+            } label: {
+              Label("Save Mix", systemImage: "rectangle.stack.badge.plus")
+            }
+            .tint(.primary)
           }
 
           AirPlayRouteButton(activeColor: accent, inactiveColor: .primary)
@@ -960,12 +1145,15 @@ private enum IPhonePage: Hashable {
     func singleSoundView(for singleSound: Sound) -> some View {
       // Single sound renders the full player inline. Next/previous onto a preset opens
       // the Now Playing sheet.
-      NowPlayingSheet(inline: true, onNavigateToPreset: { swapNowPlaying(showSheet: true) })
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // The mini player is hidden during single sound, so the zoom starts here. The
-        // two are never on screen together, so the id stays unique.
-        .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
-        .transition(.opacity)
+      NowPlayingSheet(
+        inline: true, onNavigateToPreset: { swapNowPlaying(showSheet: true) },
+        onAddSound: { showingAddSound = true }
+      )
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      // The mini player is hidden during single sound, so the zoom starts here. The
+      // two are never on screen together, so the id stays unique.
+      .matchedTransitionSource(id: "nowPlaying", in: nowPlayingNamespace)
+      .transition(.opacity)
     }
 
     /// The mixer beside wide Now Playing: Quick Mix's tiles or the preset's
@@ -1048,16 +1236,17 @@ private enum IPhonePage: Hashable {
     @Binding var isPresented: Bool
     let coversFullScreen: Bool
     let namespace: Namespace.ID
+    let onDismiss: () -> Void
     @ViewBuilder var sheetBody: () -> SheetBody
 
     func body(content: Content) -> some View {
       if coversFullScreen {
-        content.fullScreenCover(isPresented: $isPresented) {
+        content.fullScreenCover(isPresented: $isPresented, onDismiss: onDismiss) {
           sheetBody()
             .navigationTransition(.zoom(sourceID: "nowPlaying", in: namespace))
         }
       } else {
-        content.sheet(isPresented: $isPresented) {
+        content.sheet(isPresented: $isPresented, onDismiss: onDismiss) {
           sheetBody()
             .presentationSizing(.page)
             .presentationDragIndicator(.hidden)

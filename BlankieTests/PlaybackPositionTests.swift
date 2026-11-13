@@ -112,7 +112,8 @@ struct PlaybackPositionTests {
       title: "Fade Probe", systemIconName: "speaker.wave.2",
       fileName: "fireplace", fileExtension: "m4a")
     sound.loadSound()
-    let player = try #require(sound.player, "fireplace.m4a should load")
+    let player = try #require(
+      sound.player as? SoundPlayer, "fireplace.m4a should load a file player")
     defer { sound.unload() }
 
     player.volume = 0.8

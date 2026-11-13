@@ -54,6 +54,11 @@ private struct SoundCreditPopoverContent: View {
 
       if credit.workTitle != nil || credit.author != nil || credit.license != nil {
         VStack(alignment: .leading, spacing: 4) {
+          if credit.isRemix {
+            Text("Remixed From")
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
           // The original work's name. The sound's display name is already visible in the row.
           if let workTitle = credit.workTitle {
             linkOrText(workTitle, url: credit.workUrl, hint: Text("Opens the sound source"))

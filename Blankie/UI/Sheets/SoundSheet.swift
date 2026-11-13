@@ -28,6 +28,10 @@ struct SoundSheet: View {
   @State var importError: Error?
   @State var showingError = false
   @State var isProcessing = false
+  /// Import only: the running import, so Cancel can stop it, and its progress.
+  @State var importTask: Task<Void, Never>?
+  @State var importProgress: CustomSoundManager.ImportProgress?
+  @State var importAttempt: UUID?
   @State var randomizeStartPosition: Bool = true
   @State var normalizeAudio: Bool = true
   @State var volumeAdjustment: Float = 1.0
@@ -155,6 +159,8 @@ struct SoundSheet: View {
           processingOverlay
         }
       }
+      // Closing cancels an import, so only Cancel can stop one, not a stray swipe.
+      .interactiveDismissDisabled(isProcessing)
       .modifier(
         SoundSheetChangeHandlers(
           isPreviewing: $isPreviewing,
@@ -247,6 +253,12 @@ struct SoundSheet: View {
     if isPreviewing {
       Logger.ui.debug("SoundSheet: Stopping preview in onDisappear")
       stopPreview()
+    }
+
+    // Closed mid-import with Cancel: stop it, so it doesn't save the sound or add it to
+    // presets. A finished import clears `importTask` before it dismisses.
+    if importTask != nil {
+      cancelImport()
     }
 
     // Edits here (name, icon, preset-only) change what widgets, Siri, and

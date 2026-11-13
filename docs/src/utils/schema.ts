@@ -97,7 +97,7 @@ export function softwareAppLd(opts?: {
       : {}),
     url: SITE,
     downloadUrl: "https://apps.apple.com/app/blankie/id6740096581",
-    license: "https://opensource.org/license/mit",
+    license: "https://www.gnu.org/licenses/gpl-3.0.html",
     author,
   };
 }

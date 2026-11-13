@@ -164,9 +164,9 @@ extension Sound {
 
     Logger.sounds.debug("Sound: Starting LUFS analysis for custom sound '\(self.fileName)'")
 
-    if let lufsResult = await AudioAnalyzer.analyzeLUFS(at: analysisURL) {
-      let detectedLUFS = lufsResult.lufs
-      let normalizationFactor = lufsResult.normalizationFactor
+    let analysis = await AudioAnalyzer.comprehensiveAnalysis(at: analysisURL)
+    if let detectedLUFS = analysis.lufs {
+      let normalizationFactor = AudioAnalyzer.calculateLUFSNormalizationFactor(lufs: detectedLUFS)
       let soundFileName = fileName
 
       await MainActor.run {
