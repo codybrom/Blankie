@@ -1,0 +1,508 @@
+---
+// Blank(ie) Friday: a parody of over-the-top Black Friday sale pages, for an
+// app that has always been free. Every "deal" on it is true every day.
+import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import { ArrowRight, Check } from "@lucide/astro";
+import appStoreBadge from "../assets/app-store-badge.svg";
+import Comparison from "@/components/Comparison.astro";
+import Button from "@/components/Button.astro";
+import heroDevices from "../assets/hero-devices.png";
+import icon from "../assets/blankie-icon-v2.png";
+import shotSounds from "../assets/mac-window-v2.png";
+import kaleidoscopeLoop from "../assets/kaleidoscope-loop.mp4?url";
+import kaleidoscopePoster from "../assets/kaleidoscope-loop-poster.jpg?url";
+import shotTimer from "../assets/iphone-timer.png";
+import shotWidget from "../assets/guides/control-blankie-anywhere/iphone-quick-mix-widget.png";
+import shotCarPlay from "../assets/carplay-mockup.jpg";
+import shotImport from "../assets/guides/import-sounds-iphone-ipad/iphone-manage-sounds.png";
+
+const title = "Blank(ie) Friday: a deal so hot, it's not";
+const description =
+  "Blankie's biggest sale ever is also its only sale ever. Every sound, every feature and the lifetime unlimited plan are $0, marked down from $0. Offer ends never.";
+
+const appStore =
+  "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+
+// 14-point sticker shape for the "save" burst.
+const burst = `polygon(${Array.from({ length: 28 }, (_, i) => {
+  const r = i % 2 ? 40 : 50;
+  const a = (i / 28) * Math.PI * 2;
+  return `${(50 + r * Math.sin(a)).toFixed(1)}% ${(50 - r * Math.cos(a)).toFixed(1)}%`;
+}).join(",")})`;
+
+const doorbusters = [
+  {
+    name: "All 39 sounds",
+    note: "Rain, waves, fans, four kinds of noise and more",
+    img: shotSounds,
+    alt: "Blankie on Mac with a mix of sound tiles playing",
+  },
+  {
+    name: "Musical Kaleidoscopes",
+    note: "15 of them, new in 2.2 and already marked down",
+    video: { src: kaleidoscopeLoop, poster: kaleidoscopePoster },
+    alt: "The Radiance Kaleidoscope visual in teal, gold and white, slowly moving",
+  },
+  {
+    name: "Sleep timer",
+    note: "Fades out when you do",
+    img: shotTimer,
+    crop: "object-bottom",
+    alt: "Blankie's sleep timer on iPhone",
+  },
+  {
+    name: "Home Screen widgets",
+    note: "Start a mix without opening the app",
+    img: shotWidget,
+    alt: "The Quick Mix widget on the iPhone Home Screen",
+  },
+  {
+    name: "CarPlay",
+    note: "The whole car, no extra charge",
+    img: shotCarPlay,
+    alt: "Blankie on a CarPlay dashboard",
+  },
+  {
+    name: "Your own sounds",
+    note: "Import as many as you like",
+    img: shotImport,
+    alt: "The Manage Sounds list on iPhone with imported sounds",
+  },
+];
+
+const included = [
+  "All 39 sounds",
+  "Unlimited presets",
+  "iPhone, iPad, Mac and CarPlay",
+  "No ads",
+  "No subscriptions",
+  "No accounts",
+  "No tracking",
+];
+const tiers = [
+  { name: "Basic", pitch: "Everything." },
+  { name: "Pro", pitch: "Also everything." },
+  { name: "Lifetime Unlimited", pitch: "Everything, but it sounds fancier." },
+];
+---
+
+<Layout title={title} description={description}>
+  <div class="overflow-hidden">
+    {/* Hero */}
+    <section class="relative px-5 pt-36 pb-16 text-center">
+      <div class="mx-auto max-w-4xl">
+        <p class="inline-block -rotate-2 rounded-md bg-b-yellow px-4 py-1.5 text-sm font-bold tracking-[0.2em] text-midnight uppercase">
+          Blank(ie) Friday starts now!
+        </p>
+        <h1 class="mt-6 text-5xl/[0.98] font-black tracking-tighter text-balance text-fg-1 uppercase sm:text-7xl lg:text-8xl">
+          A deal so hot, <span class="grad-text">it's not!</span>
+        </h1>
+        <p class="mt-5 text-xl font-semibold text-b-yellow sm:text-2xl">
+          We can't make the price any lower!
+        </p>
+
+        <div class="relative mx-auto mt-12 flex w-fit items-end justify-center gap-5">
+          <div class="text-left">
+            <div class="text-sm font-semibold tracking-widest text-fg-3 uppercase">Was</div>
+            <div class="text-5xl font-bold text-fg-3 line-through decoration-b-yellow decoration-4 sm:text-6xl">
+              $0
+            </div>
+          </div>
+          <div class="text-left">
+            <div class="text-sm font-semibold tracking-widest text-b-yellow uppercase">Now only</div>
+            <div class="text-8xl/none font-black tracking-tighter text-fg-1 sm:text-9xl">$0</div>
+          </div>
+          <div
+            class="absolute -top-10 -right-24 hidden size-32 rotate-12 place-content-center bg-b-yellow text-center text-midnight sm:grid"
+            style={`clip-path: ${burst}`}
+          >
+            <span class="text-xs/tight font-bold uppercase">
+              Save<br /><span class="text-2xl font-black">100%</span><br />of $0
+            </span>
+          </div>
+        </div>
+
+        {/* The whole product line, in one honest picture. */}
+        <Image
+          src={heroDevices}
+          alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo"
+          widths={[640, 896, 1792]}
+          sizes="(min-width: 896px) 896px, 100vw"
+          loading="eager"
+          class="mx-auto mt-14 w-full max-w-3xl"
+        />
+
+        {/* The hard sell: arrows, a pulsing button, a stock meter and a guilt-trip way out. */}
+        <div class="mt-14 flex flex-col items-center">
+          <div class="w-full max-w-md">
+            <div class="flex items-baseline justify-between text-xs font-bold tracking-widest text-fg-2 uppercase">
+              <span>Hurry! Deals are (un)limited!</span>
+              <span class="text-b-yellow">∞ of ∞ left</span>
+            </div>
+            <div class="mt-2 h-4 overflow-hidden rounded-full bg-white/10">
+              <div class="bf-stock size-full rounded-full"></div>
+            </div>
+            <p class="mt-2 text-xs text-fg-3">Don't miss out on these incredible, forever-in-a-lifetime deals!</p>
+          </div>
+          <div class="bf-arrows mt-9 flex gap-6 text-4xl leading-none font-black text-b-yellow" aria-hidden="true">
+            <span>↓</span><span>↓</span><span>↓</span><span>↓</span><span>↓</span>
+          </div>
+          <a
+            href={appStore}
+            class="bf-push relative mt-4 block rounded-2xl bg-b-yellow px-8 py-6 text-2xl/tight font-black tracking-tight text-midnight uppercase no-underline sm:px-14 sm:text-4xl/tight"
+          >
+            Yes! Give me everything
+            <span class="block text-base font-bold tracking-widest sm:text-lg">for $0, right now</span>
+          </a>
+          {/* The way out, with the sad moon from the Worse Sleep parody icon. */}
+          <a
+            href="#compare"
+            class="glass mt-7 inline-flex items-center gap-3 rounded-xl bg-white/8 py-2.5 pr-6 pl-3 text-left text-sm font-semibold text-fg-1 no-underline shadow-[0_4px_14px_rgba(0,0,0,0.35)] transition hover:-translate-y-0.5 hover:bg-white/12"
+          >
+            <svg viewBox="13 14 32 32" class="size-10 shrink-0" aria-hidden="true">
+              <defs>
+                <radialGradient id="bf-moon" cx="0.38" cy="0.34" r="0.75">
+                  <stop offset="0" stop-color="#fdfdf8" />
+                  <stop offset="1" stop-color="#c9ced6" />
+                </radialGradient>
+              </defs>
+              <circle cx="29" cy="30" r="16" fill="url(#bf-moon)" />
+              <g fill="none" stroke-linecap="round">
+                <circle cx="24.4" cy="28" r="1.4" fill="#4a5060" stroke="none" />
+                <circle cx="34" cy="28" r="1.4" fill="#4a5060" stroke="none" />
+                <path d="M22.4 31q2 1 4 0M32 31q2 1 4 0" stroke="#a9a1c2" stroke-width="1.2" />
+                <path d="M26.6 37.2q2.6-1.4 5.2 0" stroke="#6a7383" stroke-width="1.5" />
+              </g>
+            </svg>
+            <span>No thanks, I'd rather lie awake wondering when my free trial ends</span>
+          </a>
+        </div>
+
+        <div class="mt-8 flex flex-col items-center gap-3">
+          <a href={appStore} aria-label="Download Blankie on the App Store">
+            <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" loading="eager" />
+          </a>
+        </div>
+      </div>
+    </section>
+
+    {/* Doorbusters */}
+    <section class="border-t border-white/5 px-5 py-20">
+      <div class="mx-auto max-w-5xl">
+        <h2 class="text-center text-3xl font-black tracking-tight text-fg-1 uppercase sm:text-4xl">
+          Doorbusters! <span class="text-fg-3">(There is no door.)</span>
+        </h2>
+        <ul class="mt-10 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
+          {
+            doorbusters.map((item, i) => (
+              <li class="glass relative rounded-2xl p-6">
+                <span
+                  class:list={[
+                    "absolute -top-3 right-4 rounded-md bg-b-yellow px-2.5 py-1 text-[11px] font-black tracking-wider text-midnight uppercase",
+                    i % 2 ? "rotate-3" : "-rotate-3",
+                  ]}
+                >
+                  100% off
+                </span>
+                <div class="-mx-2 -mt-2 mb-5 h-64 overflow-hidden rounded-xl bg-midnight">
+                  {item.video ? (
+                    <video
+                      src={item.video.src}
+                      poster={item.video.poster}
+                      aria-label={item.alt}
+                      width="640"
+                      height="560"
+                      autoplay
+                      muted
+                      loop
+                      playsinline
+                      data-bf-video
+                      class="size-full object-cover"
+                    />
+                  ) : (
+                    <Image
+                      src={item.img}
+                      alt={item.alt}
+                      widths={[400, 800]}
+                      sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
+                      loading="lazy"
+                      class:list={["size-full object-cover", item.crop ?? "object-top"]}
+                    />
+                  )}
+                </div>
+                <h3 class="text-lg font-semibold text-fg-1">{item.name}</h3>
+                <p class="mt-1 text-sm text-fg-2">{item.note}</p>
+                <p class="mt-4 flex items-baseline gap-2.5">
+                  <span class="text-sm text-fg-3">Normally Free</span>
+                  <span class="text-2xl font-black text-b-yellow">Now $0!</span>
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="mt-8 text-center text-sm text-fg-3">
+          Limit infinity per customer. While supplies last, which is forever, because it's software.
+        </p>
+      </div>
+    </section>
+
+    {/* Plans */}
+    <section class="border-t border-white/5 px-5 py-20">
+      <div class="mx-auto max-w-5xl">
+        <h2 class="text-center text-3xl font-black tracking-tight text-fg-1 uppercase sm:text-4xl">
+          Pick the plan that's right for you
+        </h2>
+        <p class="mt-3 text-center text-fg-2">They're all the same plan.</p>
+        <div class="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+          {
+            tiers.map((tier) => (
+              <div class="glass relative rounded-2xl p-7 pt-9">
+                <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-b-yellow px-3 py-1 text-[11px] font-black tracking-wider whitespace-nowrap text-midnight uppercase">
+                  Most popular
+                </span>
+                <h3 class="text-xl font-semibold text-fg-1">{tier.name}</h3>
+                <p class="mt-1 text-sm text-fg-2">{tier.pitch}</p>
+                <p class="mt-5">
+                  <span class="text-5xl font-black tracking-tight text-fg-1">$0</span>
+                  <span class="text-sm text-fg-3"> / forever</span>
+                </p>
+                <ul class="mt-6 grid list-none gap-2.5 p-0 text-sm text-fg-2">
+                  {included.map((line) => (
+                    <li class="flex items-center gap-2.5">
+                      <Check size={16} stroke-width={2.5} class="shrink-0 text-b-yellow" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={appStore}
+                  class="mt-7 block rounded-xl bg-moon px-5 py-3 text-center text-sm font-semibold text-midnight no-underline transition hover:-translate-y-0.5"
+                >
+                  Get {tier.name} for $0
+                </a>
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="border-b-yellow/60 mx-auto mt-14 max-w-xl -rotate-1 rounded-2xl border-2 border-dashed p-6 text-center">
+          <p class="text-sm font-bold tracking-[0.2em] text-fg-3 uppercase">Exclusive coupon</p>
+          <p class="mt-2 text-lg text-fg-1">
+            Use code <strong class="rounded bg-b-yellow px-2 py-0.5 font-black tracking-widest text-midnight">NOTHING</strong> at checkout.
+          </p>
+          <p class="mt-1.5 text-sm text-fg-2">There is no checkout.</p>
+        </div>
+      </div>
+    </section>
+
+    {/* The real comparison from the homepage, under a sale-flyer headline. */}
+    <div class="border-t border-white/5">
+      <Comparison heading="Compare and save! (Save $0.)" />
+    </div>
+
+    {/* The honest part */}
+    <section class="border-t border-white/5 px-5 py-20">
+      <div class="mx-auto max-w-2xl text-center">
+        <Image
+          src={icon}
+          alt="The Blankie app icon, a yellow-to-blue gradient B with a cream moon on midnight navy"
+          width={88}
+          height={88}
+          class="mx-auto mb-6 size-22 rounded-[22%] shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+        />
+        <h2 class="text-3xl font-semibold tracking-tight text-fg-1 sm:text-4xl">Okay, but seriously.</h2>
+        <p class="mt-5 text-lg/relaxed text-fg-2">
+          Blankie is an ambient sound mixer for iPhone, iPad, Mac and CarPlay. It's free today, it was free yesterday and it'll be free next year.
+        </p>
+        <p class="mt-4 text-lg/relaxed text-fg-2">
+          There's no sale because there's nothing to sell you, and nothing to sell about you either.
+        </p>
+        <p class="mt-4 text-lg/relaxed font-semibold text-fg-1">
+          No ads, no subscriptions, no accounts, no tracking.
+        </p>
+        <div class="mt-8 flex flex-col items-center gap-5">
+          <a href={appStore} aria-label="Download Blankie on the App Store">
+            <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" />
+          </a>
+          <Button href="/guides/why-is-blankie-free/">
+            Why is Blankie free? <ArrowRight size={17} stroke-width={1.75} />
+          </Button>
+        </div>
+        <p class="mt-14 text-xs/relaxed text-fg-3">
+          Offer ends never. Void nowhere. No purchase necessary, or possible. Savings of 100% calculated against the regular price of $0. Lifetime Unlimited is not a real plan. Neither are the other two. Blank(ie) Friday may be extended without notice, and has been.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  {/* Fake live activity in the corner: one true fact, then news that has nothing to do with buying. */}
+  <div id="bf-live" class="fixed bottom-4 left-4 z-40 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2.5">
+    <div id="bf-toast" class="bf-toast glass rounded-xl bg-lift px-4 py-3 text-sm text-fg-2" aria-hidden="true" hidden></div>
+    <div class="glass flex items-center gap-3 rounded-xl bg-lift py-3 pr-2 pl-4 text-sm text-fg-1">
+      <span class="bf-dot size-2.5 shrink-0 rounded-full bg-success"></span>
+      <span class="grow"><strong class="font-semibold">1 person</strong> is looking at this deal right now: You!</span>
+      <button
+        id="bf-live-close"
+        type="button"
+        aria-label="Hide the live activity"
+        class="grid size-7 shrink-0 place-content-center rounded-full text-lg leading-none text-fg-3 transition-colors hover:bg-white/10 hover:text-fg-1"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // The Kaleidoscope clip stays on its poster frame when the OS asks to reduce motion.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.querySelectorAll<HTMLVideoElement>("video[data-bf-video]").forEach((v) => {
+        v.autoplay = false;
+        v.pause();
+      });
+    }
+
+    // Pops a random line of "live activity" every few seconds until the corner
+    // is closed: a person, a place and something they're up to.
+    const live = document.getElementById("bf-live");
+    const toast = document.getElementById("bf-toast");
+    const places = [
+      "Toledo 🇺🇸", "Tulsa 🇺🇸", "Boise 🇺🇸", "Duluth 🇺🇸", "Fresno 🇺🇸",
+      "Winnipeg 🇨🇦", "Halifax 🇨🇦", "Leeds 🇬🇧", "Cardiff 🇬🇧",
+      "Hamburg 🇩🇪", "Leipzig 🇩🇪", "Valencia 🇪🇸", "Bilbao 🇪🇸",
+      "Lyon 🇫🇷", "Nantes 🇫🇷", "Debrecen 🇭🇺", "Szeged 🇭🇺",
+      "Bologna 🇮🇹", "Turin 🇮🇹", "Osaka 🇯🇵", "Sapporo 🇯🇵",
+      "Busan 🇰🇷", "Daegu 🇰🇷", "Kraków 🇵🇱", "Gdańsk 🇵🇱",
+      "Porto 🇵🇹", "Braga 🇵🇹", "Izmir 🇹🇷", "Bursa 🇹🇷",
+      "Chengdu 🇨🇳", "Hangzhou 🇨🇳", "Perth 🇦🇺",
+    ];
+    const who = ["Someone", "A person", "Somebody"];
+    const doings = [
+      "is on the toilet listening to Brown Noise",
+      "fell asleep to Fireplace an hour ago",
+      "has had Coffee Shop on since lunch",
+      "just mixed Waves with Warm Piano",
+      "is listening to Train for the cat",
+      "is listening to Fan in a room with a real fan",
+      "has been staring at a Kaleidoscope for a while",
+      "is listening to Summer Night in the middle of winter",
+      "just set a sleep timer and ignored it",
+      "is listening to Laundry Room instead of doing laundry",
+      "paid $0 for Lo-Fi Beats and feels fine about it",
+      "is blowing their nose right now",
+      "can't remember why they walked into the kitchen",
+      "just added nothing to their cart",
+      "has had this tab open for months",
+      "is thinking about soup",
+      "just saved $0 and told no one",
+      "is asleep. Unrelated",
+      "is named Carl.",
+      "looked at this page and nodded",
+      "is wondering whether to read the fine print",
+    ];
+    // Whole lines that need no place. One of these comes up about one time in five.
+    const asides = [
+      "A person who saw this on Threads is very confused right now.",
+      "Someone just scrolled all the way down looking for the catch.",
+      "A person refreshed this page to see if the price changed.",
+    ];
+    const pick = (list: string[]) => list[Math.floor(Math.random() * list.length)];
+    let last = "";
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const show = () => {
+      if (!toast) return;
+      const line = () =>
+        Math.random() < 0.2 ? pick(asides) : `${pick(who)} in ${pick(places)} ${pick(doings)}.`;
+      let text = line();
+      while (text === last) text = line();
+      last = text;
+      toast.textContent = text;
+      toast.hidden = false;
+      requestAnimationFrame(() => toast.classList.add("is-in"));
+      timer = setTimeout(() => {
+        toast.classList.remove("is-in");
+        timer = setTimeout(() => {
+          toast.hidden = true;
+          timer = setTimeout(show, 3500);
+        }, 400);
+      }, 5000);
+    };
+    timer = setTimeout(show, 2500);
+    document.getElementById("bf-live-close")?.addEventListener("click", () => {
+      clearTimeout(timer);
+      live?.remove();
+    });
+  </script>
+
+  <style>
+    /* The pushy bits move unless the visitor asks for less motion. */
+    .bf-arrows span {
+      animation: bf-bounce 0.9s ease-in-out infinite;
+    }
+    .bf-arrows span:nth-child(even) {
+      animation-delay: 0.15s;
+    }
+    .bf-push {
+      animation: bf-pulse 1.6s ease-out infinite;
+    }
+    /* Slanted stripes that slide along the stock meter. One stripe pair is 24px
+       across, which is about 34px along the bar at this angle. */
+    .bf-stock {
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--color-b-yellow) 0 12px,
+        var(--color-warm) 12px 24px
+      );
+      background-size: 33.94px 100%;
+      animation: bf-stripes 0.9s linear infinite;
+    }
+    @keyframes bf-bounce {
+      50% {
+        transform: translateY(0.5rem);
+      }
+    }
+    .bf-toast {
+      opacity: 0;
+      transform: translateY(0.75rem);
+      transition:
+        opacity 0.35s,
+        transform 0.35s;
+    }
+    .bf-toast.is-in {
+      opacity: 1;
+      transform: none;
+    }
+    .bf-dot {
+      animation: bf-blink 1.4s ease-in-out infinite;
+    }
+    @keyframes bf-blink {
+      50% {
+        opacity: 0.3;
+      }
+    }
+    @keyframes bf-stripes {
+      to {
+        background-position-x: 33.94px;
+      }
+    }
+    @keyframes bf-pulse {
+      0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-b-yellow) 85%, transparent);
+      }
+      100% {
+        box-shadow: 0 0 0 1.1rem color-mix(in srgb, var(--color-b-yellow) 0%, transparent);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .bf-arrows span,
+      .bf-stock,
+      .bf-dot,
+      .bf-push {
+        animation: none;
+      }
+      .bf-toast {
+        transition: none;
+      }
+    }
+  </style>
+</Layout>

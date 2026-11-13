@@ -100,7 +100,7 @@
     {
       // The parody app row is a labeled role="group" of tiles, not a form, so
       // a <fieldset> would be the wrong element.
-      "includes": ["src/pages/index.astro"],
+      "includes": ["src/components/Comparison.astro"],
       "linter": { "rules": { "a11y": { "useSemanticElements": "off" } } }
     }
   ]
