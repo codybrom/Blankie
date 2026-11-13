@@ -1,0 +1,186 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { ArrowLeft, Download, Images } from "@lucide/astro";
+import { Image } from "astro:assets";
+import Glow from "@/components/Glow.astro";
+import Lightbox from "@/components/Lightbox.astro";
+import heroPoster from "../../assets/press/blankie-2-2-kaleidoscope.jpg";
+import heroVideo from "../../assets/press/blankie-2-2-kaleidoscope.mp4?url";
+import heroCaptions from "../../assets/press/blankie-2-2-kaleidoscope.vtt?url";
+import iphoneVisual from "../../assets/guides/kaleidoscopes/radiance-iphone.png";
+
+const title =
+  "Blankie 2.2 adds ambient music Kaleidoscopes with interactive visualizations";
+const description =
+  "Blankie 2.2 adds Kaleidoscopes, ever-changing soundscapes with more than 130 tonal layers, and an interactive visual kaleidoscope to the free, open-source ambient sound mixer on iPhone, iPad and Mac.";
+---
+
+<Layout
+  title={title}
+  description={description}
+  image={heroPoster}
+  imageAlt="A visual kaleidoscope of teal, gold and white pieces from Blankie 2.2"
+>
+  <article>
+    <header class="relative pt-33">
+      <Glow
+        class="-top-30 left-1/2 h-120 w-190 -translate-x-1/2"
+        color="var(--color-b-yellow)"
+        pct={7}
+        fade={62}
+      />
+      <div class="relative z-10 mx-auto max-w-3xl px-5">
+        <a
+          class="inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-[0.01em] text-fg-3 no-underline transition-colors hover:text-accent-ink"
+          href="/press/"
+        >
+          <ArrowLeft size={14} stroke-width={2} /> Press kit
+        </a>
+        <div class="mt-7 text-xs font-bold tracking-[0.18em] text-warm uppercase">
+          Press release · Nov. 18, 2026
+        </div>
+        <h1 class="mt-3.5 text-[clamp(34px,5vw,56px)] leading-[1.04] font-semibold tracking-tighter text-balance text-fg-1">
+          Blankie 2.2 adds ambient music Kaleidoscopes with interactive visualizations
+        </h1>
+        <p class="mt-5 max-w-[60ch] text-[clamp(18px,2.2vw,22px)] leading-normal text-fg-2">
+          The free, open-source ambient sound mixer adds 15 Kaleidoscopes, each made of more than 130 tonal layers, and a visual kaleidoscope you can touch on iPhone, iPad and Mac.
+        </p>
+        <div class="mt-6 border-t border-hair-soft pt-5.5 text-[11.5px] font-semibold tracking-[0.08em] text-fg-3 uppercase">
+          For immediate release
+        </div>
+      </div>
+    </header>
+
+    <div
+      class="mx-auto max-w-3xl px-5 pt-9.5 pb-10 [&_strong]:font-semibold [&_strong]:text-fg-1 [&>p]:mb-5.5 [&>p]:text-[17.5px] [&>p]:leading-[1.74] [&>p]:text-[#d4d7ea] [&>p:first-of-type]:text-[19px] [&>p:first-of-type]:text-[#e6e8f2]"
+    >
+      <figure class="mb-8">
+        <video
+          src={heroVideo}
+          poster={heroPoster.src}
+          aria-label="Thirty seconds of the Radiance Kaleidoscope in Blankie 2.2: rings of teal, gold and white pieces moving, with its sound"
+          width="1280"
+          height="720"
+          controls
+          playsinline
+          preload="none"
+          class="block aspect-video w-full rounded-2xl bg-black"
+        >
+          <track kind="captions" src={heroCaptions} srclang="en" label="English" />
+        </video>
+        <figcaption class="mt-2.5 text-center text-sm text-fg-3">Radiance, one of 15 Kaleidoscopes in Blankie 2.2 (best with sound)</figcaption>
+      </figure>
+
+      <p>
+        <span class="font-semibold text-fg-3">TULSA, Okla., Nov. 18, 2026:</span> Blankie
+        2.2 is out today for iPhone, iPad and Mac. The update adds Kaleidoscopes to the open-source ambient sound mixer. They're ever-changing ambient music soundscapes that evolve as you listen, each with a visual kaleidoscope on screen that you can touch. Like every previous release, Blankie 2.2 is completely free.
+      </p>
+
+      <p>
+   Kaleidoscopes are known for making beautiful, constantly changing patterns with the help of mirrors and colorful materials. <strong>The Kaleidoscopes in Blankie</strong> take inspiration from that idea. Each one is made of more than 130 tonal layers, ranging from low hums to soft shimmers, and every layer brightens and fades on its own. Because the layers are always moving independently, there's no loop to notice and you never hear exactly the same combination twice.
+      </p>
+
+      <p>
+        Blankie's musical kaleidoscopes also come with <strong>a visual kaleidoscope</strong> of its own. Play one by itself on iPhone, iPad or Mac and the visual fills the player and moves in time with the sound. Just drag to move it yourself. A tap hides the controls on iPhone, while Mac can take it full screen.
+      </p>
+
+      <figure class="mt-2 mb-7.5 text-center">
+        <a href={iphoneVisual.src} data-zoom data-filename="blankie-2-2-kaleidoscope-iphone.png" class="inline-block cursor-zoom-in">
+          <Image
+            src={iphoneVisual}
+            alt="A kaleidoscope visualization with green, teal, gold and white pieces filling the iPhone screen while the Radiance Kaleidoscope plays"
+            widths={[400, 800]}
+            sizes="18rem"
+            class="mx-auto max-h-112 w-auto rounded-xl"
+          />
+        </a>
+        <figcaption class="mt-2.5 text-sm text-fg-3">Radiance on iPhone with the controls hidden</figcaption>
+      </figure>
+
+      <p>
+        Kaleidoscopes work like every other sound in Blankie. They can go into a saved preset, play in CarPlay and run on a sleep timer.
+      </p>
+
+      <p>
+        There's also more in 2.2 than Kaleidoscopes. Now making a mix is faster and easier than ever. With <strong>any single sound</strong> playing, tapping <strong>+</strong> now shows a menu to add a second one on the spot, and the pair can be saved as a preset or discarded when you're done. On iPhone, <strong>the Library</strong> is now split into Home, Kaleidoscopes and Sounds tabs with a Search tab that can find any preset, Kaleidoscope or sound by name.
+      </p>
+
+      <p>
+        <strong>Importing long recordings</strong> is now faster and more reliable on iPhone and iPad. Importing files that are multiple hours long no longer crashes the app and imports show a progress bar with a Cancel button. And a new <strong>Highlights</strong> page in Settings collects what's new in each update.
+      </p>
+
+      <blockquote class="my-7.5 border-l-[3px] border-warm py-0.5 pl-6">
+        <p class="mb-3.5 text-[20px] leading-[1.52] font-medium tracking-[-0.01em] text-pretty text-white">
+          "I've long wanted to create soundscapes that could evolve on their own, and one day the word 'Kaleidoscope' popped into my head. It felt like the perfect way to describe what I wanted to build, but with a name like that I knew it had to be something you could see and touch, too. I made the visual to go with the sound, but I honestly can't get over how relaxing it is to just sit and play with it. Future versions of Blankie will absolutely keep exploring this idea."
+        </p>
+        <cite class="text-sm font-semibold text-fg-3 not-italic">Cody Bromley, creator of Blankie</cite>
+      </blockquote>
+      <p>
+        First released on Mac in April 2025 and brought to iPhone, iPad and CarPlay in June 2026, Blankie has been downloaded more than 25,000 times across the App Store, GitHub and Homebrew, and deployed to over 1,000 school and organization devices worldwide. It holds a 4.9-out-of-5 global App Store rating, has ranked on App Store charts in 92 countries and has more than 400 stars on GitHub. All 39 built-in sounds and every feature is available for free, with no ads, no subscriptions and no user tracking whatsoever.
+      </p>
+
+      <p>
+        Blankie is available now on the App Store for iPhone, iPad and Mac, as well as on Blankie.rest, GitHub and Homebrew for macOS. It requires iOS/iPadOS 26.4 or later, or macOS 26 or later.
+      </p>
+
+      <div class="mt-8.5 flex flex-wrap gap-3">
+        <a
+          class="inline-flex items-center gap-2.5 rounded-xl bg-moon px-5 py-3 text-sm font-semibold text-midnight no-underline transition hover:-translate-y-0.5"
+          href="https://apps.apple.com/app/blankie/id6740096581"
+        >
+          <Download size={17} stroke-width={1.75} /> Download on the App Store
+        </a>
+        <a
+          class="inline-flex items-center gap-2.5 rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-fg-1 no-underline transition hover:-translate-y-0.5 hover:border-white/30"
+          href="/press/#assets"
+        >
+          <Images size={17} stroke-width={1.75} /> Press images
+        </a>
+      </div>
+
+      <div
+        class="mt-11 grid grid-cols-1 items-start gap-12 border-t border-hair-soft pt-8.5 sm:grid-cols-[1fr_280px]"
+      >
+        <div>
+          <h2 class="mb-3 text-xs font-bold tracking-widest text-warm uppercase">
+            About Blankie
+          </h2>
+          <p class="text-[15.5px] leading-[1.68] text-fg-2">
+            Blankie is a free, open-source ambient sound mixer for iPhone, iPad,
+            Mac and CarPlay. It is built by independent developer Cody Bromley
+            in Tulsa, Oklahoma, with contributors and translators around the
+            world. Blankie includes 39 ambient sounds, lets you
+            import your own audio files and voice memos, plays 100% offline and is
+            translated into 12 languages.
+          </p>
+        </div>
+
+        <div
+          class="text-sm text-fg-2 [&_a]:border-b [&_a]:border-accent-ink/30 [&_a]:text-accent-ink [&_a]:no-underline [&_a:hover]:border-accent-ink"
+        >
+          <div class="text-[11px] font-bold tracking-[0.14em] text-warm uppercase">
+            Media contact
+          </div>
+          <p class="mt-2 mb-4 text-[16px] font-semibold text-fg-1">Cody Bromley</p>
+          <div class="grid gap-2.25">
+            <div>
+              <span class="inline-block min-w-23 text-[11px] font-semibold tracking-[0.08em] text-fg-3 uppercase">
+                Email
+              </span>
+              <a href="mailto:press@blankie.rest">press@blankie.rest</a>
+            </div>
+            <div>
+              <span class="inline-block min-w-23 text-[11px] font-semibold tracking-[0.08em] text-fg-3 uppercase">
+                Press kit
+              </span>
+              <a href="/press/">blankie.rest/press</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-11 mb-2 text-center font-bold tracking-[0.5em] text-fg-3">###</div>
+    </div>
+  </article>
+  <Lightbox />
+</Layout>

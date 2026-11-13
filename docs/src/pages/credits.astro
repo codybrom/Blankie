@@ -29,6 +29,40 @@ interface Sound {
 
 const sounds: Sound[] = (soundsJSON?.sounds as Sound[]) ?? [];
 
+// Kaleidoscopes credit the recording each one was remixed from. The source
+// lives in the recipe file, the same place the app's Sound Credits read it.
+interface KaleidoscopeRecipe {
+  title: string;
+  fileName: string;
+  source: { title: string; author: string; license: string; url: string };
+}
+const recipes = import.meta.glob<KaleidoscopeRecipe>(
+  "../../../Blankie/Resources/Kaleidoscope/*.json",
+  { eager: true, import: "default" },
+);
+const kaleidoscopes: Sound[] = Object.values(recipes)
+  .map((recipe) => ({
+    title: recipe.title,
+    author: recipe.source.author,
+    authorUrl: recipe.source.url.startsWith("https://freesound.org/")
+      ? `https://freesound.org/people/${recipe.source.author}/`
+      : "",
+    license: recipe.source.license,
+    soundUrl: recipe.source.url,
+    soundName: recipe.source.title,
+    fileName: recipe.fileName,
+  }))
+  .sort((a, b) => a.title.localeCompare(b.title));
+
+const soundSections = [
+  { heading: "Sound Credits", note: "", items: sounds },
+  {
+    heading: "Kaleidoscope Credits",
+    note: "Each Kaleidoscope is remixed from the recording listed with it.",
+    items: kaleidoscopes,
+  },
+];
+
 const LICENSE: Record<string, { text: string; url: string }> = {
   cc0: {
     text: "CC0",
@@ -147,12 +181,15 @@ const licenseOf = (id: string) =>
     </section>
 
     <!-- 02 sound credits -->
+    {
+      soundSections.map((section) => (
     <section class="py-8">
       <div class="mx-auto max-w-5xl px-5">
-        <SectionHeader rule heading="Sound Credits" class="mb-5" />
+        <SectionHeader rule heading={section.heading} class="mb-5" />
+        {section.note && <p class="mb-3 text-sm text-fg-3">{section.note}</p>}
         <div class="grid grid-cols-1 gap-x-12 md:grid-cols-2">
           {
-            sounds.map((sound) => {
+            section.items.map((sound) => {
               const lic = licenseOf(sound.license);
               return (
                 <div class="grid grid-cols-[1fr_auto] items-start gap-3.5 border-t border-hair-soft py-3.75 first:border-t-0 md:nth-2:border-t-0">
@@ -182,6 +219,8 @@ const licenseOf = (id: string) =>
         </div>
       </div>
     </section>
+      ))
+    }
 
     <!-- 03 people -->
     <section class="py-8">

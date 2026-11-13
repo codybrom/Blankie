@@ -66,6 +66,7 @@ Blankie isn't the right answer for:
 - [Play Blankie Alongside Music, Podcasts or Audiobooks](https://blankie.rest/guides/mix-with-other-audio/): run ambient sounds under other audio.
 - [Blankie on CarPlay](https://blankie.rest/guides/blankie-carplay/): ambient sounds while you drive.
 - [Blankie on iPhone Duo](https://blankie.rest/guides/blankie-iphone-duo/): how Blankie adapts to each pose.
+- [Kaleidoscopes](https://blankie.rest/guides/kaleidoscopes/): sounds Blankie creates live, and the visual kaleidoscope you can touch.
 - [Spatial Audio Mixing in Blankie](https://blankie.rest/guides/spatial-audio-mixing/): place sounds around you on headphones.
 - [Import Your Own Sounds on iPhone & iPad](https://blankie.rest/guides/import-sounds-iphone-ipad/): add audio from the Files app or iCloud Drive.
 - [Turn Voice Memos Into Ambient Sounds](https://blankie.rest/guides/import-voice-memos/): loop your own recordings.

@@ -19,6 +19,8 @@ import iphoneTimer from "../assets/iphone-timer.png";
 import iphoneLockVideo from "../assets/iphone-lockscreen.mp4?url";
 import iphoneLockPoster from "../assets/iphone-lockscreen-poster.jpg?url";
 import iphoneMask from "../assets/iphone-17-pro-mask.png?url";
+import iphoneKaleidoscopeVideo from "../assets/iphone-kaleidoscope.mp4?url";
+import iphoneKaleidoscopePoster from "../assets/iphone-kaleidoscope-poster.jpg?url";
 import macCustomize from "../assets/mac-customize.png";
 import macMenubar from "../assets/mac-menubar.png";
 import carplayShot from "../assets/carplay-mockup.jpg";
@@ -288,6 +290,14 @@ const appJsonLd = ldGraph(
     path: iphoneLockVideo,
     thumbnailPath: iphoneLockPoster,
     uploadDate: "2026-10-28",
+  }),
+  videoLd({
+    name: "A Kaleidoscope in Blankie on iPhone",
+    description:
+      "A kaleidoscope visualization moves in time with ambient music in Blankie on iPhone.",
+    path: iphoneKaleidoscopeVideo,
+    thumbnailPath: iphoneKaleidoscopePoster,
+    uploadDate: "2026-11-12",
   }),
   itemListLd(
     "Blankie features",
@@ -574,6 +584,45 @@ const typicalAppLimits = [
           <ArrowRight className="size-4" strokeWidth={2} />
         </a>
       </p>
+    </div>
+  </section>
+
+  {/* New in 2.2: Kaleidoscopes */}
+  <section class="relative overflow-hidden border-b border-white/5" id="kaleidoscopes">
+    <div class="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-5 pt-24 lg:grid-cols-[1fr_auto] lg:gap-20">
+      <div class="max-w-xl pb-4 lg:pb-24">
+        <SectionHeader eyebrow="New in Blankie 2.2" heading="Meet Kaleidoscopes." />
+        <p class="mt-5 text-lg/relaxed text-fg-2">
+          Kaleidoscopes are 15 new sounds that Blankie creates live. Each one is built from more than 130 layers of sound that brighten and fade on their own, so there's no loop to notice.
+        </p>
+        <p class="mt-4 text-lg/relaxed text-fg-2">
+          Play one on its own and a visual kaleidoscope moves in time with the sound. Drag to move it yourself. Tap to hide the controls on iPhone, or go full screen on Mac.
+        </p>
+        <a
+          href="/guides/kaleidoscopes/"
+          class="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink no-underline transition-colors hover:text-white"
+        >
+          <span>How Kaleidoscopes work</span>
+          <ArrowRight className="size-4" strokeWidth={2} />
+        </a>
+      </div>
+      {/* Runs off the section's bottom edge, like the Lock Screen video below. */}
+      <div class="relative mx-auto -mb-28 h-136 w-66.5 lg:h-152 lg:w-74.5">
+        <video
+          src={iphoneKaleidoscopeVideo}
+          poster={iphoneKaleidoscopePoster}
+          aria-label="A visual kaleidoscope in greens, teals and golds spinning on iPhone while the Radiance Kaleidoscope plays in Blankie"
+          width="540"
+          height="1104"
+          autoplay
+          muted
+          loop
+          playsinline
+          data-device-video
+          class="block size-full"
+          style={`mask: url(${iphoneMask}) center / 100% 100% no-repeat; -webkit-mask: url(${iphoneMask}) center / 100% 100% no-repeat;`}
+        />
+      </div>
     </div>
   </section>
 

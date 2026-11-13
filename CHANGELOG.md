@@ -9,12 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.2.0] - Unreleased
 
-Blankie 2.2 adds Kaleidoscopes, a new kind of sound that Blankie creates live, with a visual kaleidoscope you can turn. There's also a Library with tabs and search on iPhone, and a new Highlights page in Settings.
+Blankie 2.2 adds Kaleidoscopes, a new kind of sound that Blankie creates live, with a visual kaleidoscope you can touch. There's also a Library with tabs and search on iPhone, and a new Highlights page in Settings.
 
 ### Added
 
 - **Musical Kaleidoscopes** - A kaleidoscope makes endless patterns using mirrors, lenses and colorful glass. Blankie now does something similar with sound. Using more than 130 layers of sound, each one brightening and fading on its own, Blankie's Kaleidoscope keeps the sound shifting into something new. What you hear is created live, no loops, and is best experienced with headphones.
-  - **A visual kaleidoscope to play with too (iPhone and Mac)** - Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that turns in time with the sound. Drag to turn it yourself. On iPhone, tap it to focus and hide the controls, and on Mac go full screen.
+  - **A visual kaleidoscope to play with too (iPhone and Mac)** - Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that moves in time with the sound. Drag to move it yourself. On iPhone, tap it to focus and hide the controls, and on Mac go full screen.
 - **Search the Library (iPhone)** - A new **Search** tab finds any preset, Kaleidoscope or sound by name.
 - **Start a mix from any sound** - Playing one sound on its own? Tap **+** to add another and hear them together. Save it as a preset, or let it go.
 - **Highlights** - Each update's highlights now live in **Settings → Highlights**, and a dot on the Settings button points you there when there's something you haven't read. If Blankie is set to another language, the notes are translated on your device. You can also open the page from a `blankie://highlights` link.
