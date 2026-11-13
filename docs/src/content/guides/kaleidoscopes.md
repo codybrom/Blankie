@@ -1,5 +1,5 @@
 ---
-title: "Kaleidoscopes: Sounds Blankie Creates Live"
+title: "Kaleidoscopes: Endless Ambient Soundscapes"
 description: "What Blankie's Kaleidoscopes are, how to play one, how to play with the visual kaleidoscope on iPhone, iPad and Mac and how to mix a Kaleidoscope with other sounds."
 category: "basics"
 order: 36
@@ -9,11 +9,15 @@ platforms: "iPhone, iPad, Mac and CarPlay"
 
 Kaleidoscopes are known for making beautiful, constantly changing patterns with the help of mirrors and colorful materials. The Kaleidoscopes in Blankie take inspiration from this idea, and create ever-changing soundscapes that evolve as you listen.
 
+{{video:kaleidoscope-iphone}}
+
 ## What you're hearing
 
 In Blankie, a Kaleidoscope is made of more than 130 tonal layers, ranging from low hums to soft shimmers, and everything in between brightening and fading all on its own. Because the layers are always moving independently, there's no loop to notice and you never hear exactly the same combination twice.
 
 Blankie's Kaleidoscopes are slow, soft and musical. They're also immersive and evolving. While not explicitly spatial, the sounds are programmed to move binaurally so that you perceive them as coming from different directions. The best way to experience the full effect is with headphones, but they can still be enjoyed on speakers.
+
+{{audio:radiance}}
 
 The 15 Kaleidoscopes available now are *Air*, *Calm*, *Dawn*, *Depth*, *Dreaming*, *Gentleness*, *Haze*, *Hush*, *Lull*, *Mist*, *Radiance*, *Stillness*, *Undertone*, *Velvet* and *Warmth*.
 
@@ -34,11 +38,11 @@ When you play a Kaleidoscope on its own, a visual kaleidoscope fills the player 
 - **On Mac**, go full screen to give the visual the whole display. It also shows up in the menu bar mixer.
 - **On iPhone Duo**, the visual covers both pages when the phone is open.
 
-![A kaleidoscope visualization with green, teal, gold and white pieces filling the iPhone screen while the Radiance Kaleidoscope plays.](../../assets/guides/kaleidoscopes/radiance-iphone.png "Radiance on iPhone with the controls hidden")
+{{video:kaleidoscope-iphone-hidden}}
 
 Each Kaleidoscope has its own shapes and colors, and that same picture is its artwork on the Lock Screen, in Control Center and in CarPlay.
 
-![The Radiance Kaleidoscope in full screen: rings of teal, gold and white pieces mirrored around the center.](../../assets/guides/kaleidoscopes/radiance-full-screen.png "Radiance in full screen")
+{{video:kaleidoscope-mac-full-screen}}
 
 ## Mix Kaleidoscopes with other sounds
 

@@ -26,6 +26,18 @@ import ipadMockup from "../assets/ipad-mockup.png";
 import iphoneApp1 from "../assets/iphone-mockup-1.png";
 import iphoneApp2 from "../assets/iphone-mockup-2.png";
 import carplayDash from "../assets/carplay-dash.png";
+import kalIphone from "../assets/press/kaleidoscopes/iphone-radiance.png";
+import kalIphoneHidden from "../assets/press/kaleidoscopes/iphone-radiance-controls-hidden.png";
+import kalIpad from "../assets/press/kaleidoscopes/ipad-radiance.png";
+import kalMac from "../assets/press/kaleidoscopes/mac-radiance.png";
+import kalMacFull from "../assets/press/kaleidoscopes/mac-radiance-full-screen.png";
+import kalDuo from "../assets/press/kaleidoscopes/duo-radiance-open.png";
+import kalDevices from "../assets/press/kaleidoscopes/kaleidoscopes-devices.mp4?url";
+import kalDevicesPoster from "../assets/press/kaleidoscopes/kaleidoscopes-devices.jpg";
+import kalVideo from "../assets/press/blankie-2-2-kaleidoscope.mp4?url";
+import kalVideoPoster from "../assets/press/blankie-2-2-kaleidoscope.jpg";
+import kalVideoCaptions from "../assets/press/blankie-2-2-kaleidoscope.vtt?url";
+import kalDevicesCaptions from "../assets/press/kaleidoscopes/kaleidoscopes-devices.vtt?url";
 import duoClosed from "../assets/guides/blankie-iphone-duo/closed.png";
 import duoOpen from "../assets/guides/blankie-iphone-duo/open-flat.png";
 import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
@@ -71,24 +83,24 @@ const facts: { t: string; d?: string; m?: string }[] = [
   {
     t: "Downloads",
     d: "25,000+ all-time",
-    m: "across the App Store, GitHub and Homebrew (Oct. 25, 2026)",
+    m: "across the App Store, GitHub and Homebrew (Nov. 12, 2026)",
   },
   {
     t: "Schools and organizations",
     d: "Deployed to 1,000+ devices worldwide",
-    m: "(Oct. 25, 2026)",
+    m: "(Nov. 12, 2026)",
   },
   {
     t: "Rating",
     d: "4.9 out of 5",
-    m: "global App Store rating (Oct. 25, 2026)",
+    m: "global App Store rating (Nov. 12, 2026)",
   },
   {
     t: "Charts",
-    d: "Ranked in 92 countries",
-    m: "on App Store charts in the 32 days to Oct. 25, 2026",
+    d: "Ranked in 96 App Store regions",
+    m: "on App Store charts in 2026",
   },
-  { t: "GitHub", d: "389 stars", m: "(Oct. 25, 2026)" },
+  { t: "GitHub", d: "404 stars", m: "(Nov. 12, 2026)" },
   {
     t: "License",
     d: "Open source under GPLv3",
@@ -268,6 +280,9 @@ const reviewIds = [
 
 type Asset = {
   img: ImageMetadata;
+  /** Plays this video (with controls) in the tile; img is its poster. */
+  video?: string;
+  captions?: string;
   file: string;
   label: string;
   pad?: boolean;
@@ -332,6 +347,58 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
         img: devicesShot,
         file: "hero-devices.png",
         label: "All devices",
+      },
+    ],
+  },
+  {
+    id: "kaleidoscopes",
+    title: "Kaleidoscopes",
+    items: [
+      {
+        img: kalVideoPoster,
+        video: kalVideo,
+        captions: kalVideoCaptions,
+        file: "press/blankie-2-2-kaleidoscope.mp4",
+        label: "Radiance video, with sound (30 sec)",
+      },
+      {
+        img: kalDevicesPoster,
+        video: kalDevices,
+        captions: kalDevicesCaptions,
+        file: "press/kaleidoscopes/kaleidoscopes-devices.mp4",
+        label: "Every device, no sound (15 sec)",
+      },
+      {
+        img: kalIphone,
+        file: "press/kaleidoscopes/iphone-radiance.png",
+        label: "iPhone",
+        tall: true,
+      },
+      {
+        img: kalIphoneHidden,
+        file: "press/kaleidoscopes/iphone-radiance-controls-hidden.png",
+        label: "iPhone, controls hidden",
+        tall: true,
+      },
+      {
+        img: kalIpad,
+        file: "press/kaleidoscopes/ipad-radiance.png",
+        label: "iPad",
+      },
+      {
+        img: kalDuo,
+        file: "press/kaleidoscopes/duo-radiance-open.png",
+        label: "iPhone Duo, open",
+      },
+      {
+        img: kalMac,
+        file: "press/kaleidoscopes/mac-radiance.png",
+        label: "Mac",
+      },
+      {
+        img: kalMacFull,
+        file: "press/kaleidoscopes/mac-radiance-full-screen.png",
+        label: "Mac, full screen",
       },
     ],
   },
@@ -687,7 +754,7 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
                       : "grid grid-cols-1 items-start gap-4 min-[520px]:grid-cols-2 min-[820px]:grid-cols-3",
                   ]}
                 >
-                  {group.items.map(({ img, file, label, pad, tall }) => (
+                  {group.items.map(({ img, video, captions, file, label, pad, tall }) => (
                     <div
                       class:list={[
                         "overflow-hidden rounded-xl border border-hair bg-glass transition hover:-translate-y-0.5 hover:border-white/20",
@@ -700,6 +767,19 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
                           tall ? "aspect-3/4" : "aspect-16/10",
                         ]}
                       >
+                        {video ? (
+                        <video
+                          src={video}
+                          poster={img.src}
+                          controls
+                          playsinline
+                          preload="none"
+                          aria-label={`${group.title}, ${label}`}
+                          class="max-h-full max-w-full rounded-md"
+                        >
+                          <track kind="captions" src={captions} srclang="en" label="English" />
+                        </video>
+                        ) : (
                         <a href={img.src} data-zoom data-download={img.src} data-filename={`blankie-${file.split("/").pop()}`} class="contents">
                         <Image
                           src={img}
@@ -711,6 +791,7 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
                           ]}
                         />
                         </a>
+                        )}
                       </div>
                       <div class="flex items-center justify-between gap-2.5 border-t border-hair-soft px-4 py-3">
                         <span class="text-sm font-medium text-fg-1">{label}</span>

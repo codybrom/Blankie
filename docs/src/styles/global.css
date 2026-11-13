@@ -297,6 +297,62 @@ body {
   @apply text-fg-3 mt-auto text-left text-xs;
 }
 
+/* Framed screen recordings in guides ({{video:id}}). The frame is in the video,
+   so no border or rounding here. */
+.prose .guide-video {
+  @apply mx-auto my-8 text-center;
+}
+.prose .guide-video video {
+  @apply mx-auto block h-auto w-full;
+}
+.prose .guide-video-phone video {
+  @apply max-w-72;
+}
+.prose .guide-audio {
+  @apply my-8 flex items-center gap-4;
+}
+.prose .guide-audio-art {
+  @apply m-0 size-16 shrink-0 rounded-xl shadow-[0_6px_24px_rgba(76,141,255,0.25)];
+}
+.prose .guide-audio-body {
+  @apply min-w-0 grow;
+}
+.prose .guide-audio figcaption {
+  @apply m-0 flex flex-col text-left;
+}
+.prose .guide-audio figcaption strong {
+  @apply text-fg-1 text-base font-semibold;
+}
+.prose .guide-audio figcaption span {
+  @apply text-fg-3 text-sm;
+}
+.prose .guide-audio audio {
+  @apply mt-2 block w-full;
+  color-scheme: dark;
+}
+.prose .guide-audio-track {
+  @apply mt-2.5 h-1 cursor-pointer overflow-hidden rounded-full bg-white/12;
+}
+.prose .guide-audio-fill {
+  @apply bg-accent-ink h-full w-0 rounded-full;
+}
+.prose .guide-audio-play {
+  @apply bg-moon text-midnight grid size-12 shrink-0 cursor-pointer place-items-center rounded-full transition hover:scale-105;
+}
+.prose .guide-audio-play svg {
+  @apply size-5;
+}
+.prose .guide-audio-icon-pause,
+.prose .guide-audio.is-playing .guide-audio-icon-play {
+  @apply hidden;
+}
+.prose .guide-audio.is-playing .guide-audio-icon-pause {
+  @apply block;
+}
+.prose .guide-video figcaption {
+  @apply text-fg-3 mt-3 text-sm;
+}
+
 /* Base UI Accordion wraps each trigger in an <h3>. Cancel the .prose h3 margins
    that leak in because the accordion lives inside the .prose main. */
 .prose [data-slot="accordion-item"] h3 {

@@ -4,20 +4,22 @@
 // the Blank(ie) Friday page. Add ?blankie-friday to any page to preview it.
 const name = "Blank(ie) Friday";
 const lines = [
-  "A deal so hot, it's not!",
-  "We can't make the price any lower!",
-  "Was $0. Now $0.",
+  "A deal so hot, it's not even real!",
+  "We literally can't make it any cheaper!",
+  "Makes a great gift!",
   "Buy none, get everything free!",
-  "Use code \"_______\" at checkout. There is no checkout.",
-  "Everything must stay!",
+  "Ships in time for Christmas!",
+  "We're passing the savings on to YOU!",
+  "Everything is available!",
   "Hurry! Supplies are unlimited.",
-  "Prices slashed from nothing to nothing!",
-  "Act now! Or later. Who cares!",
+  "It's the best prices of the season!",
+  "Perfect for your impossible to shop for Dad!",
+  "Act now! Or later! The price will still be $0!",
   "Free shipping on all rain sounds.",
-  "Lowest price of the year, technically.",
+  "Our lowest prices ever, technically.",
   "Savings so big, they're theoretical.",
-  "No payments for 0 months. Or ever.",
-  "Offer ends never.",
+  "$0 down and no payments for 0 months. Or ever.",
+  "Offer not available on Android",
 ];
 // The name badge comes back every three lines, and every line gets a star and
 // room to breathe.
@@ -38,9 +40,12 @@ const half = Array.from({ length: 2 }, () => lines).flat();
       [...half, ...half].map((line, i) => (
         <>
           {i % 3 === 0 && (
-            <span class="mx-10 rounded-full bg-midnight px-3.5 py-1 text-xs font-black tracking-[0.2em] text-b-yellow uppercase">
-              {name}
-            </span>
+            <>
+              <span class="mx-10 rounded-full bg-midnight px-3.5 py-1 text-xs font-black tracking-[0.2em] text-b-yellow uppercase">
+                {name}
+              </span>
+              <span class="text-midnight/50">★</span>
+            </>
           )}
           <span class="px-10">{line}</span>
           <span class="text-midnight/50">★</span>

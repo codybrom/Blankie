@@ -7,7 +7,7 @@ import Lightbox from "@/components/Lightbox.astro";
 import heroPoster from "../../assets/press/blankie-2-2-kaleidoscope.jpg";
 import heroVideo from "../../assets/press/blankie-2-2-kaleidoscope.mp4?url";
 import heroCaptions from "../../assets/press/blankie-2-2-kaleidoscope.vtt?url";
-import iphoneVisual from "../../assets/guides/kaleidoscopes/radiance-iphone.png";
+import iphoneVisual from "../../assets/press/kaleidoscopes/iphone-radiance-controls-hidden.png";
 
 const title =
   "Blankie 2.2 adds ambient music Kaleidoscopes with interactive visualizations";
@@ -85,13 +85,13 @@ const description =
       </p>
 
       <figure class="mt-2 mb-7.5 text-center">
-        <a href={iphoneVisual.src} data-zoom data-filename="blankie-2-2-kaleidoscope-iphone.png" class="inline-block cursor-zoom-in">
+        <a href={iphoneVisual.src} data-zoom data-filename="blankie-kaleidoscope-iphone.png" class="inline-block cursor-zoom-in">
           <Image
             src={iphoneVisual}
             alt="A kaleidoscope visualization with green, teal, gold and white pieces filling the iPhone screen while the Radiance Kaleidoscope plays"
             widths={[400, 800]}
             sizes="18rem"
-            class="mx-auto max-h-112 w-auto rounded-xl"
+            class="mx-auto max-h-120 w-auto"
           />
         </a>
         <figcaption class="mt-2.5 text-sm text-fg-3">Radiance on iPhone with the controls hidden</figcaption>

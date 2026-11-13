@@ -19,10 +19,32 @@ import check from "lucide-static/icons/check.svg?raw";
 import x from "lucide-static/icons/x.svg?raw";
 import minus from "lucide-static/icons/minus.svg?raw";
 import triangleAlert from "lucide-static/icons/triangle-alert.svg?raw";
+import radianceSample from "../assets/guides/kaleidoscopes/radiance-sample.m4a?url";
+import radianceArtwork from "../assets/guides/kaleidoscopes/radiance-artwork.jpg?url";
+import iphoneMask from "../assets/frames/iphone-mask.png?url";
+import macMask from "../assets/frames/mac-mask.png?url";
+import iphoneRadiance from "../assets/guides/kaleidoscopes/iphone-radiance.mp4?url";
+import iphoneRadiancePoster from "../assets/guides/kaleidoscopes/iphone-radiance-poster.jpg?url";
+import iphoneRadianceHidden from "../assets/guides/kaleidoscopes/iphone-radiance-hidden.mp4?url";
+import iphoneRadianceHiddenPoster from "../assets/guides/kaleidoscopes/iphone-radiance-hidden-poster.jpg?url";
+import macRadianceFull from "../assets/guides/kaleidoscopes/mac-radiance-full-screen.mp4?url";
+import macRadianceFullPoster from "../assets/guides/kaleidoscopes/mac-radiance-full-screen-poster.jpg?url";
 
 /** Token produced by the block `{{review:...}}` testimonial extension. */
 interface ReviewQuoteToken extends Tokens.Generic {
   type: "reviewQuote";
+  id: string;
+}
+
+/** Token produced by the block `{{audio:...}}` extension. */
+interface AudioToken extends Tokens.Generic {
+  type: "guideAudio";
+  id: string;
+}
+
+/** Token produced by the block `{{video:...}}` extension. */
+interface VideoToken extends Tokens.Generic {
+  type: "guideVideo";
   id: string;
 }
 
@@ -238,6 +260,121 @@ marked.use({
         return renderTestimonial(
           getTestimonial((token as ReviewQuoteToken).id),
         );
+      },
+    },
+  ],
+});
+
+// Audio: `{{audio:id}}` on its own line renders a small player for an entry
+// below: artwork, name, a seekable progress line and a play button. The guide
+// page's script drives it; without JavaScript the <audio> still has controls.
+// An unknown id fails the build.
+const guideAudio: Record<
+  string,
+  { src: string; artwork: string; title: string; subtitle: string }
+> = {
+  radiance: {
+    src: radianceSample,
+    artwork: radianceArtwork,
+    title: "Radiance",
+    subtitle: "2-minute sample, best with headphones",
+  },
+};
+
+marked.use({
+  extensions: [
+    {
+      name: "guideAudio",
+      level: "block",
+      start(src: string) {
+        return src.indexOf("{{audio:");
+      },
+      tokenizer(src: string): AudioToken | undefined {
+        const match = /^\{\{audio:([a-z0-9-]+)\}\}(?:\n+|$)/.exec(src);
+        if (!match) return undefined;
+        return { type: "guideAudio", raw: match[0], id: match[1] };
+      },
+      renderer(token) {
+        const { id } = token as AudioToken;
+        const audio = guideAudio[id];
+        if (!audio) throw new Error(`Unknown guide audio: ${id}`);
+        const title = escapeAttr(audio.title);
+        return `<figure class="guide-audio" data-guide-audio><img src="${audio.artwork}" alt="" width="128" height="128" class="guide-audio-art" /><div class="guide-audio-body"><figcaption><strong>${title}</strong><span>${escapeAttr(audio.subtitle)}</span></figcaption><div class="guide-audio-track" hidden><div class="guide-audio-fill"></div></div><audio src="${audio.src}" controls preload="none"></audio></div><button type="button" class="guide-audio-play" aria-label="Play the ${title} sample" hidden><span class="guide-audio-icon-play">${filled(normalize(play))}</span><span class="guide-audio-icon-pause">${filled(normalize(pause))}</span></button></figure>\n`;
+      },
+    },
+  ],
+});
+
+// Videos: `{{video:id}}` on its own line renders a silent, looping screen
+// recording in its device frame. The frame is baked into the video on black, and
+// the device's silhouette masks the black away. An unknown id fails the build.
+const guideVideos: Record<
+  string,
+  {
+    src: string;
+    poster: string;
+    mask: string;
+    width: number;
+    height: number;
+    device: "phone" | "mac";
+    label: string;
+    caption: string;
+  }
+> = {
+  "kaleidoscope-iphone": {
+    src: iphoneRadiance,
+    poster: iphoneRadiancePoster,
+    mask: iphoneMask,
+    width: 540,
+    height: 1104,
+    device: "phone",
+    label:
+      "The Radiance Kaleidoscope playing on iPhone, its visual moving behind the title and playback controls",
+    caption: "Radiance on iPhone",
+  },
+  "kaleidoscope-iphone-hidden": {
+    src: iphoneRadianceHidden,
+    poster: iphoneRadianceHiddenPoster,
+    mask: iphoneMask,
+    width: 540,
+    height: 1104,
+    device: "phone",
+    label:
+      "The Radiance visual filling the iPhone screen with the controls hidden",
+    caption: "Radiance with the controls hidden",
+  },
+  "kaleidoscope-mac-full-screen": {
+    src: macRadianceFull,
+    poster: macRadianceFullPoster,
+    mask: macMask,
+    width: 1280,
+    height: 832,
+    device: "mac",
+    label:
+      "Radiance in full screen on a MacBook Pro, with a pointer dragging across the visual",
+    caption: "Radiance in full screen on Mac",
+  },
+};
+
+marked.use({
+  extensions: [
+    {
+      name: "guideVideo",
+      level: "block",
+      start(src: string) {
+        return src.indexOf("{{video:");
+      },
+      tokenizer(src: string): VideoToken | undefined {
+        const match = /^\{\{video:([a-z0-9-]+)\}\}(?:\n+|$)/.exec(src);
+        if (!match) return undefined;
+        return { type: "guideVideo", raw: match[0], id: match[1] };
+      },
+      renderer(token) {
+        const { id } = token as VideoToken;
+        const video = guideVideos[id];
+        if (!video) throw new Error(`Unknown guide video: ${id}`);
+        const mask = `url(${video.mask}) center / 100% 100% no-repeat`;
+        return `<figure class="guide-video guide-video-${video.device}"><video src="${video.src}" poster="${video.poster}" aria-label="${escapeAttr(video.label)}" width="${video.width}" height="${video.height}" autoplay muted loop playsinline preload="metadata" data-guide-loop style="mask: ${mask}; -webkit-mask: ${mask};"></video><figcaption>${escapeAttr(video.caption)}</figcaption></figure>\n`;
       },
     },
   ],
