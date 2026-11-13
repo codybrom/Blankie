@@ -57,7 +57,7 @@ const facts: { t: string; d?: string; m?: string }[] = [
     d: "Free.",
     m: "No ads, in-app purchases, subscriptions or accounts.",
   },
-  { t: "Platforms", d: "iPhone, iPad, Mac", m: "(CarPlay supported)" },
+  { t: "Platforms", d: "iPhone, iPad, Mac", m: "and optimized for CarPlay,  HomeView and iPhone Duo" },
   { t: "Requires", d: "iOS/iPadOS 26.4 or later · macOS 26 or later" },
   {
     t: "First released",
@@ -317,6 +317,11 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
       },
     ],
   },
+    {
+    id: "homeview",
+    title: "HomeView",
+    items: guideItems("homeview"),
+  },
   {
     id: "iphone-duo",
     title: "iPhone Duo",
@@ -396,7 +401,7 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
       { img: carplayDash, file: "carplay-dash.png", label: "Dashboard" },
       ...guideItems("carplay"),
     ],
-  },
+  }
 ];
 ---
 
@@ -428,7 +433,7 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
         </h1>
         <p class="mx-auto mt-4.5 max-w-[52ch] text-lg/relaxed text-fg-2">
           Everything you need to write about Blankie, the free and open-source
-          ambient sound mixer for iPhone, iPad, Mac and CarPlay.
+          ambient sound mixer for iPhone, iPad, Mac, CarPlay and HomeView.
         </p>
         <div class="mt-7 flex flex-wrap justify-center gap-3">
           <Button variant="moon" href="mailto:press@blankie.rest">
@@ -469,7 +474,7 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
           class="mt-2.5 mb-10 text-[clamp(24px,3.4vw,34px)] leading-tight font-medium tracking-tight text-balance text-white"
         >
           Blankie is a <span class="text-warm">free and open-source</span> ambient
-          sound mixer for iPhone, iPad, Mac and CarPlay with no ugly ads, no sneaky
+          sound mixer for iPhone, iPad, Mac, CarPlay and HomeView with no ugly ads, no sneaky
           business model and no compromises for your privacy.
         </p>
         <div class="text-[11px] font-semibold tracking-widest text-fg-3 uppercase">

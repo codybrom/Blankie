@@ -411,6 +411,10 @@ try {
     "guides/blankie-iphone-duo/book.png",
     "guides/blankie-iphone-duo/tent.png",
     "guides/blankie-iphone-duo/seated.png",
+    "guides/blankie-homeview/homeview-hero.png",
+    "guides/blankie-homeview/homeview-presets.png",
+    "guides/blankie-homeview/homeview-menu.png",
+    "guides/blankie-homeview/homeview-now-playing.png",
   ];
   // The App Store screenshots, by device in page order.
   for (const device of ["iphone", "ipad", "duo", "mac"]) {

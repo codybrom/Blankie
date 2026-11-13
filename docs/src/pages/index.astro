@@ -57,6 +57,7 @@ import {
   Lock,
   Languages,
   ArrowRight,
+  MonitorSpeaker,
   Moon,
   Timer,
   Download,
@@ -276,7 +277,7 @@ const appJsonLd = ldGraph(
     withRating: true,
     screenshot: {
       path: heroDevices.src,
-      caption: "Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo",
+      caption: "Blankie on HomeView, iPad, Mac, iPhone, CarPlay and iPhone Duo",
     },
   }),
   websiteLd(),
@@ -480,7 +481,15 @@ const typicalAppLimits = [
       class="absolute inset-0 bg-linear-to-b from-navy-deep/80 via-navy-deep/70 to-navy-deep"
     >
     </div>
-    <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-44 pb-20">
+    <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-30 pb-20">
+      <a
+        href="/guides/blankie-homeview/"
+        class="mb-6 inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm font-semibold text-fg-1 no-underline backdrop-blur-sm transition-colors hover:bg-white/10"
+      >
+        <MonitorSpeaker className="size-4 text-accent-ink" strokeWidth={1.75} />
+        <span>Now on Apple HomeView!</span>
+        <span class="inline-flex items-center gap-1 text-accent-ink">Learn more <ArrowRight className="size-3.5" strokeWidth={2} /></span>
+      </a>
       <h1 class="mx-auto max-w-[14ch] text-4xl/[1.02] font-semibold tracking-tighter text-balance sm:text-6xl lg:text-7xl">
         Ambient sounds for <span class="grad-text">sleep and focus.</span>
       </h1>
@@ -489,11 +498,11 @@ const typicalAppLimits = [
         Rest deeper at night. Stay focused during the day.
       </p>
 
-      <!-- Real device family: iPad, Mac, iPhone, CarPlay and iPhone Duo -->
+      <!-- Real device family: HomeView, iPad, Mac, iPhone, CarPlay and iPhone Duo -->
       <div class="mx-auto mt-12 w-full max-w-4xl">
         <Image
           src={heroDevices}
-          alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo"
+          alt="Blankie on HomeView, iPad, Mac, iPhone, CarPlay and iPhone Duo"
           class="w-full"
           widths={[640, 896, 1792]}
           sizes="(min-width: 896px) 896px, 100vw"

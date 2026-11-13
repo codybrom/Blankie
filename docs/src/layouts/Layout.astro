@@ -33,7 +33,7 @@ const {
 const siteUrl = "https://blankie.rest";
 const description =
   customDescription ||
-  "Free, open-source ambient sound mixer for Mac, iPhone, iPad and CarPlay. Layer adjustable sounds like rain, waves and white noise for sleep and focus.";
+  "Free, open-source ambient sound mixer for Mac, iPhone, iPad, CarPlay and HomeView. Layer sounds like rain, waves and white noise for sleep and focus.";
 // Social cards are cropped to the standard 1200×630 JPEG. og:image must be an
 // absolute URL.
 const OG = { width: 1200, height: 630 };
@@ -47,7 +47,7 @@ const social = await getImage({
 const socialSrc = `${siteUrl}${social.src}`;
 const socialAlt =
   customImageAlt ||
-  "Blankie, free ambient sounds for sleep and focus, on a MacBook and an iPhone Duo";
+  "Blankie, free ambient sounds for sleep and focus, on a MacBook, an Apple HomeView and an iPhone Duo";
 const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
 // Noindex pages (404, translation status) get no Markdown twin at build.
 const markdownUrl = noindex
@@ -79,7 +79,7 @@ const markdownUrl = noindex
       noindex={noindex}
       openGraph={{
         basic: {
-          title: `Blankie - ${title}`,
+          title,
           type: "website",
           image: socialSrc,
           url: canonicalUrl,
@@ -98,7 +98,7 @@ const markdownUrl = noindex
       twitter={{
         card: "summary_large_image",
         site: "@blankie",
-        title: `Blankie - ${title}`,
+        title,
         description,
         image: socialSrc,
         imageAlt: socialAlt,

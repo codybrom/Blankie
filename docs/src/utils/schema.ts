@@ -71,7 +71,7 @@ export function softwareAppLd(opts?: {
     "@type": "SoftwareApplication",
     name: "Blankie",
     description:
-      "Free, open-source ambient sound mixer for iPhone, iPad, Mac and CarPlay. Layer adjustable sounds like rain, waves and white noise for sleep and focus.",
+      "Free, open-source ambient sound mixer for iPhone, iPad, Mac, CarPlay and HomeView. Layer sounds like rain, waves and white noise for sleep and focus.",
     operatingSystem:
       "iOS 26.4 or later, macOS 26.0 or later, iPadOS 26.4 or later",
     applicationCategory: "Ambient sound mixer",

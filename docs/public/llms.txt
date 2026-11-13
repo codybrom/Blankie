@@ -1,6 +1,6 @@
 # Blankie
 
-> Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac and CarPlay. Turn on sounds like rain, ocean waves, a crackling fireplace or white noise, give each one its own volume and play the mix to sleep, focus or relax. There are no ads, no subscriptions, no in-app purchases, no accounts and no tracking.
+> Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac, CarPlay and HomeView. Turn on sounds like rain, ocean waves, a crackling fireplace or white noise, give each one its own volume and play the mix to sleep, focus or relax. There are no ads, no subscriptions, no in-app purchases, no accounts and no tracking.
 
 Blankie is made by Cody Bromley, an independent developer. Every feature is free, with nothing locked behind a paywall or trial. All sounds are bundled in the app, so it plays offline, and presets, settings and imported sounds stay on your device.
 
