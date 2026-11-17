@@ -5,6 +5,8 @@ category: "basics"
 order: 42
 updated: 2026-10-27
 platforms: "CarPlay"
+cover: "../../assets/guides/blankie-carplay/carplay-cover.jpg"
+coverAlt: "Blankie on CarPlay: the Sounds tab with Deep Noise playing, and Now Playing for Rainy Night"
 ---
 
 Long drive with a sleeping kid in the back? Highway hum proving to be the *wrong* kind of white noise? Blankie's CarPlay app puts your soundscapes on your dashboard and was built for selecting presets at a glance with a single tap.

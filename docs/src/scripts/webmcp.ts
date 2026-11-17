@@ -42,7 +42,7 @@ const tools: ModelContextTool[] = [
     name: "find_pages",
     title: "Find pages",
     description:
-      "Search blankie.rest for guides and pages about Blankie, the free ambient sound mixer for iPhone, iPad, Mac and CarPlay. Returns each match's title, URL and summary. Leave the query empty to list every page.",
+      "Search blankie.rest for guides and pages about Blankie, the free ambient sound mixer for iPhone, iPad, Mac, CarPlay and HomeView. Returns each match's title, URL and summary. Leave the query empty to list every page.",
     inputSchema: {
       type: "object",
       properties: {

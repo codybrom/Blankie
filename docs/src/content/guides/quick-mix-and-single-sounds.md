@@ -5,6 +5,8 @@ category: "basics"
 order: 35
 updated: 2026-10-27
 platforms: "All Platforms"
+cover: "../../assets/guides/quick-mix-and-single-sounds/quick-mix-cover.jpg"
+coverAlt: "Quick Mix on CarPlay, in the Quick Mix widget and in the app on iPhone"
 ---
 
 In Blankie you can listen to a saved preset, throw together a Quick Mix or play a single sound on its own. Switching to Quick Mix or a single sound never overwrites your saved presets.

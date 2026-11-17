@@ -2,13 +2,19 @@
 import Layout from "../../layouts/Layout.astro";
 import { ArrowLeft, Download } from "@lucide/astro";
 import Glow from "@/components/Glow.astro";
+import cover from "../../assets/press/blankie-2-0-cover.jpg";
 
 const title = "Blankie 2.0, now on iPhone and iPad";
 const description =
   "Blankie 2.0 is here: a major update to the free, open-source ambient sound mixer, now on iPhone and iPad, with CarPlay, custom sounds, a sleep timer and a new Liquid Glass design. 100% free. No ads, no subscriptions, no accounts, no tracking.";
 ---
 
-<Layout title={title} description={description}>
+<Layout
+  title={title}
+  description={description}
+  image={cover}
+  imageAlt="Ambient sounds for your flow state. Blankie 2.0 on Mac, iPhone and iPad, from the launch homepage"
+>
   <article>
     <header class="relative pt-33">
       <Glow

@@ -5,6 +5,8 @@ category: "presets"
 order: 20
 updated: 2026-10-25
 platforms: "All Platforms"
+cover: "../../assets/guides/create-and-manage-presets/presets-cover.jpg"
+coverAlt: "Blankie on Mac with its favorites and presets in the sidebar and Creekside playing, next to the Edit Preset sheet for Rainy Night on iPhone"
 ---
 
 A preset in Blankie is just a mix of sounds with their volumes saved together. Maybe you like the sounds of the ocean and white noise for sleep, rain with piano while reading and sounds of the city paired with café sounds while you work. After you set them up, it takes just one click to switch between them. Every preset can also carry its own artwork and accent color, so the moment you switch mixes the app looks the part too.

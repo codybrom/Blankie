@@ -6,7 +6,8 @@ import {
   getNativeLanguageName,
   getTranslatorCredits,
 } from "../../utils/i18n-helpers";
-import appStoreBadge from "../../assets/app-store-badge.svg";
+import appStoreBadge from "../../assets/brand/app-store-badge.svg";
+import macAppStoreBadge from "../../assets/brand/mac-app-store-badge.svg";
 import FormatString from "../../components/FormatString.astro";
 import { Heart } from "@lucide/astro";
 
@@ -112,7 +113,7 @@ if (langData?.strings) {
 <Layout
   title={title}
   noindex
-  description={`${langName} translation progress and string templates for Blankie, the free ambient sound mixer for Mac, iPhone, iPad and CarPlay.`}
+  description={`${langName} translation progress and string templates for Blankie, the free ambient sound mixer for Mac, iPhone, iPad, CarPlay and HomeView.`}
 >
   <div class="mx-auto max-w-6xl px-5 pt-28 pb-10">
     <div class="mb-6">
@@ -147,19 +148,35 @@ if (langData?.strings) {
           <span class="sr-only">loves</span>
           {getNativeLanguageName(lang || "")}
         </div>
-        <a
-          href="https://apps.apple.com/app/blankie/id6740096581"
-          target="_blank"
-          aria-label="Download Blankie on the App Store"
-          class="transition-opacity hover:opacity-90"
-        >
-          <Image
-            src={appStoreBadge}
-            alt="Download on the App Store"
-            class="inline-block h-10 w-auto select-none"
-            style="user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;"
-          />
-        </a>
+        <div class="flex flex-wrap justify-center gap-3">
+          <a
+            href="https://apps.apple.com/app/blankie/id6740096581?platform=iphone"
+            target="_blank"
+            aria-label="Download Blankie on the App Store"
+            data-app-store
+            class="transition-opacity hover:opacity-90"
+          >
+            <Image
+              src={appStoreBadge}
+              alt="Download on the App Store"
+              class="inline-block h-10 w-auto select-none"
+              style="user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;"
+            />
+          </a>
+          <a
+            href="https://apps.apple.com/app/blankie/id6740096581?platform=mac"
+            target="_blank"
+            aria-label="Download Blankie on the Mac App Store"
+            class="transition-opacity hover:opacity-90"
+          >
+            <Image
+              src={macAppStoreBadge}
+              alt="Download on the Mac App Store"
+              class="inline-block h-10 w-auto select-none"
+              style="user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;"
+            />
+          </a>
+        </div>
       </div>
     </div>
 

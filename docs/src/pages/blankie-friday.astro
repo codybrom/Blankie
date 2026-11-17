@@ -4,17 +4,18 @@
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import { ArrowRight, Check, RotateCcw } from "@lucide/astro";
-import appStoreBadge from "../assets/app-store-badge.svg";
+import appStoreBadge from "../assets/brand/app-store-badge.svg";
+import macAppStoreBadge from "../assets/brand/mac-app-store-badge.svg";
 import Comparison from "@/components/Comparison.astro";
 import Button from "@/components/Button.astro";
 import heroDevices from "../assets/hero-devices.png";
-import icon from "../assets/blankie-icon-v2.png";
-import shotSounds from "../assets/mac-window-v2.png";
-import kaleidoscopeLoop from "../assets/kaleidoscope-loop.mp4?url";
-import kaleidoscopePoster from "../assets/kaleidoscope-loop-poster.jpg?url";
-import shotTimer from "../assets/iphone-timer.png";
+import icon from "../assets/brand/blankie-icon-v2.png";
+import shotSounds from "../assets/devices/mac-window-v2.png";
+import kaleidoscopeLoop from "../assets/devices/kaleidoscope-loop.mp4?url";
+import kaleidoscopePoster from "../assets/devices/kaleidoscope-loop-poster.jpg?url";
+import shotTimer from "../assets/devices/iphone-timer.png";
 import shotWidget from "../assets/guides/control-blankie-anywhere/iphone-quick-mix-widget.png";
-import shotCarPlay from "../assets/carplay-mockup.jpg";
+import shotCarPlay from "../assets/devices/carplay-mockup.jpg";
 import shotImport from "../assets/guides/import-sounds-iphone-ipad/iphone-manage-sounds.png";
 
 const title = "Blank(ie) Friday: a deal so hot, it's not";
@@ -22,7 +23,9 @@ const description =
   "Blankie's biggest sale ever is also its only sale ever. Every sound, every feature and the lifetime unlimited plan are $0, marked down from $0. Offer ends never.";
 
 const appStore =
-  "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+  "https://apps.apple.com/us/app/blankie/id6740096581?platform=iphone&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+const macAppStore =
+  "https://apps.apple.com/us/app/blankie/id6740096581?platform=mac&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
 
 // 14-point sticker shape for the "save" burst.
 const burst = `polygon(${Array.from({ length: 28 }, (_, i) => {
@@ -190,6 +193,7 @@ const defaultPlatform = platforms[2];
           </div>
           <a
             href={appStore}
+            data-app-store
             class="bf-push relative mt-4 block rounded-2xl bg-b-yellow px-8 py-6 text-2xl/tight font-black tracking-tight text-midnight uppercase no-underline sm:px-14 sm:text-4xl/tight"
           >
             Yes! Give me everything
@@ -219,10 +223,13 @@ const defaultPlatform = platforms[2];
           </a>
         </div>
 
-        <div class="mt-8 flex flex-col items-center gap-3">
-          <a href={appStore} aria-label="Download Blankie on the App Store">
-            <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" loading="eager" />
-          </a>
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <a href={appStore} aria-label="Download Blankie on the App Store" data-app-store>
+              <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" loading="eager" />
+            </a>
+            <a href={macAppStore} aria-label="Download Blankie on the Mac App Store">
+              <Image src={macAppStoreBadge} alt="Download on the Mac App Store" class="h-14 w-auto" loading="eager" />
+            </a>
         </div>
       </div>
     </section>
@@ -359,6 +366,7 @@ const defaultPlatform = platforms[2];
                 </ul>
                 <a
                   href={appStore}
+                  data-app-store
                   class:list={[
                     "mt-7 block rounded-xl px-5 py-3 text-center text-sm font-semibold no-underline transition hover:-translate-y-0.5",
                     tier.featured ? "bg-b-yellow text-midnight" : "bg-moon text-midnight",
@@ -451,9 +459,14 @@ const defaultPlatform = platforms[2];
           There's no sale because there's nothing <em>to</em> sell, and with no ads, no subscriptions, no accounts and no tracking Blankie collects nothing to sell about you either.
         </p>
         <div class="mt-8 flex flex-col items-center gap-5">
-          <a href={appStore} aria-label="Download Blankie on the App Store">
-            <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" />
-          </a>
+          <div class="flex flex-wrap justify-center gap-3">
+            <a href={appStore} aria-label="Download Blankie on the App Store" data-app-store>
+              <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" />
+            </a>
+            <a href={macAppStore} aria-label="Download Blankie on the Mac App Store">
+              <Image src={macAppStoreBadge} alt="Download on the Mac App Store" class="h-14 w-auto" />
+            </a>
+          </div>
           <Button href="/guides/why-is-blankie-free/">
             Why is Blankie free? <ArrowRight size={17} stroke-width={1.75} />
           </Button>
