@@ -5,9 +5,13 @@ category: "import"
 order: 2
 updated: 2026-10-27
 platforms: "iPhone and iPad"
+cover: "../../assets/guides/import-sounds-iphone-ipad/import-iphone-cover.jpg"
+coverAlt: "M4A, MP3, WAV, AIFF and FLAC files with an arrow pointing to the Import Sound screen in Blankie on iPhone"
 ---
 
 Blankie ships with a curated library of ambient sounds, but it's just as happy playing yours. If you can save it to the [Files app](https://support.apple.com/guide/iphone/files-basics-iphe9d46e90f/ios), you can turn it into a Blankie sound: something you downloaded, [AirDropped over from another device](https://support.apple.com/guide/iphone/use-airdrop-to-send-items-to-nearby-devices-iphcd8b9f0af/ios) or exported from another app.
+
+![M4A, MP3, WAV, AIFF and FLAC files with an arrow pointing to the Import Sound screen in Blankie on iPhone.](../../assets/guides/import-sounds-iphone-ipad/import-iphone-hero.png)
 
 ## Import a sound
 

@@ -1,6 +1,6 @@
 # Blankie
 
-> Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac and CarPlay. Turn on sounds like rain, ocean waves, a crackling fireplace or white noise, give each one its own volume and play the mix to sleep, focus or relax. There are no ads, no subscriptions, no in-app purchases, no accounts and no tracking.
+> Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac, CarPlay and HomeView. Turn on sounds like rain, ocean waves, a crackling fireplace or white noise, give each one its own volume and play the mix to sleep, focus or relax. There are no ads, no subscriptions, no in-app purchases, no accounts and no tracking.
 
 Blankie is made by Cody Bromley, an independent developer. Every feature is free, with nothing locked behind a paywall or trial. All sounds are bundled in the app, so it plays offline, and presets, settings and imported sounds stay on your device.
 
@@ -34,7 +34,7 @@ Blankie isn't the right answer for:
 
 - Price: free on the App Store, with everything included. No subscription, trial, paywall or in-app purchases.
 - Download: [Blankie on the App Store](https://apps.apple.com/app/blankie/id6740096581) for iPhone, iPad and Mac. Mac users can also install it with Homebrew: `brew install --cask blankie`.
-- Requirements: iPhone with iOS 26.4 or later, iPad with iPadOS 26.4 or later, Mac with macOS 26 or later. CarPlay works through a connected iPhone.
+- Requirements: iPhone with iOS 26.4 or later, iPad with iPadOS 26.4 or later, Mac with macOS 26 or later. CarPlay and Apple HomeView work through a connected iPhone.
 - Built-in sounds (24): Rain, Storm, Wind, Waves, Stream, Birds, Summer Night, Forest, Fireplace, Fan, Train, Airplane, Boat, City, Coffee Shop, Laundry Room, White Noise, Pink Noise, Brown Noise, Green Noise, Ambient Synth, Gentle Guitar, Warm Piano and Lo-Fi Beats.
 - Your own sounds: import M4A, MP3, WAV, FLAC, OGG and more. Imports are loudness-matched to the built-in sounds automatically.
 - Privacy: Blankie collects no personal data, usage analytics or identifiers, and there's no account to create. The only network request downloads animated Lock Screen artwork from Apple's servers.
@@ -66,6 +66,7 @@ Blankie isn't the right answer for:
 - [Play Blankie Alongside Music, Podcasts or Audiobooks](https://blankie.rest/guides/mix-with-other-audio/): run ambient sounds under other audio.
 - [Blankie on CarPlay](https://blankie.rest/guides/blankie-carplay/): ambient sounds while you drive.
 - [Blankie on iPhone Duo](https://blankie.rest/guides/blankie-iphone-duo/): how Blankie adapts to each pose.
+- [Blankie on Apple HomeView](https://blankie.rest/guides/blankie-homeview/): your presets and sounds on HomeView, played from your iPhone.
 - [Spatial Audio Mixing in Blankie](https://blankie.rest/guides/spatial-audio-mixing/): place sounds around you on headphones.
 - [Import Your Own Sounds on iPhone & iPad](https://blankie.rest/guides/import-sounds-iphone-ipad/): add audio from the Files app or iCloud Drive.
 - [Turn Voice Memos Into Ambient Sounds](https://blankie.rest/guides/import-voice-memos/): loop your own recordings.

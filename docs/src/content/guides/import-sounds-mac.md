@@ -5,9 +5,13 @@ category: "import"
 order: 1
 updated: 2026-10-27
 platforms: "Mac"
+cover: "../../assets/guides/import-sounds-mac/import-mac-cover.jpg"
+coverAlt: "M4A, MP3, WAV, AIFF and FLAC files with an arrow pointing to the Blankie app icon"
 ---
 
 Blankie comes with a curated library of ambient sounds, but you're not stuck with just those. Blankie gets even better when you add more. That voice memo of rain you recorded on a camping trip, that song you can't stop listening to, maybe even a class lecture. Whatever audio is already sitting on your Mac, you can add to Blankie.
+
+![M4A, MP3, WAV, AIFF and FLAC files with an arrow pointing to the Blankie app icon.](../../assets/guides/import-sounds-mac/import-mac-hero.png)
 
 ## Import a sound
 

@@ -4,7 +4,7 @@
 
 ### What devices can run Blankie?
 
-Blankie runs on **Mac** (macOS 26 Tahoe or later), **iPhone** (iOS 26.4 or later) and **iPad** (iPadOS 26.4 or later). **CarPlay** is available when you connected a compatible iPhone to a CarPlay-enabled vehicle.
+Blankie runs on **Mac** (macOS 26 Tahoe or later), **iPhone** (iOS 26.4 or later) and **iPad** (iPadOS 26.4 or later). **CarPlay** is available when you connect a compatible iPhone to a CarPlay-enabled vehicle, and [**Apple HomeView**](https://blankie.rest/guides/blankie-homeview/) plays it from your paired iPhone, with nothing extra to install.
 
 ### Can I use Blankie on older versions of macOS?
 

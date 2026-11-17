@@ -5,6 +5,8 @@ category: "basics"
 order: 0
 updated: 2026-10-25
 platforms: "All Platforms"
+cover: "../../assets/guides/get-started/get-started-cover.jpg"
+coverAlt: "Blankie on iPad, Mac, iPhone, CarPlay, Apple HomeView and iPhone Duo"
 ---
 
 Blankie is an ambient sound mixer. Pick the sounds you want (a fan to fall asleep to, rain to focus, a coffee shop for a too-quiet room) and set each to its own volume until the mix is just the way you like it. Getting your first mix set up usually takes about a minute.

@@ -5,6 +5,8 @@ category: "basics"
 order: 40
 updated: 2026-10-27
 platforms: "All Platforms"
+cover: "../../assets/guides/sleep-timer/sleep-timer-cover.jpg"
+coverAlt: "The Sleep Timer on Mac, CarPlay and iPhone, with 44 minutes left on iPhone"
 ---
 
 Falling asleep to rain or ocean waves is lovely. Having it run until morning isn't. Blankie's sleep timer pauses playback for you, so your soundscape clocks out when you do.

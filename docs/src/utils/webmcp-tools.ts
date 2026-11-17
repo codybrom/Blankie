@@ -68,7 +68,7 @@ export function markdownUrlFor(path: string): string {
 export const DOWNLOADS = {
   appStore: {
     url: "https://apps.apple.com/app/blankie/id6740096581",
-    platforms: "iPhone, iPad, Mac and CarPlay",
+    platforms: "iPhone, iPad, Mac, CarPlay and HomeView",
     requires: "iOS or iPadOS 26.4 or later, or macOS 26 or later",
   },
   homebrew: {

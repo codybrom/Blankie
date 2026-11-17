@@ -29,6 +29,7 @@ export default defineConfig({
     "/features": "/",
     "/contributing":
       "https://github.com/codybrom/Blankie/tree/main?tab=contributing-ov-file#contributing-to-blankie",
+    "/testflight": "https://testflight.apple.com/join/XgpBpWv8",
   },
   vite: {
     plugins: [tailwindcss()],

@@ -3,25 +3,26 @@ import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import BackgroundVideo from "../components/BackgroundVideo.astro";
 import SectionHeader from "@/components/SectionHeader.astro";
-import icon from "../assets/blankie-icon-v2.png";
-import wavesVideo from "../assets/waves.mp4";
-import wavesVideoMobile from "../assets/waves-mobile.mp4";
-import wavesPoster from "../assets/waves-poster.jpg";
-import laurelLeft from "../assets/laurel-left.svg";
-import laurelRight from "../assets/laurel-right.svg";
-import appStoreBadge from "../assets/app-store-badge.svg";
+import icon from "../assets/brand/blankie-icon-v2.png";
+import wavesVideo from "../assets/backgrounds/waves.mp4";
+import wavesVideoMobile from "../assets/backgrounds/waves-mobile.mp4";
+import wavesPoster from "../assets/backgrounds/waves-poster.jpg";
+import laurelLeft from "../assets/brand/laurel-left.svg";
+import laurelRight from "../assets/brand/laurel-right.svg";
+import appStoreBadge from "../assets/brand/app-store-badge.svg";
+import macAppStoreBadge from "../assets/brand/mac-app-store-badge.svg";
 // Real 2.0 navy product shots.
 import heroDevices from "../assets/hero-devices.png";
-import macWindow from "../assets/mac-window-v2.png";
-import ipadShot from "../assets/ipad-creekside.png";
-import ipadPreset from "../assets/ipad-preset.png";
-import iphoneTimer from "../assets/iphone-timer.png";
-import iphoneLockVideo from "../assets/iphone-lockscreen.mp4?url";
-import iphoneLockPoster from "../assets/iphone-lockscreen-poster.jpg?url";
-import iphoneMask from "../assets/iphone-17-pro-mask.png?url";
-import macCustomize from "../assets/mac-customize.png";
-import macMenubar from "../assets/mac-menubar.png";
-import carplayShot from "../assets/carplay-mockup.jpg";
+import macWindow from "../assets/devices/mac-window-v2.png";
+import ipadShot from "../assets/devices/ipad-creekside.png";
+import ipadPreset from "../assets/devices/ipad-preset.png";
+import iphoneTimer from "../assets/devices/iphone-timer.png";
+import iphoneLockVideo from "../assets/devices/iphone-lockscreen.mp4?url";
+import iphoneLockPoster from "../assets/devices/iphone-lockscreen-poster.jpg?url";
+import iphoneMask from "../assets/devices/iphone-17-pro-mask.png?url";
+import macCustomize from "../assets/devices/mac-customize.png";
+import macMenubar from "../assets/devices/mac-menubar.png";
+import carplayShot from "../assets/devices/carplay-mockup.jpg";
 import duoSeated from "../assets/guides/blankie-iphone-duo/seated.png";
 import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
 import parodyClam from "../assets/parody/clam.svg";
@@ -30,10 +31,10 @@ import parodySpendel from "../assets/parody/spendel.svg";
 import parodyDarkPattern from "../assets/parody/dark-pattern.svg";
 import parodyNosey from "../assets/parody/nosey.svg";
 import parodyAdNoiseLite from "../assets/parody/ad-noise-lite.svg";
-import bg1 from "../assets/bg-1.png";
-import bg2 from "../assets/bg-2.png";
-import bg3 from "../assets/bg-3.png";
-import bg4 from "../assets/bg-4.png";
+import bg1 from "../assets/backgrounds/bg-1.png";
+import bg2 from "../assets/backgrounds/bg-2.png";
+import bg3 from "../assets/backgrounds/bg-3.png";
+import bg4 from "../assets/backgrounds/bg-4.png";
 import {
   Smartphone,
   Monitor,
@@ -57,6 +58,7 @@ import {
   Lock,
   Languages,
   ArrowRight,
+  MonitorSpeaker,
   Moon,
   Timer,
   Download,
@@ -76,7 +78,9 @@ import { getTestimonial } from "@/utils/testimonials";
 
 const title = "Free ambient sound mixer for iPhone, iPad and Mac";
 const appStore =
-  "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+  "https://apps.apple.com/us/app/blankie/id6740096581?platform=iphone&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+const macAppStore =
+  "https://apps.apple.com/us/app/blankie/id6740096581?platform=mac&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
 
 
 // Award row, each stat flanked by laurel branches. Middle is the marquee.
@@ -276,7 +280,7 @@ const appJsonLd = ldGraph(
     withRating: true,
     screenshot: {
       path: heroDevices.src,
-      caption: "Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo",
+      caption: "Blankie on HomeView, iPad, Mac, iPhone, CarPlay and iPhone Duo",
     },
   }),
   websiteLd(),
@@ -480,7 +484,15 @@ const typicalAppLimits = [
       class="absolute inset-0 bg-linear-to-b from-navy-deep/80 via-navy-deep/70 to-navy-deep"
     >
     </div>
-    <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-44 pb-20">
+    <div class="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-5 pt-30 pb-20">
+      <a
+        href="/guides/blankie-homeview/"
+        class="mb-6 inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm font-semibold text-fg-1 no-underline backdrop-blur-sm transition-colors hover:bg-white/10"
+      >
+        <MonitorSpeaker className="size-4 text-accent-ink" strokeWidth={1.75} />
+        <span>Now on Apple HomeView!</span>
+        <span class="inline-flex items-center gap-1 text-accent-ink">Learn more <ArrowRight className="size-3.5" strokeWidth={2} /></span>
+      </a>
       <h1 class="mx-auto max-w-[14ch] text-4xl/[1.02] font-semibold tracking-tighter text-balance sm:text-6xl lg:text-7xl">
         Ambient sounds for <span class="grad-text">sleep and focus.</span>
       </h1>
@@ -489,11 +501,11 @@ const typicalAppLimits = [
         Rest deeper at night. Stay focused during the day.
       </p>
 
-      <!-- Real device family: iPad, Mac, iPhone, CarPlay and iPhone Duo -->
+      <!-- Real device family: HomeView, iPad, Mac, iPhone, CarPlay and iPhone Duo -->
       <div class="mx-auto mt-12 w-full max-w-4xl">
         <Image
           src={heroDevices}
-          alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo"
+          alt="Blankie on HomeView, iPad, Mac, iPhone, CarPlay and iPhone Duo"
           class="w-full"
           widths={[640, 896, 1792]}
           sizes="(min-width: 896px) 896px, 100vw"
@@ -503,11 +515,19 @@ const typicalAppLimits = [
         />
       </div>
 
-      <div class="mt-10 flex justify-center">
-        <a href={appStore} aria-label="Download Blankie on the App Store">
+      <div class="mt-10 flex flex-wrap justify-center gap-3">
+        <a href={appStore} aria-label="Download Blankie on the App Store" data-app-store>
           <Image
             src={appStoreBadge}
             alt="Download on the App Store"
+            class="h-14 w-auto"
+            loading="eager"
+          />
+        </a>
+        <a href={macAppStore} aria-label="Download Blankie on the Mac App Store">
+          <Image
+            src={macAppStoreBadge}
+            alt="Download on the Mac App Store"
             class="h-14 w-auto"
             loading="eager"
           />
@@ -1048,14 +1068,24 @@ const typicalAppLimits = [
       </p>
       <p class="mt-2 text-sm text-fg-3">Requires iOS/iPadOS 26.4 or later, or macOS 26 or later.</p>
       <div class="mt-9 flex flex-col items-center gap-2">
-        <a href={appStore} aria-label="Download Blankie on the App Store" class="transition hover:-translate-y-px">
-          <Image
-            src={appStoreBadge}
-            alt="Download on the App Store"
-            class="h-14 w-auto"
-            loading="lazy"
-          />
-        </a>
+        <div class="flex flex-wrap justify-center gap-3">
+          <a href={appStore} aria-label="Download Blankie on the App Store" class="transition hover:-translate-y-px" data-app-store>
+            <Image
+              src={appStoreBadge}
+              alt="Download on the App Store"
+              class="h-14 w-auto"
+              loading="lazy"
+            />
+          </a>
+          <a href={macAppStore} aria-label="Download Blankie on the Mac App Store" class="transition hover:-translate-y-px">
+            <Image
+              src={macAppStoreBadge}
+              alt="Download on the Mac App Store"
+              class="h-14 w-auto"
+              loading="lazy"
+            />
+          </a>
+        </div>
         <span class="text-xs text-fg-2">Recommended (Automatically Updates)</span>
       </div>
       <div class="mt-8 flex flex-col items-center gap-2">

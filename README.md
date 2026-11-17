@@ -1,9 +1,9 @@
 <div align="center">
-  <img src="docs/src/assets/blankie-icon-v2.png" alt="Blankie app icon" width="128" height="128"/>
+  <img src="docs/src/assets/brand/blankie-icon-v2.png" alt="Blankie app icon" width="128" height="128"/>
   
 # Blankie
 
-  Ambient sound mixer for Mac, iPad and iPhone with CarPlay support
+  Ambient sound mixer for Mac, iPad and iPhone with CarPlay and HomeView support
   
   <p align="center">
     <img src="https://img.shields.io/badge/macOS%2026+-111111?style=flat&logo=apple&logoColor=white" alt="macOS">
@@ -14,10 +14,10 @@
     <a href="https://formulae.brew.sh/cask/blankie"><img src="https://img.shields.io/badge/Homebrew-Available-FBB040?style=flat&logo=homebrew&logoColor=white" alt="Homebrew"></a>
   </p>
   <p align="center">
-    <a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/app-store-badge.svg" alt="Download on the App Store" width="202"></a>
+    <a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/brand/app-store-badge.svg" alt="Download on the App Store" width="202"></a>
   </p>
   <p align="center">
-    <img src="docs/src/assets/hero-devices.png" alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo" style="max-width: 100%; height: auto;">
+    <img src="docs/src/assets/hero-devices.png" alt="Blankie on iPad, Mac, iPhone, CarPlay, Apple HomeView and iPhone Duo" style="max-width: 100%; height: auto;">
   </p>
 </div>
 
@@ -43,7 +43,7 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 
 ## Features
 
-- **Universal app** for Mac, iPad and iPhone with CarPlay support
+- **Universal app** for Mac, iPad and iPhone with CarPlay and HomeView support
 - **24 high-quality ambient sounds** including rain, waves, fireplace and more
 - **Import your own sounds** with automatic loudness matching
 - **Mix multiple sounds** with individual volume controls
@@ -60,7 +60,7 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 
 ### App Store (Recommended)
 
-<a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/app-store-badge.svg" alt="Download on the App Store" width="165"></a>
+<a href="https://apps.apple.com/us/app/blankie/id6740096581"><img src="docs/src/assets/brand/app-store-badge.svg" alt="Download on the App Store" width="165"></a>
 
 Free for iPhone, iPad and Mac, with automatic updates.
 

@@ -8,7 +8,7 @@
     {
       "identifier": "urn:air:blankie.rest:docs:llms-txt",
       "displayName": "Blankie site index",
-      "description": "What Blankie is, when it fits, key facts and a link to every page on blankie.rest. Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac and CarPlay.",
+      "description": "What Blankie is, when it fits, key facts and a link to every page on blankie.rest. Blankie is a free, open-source ambient sound mixer for iPhone, iPad, Mac, CarPlay and HomeView.",
       "type": "text/markdown",
       "url": "https://blankie.rest/llms.txt",
       "representativeQueries": [
