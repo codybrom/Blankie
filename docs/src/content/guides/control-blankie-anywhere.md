@@ -5,6 +5,8 @@ category: "basics"
 order: 41
 updated: 2026-10-27
 platforms: "All Platforms"
+cover: "../../assets/guides/control-blankie-anywhere/control-cover.jpg"
+coverAlt: "The Mac menu bar player, a Quick Mix widget on iPhone, and a Bedtime shortcut in front"
 ---
 
 Blankie hooks into the system's Now Playing controls. Once your soundscape is going, you rarely need the app in front of you.

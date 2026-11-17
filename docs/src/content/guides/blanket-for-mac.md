@@ -6,6 +6,8 @@ order: 47
 updated: 2026-10-28
 author: "Cody Bromley"
 platforms: "Mac"
+cover: "../../assets/guides/blanket-for-mac/mac-cover.jpg"
+coverAlt: "Blankie on a MacBook playing Creekside, with its five sound tiles"
 ---
 
 If you landed here looking for a way to run Blanket on your Mac, I know the feeling. [Blanket](https://apps.gnome.org/Blanket/) is an open-source ambient sound app by Rafael Mardojai and contributors built for Linux and the GNOME desktop. Linux and macOS are both Unix-like, so you'd might think there's a way it could carry over with some tweaks, but there's not official Mac version of Blanket and that's unlikely to change.
@@ -52,7 +54,7 @@ Blanket hooks into your Linux desktop's media controls, and Blankie does the sam
 
 ## Taking it with you
 
-Blanket was designed for a desktop, so when people started asking me for Blankie on iPhone, I had to rethink a lot of it for your finger. Today Blankie runs on iPhone and iPad with the same sounds, and it plays in the car with [CarPlay](/guides/blankie-carplay/).
+Blanket was designed for a desktop, so when people started asking me for Blankie on iPhone, I had to rethink a lot of it for your finger. Today Blankie runs on iPhone and iPad with the same sounds, plays in the car with [CarPlay](/guides/blankie-carplay/) and plays at home on [Apple HomeView](/guides/blankie-homeview/).
 
 You can get it free from the [App Store](https://apps.apple.com/app/blankie/id6740096581) or with Homebrew (`brew install --cask blankie`). There are no ads, no subscriptions, no accounts and no tracking.
 

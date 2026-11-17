@@ -5,6 +5,8 @@ category: "presets"
 order: 24
 updated: 2026-10-27
 platforms: "All Platforms"
+cover: "../../assets/guides/spatial-audio-mixing/spatial-cover.jpg"
+coverAlt: "Spatial Mix on iPhone, with Rain, Fireplace and Wind placed around the listener"
 ---
 
 With headphones on, Blankie's experimental **Spatial Audio Mixing** lets you place the sounds in a preset around you on a 3D map, such as rain out in front, a fireplace to your left and wind farther back in the trees.

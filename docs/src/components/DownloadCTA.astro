@@ -1,19 +1,39 @@
 ---
 // Closing "download Blankie" card shared by the FAQ and guide-article pages.
-// A caller customizes the blurb (and optionally the title).
+// A caller customizes the blurb (and optionally the title). A guide passes its
+// `platforms` so the matching store's badge comes first.
 import { Image } from "astro:assets";
-import icon from "../assets/blankie-icon-v2.png";
-import appStoreBadge from "../assets/app-store-badge.svg";
+import icon from "../assets/brand/blankie-icon-v2.png";
+import appStoreBadge from "../assets/brand/app-store-badge.svg";
+import macAppStoreBadge from "../assets/brand/mac-app-store-badge.svg";
 
 interface Props {
   title?: string;
   blurb: string;
+  platforms?: string;
 }
 
-const { title = "Blankie is free, forever.", blurb } = Astro.props;
+const { title = "Blankie is free, forever.", blurb, platforms } = Astro.props;
 
-const appStore =
-  "https://apps.apple.com/us/app/blankie/id6740096581?itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+const listing = (platform: string) =>
+  `https://apps.apple.com/us/app/blankie/id6740096581?platform=${platform}&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581`;
+const stores = [
+  {
+    href: listing("iphone"),
+    badge: appStoreBadge,
+    label: "Download Blankie on the App Store",
+    alt: "Download on the App Store",
+  },
+  {
+    href: listing("mac"),
+    badge: macAppStoreBadge,
+    label: "Download Blankie on the Mac App Store",
+    alt: "Download on the Mac App Store",
+  },
+];
+// Always show both, so no reader thinks Blankie skips their device. A Mac guide
+// leads with the Mac App Store.
+if (platforms === "Mac") stores.reverse();
 ---
 
 <section class="mx-auto mt-20 max-w-190 px-5 pb-24">
@@ -26,18 +46,20 @@ const appStore =
         {title}
       </h2>
       <p class="mt-2 max-w-[54ch] text-sm/relaxed text-fg-2">{blurb}</p>
-      <a
-        class="mt-5 inline-block transition hover:-translate-y-px"
-        href={appStore}
-        aria-label="Download Blankie on the App Store"
-      >
-        <Image
-          src={appStoreBadge}
-          alt="Download on the App Store"
-          class="h-11 w-auto"
-          loading="lazy"
-        />
-      </a>
+      <div class="mt-5 flex flex-wrap gap-3">
+        {
+          stores.map(({ href, badge, label, alt }) => (
+            <a
+              class="inline-block transition hover:-translate-y-px"
+              href={href}
+              aria-label={label}
+              data-app-store={badge === appStoreBadge ? "" : undefined}
+            >
+              <Image src={badge} alt={alt} class="h-11 w-auto" loading="lazy" />
+            </a>
+          ))
+        }
+      </div>
     </div>
     <Image
       src={icon}

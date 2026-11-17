@@ -5,6 +5,8 @@ category: "basics"
 order: 43
 updated: 2026-10-27
 platforms: "iPhone Duo"
+cover: "../../assets/guides/blankie-iphone-duo/duo-cover.jpg"
+coverAlt: "Blankie on iPhone Duo seated, open like a book on Golden Hour, and standing like a tent"
 ---
 
 Blankie adapts its layout to how you hold or set down iPhone Duo, and your audio keeps playing when you fold, open or close the display.

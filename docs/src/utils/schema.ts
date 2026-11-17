@@ -1,7 +1,7 @@
 // JSON-LD builders for the content pages. Emitted via
 // <script is:inline type="application/ld+json"> in the page templates.
 
-import blankieLogo from "../assets/blankie-icon-v2.png";
+import blankieLogo from "../assets/brand/blankie-icon-v2.png";
 import { SOCIAL_LINKS } from "./socials";
 
 const SITE = "https://blankie.rest";
