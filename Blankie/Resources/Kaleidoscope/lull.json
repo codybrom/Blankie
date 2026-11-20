@@ -2,6 +2,7 @@
   "title": "Lull",
   "fileName": "lull",
   "glassSeed": "kaleidoscope-slow",
+  "glassColors": ["#DB758F", "#A87AC2", "#F5D1CC", "#F7EDF0"],
   "systemIconName": "rays",
   "lufs": -21.7,
   "source": {

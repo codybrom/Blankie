@@ -883,7 +883,11 @@ struct LibraryView: View {
           libraryList
         #else
           // A stack of its own, so Kaleidoscopes can push a list onto the sidebar.
-          NavigationStack { libraryList.listStyle(.sidebar) }
+          NavigationStack {
+            libraryList.listStyle(.sidebar)
+              .scrollContentBackground(.hidden)
+              .background(sidebarMaterial)
+          }
         #endif
       case .page:
         libraryList
@@ -958,11 +962,22 @@ struct LibraryView: View {
         .contentMargins(.bottom, bottomBarHeight + 8, for: .scrollContent)
         .environment(\.colorScheme, .dark)
     case .sidebar:
-      list.listStyle(.sidebar)
+      #if os(macOS)
+        list.listStyle(.sidebar)
+      #else
+        list.listStyle(.sidebar)
+          .scrollContentBackground(.hidden)
+          .background(sidebarMaterial)
+      #endif
     case .sheet, .menuBar:
       list
     }
   }
+
+  #if !os(macOS)
+    /// Keeps the iPad sidebar's rows readable when bright artwork or a Kaleidoscope sits behind it.
+    private var sidebarMaterial: Material { .thickMaterial }
+  #endif
 
   /// Every Kaleidoscope by name, starred or not.
   private var allKaleidoscopes: [Sound] {

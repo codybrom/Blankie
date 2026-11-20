@@ -17,6 +17,9 @@ struct KaleidoscopeRecipe: Decodable, Sendable {
   /// Any word or phrase. The same seed always grows the same glass for the sound's
   /// picture: its colors, its mirrors and its pieces. Without one, the file name is used.
   var glassSeed: String?
+  /// The glass's own colors, as hex values: three or more for the colored pieces,
+  /// then one for the clear glass. Without them, the seed picks a set.
+  var glassColors: [String]? = nil
   var systemIconName: String
   var lufs: Float
   var source: Source
@@ -35,7 +38,8 @@ struct KaleidoscopeRecipe: Decodable, Sendable {
     var title: String
     var author: String
     var license: String
-    var url: String
+    /// Where the recording can be found. Left out when it isn't published anywhere.
+    var url: String?
   }
 
   /// One register of the sound. The defaults play its motion as written.
@@ -92,7 +96,9 @@ struct KaleidoscopeRecipe: Decodable, Sendable {
           paceSec: layer.wobblePaceSec, slowPoints: points
         ).map { $0 * wobbleDB }
       }
-      guard loopSec > 0, !(layer.arc.isEmpty && wander.isEmpty && flicker.isEmpty) else { return [] }
+      guard loopSec > 0, !(layer.arc.isEmpty && wander.isEmpty && flicker.isEmpty) else {
+        return []
+      }
       let gains = (0..<loopSec).map { second -> Double in
         let position = Double(second) / Double(loopSec)
         let decibels =
@@ -114,7 +120,9 @@ struct KaleidoscopeRecipe: Decodable, Sendable {
     ) -> [Double] {
       guard loopSec > 1 else { return [Double](repeating: 0, count: max(0, loopSec)) }
       // FNV-1a turns the seed into the generator's starting state.
-      var state = seed.utf8.reduce(UInt64(0xCBF2_9CE4_8422_2325)) { ($0 ^ UInt64($1)) &* 0x100_0000_01B3 }
+      var state = seed.utf8.reduce(UInt64(0xCBF2_9CE4_8422_2325)) {
+        ($0 ^ UInt64($1)) &* 0x100_0000_01B3
+      }
       func gaussian() -> Double {
         let radius = sqrt(-2 * log(max(KaleidoscopePlayer.nextUnit(&state), 1e-12)))
         return radius * cos(2 * .pi * KaleidoscopePlayer.nextUnit(&state))
@@ -146,7 +154,8 @@ struct KaleidoscopeRecipe: Decodable, Sendable {
         decibels[second] -= value(of: slow, at: Double(second) / Double(loopSec))
       }
       let mean = decibels.reduce(0, +) / Double(loopSec)
-      let spread = (decibels.reduce(0) { $0 + ($1 - mean) * ($1 - mean) } / Double(loopSec)).squareRoot()
+      let spread = (decibels.reduce(0) { $0 + ($1 - mean) * ($1 - mean) } / Double(loopSec))
+        .squareRoot()
       return decibels.map { ($0 - mean) / max(spread, 1e-9) }
     }
 
@@ -162,13 +171,14 @@ struct KaleidoscopeRecipe: Decodable, Sendable {
 
   /// Low to high register, which is also their default order.
   static let bundledFileNames = [
-    "undertone", "depth", "haze", "calm", "stillness", "dawn", "gentleness", "lull", "velvet",
-    "dreaming", "warmth", "hush", "radiance", "air", "mist",
+    "beginnings", "undertone", "depth", "dusk", "ease", "stillness", "dawn", "gentleness", "lull",
+    "velvet", "dreaming", "warmth", "hush", "radiance", "air", "mist",
   ]
 
   /// The recipes in the main bundle, decoded once. Empty where they aren't bundled
   /// (the widget extension).
-  static let bundled: [KaleidoscopeRecipe] = bundledFileNames.compactMap { name -> KaleidoscopeRecipe? in
+  static let bundled: [KaleidoscopeRecipe] = bundledFileNames.compactMap {
+    name -> KaleidoscopeRecipe? in
     guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { return nil }
     do {
       return try JSONDecoder().decode(KaleidoscopeRecipe.self, from: Data(contentsOf: url))

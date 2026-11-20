@@ -52,7 +52,7 @@ class SoundCreditsManager: ObservableObject {
           soundName: recipe.source.title,
           author: recipe.source.author,
           license: License(rawValue: recipe.source.license.lowercased()) ?? .cc0,
-          soundUrl: URL(string: recipe.source.url)
+          soundUrl: recipe.source.url.flatMap { URL(string: $0) }
         )
       }
     } catch {

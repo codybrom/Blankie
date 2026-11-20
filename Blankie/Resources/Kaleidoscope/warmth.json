@@ -2,6 +2,7 @@
   "title": "Warmth",
   "fileName": "warmth",
   "glassSeed": "kaleidoscope-warm",
+  "glassColors": ["#FA9E38", "#EB5C42", "#F2739E", "#FAEDDB"],
   "systemIconName": "sunset.fill",
   "lufs": -23.91,
   "source": {

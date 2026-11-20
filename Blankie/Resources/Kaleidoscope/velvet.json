@@ -2,6 +2,7 @@
   "title": "Velvet",
   "fileName": "velvet",
   "glassSeed": "kaleidoscope-soft",
+  "glassColors": ["#BD1A3D", "#A82980", "#751F5C", "#DBC2CC"],
   "systemIconName": "sparkles",
   "lufs": -25.36,
   "source": {

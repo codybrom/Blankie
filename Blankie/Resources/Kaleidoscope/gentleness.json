@@ -2,6 +2,7 @@
   "title": "Gentleness",
   "fileName": "gentleness",
   "glassSeed": "kaleidoscope-gentle",
+  "glassColors": ["#FCBD7A", "#F0808F", "#B8D185", "#FAF2E6"],
   "systemIconName": "leaf.fill",
   "lufs": -23.58,
   "source": {

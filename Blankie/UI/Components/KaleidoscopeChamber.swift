@@ -42,6 +42,18 @@ nonisolated struct KaleidoscopeChamber {
     [[0.55, 0.52, 0.50], [0.95, 0.80, 0.35], [0.10, 0.66, 0.70], [0.93, 0.93, 0.93]],
   ]
 
+  /// Reads a recipe's glass colors, written like "#F2A82E": three or more for the
+  /// colored pieces, then one for the clear glass. Nil unless every one is well formed.
+  static func colors(fromHex hex: [String]?) -> [[Float]]? {
+    guard let hex, hex.count >= 4 else { return nil }
+    let colors = hex.compactMap { text -> [Float]? in
+      let digits = text.hasPrefix("#") ? String(text.dropFirst()) : text
+      guard digits.count == 6, let value = UInt32(digits, radix: 16) else { return nil }
+      return [16, 8, 0].map { Float((value >> $0) & 0xFF) / 255 }
+    }
+    return colors.count == hex.count ? colors : nil
+  }
+
   let state: KaleidoscopePlayer.RenderState
   let pieces: [Piece]
   let folds: Int
@@ -62,7 +74,9 @@ nonisolated struct KaleidoscopeChamber {
     folds = [6, 7, 8][Int(seed % 3)]
     // About one turn every minute and a half.
     turnRate = recipe.driftSpeed * 2 * .pi / 90
-    let palette = Self.palettes[Int((seed >> 16) % UInt64(Self.palettes.count))]
+    let palette =
+      Self.colors(fromHex: recipe.glassColors)
+      ?? Self.palettes[Int((seed >> 16) % UInt64(Self.palettes.count))]
     wash = palette[0]
     motionClock = Self.motionClock(for: state)
 
@@ -83,7 +97,8 @@ nonisolated struct KaleidoscopeChamber {
               // Sizes stay within about three to one, so nothing is a speck.
               radius: (0.115 - 0.05 * height) * (1 - 0.02 * Double(rank))
                 * (1 - 0.06 * Double(copy)),
-              color: clear ? palette[3] : palette[(index + rank + copy) % 3],
+              color: clear
+                ? palette[palette.count - 1] : palette[(index + rank + copy) % (palette.count - 1)],
               kind: kinds[(index + copy) % kinds.count],
               seed: unit(),
               depth: min(max(1 - height * 0.7 - unit() * 0.3, 0), 1),
@@ -278,10 +293,15 @@ nonisolated final class KaleidoscopeTumbler {
   }
 
   /// Steps the glass up to a moment, given how far the chamber has turned by then.
-  func advance(to date: Date, turn: Double) {
+  /// Held still, the glass stays where it lies and takes up the next turn from there.
+  func advance(to date: Date, turn: Double, holdsStill: Bool = false) {
     defer {
       lastDate = date
       lastTurn = turn
+    }
+    guard !holdsStill else {
+      turnSpeed = 0
+      return
     }
     guard let lastDate else { return }
     let elapsed = min(date.timeIntervalSince(lastDate), 0.1)

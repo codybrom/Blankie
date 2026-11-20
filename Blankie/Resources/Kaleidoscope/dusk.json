@@ -1,7 +1,8 @@
 {
-  "title": "Haze",
-  "fileName": "haze",
+  "title": "Dusk",
+  "fileName": "dusk",
   "glassSeed": "kaleidoscope-hazy",
+  "glassColors": ["#FA9E5C", "#DB7594", "#6B61BD", "#F5E6E0"],
   "systemIconName": "cloud.fog.fill",
   "lufs": -24.43,
   "source": {

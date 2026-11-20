@@ -1,7 +1,8 @@
 {
-  "title": "Calm",
-  "fileName": "calm",
+  "title": "Ease",
+  "fileName": "ease",
   "glassSeed": "kaleidoscope-calm",
+  "glassColors": ["#7ABD8F", "#8FBDE6", "#C2B8EB", "#EDF5F2"],
   "systemIconName": "cloud.moon.fill",
   "lufs": -24.25,
   "source": {

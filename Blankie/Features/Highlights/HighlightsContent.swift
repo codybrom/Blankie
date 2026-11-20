@@ -80,13 +80,13 @@ enum Highlights {
     HighlightItem(
       systemImage: "hand.draw", title: "A visual kaleidoscope to play with too",
       detail:
-        "Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that turns in time with the sound. Drag to turn it yourself, or tap it to focus and hide the controls.",
+        "Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that moves in time with the sound. Drag to spin it yourself, or tap it to focus and hide the controls.",
       platforms: [.iPhone]
     ),
     HighlightItem(
       systemImage: "hand.draw", title: "A visual kaleidoscope to play with too",
       detail:
-        "Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that turns in time with the sound. Drag to turn it yourself, or go full screen.",
+        "Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that moves in time with the sound. Drag to spin it yourself, or go full screen.",
       platforms: [.mac]
     ),
     HighlightItem(

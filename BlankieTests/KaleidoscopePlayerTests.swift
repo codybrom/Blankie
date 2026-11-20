@@ -59,8 +59,10 @@ import Testing
     let recipes = KaleidoscopeRecipe.bundled
     #expect(recipes.map(\.fileName) == KaleidoscopeRecipe.bundledFileNames)
     for recipe in recipes {
-      #expect(recipe.source.author == "Matio888")
-      #expect(License(rawValue: recipe.source.license.lowercased()) == .ccBy4)
+      // Beginnings is measured from the owner's recordings. The rest are from Matio888's.
+      let own = recipe.fileName == "beginnings"
+      #expect(recipe.source.author == (own ? "Cody Bromley (for Blankie)" : "Matio888"))
+      #expect(License(rawValue: recipe.source.license.lowercased()) == (own ? .cc0 : .ccBy4))
       #expect(!recipe.layers.isEmpty)
       for layer in recipe.layers {
         #expect(!layer.tones.isEmpty)

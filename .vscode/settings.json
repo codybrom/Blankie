@@ -199,5 +199,6 @@
   "swift.swiftEnvironmentVariables": {
     "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"
   },
-  "js/ts.tsdk.path": "docs/node_modules/typescript/lib"
+  "js/ts.tsdk.path": "docs/node_modules/typescript/lib",
+  "xml.downloadExternalResources.enabled": true
 }

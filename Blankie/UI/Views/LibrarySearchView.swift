@@ -86,7 +86,7 @@ import SwiftUI
           ContentUnavailableView.search(text: query)
         }
       }
-      .searchable(text: $query, prompt: Text("Presets, Kaleidoscopes and Sounds"))
+      .searchable(text: $query)
       .navigationTitle("Search")
       .navigationBarTitleDisplayMode(.inline)
       .tint(globalSettings.customAccentColor ?? .accentColor)

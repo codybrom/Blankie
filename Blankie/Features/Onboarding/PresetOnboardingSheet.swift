@@ -138,7 +138,7 @@ struct PresetOnboardingSheet: View {
 
         Text(
           step == .complete && !presetName.isEmpty
-            ? "'\(presetName)' is ready! Tap 'Create Preset' to save and start listening."
+            ? String(localized: "'\(presetName)' is ready!")
             : step.description
         )
         .font(descriptionFont)
@@ -193,13 +193,9 @@ struct PresetOnboardingSheet: View {
 
   private var soundSelectionContent: some View {
     VStack(spacing: 16) {
-      VStack(spacing: 4) {
-        Text("Pick some sounds for your first mix")
-          .font(promptFont)
-        Text("Select at least 2 sounds")
-          .font(hintFont)
-          .foregroundStyle(selectedSounds.count >= 2 ? Color.secondary : Color.red)
-      }
+      Text("Select at least 2 sounds")
+        .font(hintFont)
+        .foregroundStyle(selectedSounds.count >= 2 ? Color.secondary : Color.red)
 
       ScrollView {
         LazyVStack(spacing: 12) {
@@ -283,8 +279,6 @@ struct PresetOnboardingSheet: View {
 
   private var namePresetContent: some View {
     VStack(spacing: 20) {
-      Text("Give it a memorable name")
-        .font(promptFont)
       TextField("e.g., Mindful Meditation", text: $presetName)
         .textFieldStyle(.roundedBorder)
         .font(.title3)
@@ -388,67 +382,101 @@ struct PresetOnboardingSheet: View {
   }
 
   private var navigationButtons: some View {
-    HStack(spacing: 16) {
-      // Skip is always available, and Escape triggers it.
-      Button("Skip") {
-        skipOnboarding()
+    // One row when the labels fit on a line each. Otherwise the main button
+    // takes a row of its own, and at the largest text sizes each button does.
+    ViewThatFits(in: .horizontal) {
+      HStack(spacing: 16) {
+        skipButton()
+        backButton()
+        Spacer(minLength: 16)
+        forwardButton()
       }
-      .buttonStyle(.bordered)
-      .keyboardShortcut(.cancelAction)
-
-      if currentStep > 0 {
-        Button {
-          withAnimation {
-            currentStep -= 1
-          }
-        } label: {
-          Label("Back", systemImage: "chevron.left")
-            .font(.body)
+      VStack(alignment: .trailing, spacing: 12) {
+        forwardButton()
+        HStack(spacing: 16) {
+          skipButton()
+          backButton()
+          Spacer(minLength: 0)
         }
-        .buttonStyle(.bordered)
       }
-
-      Spacer()
-
-      if currentStep < steps.count - 1 {
-        Button {
-          withAnimation {
-            if currentStep == 2 && selectedSounds.count < 2 {
-              // Don't allow progression without selecting at least 2 sounds
-              return
-            }
-            if currentStep == 3 && presetName.isEmpty {
-              // Don't allow progression without preset name
-              return
-            }
-            currentStep += 1
-          }
-        } label: {
-          Label(currentStep == 0 ? "Get Started" : "Next", systemImage: "chevron.right")
-            .font(.body)
-            .foregroundStyle(accentContrastLabel)
-            .labelStyle(.trailingIcon)
-        }
-        .buttonStyle(.glassProminent)
-        .disabled(
-          (currentStep == 2 && selectedSounds.count < 2) || (currentStep == 3 && presetName.isEmpty)
-        )
-      } else {
-        Button {
-          createPreset()
-        } label: {
-          Label("Create Preset", systemImage: "checkmark")
-            .font(.body.weight(.semibold))
-            .foregroundStyle(accentContrastLabel)
-        }
-        .buttonStyle(.glassProminent)
-        .disabled(presetName.isEmpty)
+      VStack(alignment: .trailing, spacing: 12) {
+        forwardButton(oneLine: false)
+        backButton(oneLine: false)
+        skipButton(oneLine: false)
       }
     }
+    .frame(maxWidth: .infinity)
     .padding(.horizontal, 24)
     .padding(.vertical, 20)
     .background(.ultraThinMaterial)
     .tint(globalSettings.customAccentColor ?? .accentColor)
+  }
+
+  /// Skip is always available, and Escape triggers it.
+  private func skipButton(oneLine: Bool = true) -> some View {
+    Button {
+      skipOnboarding()
+    } label: {
+      Text("Skip").fixedSize(horizontal: oneLine, vertical: false)
+    }
+    .buttonStyle(.bordered)
+    .keyboardShortcut(.cancelAction)
+  }
+
+  @ViewBuilder
+  private func backButton(oneLine: Bool = true) -> some View {
+    if currentStep > 0 {
+      Button {
+        withAnimation {
+          currentStep -= 1
+        }
+      } label: {
+        Label("Back", systemImage: "chevron.left")
+          .font(.body)
+          .fixedSize(horizontal: oneLine, vertical: false)
+      }
+      .buttonStyle(.bordered)
+    }
+  }
+
+  @ViewBuilder
+  private func forwardButton(oneLine: Bool = true) -> some View {
+    if currentStep < steps.count - 1 {
+      Button {
+        withAnimation {
+          if currentStep == 2 && selectedSounds.count < 2 {
+            // Don't allow progression without selecting at least 2 sounds
+            return
+          }
+          if currentStep == 3 && presetName.isEmpty {
+            // Don't allow progression without preset name
+            return
+          }
+          currentStep += 1
+        }
+      } label: {
+        Label(currentStep == 0 ? "Get Started" : "Next", systemImage: "chevron.right")
+          .font(.body)
+          .foregroundStyle(accentContrastLabel)
+          .labelStyle(.trailingIcon)
+          .fixedSize(horizontal: oneLine, vertical: false)
+      }
+      .buttonStyle(.glassProminent)
+      .disabled(
+        (currentStep == 2 && selectedSounds.count < 2) || (currentStep == 3 && presetName.isEmpty)
+      )
+    } else {
+      Button {
+        createPreset()
+      } label: {
+        Label("Create Preset", systemImage: "checkmark")
+          .font(.body.weight(.semibold))
+          .foregroundStyle(accentContrastLabel)
+          .fixedSize(horizontal: oneLine, vertical: false)
+      }
+      .buttonStyle(.glassProminent)
+      .disabled(presetName.isEmpty)
+    }
   }
 
   // MARK: - Actions
@@ -586,32 +614,34 @@ enum OnboardingStep {
   var title: String {
     switch self {
     case .welcome:
-      return "Welcome to Blankie"
+      return String(localized: "Welcome to Blankie")
     case .chooseColor:
-      return "Yours To Keep"
+      return String(localized: "Yours To Keep")
     case .selectSounds:
-      return "Make Some Noise"
+      return String(localized: "Make Some Noise")
     case .namePreset:
-      return "Name Your Preset"
+      return String(localized: "Name Your Preset")
     case .complete:
-      return "Start Listening!"
+      return String(localized: "Start Listening!")
     }
   }
 
   var description: String {
     switch self {
     case .welcome:
-      return "Blankie lets you mix your own soundscapes to focus, relax and sleep better."
+      return String(
+        localized: "Blankie lets you mix your own soundscapes to focus, relax and sleep better.")
     case .chooseColor:
-      return
-        "Almost everything in Blankie can be customized. Let's start by choosing an accent color. You can change this anytime."
+      return String(
+        localized: "Let's start by choosing an accent color. You can change this anytime.")
     case .selectSounds:
-      return
-        "Blankie lets you mix and save different soundscapes for different moods and activites."
+      return String(localized: "Pick some sounds for your first mix")
     case .namePreset:
-      return "What kind of mood or activity is this preset for? You can always change it later."
+      return String(
+        localized:
+          "What kind of mood or activity is this preset for? You can always change it later.")
     case .complete:
-      return "Your preset is ready! Tap 'Create Preset' to save and start listening."
+      return String(localized: "Your preset is ready!")
     }
   }
 

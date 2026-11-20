@@ -203,6 +203,7 @@ import SwiftUI
           }
           .opacity(showsOnlyKaleidoscope ? 0 : 1)
           .allowsHitTesting(!showsOnlyKaleidoscope)
+          .accessibilityHidden(showsOnlyKaleidoscope)
           .overlay {
             // With the controls away, a tap anywhere brings them back.
             if showsOnlyKaleidoscope {

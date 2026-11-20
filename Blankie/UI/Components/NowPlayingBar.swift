@@ -30,6 +30,7 @@ import SwiftUI
     var showsTitle = false
     /// Set inside a tab view's bottom accessory, which brings its own glass capsule.
     @Environment(\.tabViewBottomAccessoryPlacement) private var accessoryPlacement
+    @Environment(\.dynamicTypeSize) private var typeSize
     let onTap: () -> Void
 
     @State private var audioManager = AudioManager.shared
@@ -209,10 +210,13 @@ import SwiftUI
         Button {
           onTap()
         } label: {
-          HStack(spacing: 10) {
-            artworkView
-            infoView
-            Spacer(minLength: 0)
+          // A title too long for the slot takes the artwork's room first, then
+          // steps down in size, before it would truncate.
+          ViewThatFits(in: .horizontal) {
+            barLabel(showsArtwork: true, size: textSizes[0])
+            ForEach(textSizes, id: \.self) { size in
+              barLabel(showsArtwork: false, size: size)
+            }
           }
           .padding(.leading, 12)
           // The accessory slot sets its own height.
@@ -227,13 +231,13 @@ import SwiftUI
         #if os(iOS)
           // Above a tab bar the controller leaves AirPlay to the player.
           if accessoryPlacement == nil {
-          AirPlayRouteButton(
-            activeColor: accentColor,
-            inactiveColor: Color(.secondaryLabel)
-          )
-          .frame(width: 44, height: 44)
-          .accessibilityLabel(Text("AirPlay"))
-          .padding(.trailing, 6)
+            AirPlayRouteButton(
+              activeColor: accentColor,
+              inactiveColor: Color(.secondaryLabel)
+            )
+            .frame(width: 44, height: 44)
+            .accessibilityLabel(Text("AirPlay"))
+            .padding(.trailing, 6)
           }
         #endif
       }
@@ -275,6 +279,21 @@ import SwiftUI
             .foregroundStyle(.secondary)
             .lineLimit(1)
         }
+      }
+    }
+
+    /// The bar's own text size, then up to two smaller.
+    private var textSizes: [DynamicTypeSize] {
+      let largest = min(typeSize, .accessibility3)
+      return Array(DynamicTypeSize.allCases.filter { $0 <= largest }.reversed().prefix(3))
+    }
+
+    /// The open button's label at one text size, with or without the artwork.
+    private func barLabel(showsArtwork: Bool, size: DynamicTypeSize) -> some View {
+      HStack(spacing: 10) {
+        if showsArtwork { artworkView }
+        infoView.dynamicTypeSize(size)
+        Spacer(minLength: 0)
       }
     }
 

@@ -105,7 +105,8 @@ import Testing
       for second in (first + 1)..<tumbler.bodies.count {
         let a = tumbler.bodies[first]
         let b = tumbler.bodies[second]
-        deepest = max(deepest, (a.radius + b.radius - hypot(b.x - a.x, b.y - a.y)) / (a.radius + b.radius))
+        deepest = max(
+          deepest, (a.radius + b.radius - hypot(b.x - a.x, b.y - a.y)) / (a.radius + b.radius))
       }
     }
     #expect(deepest < 0.5)
@@ -145,7 +146,28 @@ import Testing
     // The hand jumps a full turn in one frame.
     tumbler.advance(to: start.addingTimeInterval(1.0 / 30), turn: 2 * .pi)
     let moved = zip(before, tumbler.bodies).map { hypot($1.x - $0.x, $1.y - $0.y) }
-    #expect((moved.max() ?? 0) < KaleidoscopeChamber.wall * KaleidoscopeTumbler.fastestTurn / 30 + 0.05)
+    #expect(
+      (moved.max() ?? 0) < KaleidoscopeChamber.wall * KaleidoscopeTumbler.fastestTurn / 30 + 0.05)
+  }
+
+  @Test func glassHeldStillDoesNotMove() {
+    let chamber = KaleidoscopeChamber(recipe: Self.recipe())
+    let tumbler = KaleidoscopeTumbler(chamber: chamber)
+    let start = Date(timeIntervalSince1970: 0)
+    tumbler.advance(to: start, turn: 0)
+    let before = tumbler.bodies
+    // Two seconds pass and the chamber turns, with the glass held.
+    for frame in 1...60 {
+      tumbler.advance(
+        to: start.addingTimeInterval(Double(frame) / 30), turn: Double(frame) * 0.05,
+        holdsStill: true)
+    }
+    let held = zip(before, tumbler.bodies).map { hypot($1.x - $0.x, $1.y - $0.y) }
+    #expect(held.max() == 0)
+    // Let go of, it takes up the turning from where the chamber now stands.
+    tumbler.advance(to: start.addingTimeInterval(61.0 / 30), turn: 3.0)
+    let resumed = zip(before, tumbler.bodies).map { hypot($1.x - $0.x, $1.y - $0.y) }
+    #expect((resumed.max() ?? 0) < 0.05)
   }
 
   // MARK: - Drawing

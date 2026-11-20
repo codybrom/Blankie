@@ -2,6 +2,7 @@
   "title": "Depth",
   "fileName": "depth",
   "glassSeed": "kaleidoscope-deep",
+  "glassColors": ["#1A42BD", "#0F75A8", "#5747B2", "#D1E0F5"],
   "systemIconName": "circle.hexagongrid.fill",
   "lufs": -22.38,
   "source": {

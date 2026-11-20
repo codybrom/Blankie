@@ -2,6 +2,7 @@
   "title": "Hush",
   "fileName": "hush",
   "glassSeed": "kaleidoscope-hushed",
+  "glassColors": ["#A899B8", "#CCB8A8", "#94A3B2", "#F0F0F5"],
   "systemIconName": "seal.fill",
   "lufs": -23.76,
   "source": {

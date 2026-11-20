@@ -143,9 +143,9 @@ struct KaleidoscopeBackdrop: View {
             x: ($0.minX - frame.minX) * shrink, y: ($0.minY - frame.minY) * shrink,
             width: $0.width * shrink, height: $0.height * shrink)
         }
-        ?? CGRect(
-          x: size.width * 0.08, y: size.height * 0.17, width: size.width * 0.84,
-          height: size.width * 0.84)
+          ?? CGRect(
+            x: size.width * 0.08, y: size.height * 0.17, width: size.width * 0.84,
+            height: size.width * 0.84)
       let center = CGPoint(x: art.midX, y: art.midY)
       // One span is most of the screen's short side, upright or turned.
       let span = min(size.width, size.height) * 0.92
@@ -168,10 +168,11 @@ struct KaleidoscopeBackdrop: View {
       ) { context in
         let seconds = sound.playbackPosition
         // The sound turns the chamber, and so does a finger. The glass does the rest.
-        // With Reduce Motion on, only a finger turns it. The glass still glows.
+        // With Reduce Motion on, the glass moves only under a finger. It still glows.
         let soundTurn = reduceMotion ? 0 : chamber.turn(at: seconds)
         let _ = tumbler.advance(
-          to: context.date, turn: soundTurn - touch.touch.angle(at: context.date))
+          to: context.date, turn: soundTurn - touch.touch.angle(at: context.date),
+          holdsStill: reduceMotion && touch.lastSample == nil)
         let sprites = chamber.sprites(
           at: seconds, in: tumbler, apex: apex, axis: axis, span: span, reach: reach)
         Canvas { canvas, _ in

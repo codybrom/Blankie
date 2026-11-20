@@ -2,6 +2,7 @@
   "title": "Air",
   "fileName": "air",
   "glassSeed": "kaleidoscope-airy",
+  "glassColors": ["#80BDFA", "#C7E6FF", "#9EEBE0", "#F0FAFF"],
   "systemIconName": "lightspectrum.horizontal",
   "lufs": -24.8,
   "source": {
