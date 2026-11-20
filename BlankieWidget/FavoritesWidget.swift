@@ -73,7 +73,10 @@ private struct FavoriteRowView: View {
   var usesSelectionBorder: Bool = true
 
   var body: some View {
-    Button(intent: WidgetPlayFavoriteIntent(favoriteToken: favorite.token)) {
+    Button(
+      intent: WidgetPlayFavoriteIntent(
+        favoriteToken: favorite.token, pauses: isActive && isPlaying)
+    ) {
       HStack(spacing: 8) {
         WidgetArtwork(
           thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
@@ -140,7 +143,10 @@ private struct SingleFavoriteView: View {
   var body: some View {
     GeometryReader { geometry in
       let side = min(geometry.size.height, geometry.size.width * 0.38)
-      Button(intent: WidgetPlayFavoriteIntent(favoriteToken: favorite.token)) {
+      Button(
+        intent: WidgetPlayFavoriteIntent(
+          favoriteToken: favorite.token, pauses: isActive && isPlaying)
+      ) {
         HStack(spacing: 14) {
           WidgetArtwork(
             thumbnailKey: favorite.thumbnailKey, fallbackIcon: favorite.systemIconName,
@@ -196,7 +202,10 @@ private struct FavoriteTileView: View {
   let isPlaying: Bool
 
   var body: some View {
-    Button(intent: WidgetPlayFavoriteIntent(favoriteToken: favorite.token)) {
+    Button(
+      intent: WidgetPlayFavoriteIntent(
+        favoriteToken: favorite.token, pauses: isActive && isPlaying)
+    ) {
       GeometryReader { geometry in
         let shape =
           favorite.thumbnailKey == nil
@@ -255,7 +264,7 @@ private struct NowPlayingFooterView: View {
 
       Spacer(minLength: 4)
 
-      Button(intent: ToggleBlankiePlaybackIntent()) {
+      Button(intent: WidgetSetPlaybackIntent(play: !playback.isPlaying)) {
         Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
           .font(.system(size: 11, weight: .bold))
           .foregroundStyle(renderingMode == .accented ? .white : .black)

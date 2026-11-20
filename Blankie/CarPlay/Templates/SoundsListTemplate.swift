@@ -55,13 +55,13 @@ import os
       let isCurrentSingleSound = AudioManager.shared.singleSound?.id == sound.id
 
       let item = CPListItem(
-        text: CarPlaySoundNames.name(of: sound),
+        text: sound.localizedTitle,
         detailText: nil
       )
 
       if isCurrentSingleSound {
         item.accessoryType = .disclosureIndicator
-        item.setText("\(CarPlaySoundNames.name(of: sound)) ✓")
+        item.setText("\(sound.localizedTitle) ✓")
       }
 
       if let image = getSoundImage(for: sound) {

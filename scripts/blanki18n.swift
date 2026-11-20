@@ -2,7 +2,7 @@
 ///
 /// blanki18n
 /// By Cody Bromley
-/// MIT License
+/// GPL-3.0-or-later
 ///
 /// Updates Localizable.xcstrings with single-language translations in JSON or CSV format.
 /// To learn more, visit blankie.rest/i18n

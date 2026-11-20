@@ -34,6 +34,9 @@ extension SoundSheet {
     }
 
     isProcessing = true
+    importProgress = nil
+    let attempt = UUID()
+    importAttempt = attempt
 
     // Capture values before Task to avoid sendability issues
     let file = selectedFile
@@ -42,16 +45,32 @@ extension SoundSheet {
     let randomize = randomizeStartPosition
     let convert = convertToAACOnImport
 
-    Task {
+    importTask = Task {
+      #if os(iOS) || os(visionOS)
+        let backgroundTime = ImportBackgroundTime()
+        defer { backgroundTime.end() }
+      #endif
+
       let result = await CustomSoundManager.shared.importSound(
         from: file,
         title: title,
         iconName: icon,
         randomizeStartPosition: randomize,
         convertToAAC: convert
-      )
+      ) { progress in
+        Task { @MainActor in
+          // Updates hop to the main actor separately, so drop any that arrive late or
+          // come from an import that was cancelled.
+          if importAttempt == attempt, progress.fraction >= importProgress?.fraction ?? 0 {
+            importProgress = progress
+          }
+        }
+      }
 
+      // Cancel already reset the sheet and the import removed its files.
+      guard !Task.isCancelled else { return }
       isProcessing = false
+      importTask = nil
 
       switch result {
       case .success(let customSound):
@@ -91,6 +110,15 @@ extension SoundSheet {
         showingError = true
       }
     }
+  }
+
+  /// Stops a running import and returns to the form with everything still filled in.
+  func cancelImport() {
+    importTask?.cancel()
+    importTask = nil
+    importAttempt = nil
+    importProgress = nil
+    isProcessing = false
   }
 
   func applyCustomizationInstantly(_ sound: Sound) {
@@ -318,3 +346,23 @@ extension SoundSheet {
     dismiss()
   }
 }
+
+#if os(iOS) || os(visionOS)
+  /// Asks iOS for extra time so an import keeps running for a while after Blankie
+  /// leaves the foreground. Ends itself if that time runs out.
+  @MainActor private final class ImportBackgroundTime {
+    private var identifier = UIBackgroundTaskIdentifier.invalid
+
+    init() {
+      identifier = UIApplication.shared.beginBackgroundTask(withName: "Import Sound") {
+        [weak self] in self?.end()
+      }
+    }
+
+    func end() {
+      guard identifier != .invalid else { return }
+      UIApplication.shared.endBackgroundTask(identifier)
+      identifier = .invalid
+    }
+  }
+#endif

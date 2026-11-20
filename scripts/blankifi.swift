@@ -27,6 +27,10 @@ exec "$BIN" "$@"
 //    fix        <in> <out> [--xfade-ms 250] [--bitrate 192000]  seamless-loop repair
 //    convert    <in> <out.m4a> [--bitrate 192000]               transcode to 44.1k stereo M4A
 //    reanalyze  [--write] [--json PATH] [--sounds-dir DIR]      batch re-measure sounds.json
+//    spectrum-over-time <file> [--win-sec 4 --hop-sec 1]        centroid/rolloff/flux/RMS over time
+//    chroma     <file> [--win-sec 8 --hop-sec 1]                pitch-class over time (root/fifth per third)
+//    modulation <file>                                          swell/LFO rate 0.05-5 Hz from RMS envelope
+//    width      <file>                                          mid/side width + correlation over time
 //
 //  The shell preamble compiles this file with the app's AudioAnalyzer, so
 //  `analyze` and `reanalyze` report the same LUFS the app computes.
@@ -137,6 +141,55 @@ func median(_ a: [Float]) -> Float {
   let s = a.sorted()
   let n = s.count
   return n % 2 == 1 ? s[n / 2] : (s[n / 2 - 1] + s[n / 2]) / 2
+}
+
+// MARK: - FFT
+
+func nextPow2(_ n: Int) -> Int {
+  var p = 1
+  while p < n { p <<= 1 }
+  return p
+}
+
+/// Magnitude spectrum of a real signal (Hann window applied by caller).
+/// `x.count` must be a power of two. Returns `n/2` mags (DC..Nyquist).
+/// Note: `vDSP.FFT` with split-complex buffers of length `m` executes a
+/// length-`m/2` transform, so this pads to `2n` buffers to get a length-`n`
+/// spectrum (verified empirically: a 440 Hz sine peaks one octave low
+/// without the doubling).
+func fftMags(_ x: [Float]) -> [Float] {
+  let n = x.count
+  let m = n * 2
+  let log2m = UInt(log2(Double(m)))
+  guard let fft = vDSP.FFT(log2n: log2m, radix: .radix2, ofType: DSPSplitComplex.self) else {
+    return [Float](repeating: 0, count: n / 2)
+  }
+  var realIn = x + [Float](repeating: 0, count: n)
+  var imagIn = [Float](repeating: 0, count: m)
+  var realOut = [Float](repeating: 0, count: m)
+  var imagOut = [Float](repeating: 0, count: m)
+  realIn.withUnsafeMutableBufferPointer { rInPtr in
+    imagIn.withUnsafeMutableBufferPointer { iInPtr in
+      realOut.withUnsafeMutableBufferPointer { rOutPtr in
+        imagOut.withUnsafeMutableBufferPointer { iOutPtr in
+          var inSplit = DSPSplitComplex(realp: rInPtr.baseAddress!, imagp: iInPtr.baseAddress!)
+          var outSplit = DSPSplitComplex(realp: rOutPtr.baseAddress!, imagp: iOutPtr.baseAddress!)
+          fft.forward(input: inSplit, output: &outSplit)
+        }
+      }
+    }
+  }
+  var mags = [Float](repeating: 0, count: n / 2)
+  for k in 0..<(n / 2) {
+    mags[k] = (realOut[k] * realOut[k] + imagOut[k] * imagOut[k]).squareRoot()
+  }
+  return mags
+}
+
+func hann(_ n: Int) -> [Float] {
+  var w = [Float](repeating: 0, count: n)
+  vDSP_hann_window(&w, vDSP_Length(n), Int32(vDSP_HANN_NORM))
+  return w
 }
 
 /// Detect where the leading/trailing silence + isolated edge transient end, so a
@@ -502,10 +555,9 @@ func cmdReanalyze(_ args: [String]) async {
     rest.remove(at: i)
   }
 
-  guard var text = try? String(contentsOfFile: jsonPath, encoding: .utf8),
-    let data = text.data(using: .utf8),
-    let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-    let sounds = obj["sounds"] as? [[String: Any]]
+  guard let data = FileManager.default.contents(atPath: jsonPath),
+    case .object(var root)? = try? JSONDecoder().decode(JSONValue.self, from: data),
+    case .array(var sounds)? = root["sounds"]
   else { fail("could not read/parse \(jsonPath)") }
 
   print(
@@ -514,8 +566,10 @@ func cmdReanalyze(_ args: [String]) async {
     padR("sound", 16) + padL("oldLUFS", 9) + padL("newLUFS", 9) + padL("ΔLUFS", 8)
       + padL("oldFac", 9) + padL("newFac", 9) + padL("truePk", 9) + padL("predPeak", 10) + "  flags")
   var changed = 0
-  for s in sounds {
-    guard let fileName = s["fileName"] as? String else { continue }
+  for index in sounds.indices {
+    guard case .object(var s) = sounds[index], case .string(let fileName)? = s["fileName"] else {
+      continue
+    }
     let fileURL = ["m4a", "wav", "mp3", "aiff"].lazy
       .map { URL(fileURLWithPath: "\(soundsDir)/\(fileName).\($0)") }
       .first { FileManager.default.fileExists(atPath: $0.path) }
@@ -528,8 +582,8 @@ func cmdReanalyze(_ args: [String]) async {
       print("\(fileName): analysis failed")
       continue
     }
-    let oldLufs = (s["lufs"] as? NSNumber)?.floatValue ?? 0
-    let oldFac = (s["normalizationFactor"] as? NSNumber)?.floatValue ?? 0
+    let oldLufs = s["lufs"]?.float ?? 0
+    let oldFac = s["normalizationFactor"]?.float ?? 0
     let newFac = r.normalizationFactor
     let truePeak = r.truePeakdBTP ?? -.infinity
     let needsLimiter = r.needsLimiter
@@ -544,21 +598,22 @@ func cmdReanalyze(_ args: [String]) async {
         + padL(String(format: "%.2f", truePeak), 9) + padL(String(format: "%.2f", predPeak), 10)
         + "  " + flags)
     if write {
-      text = upsertField(text, fileName: fileName, key: "lufs", value: "\(newLufs)", before: nil)
-      text = upsertField(
-        text, fileName: fileName, key: "needsLimiter", value: needsLimiter ? "true" : "false",
-        before: "normalizationFactor")
-      text = upsertField(
-        text, fileName: fileName, key: "normalizationFactor", value: "\(newFac)", before: nil)
-      if truePeak.isFinite {
-        text = upsertField(
-          text, fileName: fileName, key: "truePeakdBTP", value: "\(truePeak)", before: nil)
-      }
+      s["lufs"] = JSONValue(newLufs)
+      s["needsLimiter"] = .bool(needsLimiter)
+      s["normalizationFactor"] = JSONValue(newFac)
+      if truePeak.isFinite { s["truePeakdBTP"] = JSONValue(truePeak) }
+      sounds[index] = .object(s)
       changed += 1
     }
   }
   if write {
-    do { try text.write(toFile: jsonPath, atomically: true, encoding: .utf8) } catch {
+    root["sounds"] = .array(sounds)
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+    do {
+      try encoder.encode(JSONValue.object(root)).write(
+        to: URL(fileURLWithPath: jsonPath), options: .atomic)
+    } catch {
       fail("write failed: \(error)")
     }
     print("\n✅ wrote \(changed) updated entries to \(jsonPath)")
@@ -567,50 +622,285 @@ func cmdReanalyze(_ args: [String]) async {
   }
 }
 
-/// Set `key` to `value` inside the JSON object that contains
-/// `"fileName": "<fileName>"`, preserving all other text and formatting. If the
-/// key exists its value is replaced. Otherwise a new line is inserted before
-/// `beforeKey` (to keep sorted order), or appended as the last field if
-/// `beforeKey` is nil. `value` is the raw JSON token (number / true / false).
-func upsertField(_ text: String, fileName: String, key: String, value: String, before beforeKey: String?)
-  -> String
-{
-  guard let anchor = text.range(of: "\"fileName\": \"\(fileName)\"") else { return text }
-  guard
-    let objStart = text.range(
-      of: "{", options: .backwards, range: text.startIndex..<anchor.lowerBound),
-    let objEnd = text.range(of: "}", range: anchor.upperBound..<text.endIndex)
-  else { return text }
-  let objRange = objStart.lowerBound..<objEnd.upperBound
-  var obj = String(text[objRange])
+func parseFlag(_ args: [String], _ name: String, default def: Double) -> Double {
+  if let i = args.firstIndex(of: name), i + 1 < args.count { return Double(args[i + 1]) ?? def }
+  return def
+}
 
-  // Replace if the key already exists (value runs to end of its line).
-  if let re = try? NSRegularExpression(pattern: "(\"\(key)\"\\s*:\\s*)[^,\\n]+"),
-    re.firstMatch(in: obj, range: NSRange(obj.startIndex..., in: obj)) != nil
-  {
-    let ns = obj as NSString
-    obj = re.stringByReplacingMatches(
-      in: obj, range: NSRange(location: 0, length: ns.length), withTemplate: "$1\(value)")
-    return text.replacingCharacters(in: objRange, with: obj)
+/// Window and hop in samples. Fails on values that would give an empty window, a hop
+/// that never advances, or a recording too short to fill one window.
+func windowedSizes(sampleRate: Double, winSec: Double, hopSec: Double, samples: Int) -> (
+  win: Int, hop: Int
+) {
+  guard winSec.isFinite, hopSec.isFinite, winSec > 0, hopSec > 0 else {
+    fail("--win-sec and --hop-sec must be positive numbers")
+  }
+  let win = Int(sampleRate * winSec)
+  let hop = Int(sampleRate * hopSec)
+  guard win >= 1, hop >= 1 else { fail("--win-sec and --hop-sec must cover at least one sample") }
+  guard samples >= win else {
+    fail(String(format: "recording is shorter than the %.1f-second window", winSec))
+  }
+  return (win, hop)
+}
+
+/// Spectral centroid / rolloff85 / flux / RMS per hop. Prints CSV plus a
+/// median summary. Maps shimmer and filter motion to automation points.
+func cmdSpectrumOverTime(_ args: [String]) {
+  guard let path = args.first(where: { !$0.hasPrefix("--") }) else {
+    fail("spectrum-over-time <file> [--win-sec 4 --hop-sec 1]")
+  }
+  let winSec = parseFlag(args, "--win-sec", default: 4)
+  let hopSec = parseFlag(args, "--hop-sec", default: 1)
+  guard let (channels, sr) = try? readChannels(URL(fileURLWithPath: path)) else {
+    fail("read failed")
+  }
+  let mono = toMono(channels)
+  let n = mono.count
+  let (win, hop) = windowedSizes(sampleRate: sr, winSec: winSec, hopSec: hopSec, samples: n)
+  let fftN = nextPow2(win)
+  let window = hann(win)
+  var prev: [Float]?
+  print("time_s,centroid_hz,rolloff85_hz,flux,rms_db")
+  var cents = [Float](), rolls = [Float](), fluxes = [Float]()
+  var t = 0.0
+  var i = 0
+  while i + win <= n {
+    var blk = Array(mono[i..<(i + win)])
+    vDSP_vmul(blk, 1, window, 1, &blk, 1, vDSP_Length(win))
+    var padded = blk
+    padded.append(contentsOf: [Float](repeating: 0, count: fftN - win))
+    let mags = fftMags(padded)
+    let bw = Double(sr) / Double(fftN)
+    var num = 0.0, den = 0.0
+    for (k, m) in mags.enumerated() {
+      let f = Double(k) * bw
+      num += f * Double(m)
+      den += Double(m)
+    }
+    let cent: Float = den > 0 ? Float(num / den) : 0
+    var acc = 0.0
+    let total = mags.reduce(0.0) { $0 + Double($1) }
+    var roll: Float = 0
+    for (k, m) in mags.enumerated() {
+      acc += Double(m)
+      if acc >= total * 0.85 {
+        roll = Float(Double(k) * bw)
+        break
+      }
+    }
+    var flux: Float = 0
+    if let p = prev {
+      for k in mags.indices {
+        let d = mags[k] - p[k]
+        flux += d * d
+      }
+      flux = flux.squareRoot()
+    }
+    prev = mags
+    let rms = dbRMS(mono[i..<(i + win)])
+    cents.append(cent)
+    rolls.append(roll)
+    fluxes.append(flux)
+    print(String(format: "%.1f,%.0f,%.0f,%.3f,%.1f", t, cent, roll, flux, rms))
+    t += hopSec
+    i += hop
+  }
+  func med(_ a: [Float]) -> Float { median(a) }
+  print(
+    String(
+      format: "summary: centroid_med=%.0f rolloff_med=%.0f flux_mean=%.3f dur=%.1fs",
+      med(cents), med(rolls), fluxes.reduce(0, +) / Float(max(fluxes.count, 1)),
+      Double(n) / sr))
+}
+
+/// Pitch-class energy per hop plus top-2 persistent classes per third.
+/// Maps the drone root and fifth directly.
+func cmdChroma(_ args: [String]) {
+  guard let path = args.first(where: { !$0.hasPrefix("--") }) else {
+    fail("chroma <file> [--win-sec 8 --hop-sec 1]")
+  }
+  let winSec = parseFlag(args, "--win-sec", default: 8)
+  let hopSec = parseFlag(args, "--hop-sec", default: 1)
+  guard let (channels, sr) = try? readChannels(URL(fileURLWithPath: path)) else {
+    fail("read failed")
+  }
+  let mono = toMono(channels)
+  let n = mono.count
+  let (win, hop) = windowedSizes(sampleRate: sr, winSec: winSec, hopSec: hopSec, samples: n)
+  let fftN = nextPow2(win)
+  let window = hann(win)
+  let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+  var frames = [[Float]]()
+  var i = 0
+  while i + win <= n {
+    var blk = Array(mono[i..<(i + win)])
+    vDSP_vmul(blk, 1, window, 1, &blk, 1, vDSP_Length(win))
+    var padded = blk
+    padded.append(contentsOf: [Float](repeating: 0, count: fftN - win))
+    let mags = fftMags(padded)
+    let bw = Double(sr) / Double(fftN)
+    var pc = [Float](repeating: 0, count: 12)
+    for k in mags.indices {
+      let f = Double(k) * bw
+      if f < 40 || f > 4000 { continue }
+      let midi = Int(round(69 + 12 * log2(f / 440.0)))
+      pc[midi % 12 + (midi % 12 < 0 ? 12 : 0)] += mags[k]
+    }
+    frames.append(pc)
+    i += hop
+  }
+  print("time_s," + names.joined(separator: ","))
+  var t = 0.0
+  for pc in frames {
+    print(String(format: "%.1f", t) + "," + pc.map { String(format: "%.1f", $0) }.joined(separator: ","))
+    t += hopSec
+  }
+  let thirds = [frames.prefix(frames.count / 3), frames.dropFirst(frames.count / 3).prefix(frames.count / 3), frames.suffix(frames.count - 2 * (frames.count / 3))]
+  let labels = ["first", "middle", "last"]
+  for (ti, part) in thirds.enumerated() {
+    var sum = [Float](repeating: 0, count: 12)
+    for pc in part { for k in 0..<12 { sum[k] += pc[k] } }
+    let order = (0..<12).sorted { sum[$0] > sum[$1] }
+    let total = sum.reduce(0, +) + 1e-9
+    print(
+      String(
+        format: "%@ third: %@ %.0f%% + %@ %.0f%%", labels[ti], names[order[0]],
+        sum[order[0]] / total * 100, names[order[1]], sum[order[1]] / total * 100))
+  }
+}
+
+/// RMS-envelope modulation spectrum 0.05-5 Hz. Prints the peak swell/LFO
+/// rate and depth. Maps evolving-pad pulse to LFO-rate params.
+func cmdModulation(_ args: [String]) {
+  guard let path = args.first(where: { !$0.hasPrefix("--") }) else {
+    fail("modulation <file>")
+  }
+  guard let (channels, sr) = try? readChannels(URL(fileURLWithPath: path)) else {
+    fail("read failed")
+  }
+  let mono = toMono(channels)
+  let env = rmsEnvelope(mono[0...], win: max(1, Int(sr * 0.02)))
+  guard env.count >= 2 else { fail("recording is too short to measure modulation") }
+  let fs = 50.0
+  let mean = env.reduce(0, +) / Float(env.count)
+  let detrended = env.map { $0 - mean }
+  let depth = (env.max()! - env.min()!) / (mean + 1e-9)
+  let fftN = nextPow2(detrended.count)
+  var padded = detrended
+  padded.append(contentsOf: [Float](repeating: 0, count: fftN - detrended.count))
+  let mags = fftMags(padded)
+  var bestF = 0.0
+  var bestM: Float = 0
+  for k in 1..<mags.count {
+    let f = Double(k) * fs / Double(fftN)
+    if f < 0.05 || f > 5 { continue }
+    if mags[k] > bestM {
+      bestM = mags[k]
+      bestF = f
+    }
+  }
+  print(String(format: "lfo_peak_hz: %.3f (period %.1fs)", bestF, bestF > 0 ? 1 / bestF : 0))
+  print(String(format: "depth: %.2f (max-min over mean)", depth))
+  print(String(format: "env_mean_db: %.1f", 20 * log10(mean + 1e-9)))
+}
+
+/// Per-hop mid/side width and correlation. Reports whether the reference is
+/// a wide shimmer or a mono drone.
+func cmdWidth(_ args: [String]) {
+  guard let path = args.first(where: { !$0.hasPrefix("--") }) else { fail("width <file>") }
+  guard let (channels, sr) = try? readChannels(URL(fileURLWithPath: path)) else {
+    fail("read failed")
+  }
+  guard channels.count >= 2 else {
+    print("channels=1 (mono)")
+    return
+  }
+  let hop = Int(sr * 1.0)
+  let n = channels[0].count
+  guard hop >= 1, n >= hop else { fail("width needs at least one second of audio") }
+  var widths = [Float](), corrs = [Float]()
+  print("time_s,width_db,correlation")
+  var t = 0.0
+  var i = 0
+  while i + hop <= n {
+    let l = Array(channels[0][i..<(i + hop)])
+    let r = Array(channels[1][i..<(i + hop)])
+    var mid = [Float](repeating: 0, count: hop)
+    var side = [Float](repeating: 0, count: hop)
+    for k in 0..<hop {
+      mid[k] = (l[k] + r[k]) * 0.5
+      side[k] = (l[k] - r[k]) * 0.5
+    }
+    var msM: Float = 0, msS: Float = 0
+    vDSP_measqv(mid, 1, &msM, vDSP_Length(hop))
+    vDSP_measqv(side, 1, &msS, vDSP_Length(hop))
+    let widthDb = 20 * log10((msS + 1e-9).squareRoot() / ((msM + 1e-9).squareRoot()))
+    var lm = l.reduce(0, +) / Float(hop), rm = r.reduce(0, +) / Float(hop)
+    var num: Float = 0, dl: Float = 0, dr: Float = 0
+    for k in 0..<hop {
+      let a = l[k] - lm, b = r[k] - rm
+      num += a * b
+      dl += a * a
+      dr += b * b
+    }
+    let corr = num / ((dl * dr).squareRoot() + 1e-9)
+    widths.append(widthDb)
+    corrs.append(corr)
+    print(String(format: "%.1f,%.1f,%.3f", t, widthDb, corr))
+    t += 1.0
+    i += hop
+  }
+  print(
+    String(
+      format: "summary: width_med=%.1fdB corr_med=%.3f", median(widths), median(corrs)))
+}
+
+/// Any JSON value, so `reanalyze` can update `sounds.json` without a model of every field.
+enum JSONValue: Codable {
+  case string(String)
+  case number(Double)
+  case bool(Bool)
+  case array([JSONValue])
+  case object([String: JSONValue])
+  case null
+
+  /// Stores the Float's printed value, so the file keeps its short decimals.
+  init(_ value: Float) { self = .number(Double("\(value)") ?? Double(value)) }
+
+  var float: Float? {
+    if case .number(let value) = self { return Float(value) }
+    return nil
   }
 
-  if let beforeKey = beforeKey, let kr = obj.range(of: "\"\(beforeKey)\"") {
-    // Insert a new field line before beforeKey's line, matching its indentation.
-    let nl = obj[obj.startIndex..<kr.lowerBound].lastIndex(of: "\n") ?? obj.startIndex
-    let lineStart = obj.index(after: nl)
-    let indent = String(obj[lineStart..<kr.lowerBound])
-    obj.insert(contentsOf: "\(indent)\"\(key)\": \(value),\n", at: lineStart)
-  } else {
-    // Append as the last field: add a comma to the current last field, then a new line.
-    guard let brace = obj.range(of: "}", options: .backwards) else { return text }
-    let beforeBrace = obj[obj.startIndex..<brace.lowerBound]
-    guard let braceNl = beforeBrace.lastIndex(of: "\n") else { return text }
-    let lastFieldStart =
-      obj.index(after: beforeBrace[beforeBrace.startIndex..<braceNl].lastIndex(of: "\n") ?? braceNl)
-    let indent = String(obj[lastFieldStart..<(obj[lastFieldStart...].firstIndex(of: "\"") ?? lastFieldStart)])
-    obj.insert(contentsOf: ",\n\(indent)\"\(key)\": \(value)", at: braceNl)
+  init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    if container.decodeNil() {
+      self = .null
+    } else if let value = try? container.decode(Bool.self) {
+      self = .bool(value)
+    } else if let value = try? container.decode(Double.self) {
+      self = .number(value)
+    } else if let value = try? container.decode(String.self) {
+      self = .string(value)
+    } else if let value = try? container.decode([JSONValue].self) {
+      self = .array(value)
+    } else {
+      self = .object(try container.decode([String: JSONValue].self))
+    }
   }
-  return text.replacingCharacters(in: objRange, with: obj)
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    switch self {
+    case .string(let value): try container.encode(value)
+    case .number(let value): try container.encode(value)
+    case .bool(let value): try container.encode(value)
+    case .array(let value): try container.encode(value)
+    case .object(let value): try container.encode(value)
+    case .null: try container.encodeNil()
+    }
+  }
 }
 
 // MARK: - Entry
@@ -640,6 +930,10 @@ struct BlankIFI {
           fix       <in> <out> [--xfade-ms 250] [--bitrate 192000]
           convert   <in> <out.m4a> [--bitrate 192000]
           reanalyze [--write] [--json PATH] [--sounds-dir DIR]
+          spectrum-over-time <file> [--win-sec 4 --hop-sec 1]
+          chroma    <file> [--win-sec 8 --hop-sec 1]
+          modulation <file>
+          width     <file>
         """)
       return
     }
@@ -650,6 +944,10 @@ struct BlankIFI {
     case "fix": cmdFix(rest)
     case "convert": cmdConvert(rest)
     case "reanalyze": await cmdReanalyze(rest)
+    case "spectrum-over-time": cmdSpectrumOverTime(rest)
+    case "chroma": cmdChroma(rest)
+    case "modulation": cmdModulation(rest)
+    case "width": cmdWidth(rest)
     default: fail("unknown subcommand '\(cmd)'")
     }
   }

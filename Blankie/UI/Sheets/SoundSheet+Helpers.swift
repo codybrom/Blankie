@@ -45,7 +45,11 @@ extension SoundSheet {
   var progressMessage: LocalizedStringKey {
     switch mode {
     case .add:
-      return "Importing sound..."
+      switch importProgress?.stage {
+      case .converting: return "Converting to AAC…"
+      case .measuring: return "Measuring loudness…"
+      case nil: return "Importing sound..."
+      }
     case .edit:
       return "Saving changes..."
     }
@@ -61,8 +65,16 @@ extension SoundSheet {
     }
   }
 
+  @ViewBuilder
   var processingOverlay: some View {
-    SoundSheetProcessingOverlay(progressMessage: progressMessage)
+    if mode.isAdd {
+      SoundSheetProcessingOverlay(
+        progressMessage: progressMessage,
+        fraction: importProgress?.fraction ?? 0,
+        onCancel: { cancelImport() })
+    } else {
+      SoundSheetProcessingOverlay(progressMessage: progressMessage)
+    }
   }
 
   var isCustomSoundInEditMode: Bool {

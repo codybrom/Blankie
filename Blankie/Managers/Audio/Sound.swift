@@ -86,14 +86,17 @@ open class Sound: NSObject, Identifiable {
     didSet {
       UserDefaults.shared.set(isSelected, forKey: "\(fileName)_isSelected")
 
-      // A newly selected sound starts playing once playback is active.
-      if isSelected, oldValue == false {
-        // A preset holds at most one music sound (last selected wins). Synchronous so
-        // the outgoing sound fades as this one comes in. Skipped during bootstrap.
-        if isMusic, !AudioManager.isBootstrapping {
-          AudioManager.shared.deselectOtherMusicSounds(except: self)
-        }
+      // A preset holds at most one music sound (last selected wins). Synchronous so
+      // the outgoing sound fades as this one comes in. Skipped during bootstrap.
+      if isSelected, oldValue == false, isMusic, !AudioManager.isBootstrapping {
+        AudioManager.shared.deselectOtherMusicSounds(except: self)
+      }
 
+      // A newly selected sound starts playing once playback is active. A discarded mix
+      // brings its preset's sounds back without playing them.
+      if isSelected, oldValue == false,
+        AudioManager.isBootstrapping || !AudioManager.shared.isRestoringSelections
+      {
         DispatchQueue.main.async { [weak self] in
           guard let self = self else { return }
 
@@ -238,7 +241,7 @@ open class Sound: NSObject, Identifiable {
     }
   }
 
-  @ObservationIgnored var player: SoundPlayer?
+  @ObservationIgnored var player: (any EngineSoundPlayer)?
 
   /// Explicit playback lifecycle. `var` because Sound+Playback maintains it from another file.
   var playbackState: PlaybackState = .stopped
@@ -415,9 +418,11 @@ open class Sound: NSObject, Identifiable {
   @MainActor
   func setSpatialPlacement(angleDegrees: Float, distance: Float, persist: Bool) {
     let point = AudioEngineManager.point(angleDegrees: angleDegrees, distance: distance)
-    player?.spatialPosition = point
-    if let player, player.isSpatial {
-      player.node.position = point
+    if let player = player as? SoundPlayer {
+      player.spatialPosition = point
+      if player.isSpatial {
+        player.node.position = point
+      }
     }
     if persist {
       SpatialSessionManager.shared.setPlacement(

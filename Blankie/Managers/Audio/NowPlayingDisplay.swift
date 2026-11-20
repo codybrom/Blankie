@@ -31,6 +31,8 @@ enum NowPlayingDisplay {
         singleSound.localizedSubtitle ?? (singleSound.isCustom ? singleSound.creditedAuthor : nil)
         ?? "Blankie"
       return (title: singleSound.localizedTitle, artist: artist)
+    } else if let unsavedMix = AudioManager.shared.unsavedMix {
+      return (title: unsavedMix.name, artist: "")
     } else if AudioManager.shared.isQuickMix {
       // Quick Mix has no preset, so name it explicitly (not "Custom Mix").
       let artistInfo = soundNameSummary(currentMixSoundTitles())
@@ -113,6 +115,8 @@ enum NowPlayingDisplay {
   static func widgetSubtitle(resolvedCreatorName: String?) -> String? {
     if let singleSound = AudioManager.shared.singleSound {
       return singleSound.isCustom ? singleSound.creditedAuthor : nil
+    } else if AudioManager.shared.unsavedMix != nil {
+      return nil
     } else if let creator = resolvedCreatorName, !AudioManager.shared.isQuickMix {
       return creator
     } else {
@@ -138,17 +142,19 @@ enum NowPlayingDisplay {
     if let singleSound = AudioManager.shared.singleSound {
       anchorSound = singleSound
     } else {
-      // The longest selected sound (not only playing ones), so time still tracks
-      // while paused.
+      // The longest selected loop (not only playing ones), so time still tracks
+      // while paused. Kaleidoscopes never loop, so they can't anchor progress.
       anchorSound =
         AudioManager.shared.sounds
-        .filter { $0.isSelected }
+        .filter { $0.isSelected && $0.playbackDuration.isFinite }
         .max { $0.playbackDuration < $1.playbackDuration }
     }
 
     // Under a second, a 0.25 s position poll can't see the wrap (it needs a
     // 0.5 s drop), so the bar would run past the end. Show it indeterminate.
-    guard let anchorSound, anchorSound.playbackDuration >= 1 else { return nil }
+    guard let anchorSound, anchorSound.playbackDuration.isFinite,
+      anchorSound.playbackDuration >= 1
+    else { return nil }
     return (anchorSound.playbackPosition, anchorSound.playbackDuration)
   }
 
@@ -199,7 +205,9 @@ enum NowPlayingDisplay {
   /// A single sound's lock-screen artwork: its SF Symbol in the accent on the
   /// dark tinted card, mirroring the in-app placeholder.
   static func singleFallbackImage(for sound: Sound) -> PlatformImage? {
-    fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
+    // A Kaleidoscope's artwork is a picture of its own glass.
+    if let artwork = (sound as? KaleidoscopeSound)?.artwork { return artwork }
+    return fallbackArtworkImage(glyph: .symbol(sound.systemIconName), fraction: 0.4)
   }
 
   /// The fallback for a mix without custom or animated artwork, matching its library
@@ -215,7 +223,13 @@ enum NowPlayingDisplay {
   static func mixFallbackGlyph() -> FallbackArtwork.Glyph {
     .playback(
       isQuickMix: AudioManager.shared.isQuickMix,
-      isDefaultPreset: PresetManager.shared.currentPreset?.isDefault ?? true,
+      isDefaultPreset: mixShowsBrandArtwork,
       icons: AudioManager.shared.playingSoundIcons())
+  }
+
+  /// The default preset, or no preset at all, shows the Blankie mark. An unsaved mix has no
+  /// preset but gets a montage of its sounds, like a custom preset.
+  static var mixShowsBrandArtwork: Bool {
+    PresetManager.shared.currentPreset?.isDefault ?? (AudioManager.shared.unsavedMix == nil)
   }
 }

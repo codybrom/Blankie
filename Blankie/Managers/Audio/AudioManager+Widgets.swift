@@ -120,7 +120,7 @@ extension AudioManager {
       preset.isDefault ? GlobalSettings.allSoundsToken : preset.id.uuidString
     }
     let soundTokens = sounds.filter { !$0.isPresetUseOnly }.map { sound in
-      GlobalSettings.singleToken(forFileName: sound.fileName)
+      PlayableItem.single(fileName: sound.fileName).token
     }
     return (presetTokens + soundTokens).compactMap(widgetFavorite(forToken:))
   }

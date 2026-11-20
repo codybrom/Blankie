@@ -54,6 +54,35 @@ import Testing
     return entries.filter { $0.hasPrefix("\(fileName)-aac-") }
   }
 
+  // MARK: - Importing
+
+  /// The import works on a file in tmp and moves it into CustomSounds once it's measured.
+  @Test func importMovesTheStagedFileIntoCustomSounds() async throws {
+    let dir = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: dir) }
+    let source = dir.appendingPathComponent("tone.wav")
+    try TestAudio.writeTone(to: source, seconds: 1)
+
+    let result = await CustomSoundManager.shared.importSound(
+      from: source, title: "Test Import", iconName: "waveform")
+    let sound = try result.get()
+    sandbox.trackCustomSound(named: sound.fileName)
+
+    let directory = try sandbox.customSoundsDirectory()
+    let stored = directory.appendingPathComponent("\(sound.fileName).wav")
+    let staged = FileManager.default.temporaryDirectory
+      .appendingPathComponent("\(sound.fileName).wav")
+    #expect(FileManager.default.fileExists(atPath: stored.path))
+    #expect(!FileManager.default.fileExists(atPath: staged.path))
+
+    // The sidecar is written in the background. Wait for it, so restore() removes it
+    // instead of the write landing afterward in the real CustomSounds folder.
+    let sidecar = directory.appendingPathComponent(
+      "\(sound.fileName)\(CustomSoundManager.mirrorSuffix)")
+    await sandbox.waitUntil { FileManager.default.fileExists(atPath: sidecar.path) }
+    #expect(FileManager.default.fileExists(atPath: sidecar.path))
+  }
+
   // MARK: - Adds and deletes keep live instances
 
   /// Single sound holds a `Sound` instance, so an add must not rebuild the others.

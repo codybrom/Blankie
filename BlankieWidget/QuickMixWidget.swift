@@ -204,7 +204,10 @@ private struct QuickMixTransportView: View {
   let isPlaying: Bool
 
   var body: some View {
-    Button(intent: WidgetPlayFavoriteIntent(favoriteToken: GlobalSettings.quickMixToken)) {
+    Button(
+      intent: WidgetPlayFavoriteIntent(
+        favoriteToken: GlobalSettings.quickMixToken, pauses: isPlaying)
+    ) {
       Image(systemName: isPlaying ? "pause.fill" : "play.fill")
         .font(.system(size: 12, weight: .bold))
         .foregroundStyle(renderingMode == .accented ? .white : .black)

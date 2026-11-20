@@ -112,7 +112,7 @@ extension EditPresetSheet {
                   Text(sound.localizedTitle)
                 } icon: {
                   Image(systemName: sound.systemIconName)
-                    .foregroundColor(activeAccentColor)
+                    .foregroundStyle(.primary)
                 }
 
                 SoundCreditInfoButton(sound: sound, accent: activeAccentColor)
@@ -134,7 +134,7 @@ extension EditPresetSheet {
                 Text(sound.localizedTitle)
               } icon: {
                 Image(systemName: sound.systemIconName)
-                  .foregroundColor(activeAccentColor)
+                  .foregroundStyle(.primary)
               }
 
               SoundCreditInfoButton(sound: sound, accent: activeAccentColor)

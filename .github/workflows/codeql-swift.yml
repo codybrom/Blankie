@@ -32,7 +32,7 @@ jobs:
     name: Analyze (swift)
     # Don't scan draft PRs (push/schedule are unaffected)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 120
     permissions:
       security-events: write
@@ -47,17 +47,10 @@ jobs:
         with:
           languages: swift
           build-mode: manual
-      - name: Select latest Xcode
-        run: |
-          echo "Installed Xcode versions:"
-          ls -d /Applications/Xcode*.app 2>/dev/null || true
-          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
-          if [ -z "$LATEST" ]; then LATEST=/Applications/Xcode.app; fi
-          # The image's default Xcode (26.4.1) can't open objectVersion=100, so
-          # select the newest installed Xcode.
-          echo "Selecting $LATEST"
-          sudo xcode-select -s "$LATEST"
-          xcodebuild -version
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
       - name: Build Swift project
         run: |
           if [ ! -f "Configuration.xcconfig" ]; then

@@ -19,7 +19,7 @@ import Testing
 @Suite struct WidgetTokenGrammarTests {
 
   @Test func singleTokenRoundTrips() {
-    let token = GlobalSettings.singleToken(forFileName: "rain")
+    let token = PlayableItem.single(fileName: "rain").token
     #expect(token == "solo:rain")
     #expect(GlobalSettings.singleFileName(fromToken: token) == "rain")
   }
@@ -33,7 +33,7 @@ import Testing
 
   /// Only the first `solo:` is stripped, so a delimiter in the file name survives.
   @Test func singleTokenPreservesColonInFileName() {
-    let token = GlobalSettings.singleToken(forFileName: "a:b")
+    let token = PlayableItem.single(fileName: "a:b").token
     #expect(token == "solo:a:b")
     #expect(GlobalSettings.singleFileName(fromToken: token) == "a:b")
   }
@@ -43,7 +43,7 @@ import Testing
     #expect(!GlobalSettings.quickMixToken.hasPrefix(PlayableItem.singleTokenPrefix))
     #expect(UUID(uuidString: GlobalSettings.allSoundsToken) == nil)
     #expect(UUID(uuidString: GlobalSettings.quickMixToken) == nil)
-    #expect(UUID(uuidString: GlobalSettings.singleToken(forFileName: "rain")) == nil)
+    #expect(UUID(uuidString: PlayableItem.single(fileName: "rain").token) == nil)
     let uuid = UUID()
     #expect(UUID(uuidString: uuid.uuidString) == uuid)
   }
@@ -99,7 +99,7 @@ import Testing
   @Test func resolvesSingleTokenToItsSound() {
     let rain = TestSound(fileName: "test-rain")
     audioManager.sounds = [rain]
-    let token = GlobalSettings.singleToken(forFileName: "test-rain")
+    let token = PlayableItem.single(fileName: "test-rain").token
 
     let favorite = audioManager.widgetFavorite(forToken: token)
     #expect(favorite?.token == token)
@@ -110,7 +110,7 @@ import Testing
 
   @Test func singleTokenForMissingSoundIsNil() {
     audioManager.sounds = []
-    let token = GlobalSettings.singleToken(forFileName: "ghost")
+    let token = PlayableItem.single(fileName: "ghost").token
     #expect(audioManager.widgetFavorite(forToken: token) == nil)
   }
 
@@ -206,7 +206,7 @@ import Testing
     audioManager.singleSound = rain
 
     #expect(
-      audioManager.currentFavoriteToken == GlobalSettings.singleToken(forFileName: "test-rain"))
+      audioManager.currentFavoriteToken == PlayableItem.single(fileName: "test-rain").token)
   }
 
   @Test func currentTokenIsQuickMixWithoutSingle() {

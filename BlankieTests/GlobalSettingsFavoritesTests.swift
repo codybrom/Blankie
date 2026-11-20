@@ -45,7 +45,7 @@ import Testing
   // MARK: - Token helpers
 
   @Test func singleTokenRoundTrips() {
-    let token = GlobalSettings.singleToken(forFileName: "rain")
+    let token = PlayableItem.single(fileName: "rain").token
     #expect(token == "solo:rain")
     #expect(GlobalSettings.singleFileName(fromToken: token) == "rain")
     #expect(GlobalSettings.singleFileName(fromToken: GlobalSettings.allSoundsToken) == nil)
@@ -78,7 +78,7 @@ import Testing
     let deadPreset = UUID().uuidString
     settings.setStarredItems([
       GlobalSettings.allSoundsToken, GlobalSettings.quickMixToken,
-      livePreset, deadPreset, GlobalSettings.singleToken(forFileName: "rain"),
+      livePreset, deadPreset, PlayableItem.single(fileName: "rain").token,
     ])
 
     settings.pruneStarredItems(
@@ -87,25 +87,25 @@ import Testing
     #expect(settings.starredItems.contains(GlobalSettings.allSoundsToken))
     #expect(settings.starredItems.contains(GlobalSettings.quickMixToken))
     #expect(settings.starredItems.contains(livePreset))
-    #expect(settings.starredItems.contains(GlobalSettings.singleToken(forFileName: "rain")))
+    #expect(settings.starredItems.contains(PlayableItem.single(fileName: "rain").token))
     #expect(!settings.starredItems.contains(deadPreset))
   }
 
   @Test func pruneDropsSingleForMissingSound() {
     settings.setStarredItems([
-      GlobalSettings.singleToken(forFileName: "rain"),
-      GlobalSettings.singleToken(forFileName: "deleted"),
+      PlayableItem.single(fileName: "rain").token,
+      PlayableItem.single(fileName: "deleted").token,
     ])
     settings.pruneStarredItems(validPresetIDs: [], validSoundFileNames: ["rain"])
-    #expect(settings.starredItems == [GlobalSettings.singleToken(forFileName: "rain")])
+    #expect(settings.starredItems == [PlayableItem.single(fileName: "rain").token])
   }
 
   @Test func pruneKeepsSingleWhenSoundsUnknown() {
     settings.setStarredItems([
-      GlobalSettings.singleToken(forFileName: "anything"), UUID().uuidString,
+      PlayableItem.single(fileName: "anything").token, UUID().uuidString,
     ])
     settings.pruneStarredItems(validPresetIDs: [], validSoundFileNames: nil)
-    #expect(settings.starredItems == [GlobalSettings.singleToken(forFileName: "anything")])
+    #expect(settings.starredItems == [PlayableItem.single(fileName: "anything").token])
   }
 
   // MARK: - Setters
