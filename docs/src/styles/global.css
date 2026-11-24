@@ -103,6 +103,10 @@ html {
 
   & [id] {
     scroll-margin-top: 100px;
+    /* The sale banner is pinned above the nav from the sm breakpoint up. */
+    @media (width >= 40rem) {
+      scroll-margin-top: calc(100px + var(--banner-h));
+    }
   }
 }
 

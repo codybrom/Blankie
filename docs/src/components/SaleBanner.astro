@@ -33,14 +33,14 @@ const half = Array.from({ length: 2 }, () => lines).flat();
   id="sale-banner"
   href="/blankie-friday/"
   hidden
-  class="absolute inset-x-0 top-(--nav-h) z-40 flex h-11 items-center overflow-hidden bg-b-yellow text-[15px] font-bold text-midnight no-underline sm:fixed sm:top-0 sm:z-60"
+  class="absolute inset-x-0 top-(--nav-h) z-40 flex h-11 items-center overflow-hidden bg-b-yellow text-[15px] font-bold text-midnight no-underline sm:fixed sm:top-0"
 >
   <span class="sr-only">{name}. {lines.join(" ").replace(/_+/g, "blank")} See the deal.</span>
   <span class="sale-track flex shrink-0 items-center whitespace-nowrap" aria-hidden="true">
     {
       [...half, ...half].map((line, i) => (
         <>
-          {i % 3 === 0 && (
+          {(i % half.length) % 3 === 0 && (
             <>
               <span class="mx-10 rounded-full bg-midnight px-3.5 py-1 text-xs font-black tracking-[0.2em] text-b-yellow uppercase">
                 {name}
