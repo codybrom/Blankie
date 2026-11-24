@@ -1,0 +1,940 @@
+---
+// Blank(ie) Friday: a parody of over-the-top Black Friday sale pages, for an
+// app that has always been free. Every "deal" on it is true every day.
+import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import { ArrowRight, Check, RotateCcw } from "@lucide/astro";
+import appStoreBadge from "../assets/brand/app-store-badge.svg";
+import macAppStoreBadge from "../assets/brand/mac-app-store-badge.svg";
+import Comparison from "@/components/Comparison.astro";
+import Button from "@/components/Button.astro";
+import heroDevices from "../assets/hero-devices.png";
+import icon from "../assets/brand/blankie-icon-v2.png";
+import card from "../assets/cards/blankie-friday.jpg";
+import shotSounds from "../assets/devices/mac-window-v2.png";
+import lockScreenLoop from "../assets/devices/iphone-lockscreen.mp4?url";
+import lockScreenPoster from "../assets/devices/iphone-lockscreen-poster.jpg?url";
+import shotTimer from "../assets/devices/iphone-timer.png";
+import shotWidget from "../assets/guides/control-blankie-anywhere/iphone-quick-mix-widget.png";
+import shotCarPlay from "../assets/devices/carplay-mockup.jpg";
+import shotImport from "../assets/guides/import-sounds-iphone-ipad/iphone-manage-sounds.png";
+
+const title = "Blank(ie) Friday: a deal so hot, it's not even real";
+const description =
+  "Blankie's biggest sale ever is also its only sale ever. Every sound, every feature and the lifetime unlimited plan are $0, marked down from $0. Offer ends never.";
+
+const appStore =
+  "https://apps.apple.com/us/app/blankie/id6740096581?platform=iphone&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+const macAppStore =
+  "https://apps.apple.com/us/app/blankie/id6740096581?platform=mac&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
+
+// 14-point sticker shape for the "save" burst.
+const burst = `polygon(${Array.from({ length: 28 }, (_, i) => {
+  const r = i % 2 ? 40 : 50;
+  const a = (i / 28) * Math.PI * 2;
+  return `${(50 + r * Math.sin(a)).toFixed(1)}% ${(50 - r * Math.cos(a)).toFixed(1)}%`;
+}).join(",")})`;
+
+const doorbusters = [
+  {
+    name: "All 24 sounds",
+    note: "Rain, waves, fans, four kinds of noise and more",
+    img: shotSounds,
+    alt: "Blankie on Mac with a mix of sound tiles playing",
+  },
+  {
+    name: "Animated Lock Screen art",
+    note: "Looping video while your mix plays",
+    video: { src: lockScreenLoop, poster: lockScreenPoster },
+    crop: "object-top",
+    alt: "An iPhone Lock Screen with rain running down a window as animated artwork",
+  },
+  {
+    name: "Sleep timer",
+    note: "Fades out when you do",
+    img: shotTimer,
+    crop: "object-bottom",
+    alt: "Blankie's sleep timer on iPhone",
+  },
+  {
+    name: "Home Screen widgets",
+    note: "Start a mix without opening the app",
+    img: shotWidget,
+    alt: "The Quick Mix widget on the iPhone Home Screen",
+  },
+  {
+    name: "CarPlay",
+    note: "You wouldn't download a car",
+    img: shotCarPlay,
+    alt: "Blankie on a CarPlay dashboard",
+  },
+  {
+    name: "Your own sounds",
+    note: "Import as many as you like",
+    img: shotImport,
+    alt: "The Manage Sounds list on iPhone with imported sounds",
+  },
+];
+
+const included = [
+  "All included sounds",
+  "Unlimited presets",
+  "iPhone, iPad, Mac and CarPlay",
+  "No ads",
+  "No subscriptions",
+  "No accounts",
+  "No tracking",
+];
+const tiers = [
+  {
+    name: "Basic",
+    pitch: "Everything.",
+    badge: "Most popular",
+    cta: "Start with Basic",
+    featured: false,
+  },
+  {
+    name: "Pro",
+    pitch: "Also everything.",
+    badge: "Recommended",
+    cta: "Go Pro",
+    featured: true,
+  },
+  {
+    name: "Lifetime Unlimited",
+    pitch: "Still everything, but it sounds fancier.",
+    badge: "Best value",
+    cta: "Go Lifetime",
+    featured: false,
+  },
+];
+// The platform switch changes the words around the price, never the price.
+const platforms = [
+  {
+    id: "mobile",
+    label: "iPhone + iPad",
+    unit: "on iPhone + iPad",
+    note: "For an unlimited time also includes Mac!",
+  },
+  {
+    id: "mac",
+    label: "Mac",
+    unit: "on Mac",
+    note: "For an unlimited time also includes iPhone + iPad!",
+  },
+  {
+    id: "bundle",
+    label: "Bundle",
+    unit: "for everything",
+    note: "Every device. Bundle and save 0%!",
+  },
+];
+const defaultPlatform = platforms[2];
+---
+
+<Layout
+  title={title}
+  description={description}
+  image={card}
+  imageAlt="A sale ad for Blank(ie) Friday from Blankie. A deal so hot, it's not even real! A yellow badge says up to 100% off everything."
+>
+  <div class="overflow-hidden">
+    {/* Hero */}
+    <section class="relative px-5 pt-36 pb-16 text-center">
+      <div class="mx-auto max-w-4xl">
+        <p class="inline-block -rotate-2 rounded-md bg-b-yellow px-4 py-1.5 text-sm font-bold tracking-[0.2em] text-midnight uppercase">
+          Blank(ie) Friday starts now!
+        </p>
+        <h1 class="mt-6 text-5xl/[0.98] font-black tracking-tighter text-balance text-fg-1 uppercase sm:text-7xl lg:text-8xl">
+          A deal so hot, <span class="grad-text">it's not even real!</span>
+        </h1>
+        <p class="mt-5 text-xl font-semibold text-b-yellow sm:text-2xl">
+          We can't make the price any lower!
+        </p>
+
+        <div class="relative mx-auto mt-12 flex w-fit items-end justify-center gap-5">
+          <div class="text-left">
+            <div class="text-sm font-semibold tracking-widest text-fg-3 uppercase">Was</div>
+            <div class="text-5xl font-bold text-fg-3 line-through decoration-b-yellow decoration-4 sm:text-6xl">
+              $0
+            </div>
+          </div>
+          <div class="text-left">
+            <div class="text-sm font-semibold tracking-widest text-b-yellow uppercase">Now only</div>
+            <div class="text-8xl/none font-black tracking-tighter text-fg-1 sm:text-9xl">$0</div>
+          </div>
+          <div
+            class="absolute -top-10 -right-24 hidden size-32 rotate-12 place-content-center bg-b-yellow text-center text-midnight sm:grid"
+            style={`clip-path: ${burst}`}
+          >
+            <span class="text-xs/tight font-bold uppercase">
+              Save<br /><span class="text-2xl font-black">100%</span><br />of $0
+            </span>
+          </div>
+        </div>
+
+        {/* The whole product line, in one honest picture. */}
+        <Image
+          src={heroDevices}
+          alt="Blankie on iPad, Mac, iPhone, CarPlay and iPhone Duo"
+          widths={[640, 896, 1792]}
+          sizes="(min-width: 896px) 896px, 100vw"
+          loading="eager"
+          class="mx-auto mt-14 w-full max-w-3xl"
+        />
+
+        {/* The hard sell: arrows, a pulsing button, a stock meter and a guilt-trip way out. */}
+        <div class="mt-14 flex flex-col items-center">
+          <div class="w-full max-w-md">
+            <div class="flex items-baseline justify-between text-xs font-bold tracking-widest text-fg-2 uppercase">
+              <span>Hurry! Deals are (un)limited!</span>
+              <span class="text-b-yellow">∞ of ∞ left</span>
+            </div>
+            <div class="mt-2 h-4 overflow-hidden rounded-full bg-white/10">
+              <div class="bf-stock size-full rounded-full"></div>
+            </div>
+            <p class="mt-2 text-xs text-fg-3">Don't miss out on these incredible, forever-in-a-lifetime deals!</p>
+          </div>
+          <div class="bf-arrows mt-9 flex gap-6 text-4xl leading-none font-black text-b-yellow" aria-hidden="true">
+            <span>↓</span><span>↓</span><span>↓</span><span>↓</span><span>↓</span>
+          </div>
+          <a
+            href={appStore}
+            data-app-store
+            class="bf-push relative mt-4 block rounded-2xl bg-b-yellow px-8 py-6 text-2xl/tight font-black tracking-tight text-midnight uppercase no-underline sm:px-14 sm:text-4xl/tight"
+          >
+            Yes! Give me everything
+            <span class="block text-base font-bold tracking-widest sm:text-lg">for $0, right now</span>
+          </a>
+          {/* The way out, with the sad moon from the Worse Sleep parody icon. */}
+          <a
+            href="#compare"
+            class="glass mt-7 inline-flex items-center gap-3 rounded-xl bg-white/8 py-2.5 pr-6 pl-3 text-left text-sm font-semibold text-fg-1 no-underline shadow-[0_4px_14px_rgba(0,0,0,0.35)] transition hover:-translate-y-0.5 hover:bg-white/12"
+          >
+            <svg viewBox="13 14 32 32" class="size-10 shrink-0" aria-hidden="true">
+              <defs>
+                <radialGradient id="bf-moon" cx="0.38" cy="0.34" r="0.75">
+                  <stop offset="0" stop-color="#fdfdf8" />
+                  <stop offset="1" stop-color="#c9ced6" />
+                </radialGradient>
+              </defs>
+              <circle cx="29" cy="30" r="16" fill="url(#bf-moon)" />
+              <g fill="none" stroke-linecap="round">
+                <circle cx="24.4" cy="28" r="1.4" fill="#4a5060" stroke="none" />
+                <circle cx="34" cy="28" r="1.4" fill="#4a5060" stroke="none" />
+                <path d="M22.4 31q2 1 4 0M32 31q2 1 4 0" stroke="#a9a1c2" stroke-width="1.2" />
+                <path d="M26.6 37.2q2.6-1.4 5.2 0" stroke="#6a7383" stroke-width="1.5" />
+              </g>
+            </svg>
+            <span>No thanks, I'd rather lie awake wondering when my free trial ends</span>
+          </a>
+        </div>
+
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <a href={appStore} aria-label="Download Blankie on the App Store" data-app-store>
+              <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" loading="eager" />
+            </a>
+            <a href={macAppStore} aria-label="Download Blankie on the Mac App Store">
+              <Image src={macAppStoreBadge} alt="Download on the Mac App Store" class="h-14 w-auto" loading="eager" />
+            </a>
+        </div>
+      </div>
+    </section>
+
+    {/* Deals of the day */}
+    <section class="border-t border-white/5 px-5 py-20">
+      <div class="mx-auto max-w-5xl">
+        <h2 class="text-center text-3xl font-black tracking-tight text-fg-1 uppercase sm:text-4xl">
+          Deals of the day! <span class="text-fg-3">(And every other day.)</span>
+        </h2>
+        <p class="mx-auto mt-3 max-w-xl text-center text-balance text-fg-2">
+          Get your favorite sounds half off, or half on, or even at full volume. Just the way you like it!
+        </p>
+        <ul class="mt-10 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3">
+          {
+            doorbusters.map((item, i) => (
+              <li class="glass relative rounded-2xl p-6">
+                <span
+                  class:list={[
+                    "absolute -top-3 right-4 rounded-md bg-b-yellow px-2.5 py-1 text-[11px] font-black tracking-wider text-midnight uppercase",
+                    i % 2 ? "rotate-3" : "-rotate-3",
+                  ]}
+                >
+                  100% off
+                </span>
+                <div class="-mx-2 -mt-2 mb-5 h-64 overflow-hidden rounded-xl bg-midnight">
+                  {item.video ? (
+                    <video
+                      src={item.video.src}
+                      poster={item.video.poster}
+                      aria-label={item.alt}
+                      width="540"
+                      height="1104"
+                      autoplay
+                      muted
+                      loop
+                      playsinline
+                      data-bf-video
+                      class:list={["size-full object-cover", item.crop]}
+                    />
+                  ) : (
+                    <Image
+                      src={item.img}
+                      alt={item.alt}
+                      widths={[400, 800]}
+                      sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 90vw"
+                      loading="lazy"
+                      class:list={["size-full object-cover", item.crop ?? "object-top"]}
+                    />
+                  )}
+                </div>
+                <h3 class="text-lg font-semibold text-fg-1">{item.name}</h3>
+                <p class="mt-1 text-sm text-fg-2">{item.note}</p>
+                <p class="mt-4 flex items-baseline gap-2.5">
+                  <span class="text-sm text-fg-3">Normally Free</span>
+                  <span class="text-2xl font-black text-b-yellow">Now $0!</span>
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="mt-8 text-center text-sm text-fg-3">
+          Limit infinity per customer. While supplies last, which is forever.
+        </p>
+      </div>
+    </section>
+
+    {/* Plans */}
+    <section class="border-t border-white/5 px-5 py-20">
+      <div class="mx-auto max-w-5xl">
+        <h2 class="text-center text-3xl font-black tracking-tight text-fg-1 uppercase sm:text-4xl">
+          Pick the plan that's right for you
+        </h2>
+        <p class="mt-3 text-center text-fg-2">Technically, they're all the same plan.</p>
+
+        <div class="mt-8 flex justify-center">
+          <fieldset class="m-0 inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+            <legend class="sr-only">Platform</legend>
+            {
+              platforms.map((b) => (
+                <button
+                  type="button"
+                  data-platform={b.id}
+                  data-unit={b.unit}
+                  data-note={b.note}
+                  aria-pressed={b.id === defaultPlatform.id ? "true" : "false"}
+                  class="relative rounded-full px-4 py-2 text-sm font-semibold text-fg-2 transition-colors hover:text-white aria-pressed:bg-b-yellow aria-pressed:text-midnight"
+                >
+                  {b.label}
+                  {b.id === "bundle" && (
+                    <span class="ml-1.5 rounded-full bg-midnight px-1.5 py-0.5 text-[10px] font-black tracking-wide text-b-yellow uppercase">
+                      Save 0%
+                    </span>
+                  )}
+                </button>
+              ))
+            }
+          </fieldset>
+        </div>
+
+        <div class="mt-12 grid grid-cols-1 items-center gap-5 md:grid-cols-3">
+          {
+            tiers.map((tier) => (
+              <div
+                class:list={[
+                  "glass relative rounded-2xl p-7 pt-9",
+                  tier.featured && "ring-2 ring-b-yellow md:-my-4 md:py-11 md:shadow-[0_20px_60px_rgba(255,211,0,0.15)]",
+                ]}
+              >
+                <span
+                  class:list={[
+                    "absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[11px] font-black tracking-wider whitespace-nowrap uppercase",
+                    tier.featured ? "bg-b-yellow text-midnight" : "bg-moon text-midnight",
+                  ]}
+                >
+                  {tier.badge}
+                </span>
+                <h3 class="text-xl font-semibold text-fg-1">{tier.name}</h3>
+                <p class="mt-1 text-sm text-fg-2">{tier.pitch}</p>
+                <p class="mt-5">
+                  <span class="text-5xl font-black tracking-tight text-fg-1">$0</span>
+                  <span class="text-sm text-fg-3" data-platform-unit>{` ${defaultPlatform.unit}`}</span>
+                </p>
+                <p class="mt-1 min-h-5 text-xs text-fg-3" data-platform-note>
+                  {defaultPlatform.note}
+                </p>
+                <ul class="mt-6 grid list-none gap-2.5 p-0 text-sm text-fg-2">
+                  {included.map((line) => (
+                    <li class="flex items-center gap-2.5">
+                      <Check size={16} stroke-width={2.5} class="shrink-0 text-b-yellow" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={appStore}
+                  data-app-store
+                  class:list={[
+                    "mt-7 block rounded-xl px-5 py-3 text-center text-sm font-semibold no-underline transition hover:-translate-y-0.5",
+                    tier.featured ? "bg-b-yellow text-midnight" : "bg-moon text-midnight",
+                  ]}
+                >
+                  {tier.cta} for $0
+                </a>
+              </div>
+            ))
+          }
+        </div>
+
+        <p class="mt-10 text-center text-sm text-fg-2">
+          Looking for monthly or annual options? You won't find them here because Blankie has no subscriptions!
+        </p>
+
+        <div class="border-b-yellow/60 mx-auto mt-14 max-w-xl -rotate-1 rounded-2xl border-2 border-dashed p-6 text-center">
+          <p class="text-sm font-bold tracking-[0.2em] text-fg-3 uppercase">Exclusive coupon</p>
+          {/* A sticker over the code. Clicking it peels it off. */}
+          <div class="bf-coupon relative mx-auto mt-4 w-fit">
+            <div data-coupon-code aria-hidden="true" class="bf-code relative m-0 h-17 min-w-72 overflow-hidden rounded-lg bg-b-yellow">
+              {/* A puff when the sticker comes off, a cobweb in the corner, then a few
+                  specks drifting across nothing. */}
+              <svg class="bf-web" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M0 0 L46 0 M0 0 L43 17 M0 0 L33 33 M0 0 L17 43 M0 0 L0 46" />
+                <path d="M12 0 Q11 3 11.3 4.4 Q8 6.5 8.4 8.4 Q6 9.6 4.4 11.3 Q3 11 0 12" />
+                <path d="M25 0 Q23 6 23.2 9 Q18 12 17.7 17.7 Q12 18 9 23.2 Q6 23 0 25" />
+                <path d="M38 0 Q35 9 35.4 13.8 Q28 18 27 27 Q18 28 13.8 35.4 Q9 35 0 38" />
+              </svg>
+              <span class="bf-puff" style="--dx: -38px; --dy: -14px"></span>
+              <span class="bf-puff" style="--dx: 34px; --dy: -18px"></span>
+              <span class="bf-puff" style="--dx: -26px; --dy: 16px"></span>
+              <span class="bf-puff" style="--dx: 42px; --dy: 12px"></span>
+              <span class="bf-puff" style="--dx: 4px; --dy: -24px"></span>
+              <span class="bf-puff" style="--dx: -6px; --dy: 22px"></span>
+              <span class="bf-mote" style="--top: 28%; --size: 3px; --dur: 13s; --delay: 1.2s"></span>
+              <span class="bf-mote" style="--top: 58%; --size: 2px; --dur: 17s; --delay: 3s"></span>
+              <span class="bf-mote" style="--top: 72%; --size: 4px; --dur: 21s; --delay: 6s"></span>
+            </div>
+            <button
+              type="button"
+              data-coupon-sticker
+              aria-label="Click to reveal your exclusive coupon"
+              class="bf-sticker absolute inset-0 grid cursor-pointer place-items-center rounded-lg text-sm/snug font-bold tracking-wide text-midnight"
+            >
+              Click to reveal your
+              <br />
+              exclusive coupon
+            </button>
+          </div>
+          <div class="bf-coupon-after mt-4 text-fg-1" aria-hidden="true" hidden>
+            <p hidden class="bf-beat m-0 text-sm text-fg-2">Oh?</p>
+            <p hidden class="bf-beat m-0 text-sm text-fg-2">It's blank?</p>
+            <p hidden class="bf-beat m-0 text-base font-semibold text-balance">Blankie doesn't have coupons or a checkout...</p>
+            <p hidden class="bf-beat m-0 mt-1 text-xl font-black text-b-yellow">because Blankie is free!</p>
+          </div>
+          <p data-coupon-after class="sr-only" aria-live="polite"></p>
+          <button
+            type="button"
+            data-coupon-reset
+            hidden
+            class="mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/15 px-3.5 py-1.5 text-xs font-semibold text-fg-2 transition-colors hover:border-white/30 hover:text-fg-1"
+          >
+            <RotateCcw size={13} stroke-width={2} /> Reset coupon
+          </button>
+        </div>
+      </div>
+    </section>
+
+    {/* The real comparison from the homepage, under a sale-flyer headline. */}
+    <div class="border-t border-white/5">
+      <Comparison heading="Why pay more? (Or at all?)" />
+    </div>
+
+    {/* The honest part */}
+    <section class="border-t border-white/5 px-5 py-20">
+      <div class="mx-auto max-w-2xl text-center">
+        <Image
+          src={icon}
+          alt="The Blankie app icon, a yellow-to-blue gradient B with a cream moon on midnight navy"
+          width={88}
+          height={88}
+          class="mx-auto mb-6 size-22 rounded-[22%] shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
+        />
+        <h2 class="text-3xl font-semibold tracking-tight text-fg-1 sm:text-4xl">Okay, but seriously.</h2>
+        <p class="mt-5 text-lg/relaxed text-fg-2">
+          Blankie is an ambient sound mixer for iPhone, iPad, Mac and CarPlay. It's free today, it was free yesterday and it'll be free next year.
+        </p>
+        <p class="mt-4 text-lg/relaxed text-fg-2">
+          There's no sale because there's nothing <em>to</em> sell, and with no ads, no subscriptions, no accounts and no tracking Blankie collects nothing to sell about you either.
+        </p>
+        <div class="mt-8 flex flex-col items-center gap-5">
+          <div class="flex flex-wrap justify-center gap-3">
+            <a href={appStore} aria-label="Download Blankie on the App Store" data-app-store>
+              <Image src={appStoreBadge} alt="Download on the App Store" class="h-14 w-auto" />
+            </a>
+            <a href={macAppStore} aria-label="Download Blankie on the Mac App Store">
+              <Image src={macAppStoreBadge} alt="Download on the Mac App Store" class="h-14 w-auto" />
+            </a>
+          </div>
+          <Button href="/guides/why-is-blankie-free/">
+            Why is Blankie free? <ArrowRight size={17} stroke-width={1.75} />
+          </Button>
+        </div>
+        <p class="mt-14 text-xs/relaxed text-fg-3">
+          Offer ends never. Void nowhere. No purchase necessary, or possible. Savings of 100% calculated against the regular price of $0. Lifetime Unlimited is not a real plan. Neither are the other two. Blank(ie) Friday may be extended without notice, and has been.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  {/* Fake live activity in the corner: one true fact, then news that has nothing to do with buying. */}
+  <div id="bf-live" class="fixed bottom-4 left-4 z-40 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2.5">
+    <div id="bf-toast" class="bf-toast rounded-xl border border-hair bg-lift px-4 py-3 text-sm text-fg-2 shadow-[0_8px_30px_rgba(0,0,0,0.5)]" aria-hidden="true" hidden></div>
+    <div class="flex items-center gap-3 rounded-xl border border-hair bg-lift py-3 pr-2 pl-4 text-sm text-fg-1 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+      <span class="bf-dot size-2.5 shrink-0 rounded-full bg-success"></span>
+      <span class="grow"><strong class="font-semibold">1 person</strong> is looking at this deal right now: You!</span>
+      <button
+        id="bf-live-close"
+        type="button"
+        aria-label="Hide the live activity"
+        class="grid size-7 shrink-0 place-content-center rounded-full text-lg leading-none text-fg-3 transition-colors hover:bg-white/10 hover:text-fg-1"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // The Lock Screen clip stays on its poster frame when the OS asks to reduce motion.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.querySelectorAll<HTMLVideoElement>("video[data-bf-video]").forEach((v) => {
+        v.autoplay = false;
+        v.pause();
+      });
+    }
+
+    // Pops a random line of "live activity" every few seconds until the corner
+    // is closed: a person, a place and something they're up to.
+    const live = document.getElementById("bf-live");
+    const toast = document.getElementById("bf-toast");
+    const places = [
+      "Toledo 🇺🇸", "Tulsa 🇺🇸", "Boise 🇺🇸", "Duluth 🇺🇸", "Fresno 🇺🇸",
+      "Winnipeg 🇨🇦", "Halifax 🇨🇦", "Leeds 🇬🇧", "Cardiff 🇬🇧",
+      "Hamburg 🇩🇪", "Leipzig 🇩🇪", "Valencia 🇪🇸", "Bilbao 🇪🇸",
+      "Lyon 🇫🇷", "Nantes 🇫🇷", "Debrecen 🇭🇺", "Szeged 🇭🇺",
+      "Bologna 🇮🇹", "Turin 🇮🇹", "Osaka 🇯🇵", "Sapporo 🇯🇵",
+      "Busan 🇰🇷", "Daegu 🇰🇷", "Kraków 🇵🇱", "Gdańsk 🇵🇱",
+      "Porto 🇵🇹", "Braga 🇵🇹", "Izmir 🇹🇷", "Bursa 🇹🇷",
+      "Chengdu 🇨🇳", "Hangzhou 🇨🇳", "Perth 🇦🇺",
+    ];
+    const who = ["Someone", "A person", "Somebody"];
+    const doings = [
+      "is on the toilet listening to Brown Noise",
+      "fell asleep to Fireplace an hour ago",
+      "has had Coffee Shop on since lunch",
+      "just mixed Waves with Warm Piano",
+      "is listening to Train for the cat",
+      "is listening to Fan in a room with a real fan",
+      "is listening to Summer Night in the middle of winter",
+      "just set a sleep timer and ignored it",
+      "is listening to Laundry Room instead of doing laundry",
+      "paid $0 for Lo-Fi Beats and feels fine about it",
+      "is blowing their nose right now",
+      "can't remember why they walked into the kitchen",
+      "just added nothing to their cart",
+      "has had this tab open for months",
+      "is thinking about soup",
+      "just saved $0 and told no one",
+      "is asleep. Unrelated",
+      "is named Carl.",
+      "looked at this page and nodded",
+      "is wondering whether to read the fine print",
+    ];
+    // Whole lines that need no place. One of these comes up about one time in five.
+    const asides = [
+      "A person who saw this on Threads is very confused right now.",
+      "Someone just scrolled all the way down looking for the catch.",
+      "A person refreshed this page to see if the price changed.",
+    ];
+    const pick = (list: string[]) => list[Math.floor(Math.random() * list.length)];
+    let last = "";
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const show = () => {
+      if (!toast) return;
+      const line = () =>
+        Math.random() < 0.2 ? pick(asides) : `${pick(who)} in ${pick(places)} ${pick(doings)}.`;
+      let text = line();
+      while (text === last) text = line();
+      last = text;
+      toast.textContent = text;
+      toast.hidden = false;
+      requestAnimationFrame(() => toast.classList.add("is-in"));
+      timer = setTimeout(() => {
+        toast.classList.remove("is-in");
+        timer = setTimeout(() => {
+          toast.hidden = true;
+          timer = setTimeout(show, 3500);
+        }, 400);
+      }, 5000);
+    };
+    timer = setTimeout(show, 2500);
+    document.getElementById("bf-live-close")?.addEventListener("click", () => {
+      clearTimeout(timer);
+      live?.remove();
+    });
+  </script>
+
+  <script>
+    // Pops the blank code and throws confetti out of where it was.
+    const explode = (coupon: HTMLElement) => {
+      const code = coupon.querySelector<HTMLElement>(".bf-code");
+      if (!code) return;
+      const colors = ["--color-b-yellow", "--color-b-blue", "--color-moon", "--color-warm", "--color-accent-blue"];
+      const box = code.getBoundingClientRect();
+      for (let n = 0; n < 70; n++) {
+        const piece = document.createElement("span");
+        piece.className = "bf-confetti";
+        const w = 5 + Math.random() * 6;
+        piece.style.width = `${w}px`;
+        piece.style.height = `${w * (0.4 + Math.random() * 0.8)}px`;
+        piece.style.background = `var(${colors[n % colors.length]})`;
+        piece.style.left = `${Math.random() * box.width}px`;
+        piece.style.top = `${Math.random() * box.height}px`;
+        code.parentElement?.appendChild(piece);
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 90 + Math.random() * 170;
+        const dx = Math.cos(angle) * speed;
+        const up = Math.sin(angle) * speed - 80;
+        const spin = (Math.random() - 0.5) * 1080;
+        const flight = piece.animate(
+          [
+            { transform: "translate(0, 0) rotate(0deg)", opacity: 1 },
+            { transform: `translate(${dx * 0.6}px, ${up * 0.6}px) rotate(${spin * 0.5}deg)`, opacity: 1, offset: 0.35 },
+            { transform: `translate(${dx}px, ${up + 220}px) rotate(${spin}deg)`, opacity: 0 },
+          ],
+          { duration: 1400 + Math.random() * 900, easing: "cubic-bezier(0.2, 0.6, 0.4, 1)", fill: "forwards" },
+        );
+        flight.onfinish = () => piece.remove();
+      }
+      code.animate(
+        [
+          { transform: "scale(1)", opacity: 1 },
+          { transform: "scale(1.08)", opacity: 1, offset: 0.4 },
+          { transform: "scale(0.2)", opacity: 0 },
+        ],
+        { duration: 260, easing: "ease-in", fill: "forwards" },
+      ).onfinish = () => {
+        // Close the gap the coupon left. The confetti is positioned, so it keeps falling.
+        const holder = coupon;
+        holder.style.height = `${holder.offsetHeight}px`;
+        holder.style.transition = "height 0.5s ease, margin 0.5s ease";
+        requestAnimationFrame(() => {
+          holder.style.height = "0px";
+          holder.style.marginTop = "0px";
+        });
+      };
+    };
+
+    // Coupon sticker: peels away to a blank code, then the penny drops in beats,
+    // the coupon pops into confetti and a reset button puts it all back.
+    const sticker = document.querySelector<HTMLButtonElement>("[data-coupon-sticker]");
+    const couponAfter = document.querySelector<HTMLElement>("[data-coupon-after]");
+    const resetButton = document.querySelector<HTMLButtonElement>("[data-coupon-reset]");
+    const coupon = sticker?.closest<HTMLElement>(".bf-coupon");
+    const after = coupon?.parentElement?.querySelector<HTMLElement>(".bf-coupon-after");
+    const beats = Array.from(after?.querySelectorAll<HTMLElement>(".bf-beat") ?? []);
+    let timers: ReturnType<typeof setTimeout>[] = [];
+    const later = (ms: number, run: () => void) => {
+      timers.push(setTimeout(run, ms));
+    };
+    sticker?.addEventListener("click", () => {
+      if (!coupon) return;
+      coupon.classList.add("is-peeled");
+      sticker.tabIndex = -1;
+      sticker.setAttribute("aria-hidden", "true");
+      if (after) after.hidden = false;
+      const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      // "Oh?" and "It's blank?" each give way to the next line. The last two stay.
+      beats.forEach((beat, i) => {
+        if (still && i < 2) return;
+        later(still ? 0 : 700 + i * 1200, () => {
+          if (i === 1 || i === 2) beats[i - 1].hidden = true;
+          beat.hidden = false;
+          requestAnimationFrame(() => beat.classList.add("is-in"));
+        });
+      });
+      const end = still ? 0 : 700 + beats.length * 1200 + 500;
+      // Then the blank coupon pops into confetti.
+      if (!still) later(end, () => explode(coupon));
+      later(still ? 0 : end + 700, () => {
+        if (resetButton) resetButton.hidden = false;
+      });
+      if (couponAfter) {
+        couponAfter.textContent =
+          "Your coupon code is blank. That's because there are no coupons and no checkout. Blankie is free!";
+      }
+    });
+    resetButton?.addEventListener("click", () => {
+      if (!coupon || !sticker) return;
+      timers.forEach(clearTimeout);
+      timers = [];
+      coupon.querySelectorAll(".bf-confetti").forEach((piece) => {
+        piece.remove();
+      });
+      coupon.querySelector(".bf-code")?.getAnimations().forEach((a) => {
+        a.cancel();
+      });
+      coupon.style.height = "";
+      coupon.style.marginTop = "";
+      coupon.style.transition = "";
+      coupon.classList.remove("is-peeled");
+      beats.forEach((beat) => {
+        beat.hidden = true;
+        beat.classList.remove("is-in");
+      });
+      if (after) after.hidden = true;
+      if (couponAfter) couponAfter.textContent = "";
+      resetButton.hidden = true;
+      sticker.tabIndex = 0;
+      sticker.removeAttribute("aria-hidden");
+      sticker.focus();
+    });
+  </script>
+
+  <script>
+    // Platform switch: every option costs $0, so only the words change.
+    const platformButtons = document.querySelectorAll<HTMLButtonElement>("[data-platform]");
+    platformButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        platformButtons.forEach((b) => {
+          b.setAttribute("aria-pressed", String(b === button));
+        });
+        document.querySelectorAll("[data-platform-unit]").forEach((el) => {
+          el.textContent = ` ${button.dataset.unit ?? ""}`;
+        });
+        document.querySelectorAll("[data-platform-note]").forEach((el) => {
+          el.textContent = button.dataset.note ?? "";
+        });
+      });
+    });
+  </script>
+
+  <style>
+    /* The pushy bits move unless the visitor asks for less motion. */
+    .bf-arrows span {
+      animation: bf-bounce 0.9s ease-in-out infinite;
+    }
+    .bf-arrows span:nth-child(even) {
+      animation-delay: 0.15s;
+    }
+    .bf-push {
+      animation: bf-pulse 1.6s ease-out infinite;
+    }
+    /* The coupon sticker: cream, with its bottom-right corner folded back. */
+    .bf-sticker {
+      background: linear-gradient(315deg, transparent 0 14px, var(--color-moon) 14px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      transform-origin: 0 0;
+      transition:
+        transform 0.7s cubic-bezier(0.5, 0, 0.75, 0.2),
+        opacity 0.7s ease-in;
+    }
+    .bf-sticker::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(315deg, transparent 50%, #c9c2ad 50%);
+      border-top-left-radius: 4px;
+      box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.2);
+      transition: width 0.2s, height 0.2s;
+    }
+    .bf-sticker:hover::after,
+    .bf-sticker:focus-visible::after {
+      width: 30px;
+      height: 30px;
+    }
+    .bf-coupon.is-peeled .bf-sticker {
+      transform: perspective(500px) rotateX(-8deg) rotateY(-70deg) rotateZ(-14deg) translate(-30px, -40px);
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* The blank code: dulls once revealed, with a puff of dust and drifting specks. */
+    .bf-code {
+      transition: filter 1.2s 0.6s;
+    }
+    .bf-coupon.is-peeled .bf-code {
+      filter: saturate(0.3) brightness(0.8) sepia(0.25);
+    }
+    /* Global: the pieces are made by the script, so they miss the scoped styles. */
+    :global(.bf-confetti) {
+      position: absolute;
+      z-index: 2;
+      border-radius: 1px;
+      pointer-events: none;
+    }
+    .bf-web {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 52px;
+      height: 52px;
+      fill: none;
+      stroke: color-mix(in srgb, var(--color-midnight) 45%, transparent);
+      stroke-width: 0.7;
+      opacity: 0;
+      transition: opacity 1.6s 1.4s;
+    }
+    .bf-coupon.is-peeled .bf-web {
+      opacity: 1;
+    }
+    .bf-puff,
+    .bf-mote {
+      position: absolute;
+      border-radius: 9999px;
+      background: color-mix(in srgb, var(--color-midnight) 35%, transparent);
+      opacity: 0;
+    }
+    .bf-puff {
+      top: 50%;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      background: color-mix(in srgb, #e8e0c8 70%, transparent);
+      filter: blur(4px);
+    }
+    .bf-coupon.is-peeled .bf-puff {
+      animation: bf-puff 1.4s 0.55s ease-out forwards;
+    }
+    .bf-mote {
+      top: var(--top);
+      left: -8px;
+      width: var(--size);
+      height: var(--size);
+    }
+    .bf-coupon.is-peeled .bf-mote {
+      animation: bf-mote var(--dur) var(--delay) linear infinite;
+    }
+    @keyframes bf-puff {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.4);
+      }
+      20% {
+        opacity: 0.9;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 10px)) scale(2.2);
+      }
+    }
+    @keyframes bf-mote {
+      0% {
+        opacity: 0;
+        transform: translate(0, 0);
+      }
+      10% {
+        opacity: 0.55;
+      }
+      50% {
+        transform: translate(150px, -6px);
+      }
+      90% {
+        opacity: 0.55;
+      }
+      100% {
+        opacity: 0;
+        transform: translate(300px, 4px);
+      }
+    }
+    .bf-beat {
+      opacity: 0;
+      transform: translateY(0.4rem);
+      transition:
+        opacity 0.4s,
+        transform 0.4s;
+    }
+    .bf-beat.is-in {
+      opacity: 1;
+      transform: none;
+    }
+    /* Slanted stripes that slide along the stock meter. One stripe pair is 24px
+       across, which is about 34px along the bar at this angle. */
+    .bf-stock {
+      background: repeating-linear-gradient(
+        -45deg,
+        var(--color-b-yellow) 0 12px,
+        var(--color-warm) 12px 24px
+      );
+      background-size: 33.94px 100%;
+      animation: bf-stripes 0.9s linear infinite;
+    }
+    @keyframes bf-bounce {
+      50% {
+        transform: translateY(0.5rem);
+      }
+    }
+    .bf-toast {
+      opacity: 0;
+      transform: translateY(0.75rem);
+      transition:
+        opacity 0.35s,
+        transform 0.35s;
+    }
+    .bf-toast.is-in {
+      opacity: 1;
+      transform: none;
+    }
+    .bf-dot {
+      animation: bf-blink 1.4s ease-in-out infinite;
+    }
+    @keyframes bf-blink {
+      50% {
+        opacity: 0.3;
+      }
+    }
+    @keyframes bf-stripes {
+      to {
+        background-position-x: 33.94px;
+      }
+    }
+    @keyframes bf-pulse {
+      0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-b-yellow) 85%, transparent);
+      }
+      100% {
+        box-shadow: 0 0 0 1.1rem color-mix(in srgb, var(--color-b-yellow) 0%, transparent);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .bf-arrows span,
+      .bf-stock,
+      .bf-dot,
+      .bf-push {
+        animation: none;
+      }
+      .bf-toast {
+        transition: none;
+      }
+      .bf-coupon.is-peeled .bf-sticker {
+        transform: none;
+        transition: opacity 0.3s;
+      }
+      .bf-beat {
+        transform: none;
+        transition: none;
+      }
+      .bf-coupon.is-peeled .bf-puff {
+        animation: none;
+      }
+      .bf-web {
+        transition: none;
+      }
+      .bf-coupon.is-peeled .bf-mote {
+        animation: none;
+        opacity: 0.45;
+        left: 30%;
+      }
+    }
+  </style>
+</Layout>
