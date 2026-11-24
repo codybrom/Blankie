@@ -10,6 +10,7 @@ import Comparison from "@/components/Comparison.astro";
 import Button from "@/components/Button.astro";
 import heroDevices from "../assets/hero-devices.png";
 import icon from "../assets/brand/blankie-icon-v2.png";
+import card from "../assets/cards/blankie-friday.jpg";
 import shotSounds from "../assets/devices/mac-window-v2.png";
 import lockScreenLoop from "../assets/devices/iphone-lockscreen.mp4?url";
 import lockScreenPoster from "../assets/devices/iphone-lockscreen-poster.jpg?url";
@@ -18,7 +19,7 @@ import shotWidget from "../assets/guides/control-blankie-anywhere/iphone-quick-m
 import shotCarPlay from "../assets/devices/carplay-mockup.jpg";
 import shotImport from "../assets/guides/import-sounds-iphone-ipad/iphone-manage-sounds.png";
 
-const title = "Blank(ie) Friday: a deal so hot, it's not";
+const title = "Blank(ie) Friday: a deal so hot, it's not even real";
 const description =
   "Blankie's biggest sale ever is also its only sale ever. Every sound, every feature and the lifetime unlimited plan are $0, marked down from $0. Offer ends never.";
 
@@ -131,7 +132,12 @@ const platforms = [
 const defaultPlatform = platforms[2];
 ---
 
-<Layout title={title} description={description}>
+<Layout
+  title={title}
+  description={description}
+  image={card}
+  imageAlt="A sale ad for Blank(ie) Friday from Blankie. A deal so hot, it's not even real! A yellow badge says up to 100% off everything."
+>
   <div class="overflow-hidden">
     {/* Hero */}
     <section class="relative px-5 pt-36 pb-16 text-center">
@@ -140,7 +146,7 @@ const defaultPlatform = platforms[2];
           Blank(ie) Friday starts now!
         </p>
         <h1 class="mt-6 text-5xl/[0.98] font-black tracking-tighter text-balance text-fg-1 uppercase sm:text-7xl lg:text-8xl">
-          A deal so hot, <span class="grad-text">it's not!</span>
+          A deal so hot, <span class="grad-text">it's not even real!</span>
         </h1>
         <p class="mt-5 text-xl font-semibold text-b-yellow sm:text-2xl">
           We can't make the price any lower!
