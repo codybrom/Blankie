@@ -1,6 +1,6 @@
 ---
 // Blank(ie) Friday: a sale-season joke for a free app. A ticker pinned above
-// the nav from Nov. 15 to 30, 2026 in the visitor's own time, and all year on
+// the nav from Nov. 15 to Dec. 5, 2026 in the visitor's own time, and all year on
 // the Blank(ie) Friday page. On phones it sits below the nav and scrolls away
 // with the page. Add ?blankie-friday to any page to preview it.
 const name = "Blank(ie) Friday";
@@ -59,7 +59,7 @@ const half = Array.from({ length: 2 }, () => lines).flat();
   (() => {
     const banner = document.getElementById("sale-banner");
     const now = new Date();
-    const onSale = now >= new Date(2026, 10, 15) && now < new Date(2026, 11, 1);
+    const onSale = now >= new Date(2026, 10, 15) && now < new Date(2026, 11, 6);
     const onSalePage = location.pathname.startsWith("/blankie-friday");
     if (banner && (onSale || onSalePage || location.search.includes("blankie-friday"))) {
       banner.hidden = false;
