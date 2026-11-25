@@ -103,6 +103,10 @@ html {
 
   & [id] {
     scroll-margin-top: 100px;
+    /* The sale banner is pinned above the nav from the sm breakpoint up. */
+    @media (width >= 40rem) {
+      scroll-margin-top: calc(100px + var(--banner-h));
+    }
   }
 }
 
@@ -535,6 +539,8 @@ body {
 .dark {
   /* Height of the sale banner above the nav. Zero unless the banner is showing. */
   --banner-h: 0px;
+  /* Height of the fixed nav: a 2.5rem logo, 1rem of padding above and below and a 1px border. */
+  --nav-h: calc(4.5rem + 1px);
   --background: var(--color-navy-deep); /* Blankie 2.0 midnight navy */
   --foreground: var(--color-ink);
 

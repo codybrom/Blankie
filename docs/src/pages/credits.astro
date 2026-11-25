@@ -34,7 +34,7 @@ const sounds: Sound[] = (soundsJSON?.sounds as Sound[]) ?? [];
 interface KaleidoscopeRecipe {
   title: string;
   fileName: string;
-  source: { title: string; author: string; license: string; url: string };
+  source: { title: string; author: string; license: string; url?: string };
 }
 const recipes = import.meta.glob<KaleidoscopeRecipe>(
   "../../../Blankie/Resources/Kaleidoscope/*.json",
@@ -44,11 +44,11 @@ const kaleidoscopes: Sound[] = Object.values(recipes)
   .map((recipe) => ({
     title: recipe.title,
     author: recipe.source.author,
-    authorUrl: recipe.source.url.startsWith("https://freesound.org/")
+    authorUrl: recipe.source.url?.startsWith("https://freesound.org/")
       ? `https://freesound.org/people/${recipe.source.author}/`
       : "",
     license: recipe.source.license,
-    soundUrl: recipe.source.url,
+    soundUrl: recipe.source.url ?? "",
     soundName: recipe.source.title,
     fileName: recipe.fileName,
   }))
@@ -198,7 +198,7 @@ const licenseOf = (id: string) =>
                       {sound.title}
                     </div>
                     <div class="mt-1 text-[13px] leading-normal text-fg-3 [&_a]:border-b [&_a]:border-transparent [&_a]:text-accent-ink [&_a]:no-underline [&_a:hover]:border-accent-ink">
-                      <a href={sound.soundUrl}>{sound.soundName}</a>
+                      {sound.soundUrl ? <a href={sound.soundUrl}>{sound.soundName}</a> : sound.soundName}
                       <span>
                         {" · by "}
                         {sound.authorUrl ? (

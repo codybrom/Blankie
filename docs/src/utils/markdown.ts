@@ -299,7 +299,7 @@ marked.use({
         const audio = guideAudio[id];
         if (!audio) throw new Error(`Unknown guide audio: ${id}`);
         const title = escapeAttr(audio.title);
-        return `<figure class="guide-audio" data-guide-audio><img src="${audio.artwork}" alt="" width="128" height="128" class="guide-audio-art" /><div class="guide-audio-body"><figcaption><strong>${title}</strong><span>${escapeAttr(audio.subtitle)}</span></figcaption><div class="guide-audio-track" hidden><div class="guide-audio-fill"></div></div><audio src="${audio.src}" controls preload="none"></audio></div><button type="button" class="guide-audio-play" aria-label="Play the ${title} sample" hidden><span class="guide-audio-icon-play">${filled(normalize(play))}</span><span class="guide-audio-icon-pause">${filled(normalize(pause))}</span></button></figure>\n`;
+        return `<figure class="guide-audio" data-guide-audio><img src="${audio.artwork}" alt="" width="128" height="128" class="guide-audio-art" /><div class="guide-audio-body"><figcaption><strong>${title}</strong><span>${escapeAttr(audio.subtitle)}</span></figcaption><div class="guide-audio-track" role="slider" tabindex="0" aria-label="Position in the ${title} sample" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="0:00" hidden><div class="guide-audio-fill"></div></div><audio src="${audio.src}" controls preload="none"></audio></div><button type="button" class="guide-audio-play" aria-label="Play the ${title} sample" hidden><span class="guide-audio-icon-play">${filled(normalize(play))}</span><span class="guide-audio-icon-pause">${filled(normalize(pause))}</span></button></figure>\n`;
       },
     },
   ],
