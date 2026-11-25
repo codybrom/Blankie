@@ -49,9 +49,6 @@ struct SharedAppModifiers: ViewModifier {
         if url.scheme == "blankie" {
           if url.host() == "highlights" {
             #if os(macOS)
-              // The pane shows About and Manage Sounds ahead of Highlights.
-              AppState.shared.showingSettingsAboutPage = false
-              AppState.shared.showingSettingsManageSoundsPage = false
               AppState.shared.showingSettingsPane = true
             #endif
             AppState.shared.showingSettingsHighlightsPage = true

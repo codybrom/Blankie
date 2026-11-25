@@ -125,9 +125,6 @@ struct SettingsView: View {
           if appState.showingSettingsAboutPage {
             AboutView()
               .toolbar { paneSubPageToolbar }
-          } else if appState.showingSettingsHighlightsPage {
-            HighlightsView()
-              .toolbar { paneSubPageToolbar }
           } else if appState.showingSettingsManageSoundsPage {
             SoundManagementView()
               .toolbar { paneSubPageToolbar }
@@ -139,6 +136,17 @@ struct SettingsView: View {
         #endif
       }
       #if os(macOS)
+        .sheet(isPresented: $appState.showingSettingsHighlightsPage) {
+          NavigationStack {
+            HighlightsView()
+            .toolbar {
+              ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { appState.showingSettingsHighlightsPage = false }
+              }
+            }
+          }
+          .frame(minWidth: 400, idealWidth: 500, minHeight: 300, idealHeight: 480)
+        }
         // Reset after the pane is gone so it doesn't flash the root mid-fade.
         .onDisappear {
           appState.showingSettingsAboutPage = false
@@ -171,7 +179,6 @@ struct SettingsView: View {
         Button {
           appState.showingSettingsAboutPage = false
           appState.showingSettingsManageSoundsPage = false
-          appState.showingSettingsHighlightsPage = false
         } label: {
           Label("Back", systemImage: "chevron.left")
         }
