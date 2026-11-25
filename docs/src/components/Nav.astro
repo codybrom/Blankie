@@ -13,7 +13,7 @@ const navLinks: NavLink[] = [
 ---
 
 <header
-  class="fixed top-0 z-50 w-full border-b border-white/10 bg-navy-deep/80 backdrop-blur-md"
+  class="fixed top-0 z-50 w-full border-b border-white/10 bg-navy-deep/80 backdrop-blur-md sm:top-(--banner-h)"
 >
   <div class="mx-auto max-w-7xl p-4 sm:px-6 lg:px-8">
     <nav class="flex items-center justify-between">
@@ -27,6 +27,7 @@ const navLinks: NavLink[] = [
           alt="The Blankie app icon, a yellow-to-blue gradient B with a cream moon on midnight navy"
           width={40}
           height={40}
+          densities={[1, 2, 3]}
           loading="eager"
           class="size-10 rounded-[22%] object-contain"
         />

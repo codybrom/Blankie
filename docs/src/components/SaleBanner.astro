@@ -1,0 +1,89 @@
+---
+// Blank(ie) Friday: a sale-season joke for a free app. A ticker pinned above
+// the nav from Nov. 15 to Dec. 5, 2026 in the visitor's own time, and all year on
+// the Blank(ie) Friday page. On phones it sits below the nav and scrolls away
+// with the page. Add ?blankie-friday to any page to preview it.
+const name = "Blank(ie) Friday";
+const lines = [
+  "A deal so hot, it's not even real!",
+  "We literally can't make it any cheaper!",
+  "Makes a great gift!",
+  "Buy none, get everything free!",
+  "Ships in time for Christmas!",
+  "We're passing the savings on to YOU!",
+  "Everything is available!",
+  "Hurry! Supplies are unlimited.",
+  "Our best price of the season! Same as last season.",
+  "Perfect for your impossible-to-shop-for dad!",
+  "Act now! Or later! The price will still be $0!",
+  "Free shipping on all rain sounds.",
+  "Our lowest prices ever, technically.",
+  "Savings so big, they're theoretical.",
+  "$0 down and no payments for 0 months. Or ever.",
+  "Offer not available on Android.",
+];
+// The name badge comes back every three lines, and every line gets a star and
+// room to breathe.
+// The second half of the track is a copy of the first, so sliding one half's
+// width loops without a jump.
+const half = Array.from({ length: 2 }, () => lines).flat();
+---
+
+<a
+  id="sale-banner"
+  href="/blankie-friday/"
+  hidden
+  class="absolute inset-x-0 top-(--nav-h) z-40 flex h-11 items-center overflow-hidden bg-b-yellow text-[15px] font-bold text-midnight no-underline sm:fixed sm:top-0"
+>
+  <span class="sr-only">{name}. {lines.join(" ").replace(/_+/g, "blank")} See the deal.</span>
+  <span class="sale-track flex shrink-0 items-center whitespace-nowrap" aria-hidden="true">
+    {
+      [...half, ...half].map((line, i) => (
+        <>
+          {(i % half.length) % 3 === 0 && (
+            <>
+              <span class="mx-10 rounded-full bg-midnight px-3.5 py-1 text-xs font-black tracking-[0.2em] text-b-yellow uppercase">
+                {name}
+              </span>
+              <span class="text-midnight/50">★</span>
+            </>
+          )}
+          <span class="px-10">{line}</span>
+          <span class="text-midnight/50">★</span>
+        </>
+      ))
+    }
+  </span>
+</a>
+<script is:inline>
+  (() => {
+    const banner = document.getElementById("sale-banner");
+    const now = new Date();
+    const onSale = now >= new Date(2026, 10, 15) && now < new Date(2026, 11, 6);
+    const onSalePage = location.pathname.startsWith("/blankie-friday");
+    if (banner && (onSale || onSalePage || location.search.includes("blankie-friday"))) {
+      banner.hidden = false;
+      document.documentElement.style.setProperty("--banner-h", "2.75rem");
+    }
+  })();
+</script>
+
+<style>
+  .sale-track {
+    animation: sale-ticker 170s linear infinite;
+  }
+  #sale-banner:hover .sale-track,
+  #sale-banner:focus-visible .sale-track {
+    animation-play-state: paused;
+  }
+  @keyframes sale-ticker {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sale-track {
+      animation: none;
+    }
+  }
+</style>
