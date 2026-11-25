@@ -97,5 +97,6 @@ extension SoundSheet {
     fadeSound = true
     isPresetUseOnly = false
     isMusic = sound.isMusicDefault
+    sound.setEqualizer(gains: SoundEqualizer.flat)
   }
 }

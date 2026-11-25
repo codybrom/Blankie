@@ -18,6 +18,7 @@ Blankie 2.2 adds Kaleidoscopes, a new kind of sound that Blankie creates live, w
   - **Still when you want it to be** - With Reduce Motion on, the visual holds still until you move it yourself.
 - **Search the Library (iPhone)** - A new **Search** tab finds any preset, Kaleidoscope or sound by name.
 - **Start a mix from any sound** - Playing one sound on its own? Tap **+** to add another and hear them together. Save it as a preset, or let it go.
+- **An equalizer for each sound** - When a sound is almost right, open its editor and tap **Equalizer**. Pick a preset like **Reduce Treble** or **Next Room**, or drag the seven bands yourself while the sound plays. It works on built-in sounds, your own imports and Kaleidoscopes, and it travels with the presets you share.
 - **Highlights** - Each update's highlights now live in **Settings → Highlights**, and a dot on the Settings button points you there when there's something you haven't read. If Blankie is set to another language, the notes are translated on your device. You can also open the page from a `blankie://highlights` link.
 - **Translate the software license** - When Blankie runs in another language, **About → Software License** has a **Translate** button that shows Apple's translation next to the English text.
 

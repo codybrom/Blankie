@@ -325,6 +325,7 @@ struct SoundIcon: View {
         {
           Button("Reset to Default", systemImage: "arrow.counterclockwise") {
             SoundCustomizationManager.shared.resetCustomizations(for: sound.fileName)
+            sound.applyEqualizer()
           }
         }
       }

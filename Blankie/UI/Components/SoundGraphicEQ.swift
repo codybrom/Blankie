@@ -7,13 +7,14 @@
 
 import SwiftUI
 
-/// A named curve for the graphic EQ, as seven band gains in dB (60 Hz to 15 kHz).
+/// A named curve for the equalizer, as one gain in dB per `SoundEqualizer` band.
 enum GraphicEQPreset: String, CaseIterable, Identifiable {
   case flat
-  case bassBooster
-  case bassReducer
-  case trebleBooster
-  case trebleReducer
+  case increaseBass
+  case reduceBass
+  case increaseTreble
+  case reduceTreble
+  case deep
   case smallSpeakers
   case nextRoom
   case oldRadio
@@ -22,54 +23,81 @@ enum GraphicEQPreset: String, CaseIterable, Identifiable {
 
   var name: String {
     switch self {
-    case .flat: "Flat"
-    case .bassBooster: "Bass Booster"
-    case .bassReducer: "Bass Reducer"
-    case .trebleBooster: "Treble Booster"
-    case .trebleReducer: "Treble Reducer"
-    case .smallSpeakers: "Small Speakers"
-    case .nextRoom: "Next Room"
-    case .oldRadio: "Old Radio"
+    case .flat:
+      String(localized: "Flat", comment: "Equalizer preset that leaves the sound unchanged.")
+    case .increaseBass: String(localized: "Increase Bass", comment: "Equalizer preset name.")
+    case .reduceBass: String(localized: "Reduce Bass", comment: "Equalizer preset name.")
+    case .increaseTreble: String(localized: "Increase Treble", comment: "Equalizer preset name.")
+    case .reduceTreble: String(localized: "Reduce Treble", comment: "Equalizer preset name.")
+    case .deep:
+      String(
+        localized: "Deep",
+        comment: "Equalizer preset that makes a sound fuller and softens its high end.")
+    case .smallSpeakers: String(localized: "Small Speakers", comment: "Equalizer preset name.")
+    case .nextRoom:
+      String(
+        localized: "Next Room",
+        comment: "Equalizer preset that muffles a sound as if heard through a wall.")
+    case .oldRadio:
+      String(
+        localized: "Old Radio",
+        comment: "Equalizer preset that makes a sound thin, like a small old radio.")
     }
   }
 
-  var gains: [Double] {
+  var gains: [Float] {
     switch self {
     case .flat: [0, 0, 0, 0, 0, 0, 0]
-    case .bassBooster: [15, 12, 6, 0, 0, 0, 0]
-    case .bassReducer: [-18, -14, -7, 0, 0, 0, 0]
-    case .trebleBooster: [0, 0, 0, 0, 6, 12, 15]
-    case .trebleReducer: [0, 0, 0, 0, -7, -14, -18]
+    case .increaseBass: [15, 12, 6, 0, 0, 0, 0]
+    case .reduceBass: [-18, -14, -7, 0, 0, 0, 0]
+    case .increaseTreble: [0, 0, 0, 0, 6, 12, 15]
+    case .reduceTreble: [0, 0, 0, 0, -7, -14, -18]
+    case .deep: [10, 8, 5, 2, -3, -7, -10]
     case .smallSpeakers: [12, 9, 4, 0, -4, -8, -10]
     case .nextRoom: [3, 2, 0, -7, -14, -18, -18]
     case .oldRadio: [-18, -15, -5, 3, 5, -9, -18]
     }
+  }
+
+  /// The preset whose curve is exactly `gains`, if any.
+  static func matching(_ gains: [Float]) -> GraphicEQPreset? {
+    allCases.first { $0.gains == gains }
+  }
+
+  /// The matching preset's name, or Custom for a hand-set curve.
+  static func name(for gains: [Float]) -> String {
+    matching(gains)?.name
+      ?? String(
+        localized: "equalizer.preset.custom", defaultValue: "Custom",
+        comment: "Shown in place of an equalizer preset name after the bands are moved by hand.")
   }
 }
 
 /// A graphic equalizer for one sound. A pop-up button picks a preset, and
 /// picking one moves the seven band sliders so the bank shows what the preset
 /// does. Moving a slider by hand switches it to Custom. A live spectrum behind
-/// the sliders shows the sound band by band. Settings aren't saved yet.
+/// the sliders shows the sound band by band. Changes save as they're made.
 struct SoundGraphicEQ: View {
   let sound: Sound
+  @Binding var isPreviewing: Bool
 
-  @State private var gains: [Double] = GraphicEQPreset.flat.gains
+  @State private var gains: [Float] = SoundEqualizer.flat
   @State private var preset: GraphicEQPreset? = .flat
-  @State private var dragStartGains: [Int: Double] = [:]
-  @State private var meter = SoundSpectrumMeter(centers: SoundPlayer.graphicEQFrequencies)
+  @State private var dragStartGains: [Int: Float] = [:]
+  @State private var meter = SoundSpectrumMeter(centers: SoundEqualizer.frequencies)
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   private static let sliderLength: CGFloat = 200
   private static let handleHeight: CGFloat = 7
-  private static let range = Double(SoundPlayer.graphicEQRangeDB)
+  private static let range = SoundEqualizer.rangeDB
+  /// How far one VoiceOver swipe or arrow key press moves a band, in dB.
+  private static let keyStep: Float = 3
   private static let labels = ["60", "150", "400", "1K", "2.4K", "6K", "15K"]
 
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       HStack {
-        Text(verbatim: "Equalizer")
-          .font(.headline)
+        SoundPreviewButton(isPreviewing: $isPreviewing, turnsRedWhilePlaying: false)
         Spacer()
         presetMenu
       }
@@ -89,16 +117,14 @@ struct SoundGraphicEQ: View {
     }
     .onAppear {
       if !reduceMotion { meter.start(for: sound) }
-      let current = sound.graphicEQGains.map(Double.init)
-      guard current.count == gains.count else { return }
-      gains = current
-      preset = GraphicEQPreset.allCases.first { $0.gains == current }
+      gains = sound.equalizerGains
+      preset = GraphicEQPreset.matching(gains)
     }
     .onDisappear { meter.stop() }
     .onChange(of: preset) { _, preset in
-      guard let preset else { return }
+      guard let preset, preset.gains != gains else { return }
       withAnimation(.snappy) { gains = preset.gains }
-      apply()
+      sound.setEqualizer(gains: gains)
     }
     .sensoryFeedback(.selection, trigger: gains.map { Int($0.rounded()) })
   }
@@ -109,7 +135,7 @@ struct SoundGraphicEQ: View {
     Menu {
       Picker(selection: $preset) {
         ForEach(GraphicEQPreset.allCases) { item in
-          Text(verbatim: item.name).tag(Optional(item))
+          Text(item.name).tag(Optional(item))
         }
       } label: {
         EmptyView()
@@ -117,13 +143,18 @@ struct SoundGraphicEQ: View {
       .pickerStyle(.inline)
     } label: {
       HStack(spacing: 6) {
-        Text(verbatim: preset?.name ?? "Custom")
+        Text(GraphicEQPreset.name(for: gains))
         Image(systemName: "chevron.up.chevron.down")
           .imageScale(.small)
+          .accessibilityHidden(true)
       }
     }
+    .menuIndicator(.hidden)
     .buttonStyle(.bordered)
     .buttonBorderShape(.capsule)
+    .fixedSize()
+    .accessibilityLabel(Text("Equalizer"))
+    .accessibilityValue(Text(GraphicEQPreset.name(for: gains)))
   }
 
   private func band(_ index: Int) -> some View {
@@ -134,6 +165,7 @@ struct SoundGraphicEQ: View {
         .font(.caption2)
         .monospacedDigit()
         .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
     }
     .frame(maxWidth: .infinity)
   }
@@ -143,7 +175,7 @@ struct SoundGraphicEQ: View {
   /// hand, and VoiceOver gets a standard slider in its place.
   private func fader(_ index: Int) -> some View {
     let travel = Self.sliderLength - Self.handleHeight
-    let fraction = (gains[index] + Self.range) / (2 * Self.range)
+    let fraction = CGFloat((gains[index] + Self.range) / (2 * Self.range))
     return SpectrumColumn(
       level: reduceMotion ? 0 : meter.levels[index], height: Self.sliderLength
     )
@@ -162,8 +194,10 @@ struct SoundGraphicEQ: View {
         .onChanged { value in
           let start = dragStartGains[index] ?? gains[index]
           dragStartGains[index] = start
-          let moved = -Double(value.translation.height / travel) * 2 * Self.range
-          setGain(max(-Self.range, min(Self.range, start + moved)), at: index)
+          let moved = -Float(value.translation.height / travel) * 2 * Self.range
+          let gain = start + moved
+          // Snaps to 0 dB near the middle.
+          setGain(abs(gain) < 1.1 ? 0 : gain, at: index)
         }
         .onEnded { _ in dragStartGains[index] = nil }
     )
@@ -174,24 +208,71 @@ struct SoundGraphicEQ: View {
         } set: {
           setGain($0, at: index)
         },
-        in: -Self.range...Self.range
+        in: -Self.range...Self.range,
+        step: Self.keyStep
       ) {
-        Text(verbatim: "\(Self.labels[index]) hertz")
+        Text(
+          Measurement(value: Double(SoundEqualizer.frequencies[index]), unit: UnitFrequency.hertz)
+            .formatted(.measurement(width: .wide, usage: .asProvided)))
       }
+      .accessibilityValue(Text(verbatim: Self.decibelText(gains[index])))
     }
+    #if os(macOS)
+      .focusable()
+      .onMoveCommand { direction in
+        switch direction {
+        case .up: setGain(gains[index] + Self.keyStep, at: index)
+        case .down: setGain(gains[index] - Self.keyStep, at: index)
+        default: break
+        }
+      }
+    #endif
   }
 
-  /// Snaps to 0 dB near the middle, and a hand edit leaves the preset.
-  private func setGain(_ newValue: Double, at index: Int) {
-    let snapped = abs(newValue) < 1.1 ? 0 : newValue
-    guard snapped != gains[index] else { return }
-    gains[index] = snapped
-    if let current = preset, current.gains != gains { preset = nil }
-    apply()
+  private static func decibelText(_ gain: Float) -> String {
+    let number = gain.formatted(
+      .number.precision(.fractionLength(0)).sign(strategy: .always(includingZero: false)))
+    return "\(number) dB"
   }
 
-  private func apply() {
-    sound.setGraphicEQ(gains: gains.map(Float.init))
+  /// Clamps to the band range. A hand edit leaves the preset.
+  private func setGain(_ newValue: Float, at index: Int) {
+    let clamped = max(-Self.range, min(Self.range, newValue))
+    guard clamped != gains[index] else { return }
+    gains[index] = clamped
+    preset = GraphicEQPreset.matching(gains)
+    sound.setEqualizer(gains: gains)
+  }
+}
+
+/// The equalizer for one sound, presented from the sound editor.
+struct SoundEqualizerSheet: View {
+  let sound: Sound
+  @Binding var isPreviewing: Bool
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    NavigationStack {
+      SoundGraphicEQ(sound: sound, isPreviewing: $isPreviewing)
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
+        .navigationTitle(Text("Equalizer"))
+        #if !os(macOS)
+          .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+          ToolbarItem(placement: .confirmationAction) {
+            Button("Done") { dismiss() }
+          }
+        }
+    }
+    #if os(macOS)
+      .frame(width: 420, height: 370)
+    #else
+      .presentationDetents([.height(385)])
+      // A sheet this short is see-through glass by default, which fights the meters.
+      .presentationBackground(.thickMaterial)
+    #endif
   }
 }
 
@@ -199,10 +280,10 @@ struct SoundGraphicEQ: View {
   /// Preview stand-in for the sound editor: pick a built-in sound and play it.
   private struct EqualizerPreview: View {
     @State private var selected: Sound?
-    @State private var isPlaying = false
+    @State private var isPreviewing = false
 
     private var sounds: [Sound] {
-      AudioManager.shared.sounds.filter { !$0.isCustom && !($0 is KaleidoscopeSound) }
+      AudioManager.shared.sounds.filter { !$0.isCustom }
     }
 
     var body: some View {
@@ -216,19 +297,9 @@ struct SoundGraphicEQ: View {
         }
         .pickerStyle(.menu)
 
-        Button {
-          toggle()
-        } label: {
-          Image(systemName: isPlaying ? "stop.fill" : "play.fill")
-            .font(.title2)
-            .frame(width: 56, height: 56)
-        }
-        .buttonStyle(.glass)
-
         if let selected {
-          SoundGraphicEQ(sound: selected)
+          SoundGraphicEQ(sound: selected, isPreviewing: $isPreviewing)
             .padding()
-            .background(.fill.tertiary, in: .rect(cornerRadius: 26, style: .continuous))
             .id(selected.id)
         }
       }
@@ -236,27 +307,31 @@ struct SoundGraphicEQ: View {
       .onAppear {
         selected = sounds.first { $0.fileName == "rain" } ?? sounds.first
       }
-      .onChange(of: selected) { old, new in
-        old?.setGraphicEQ(gains: GraphicEQPreset.flat.gains.map(Float.init))
-        guard isPlaying, let new else { return }
+      .onChange(of: isPreviewing) { _, previewing in
+        guard let selected else { return }
+        if previewing {
+          AudioManager.shared.enterPreviewMode(for: selected)
+        } else {
+          AudioManager.shared.exitPreviewMode(resuming: false)
+        }
+      }
+      .onChange(of: selected) { _, new in
+        guard isPreviewing, let new else { return }
         AudioManager.shared.exitPreviewMode(resuming: false)
         AudioManager.shared.enterPreviewMode(for: new)
       }
-    }
-
-    private func toggle() {
-      guard let selected else { return }
-      if isPlaying {
-        AudioManager.shared.exitPreviewMode(resuming: false)
-      } else {
-        AudioManager.shared.enterPreviewMode(for: selected)
-      }
-      isPlaying.toggle()
     }
   }
 
   #Preview("Graphic EQ") {
     EqualizerPreview()
       .preferredColorScheme(.dark)
+  }
+
+  #Preview("Equalizer Sheet") {
+    if let rain = AudioManager.shared.sounds.first(where: { $0.fileName == "rain" }) {
+      SoundEqualizerSheet(sound: rain, isPreviewing: .constant(false))
+        .preferredColorScheme(.dark)
+    }
   }
 #endif

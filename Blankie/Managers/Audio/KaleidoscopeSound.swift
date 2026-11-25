@@ -57,6 +57,7 @@ final class KaleidoscopeSound: Sound {
     let kaleidoscopePlayer = KaleidoscopePlayer(recipe: recipe)
     player = kaleidoscopePlayer
     AudioEngineManager.shared.attach(kaleidoscopePlayer)
+    applyEqualizer()
     updateVolume()
     // Rewinds and marks it stopped, so play() starts through the attack.
     resetSoundPosition()

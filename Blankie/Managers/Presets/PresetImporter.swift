@@ -143,6 +143,12 @@ private enum SoundCustomizationImporter {
         if let loopSound = customization.loopSound {
           customizationManager.setLoopSound(loopSound, for: customization.fileName)
         }
+        if let equalizerGains = customization.equalizerGains {
+          // The setter clamps to the band range and drops malformed curves.
+          customizationManager.setEqualizerGains(equalizerGains, for: customization.fileName)
+          AudioManager.shared.sounds.first { $0.fileName == customization.fileName }?
+            .applyEqualizer()
+        }
 
         appliedCount += 1
       }

@@ -18,27 +18,8 @@ extension SoundSheetForm {
     ) {
       // Preview with waveform
       HStack(spacing: 12) {
-        Button(action: {
-          togglePreview()
-        }) {
-          ZStack {
-            Circle()
-              .fill(isPreviewing ? Color.red.opacity(0.1) : Color.secondary.opacity(0.1))
-              .frame(width: 44, height: 44)
-              .accessibilityHidden(true)
-
-            Image(systemName: isPreviewing ? "stop.fill" : "play.fill")
-              .font(.system(size: 18, weight: .medium))
-              .foregroundStyle(isPreviewing ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
-              .contentTransition(
-                .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating))
-          }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isPreviewing ? Text("Stop Preview") : Text("Play Preview"))
-        .disabled(isDisappearing)
-        .scaleEffect(isPreviewing ? 1.1 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isPreviewing)
+        SoundPreviewButton(isPreviewing: $isPreviewing)
+          .disabled(isDisappearing)
 
         if let fileURL = selectedFile {
           // For add mode with selected file
@@ -79,6 +60,8 @@ extension SoundSheetForm {
       .padding(.vertical, 4)
 
       // Alphabetical, with the two loop-dependent toggles right after Loop.
+
+      equalizerRow
 
       // Play/pause fades. Very short clips always hard-cut (a fade would
       // swallow them), regardless of this setting.
@@ -166,6 +149,29 @@ extension SoundSheetForm {
     }
   }
 
+  /// Edit mode only: names the sound's equalizer preset and opens the equalizer.
+  @ViewBuilder
+  var equalizerRow: some View {
+    if case .edit(let sound) = mode {
+      Button {
+        showingEqualizer = true
+      } label: {
+        HStack {
+          Text("Equalizer")
+          Spacer()
+          Text(GraphicEQPreset.name(for: sound.equalizerGains))
+            .foregroundStyle(.secondary)
+          Image(systemName: "chevron.right")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .accessibilityHidden(true)
+        }
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+    }
+  }
+
   @ViewBuilder
   var technicalDetailsSection: some View {
     if case .edit(let sound) = mode {
@@ -210,4 +216,36 @@ extension SoundSheetForm {
       }
     }
   }
+}
+
+/// The round play and stop button that previews a sound in its editor.
+struct SoundPreviewButton: View {
+  @Binding var isPreviewing: Bool
+  /// Red while playing. Off next to the equalizer's meters, where red reads as recording.
+  var turnsRedWhilePlaying = true
+
+  var body: some View {
+    Button {
+      isPreviewing.toggle()
+    } label: {
+      ZStack {
+        Circle()
+          .fill(isRed ? Color.red.opacity(0.1) : Color.secondary.opacity(0.1))
+          .frame(width: 44, height: 44)
+          .accessibilityHidden(true)
+
+        Image(systemName: isPreviewing ? "stop.fill" : "play.fill")
+          .font(.system(size: 18, weight: .medium))
+          .foregroundStyle(isRed ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
+          .contentTransition(
+            .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating))
+      }
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(isPreviewing ? Text("Stop Preview") : Text("Play Preview"))
+    .scaleEffect(isPreviewing ? 1.1 : 1.0)
+    .animation(.easeInOut(duration: 0.15), value: isPreviewing)
+  }
+
+  private var isRed: Bool { isPreviewing && turnsRedWhilePlaying }
 }

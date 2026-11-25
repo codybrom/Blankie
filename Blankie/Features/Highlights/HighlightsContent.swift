@@ -90,6 +90,11 @@ enum Highlights {
       platforms: [.mac]
     ),
     HighlightItem(
+      systemImage: "slider.vertical.3", title: "An equalizer for every sound",
+      detail:
+        "Is a sound a little too sharp or bassy for your taste? Open the sound's editor and tap Equalizer. Pick a preset like Reduce Treble or Next Room, or drag the seven bands yourself and hear the change as it plays."
+    ),
+    HighlightItem(
       systemImage: "magnifyingglass", title: "A Library with tabs and search",
       detail:
         "Home keeps your favorites, presets and Quick Mix. Kaleidoscopes and Sounds each get a tab of their own, and Search finds anything by name.",

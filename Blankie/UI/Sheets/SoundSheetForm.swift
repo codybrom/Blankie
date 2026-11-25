@@ -35,6 +35,7 @@ struct SoundSheetForm: View {
   let globalSettings = GlobalSettings.shared
   let presetManager = PresetManager.shared
   @State var showingIconPicker = false
+  @State var showingEqualizer = false
   @State var isGeneratingDetails = false
   @State var isGeneratingIcon = false
   /// Import-time AAC conversion state, refreshed on each file change. `forced`
@@ -97,6 +98,11 @@ struct SoundSheetForm: View {
     .sheet(isPresented: $showingIconPicker) {
       NavigationStack {
         IconPickerView(selectedIcon: $selectedIcon)
+      }
+    }
+    .sheet(isPresented: $showingEqualizer) {
+      if case .edit(let sound) = mode {
+        SoundEqualizerSheet(sound: sound, isPreviewing: $isPreviewing)
       }
     }
     // Suggest a name and icon whenever an import picks a file.
@@ -278,10 +284,6 @@ extension SoundSheetForm {
 
 // MARK: - Preview Helpers
 extension SoundSheetForm {
-  func togglePreview() {
-    isPreviewing.toggle()
-  }
-
   func startPreview() {
     isPreviewing = true
   }

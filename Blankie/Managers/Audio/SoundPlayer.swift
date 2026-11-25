@@ -46,7 +46,7 @@ final class SoundPlayer: EngineSoundPlayer {
 
   // The normalization boost and the equalizer's loudness trim share the EQ's global gain.
   private var boostDB: Float = 0
-  private var graphicTrimDB: Float = 0
+  private var equalizerTrimDB: Float = 0
 
   /// Owner-set callback fired once when a non-looping sound finishes playback.
   var onPlaybackFinished: (() -> Void)?
@@ -140,9 +140,7 @@ final class SoundPlayer: EngineSoundPlayer {
     self.totalFrames = chosenFile.length
     self.sampleRate = chosenFile.processingFormat.sampleRate
     self.node = AVAudioPlayerNode()
-    self.gain = AVAudioUnitEQ(numberOfBands: SoundPlayer.graphicEQFrequencies.count)
-    self.gain.globalGain = 0
-    for band in self.gain.bands { band.bypass = true }
+    self.gain = SoundEqualizer.makeUnit()
   }
 
   /// Averages all channels into a mono buffer with the normalization boost
@@ -226,36 +224,11 @@ final class SoundPlayer: EngineSoundPlayer {
   }
 
   private func applyGlobalGain() {
-    gain.globalGain = min(24, boostDB + graphicTrimDB)
+    gain.globalGain = min(24, boostDB + equalizerTrimDB)
   }
 
-  /// Seven-band graphic EQ. Bands are wide enough to overlap their neighbors.
-  nonisolated static let graphicEQFrequencies: [Float] = [
-    60, 150, 400, 1_000, 2_400, 6_000, 15_000,
-  ]
-  static let graphicEQRangeDB: Float = 18
-
-  /// Sets every band gain in dB. A trim offsets the average so presets that
-  /// boost don't get louder overall and presets that cut don't drop away.
-  func setGraphicEQ(gains: [Float]) {
-    let range = Self.graphicEQRangeDB
-    var total: Float = 0
-    for (index, frequency) in Self.graphicEQFrequencies.enumerated() {
-      let band = gain.bands[index]
-      let gainDB = index < gains.count ? max(-range, min(range, gains[index])) : 0
-      total += gainDB
-      guard abs(gainDB) > 0.1 else {
-        band.bypass = true
-        continue
-      }
-      band.filterType = .parametric
-      band.frequency = frequency
-      band.bandwidth = 1.6
-      band.gain = gainDB
-      band.bypass = false
-    }
-    let mean = total / Float(Self.graphicEQFrequencies.count)
-    graphicTrimDB = max(-9, min(6, -0.8 * mean))
+  func setEqualizer(gains: [Float]) {
+    equalizerTrimDB = SoundEqualizer.apply(gains, to: gain)
     applyGlobalGain()
   }
 

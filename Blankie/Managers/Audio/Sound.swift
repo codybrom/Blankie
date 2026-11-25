@@ -243,13 +243,21 @@ open class Sound: NSObject, Identifiable {
 
   @ObservationIgnored var player: (any EngineSoundPlayer)?
 
-  /// Graphic EQ band gains in dB. Held in memory only, not saved yet.
-  @ObservationIgnored var graphicEQGains: [Float] = Array(
-    repeating: 0, count: SoundPlayer.graphicEQFrequencies.count)
+  /// This sound's equalizer band gains in dB. Flat when none are saved.
+  var equalizerGains: [Float] {
+    SoundCustomizationManager.shared.getCustomization(for: fileName)?.equalizerGains
+      ?? SoundEqualizer.flat
+  }
 
-  func setGraphicEQ(gains: [Float]) {
-    graphicEQGains = gains
-    (player as? SoundPlayer)?.setGraphicEQ(gains: gains)
+  /// Saves the band gains and applies them to the live player.
+  func setEqualizer(gains: [Float]) {
+    SoundCustomizationManager.shared.setEqualizerGains(gains, for: fileName)
+    applyEqualizer()
+  }
+
+  /// Pushes the saved band gains to the live player.
+  func applyEqualizer() {
+    player?.setEqualizer(gains: equalizerGains)
   }
 
   /// Explicit playback lifecycle. `var` because Sound+Playback maintains it from another file.
@@ -367,7 +375,7 @@ open class Sound: NSObject, Identifiable {
       }
       player = loadedPlayer
       AudioEngineManager.shared.attach(loadedPlayer)
-      loadedPlayer.setGraphicEQ(gains: graphicEQGains)
+      applyEqualizer()
 
       updateVolume()
 
