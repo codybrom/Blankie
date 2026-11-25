@@ -3,6 +3,7 @@ import { SEO } from "astro-seo";
 import { type ImageMetadata } from "astro";
 import { getImage } from "astro:assets";
 import Nav from "@/components/Nav.astro";
+import SaleBanner from "@/components/SaleBanner.astro";
 import Footer from "@/components/Footer.astro";
 import { markdownPathFor } from "@/utils/markdown-path";
 import "../styles/global.css";
@@ -111,7 +112,7 @@ const markdownUrl = noindex
     }
     <link rel="ard" href="/.well-known/ard.json" />
   </head>
-  <body class="overflow-x-hidden bg-navy-deep text-base">
+  <body class="overflow-x-hidden bg-navy-deep pt-(--banner-h) text-base">
     <!-- For agents that read the HTML. Hidden on screen and from screen readers. -->
     <div class="sr-only" aria-hidden="true">
       For an index of every page on this site, see <a
@@ -128,6 +129,7 @@ const markdownUrl = noindex
         )
       }
     </div>
+    <SaleBanner />
     <Nav />
     <main>
       <slot />

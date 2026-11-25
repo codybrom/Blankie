@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
 import BackgroundVideo from "../components/BackgroundVideo.astro";
 import SectionHeader from "@/components/SectionHeader.astro";
+import Comparison from "@/components/Comparison.astro";
 import icon from "../assets/brand/blankie-icon-v2.png";
 import wavesVideo from "../assets/backgrounds/waves.mp4";
 import wavesVideoMobile from "../assets/backgrounds/waves-mobile.mp4";
@@ -20,17 +21,13 @@ import iphoneTimer from "../assets/devices/iphone-timer.png";
 import iphoneLockVideo from "../assets/devices/iphone-lockscreen.mp4?url";
 import iphoneLockPoster from "../assets/devices/iphone-lockscreen-poster.jpg?url";
 import iphoneMask from "../assets/devices/iphone-17-pro-mask.png?url";
+import iphoneKaleidoscopeVideo from "../assets/devices/iphone-kaleidoscope.mp4?url";
+import iphoneKaleidoscopePoster from "../assets/devices/iphone-kaleidoscope-poster.jpg?url";
 import macCustomize from "../assets/devices/mac-customize.png";
 import macMenubar from "../assets/devices/mac-menubar.png";
 import carplayShot from "../assets/devices/carplay-mockup.jpg";
 import duoSeated from "../assets/guides/blankie-iphone-duo/seated.png";
 import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
-import parodyClam from "../assets/parody/clam.svg";
-import parodyWorseSleep from "../assets/parody/worse-sleep.svg";
-import parodySpendel from "../assets/parody/spendel.svg";
-import parodyDarkPattern from "../assets/parody/dark-pattern.svg";
-import parodyNosey from "../assets/parody/nosey.svg";
-import parodyAdNoiseLite from "../assets/parody/ad-noise-lite.svg";
 import bg1 from "../assets/backgrounds/bg-1.png";
 import bg2 from "../assets/backgrounds/bg-2.png";
 import bg3 from "../assets/backgrounds/bg-3.png";
@@ -52,8 +49,6 @@ import {
   Orbit,
   SlidersHorizontal,
   GitBranch,
-  Check,
-  X,
   Star,
   Lock,
   Languages,
@@ -62,7 +57,6 @@ import {
   Moon,
   Timer,
   Download,
-  Eye,
   Terminal,
   MessageSquareText,
 } from "lucide-react";
@@ -104,7 +98,7 @@ const features = [
     eyebrow: "Mix",
     heading: "Layer as many sounds as you like.",
     blurb:
-      "Blankie comes with 24 built-in sounds, from steady rain and bedroom fans to coffee shops and brown noise. Start with one, layer in another and adjust each volume until you like how it sounds.",
+      "Blankie comes with 39 built-in sounds, from steady rain and bedroom fans to coffee shops and brown noise. Start with one, layer in another and adjust each volume until you like how it sounds.",
     screen: macWindow,
     screenAlt: "Blankie on Mac with several ambient sounds playing at once",
     portrait: false,
@@ -293,6 +287,14 @@ const appJsonLd = ldGraph(
     thumbnailPath: iphoneLockPoster,
     uploadDate: "2026-10-28",
   }),
+  videoLd({
+    name: "A Kaleidoscope in Blankie on iPhone",
+    description:
+      "A kaleidoscope visualization moves in time with ambient music in Blankie on iPhone.",
+    path: iphoneKaleidoscopeVideo,
+    thumbnailPath: iphoneKaleidoscopePoster,
+    uploadDate: "2026-11-12",
+  }),
   itemListLd(
     "Blankie features",
     moreFeatures.map((f) => ({ name: f.title, description: f.sub })),
@@ -313,163 +315,6 @@ const homeReviewIds = [
 
 const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
 
-const blankieIncluded = [
-  {
-    title: "All 24 built-in sounds",
-    sub: "Including classic sounds like rain and waves, four kinds of noise and music loops",
-  },
-  {
-    title: "Unlimited adjustable layers",
-    sub: "Mix as many simultaneous layers as you like with no limits",
-  },
-  {
-    title: "Import your own audio",
-    sub: "Blankie automatically levels your imports so nothing gets lost in the mix",
-  },
-  {
-    title: "CarPlay & iPhone Duo support",
-    sub: "In your car, or on your nightstand, Blankie is ready to go",
-  },
-  {
-    title: "Widgets, Siri & Shortcuts",
-    sub: "Put Blankie on your Home Screen, or add Action Button and Focus automations",
-  },
-  {
-    title: "Sleep timer & Lock Screen art",
-    sub: "A short fade when the timer ends, and looping video on the Lock Screen",
-  },
-  {
-    title: "Shareable presets",
-    sub: "Send mixes to friends as files they can open without an account",
-  },
-  {
-    title: "100% offline & private",
-    sub: "Works in airplane mode and never collects your data",
-  },
-  {
-    title: "Translated into 12 languages",
-    sub: "Thanks to volunteer translators from around the world",
-  },
-  {
-    title: "Every future update, free",
-    sub: "No paid tiers and nothing to unlock",
-  },
-];
-
-// Parody app icons (src/assets/parody/) stand in for real apps
-const parodyApps = [
-  {
-    id: "clam",
-    name: "Clam",
-    src: parodyClam,
-    badges: [
-      { kind: "price", label: "$$" },
-      { kind: "tracking", label: "" },
-    ],
-  },
-  {
-    id: "worse-sleep",
-    name: "Worse Sleep",
-    src: parodyWorseSleep,
-    badges: [
-      { kind: "price", label: "$$" },
-      { kind: "tracking", label: "" },
-    ],
-  },
-  {
-    id: "spendel",
-    name: "Spendel",
-    src: parodySpendel,
-    badges: [
-      { kind: "price", label: "$$$" },
-      { kind: "tracking", label: "" },
-    ],
-  },
-  {
-    id: "dark-pattern",
-    name: "Dark Pattern",
-    src: parodyDarkPattern,
-    badges: [{ kind: "price", label: "$" }],
-  },
-  {
-    id: "nosey",
-    name: "Nosey",
-    src: parodyNosey,
-    badges: [{ kind: "tracking", label: "" }],
-  },
-  {
-    id: "ad-noise-lite",
-    name: "Ad Noise Lite",
-    src: parodyAdNoiseLite,
-    badges: [{ kind: "tracking", label: "" }],
-  },
-];
-// Corner badges on the parody icons: a $ scale for yearly price ($ under $40,
-// $$ under $100, $$$ above) and an eye for tracking, from each app's own App
-// Store privacy label or privacy policy.
-const badgeStyles: Record<string, string> = {
-  price: "bg-red-500 text-white",
-  tracking: "bg-violet-500 text-white",
-};
-// Each line is generic (true of at least two of the apps) and lists the parody
-// apps it applies to. Every claim comes from the apps' own App Store listings,
-// privacy labels and privacy policies, checked Oct. 2026.
-const typicalAppLimits = [
-  {
-    text: "Limit what you can listen to or do until you pay",
-    apps: [
-      "clam",
-      "worse-sleep",
-      "spendel",
-      "dark-pattern",
-      "nosey",
-      "ad-noise-lite",
-    ],
-  },
-  // Usage analytics: every app's label or policy lists it.
-  {
-    text: "Can monitor how you use the app",
-    apps: [
-      "clam",
-      "worse-sleep",
-      "spendel",
-      "dark-pattern",
-      "nosey",
-      "ad-noise-lite",
-    ],
-  },
-  {
-    text: "Can track your location",
-    apps: ["worse-sleep", "spendel", "ad-noise-lite"],
-  },
-  {
-    text: "Can track you across other apps and the web",
-    apps: ["clam", "worse-sleep", "spendel", "nosey", "ad-noise-lite"],
-  },
-  {
-    text: "Have free trials that start charging you automatically",
-    apps: ["clam", "worse-sleep", "spendel", "dark-pattern"],
-  },
-  {
-    text: "Don't have a CarPlay app",
-    apps: [
-      "clam",
-      "worse-sleep",
-      "spendel",
-      "dark-pattern",
-      "nosey",
-      "ad-noise-lite",
-    ],
-  },
-  {
-    text: "Collect your personal information",
-    apps: ["clam", "worse-sleep", "spendel"],
-  },
-  {
-    text: "Can share your data with third-party advertisers",
-    apps: ["clam", "spendel", "nosey", "ad-noise-lite"],
-  },
-];
 ---
 
 <Layout title={title}>
@@ -594,6 +439,45 @@ const typicalAppLimits = [
           <ArrowRight className="size-4" strokeWidth={2} />
         </a>
       </p>
+    </div>
+  </section>
+
+  {/* New in 2.2: Kaleidoscopes */}
+  <section class="relative overflow-hidden border-b border-white/5" id="kaleidoscopes">
+    <div class="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-5 pt-24 lg:grid-cols-[1fr_auto] lg:gap-20">
+      <div class="max-w-xl pb-4 lg:pb-24">
+        <SectionHeader eyebrow="New in Blankie 2.2" heading="Meet Kaleidoscopes." />
+        <p class="mt-5 text-lg/relaxed text-fg-2">
+          Kaleidoscopes are 15 new sounds that Blankie creates live. Each one is built from more than 130 layers of sound that brighten and fade on their own, so there's no loop to notice.
+        </p>
+        <p class="mt-4 text-lg/relaxed text-fg-2">
+          Play one on its own and a visual kaleidoscope moves in time with the sound. Drag to move it yourself. Tap to hide the controls on iPhone, or go full screen on Mac.
+        </p>
+        <a
+          href="/guides/kaleidoscopes/"
+          class="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink no-underline transition-colors hover:text-white"
+        >
+          <span>How Kaleidoscopes work</span>
+          <ArrowRight className="size-4" strokeWidth={2} />
+        </a>
+      </div>
+      {/* Runs off the section's bottom edge, like the Lock Screen video below. */}
+      <div class="relative mx-auto -mb-28 h-136 w-66.5 lg:h-152 lg:w-74.5">
+        <video
+          src={iphoneKaleidoscopeVideo}
+          poster={iphoneKaleidoscopePoster}
+          aria-label="A visual kaleidoscope in greens, teals and golds spinning on iPhone while the Radiance Kaleidoscope plays in Blankie"
+          width="540"
+          height="1104"
+          autoplay
+          muted
+          loop
+          playsinline
+          data-device-video
+          class="block size-full"
+          style={`mask: url(${iphoneMask}) center / 100% 100% no-repeat; -webkit-mask: url(${iphoneMask}) center / 100% 100% no-repeat;`}
+        />
+      </div>
     </div>
   </section>
 
@@ -888,160 +772,7 @@ const typicalAppLimits = [
   </section>
 
   <!-- Pricing: $0 forever comparison (linkable, but not in the section nav) -->
-  <section class="relative" id="compare">
-    <div id="pricing" class="sr-only" aria-hidden="true"></div>
-    <div class="relative z-10 mx-auto max-w-6xl px-5 pt-24 pb-12">
-      <div class="mx-auto max-w-2xl text-center">
-        <h2 class="text-3xl font-semibold tracking-[-0.04em] text-balance sm:text-5xl">
-          Don't rent your relaxation.
-        </h2>
-        <p class="mx-auto mt-4 max-w-3xl text-lg text-balance text-fg-2">
-          Other sleep and focus apps lock sounds and features behind paywalls.
-          <span class="sm:block">Blankie gives you everything free, forever.</span>
-        </p>
-      </div>
-
-      <div class="mt-12 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-[1.25fr_1fr]">
-        <!-- Blankie $0 Forever Card -->
-        <div class="glass rounded-3xl border-accent-ink/25 bg-[linear-gradient(180deg,rgba(76,141,255,0.10),rgba(255,255,255,0.03))] p-7 sm:p-9">
-          <div>
-            <div class="flex items-end justify-between gap-4">
-              <div>
-                <div class="flex items-center gap-2.5">
-                  <h3 class="text-3xl font-semibold tracking-tight text-white">
-                    Blankie
-                  </h3>
-                  <a
-                    href="/faq/#what-does-open-source-mean"
-                    class="rounded-full border border-accent-ink/30 px-2.5 py-0.5 text-[11px] font-semibold tracking-wide text-accent-ink uppercase no-underline transition-colors hover:border-accent-ink/60 hover:text-white"
-                  >
-                    Open Source
-                  </a>
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="text-4xl font-bold tracking-tight text-white">
-                  $0
-                </div>
-                <div class="text-xs font-semibold tracking-wide text-accent-ink uppercase">
-                  Forever
-                </div>
-              </div>
-            </div>
-            <p class="mt-3 border-b border-white/10 pb-6 text-sm text-fg-2">
-              No ads, no upsells and no sneaky business model.{" "}
-              <a
-                href="/guides/why-is-blankie-free/"
-                class="text-accent-ink underline underline-offset-2 transition-colors hover:text-white"
-              >
-                Why is Blankie free?
-              </a>
-            </p>
-
-            <ul class="mt-8 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:gap-y-8">
-              {
-                
-                blankieIncluded.map((item) => (
-                  <li class="flex items-start gap-3">
-                    <span class="mt-0.5 grid size-5.5 shrink-0 place-items-center rounded-full bg-success/10 text-success">
-                      <Check className="size-3.5" strokeWidth={2.5} />
-                    </span>
-                    <div>
-                      <div class="text-base font-semibold text-fg-1">
-                        {item.title}
-                      </div>
-                      <div class="mt-0.5 text-sm/snug text-fg-3">{item.sub}</div>
-                    </div>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-        </div>
-
-        <!-- Typical Subscription Apps Card (first on phones, so the comparison leads) -->
-        <div class="flex flex-col justify-between rounded-3xl border border-white/8 bg-white/2 p-7 max-lg:order-first sm:p-9">
-          <div>
-            <div class="flex items-end justify-between gap-4">
-              <h3 class="min-w-0 text-3xl font-semibold tracking-tight text-white">Other apps</h3>
-              <div class="text-right">
-                <div class="text-4xl font-bold tracking-tight whitespace-nowrap text-white">
-                  $20–$120
-                </div>
-                <div class="text-xs font-semibold tracking-wide text-destructive-foreground uppercase">
-                  Per year
-                </div>
-              </div>
-            </div>
-            <p class="mt-3 border-b border-white/8 pb-6 text-sm text-fg-2">
-              Free to try, then worse until you buy.
-            </p>
-
-            <div
-              role="group"
-              class="parody-row mx-auto mt-6 grid max-w-sm grid-cols-3 gap-x-4 gap-y-5"
-              aria-label="Parody versions of other apps"
-            >
-              {
-                
-                parodyApps.map((app, i) => (
-                  <figure
-                    class="parody-app flex cursor-default flex-col items-center rounded-xl py-1 transition-opacity duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent-ink/60 [&.is-dim]:opacity-35"
-                    data-app={app.id}
-                    tabindex="0"
-                  >
-                    <span
-                      class:list={[
-                        "relative size-16 rounded-[22.37%] shadow-[0_6px_14px_rgba(0,0,0,0.5)]",
-                        i % 2 === 0 ? "-rotate-6" : "rotate-6",
-                      ]}
-                    >
-                      <Image src={app.src} alt="" width={64} height={64} class="size-full rounded-[22.37%]" />
-                      <span class="absolute inset-0 rounded-[22.37%] bg-linear-to-b from-white/20 via-white/0 to-black/10 shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.22)]" />
-                      <span class="absolute -top-2 -right-3 z-10 flex items-center -space-x-px">
-                        {app.badges.map((badge, j) => (
-                          <span
-                            style={`z-index: ${j + 1}`}
-                            class:list={[
-                              "relative inline-flex h-4.75 min-w-4.75 items-center justify-center rounded-full px-1.25 text-[10px]/none font-extrabold tracking-tight whitespace-nowrap shadow-[0_2px_6px_rgba(0,0,0,0.45)] ring-2 ring-[#10152f]",
-                              badgeStyles[badge.kind],
-                            ]}
-                          >
-                            {badge.kind === "tracking" && <Eye className="size-2.75" strokeWidth={2.75} />}
-                            {badge.label}
-                          </span>
-                        ))}
-                      </span>
-                    </span>
-                    <figcaption class="mt-2 text-center text-xs/tight text-balance text-fg-2">
-                      {app.name}
-                    </figcaption>
-                  </figure>
-                ))
-              }
-            </div>
-
-            <ul class="mt-6 space-y-3.5">
-              {
-                typicalAppLimits.map((limit) => (
-                  <li
-                    class="parody-limit flex items-start gap-3 text-sm text-fg-2 transition-[opacity,color] duration-200 [&.is-dim]:opacity-30 [&.is-hit]:text-white"
-                    data-apps={limit.apps.join(" ")}
-                  >
-                    <span class="mt-px grid size-5 shrink-0 place-items-center rounded-full bg-destructive/15 text-destructive-foreground">
-                      <X className="size-3.5" strokeWidth={2.5} />
-                    </span>
-                    <span>{limit.text}</span>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
+  <Comparison />
 
   <!-- Download: its own section so the nav's Download link lands past the comparison -->
   <section class="relative overflow-hidden" id="download">
@@ -1227,48 +958,6 @@ const typicalAppLimits = [
         v.pause();
       });
     }
-  </script>
-
-  <script>
-    // Hovering or focusing a parody app highlights the lines that apply to it.
-    const parodyApps = document.querySelectorAll<HTMLElement>(".parody-app");
-    const parodyLimits = document.querySelectorAll<HTMLElement>(".parody-limit");
-    const showParody = (id: string | null) => {
-      parodyApps.forEach((el) => { el.classList.toggle("is-dim", !!id && el.dataset.app !== id); });
-      parodyLimits.forEach((el) => {
-        const hit = !!id && (el.dataset.apps ?? "").split(" ").includes(id);
-        el.classList.toggle("is-hit", hit);
-        el.classList.toggle("is-dim", !!id && !hit);
-      });
-    };
-    // Mouse: hover highlights. Touch: a tap toggles the highlight, and it stays
-    // until another tap, so it doesn't flicker on and off as the finger lifts.
-    let tapped: string | null = null;
-    parodyApps.forEach((el) => {
-      el.addEventListener("pointerenter", (e) => {
-        if (e.pointerType === "mouse") showParody(el.dataset.app ?? null);
-      });
-      el.addEventListener("pointerleave", (e) => {
-        if (e.pointerType === "mouse") showParody(null);
-      });
-      el.addEventListener("click", (e) => {
-        if ((e as PointerEvent).pointerType === "mouse") return;
-        tapped = tapped === el.dataset.app ? null : (el.dataset.app ?? null);
-        showParody(tapped);
-      });
-      el.addEventListener("focus", () => {
-        if (el.matches(":focus-visible")) showParody(el.dataset.app ?? null);
-      });
-      el.addEventListener("blur", () => {
-        if (!tapped) showParody(null);
-      });
-    });
-    document.addEventListener("click", (e) => {
-      if (tapped && !(e.target as Element).closest(".parody-app")) {
-        tapped = null;
-        showParody(null);
-      }
-    });
   </script>
 
   <script>

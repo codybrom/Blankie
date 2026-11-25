@@ -49,6 +49,34 @@ describe("renderMarkdown", () => {
     expect(html).not.toContain("{#install-section}");
   });
 
+  it("renders a framed guide video as a silent, masked loop with a caption", () => {
+    const html = renderMarkdown("{{video:kaleidoscope-iphone}}");
+    expect(html).toContain('<figure class="guide-video guide-video-phone">');
+    expect(html).toContain("autoplay muted loop playsinline");
+    expect(html).toContain("mask: url(");
+    expect(html).toContain("<figcaption>Radiance on iPhone</figcaption>");
+  });
+
+  it("renders a guide audio sample with artwork, title and a play button", () => {
+    const html = renderMarkdown("{{audio:radiance}}");
+    expect(html).toContain('<figure class="guide-audio" data-guide-audio>');
+    expect(html).toContain("controls");
+    expect(html).toContain("<strong>Radiance</strong>");
+    expect(html).toContain('aria-label="Play the Radiance sample"');
+  });
+
+  it("fails on an unknown guide audio sample", () => {
+    expect(() => renderMarkdown("{{audio:nope}}")).toThrow(
+      "Unknown guide audio",
+    );
+  });
+
+  it("fails on an unknown guide video", () => {
+    expect(() => renderMarkdown("{{video:nope}}")).toThrow(
+      "Unknown guide video",
+    );
+  });
+
   it("renders a review quote with stars and attribution", () => {
     const html = renderMarkdown("{{review:straightforward}}");
     expect(html).toContain('class="review-quote"');
