@@ -10,6 +10,7 @@ import Comparison from "@/components/Comparison.astro";
 import Button from "@/components/Button.astro";
 import heroDevices from "../assets/hero-devices.png";
 import icon from "../assets/brand/blankie-icon-v2.png";
+import card from "../assets/cards/blankie-friday.jpg";
 import shotSounds from "../assets/devices/mac-window-v2.png";
 import kaleidoscopeLoop from "../assets/devices/kaleidoscope-loop.mp4?url";
 import kaleidoscopePoster from "../assets/devices/kaleidoscope-loop-poster.jpg?url";
@@ -18,7 +19,7 @@ import shotWidget from "../assets/guides/control-blankie-anywhere/iphone-quick-m
 import shotCarPlay from "../assets/devices/carplay-mockup.jpg";
 import shotImport from "../assets/guides/import-sounds-iphone-ipad/iphone-manage-sounds.png";
 
-const title = "Blank(ie) Friday: a deal so hot, it's not";
+const title = "Blank(ie) Friday: a deal so hot, it's not even real";
 const description =
   "Blankie's biggest sale ever is also its only sale ever. Every sound, every feature and the lifetime unlimited plan are $0, marked down from $0. Offer ends never.";
 
@@ -36,14 +37,14 @@ const burst = `polygon(${Array.from({ length: 28 }, (_, i) => {
 
 const doorbusters = [
   {
-    name: "All 39 sounds",
+    name: "All 40 sounds",
     note: "Rain, waves, fans, four kinds of noise and more",
     img: shotSounds,
     alt: "Blankie on Mac with a mix of sound tiles playing",
   },
   {
     name: "Musical Kaleidoscopes",
-    note: "15 of them, new in 2.2 and already marked down",
+    note: "16 of them, new in 2.2 and already marked down",
     video: { src: kaleidoscopeLoop, poster: kaleidoscopePoster },
     alt: "The Radiance Kaleidoscope visual in teal, gold and white, slowly moving",
   },
@@ -112,13 +113,13 @@ const platforms = [
     id: "mobile",
     label: "iPhone + iPad",
     unit: "on iPhone + iPad",
-    note: "For an unlimited time also includes Mac!",
+    note: "For an unlimited time, also includes Mac!",
   },
   {
     id: "mac",
     label: "Mac",
     unit: "on Mac",
-    note: "For an unlimited time also includes iPhone + iPad!",
+    note: "For an unlimited time, also includes iPhone + iPad!",
   },
   {
     id: "bundle",
@@ -130,7 +131,12 @@ const platforms = [
 const defaultPlatform = platforms[2];
 ---
 
-<Layout title={title} description={description}>
+<Layout
+  title={title}
+  description={description}
+  image={card}
+  imageAlt="A sale ad for Blank(ie) Friday from Blankie. A deal so hot, it's not even real! A yellow badge says up to 100% off everything."
+>
   <div class="overflow-hidden">
     {/* Hero */}
     <section class="relative px-5 pt-36 pb-16 text-center">
@@ -139,7 +145,7 @@ const defaultPlatform = platforms[2];
           Blank(ie) Friday starts now!
         </p>
         <h1 class="mt-6 text-5xl/[0.98] font-black tracking-tighter text-balance text-fg-1 uppercase sm:text-7xl lg:text-8xl">
-          A deal so hot, <span class="grad-text">it's not!</span>
+          A deal so hot, <span class="grad-text">it's not even real!</span>
         </h1>
         <p class="mt-5 text-xl font-semibold text-b-yellow sm:text-2xl">
           We can't make the price any lower!
@@ -268,7 +274,7 @@ const defaultPlatform = platforms[2];
                       loop
                       playsinline
                       data-bf-video
-                      class="size-full object-cover"
+                      class:list={["size-full object-cover", item.crop]}
                     />
                   ) : (
                     <Image
@@ -284,7 +290,7 @@ const defaultPlatform = platforms[2];
                 <h3 class="text-lg font-semibold text-fg-1">{item.name}</h3>
                 <p class="mt-1 text-sm text-fg-2">{item.note}</p>
                 <p class="mt-4 flex items-baseline gap-2.5">
-                  <span class="text-sm text-fg-3">Normally Free</span>
+                  <span class="text-sm text-fg-3">Normally free</span>
                   <span class="text-2xl font-black text-b-yellow">Now $0!</span>
                 </p>
               </li>
@@ -292,7 +298,7 @@ const defaultPlatform = platforms[2];
           }
         </ul>
         <p class="mt-8 text-center text-sm text-fg-3">
-          Limit infinity per customer. While supplies last, which is forever, because it's software.
+          Limit infinity per customer. While supplies last, which is forever.
         </p>
       </div>
     </section>
@@ -438,7 +444,7 @@ const defaultPlatform = platforms[2];
 
     {/* The real comparison from the homepage, under a sale-flyer headline. */}
     <div class="border-t border-white/5">
-      <Comparison heading="Compare and save! (Save $0.)" />
+      <Comparison heading="Why pay more? (Or at all?)" />
     </div>
 
     {/* The honest part */}
@@ -449,6 +455,7 @@ const defaultPlatform = platforms[2];
           alt="The Blankie app icon, a yellow-to-blue gradient B with a cream moon on midnight navy"
           width={88}
           height={88}
+          densities={[1, 2, 3]}
           class="mx-auto mb-6 size-22 rounded-[22%] shadow-[0_10px_30px_rgba(0,0,0,0.5)]"
         />
         <h2 class="text-3xl font-semibold tracking-tight text-fg-1 sm:text-4xl">Okay, but seriously.</h2>
@@ -456,7 +463,7 @@ const defaultPlatform = platforms[2];
           Blankie is an ambient sound mixer for iPhone, iPad, Mac and CarPlay. It's free today, it was free yesterday and it'll be free next year.
         </p>
         <p class="mt-4 text-lg/relaxed text-fg-2">
-          There's no sale because there's nothing <em>to</em> sell, and with no ads, no subscriptions, no accounts and no tracking Blankie collects nothing to sell about you either.
+          There's no sale because there's nothing <em>to</em> sell, and with no ads, no subscriptions, no accounts and no tracking, Blankie collects nothing to sell about you either.
         </p>
         <div class="mt-8 flex flex-col items-center gap-5">
           <div class="flex flex-wrap justify-center gap-3">
@@ -480,8 +487,8 @@ const defaultPlatform = platforms[2];
 
   {/* Fake live activity in the corner: one true fact, then news that has nothing to do with buying. */}
   <div id="bf-live" class="fixed bottom-4 left-4 z-40 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2.5">
-    <div id="bf-toast" class="bf-toast glass rounded-xl bg-lift px-4 py-3 text-sm text-fg-2" aria-hidden="true" hidden></div>
-    <div class="glass flex items-center gap-3 rounded-xl bg-lift py-3 pr-2 pl-4 text-sm text-fg-1">
+    <div id="bf-toast" class="bf-toast rounded-xl border border-hair bg-lift px-4 py-3 text-sm text-fg-2 shadow-[0_8px_30px_rgba(0,0,0,0.5)]" aria-hidden="true" hidden></div>
+    <div class="flex items-center gap-3 rounded-xl border border-hair bg-lift py-3 pr-2 pl-4 text-sm text-fg-1 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
       <span class="bf-dot size-2.5 shrink-0 rounded-full bg-success"></span>
       <span class="grow"><strong class="font-semibold">1 person</strong> is looking at this deal right now: You!</span>
       <button
@@ -538,7 +545,7 @@ const defaultPlatform = platforms[2];
       "is thinking about soup",
       "just saved $0 and told no one",
       "is asleep. Unrelated",
-      "is named Carl.",
+      "is named Carl",
       "looked at this page and nodded",
       "is wondering whether to read the fine print",
     ];
