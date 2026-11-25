@@ -4,7 +4,8 @@
 //
 //  Created by Cody Bromley on 11/24/26.
 //
-//  The equalizer's spectrum display: a tone lights the band it sits in and silence lights none.
+//  The equalizer's spectrum display: a tone lights the band it sits in, on either channel, and
+//  silence lights none.
 //
 
 import Foundation
@@ -40,6 +41,29 @@ import Testing
     #expect(levels.count == SoundEqualizer.frequencies.count)
     #expect(levels.firstIndex(of: levels.max() ?? 0) == band)
     #expect(levels[band] > 0.7)
+  }
+
+  /// A band heard only on the right still shows.
+  @Test func toneOnOneChannelStillLightsItsBand() {
+    let analyzer = SpectrumAnalyzer(centers: SoundEqualizer.frequencies)
+    let left = [Float](repeating: 0, count: 4_096)
+    var levels: [Float] = []
+    var phase: Float = 0
+    let step = 2 * Float.pi * 1_000 / Self.sampleRate
+    for _ in 0..<12 {
+      var right = [Float](repeating: 0, count: 4_096)
+      for index in right.indices {
+        right[index] = 0.5 * sin(phase)
+        phase += step
+      }
+      levels = left.withUnsafeBufferPointer { leftPointer in
+        right.withUnsafeBufferPointer { rightPointer in
+          analyzer.process([leftPointer, rightPointer], sampleRate: Self.sampleRate)
+        }
+      }
+    }
+    #expect(levels.firstIndex(of: levels.max() ?? 0) == 3)
+    #expect(levels[3] > 0.7)
   }
 
   @Test func silenceLightsNothing() {

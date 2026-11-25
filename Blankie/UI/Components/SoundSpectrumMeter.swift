@@ -46,7 +46,7 @@ final class SoundSpectrumMeter {
   }
 
   private func refresh(for sound: Sound) {
-    let eq = (sound.player as? SoundPlayer)?.gain
+    let eq = sound.player?.gain
     let node: AVAudioNode? = eq?.engine != nil ? eq : nil
     if node !== tappedNode {
       tappedNode?.removeTap(onBus: 0)
@@ -74,9 +74,11 @@ final class SoundSpectrumMeter {
     analyzer: SpectrumAnalyzer, meter: SoundSpectrumMeter
   ) -> AVAudioNodeTapBlock {
     { [weak meter] buffer, _ in
-      guard let channels = buffer.floatChannelData, buffer.frameLength > 0 else { return }
-      let samples = UnsafeBufferPointer(start: channels[0], count: Int(buffer.frameLength))
-      let levels = analyzer.process(samples, sampleRate: Float(buffer.format.sampleRate))
+      guard let data = buffer.floatChannelData, buffer.frameLength > 0 else { return }
+      let channels = (0..<Int(buffer.format.channelCount)).map {
+        UnsafeBufferPointer(start: data[$0], count: Int(buffer.frameLength))
+      }
+      let levels = analyzer.process(channels, sampleRate: Float(buffer.format.sampleRate))
       Task { @MainActor in
         meter?.show(levels)
       }

@@ -56,34 +56,26 @@ nonisolated final class SpectrumAnalyzer: @unchecked Sendable {
     vDSP_destroy_fftsetup(setup)
   }
 
-  /// Analyzes the newest samples and returns the smoothed level of each band.
+  /// Analyzes the newest samples of one channel and returns the smoothed level of each band.
   func process(_ samples: UnsafeBufferPointer<Float>, sampleRate: Float) -> [Float] {
+    process([samples], sampleRate: sampleRate)
+  }
+
+  /// Analyzes the newest samples and returns the smoothed level of each band.
+  /// Power is averaged across `channels`, so a band heard on one side still shows.
+  func process(_ channels: [UnsafeBufferPointer<Float>], sampleRate: Float) -> [Float] {
     let size = Self.size
     let half = size / 2
-    guard !samples.isEmpty, sampleRate > 0 else { return smoothed }
-
-    // Newest `size` samples, zero-padded at the front when the block is short.
-    let take = min(size, samples.count)
-    for index in 0..<(size - take) { input[index] = 0 }
-    for index in 0..<take {
-      input[size - take + index] = samples[samples.count - take + index]
-    }
-    vDSP_vmul(input, 1, window, 1, &input, 1, vDSP_Length(size))
+    let frames = channels.first?.count ?? 0
+    guard frames > 0, sampleRate > 0 else { return smoothed }
 
     var power = [Float](repeating: 0, count: half)
-    input.withUnsafeBufferPointer { inputPointer in
-      real.withUnsafeMutableBufferPointer { realPointer in
-        imaginary.withUnsafeMutableBufferPointer { imaginaryPointer in
-          var split = DSPSplitComplex(
-            realp: realPointer.baseAddress!, imagp: imaginaryPointer.baseAddress!)
-          inputPointer.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: half) {
-            vDSP_ctoz($0, 2, &split, 1, vDSP_Length(half))
-          }
-          vDSP_fft_zrip(setup, &split, 1, Self.log2Size, FFTDirection(FFT_FORWARD))
-          vDSP_zvmags(&split, 1, &power, 1, vDSP_Length(half))
-        }
-      }
+    var channelPower = [Float](repeating: 0, count: half)
+    for samples in channels where samples.count == frames {
+      addPower(of: samples, to: &power, scratch: &channelPower)
     }
+    var scale = 1 / Float(channels.count)
+    vDSP_vsmul(power, 1, &scale, &power, 1, vDSP_Length(half))
 
     // Sum the power in each band, in dB. A full-scale sine comes out near 0 dB.
     let binWidth = sampleRate / Float(size)
@@ -102,7 +94,7 @@ nonisolated final class SpectrumAnalyzer: @unchecked Sendable {
     // so pulling one band down shows as that bar sinking, not the others rising.
     // When the whole sound drops well below it (a louder start, a fade), it
     // catches up quickly so the display doesn't sit half empty.
-    let elapsed = Float(samples.count) / sampleRate
+    let elapsed = Float(frames) / sampleRate
     let loudest = bandDB.max() ?? -120
     let isSilent = loudest < -90
     if !isSilent {
@@ -121,5 +113,36 @@ nonisolated final class SpectrumAnalyzer: @unchecked Sendable {
       }
     }
     return smoothed
+  }
+
+  /// Adds one channel's power spectrum to `power`.
+  private func addPower(
+    of samples: UnsafeBufferPointer<Float>, to power: inout [Float], scratch: inout [Float]
+  ) {
+    let size = Self.size
+    let half = size / 2
+
+    // Newest `size` samples, zero-padded at the front when the block is short.
+    let take = min(size, samples.count)
+    for index in 0..<(size - take) { input[index] = 0 }
+    for index in 0..<take {
+      input[size - take + index] = samples[samples.count - take + index]
+    }
+    vDSP_vmul(input, 1, window, 1, &input, 1, vDSP_Length(size))
+
+    input.withUnsafeBufferPointer { inputPointer in
+      real.withUnsafeMutableBufferPointer { realPointer in
+        imaginary.withUnsafeMutableBufferPointer { imaginaryPointer in
+          var split = DSPSplitComplex(
+            realp: realPointer.baseAddress!, imagp: imaginaryPointer.baseAddress!)
+          inputPointer.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: half) {
+            vDSP_ctoz($0, 2, &split, 1, vDSP_Length(half))
+          }
+          vDSP_fft_zrip(setup, &split, 1, Self.log2Size, FFTDirection(FFT_FORWARD))
+          vDSP_zvmags(&split, 1, &scratch, 1, vDSP_Length(half))
+        }
+      }
+    }
+    vDSP_vadd(power, 1, scratch, 1, &power, 1, vDSP_Length(half))
   }
 }

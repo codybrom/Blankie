@@ -121,6 +121,13 @@ struct SoundGraphicEQ: View {
       preset = GraphicEQPreset.matching(gains)
     }
     .onDisappear { meter.stop() }
+    .onChange(of: reduceMotion) { _, reduceMotion in
+      if reduceMotion {
+        meter.stop()
+      } else {
+        meter.start(for: sound)
+      }
+    }
     .onChange(of: preset) { _, preset in
       guard let preset, preset.gains != gains else { return }
       withAnimation(.snappy) { gains = preset.gains }
