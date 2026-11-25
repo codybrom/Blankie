@@ -15,13 +15,6 @@ import os
 ///
 /// Call public methods on the main thread. Node completions hop to main before
 /// touching state, and `generation` fences stale ones.
-/// SPIKE: filter type for the synth-style filter prototype.
-enum SynthFilterMode: Sendable {
-  case off
-  case lowPass
-  case highPass
-}
-
 final class SoundPlayer: EngineSoundPlayer {
 
   /// Files at or below this duration decode fully into a looping buffer.
@@ -51,9 +44,8 @@ final class SoundPlayer: EngineSoundPlayer {
   /// Stable identifier used to derive this sound's 3D position.
   let sourceName: String
 
-  // Normalization boost and the tone pad's loudness trim share the EQ's global gain.
+  // The normalization boost and the equalizer's loudness trim share the EQ's global gain.
   private var boostDB: Float = 0
-  private var toneTrimDB: Float = 0
   private var graphicTrimDB: Float = 0
 
   /// Owner-set callback fired once when a non-looping sound finishes playback.
@@ -148,7 +140,7 @@ final class SoundPlayer: EngineSoundPlayer {
     self.totalFrames = chosenFile.length
     self.sampleRate = chosenFile.processingFormat.sampleRate
     self.node = AVAudioPlayerNode()
-    self.gain = AVAudioUnitEQ(numberOfBands: 3 + SoundPlayer.graphicEQFrequencies.count)
+    self.gain = AVAudioUnitEQ(numberOfBands: SoundPlayer.graphicEQFrequencies.count)
     self.gain.globalGain = 0
     for band in self.gain.bands { band.bypass = true }
   }
@@ -234,66 +226,10 @@ final class SoundPlayer: EngineSoundPlayer {
   }
 
   private func applyGlobalGain() {
-    gain.globalGain = min(24, boostDB + toneTrimDB + graphicTrimDB)
+    gain.globalGain = min(24, boostDB + graphicTrimDB)
   }
 
-  /// SPIKE: tone pad → two independent shelves. Both inputs run -1...1, and 0 is
-  /// untouched. Highs below 0 take the hiss off (smooth), above 0 open the sound
-  /// up (clear). Lows below 0 take the rumble out, above 0 add body. The trim
-  /// pulls boosts back down so no corner of the pad gets louder overall.
-  func setTone(highs: Float, lows: Float) {
-    let highs = max(-1, min(1, highs))
-    let lows = max(-1, min(1, lows))
-    let highDB = highs * (highs < 0 ? Self.toneCutDB : Self.toneBoostDB)
-    let lowDB = lows * (lows < 0 ? Self.toneCutDB : Self.toneBoostDB)
-
-    setShelf(gain.bands[0], type: .highShelf, frequency: 3_000, gainDB: highDB)
-    setShelf(gain.bands[1], type: .lowShelf, frequency: 250, gainDB: lowDB)
-
-    let boosts = max(0, highDB) + max(0, lowDB)
-    let cuts = max(0, -highDB) + max(0, -lowDB)
-    toneTrimDB = -0.5 * boosts + 0.15 * cuts
-    applyGlobalGain()
-  }
-
-  private func setShelf(
-    _ band: AVAudioUnitEQFilterParameters, type: AVAudioUnitEQFilterType,
-    frequency: Float, gainDB: Float
-  ) {
-    guard abs(gainDB) > 0.1 else {
-      band.bypass = true
-      return
-    }
-    band.filterType = type
-    band.frequency = frequency
-    band.gain = gainDB
-    band.bypass = false
-  }
-
-  private static let toneCutDB: Float = 20
-  private static let toneBoostDB: Float = 9
-
-  /// SPIKE: synth-style filter on its own band. Cutoff is in Hz. Resonance runs
-  /// 0...1, from a plain slope to a ringing peak at the cutoff (capped short of
-  /// self-oscillation).
-  func setSynthFilter(mode: SynthFilterMode, cutoff: Float, resonance: Float) {
-    let band = gain.bands[2]
-    switch mode {
-    case .off:
-      band.bypass = true
-      return
-    case .lowPass:
-      band.filterType = .resonantLowPass
-    case .highPass:
-      band.filterType = .resonantHighPass
-    }
-    band.frequency = max(20, min(20_000, cutoff))
-    // Bandwidth in octaves. Narrower is more resonant, and about 1.9 is a plain slope.
-    band.bandwidth = 1.9 * pow(0.3 / 1.9, max(0, min(1, resonance)))
-    band.bypass = false
-  }
-
-  /// SPIKE: classic seven-band graphic EQ. Bands are wide enough to overlap their neighbors.
+  /// Seven-band graphic EQ. Bands are wide enough to overlap their neighbors.
   nonisolated static let graphicEQFrequencies: [Float] = [
     60, 150, 400, 1_000, 2_400, 6_000, 15_000,
   ]
@@ -305,7 +241,7 @@ final class SoundPlayer: EngineSoundPlayer {
     let range = Self.graphicEQRangeDB
     var total: Float = 0
     for (index, frequency) in Self.graphicEQFrequencies.enumerated() {
-      let band = gain.bands[3 + index]
+      let band = gain.bands[index]
       let gainDB = index < gains.count ? max(-range, min(range, gains[index])) : 0
       total += gainDB
       guard abs(gainDB) > 0.1 else {

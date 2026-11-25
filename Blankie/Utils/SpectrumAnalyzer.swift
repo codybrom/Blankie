@@ -7,7 +7,7 @@
 
 import Accelerate
 
-/// SPIKE: turns a block of audio samples into one level per band, 0...1, for a
+/// Turns a block of audio samples into one level per band, 0...1, for a
 /// spectrum display. Levels are relative to the loudest band seen recently, so
 /// the tallest bar sits near the top whatever the sound's volume.
 ///

@@ -7,8 +7,7 @@
 
 import SwiftUI
 
-/// SPIKE: a named curve for the graphic EQ, as seven band gains in dB (60 Hz to
-/// 15 kHz). Names and curves are placeholders.
+/// A named curve for the graphic EQ, as seven band gains in dB (60 Hz to 15 kHz).
 enum GraphicEQPreset: String, CaseIterable, Identifiable {
   case flat
   case bassBooster
@@ -48,11 +47,10 @@ enum GraphicEQPreset: String, CaseIterable, Identifiable {
   }
 }
 
-/// SPIKE: an old-school graphic equalizer for one sound. A pop-up button picks a
-/// preset, and picking one moves the seven band sliders so the bank shows what
-/// the preset does. Moving a slider by hand switches it to Custom. A live
-/// spectrum behind the sliders shows the sound band by band. Throwaway: no
-/// persistence.
+/// A graphic equalizer for one sound. A pop-up button picks a preset, and
+/// picking one moves the seven band sliders so the bank shows what the preset
+/// does. Moving a slider by hand switches it to Custom. A live spectrum behind
+/// the sliders shows the sound band by band. Settings aren't saved yet.
 struct SoundGraphicEQ: View {
   let sound: Sound
 
@@ -171,7 +169,11 @@ struct SoundGraphicEQ: View {
     )
     .accessibilityRepresentation {
       Slider(
-        value: Binding { gains[index] } set: { setGain($0, at: index) },
+        value: Binding {
+          gains[index]
+        } set: {
+          setGain($0, at: index)
+        },
         in: -Self.range...Self.range
       ) {
         Text(verbatim: "\(Self.labels[index]) hertz")
@@ -193,11 +195,68 @@ struct SoundGraphicEQ: View {
   }
 }
 
-#Preview("Graphic EQ") {
-  SoundPrototypeHarness { sound in
-    SoundGraphicEQ(sound: sound)
+#if DEBUG
+  /// Preview stand-in for the sound editor: pick a built-in sound and play it.
+  private struct EqualizerPreview: View {
+    @State private var selected: Sound?
+    @State private var isPlaying = false
+
+    private var sounds: [Sound] {
+      AudioManager.shared.sounds.filter { !$0.isCustom && !($0 is KaleidoscopeSound) }
+    }
+
+    var body: some View {
+      VStack(spacing: 20) {
+        Picker(selection: $selected) {
+          ForEach(sounds) { sound in
+            Text(verbatim: sound.title).tag(Optional(sound))
+          }
+        } label: {
+          EmptyView()
+        }
+        .pickerStyle(.menu)
+
+        Button {
+          toggle()
+        } label: {
+          Image(systemName: isPlaying ? "stop.fill" : "play.fill")
+            .font(.title2)
+            .frame(width: 56, height: 56)
+        }
+        .buttonStyle(.glass)
+
+        if let selected {
+          SoundGraphicEQ(sound: selected)
+            .padding()
+            .background(.fill.tertiary, in: .rect(cornerRadius: 26, style: .continuous))
+            .id(selected.id)
+        }
+      }
       .padding()
-      .background(.fill.tertiary, in: .rect(cornerRadius: 26, style: .continuous))
+      .onAppear {
+        selected = sounds.first { $0.fileName == "rain" } ?? sounds.first
+      }
+      .onChange(of: selected) { old, new in
+        old?.setGraphicEQ(gains: GraphicEQPreset.flat.gains.map(Float.init))
+        guard isPlaying, let new else { return }
+        AudioManager.shared.exitPreviewMode(resuming: false)
+        AudioManager.shared.enterPreviewMode(for: new)
+      }
+    }
+
+    private func toggle() {
+      guard let selected else { return }
+      if isPlaying {
+        AudioManager.shared.exitPreviewMode(resuming: false)
+      } else {
+        AudioManager.shared.enterPreviewMode(for: selected)
+      }
+      isPlaying.toggle()
+    }
   }
-  .preferredColorScheme(.dark)
-}
+
+  #Preview("Graphic EQ") {
+    EqualizerPreview()
+      .preferredColorScheme(.dark)
+  }
+#endif

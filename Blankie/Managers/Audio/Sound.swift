@@ -243,35 +243,13 @@ open class Sound: NSObject, Identifiable {
 
   @ObservationIgnored var player: (any EngineSoundPlayer)?
 
-  /// SPIKE: in-memory tone pad position (-1...1 each). Not persisted.
-  @ObservationIgnored var toneHighs: Float = 0
-  @ObservationIgnored var toneLows: Float = 0
-
-  func setTone(highs: Float, lows: Float) {
-    toneHighs = highs
-    toneLows = lows
-    (player as? SoundPlayer)?.setTone(highs: highs, lows: lows)
-  }
-
-  /// SPIKE: in-memory graphic EQ band gains in dB. Not persisted.
+  /// Graphic EQ band gains in dB. Held in memory only, not saved yet.
   @ObservationIgnored var graphicEQGains: [Float] = Array(
     repeating: 0, count: SoundPlayer.graphicEQFrequencies.count)
 
   func setGraphicEQ(gains: [Float]) {
     graphicEQGains = gains
     (player as? SoundPlayer)?.setGraphicEQ(gains: gains)
-  }
-
-  /// SPIKE: in-memory synth-style filter settings. Not persisted.
-  @ObservationIgnored var synthFilterMode: SynthFilterMode = .off
-  @ObservationIgnored var synthFilterCutoff: Float = 1_000
-  @ObservationIgnored var synthFilterResonance: Float = 0
-
-  func setSynthFilter(mode: SynthFilterMode, cutoff: Float, resonance: Float) {
-    synthFilterMode = mode
-    synthFilterCutoff = cutoff
-    synthFilterResonance = resonance
-    (player as? SoundPlayer)?.setSynthFilter(mode: mode, cutoff: cutoff, resonance: resonance)
   }
 
   /// Explicit playback lifecycle. `var` because Sound+Playback maintains it from another file.
@@ -389,9 +367,6 @@ open class Sound: NSObject, Identifiable {
       }
       player = loadedPlayer
       AudioEngineManager.shared.attach(loadedPlayer)
-      loadedPlayer.setTone(highs: toneHighs, lows: toneLows)
-      loadedPlayer.setSynthFilter(
-        mode: synthFilterMode, cutoff: synthFilterCutoff, resonance: synthFilterResonance)
       loadedPlayer.setGraphicEQ(gains: graphicEQGains)
 
       updateVolume()

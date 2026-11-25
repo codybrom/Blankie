@@ -8,7 +8,7 @@
 import AVFoundation
 import SwiftUI
 
-/// SPIKE: live band levels for one sound, read after its EQ so the display shows
+/// Live band levels for one sound, read after its EQ so the display shows
 /// what is being heard. Taps the sound's EQ node while started and follows the
 /// sound if its player is rebuilt. Spatial sounds skip that node, so they show
 /// nothing.
@@ -84,7 +84,7 @@ final class SoundSpectrumMeter {
   }
 }
 
-/// SPIKE: one LED-style column for one band, like the display on an old hi-fi.
+/// One LED-style column for one band, like the display on an old hi-fi.
 /// Doubles as the track for a band's fader. Hidden from VoiceOver on its own.
 struct SpectrumColumn: View {
   let level: Float
