@@ -149,18 +149,26 @@ extension SoundSheetForm {
     }
   }
 
-  /// Edit mode only: names the sound's equalizer preset and opens the equalizer.
+  /// Edit mode only: opens the equalizer. Reads Off while the curve is flat,
+  /// and otherwise names the preset.
   @ViewBuilder
   var equalizerRow: some View {
     if case .edit(let sound) = mode {
+      let gains = sound.equalizerGains
       Button {
         showingEqualizer = true
       } label: {
         HStack {
           Text("Equalizer")
           Spacer()
-          Text(GraphicEQPreset.name(for: sound.equalizerGains))
-            .foregroundStyle(.secondary)
+          Group {
+            if gains == SoundEqualizer.flat {
+              Text("Off")
+            } else {
+              Text(GraphicEQPreset.name(for: gains))
+            }
+          }
+          .foregroundStyle(.secondary)
           Image(systemName: "chevron.right")
             .font(.caption)
             .foregroundStyle(.tertiary)
