@@ -106,6 +106,9 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
   private(set) var isFadingToSilence = false
   private(set) var fadeLevel: Float = 1
   private var baseVolume: Float = 1
+  // The normalization boost and the equalizer's loudness trim share the EQ's global gain.
+  private var boostDB: Float = 0
+  private var equalizerTrimDB: Float = 0
   private var fadeTimer: Timer?
   private var fadeStep = 0
   private var fadeCompletion: (() -> Void)?
@@ -132,8 +135,7 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
     // (~11 kHz). The mixer resamples to the hardware rate.
     let format = AVAudioFormat(standardFormatWithSampleRate: 32000, channels: 2)!
     connectionFormat = format
-    gain = AVAudioUnitEQ(numberOfBands: 0)
-    gain.globalGain = 0
+    gain = SoundEqualizer.makeUnit()
     let state = Self.renderState(for: recipe, sampleRate: format.sampleRate)
     var rng = UInt64.random(in: 1...UInt64.max)
     let voices = VoiceBox(.seeded(count: state.increments.count, rng: &rng))
@@ -141,7 +143,17 @@ final class KaleidoscopePlayer: EngineSoundPlayer {
   }
 
   func setBoostDB(_ db: Float) {
-    gain.globalGain = max(0, db)
+    boostDB = max(0, db)
+    applyGlobalGain()
+  }
+
+  func setEqualizer(gains: [Float]) {
+    equalizerTrimDB = SoundEqualizer.apply(gains, to: gain)
+    applyGlobalGain()
+  }
+
+  private func applyGlobalGain() {
+    gain.globalGain = min(24, boostDB + equalizerTrimDB)
   }
 
   /// Nothing to capture: the frame counter survives an engine rebuild.

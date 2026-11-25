@@ -166,6 +166,7 @@
 				"Managers/Audio/Sound+Normalization.swift",
 				"Managers/Audio/Sound+Playback.swift",
 				Managers/Audio/SoundCreditsManager.swift,
+				Managers/Audio/SoundEqualizer.swift,
 				Managers/Audio/SoundPlayer.swift,
 				Managers/Audio/SpatialSessionManager.swift,
 				Managers/BackgroundResourceManager.swift,

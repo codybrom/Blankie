@@ -44,6 +44,10 @@ final class SoundPlayer: EngineSoundPlayer {
   /// Stable identifier used to derive this sound's 3D position.
   let sourceName: String
 
+  // The normalization boost and the equalizer's loudness trim share the EQ's global gain.
+  private var boostDB: Float = 0
+  private var equalizerTrimDB: Float = 0
+
   /// Owner-set callback fired once when a non-looping sound finishes playback.
   var onPlaybackFinished: (() -> Void)?
 
@@ -136,8 +140,7 @@ final class SoundPlayer: EngineSoundPlayer {
     self.totalFrames = chosenFile.length
     self.sampleRate = chosenFile.processingFormat.sampleRate
     self.node = AVAudioPlayerNode()
-    self.gain = AVAudioUnitEQ(numberOfBands: 0)
-    self.gain.globalGain = 0
+    self.gain = SoundEqualizer.makeUnit()
   }
 
   /// Averages all channels into a mono buffer with the normalization boost
@@ -216,7 +219,17 @@ final class SoundPlayer: EngineSoundPlayer {
 
   /// Boost gain in dB (≥ 0). Attenuation lives in `volume`.
   func setBoostDB(_ db: Float) {
-    gain.globalGain = max(0, db)
+    boostDB = max(0, db)
+    applyGlobalGain()
+  }
+
+  private func applyGlobalGain() {
+    gain.globalGain = min(24, boostDB + equalizerTrimDB)
+  }
+
+  func setEqualizer(gains: [Float]) {
+    equalizerTrimDB = SoundEqualizer.apply(gains, to: gain)
+    applyGlobalGain()
   }
 
   // MARK: - Fades

@@ -35,6 +35,8 @@ protocol EngineSoundPlayer: AnyObject {
   func seek(toFrame: AVAudioFramePosition)
   func setFadeLevel(_ level: Float)
   func setBoostDB(_ db: Float)
+  /// Band gains in dB, one per `SoundEqualizer.frequencies`.
+  func setEqualizer(gains: [Float])
   func fade(to target: Float, duration: TimeInterval, completion: (() -> Void)?)
 }
 
