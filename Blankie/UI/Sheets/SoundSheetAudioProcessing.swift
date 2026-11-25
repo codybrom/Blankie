@@ -78,6 +78,11 @@ extension SoundSheetForm {
       .frame(height: 44)
       .padding(.vertical, 4)
 
+      // SPIKE: live filter pad on the real sound.
+      if case .edit(let sound) = mode, !isKaleidoscope {
+        SoundFilterPad(sound: sound)
+      }
+
       // Alphabetical, with the two loop-dependent toggles right after Loop.
 
       // Play/pause fades. Very short clips always hard-cut (a fade would
