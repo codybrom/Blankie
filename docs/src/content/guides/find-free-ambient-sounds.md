@@ -7,7 +7,7 @@ updated: 2026-10-26
 platforms: "All Platforms"
 ---
 
-Blankie comes with 39 curated ambient sounds but you can [import your own](/guides/import-sounds-mac/) whenever you want more. So where do you get more? Here are the places I trust for good audio that's free and legal to use.
+Blankie comes with 40 curated ambient sounds but you can [import your own](/guides/import-sounds-mac/) whenever you want more. So where do you get more? Here are the places I trust for good audio that's free and legal to use.
 
 ## Freesound
 

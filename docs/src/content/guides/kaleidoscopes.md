@@ -19,7 +19,7 @@ Blankie's Kaleidoscopes are slow, soft and musical. They're also immersive and e
 
 {{audio:radiance}}
 
-The 15 Kaleidoscopes available now are *Air*, *Calm*, *Dawn*, *Depth*, *Dreaming*, *Gentleness*, *Haze*, *Hush*, *Lull*, *Mist*, *Radiance*, *Stillness*, *Undertone*, *Velvet* and *Warmth*.
+The 16 Kaleidoscopes available now are *Air*, *Beginnings*, *Dawn*, *Depth*, *Dreaming*, *Dusk*, *Ease*, *Gentleness*, *Hush*, *Lull*, *Mist*, *Radiance*, *Stillness*, *Undertone*, *Velvet* and *Warmth*.
 
 ## Play a Kaleidoscope
 

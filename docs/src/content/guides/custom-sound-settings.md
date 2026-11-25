@@ -57,7 +57,7 @@ If you grabbed a sound from somewhere, choose **Add Credits** in its settings af
 
 ## Changing settings later (including built-in sounds)
 
-None of this is locked in. You can also edit Blankie's 39 built-in sounds the same way if you want to rename one, swap its icon, hide it with **Preset Use Only** or override its **Sound Check** level:
+None of this is locked in. You can also edit Blankie's 40 built-in sounds the same way if you want to rename one, swap its icon, hide it with **Preset Use Only** or override its **Sound Check** level:
 
 - **Mac:** choose **File → Manage Sounds**, press {{kbd:⌘ O}} or open **Settings → Manage Sounds**, then select the sound to edit.
 - **iPhone and iPad:** open **Settings → Manage Sounds**, then tap the sound to edit.
