@@ -4,7 +4,7 @@ description: "Import a Voice Memos recording into Blankie and loop it. Turn your
 category: "import"
 order: 3
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 A thunderstorm you caught from the porch, the crackle of the campfire last summer and the hum of your favorite café belong in your mix. The Voice Memos app on your phone exports recordings in a format that Blankie can use natively, so you can go straight from recording to soundscape without converting or transferring.

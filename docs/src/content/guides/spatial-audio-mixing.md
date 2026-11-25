@@ -4,7 +4,7 @@ description: "Place your preset's ambient sounds around you in a 3D binaural spa
 category: "presets"
 order: 24
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 cover: "../../assets/guides/spatial-audio-mixing/spatial-cover.jpg"
 coverAlt: "Spatial Mix on iPhone, with Rain, Fireplace and Wind placed around the listener"
 ---

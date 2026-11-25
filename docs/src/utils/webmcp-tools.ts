@@ -1,6 +1,6 @@
 // The site's WebMCP tools, kept free of DOM registration so they can be tested.
 // Each one reads files the site already serves: llms.txt is the page index and
-// every page has a Markdown twin.
+// every page has a Markdown copy.
 
 import { markdownPathFor } from "./markdown-path";
 
@@ -60,7 +60,7 @@ export function sitePath(input: string): string | null {
   return url.pathname.endsWith("/") ? url.pathname : `${url.pathname}/`;
 }
 
-/** Where a page's Markdown twin is served. */
+/** Where a page's Markdown copy is served. */
 export function markdownUrlFor(path: string): string {
   return `/${markdownPathFor(path)}`;
 }

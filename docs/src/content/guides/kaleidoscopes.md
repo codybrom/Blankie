@@ -3,8 +3,8 @@ title: "Kaleidoscopes: Endless Ambient Soundscapes"
 description: "What Blankie's Kaleidoscopes are, how to play one, how to play with the visual kaleidoscope on iPhone, iPad and Mac and how to mix a Kaleidoscope with other sounds."
 category: "basics"
 order: 36
-updated: 2026-11-12
-platforms: "iPhone, iPad, Mac and CarPlay"
+updated: 2026-11-25
+platforms: "All Devices"
 ---
 
 Kaleidoscopes are known for making beautiful, constantly changing patterns with the help of mirrors and colorful materials. The Kaleidoscopes in Blankie take inspiration from this idea, and create ever-changing soundscapes that evolve as you listen.
@@ -58,3 +58,9 @@ Also, keep in mind that the visual kaleidoscope only appears when a Kaleidoscope
 ## Where the sounds come from
 
 Blankie's Kaleidoscopes were remixed from ambient recordings by Matio888 on Freesound. These recordings are shared under a Creative Commons Attribution license. You can find links to the original recordings in a Kaleidoscope's sound settings under the **Remixed From** heading, or find them linked on the Credits page.
+
+## Related guides
+
+- [Quick Mix, Single Sounds and Presets](/guides/quick-mix-and-single-sounds/)
+- [Create and Theme Presets](/guides/create-and-manage-presets/)
+- [Spatial Audio Mixing in Blankie](/guides/spatial-audio-mixing/)

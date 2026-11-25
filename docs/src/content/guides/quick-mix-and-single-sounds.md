@@ -4,7 +4,7 @@ description: "How Blankie's presets, Quick Mix soundboard and single-sound playb
 category: "basics"
 order: 35
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 cover: "../../assets/guides/quick-mix-and-single-sounds/quick-mix-cover.jpg"
 coverAlt: "Quick Mix on CarPlay, in the Quick Mix widget and in the app on iPhone"
 ---

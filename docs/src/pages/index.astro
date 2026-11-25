@@ -70,6 +70,12 @@ import {
 } from "@/utils/schema";
 import { getTestimonial } from "@/utils/testimonials";
 
+// Responsive widths up to the source's own width (never upscaled).
+const upTo = (img: ImageMetadata, widths: number[]) => [
+  ...widths.filter((w) => w < img.width),
+  img.width,
+];
+
 const title = "Free ambient sound mixer for iPhone, iPad and Mac";
 const appStore =
   "https://apps.apple.com/us/app/blankie/id6740096581?platform=iphone&itscg=30200&itsct=apps_box_badge&mttnsubad=6740096581";
@@ -285,7 +291,7 @@ const appJsonLd = ldGraph(
       "Blankie playing on the iPhone Lock Screen over animated rain artwork.",
     path: iphoneLockVideo,
     thumbnailPath: iphoneLockPoster,
-    uploadDate: "2026-10-28",
+    uploadDate: "2026-10-28T12:00:00-05:00",
   }),
   videoLd({
     name: "A Kaleidoscope in Blankie on iPhone",
@@ -293,7 +299,7 @@ const appJsonLd = ldGraph(
       "A kaleidoscope visualization moves in time with ambient music in Blankie on iPhone.",
     path: iphoneKaleidoscopeVideo,
     thumbnailPath: iphoneKaleidoscopePoster,
-    uploadDate: "2026-11-12",
+    uploadDate: "2026-11-12T12:00:00-06:00",
   }),
   itemListLd(
     "Blankie features",
@@ -430,7 +436,7 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
       </div>
 
       <p class="mt-8 text-sm text-muted-foreground">
-        Featured in MacRumors, 9to5Mac, ZDNET and Dense Discovery.
+        Featured in MacRumors, 9to5Mac, MIT Technology Review and Dense Discovery.
         <a
           href="/press/"
           class="ml-1 inline-flex items-center gap-1 font-semibold text-accent-ink no-underline transition-colors hover:text-white"
@@ -484,7 +490,7 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
   <!-- A Blankie for every screen -->
   <section class="relative overflow-hidden border-b border-white/5" id="devices">
     <div class="absolute inset-0">
-      <Image src={bg4} alt="" class="size-full object-cover opacity-50" />
+      <Image src={bg4} alt="" widths={upTo(bg4, [640, 1280, 1920])} sizes="100vw" class="size-full object-cover opacity-50" />
       <div class="absolute inset-0 bg-navy-deep/85"></div>
     </div>
     <div class="relative mx-auto max-w-6xl px-5 py-24">
@@ -610,7 +616,7 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
         class="relative overflow-hidden border-b border-white/5"
       >
         <div class="absolute inset-0">
-          <Image src={row[0].bg} alt="" class="size-full object-cover opacity-60" />
+          <Image src={row[0].bg} alt="" widths={upTo(row[0].bg, [640, 1280, 1920])} sizes="100vw" class="size-full object-cover opacity-60" />
           <div class="absolute inset-0 bg-navy-deep/85" />
         </div>
         <div class="relative mx-auto max-w-6xl space-y-20 px-5 py-20 lg:space-y-28 lg:py-24">
@@ -646,6 +652,8 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
                     <Image
                       src={feature.screen}
                       alt={feature.screenAlt}
+                      widths={feature.portrait ? upTo(feature.screen, [288, 576, 864]) : upTo(feature.screen, [560, 840, 1120, 1680])}
+                      sizes={feature.portrait ? "288px" : "(min-width: 1024px) 560px, 100vw"}
                       class:list={[feature.portrait ? "w-auto max-w-72" : "w-full"]}
                       quality={90}
                     />
@@ -662,7 +670,7 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
   <!-- More features grid -->
   <section class="relative overflow-hidden border-b border-white/5">
     <div class="absolute inset-0">
-      <Image src={bg3} alt="" class="size-full object-cover opacity-50" />
+      <Image src={bg3} alt="" widths={upTo(bg3, [640, 1280, 1920])} sizes="100vw" class="size-full object-cover opacity-50" />
       <div class="absolute inset-0 bg-navy-deep/85"></div>
     </div>
     <div class="relative mx-auto max-w-5xl px-5 py-24">
@@ -705,7 +713,7 @@ const homeReviews = homeReviewIds.map((id) => getTestimonial(id));
               ))}
             </div>
             <span class="font-semibold whitespace-nowrap text-white">4.9 out of 5</span>
-            <span class="whitespace-nowrap text-fg-3">· 25,000+ downloads</span>
+            <span class="whitespace-nowrap text-fg-3">· 28,000+ downloads</span>
           </div>
         </div>
 

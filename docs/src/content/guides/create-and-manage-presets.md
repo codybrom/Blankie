@@ -4,7 +4,7 @@ description: "Save your favorite ambient sound mixes as presets in Blankie, then
 category: "presets"
 order: 20
 updated: 2026-10-25
-platforms: "All Platforms"
+platforms: "All Devices"
 cover: "../../assets/guides/create-and-manage-presets/presets-cover.jpg"
 coverAlt: "Blankie on Mac with its favorites and presets in the sidebar and Creekside playing, next to the Edit Preset sheet for Rainy Night on iPhone"
 ---

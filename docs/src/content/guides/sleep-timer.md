@@ -4,7 +4,7 @@ description: "Drift off to rain, waves or white noise and let Blankie pause for 
 category: "basics"
 order: 40
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 cover: "../../assets/guides/sleep-timer/sleep-timer-cover.jpg"
 coverAlt: "The Sleep Timer on Mac, CarPlay and iPhone, with 44 minutes left on iPhone"
 ---

@@ -4,7 +4,7 @@ description: "New to Blankie? Turn on your first ambient sound, layer adjustable
 category: "basics"
 order: 0
 updated: 2026-10-25
-platforms: "All Platforms"
+platforms: "All Devices"
 cover: "../../assets/guides/get-started/get-started-cover.jpg"
 coverAlt: "Blankie on iPad, Mac, iPhone, CarPlay, Apple HomeView and iPhone Duo"
 ---

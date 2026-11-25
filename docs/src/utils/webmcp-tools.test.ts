@@ -67,7 +67,7 @@ describe("sitePath", () => {
 });
 
 describe("markdownUrlFor", () => {
-  it("points at the page's Markdown twin", () => {
+  it("points at the page's Markdown copy", () => {
     expect(markdownUrlFor("/")).toBe("/index.md");
     expect(markdownUrlFor("/guides/sleep-timer/")).toBe(
       "/guides/sleep-timer.md",
