@@ -31,6 +31,10 @@ class AudioManager {
 
   // Preview Mode (separate from single-sound mode for SoundSheet previews)
   var previewModeSound: Sound?
+  /// The single sound a sheet preview stepped out of, restored when the preview stops.
+  var previewHeldSingleSound: Sound?
+  /// The single sound the Library shows as current, held steady through a sheet preview.
+  var displayedSingleSound: Sound? { singleSound ?? previewHeldSingleSound }
   @ObservationIgnored var previewModeOriginalStates: [String: PreviewOriginalState] = [:]
 
   struct PreviewOriginalState {

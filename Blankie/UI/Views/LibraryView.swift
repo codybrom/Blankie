@@ -164,7 +164,7 @@ struct PresetPickerRow: View {
 
   /// Single-sound mode takes precedence over the current preset.
   private var isCurrent: Bool {
-    audioManager.singleSound == nil && presetManager.currentPreset?.id == preset.id
+    audioManager.displayedSingleSound == nil && presetManager.currentPreset?.id == preset.id
   }
 
   /// macOS: while Settings holds the detail pane, any single click (current row
@@ -309,7 +309,7 @@ struct SingleSoundPickerRow: View {
   }
 
   private var isCurrent: Bool {
-    audioManager.singleSound?.id == sound.id
+    audioManager.displayedSingleSound?.id == sound.id
   }
 
   /// macOS: while Settings holds the detail pane, any single click (current row
@@ -988,7 +988,7 @@ struct LibraryView: View {
   /// Opens the Kaleidoscopes in place of the list.
   private var kaleidoscopesRow: some View {
     let accent = globalSettings.customAccentColor ?? .accentColor
-    let isCurrent = audioManager.singleSound is KaleidoscopeSound
+    let isCurrent = audioManager.displayedSingleSound is KaleidoscopeSound
     return Button {
       withAnimation(.snappy) { showingKaleidoscopes = true }
     } label: {

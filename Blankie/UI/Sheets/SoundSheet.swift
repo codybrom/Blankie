@@ -43,7 +43,6 @@ struct SoundSheet: View {
   @State var previewSound: Sound?
   @State var previewProgress: Double = 0
   @State var previewTimer: Timer?
-  @State var previousSingleSound: Sound?
   @State var wasPreviewSoundPlaying: Bool = false
   @State var showingDeleteConfirmation: Bool = false
   @State var showingResetConfirmation: Bool = false
@@ -188,7 +187,7 @@ struct SoundSheet: View {
       // outside. Drop the saved single sound so stopPreview doesn't re-enter it on top.
       .onChange(of: AudioManager.shared.previewModeSound == nil) { _, ended in
         if ended, isPreviewing {
-          previousSingleSound = nil
+          AudioManager.shared.previewHeldSingleSound = nil
           isPreviewing = false
         }
       }
