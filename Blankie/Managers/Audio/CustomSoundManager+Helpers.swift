@@ -83,7 +83,8 @@ extension CustomSoundManager {
   func validateAudioFile(at url: URL) async throws -> Result<Void, Error> {
     Logger.sounds.debug("CustomSoundManager: Validating audio file at \(url.lastPathComponent)")
 
-    // No size cap: oversized files are transcoded to AAC on import (see importSound).
+    // No size cap. Large uncompressed or lossless files are transcoded to AAC on import,
+    // and large lossy ones are copied as they are (see importRequiresConversion).
     do {
       let asset = AVURLAsset(url: url)
 

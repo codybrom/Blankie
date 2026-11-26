@@ -13,6 +13,11 @@ struct CreatePresetSheet: View {
   /// Sound file names to pre-select ("create from playing sounds" while on
   /// the default preset). Empty = start with nothing selected.
   var initialSelectedSounds: Set<String> = []
+  /// Fills the name field, such as an unsaved mix's name, instead of suggesting one.
+  var initialName: String?
+  /// Saves the unsaved mix, which keeps playing as the new preset. Blocks Create while
+  /// the name matches an existing preset.
+  var savesUnsavedMix = false
   /// Fired after the new preset is created and applied so the owner can
   /// navigate to it (iPhone Library pushes the mixer). Nil at the mixer.
   var onCreated: (() -> Void)?
@@ -48,6 +53,14 @@ struct CreatePresetSheet: View {
     audioManager.sounds.sortedByLocalizedTitle()
   }
 
+  private var isDuplicateName: Bool {
+    savesUnsavedMix && presetManager.hasPreset(named: presetName)
+  }
+
+  private var canCreate: Bool {
+    !presetName.isEmpty && !selectedSounds.isEmpty && !isDuplicateName
+  }
+
   /// Live accent: the custom accent once enabled, else the app-wide one, so the
   /// sheet re-themes while you pick (as Edit Preset does).
   private var activeAccentColor: Color {
@@ -73,7 +86,8 @@ struct CreatePresetSheet: View {
           accent: activeAccentColor,
           aiSoundTitles: selectedSoundTitles,
           sparklesOnlyWhenEmpty: false,
-          isGeneratingName: $isGeneratingName
+          isGeneratingName: $isGeneratingName,
+          nameNote: isDuplicateName ? "You already have a preset with this name." : nil
         )
         soundsSection
         PresetThemeSection(
@@ -91,7 +105,7 @@ struct CreatePresetSheet: View {
             .tint(Color.primary),
           trailing: Button("Create") { createPreset() }
             .fontWeight(.semibold)
-            .disabled(presetName.isEmpty || selectedSounds.isEmpty)
+            .disabled(!canCreate)
             .tint(Color.primary)
         )
       #else
@@ -104,7 +118,7 @@ struct CreatePresetSheet: View {
           ToolbarItem(placement: .confirmationAction) {
             Button("Create") { createPreset() }
             .keyboardShortcut(.return)
-            .disabled(presetName.isEmpty || selectedSounds.isEmpty)
+            .disabled(!canCreate)
           }
         }
       #endif
@@ -125,7 +139,8 @@ struct CreatePresetSheet: View {
             SoundSelectionView(
               selectedSounds: $selectedSounds,
               orderedSounds: orderedSounds,
-              editingPreset: nil
+              editingPreset: nil,
+              editsPlayingMix: savesUnsavedMix
             )
             .toolbar {
               ToolbarItem(placement: .confirmationAction) {
@@ -198,7 +213,8 @@ extension CreatePresetSheet {
       #else
         NavigationLink(
           destination: SoundSelectionView(
-            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: nil
+            selectedSounds: $selectedSounds, orderedSounds: orderedSounds, editingPreset: nil,
+            editsPlayingMix: savesUnsavedMix
           )
         ) {
           LabeledContent("Choose Sounds", value: "\(selectedSounds.count)")
@@ -216,7 +232,7 @@ extension CreatePresetSheet {
               Text(sound.localizedTitle)
             } icon: {
               Image(systemName: sound.systemIconName)
-                .foregroundColor(activeAccentColor)
+                .foregroundStyle(.primary)
             }
             SoundCreditInfoButton(sound: sound, accent: activeAccentColor)
             Spacer()
@@ -229,9 +245,13 @@ extension CreatePresetSheet {
   }
 
   func setupDefaultSelection() {
+    if let initialName {
+      presetName = initialName
+    }
     // Seed from the caller's pre-selection, or start with no sounds selected.
     if !initialSelectedSounds.isEmpty {
       selectedSounds = initialSelectedSounds
+      guard initialName == nil else { return }
       // Offer an Apple Intelligence name for the seeded mix up front. Held in a
       // handle so the first keystroke in the name field can cancel it.
       nameSuggestionTask = Task {
@@ -275,6 +295,7 @@ extension CreatePresetSheet {
       error = String(localized: "Preset name cannot be empty")
       return
     }
+    guard !isDuplicateName else { return }
 
     Task {
       do {
@@ -291,10 +312,15 @@ extension CreatePresetSheet {
           await presetManager.cacheThumbnail(for: newPreset)
         }
 
-        // Leave single sound/Quick Mix first, like a Library row tap, so the prior
-        // mix doesn't linger as the current selection.
-        audioManager.leaveTransientModes()
-        try presetManager.applyPreset(newPreset)
+        if savesUnsavedMix, audioManager.unsavedMix != nil {
+          audioManager.adoptUnsavedMix(as: newPreset)
+        } else {
+          // Leave single sound/Quick Mix first, like a Library row tap, so the prior
+          // mix doesn't linger as the current selection. An unsaved mix was asked about
+          // before the sheet opened.
+          audioManager.leaveTransientModes()
+          try presetManager.applyPreset(newPreset)
+        }
         await MainActor.run {
           didCreatePreset = true
           // Re-arm the remote command handlers and refresh Now Playing, since browsing
@@ -332,6 +358,13 @@ extension CreatePresetSheet {
         )
       }
 
+    // A saved mix keeps the order its tiles were dragged into. Sounds added here go last.
+    var soundOrder: [String]?
+    if savesUnsavedMix, let mixOrder = audioManager.unsavedMix?.soundFileNames {
+      let names = selectedSoundStates.map(\.fileName)
+      soundOrder = mixOrder.filter(names.contains) + names.filter { !mixOrder.contains($0) }
+    }
+
     let presetId = UUID()
     let artworkId = await saveArtworkIfPresent(for: presetId)
 
@@ -344,7 +377,7 @@ extension CreatePresetSheet {
       isDefault: false,
       createdVersion: currentVersion,
       lastModifiedVersion: currentVersion,
-      soundOrder: nil,
+      soundOrder: soundOrder,
       creatorName: creatorName.isEmpty ? nil : creatorName,
       artworkId: artworkId,
       animatedArtwork: animatedArtwork,

@@ -24,12 +24,14 @@ nonisolated struct SoundCustomization: Codable, Identifiable, Sendable {
 
   var normalizeAudio: Bool?
   var volumeAdjustment: Float?  // 0.5 = -50%, 1.0 = normal, 1.5 = +50%
+  var equalizerGains: [Float]?  // nil = flat, else one dB value per SoundEqualizer band
 
   init(
     fileName: String, customTitle: String? = nil, customIconName: String? = nil,
     randomizeStartPosition: Bool? = nil,
     normalizeAudio: Bool? = nil, volumeAdjustment: Float? = nil, loopSound: Bool? = nil,
-    fadeSound: Bool? = nil, isPresetUseOnly: Bool? = nil, isMusic: Bool? = nil
+    fadeSound: Bool? = nil, isPresetUseOnly: Bool? = nil, isMusic: Bool? = nil,
+    equalizerGains: [Float]? = nil
   ) {
     self.id = UUID()
     self.fileName = fileName
@@ -42,6 +44,7 @@ nonisolated struct SoundCustomization: Codable, Identifiable, Sendable {
     self.fadeSound = fadeSound
     self.isPresetUseOnly = isPresetUseOnly
     self.isMusic = isMusic
+    self.equalizerGains = equalizerGains
   }
 
   func effectiveTitle(originalTitle: String) -> String {
@@ -56,6 +59,7 @@ nonisolated struct SoundCustomization: Codable, Identifiable, Sendable {
     return customTitle != nil || customIconName != nil
       || randomizeStartPosition != nil || normalizeAudio != nil || volumeAdjustment != nil
       || loopSound != nil || fadeSound != nil || isPresetUseOnly != nil || isMusic != nil
+      || equalizerGains != nil
   }
 }
 
@@ -135,6 +139,11 @@ class SoundCustomizationManager {
 
   func setMusic(_ music: Bool?, for fileName: String) {
     mutate(for: fileName) { $0.isMusic = music }
+  }
+
+  /// A flat or malformed curve clears the saved equalizer.
+  func setEqualizerGains(_ gains: [Float]?, for fileName: String) {
+    mutate(for: fileName) { $0.equalizerGains = SoundEqualizer.sanitized(gains) }
   }
 
   func resetCustomizations(for fileName: String) {

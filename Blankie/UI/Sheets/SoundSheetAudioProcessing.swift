@@ -18,27 +18,8 @@ extension SoundSheetForm {
     ) {
       // Preview with waveform
       HStack(spacing: 12) {
-        Button(action: {
-          togglePreview()
-        }) {
-          ZStack {
-            Circle()
-              .fill(isPreviewing ? Color.red.opacity(0.1) : Color.secondary.opacity(0.1))
-              .frame(width: 44, height: 44)
-              .accessibilityHidden(true)
-
-            Image(systemName: isPreviewing ? "stop.fill" : "play.fill")
-              .font(.system(size: 18, weight: .medium))
-              .foregroundStyle(isPreviewing ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
-              .contentTransition(
-                .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating))
-          }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(isPreviewing ? Text("Stop Preview") : Text("Play Preview"))
-        .disabled(isDisappearing)
-        .scaleEffect(isPreviewing ? 1.1 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isPreviewing)
+        SoundPreviewButton(isPreviewing: $isPreviewing)
+          .disabled(isDisappearing)
 
         if let fileURL = selectedFile {
           // For add mode with selected file
@@ -49,7 +30,7 @@ extension SoundSheetForm {
             isPlaying: isPreviewing
           )
           .accessibilityHidden(true)
-        } else if case .edit(let sound) = mode {
+        } else if case .edit(let sound) = mode, !isKaleidoscope {
           if sound.isCustom,
             let customSoundDataID = sound.customSoundDataID,
             let customSoundData = CustomSoundManager.shared.getCustomSound(by: customSoundDataID),
@@ -80,6 +61,8 @@ extension SoundSheetForm {
 
       // Alphabetical, with the two loop-dependent toggles right after Loop.
 
+      equalizerRow
+
       // Play/pause fades. Very short clips always hard-cut (a fade would
       // swallow them), regardless of this setting.
       Toggle(isOn: $fadeSound) {
@@ -88,10 +71,12 @@ extension SoundSheetForm {
         )
       }
 
-      Toggle(isOn: $loopSound) {
-        Text(
-          "Loop Sound"
-        )
+      if !isKaleidoscope {
+        Toggle(isOn: $loopSound) {
+          Text(
+            "Loop Sound"
+          )
+        }
       }
 
       // Non-looping one-shots are always preset-only, so the toggle locks on
@@ -110,15 +95,17 @@ extension SoundSheetForm {
 
       // Random start only applies to loops (on a one-shot it would cut off the start),
       // so playback ignores it there and the disabled toggle explains why.
-      Toggle(isOn: $randomizeStartPosition) {
-        Text(
-          "Randomize Start"
-        )
-        if !loopSound {
-          Text("Only applies when Loop Sound is on.")
+      if !isKaleidoscope {
+        Toggle(isOn: $randomizeStartPosition) {
+          Text(
+            "Randomize Start"
+          )
+          if !loopSound {
+            Text("Only applies when Loop Sound is on.")
+          }
         }
+        .disabled(!loopSound)
       }
-      .disabled(!loopSound)
 
       // A preset plays at most one music sound, so starting another stops this one.
       // Built-ins take their music tag from sounds.json, so the toggle is disabled for them.
@@ -133,12 +120,12 @@ extension SoundSheetForm {
       .disabled(!isCustomSound)
 
       // Import only: offer re-encoding to AAC to save space. Hidden when there's
-      // nothing to gain. Locked on over the size ceiling to bound memory use.
+      // nothing to gain. Locked on for large files that aren't already AAC or MP3.
       if mode.isAdd, importConvertForced || importConvertEstimate != nil {
         Toggle(isOn: importConvertForced ? .constant(true) : $convertToAACOnImport) {
           Text("Convert to AAC")
           if importConvertForced {
-            Text("Audio files larger than 150 MB must be converted to preserve memory.")
+            Text("Uncompressed and lossless files larger than 150 MB are converted to save space.")
           } else if let estimate = importConvertEstimate {
             Text(
               "Would use about \(estimate.savedFraction.formatted(.percent.precision(.fractionLength(0)))) less space with minimal quality loss."
@@ -159,6 +146,37 @@ extension SoundSheetForm {
       if !normalizeAudio {
         volumeAdjustmentView
       }
+    }
+  }
+
+  /// Edit mode only: opens the equalizer. Reads Off while the curve is flat,
+  /// and otherwise names the preset.
+  @ViewBuilder
+  var equalizerRow: some View {
+    if case .edit(let sound) = mode {
+      let gains = sound.equalizerGains
+      Button {
+        showingEqualizer = true
+      } label: {
+        HStack {
+          Text("Equalizer")
+          Spacer()
+          Group {
+            if gains == SoundEqualizer.flat {
+              Text("Off")
+            } else {
+              Text(GraphicEQPreset.name(for: gains))
+            }
+          }
+          .foregroundStyle(.secondary)
+          Image(systemName: "chevron.right")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .accessibilityHidden(true)
+        }
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
     }
   }
 
@@ -205,5 +223,33 @@ extension SoundSheetForm {
         .accessibilityHidden(true)
       }
     }
+  }
+}
+
+/// The round play and stop button that previews a sound in its editor.
+struct SoundPreviewButton: View {
+  @Binding var isPreviewing: Bool
+
+  var body: some View {
+    Button {
+      isPreviewing.toggle()
+    } label: {
+      ZStack {
+        Circle()
+          .fill(isPreviewing ? Color.red.opacity(0.1) : Color.secondary.opacity(0.1))
+          .frame(width: 44, height: 44)
+          .accessibilityHidden(true)
+
+        Image(systemName: isPreviewing ? "stop.fill" : "play.fill")
+          .font(.system(size: 18, weight: .medium))
+          .foregroundStyle(isPreviewing ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
+          .contentTransition(
+            .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating))
+      }
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel(isPreviewing ? Text("Stop Preview") : Text("Play Preview"))
+    .scaleEffect(isPreviewing ? 1.1 : 1.0)
+    .animation(.easeInOut(duration: 0.15), value: isPreviewing)
   }
 }

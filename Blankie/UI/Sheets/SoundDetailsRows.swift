@@ -111,7 +111,7 @@ struct SoundDetailsRows: View {
   private func offerCompression() {
     guard sound.isCustom, !isConverting else { return }
     if let estimate = CustomSoundManager.shared.compressionEstimate(
-      forExtension: sound.fileExtension, currentBytes: sound.fileSize, duration: sound.duration)
+      for: sound.fileURL, currentBytes: sound.fileSize, duration: sound.duration)
     {
       compressionEstimate = estimate
       showCompressionOffer = true

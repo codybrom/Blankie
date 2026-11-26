@@ -4,7 +4,7 @@ description: "Run Blankie's rain, fireplace or coffee shop sounds underneath you
 category: "basics"
 order: 45
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 On iPhone and iPad, Blankie behaves like a music app. Starting it pauses whatever else was playing, and Blankie takes over the Lock Screen, Control Center and your headphone buttons. Want rain under an audiobook or podcast instead? Turn on Mix with Other Audio and Blankie plays alongside your other apps.

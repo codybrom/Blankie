@@ -45,7 +45,17 @@ struct SharedAppModifiers: ViewModifier {
       }
       .tint(globalSettings.customAccentColor ?? .accentColor)
       .onOpenURL { url in
-        if url.pathExtension == "blankie" {
+        // App links. Unknown ones are ignored rather than treated as a file import.
+        if url.scheme == "blankie" {
+          if url.host() == "highlights" {
+            #if os(macOS)
+              AppState.shared.showingSettingsPane = true
+            #endif
+            AppState.shared.showingSettingsHighlightsPage = true
+          } else {
+            Logger.app.debug("Ignoring unknown app link \(url.absoluteString)")
+          }
+        } else if url.pathExtension == "blankie" {
           Task { @MainActor in
             do {
               let importedPreset = try await PresetImporter.shared.importArchive(from: url)

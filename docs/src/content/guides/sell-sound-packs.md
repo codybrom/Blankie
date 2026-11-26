@@ -4,7 +4,7 @@ description: "Which sound licenses let you sell a Blankie sound pack, what's saf
 category: "presets"
 order: 23
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 Yes. You can sell your own Blankie sound packs. Really. The only catch is that an exported `.blankie` preset bundles any custom sounds into the file, so selling a pack also means selling those recordings and each recording's license still applies.

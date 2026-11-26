@@ -11,13 +11,21 @@ struct SoundSelectionView: View {
   @Binding var selectedSounds: Set<String>
   let orderedSounds: [Sound]
   let editingPreset: Preset?
+  /// Saving the unsaved mix, whose sounds are the ones playing.
+  var editsPlayingMix = false
   @Environment(\.dismiss) private var dismiss
   private let audioManager = AudioManager.shared
   private let presetManager = PresetManager.shared
 
-  private func handleSoundToggle(_ sound: Sound) {
-    let isEditingActivePreset = editingPreset?.id == presetManager.currentPreset?.id
+  /// Removing a sound stops it right away when the sheet edits what's playing: the active
+  /// preset, or the mix being saved. A new preset leaves the playing sounds alone.
+  private var isEditingActivePreset: Bool {
+    if editsPlayingMix { return true }
+    guard let editingPreset else { return false }
+    return editingPreset.id == presetManager.currentPreset?.id
+  }
 
+  private func handleSoundToggle(_ sound: Sound) {
     if selectedSounds.contains(sound.fileName) {
       selectedSounds.remove(sound.fileName)
 
@@ -31,8 +39,6 @@ struct SoundSelectionView: View {
   }
 
   private func handleClearAll() {
-    let isEditingActivePreset = editingPreset?.id == presetManager.currentPreset?.id
-
     if isEditingActivePreset, audioManager.isGloballyPlaying {
       for fileName in selectedSounds {
         if let sound = orderedSounds.first(where: { $0.fileName == fileName }) {
@@ -183,7 +189,7 @@ struct SoundSelectionView: View {
       }
     } icon: {
       Image(systemName: sound.systemIconName)
-        .foregroundStyle(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(.secondary))
+        .foregroundStyle(isSelected ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
     }
   }
 }

@@ -1,14 +1,19 @@
 ---
 import { type ImageMetadata } from "astro";
-import { Image } from "astro:assets";
+import { Image, getImage } from "astro:assets";
 import Layout from "../layouts/Layout.astro";
 import {
   Mail,
   Download,
   Check,
+  Copy,
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   FileText,
+  Play,
+  Sparkles,
 } from "@lucide/astro";
 import Testimonial from "../components/Testimonial.astro";
 import SectionHeader from "@/components/SectionHeader.astro";
@@ -26,6 +31,19 @@ import ipadMockup from "../assets/ipad-mockup.png";
 import iphoneApp1 from "../assets/iphone-mockup-1.png";
 import iphoneApp2 from "../assets/iphone-mockup-2.png";
 import carplayDash from "../assets/carplay-dash.png";
+import kalIphone from "../assets/press/kaleidoscopes/iphone-radiance.png";
+import kalIphoneHidden from "../assets/press/kaleidoscopes/iphone-radiance-controls-hidden.png";
+import kalIpad from "../assets/press/kaleidoscopes/ipad-radiance.png";
+import kalMac from "../assets/press/kaleidoscopes/mac-radiance.png";
+import kalMacFull from "../assets/press/kaleidoscopes/mac-radiance-full-screen.png";
+import kalDuo from "../assets/press/kaleidoscopes/duo-radiance-open.png";
+import kalDevices from "../assets/press/kaleidoscopes/kaleidoscopes-devices.mp4?url";
+import kalDevicesPoster from "../assets/press/kaleidoscopes/kaleidoscopes-devices.jpg";
+import headshot from "../assets/press/blankie-developer-headshot.jpg";
+import kalVideo from "../assets/press/blankie-2-2-kaleidoscope.mp4?url";
+import kalVideoPoster from "../assets/press/blankie-2-2-kaleidoscope.jpg";
+import kalVideoCaptions from "../assets/press/blankie-2-2-kaleidoscope.vtt?url";
+import kalDevicesCaptions from "../assets/press/kaleidoscopes/kaleidoscopes-devices.vtt?url";
 import duoClosed from "../assets/guides/blankie-iphone-duo/closed.png";
 import duoOpen from "../assets/guides/blankie-iphone-duo/open-flat.png";
 import duoBook from "../assets/guides/blankie-iphone-duo/book.png";
@@ -41,23 +59,23 @@ const raw =
   "https://raw.githubusercontent.com/codybrom/Blankie/main/docs/src/assets";
 
 const quick: [string, string][] = [
-  ["24", "Ambient sounds"],
-  ["25,000+", "All-time downloads"],
+  ["40", "Ambient sounds"],
+  ["28,000+", "All-time downloads"],
   ["12", "Languages"],
   ["100% Free", "Price"],
 ];
 
 // Fact rows: a bright primary value plus an optional muted continuation.
-const facts: { t: string; d?: string; m?: string }[] = [
+const facts: { t: string; d?: string; href?: string; m?: string }[] = [
   { t: "App name", d: "Blankie" },
-  { t: "Version", d: "2.1.0" },
-  { t: "Developer", d: "Cody Bromley", m: "(independent developer)" },
+  { t: "Version", d: "2.2.0" },
+  { t: "Developer", d: "Cody Bromley", href: "#about", m: "(independent developer)" },
   {
     t: "Price",
     d: "Free.",
     m: "No ads, in-app purchases, subscriptions or accounts.",
   },
-  { t: "Platforms", d: "iPhone, iPad, Mac", m: "and optimized for CarPlay,  HomeView and iPhone Duo" },
+  { t: "Platforms", d: "iPhone, iPad, Mac", m: "and optimized for CarPlay, HomeView and iPhone Duo" },
   { t: "Requires", d: "iOS/iPadOS 26.4 or later · macOS 26 or later" },
   {
     t: "First released",
@@ -66,32 +84,33 @@ const facts: { t: string; d?: string; m?: string }[] = [
   },
   {
     t: "Languages",
-    m: "English, German, Spanish, French, Hungarian, Italian, Japanese, Korean, Polish, Portuguese, Turkish, Simplified Chinese",
+    d: "12",
+    m: "· English (US, GB, CA), Chinese (Simplified), French, German, Hungarian, Italian, Japanese, Korean, Polish, Portuguese (PT), Spanish and Turkish",
   },
   {
     t: "Downloads",
-    d: "25,000+ all-time",
-    m: "across the App Store, GitHub and Homebrew (Oct. 25, 2026)",
+    d: "28,000+ all-time",
+    m: "across the App Store, GitHub and Homebrew (Nov. 25, 2026)",
   },
   {
     t: "Schools and organizations",
     d: "Deployed to 1,000+ devices worldwide",
-    m: "(Oct. 25, 2026)",
+    m: "(Nov. 25, 2026)",
   },
   {
     t: "Rating",
     d: "4.9 out of 5",
-    m: "global App Store rating (Oct. 25, 2026)",
+    m: "global App Store rating from 101 ratings (Nov. 25, 2026)",
   },
   {
     t: "Charts",
-    d: "Ranked in 92 countries",
-    m: "on App Store charts in the 32 days to Oct. 25, 2026",
+    d: "Charted in 97 regions",
+    m: "on App Store charts in 2026 (Nov. 25, 2026)",
   },
-  { t: "GitHub", d: "389 stars", m: "(Oct. 25, 2026)" },
+  { t: "GitHub", d: "412 stars", m: "(Nov. 25, 2026)" },
   {
     t: "License",
-    d: "Open source under MIT",
+    d: "Open source under GPLv3",
     m: "(code) · openly licensed sounds",
   },
   {
@@ -112,144 +131,343 @@ const links: [string, string][] = [
 ];
 
 const highlights = [
-  "The first ambient sound app with CarPlay support.",
-  "24 ambient sounds, static noises and music loops.",
-  "Customize presets with artwork, colors and your own sounds, then export and share.",
-  "Built natively for iOS 26 with Liquid Glass.",
+  "The only ambient sound app with CarPlay and HomeView support.",
+  "Includes 40 high-quality sounds like rain, white noise and ambient music.",
   "Every feature and sound free forever, with no ads, subscriptions or trackers.",
   "Works 100% offline.",
-  "Built-in sleep timer.",
   "Home Screen widgets on iPhone and iPad, plus Siri and Shortcuts actions.",
-  "Find presets and sounds in Spotlight on Mac, iPhone and iPad.",
   "Fully accessible with VoiceOver and Dynamic Type.",
-  "Open source and actively maintained with contributors worldwide.",
 ];
 
-const releases: { title: string; when: string; url: string }[] = [
+// AP style for English: "Nov. 18, 2026", with March through July spelled out.
+// Readers in other languages get their own format from the page script.
+const apMonths = ["Jan.", "Feb.", "March", "April", "May", "June", "July", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."];
+const apDate = (date: string) => {
+  const [y, m, d] = date.split("-").map(Number);
+  return `${apMonths[m - 1]} ${d}, ${y}`;
+};
+
+const releases: { title: string; date: string; url: string }[] = [
+  {
+    title:
+      "Blankie 2.2 adds ambient music Kaleidoscopes with interactive visualizations",
+    date: "2026-11-18",
+    url: "/press/blankie-2-2/",
+  },
   {
     title:
       "Blankie 2.1 adds Home Screen widgets, Siri, Shortcuts and iPhone Duo support",
-    when: "Oct. 28, 2026",
+    date: "2026-10-28",
     url: "/press/blankie-2-1/",
   },
   {
     title: "Blankie 2.0 comes to iPhone and iPad",
-    when: "June 23, 2026",
+    date: "2026-06-23",
     url: "/press/blankie-2-0/",
   },
 ];
 
-const coverage: { out: string; note: string; when: string; url?: string }[] = [
+// Each entry names the piece (headline) and/or quotes what it says about
+// Blankie (quote). Quoted entries get the most emphasis on the page.
+type CoverageType = "Article" | "Feature" | "Video";
+
+// Pinned entries are featured at the top in the order listed.
+const coverage: {
+  out: string;
+  pinned?: boolean;
+  type: CoverageType;
+  headline?: string;
+  quote?: string;
+  context?: string;
+  // ISO date, "2026-11" or "2026-11-06". Shown in the reader's locale.
+  date: string;
+  url?: string;
+}[] = [
   {
-    out: "FoldHunt",
-    note: "Listed in its iPhone Duo app directory",
-    when: "October 2026",
-    url: "https://foldhunt.com/apps/blankie/",
-  },
-  {
-    out: "Stephen Robles",
-    note: "Listed in the “iPhone Duo Apps” directory",
-    when: "October 2026",
-    url: "https://beardfm.app/duo-apps/",
-  },
-  {
-    out: "9to5Mac",
-    note: "Included in “Best CarPlay apps for iPhone”",
-    when: "October 2026",
-    url: "https://9to5mac.com/best-carplay-apps/",
-  },
-  {
-    out: "Dense Discovery",
-    note: "Issue 402: “…Blankie stands out as a completely free, open-source app…”",
-    when: "October 2026",
-    url: "https://www.densediscovery.com/issues/402",
-  },
-  {
-    out: "ZDNET",
-    note: "“…just fantastic.”",
-    when: "June 2025",
-    url: "https://www.zdnet.com/article/need-to-relax-these-sound-apps-do-the-trick-for-me-heres-how/",
+    out: "MIT Technology Review",
+    pinned: true,
+    type: "Article",
+    quote: "Blankie’s free ambient sound mixer could help you work, focus, relax, and sleep.",
+    date: "2026-08-21",
+    url: "https://www.technologyreview.com/2026/08/21/1142762/the-download-space-mirrors-threats-ai-designed-drugs-credit/",
   },
   {
     out: "Mac App Store",
-    note: "Featured in “Best New Apps and Updates”",
-    when: "May 2025",
+    pinned: true,
+    type: "Feature",
+    headline: "Best New Apps and Updates",
+    date: "2025-05-13",
   },
   {
-    out: "Product Hunt",
-    note: "#4 Product of the Month, Health & Fitness",
-    when: "May 2025",
-    url: "https://www.producthunt.com/products/blankie",
+    out: "MacRumors",
+    pinned: true,
+    type: "Video",
+    headline: "iPhone Duo - 10 Best FREE Apps!",
+    date: "2026-11-10",
+    url: "https://www.youtube.com/watch?v=lEEj11EieEA&t=267s",
+  },
+  {
+    out: "9to5Mac",
+    pinned: true,
+    type: "Article",
+    headline: "Best CarPlay apps for iPhone",
+    date: "2026-10",
+    url: "https://9to5mac.com/best-carplay-apps/",
+  },
+  {
+    out: "ZDNET",
+    pinned: true,
+    type: "Article",
+    headline: "Need to relax? These sound apps do the trick for me – here’s how",
+    quote: "…just fantastic.",
+    date: "2025-06",
+    url: "https://www.zdnet.com/article/need-to-relax-these-sound-apps-do-the-trick-for-me-heres-how/",
+  },
+  {
+    out: "Dense Discovery",
+    pinned: true,
+    type: "Article",
+    quote: "…Blankie stands out as a completely free, open-source app…",
+    context: "Issue 402",
+    date: "2026-10",
+    url: "https://www.densediscovery.com/issues/402",
   },
   {
     out: "Mac & i (heise)",
-    note: "#1 of “21 Freeware-Perlen für den Mac”",
-    when: "Issue 1/2026",
+    pinned: true,
+    type: "Article",
+    headline: "21 Freeware-Perlen für den Mac",
+    context: "Ranked #1, in German",
+    date: "2026-01",
     url: "https://www.heise.de/ratgeber/Voellig-kostenlos-21-Freeware-Perlen-fuer-den-Mac-11215455.html",
   },
   {
-    out: "Craig Neidel (YouTube)",
-    note: "Featured in “4 More macOS Apps To Use Every Day”",
-    when: "February 2026",
-    url: "https://www.youtube.com/watch?v=J4U5Z5EBqFM&t=881s",
+    out: "MacRumors",
+    type: "Article",
+    headline: "More Fun iPhone Duo Apps: 30 New Picks to Try",
+    date: "2026-11-06",
+    url: "https://www.macrumors.com/2026/11/06/iphone-duo-app-suggestions/",
   },
   {
-    out: "AppAddict",
-    note: "Review: “A Breath of Fresh Air, Right in Your Ear”",
-    when: "July 2026",
-    url: "https://appaddict.app/post/blankie-a-free-and-open-source-ambient-sound-mixer-is-a-breath-of-fresh-air-right-in-your-ear",
+    out: "iSenaCode",
+    type: "Video",
+    headline: "Las 7 mejores APPS GRATIS para iPad",
+    date: "2026-11-18",
+    url: "https://www.youtube.com/watch?v=FhZDJHcLVqo&t=560s",
   },
   {
     out: "MacGadget",
-    note: "“Blankie 2.0: Kostenlose Mac-Software spielt Umgebungsgeräusche zum Entspannen ab”",
-    when: "June 2026",
-    url: "https://www.macgadget.de/News/2026/06/24/Blankie-20-Kostenlose-Mac-Software-spielt-Umgebungsgeraeusche-zum-Entspannen-ab",
+    type: "Article",
+    headline: "Blankie: Mac-Software spielt Umgebungsgeräusche zum Entspannen ab",
+    date: "2026-11-02",
+    url: "https://www.macgadget.de/News/2026/11/02/Update-fuer-Blankie-Mac-Software-spielt-Umgebungsgeraeusche-zum-Entspannen-ab",
+  },
+  {
+    out: "James Gill",
+    type: "Article",
+    headline: "Some more tools and links",
+    quote: "Beautifully designed native app for iOS and Mac.",
+    date: "2026-10-02",
+    url: "https://www.jamesgill.co/tools-and-links-october-2026/",
+  },
+  {
+    out: "justadandak",
+    type: "Article",
+    headline: "Monthly Digital Breadcrumbs #91",
+    date: "2026-09-01",
+    url: "https://justadandak.com/91-august-2026-monthly-digital-breadcrumbs/",
+  },
+  {
+    out: "Happily Imperfect",
+    type: "Article",
+    headline: "AI, Mac Apps, Blogrolls, Substack",
+    context: "Gordon McLean on his Mac setup",
+    date: "2026-08-06",
+    url: "https://www.gordonmclean.co.uk/2026/08/06/ai-mac-apps-blogrolls-substack/",
+  },
+  {
+    out: "AppAddict",
+    type: "Article",
+    headline: "A Breath of Fresh Air, Right in Your Ear",
+    date: "2026-07-30",
+    url: "https://appaddict.app/post/blankie-a-free-and-open-source-ambient-sound-mixer-is-a-breath-of-fresh-air-right-in-your-ear",
+  },
+  {
+    out: "Craig Neidel",
+    type: "Video",
+    headline: "4 More macOS Apps To Use Every Day",
+    date: "2026-02",
+    url: "https://www.youtube.com/watch?v=J4U5Z5EBqFM&t=881s",
+  },
+  {
+    out: "Missives from Samsara",
+    type: "Article",
+    headline: "5 Recommendations",
+    quote: "An open source, native ambient sounds app for Mac…",
+    context: "First pick",
+    date: "2025-10-02",
+    url: "https://missivesfromsamsara.com/2025/10/02/recommendations.html",
   },
   {
     out: "MaxiApple",
-    note: "“Ambiances Sonores et Bruits Blancs”",
-    when: "September 2025",
+    type: "Article",
+    headline: "Ambiances Sonores et Bruits Blancs",
+    date: "2025-09",
     url: "https://www.maxiapple.com/2025/09/blankie-mac-macos-app-ambiance-sonore-bruits-blancs-gratuit.html",
   },
   {
+    out: "Tech Productivity",
+    type: "Article",
+    headline: "Issue 344",
+    context: "In “Tools & Apps”",
+    date: "2025-09-15",
+    url: "https://techproductivity.co/archives/issue-344/",
+  },
+  {
     out: "tchgdns",
-    note: "“Kostenlose Mac-App Blankie mixt Umgebungsgeräusche”",
-    when: "July 2025",
+    type: "Article",
+    headline: "Kostenlose Mac-App Blankie mixt Umgebungsgeräusche",
+    date: "2025-07",
     url: "https://tchgdns.de/blankie-open-source-ambient-sound-macos/",
   },
   {
+    out: "Manual do Usuário",
+    type: "Article",
+    headline: "Cool links of the week",
+    quote: "On macOS? Try Blankie.",
+    context: "Brazil",
+    date: "2025-07-11",
+    url: "https://manualdousuario.net/en/cool-links-20250711/",
+  },
+  {
+    out: "Mac Treasure",
+    type: "Article",
+    headline: "Ambient sound mixer for macOS",
+    date: "2025-06-07",
+    url: "https://mactreasure.com/blankie/",
+  },
+  {
+    out: "Mac O’Clock (Medium)",
+    type: "Article",
+    headline: "10 Productivity-Boosting Mac Apps You Shouldn’t Miss",
+    date: "2025-06-06",
+    url: "https://medium.com/macoclock/10-productivity-boosting-mac-apps-you-shouldnt-miss-1cdd04dce783",
+  },
+  {
+    out: "Les Outils Numériques",
+    type: "Article",
+    context: "June 4 newsletter (France)",
+    date: "2025-06-04",
+    url: "https://outilsnum.fr/newsletter-outils-numeriques-4-juin-2025/",
+  },
+  {
+    out: "Product Hunt",
+    type: "Feature",
+    context: "#4 Product of the Month, Health & Fitness",
+    date: "2025-05",
+    url: "https://www.producthunt.com/products/blankie",
+  },
+  {
     out: "AAPL Ch.",
-    note: "Mac release coverage (Japan)",
-    when: "May 2025",
+    type: "Article",
+    context: "Mac release coverage (Japan)",
+    date: "2025-05-16",
     url: "https://applech2.com/archives/20250516-blankie-for-mac-ambient-sound.html",
   },
   {
     out: "iFun.de",
-    note: "“Freie Mac-App mischt individuelle Klanglandschaften”",
-    when: "April 2025",
+    type: "Article",
+    headline: "Recents und Blankie: Schnellzugriff- und Geräusche-App aktualisiert",
+    date: "2025-05-19",
+    url: "https://www.ifun.de/recents-und-blankie-schnellzugriff-und-geraeusche-app-aktualisiert-254639/",
+  },
+  {
+    out: "yeeach.com",
+    type: "Article",
+    context: "May 30 daily share (China)",
+    date: "2025-05-30",
+    url: "https://yeeach.com/1654/要福利每日分享2025-05-30/",
+  },
+  {
+    out: "iFun.de",
+    type: "Article",
+    headline: "Freie Mac-App mischt individuelle Klanglandschaften",
+    date: "2025-04",
     url: "https://www.ifun.de/blankie-freie-mac-app-mischt-individuelle-klanglandschaften-252622/",
   },
 ];
+
+// Articles say "Read more", features "See more". Videos say where Blankie comes up ("Watch from 9:20").
+const coverageCtas: Record<CoverageType, string> = {
+  Article: "Read more",
+  Feature: "See more",
+  Video: "Watch",
+};
+const coverageIcons: Record<CoverageType, typeof Play> = {
+  Article: BookOpen,
+  Feature: Sparkles,
+  Video: Play,
+};
+const ctaFor = (type: CoverageType, url?: string) => {
+  const t = type === "Video" && url ? Number(new URL(url).searchParams.get("t")?.replace("s", "")) : 0;
+  if (!t) return coverageCtas[type];
+  return `Watch from ${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+};
+// English fallbacks for readers without JavaScript. The page script swaps in
+// the reader's own locale using each <time>'s datetime.
+const englishDate = (date: string, options: Intl.DateTimeFormatOptions) =>
+  new Date(`${date.slice(0, 7)}-01T12:00:00Z`).toLocaleDateString("en-US", {
+    ...options,
+    timeZone: "UTC",
+  });
+const withDisplay = (c: (typeof coverage)[number]) => ({
+  ...c,
+  Icon: coverageIcons[c.type],
+  cta: ctaFor(c.type, c.url),
+  monthYear: englishDate(c.date, { month: "long", year: "numeric" }),
+});
+// Pinned entries are about who covered Blankie, so they lead with the outlet's
+// name. The first one with a quote is the hero, and the rest follow as tiles
+// in the order listed.
+// Everything else is listed newest first under "More coverage".
+const pinnedCoverage = coverage.filter((c) => c.pinned).map(withDisplay);
+const heroCoverage = pinnedCoverage.find((c) => c.quote);
+const pinnedCards = pinnedCoverage.filter((c) => c !== heroCoverage);
+// Cards fill rows of three (or four, when that divides evenly) on large
+// screens. A short last row stretches to fill the width.
+const cardSpan = (i: number, n: number) => {
+  const perRow = n % 4 === 0 ? 4 : 3;
+  const lastRow = n % perRow;
+  const full = perRow === 4 ? "lg:col-span-3" : "lg:col-span-4";
+  if (!lastRow || i < n - lastRow) return full;
+  return lastRow === 1 ? "lg:col-span-12" : "lg:col-span-6";
+};
+const moreCoverage = coverage
+  .filter((c) => !c.pinned)
+  .sort((a, b) => b.date.localeCompare(a.date))
+  .map(withDisplay);
+// Shown 8 at a time. Without JavaScript every page stays visible.
+const morePageSize = 8;
+const morePages = Array.from({ length: Math.ceil(moreCoverage.length / morePageSize) }, (_, i) =>
+  moreCoverage.slice(i * morePageSize, (i + 1) * morePageSize),
+);
 
 // A handful of verbatim App Store reviews for the press kit (see testimonials.ts).
 // Ordered to interleave long and short quotes so the masonry columns balance.
 const reviewIds = [
   "carplay-standout",
   "straightforward",
-  "no-paywall-sleep",
-  "grounded-at-work",
   "pencil-neighbor",
-  "youtube-tabs",
-  "einfach-genial",
-  "mix-five-sounds",
-  "custom-soundscapes",
   "coworking",
+  "no-paywall-sleep",
   "macht-genau",
-  "simple-efficace",
 ];
 
 type Asset = {
   img: ImageMetadata;
+  /** Plays this video (with controls) in the tile; img is its poster. */
+  video?: string;
+  captions?: string;
   file: string;
   label: string;
   pad?: boolean;
@@ -303,6 +521,18 @@ const guideItems = (device: string): Asset[] =>
     })
     .sort((a, b) => a.label.localeCompare(b.label));
 
+// The developer photo is drawn as a background image, sharp at 1x, 2x and 3x.
+const portrait = await getImage({ src: headshot, width: 160, height: 160, densities: [1, 2, 3] });
+const portraitStyle = `background-image: url(${portrait.src}); background-image: image-set(${portrait.srcSet.values
+  .map((v) => `url(${v.url}) ${v.descriptor}`)
+  .join(", ")});`;
+
+// Responsive widths up to the source's own width (never upscaled).
+const upTo = (img: ImageMetadata, widths: number[]) => [
+  ...widths.filter((w) => w < img.width),
+  img.width,
+];
+
 const assetGroups: { id: string; title: string; items: Asset[] }[] = [
   {
     id: "brand",
@@ -321,6 +551,58 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
     id: "homeview",
     title: "HomeView",
     items: guideItems("homeview"),
+  },
+  {
+    id: "kaleidoscopes",
+    title: "Kaleidoscopes",
+    items: [
+      {
+        img: kalVideoPoster,
+        video: kalVideo,
+        captions: kalVideoCaptions,
+        file: "press/blankie-2-2-kaleidoscope.mp4",
+        label: "Radiance video, with sound (30 sec)",
+      },
+      {
+        img: kalDevicesPoster,
+        video: kalDevices,
+        captions: kalDevicesCaptions,
+        file: "press/kaleidoscopes/kaleidoscopes-devices.mp4",
+        label: "Every device, no sound (15 sec)",
+      },
+      {
+        img: kalIphone,
+        file: "press/kaleidoscopes/iphone-radiance.png",
+        label: "iPhone",
+        tall: true,
+      },
+      {
+        img: kalIphoneHidden,
+        file: "press/kaleidoscopes/iphone-radiance-controls-hidden.png",
+        label: "iPhone, controls hidden",
+        tall: true,
+      },
+      {
+        img: kalIpad,
+        file: "press/kaleidoscopes/ipad-radiance.png",
+        label: "iPad",
+      },
+      {
+        img: kalDuo,
+        file: "press/kaleidoscopes/duo-radiance-open.png",
+        label: "iPhone Duo, open",
+      },
+      {
+        img: kalMac,
+        file: "press/kaleidoscopes/mac-radiance.png",
+        label: "Mac",
+      },
+      {
+        img: kalMacFull,
+        file: "press/kaleidoscopes/mac-radiance-full-screen.png",
+        label: "Mac, full screen",
+      },
+    ],
   },
   {
     id: "iphone-duo",
@@ -442,8 +724,8 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
           <Button href="#assets">
             <Download size={17} stroke-width={1.75} /> Download assets
           </Button>
-          <Button href="/press/blankie-2-1/">
-            <FileText size={17} stroke-width={1.75} /> Read the 2.1 release
+          <Button href="/press/blankie-2-2/">
+            <FileText size={17} stroke-width={1.75} /> Read the 2.2 release
           </Button>
         </div>
         <div
@@ -464,42 +746,230 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
     </section>
 
     <!-- summary -->
-    <section class="pt-14">
+    <section class="scroll-mt-20 pt-14" id="summary">
       <div class="mx-auto max-w-5xl px-5">
         <SectionHeader rule heading="Summary" class="mb-6" />
-        <div class="text-[11px] font-semibold tracking-widest text-fg-3 uppercase">
+        <div class="flex items-center gap-3 text-[11px] font-semibold tracking-widest text-fg-3 uppercase">
           One-liner
+          <button
+            type="button"
+            data-copy="one-liner"
+            class="inline-flex items-center gap-1 rounded-full border border-hair px-2.5 py-1 text-[11px] font-semibold tracking-normal text-fg-2 normal-case transition-colors hover:border-white/20 hover:text-white"
+            hidden
+          >
+            <Copy size={12} aria-hidden="true" />
+            <span data-copy-label>Copy</span>
+          </button>
         </div>
         <p
+          id="one-liner"
           class="mt-2.5 mb-10 text-[clamp(24px,3.4vw,34px)] leading-tight font-medium tracking-tight text-balance text-white"
         >
           Blankie is a <span class="text-warm">free and open-source</span> ambient
           sound mixer for iPhone, iPad, Mac, CarPlay and HomeView with no ugly ads, no sneaky
           business model and no compromises for your privacy.
         </p>
-        <div class="text-[11px] font-semibold tracking-widest text-fg-3 uppercase">
+        <div class="flex items-center gap-3 text-[11px] font-semibold tracking-widest text-fg-3 uppercase">
           Short description
+          <button
+            type="button"
+            data-copy="short-description"
+            class="inline-flex items-center gap-1 rounded-full border border-hair px-2.5 py-1 text-[11px] font-semibold tracking-normal text-fg-2 normal-case transition-colors hover:border-white/20 hover:text-white"
+            hidden
+          >
+            <Copy size={12} aria-hidden="true" />
+            <span data-copy-label>Copy</span>
+          </button>
         </div>
-        <p class="mt-2.5 max-w-[76ch] leading-relaxed text-[#d4d7ea]">
-          Blankie helps people sleep, relax and focus with 24 adjustable ambient
+        <p id="short-description" class="mt-2.5 max-w-[76ch] leading-relaxed text-[#d4d7ea]">
+          Blankie helps people sleep, relax and focus with 40 adjustable ambient
           sounds (rain, waves, fireplaces, coffee shops and more) that can be mixed into
           custom soundscapes. Listeners can import their own audio, set sleep
           timers, pick animated Lock Screen artwork and use Blankie in the car
-          with CarPlay. Version 2.1 adds Home Screen widgets, Siri and Shortcuts
-          actions, Spotlight search and layouts for every pose of iPhone Duo.
+          with CarPlay. Version 2.2 adds ambient music Kaleidoscopes with
+          interactive visualizations. Version 2.1 brought Home Screen widgets,
+          Siri and Shortcuts actions, Spotlight search and layouts for every
+          pose of iPhone Duo.
           Blankie is open source, translated into 12 languages, accessible with
           VoiceOver and free forever.
         </p>
       </div>
     </section>
 
-    <!-- press releases -->
-    <section class="pt-14" id="releases">
+    <!-- coverage -->
+    <section class="scroll-mt-20 pt-14" id="coverage">
       <div class="mx-auto max-w-5xl px-5">
-        <SectionHeader rule heading="Press Releases" class="mb-6" />
+        <SectionHeader rule heading="Recognition & coverage" class="mb-6" />
+
+        {
+          heroCoverage && (
+            <figure class="relative isolate overflow-hidden rounded-3xl border border-hair bg-[linear-gradient(150deg,color-mix(in_srgb,var(--color-accent-blue)_18%,transparent),transparent_62%)] p-7 sm:p-11">
+              <Glow class="-top-48 -right-32 -z-10 size-130" pct={20} fade={62} />
+              <p class="text-[11px] font-semibold tracking-[0.16em] text-accent-ink uppercase">Featured in</p>
+              <p class="mt-3 text-4xl font-semibold tracking-tight text-fg-1 sm:text-6xl">
+                {heroCoverage.out}
+              </p>
+              <p class="mt-2 text-sm text-fg-3">
+                <time datetime={heroCoverage.date} data-localize="month-year">{heroCoverage.monthYear}</time>
+              </p>
+              <div class="mt-7 flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+                <blockquote class="max-w-2xl text-lg/snug text-balance text-fg-2 sm:text-xl/snug">
+                  “{heroCoverage.quote}”
+                </blockquote>
+                {heroCoverage.url && (
+                  <a
+                    class="group inline-flex shrink-0 items-center gap-2 rounded-full bg-moon px-4 py-2.5 text-sm font-semibold text-midnight no-underline transition hover:-translate-y-0.5"
+                    href={heroCoverage.url}
+                  >
+                    {heroCoverage.Icon && <heroCoverage.Icon size={15} aria-hidden="true" />}
+                    {heroCoverage.cta}
+                    <ArrowRight size={14} class="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                  </a>
+                )}
+              </div>
+            </figure>
+          )
+        }
+
+        <ul class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-12">
+          {
+            pinnedCards.map(({ out, Icon, cta, headline, quote, date, monthYear, url }, i) => {
+              const Tile = url ? "a" : "div";
+              return (
+                <li
+                  class:list={[
+                    "grid",
+                    cardSpan(i, pinnedCards.length),
+                    pinnedCards.length % 2 === 1 && i === pinnedCards.length - 1 && "sm:col-span-2",
+                  ]}
+                >
+                  <Tile
+                    href={url}
+                    class:list={[
+                      "flex min-h-36 flex-col justify-between gap-6 rounded-2xl border border-hair-soft bg-glass p-6 no-underline",
+                      url &&
+                        "group transition duration-200 hover:-translate-y-0.5 hover:border-hair hover:bg-glass-2 hover:shadow-[0_18px_40px_rgba(0,0,0,0.35)]",
+                    ]}
+                  >
+                    <span class="grid gap-2">
+                      <span class="text-2xl font-semibold tracking-tight text-fg-1 sm:text-[28px]">{out}</span>
+                      {(headline || quote) && (
+                        <span class="text-sm/snug text-balance text-fg-2">
+                          <span class="sr-only">: </span>
+                          {headline ?? `“${quote}”`}
+                        </span>
+                      )}
+                    </span>
+                    <span class="flex items-center justify-between gap-4 text-xs">
+                      <span
+                        class:list={[
+                          "inline-flex items-center gap-1.5 font-semibold",
+                          url ? "text-accent-ink transition-colors group-hover:text-fg-1" : "text-fg-3",
+                        ]}
+                      >
+                        <span class="sr-only">. </span>
+                        {Icon && <Icon size={14} class={Icon === Play ? "fill-current" : undefined} aria-hidden="true" />}
+                        {url ? cta : "Featured"}
+                        {url && (
+                          <ArrowRight size={13} class="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                        )}
+                      </span>
+                      <span class="sr-only">, </span>
+                      <time class="text-fg-3" datetime={date} data-localize="month-year">
+                        {monthYear}
+                      </time>
+                    </span>
+                  </Tile>
+                </li>
+              );
+            })
+          }
+        </ul>
+
+        <h3 class="mt-14 mb-3 text-lg font-semibold tracking-tight text-fg-1">More coverage</h3>
+        <div class="scroll-mt-28 border-t border-hair-soft pt-2" data-coverage-list>
+          {
+            morePages.map((page, p) => (
+              <ul class="grid" data-coverage-page={p}>
+                {page.map(({ out, Icon, cta, headline, quote, context, date, monthYear, url }) => (
+                  <li>
+                    <a
+                      class="group -mx-3 grid grid-cols-[1fr_auto] items-baseline gap-x-4 rounded-xl px-3 py-2.5 no-underline transition-colors hover:bg-glass"
+                      href={url}
+                    >
+                      <span class="min-w-0 text-sm/snug">
+                        <span class="font-semibold text-fg-1">{out}</span>
+                        <span class="text-fg-2">
+                          {" · "}
+                          {quote ? `“${quote}”` : (headline ?? context)}
+                        </span>
+                      </span>
+                      <span class="sr-only">. </span>
+                      <span class="flex items-center gap-3 text-xs whitespace-nowrap text-fg-3">
+                        <span class="hidden items-center gap-1.5 font-semibold text-accent-ink transition-colors group-hover:text-fg-1 sm:inline-flex">
+                          {Icon && <Icon size={13} class={Icon === Play ? "fill-current" : undefined} aria-hidden="true" />}
+                          {cta}
+                        </span>
+                        {Icon && (
+                          <Icon size={13} aria-hidden="true" class:list={["text-accent-ink sm:hidden", Icon === Play && "fill-current"]} />
+                        )}
+                        <span class="sr-only">, </span>
+                        <time class="w-26 text-right tabular-nums" datetime={date} data-localize="month-year">
+                          {monthYear}
+                        </time>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ))
+          }
+        </div>
+        <nav
+          data-coverage-pager
+          aria-label="More coverage pages"
+          class="mt-3 flex items-center justify-center gap-1"
+          hidden
+        >
+          <button
+            type="button"
+            data-step="-1"
+            aria-label="Previous page"
+            class="grid size-9 place-items-center rounded-full text-fg-2 transition-colors hover:bg-glass-2 hover:text-fg-1 disabled:pointer-events-none disabled:opacity-30"
+          >
+            <ArrowLeft size={15} />
+          </button>
+          {
+            morePages.map((_, p) => (
+              <button
+                type="button"
+                data-page={p}
+                aria-label={`Page ${p + 1}`}
+                class="grid size-9 place-items-center rounded-full text-sm font-semibold text-fg-3 tabular-nums transition-colors hover:bg-glass-2 hover:text-fg-1 aria-[current=page]:bg-glass-2 aria-[current=page]:text-fg-1 aria-[current=page]:ring-1 aria-[current=page]:ring-hair"
+              >
+                {p + 1}
+              </button>
+            ))
+          }
+          <button
+            type="button"
+            data-step="1"
+            aria-label="Next page"
+            class="grid size-9 place-items-center rounded-full text-fg-2 transition-colors hover:bg-glass-2 hover:text-fg-1 disabled:pointer-events-none disabled:opacity-30"
+          >
+            <ArrowRight size={15} />
+          </button>
+        </nav>
+      </div>
+    </section>
+
+    <!-- press releases -->
+    <section class="scroll-mt-20 pt-14" id="releases">
+      <div class="mx-auto max-w-5xl px-5">
+        <SectionHeader rule heading="Press releases" class="mb-6" />
         <div class="grid">
           {
-            releases.map(({ title, when, url }) => (
+            releases.map(({ title, date, url }) => (
               <div class="grid grid-cols-1 items-baseline gap-1 border-t border-hair-soft py-4 first:border-t-0 sm:grid-cols-[1fr_auto] sm:gap-6">
                 <a
                   class="group inline-flex items-center gap-1.5 font-semibold tracking-tight text-fg-1 no-underline transition-colors hover:text-accent-ink"
@@ -511,9 +981,13 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
                     size={13}
                   />
                 </a>
-                <span class="text-[11px] tracking-wide whitespace-nowrap text-fg-3 sm:text-right">
-                  {when}
-                </span>
+                <time
+                  class="text-[11px] tracking-wide whitespace-nowrap text-fg-3 sm:text-right"
+                  datetime={date}
+                  data-localize="day"
+                >
+                  {apDate(date)}
+                </time>
               </div>
             ))
           }
@@ -522,14 +996,20 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
     </section>
 
     <!-- fact sheet -->
-    <section class="pt-14">
+    <section class="scroll-mt-20 pt-14" id="facts">
       <div class="mx-auto max-w-5xl px-5">
-        <SectionHeader rule heading="Fact Sheet" class="mb-6" />
+        <SectionHeader rule heading="Fact sheet" class="mb-6" />
         <dl class="grid [&_dd]:leading-normal [&_dd]:text-fg-1">
           {
             facts.map((f) => (
               <DefRow term={f.t}>
-                {f.d}
+                {f.href ? (
+                  <a class="border-b border-accent-ink/35 text-fg-1 no-underline transition-colors hover:border-accent-ink" href={f.href}>
+                    {f.d}
+                  </a>
+                ) : (
+                  f.d
+                )}
                 {f.d && f.m ? " " : ""}
                 {f.m && <span class="text-fg-2">{f.m}</span>}
               </DefRow>
@@ -570,43 +1050,8 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
       </div>
     </section>
 
-    <!-- coverage -->
-    <section class="pt-14">
-      <div class="mx-auto max-w-5xl px-5">
-        <SectionHeader rule heading="Recognition & Coverage" class="mb-6" />
-        <div class="grid">
-          {
-            coverage.map(({ out, note, when, url }) => (
-              <div class="grid grid-cols-1 items-baseline gap-1 border-t border-hair-soft py-4 first:border-t-0 sm:grid-cols-[190px_1fr_auto] sm:gap-6">
-                {url ? (
-                  <a
-                    class="group inline-flex items-center gap-1.5 font-semibold tracking-tight text-fg-1 no-underline transition-colors hover:text-accent-ink"
-                    href={url}
-                  >
-                    {out}{" "}
-                    <ArrowUpRight
-                      class="text-fg-3 transition-colors group-hover:text-accent-ink"
-                      size={13}
-                    />
-                  </a>
-                ) : (
-                  <span class="font-semibold tracking-tight text-fg-1">
-                    {out}
-                  </span>
-                )}
-                <span class="text-sm/snug text-fg-2">{note}</span>
-                <span class="text-[11px] tracking-wide whitespace-nowrap text-fg-3 sm:text-right">
-                  {when}
-                </span>
-              </div>
-            ))
-          }
-        </div>
-      </div>
-    </section>
-
     <!-- reviews -->
-    <section class="pt-14">
+    <section class="scroll-mt-20 pt-14" id="reviews">
       <div class="mx-auto max-w-5xl px-5">
         <SectionHeader rule heading="Reviews" class="mb-6" />
         <div class="columns-1 gap-4 min-[600px]:columns-2 min-[900px]:columns-3">
@@ -622,9 +1067,9 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
     </section>
 
     <!-- assets -->
-    <section class="pt-14" id="assets">
+    <section class="scroll-mt-20 pt-14" id="assets">
       <div class="mx-auto max-w-5xl px-5">
-        <SectionHeader rule heading="Images & Assets" class="mb-6" />
+        <SectionHeader rule heading="Images & assets" class="mb-6" />
         <div class="mb-7 flex flex-wrap items-center justify-between gap-4">
           <p class="max-w-[60ch] text-sm text-fg-3">
             Free to use in coverage of Blankie. Need something specific? Localized
@@ -642,12 +1087,13 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
             </Button>
           </div>
         </div>
-        <nav class="mb-8 flex flex-wrap gap-2" aria-label="Asset groups">
+        <nav class="mb-8 flex flex-wrap gap-2" aria-label="Asset groups" data-asset-tabs>
           {
             assetGroups.map((group) => (
               <a
                 href={`#${group.id}`}
-                class="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm font-medium text-fg-2 no-underline transition-colors hover:border-white/20 hover:text-white"
+                data-asset-tab={group.id}
+                class="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm font-medium text-fg-2 no-underline transition-colors hover:border-white/20 hover:text-white aria-[current=true]:border-white/25 aria-[current=true]:bg-white/12 aria-[current=true]:text-white"
               >
                 {group.title}
                 <span class="ml-1.5 text-fg-3">{group.items.length}</span>
@@ -663,7 +1109,7 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
               group.items.some((i) => i.tall) &&
               group.items.some((i) => !i.tall);
             return (
-              <div class="[&+&]:mt-9" id={group.id}>
+              <div class="scroll-mt-28 [&+&]:mt-9" id={group.id} data-asset-group={group.id}>
                 <h3 class="mb-3.5 text-xs font-semibold tracking-wide text-fg-3 uppercase">
                   {group.title}
                 </h3>
@@ -674,7 +1120,7 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
                       : "grid grid-cols-1 items-start gap-4 min-[520px]:grid-cols-2 min-[820px]:grid-cols-3",
                   ]}
                 >
-                  {group.items.map(({ img, file, label, pad, tall }) => (
+                  {group.items.map(({ img, video, captions, file, label, pad, tall }) => (
                     <div
                       class:list={[
                         "overflow-hidden rounded-xl border border-hair bg-glass transition hover:-translate-y-0.5 hover:border-white/20",
@@ -683,21 +1129,37 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
                     >
                       <div
                         class:list={[
-                          "grid place-items-center overflow-hidden bg-[linear-gradient(160deg,#0c1130,#06091f)] p-4",
+                          "flex items-center justify-center overflow-hidden bg-[linear-gradient(160deg,#0c1130,#06091f)] p-4",
                           tall ? "aspect-3/4" : "aspect-16/10",
                         ]}
                       >
+                        {video ? (
+                        <video
+                          src={video}
+                          poster={img.src}
+                          controls
+                          playsinline
+                          preload="none"
+                          aria-label={`${group.title}, ${label}`}
+                          class="max-h-full max-w-full rounded-md"
+                        >
+                          <track kind="captions" src={captions} srclang="en" label="English" />
+                        </video>
+                        ) : (
                         <a href={img.src} data-zoom data-download={img.src} data-filename={`blankie-${file.split("/").pop()}`} class="contents">
                         <Image
                           src={img}
                           alt={`${group.title}, ${label}`}
                           quality={82}
+                          widths={pad ? upTo(img, [84, 168, 252]) : upTo(img, [400, 640, 960, 1280])}
+                          sizes={pad ? "84px" : "(min-width: 1024px) 320px, (min-width: 640px) 45vw, 100vw"}
                           class:list={[
                             "max-h-full max-w-full object-contain",
                             pad ? "max-h-21 rounded-[22%]" : "rounded-md",
                           ]}
                         />
                         </a>
+                        )}
                       </div>
                       <div class="flex items-center justify-between gap-2.5 border-t border-hair-soft px-4 py-3">
                         <span class="text-sm font-medium text-fg-1">{label}</span>
@@ -720,9 +1182,32 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
     </section>
 
     <!-- about the developer -->
-    <section class="pt-14 pb-6">
+    <section class="scroll-mt-20 pt-14 pb-6" id="about">
       <div class="mx-auto max-w-5xl px-5">
-        <SectionHeader rule heading="About the Developer" class="mb-6" />
+        <SectionHeader rule heading="About the developer" class="mb-6" />
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
+        <figure class="shrink-0">
+          <div
+            role="img"
+            aria-label="Cody Bromley"
+            class="size-32 rounded-full bg-cover bg-center ring-1 ring-hair sm:size-36"
+            style={portraitStyle}
+          ></div>
+          <figcaption class="mt-2 text-center text-[11px] text-fg-3">
+            Photo by Henry Ninde ·{" "}
+            <a
+              class="inline-flex align-[-2px] text-accent-ink transition-colors hover:text-fg-1"
+              href={headshot.src}
+              rel="nofollow"
+              download
+              title="Download headshot"
+            >
+              <Download size={13} aria-hidden="true" />
+              <span class="sr-only">Download headshot</span>
+            </a>
+          </figcaption>
+        </figure>
+        <div>
         <p class="max-w-[76ch] leading-relaxed text-[#d4d7ea]">
           Cody Bromley is an independent developer from Tulsa, Oklahoma. He built
           Blankie in the great tradition of free Mac and iPhone apps that solve a
@@ -741,8 +1226,167 @@ const assetGroups: { id: string; title: string; items: Asset[] }[] = [
             href="https://github.com/codybrom">github.com/codybrom</a
           >
         </p>
+        </div>
+        </div>
       </div>
     </section>
   </div>
   <Lightbox />
+
+  <nav
+    class="press-pill is-hidden fixed bottom-8 left-1/2 z-40 inline-flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/10 bg-[color-mix(in_srgb,var(--color-midnight)_72%,transparent)] p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.4)] backdrop-blur-[22px] backdrop-saturate-150 transition-[opacity,transform] duration-350 [&.is-hidden]:pointer-events-none [&.is-hidden]:translate-y-5 [&.is-hidden]:opacity-0"
+    aria-label="Page sections"
+  >
+    {
+      [
+        ["summary", "Summary"],
+        ["coverage", "Coverage"],
+        ["facts", "Facts"],
+        ["assets", "Images"],
+        ["about", "About"],
+      ].map(([id, label]) => (
+        <a
+          href={`#${id}`}
+          data-section={id}
+          class="rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-fg-2 no-underline transition-colors hover:text-white max-[520px]:px-2.5 max-[520px]:text-xs [&.active]:bg-white/8 [&.active]:text-white"
+        >
+          {label}
+        </a>
+      ))
+    }
+  </nav>
+
+  <script>
+    // Summary copy buttons put the paragraph's plain text on the clipboard.
+    document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((button) => {
+      const source = document.getElementById(button.dataset.copy ?? "");
+      const label = button.querySelector("[data-copy-label]");
+      if (!source || !label || !navigator.clipboard) return;
+      button.hidden = false;
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(source.textContent?.replace(/\s+/g, " ").trim() ?? "");
+        } catch {
+          return;
+        }
+        label.textContent = "Copied";
+        setTimeout(() => {
+          label.textContent = "Copy";
+        }, 1600);
+      });
+    });
+
+    // Asset chips show one group at a time. Without JavaScript every group shows.
+    const assetTabs = document.querySelectorAll<HTMLAnchorElement>("[data-asset-tab]");
+    const assetGroupEls = document.querySelectorAll<HTMLElement>("[data-asset-group]");
+    const showAssets = (id: string) => {
+      assetGroupEls.forEach((group) => {
+        group.hidden = group.dataset.assetGroup !== id;
+      });
+      assetTabs.forEach((tab) => {
+        tab.setAttribute("aria-current", String(tab.dataset.assetTab === id));
+      });
+    };
+    if (assetTabs.length && assetGroupEls.length) {
+      const ids = [...assetTabs].map((t) => t.dataset.assetTab ?? "");
+      const fromHash = location.hash.slice(1);
+      showAssets(ids.includes(fromHash) ? fromHash : ids[0]);
+      assetTabs.forEach((tab) => {
+        tab.addEventListener("click", (event) => {
+          event.preventDefault();
+          showAssets(tab.dataset.assetTab ?? ids[0]);
+          history.replaceState(null, "", `#${tab.dataset.assetTab}`);
+        });
+      });
+    }
+
+    // The floating section bar appears after the hero and marks the section in view.
+    const pill = document.querySelector<HTMLElement>(".press-pill");
+    const summary = document.getElementById("summary");
+    if (pill && summary) {
+      const links = pill.querySelectorAll<HTMLAnchorElement>("a[data-section]");
+      const spy = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            links.forEach((link) => {
+              link.classList.toggle("active", link.dataset.section === entry.target.id);
+            });
+          });
+        },
+        { rootMargin: "-45% 0px -45% 0px" },
+      );
+      links.forEach((link) => {
+        const section = document.getElementById(link.dataset.section ?? "");
+        if (section) spy.observe(section);
+      });
+      let queued = false;
+      const update = () => {
+        queued = false;
+        pill.classList.toggle("is-hidden", summary.getBoundingClientRect().top > window.innerHeight * 0.6);
+      };
+      const onScroll = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(update);
+      };
+      update();
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll, { passive: true });
+    }
+
+    // Press dates show in the reader's own locale. Month-precision dates
+    // ("2026-11") are read as the first of the month.
+    const formats: Record<string, Intl.DateTimeFormatOptions> = {
+      day: { month: "short", day: "numeric", year: "numeric" },
+      "month-year": { month: "long", year: "numeric" },
+    };
+    // English readers keep the AP-style dates the page was built with.
+    const english = (navigator.languages[0] ?? navigator.language).toLowerCase().startsWith("en");
+    document.querySelectorAll<HTMLTimeElement>("time[data-localize]").forEach((time) => {
+      const options = formats[time.dataset.localize ?? ""];
+      if (!options || (english && time.dataset.localize === "day")) return;
+      const iso = time.dateTime.length === 7 ? `${time.dateTime}-01` : time.dateTime;
+      time.textContent = new Intl.DateTimeFormat(navigator.languages, {
+        ...options,
+        timeZone: "UTC",
+      }).format(new Date(`${iso}T12:00:00Z`));
+    });
+
+    // "More coverage" shows one page at a time once JavaScript runs.
+    const pager = document.querySelector<HTMLElement>("[data-coverage-pager]");
+    const list = document.querySelector<HTMLElement>("[data-coverage-list]");
+    const pages = list?.querySelectorAll<HTMLElement>("[data-coverage-page]");
+    if (pager && list && pages && pages.length > 1) {
+      const numbers = pager.querySelectorAll<HTMLButtonElement>("[data-page]");
+      const prev = pager.querySelector<HTMLButtonElement>('[data-step="-1"]');
+      const next = pager.querySelector<HTMLButtonElement>('[data-step="1"]');
+      let current = 0;
+      const show = (index: number, scroll: boolean) => {
+        current = index;
+        pages.forEach((page, i) => {
+          page.hidden = i !== index;
+        });
+        numbers.forEach((button, i) => {
+          if (i === index) button.setAttribute("aria-current", "page");
+          else button.removeAttribute("aria-current");
+        });
+        if (prev) prev.disabled = index === 0;
+        if (next) next.disabled = index === pages.length - 1;
+        if (scroll && list.getBoundingClientRect().top < 80) {
+          list.scrollIntoView({ block: "start" });
+        }
+      };
+      pager.addEventListener("click", (event) => {
+        const button = (event.target as Element).closest<HTMLButtonElement>("button");
+        if (!button) return;
+        const target = button.dataset.page
+          ? Number(button.dataset.page)
+          : current + Number(button.dataset.step);
+        if (target >= 0 && target < pages.length) show(target, true);
+      });
+      pager.hidden = false;
+      show(0, false);
+    }
+  </script>
 </Layout>

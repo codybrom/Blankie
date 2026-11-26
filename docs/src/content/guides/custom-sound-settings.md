@@ -1,10 +1,10 @@
 ---
 title: "Custom Sound Settings: Loop, Sound Check & Credits"
-description: "Every setting for sounds in Blankie: looping, fades, music tags, Preset Use Only, automatic loudness matching with Sound Check, AAC conversion and credits."
+description: "Every setting for sounds in Blankie: looping, fades, music tags, Preset Use Only, automatic loudness matching with Sound Check, the equalizer, AAC conversion and credits."
 category: "import"
 order: 4
-updated: 2026-10-26
-platforms: "All Platforms"
+updated: 2026-11-25
+platforms: "All Devices"
 ---
 
 When you import a sound, or edit one later in **Manage Sounds**, Blankie gives you a set of controls that decide how it behaves in a mix and where it shows up in the app. Here's what each one does.
@@ -47,6 +47,16 @@ Turn Sound Check off and a **Volume Adjustment** slider takes its place, letting
 
 ![The same Bedroom Fan sheet with Sound Check turned off, which shows the Volume Adjustment slider in its place.](../../assets/guides/custom-sound-settings/mac-volume-adjustment.png)
 
+## Equalizer
+
+When a sound is almost right (a fan with a little too much hiss, or rain that's a touch too bright), the **Equalizer** lets you reshape it. Open the sound's settings after you import it and choose **Equalizer**. The row reads **Off** until you change something.
+
+Pick a preset from the menu, like **Reduce Treble**, **Increase Bass**, **Next Room** or **Old Radio**, or drag any of the seven bands yourself, from the low rumble at 60 Hz up to the airy top at 15 kHz. Press play at the top of the equalizer to hear your changes as you make them. Blankie keeps the overall level about the same, so boosting a band doesn't just make the whole sound louder.
+
+The equalizer belongs to the sound, so it follows that sound into every preset, and it comes along when you share a preset. Choose **Flat** to set it back.
+
+![The Equalizer on Mac for Bedroom Fan, set to Reduce Treble and playing, with the low bands lit and the treble bands pulled down.](../../assets/guides/custom-sound-settings/mac-equalizer.png)
+
 ## Add to Presets
 
 At the bottom of the import sheet, **Add to Presets** lets you drop your new sound straight into any of your saved presets, or check **New Preset** to spin up a fresh "[Sound Name] Mix" preset right away. When you edit a sound later, the **Presets** row shows how many custom presets include it and lets you check or uncheck them in place.
@@ -57,7 +67,7 @@ If you grabbed a sound from somewhere, choose **Add Credits** in its settings af
 
 ## Changing settings later (including built-in sounds)
 
-None of this is locked in. You can also edit Blankie's 24 built-in sounds the same way if you want to rename one, swap its icon, hide it with **Preset Use Only** or override its **Sound Check** level:
+None of this is locked in. You can also edit Blankie's 40 built-in sounds the same way if you want to rename one, swap its icon, hide it with **Preset Use Only**, override its **Sound Check** level or reshape it with the **Equalizer** (Kaleidoscopes have an **Equalizer** too):
 
 - **Mac:** choose **File → Manage Sounds**, press {{kbd:⌘ O}} or open **Settings → Manage Sounds**, then select the sound to edit.
 - **iPhone and iPad:** open **Settings → Manage Sounds**, then tap the sound to edit.

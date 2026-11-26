@@ -4,8 +4,8 @@
 //
 //  Created by Cody Bromley on 10/13/26.
 //
-//  An import leaves single sound and Quick Mix, activates the imported preset and clamps an
-//  archive's volume adjustments. Runs on an in-memory store and isolated presets
+//  An import leaves single sound and Quick Mix, activates the imported preset and cleans an
+//  archive's volume adjustments and equalizer curves. Runs on an in-memory store and isolated presets
 //  (SingletonSandbox).
 //
 
@@ -80,5 +80,17 @@ import Testing
     let manager = SoundCustomizationManager.shared
     #expect(manager.getCustomization(for: Self.names[0])?.volumeAdjustment == 0.5)
     #expect(manager.getCustomization(for: Self.names[1])?.volumeAdjustment == 8)
+  }
+
+  /// A shared preset carries each sound's equalizer. Out-of-range bands clamp
+  /// and a curve with the wrong band count is dropped.
+  @Test func importAppliesAndCleansEqualizerCurves() async throws {
+    _ = try await importPreset(customizations: [
+      SoundCustomization(fileName: Self.names[0], equalizerGains: [40, 0, 0, 0, 0, 0, -40]),
+      SoundCustomization(fileName: Self.names[1], equalizerGains: [6, 6]),
+    ])
+
+    #expect(sandbox.audioManager.sounds[0].equalizerGains == [18, 0, 0, 0, 0, 0, -18])
+    #expect(sandbox.audioManager.sounds[1].equalizerGains == SoundEqualizer.flat)
   }
 }

@@ -32,7 +32,7 @@
 
 ## About
 
-Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 24 high-quality sounds to create your ideal environment for work, study or rest.
+Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 40 high-quality sounds to create your ideal environment for work, study or rest.
 
 **Why choose Blankie?**
 
@@ -44,7 +44,7 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 ## Features
 
 - **Universal app** for Mac, iPad and iPhone with CarPlay and HomeView support
-- **24 high-quality ambient sounds** including rain, waves, fireplace and more
+- **40 high-quality ambient sounds** including rain, waves, fireplace and musical soundscapes
 - **Import your own sounds** with automatic loudness matching
 - **Mix multiple sounds** with individual volume controls
 - **Customizable presets** with colors, artwork and layouts that you can export and share with friends
@@ -99,11 +99,12 @@ See our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF
 
 ## License
 
-© 2026 Cody Bromley and contributors. All rights reserved.
+© 2025-2026 Cody Bromley and contributors. All rights reserved.
 
-- **Source code**: [MIT License](LICENSE)
-- **Name, logo and app icons**: © Cody Bromley, all rights reserved. These are trademarks, are not covered by the MIT License and may not be reused without permission (see [credits](https://blankie.rest/credits)).
+- **Source code**: [GNU General Public License v3.0 or later](LICENSE) (GPL-3.0-or-later). Some earlier versions of Blankie were released under the MIT License. Check the LICENSE file in each version for details.
+- **Name, logo and app icons**: © Cody Bromley, all rights reserved. These are trademarks, are not covered by the GPL and may not be reused without permission (see [credits](https://blankie.rest/credits)).
 - **Sounds**: Various open licenses (see [credits](https://blankie.rest/credits))
+- **Animated artwork**: Cropped and trimmed from videos shared under the [Pexels License](https://www.pexels.com/license/), which is separate from the GPL (see [credits](https://blankie.rest/credits))
 
 ## Support
 

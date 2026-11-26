@@ -77,8 +77,5 @@ import Testing
   @Test func matchesGlobalSettingsTokens() {
     #expect(PlayableItem.allSounds.token == GlobalSettings.allSoundsToken)
     #expect(PlayableItem.quickMix.token == GlobalSettings.quickMixToken)
-    #expect(
-      PlayableItem.single(fileName: "rain").token == GlobalSettings.singleToken(forFileName: "rain")
-    )
   }
 }

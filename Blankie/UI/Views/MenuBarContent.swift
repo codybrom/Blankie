@@ -167,9 +167,49 @@
     }
 
     /// The mixer: the single sound icon or the iOS-style sound list, plus the control bar.
+    /// A Kaleidoscope's glass in place of the icon. The header already names it.
+    /// Dragging around its middle turns it.
+    private func kaleidoscopeGlass(_ kaleidoscope: KaleidoscopeSound) -> some View {
+      GeometryReader { proxy in
+        let frame = proxy.frame(in: .global)
+        KaleidoscopeBackdrop(
+          sound: kaleidoscope, isPlaying: audioManager.isGloballyPlaying,
+          artworkFrame: frame, dimsForControls: false, touch: kaleidoscopeTouch,
+          isTouched: kaleidoscopeTouched
+        )
+        // The popover is no scene of its own, and it only draws while it is open.
+        .environment(\.scenePhase, .active)
+        .contentShape(Rectangle())
+        .gesture(
+          DragGesture(minimumDistance: 4, coordinateSpace: .global)
+            .onChanged { value in
+              let center = CGPoint(x: frame.midX, y: frame.midY)
+              if kaleidoscopeTouch.drag(to: value.location, about: center, at: value.time),
+                !kaleidoscopeTouched
+              {
+                kaleidoscopeTouched = true
+              }
+            }
+            .onEnded { _ in
+              let released = kaleidoscopeTouch.release()
+              Task {
+                try? await Task.sleep(for: .seconds(7))
+                if kaleidoscopeTouch.hasSettled(since: released) { kaleidoscopeTouched = false }
+              }
+            }
+        )
+      }
+      .frame(height: 236)
+      .clipped()
+      .id(kaleidoscope.id)
+      .accessibilityHidden(true)
+    }
+
     private var mixerContent: some View {
       VStack(spacing: 0) {
-        if let single = audioManager.singleSound {
+        if let kaleidoscope = audioManager.singleSound as? KaleidoscopeSound {
+          kaleidoscopeGlass(kaleidoscope)
+        } else if let single = audioManager.singleSound {
           SingleSoundCard(sound: single, iconSize: 120)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 28)
@@ -213,6 +253,12 @@
     }
 
     @State private var listContentHeight: CGFloat = 300
+
+    /// The turn a drag has given the glass, and whether it is still moving from one.
+
+    @State private var kaleidoscopeTouch = KaleidoscopeBackdrop.TouchBox()
+
+    @State private var kaleidoscopeTouched = false
     private let maxListHeight: CGFloat = 420
 
     /// The sounds shown in the list, ordered. Shared with the main grid and iOS.
@@ -220,11 +266,12 @@
       audioManager.orderedVisibleSounds(for: presetManager.currentPreset)
     }
 
-    /// Mixer title: single sound, Quick Mix, or the preset name.
+    /// Mixer title: single sound, an unsaved mix, Quick Mix, or the preset name.
     private var mixerTitle: String {
       if let single = audioManager.singleSound {
         return single.localizedTitle
       }
+      if let unsavedMix = audioManager.unsavedMix { return unsavedMix.name }
       if audioManager.isQuickMix { return String(localized: "Quick Mix") }
       return presetManager.currentPreset?.displayName ?? "Blankie"
     }

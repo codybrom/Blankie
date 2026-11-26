@@ -49,7 +49,7 @@
         return
       }
 
-      let sortedSounds = CarPlaySoundNames.sorted(presetSounds)
+      let sortedSounds = presetSounds.sortedByLocalizedTitle()
 
       let items = sortedSounds.map { sound in
         createSoundEditItem(sound)
@@ -81,7 +81,7 @@
       let volumeText = String(localized: "\(percent) Volume")
 
       let item = CPListItem(
-        text: CarPlaySoundNames.name(of: sound),
+        text: sound.localizedTitle,
         detailText: isSelected
           ? String(localized: "Playing • \(volumeText)") : String(localized: "Stopped")
       )
@@ -150,7 +150,7 @@
 
     static func createVolumeAdjustmentTemplate(for sound: Sound) -> CPListTemplate {
       let template = CPListTemplate(
-        title: String(localized: "\(CarPlaySoundNames.name(of: sound)) Volume"),
+        title: String(localized: "\(sound.localizedTitle) Volume"),
         sections: []
       )
 
@@ -238,7 +238,7 @@
       var items: [CPListItem] = []
 
       let headerItem = CPListItem(
-        text: String(localized: "Choose a volume to start \(CarPlaySoundNames.name(of: sound))"),
+        text: String(localized: "Choose a volume to start \(sound.localizedTitle)"),
         detailText: nil
       )
       headerItem.isEnabled = false

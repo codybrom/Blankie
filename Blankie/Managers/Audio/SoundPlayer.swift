@@ -15,7 +15,7 @@ import os
 ///
 /// Call public methods on the main thread. Node completions hop to main before
 /// touching state, and `generation` fences stale ones.
-final class SoundPlayer {
+final class SoundPlayer: EngineSoundPlayer {
 
   /// Files at or below this duration decode fully into a looping buffer.
   /// Longer files stream in chunks to bound memory.
@@ -32,6 +32,8 @@ final class SoundPlayer {
   let node: AVAudioPlayerNode
   let gain: AVAudioUnitEQ
   let file: AVAudioFile
+  var engineNode: AVAudioNode { node }
+  var connectionFormat: AVAudioFormat { file.processingFormat }
   let totalFrames: AVAudioFramePosition
   let sampleRate: Double
   let mode: Mode
@@ -41,6 +43,10 @@ final class SoundPlayer {
   let isSpatial: Bool
   /// Stable identifier used to derive this sound's 3D position.
   let sourceName: String
+
+  // The normalization boost and the equalizer's loudness trim share the EQ's global gain.
+  private var boostDB: Float = 0
+  private var equalizerTrimDB: Float = 0
 
   /// Owner-set callback fired once when a non-looping sound finishes playback.
   var onPlaybackFinished: (() -> Void)?
@@ -134,8 +140,7 @@ final class SoundPlayer {
     self.totalFrames = chosenFile.length
     self.sampleRate = chosenFile.processingFormat.sampleRate
     self.node = AVAudioPlayerNode()
-    self.gain = AVAudioUnitEQ(numberOfBands: 0)
-    self.gain.globalGain = 0
+    self.gain = SoundEqualizer.makeUnit()
   }
 
   /// Averages all channels into a mono buffer with the normalization boost
@@ -214,7 +219,17 @@ final class SoundPlayer {
 
   /// Boost gain in dB (≥ 0). Attenuation lives in `volume`.
   func setBoostDB(_ db: Float) {
-    gain.globalGain = max(0, db)
+    boostDB = max(0, db)
+    applyGlobalGain()
+  }
+
+  private func applyGlobalGain() {
+    gain.globalGain = min(24, boostDB + equalizerTrimDB)
+  }
+
+  func setEqualizer(gains: [Float]) {
+    equalizerTrimDB = SoundEqualizer.apply(gains, to: gain)
+    applyGlobalGain()
   }
 
   // MARK: - Fades
@@ -290,7 +305,7 @@ final class SoundPlayer {
 
   /// Starts playback from `fromFrame`, flushing any prior schedule so a resume is a
   /// clean reschedule even after an engine stop or rebuild. Needs a running engine.
-  func play(fromFrame: AVAudioFramePosition, completion: (() -> Void)? = nil) {
+  func play(fromFrame: AVAudioFramePosition) {
     // -[AVAudioPlayerNode play] raises an Obj-C exception (uncatchable in Swift) when
     // the node isn't attached to a running engine. Callers attach() and ensureRunning()
     // first. This guard turns a stale graph into a no-op.
@@ -306,7 +321,6 @@ final class SoundPlayer {
     let start = max(0, min(fromFrame, max(totalFrames - 1, 0)))
     segmentBaseFrame = start
     lastKnownFrame = start
-    if let completion { onPlaybackFinished = completion }
 
     let scheduleGeneration = generation
 

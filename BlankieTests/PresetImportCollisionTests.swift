@@ -119,4 +119,57 @@ import Testing
     #expect(rows.first { $0.id == takenID }?.sha256Hash == "existing-hash")
     #expect(rows.contains { $0.id == newID })
   }
+
+  /// The archive's equalizer curve is saved under the fresh ID, and the sound
+  /// that already held the ID keeps its own (flat) equalizer.
+  @Test func importedSoundWithATakenIDKeepsItsEqualizer() async throws {
+    let dir = try sandbox.customSoundsDirectory()
+    let takenID = UUID()
+    sandbox.trackCustomSound(named: takenID.uuidString)
+
+    let existing = CustomSoundData(
+      title: "Mine", systemIconName: "waveform", fileName: takenID.uuidString,
+      fileExtension: "wav", originalFileName: "mine.wav")
+    existing.id = takenID
+    existing.sha256Hash = "existing-hash"
+    context.insert(existing)
+    try context.save()
+    try TestAudio.writeTone(
+      to: dir.appendingPathComponent("\(takenID.uuidString).wav"), seconds: 1, frequency: 440)
+
+    let archive = TestSupport.makeTempDir()
+    defer { try? FileManager.default.removeItem(at: archive) }
+    let soundsDir = archive.appendingPathComponent(PresetArchive.soundsDirectoryName)
+    try FileManager.default.createDirectory(at: soundsDir, withIntermediateDirectories: true)
+    try TestAudio.writeTone(
+      to: soundsDir.appendingPathComponent("\(takenID.uuidString).wav"), seconds: 1,
+      frequency: 880)
+    let metadata = CustomSoundMetadata(
+      id: takenID, fileName: "\(takenID.uuidString).wav", originalFileName: "theirs.wav",
+      title: "Theirs", systemIconName: "waveform", lufsValue: nil, sha256Hash: "other-hash",
+      credits: nil)
+    let curve = GraphicEQPreset.nextRoom.gains
+    let manifest = SoundsManifest(
+      customSounds: [metadata],
+      builtInCustomizations: [
+        SoundCustomization(fileName: takenID.uuidString, equalizerGains: curve)
+      ])
+    try JSONEncoder().encode(manifest)
+      .write(to: soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName))
+
+    // The same two steps importArchive runs, in its order.
+    let preset = PresetFactory.makePreset(
+      soundStates: [PresetState(fileName: takenID.uuidString, isSelected: false, volume: 0.5)],
+      soundOrder: [takenID.uuidString])
+    try await SoundCustomizationImporter.importFromManifest(from: archive)
+    let mapping = try await PresetImporter.shared.importCustomSounds(for: preset, from: archive)
+    let newID = try #require(mapping[takenID])
+    sandbox.trackCustomSound(named: newID.uuidString)
+    await sandbox.settle()
+
+    let manager = SoundCustomizationManager.shared
+    #expect(newID != takenID)
+    #expect(manager.getCustomization(for: newID.uuidString)?.equalizerGains == curve)
+    #expect(manager.getCustomization(for: takenID.uuidString)?.equalizerGains == nil)
+  }
 }

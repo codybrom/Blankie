@@ -50,7 +50,7 @@ const socialAlt =
   customImageAlt ||
   "Blankie, free ambient sounds for sleep and focus, on a MacBook, an Apple HomeView and an iPhone Duo";
 const canonicalUrl = `${siteUrl}${Astro.url.pathname}`;
-// Noindex pages (404, translation status) get no Markdown twin at build.
+// Noindex pages (404, translation status) get no Markdown copy at build.
 const markdownUrl = noindex
   ? undefined
   : `${siteUrl}/${markdownPathFor(Astro.url.pathname)}`;

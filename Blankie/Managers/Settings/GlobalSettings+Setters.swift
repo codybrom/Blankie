@@ -71,6 +71,13 @@ extension GlobalSettings {
   }
 
   @MainActor
+  func setLastSeenHighlightsVersion(_ version: String) {
+    guard lastSeenHighlightsVersion != version else { return }
+    lastSeenHighlightsVersion = version
+    UserDefaults.shared.set(version, forKey: UserDefaultsKeys.lastSeenHighlightsVersion)
+  }
+
+  @MainActor
   func setShowDockBadgeWhenPaused(_ value: Bool) {
     showDockBadgeWhenPaused = value
     UserDefaults.shared.set(value, forKey: UserDefaultsKeys.showDockBadgeWhenPaused)

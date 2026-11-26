@@ -399,6 +399,7 @@ try {
   const pressFiles = [
     "icon.png",
     "press/blankie-2-1-widgets-duo.jpg",
+    "press/blankie-developer-headshot.jpg",
     "promo.jpg",
     "hero-devices.png",
     "mac-mockup.png",

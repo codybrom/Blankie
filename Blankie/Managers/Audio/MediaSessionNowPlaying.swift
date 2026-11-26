@@ -172,7 +172,7 @@
         ?? (singleFileName == nil && !isQuickMix ? PresetManager.shared.currentPreset : nil)
 
       model.title = displayInfo.title
-      model.subtitle = displayInfo.artist
+      model.subtitle = displayInfo.artist.isEmpty ? nil : displayInfo.artist
       model.contentID = NowPlayingSessionMapping.contentID(
         singleFileName: singleFileName, isQuickMix: isQuickMix, presetID: resolvedPreset?.id)
       model.playback = NowPlayingSessionMapping.playback(isPlaying: isPlaying)

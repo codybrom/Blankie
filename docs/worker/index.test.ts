@@ -72,7 +72,7 @@ describe("prefersMarkdown", () => {
 });
 
 describe("worker", () => {
-  it("serves the homepage's Markdown twin with Vary: Accept", async () => {
+  it("serves the homepage's Markdown copy with Vary: Accept", async () => {
     const res = await get("/", "text/markdown");
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe(
@@ -94,7 +94,7 @@ describe("worker", () => {
     expect(await res.text()).toBe("# Blankie\n\n> Index");
   });
 
-  it("serves other pages' Markdown twins for ?mode=agent", async () => {
+  it("serves other pages' Markdown copies for ?mode=agent", async () => {
     const res = await get("/faq?mode=agent", "text/html");
     expect(res.headers.get("Content-Type")).toBe(
       "text/markdown; charset=utf-8",
@@ -105,7 +105,7 @@ describe("worker", () => {
     expect(await res.text()).toBe("# FAQ");
   });
 
-  it("advertises the Markdown twin, llms.txt and sitemap on HTML pages", async () => {
+  it("advertises the Markdown copy, llms.txt and sitemap on HTML pages", async () => {
     const link = (await get("/faq/", "text/html")).headers.get("Link");
     expect(link).toContain('</faq.md>; rel="alternate"; type="text/markdown"');
     expect(link).toContain('</llms.txt>; rel="describedby"');
@@ -139,7 +139,7 @@ describe("worker", () => {
     expect(await res.text()).toBe("<h1>FAQ</h1>");
   });
 
-  it("finds the twin for paths without a trailing slash", async () => {
+  it("finds the Markdown copy for paths without a trailing slash", async () => {
     const res = await get("/faq", "text/markdown");
     expect(await res.text()).toBe("# FAQ");
   });
@@ -159,6 +159,16 @@ describe("worker", () => {
     const res = await get("/nope/", "text/html");
     expect(res.status).toBe(404);
     expect(await res.text()).toContain("Page not found");
+  });
+
+  it("marks the web page as the real one when a .md copy is opened", async () => {
+    expect((await get("/index.md")).headers.get("Link")).toBe(
+      '<https://blankie.rest/>; rel="canonical"',
+    );
+    expect((await get("/faq.md")).headers.get("Link")).toBe(
+      '<https://blankie.rest/faq/>; rel="canonical"',
+    );
+    expect((await get("/nope.md")).headers.get("Link")).toBeNull();
   });
 
   it("passes files with extensions straight through", async () => {

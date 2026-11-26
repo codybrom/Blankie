@@ -162,7 +162,11 @@ import os
     func moveItems(from source: IndexSet, to destination: Int) {
       Logger.ui.debug("ListView: moveItems called - source: \(source), destination: \(destination)")
 
-      if let preset = presetManager.currentPreset, !preset.isDefault {
+      if audioManager.unsavedMix != nil {
+        var newOrder = filteredSounds.map(\.fileName)
+        newOrder.move(fromOffsets: source, toOffset: destination)
+        audioManager.reorderUnsavedMix(newOrder)
+      } else if let preset = presetManager.currentPreset, !preset.isDefault {
         Logger.ui.debug("ListView: Moving sounds in preset '\(preset.name)'")
 
         let displayedSounds = filteredSounds

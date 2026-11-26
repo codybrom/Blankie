@@ -1,4 +1,4 @@
-// Builds the Markdown twin of a rendered page, served at the page's URL with
+// Builds the Markdown copy of a rendered page, served at the page's URL with
 // .md in place of the trailing slash (/guides/sleep-timer/ is served as
 // /guides/sleep-timer.md).
 
@@ -29,7 +29,7 @@ export const LLMS_TXT_DIRECTIVE =
 /**
  * Converts a built page's <main> to Markdown with a frontmatter block (title,
  * description and canonical URL) and the llms.txt directive, or returns null
- * for pages that shouldn't get a twin (redirects, noindex pages and pages
+ * for pages that shouldn't get a Markdown copy (redirects, noindex pages and pages
  * without <main>).
  */
 export function pageToMarkdown(html: string, url: string): string | null {
@@ -85,7 +85,7 @@ export function pageToMarkdown(html: string, url: string): string | null {
   return `---\n${frontmatter.join("\n")}\n---\n\n${LLMS_TXT_DIRECTIVE}\n\n${body}\n\nSource: ${url}\n`;
 }
 
-/** A page twin without its frontmatter and directive, for llms-full.txt. */
+/** A page copy without its frontmatter and directive, for llms-full.txt. */
 export function markdownBody(markdown: string): string {
   return markdown
     .replace(/^---\n[\s\S]*?\n---\n\n/, "")

@@ -174,4 +174,30 @@ import Testing
 
     #expect(!engineManager.engine.isRunning, "the engine idles after the preview fades out")
   }
+
+  /// A single sound the sheet's preview stepped out of is deselected and mid
+  /// fade-out when the preview starts. A global pause must still stop it.
+  @Test func pausingDuringAPreviewStopsADeselectedSound() async throws {
+    let sound = try makeProbe()
+    audioManager.sounds = [sound]
+    #expect(engineManager.ensureRunning())
+    sound.play()
+
+    await spinMainLoop(timeout: 2.0) { (sound.player?.fadeLevel ?? 1) >= 0.1 }
+    guard (sound.player?.fadeLevel ?? 0) >= 0.1 else {
+      try Test.cancel("Fade-in timer didn't advance; run loop starved in this environment")
+    }
+
+    sound.pause()
+    sound.isSelected = false
+    try #require(sound.isPlaying, "the node keeps rendering during the fade-out")
+
+    audioManager.enterPreviewMode(for: sound)
+    try #require(sound.playbackState == .playing, "the preview rescues the fade-out")
+
+    audioManager.setGlobalPlaybackState(false)
+
+    #expect(sound.playbackState != .playing, "a deselected preview doesn't outlive the pause")
+    sound.pause(immediate: true)
+  }
 }

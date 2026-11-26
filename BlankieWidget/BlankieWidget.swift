@@ -193,7 +193,8 @@ struct NowPlayingWidgetEntryView: View {
     NowPlayingSmallCard(
       title: playback.title, subtitle: playback.subtitle, thumbnailKey: playback.thumbnailKey,
       fallbackIcon: playback.soundSystemIconNames.first, accentColor: accent,
-      isPlaying: playback.isPlaying, playIntent: ToggleBlankiePlaybackIntent()
+      isPlaying: playback.isPlaying,
+      playIntent: WidgetSetPlaybackIntent(play: !playback.isPlaying)
     )
     .containerBackground(for: .widget) {
       widgetAccentGradient(accent, colorScheme: colorScheme)

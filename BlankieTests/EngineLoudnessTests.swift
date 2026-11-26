@@ -83,9 +83,11 @@ import Testing
       "Storm should attenuate to ≈ \(targetLUFS) LUFS, got \(measured)")
   }
 
-  // MARK: - True-peak ceiling with limiter
+  // MARK: - Sample-peak ceiling with limiter
 
-  @Test func truePeakStaysUnderCeilingWithLimiter() async throws {
+  /// The PeakLimiter AU holds samples at its 0 dBFS ceiling. It doesn't look between
+  /// samples, so true peak can still overshoot it.
+  @Test func samplePeakStaysUnderCeilingWithLimiter() async throws {
     let factor = try #require(soundData("fireplace").normalizationFactor)
 
     let buffer: AVAudioPCMBuffer
@@ -99,11 +101,18 @@ import Testing
       )
     }
 
-    // The PeakLimiter AU has a fixed 0 dBFS ceiling. Unlimited, this signal peaks near +14.8 dBTP.
-    let truePeak = try #require(AudioAnalyzer.truePeakdBTP(buffer: buffer))
+    // Unlimited, this signal peaks near +14.8 dBTP.
+    let channels = try #require(buffer.floatChannelData)
+    var samplePeak: Float = 0
+    for channel in 0..<Int(buffer.format.channelCount) {
+      for frame in 0..<Int(buffer.frameLength) {
+        samplePeak = max(samplePeak, abs(channels[channel][frame]))
+      }
+    }
+    let samplePeakdBFS = 20 * log10(samplePeak)
     #expect(
-      truePeak <= 0.1,
-      "Limiter should prevent digital clipping (ceiling ≈ 0 dBFS), got \(truePeak) dBTP")
+      samplePeakdBFS <= 0.1,
+      "Limiter should prevent digital clipping (ceiling ≈ 0 dBFS), got \(samplePeakdBFS) dBFS")
   }
 
   // MARK: - Synthesized quiet tone (the quiet-custom-import case)

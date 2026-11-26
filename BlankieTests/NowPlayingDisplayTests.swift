@@ -19,6 +19,8 @@ import Testing
   private let originalSounds: [Sound]
   private let originalSingle: Sound?
   private let originalQuickMix: Bool
+  private let originalUnsavedMix: UnsavedMix?
+  private let originalDefaultSoundOrder: [String]
   private let originalPresets: [Preset]
   private let originalCurrentPreset: Preset?
   nonisolated private static let testNames = ["test-rain", "test-waves", "Rain"]
@@ -28,17 +30,22 @@ import Testing
     originalSounds = audioManager.sounds
     originalSingle = audioManager.singleSound
     originalQuickMix = audioManager.isQuickMix
+    originalUnsavedMix = audioManager.unsavedMix
+    originalDefaultSoundOrder = audioManager.defaultSoundOrder
     originalPresets = PresetManager.shared.presets
     originalCurrentPreset = PresetManager.shared.currentPreset
     GlobalSettings.shared.setAutoPlayOnLaunch(false)
     AudioManager.shared.resetSounds()
     audioManager.singleSound = nil
     audioManager.isQuickMix = false
+    audioManager.unsavedMix = nil
   }
 
   isolated deinit {
     audioManager.singleSound = originalSingle
     audioManager.isQuickMix = originalQuickMix
+    audioManager.unsavedMix = originalUnsavedMix
+    audioManager.defaultSoundOrder = originalDefaultSoundOrder
     audioManager.sounds = originalSounds
     PresetManager.shared.setPresets(originalPresets)
     PresetManager.shared.setCurrentPreset(originalCurrentPreset)
@@ -103,6 +110,27 @@ import Testing
 
   @Test func realPresetNameIsTheTitle() {
     #expect(NowPlayingDisplay.getDisplayInfo(presetName: "Rainy Night").title == "Rainy Night")
+  }
+
+  /// Republishes during the mix carry no preset or name, so the mix names itself. It has no
+  /// second line, and its artwork is a montage of its sounds like a custom preset's.
+  @Test func unsavedMixShowsOnlyItsName() {
+    let rain = TestSound(fileName: "test-rain")
+    let waves = TestSound(fileName: "test-waves")
+    audioManager.sounds = [rain, waves]
+    audioManager.defaultSoundOrder = ["test-rain", "test-waves"]
+    rain.isSelected = true
+    waves.isSelected = true
+    PresetManager.shared.setCurrentPreset(nil)
+    audioManager.unsavedMix = UnsavedMix(
+      name: "Rain + Waves Mix", originSoundFileName: "test-rain",
+      soundFileNames: ["test-rain", "test-waves"])
+
+    let info = NowPlayingDisplay.getDisplayInfo(presetName: nil)
+    #expect(info.title == "Rain + Waves Mix")
+    #expect(info.artist.isEmpty)
+    #expect(NowPlayingDisplay.widgetSubtitle(resolvedCreatorName: nil) == nil)
+    #expect(NowPlayingDisplay.mixFallbackGlyph() == .composite(audioManager.playingSoundIcons()))
   }
 
   @Test func missingPresetNameShowsCustomMix() {

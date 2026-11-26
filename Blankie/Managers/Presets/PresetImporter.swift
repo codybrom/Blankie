@@ -84,7 +84,7 @@ private enum DuplicateDetectionHelper {
 
 // MARK: - Sound Customization Helper
 
-private enum SoundCustomizationImporter {
+enum SoundCustomizationImporter {
   static func importFromManifest(from archiveURL: URL) async throws {
     let soundsDir = archiveURL.appendingPathComponent(PresetArchive.soundsDirectoryName)
     let metadataURL = soundsDir.appendingPathComponent(PresetArchive.soundsMetadataFileName)
@@ -142,6 +142,16 @@ private enum SoundCustomizationImporter {
         }
         if let loopSound = customization.loopSound {
           customizationManager.setLoopSound(loopSound, for: customization.fileName)
+        }
+        // A custom sound (its fileName is a UUID) can be re-IDed on import, so
+        // importNewSound saves its curve once the final ID is known.
+        if let equalizerGains = customization.equalizerGains,
+          UUID(uuidString: customization.fileName) == nil
+        {
+          // The setter clamps to the band range and drops malformed curves.
+          customizationManager.setEqualizerGains(equalizerGains, for: customization.fileName)
+          AudioManager.shared.sounds.first { $0.fileName == customization.fileName }?
+            .applyEqualizer()
         }
 
         appliedCount += 1
@@ -460,6 +470,16 @@ extension PresetImporter {
       }
 
       importedCount += 1
+
+      // Saved under the ID the sound ended up with. A sound already on this
+      // device keeps its own equalizer.
+      if let equalizerGains = customizations.first(where: {
+        $0.fileName == fileNameWithoutExtension
+      })?.equalizerGains {
+        SoundCustomizationManager.shared.setEqualizerGains(
+          equalizerGains, for: actualId.uuidString)
+        AudioManager.shared.sounds.first { $0.fileName == actualId.uuidString }?.applyEqualizer()
+      }
 
       return actualId
 

@@ -58,7 +58,7 @@ extension SoundSheet {
 
   private func prepareForPreview() {
     // Save the current single sound, if any, to restore after the preview.
-    previousSingleSound = AudioManager.shared.singleSound
+    AudioManager.shared.previewHeldSingleSound = AudioManager.shared.singleSound
 
     // Exit any existing single-sound mode first (but don't change global playback state)
     if AudioManager.shared.singleSound != nil {
@@ -133,7 +133,7 @@ extension SoundSheet {
         // Exit preview mode (this restores all original states)
         AudioManager.shared.exitPreviewMode()
 
-        if let previousSingle = previousSingleSound {
+        if let previousSingle = AudioManager.shared.previewHeldSingleSound {
           Logger.ui.debug(
             "SoundSheet: Restoring previous single-sound mode for '\(previousSingle.title)'")
           // Restore the single sound session paused, since the single sound is usually the one
@@ -151,7 +151,7 @@ extension SoundSheet {
       }
 
       previewSound = nil
-      previousSingleSound = nil
+      AudioManager.shared.previewHeldSingleSound = nil
       wasPreviewSoundPlaying = false
     }
   }

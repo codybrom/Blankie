@@ -114,8 +114,9 @@ import SwiftUI
     @ObservedObject private var headPose = HeadPoseMonitor.shared
     @Environment(\.dismiss) private var dismiss
 
+    /// Kaleidoscopes always play in stereo, so they never join the field.
     private var mixSounds: [Sound] {
-      audioManager.sounds.filter { $0.isSelected }
+      audioManager.sounds.filter { $0.isSelected && !($0 is KaleidoscopeSound) }
     }
 
     private var gridSounds: [Sound] {

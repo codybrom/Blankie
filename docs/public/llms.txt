@@ -35,11 +35,11 @@ Blankie isn't the right answer for:
 - Price: free on the App Store, with everything included. No subscription, trial, paywall or in-app purchases.
 - Download: [Blankie on the App Store](https://apps.apple.com/app/blankie/id6740096581) for iPhone, iPad and Mac. Mac users can also install it with Homebrew: `brew install --cask blankie`.
 - Requirements: iPhone with iOS 26.4 or later, iPad with iPadOS 26.4 or later, Mac with macOS 26 or later. CarPlay and Apple HomeView work through a connected iPhone.
-- Built-in sounds (24): Rain, Storm, Wind, Waves, Stream, Birds, Summer Night, Forest, Fireplace, Fan, Train, Airplane, Boat, City, Coffee Shop, Laundry Room, White Noise, Pink Noise, Brown Noise, Green Noise, Ambient Synth, Gentle Guitar, Warm Piano and Lo-Fi Beats.
+- Built-in sounds (40): Rain, Storm, Wind, Waves, Stream, Birds, Summer Night, Forest, Fireplace, Fan, Train, Airplane, Boat, City, Coffee Shop, Laundry Room, White Noise, Pink Noise, Brown Noise, Green Noise, Ambient Synth, Gentle Guitar, Warm Piano, Lo-Fi Beats and 16 adaptive musical soundscapes (Air, Beginnings, Dawn, Depth, Dreaming, Dusk, Ease, Gentleness, Hush, Lull, Mist, Radiance, Stillness, Undertone, Velvet and Warmth).
 - Your own sounds: import M4A, MP3, WAV, FLAC, OGG and more. Imports are loudness-matched to the built-in sounds automatically.
 - Privacy: Blankie collects no personal data, usage analytics or identifiers, and there's no account to create. The only network request downloads animated Lock Screen artwork from Apple's servers.
 - Open source: the full source code for the app and this website is on [GitHub](https://github.com/codybrom/blankie).
-- Languages: English, German, Spanish, French, Italian, Hungarian, Polish, Japanese, Korean, Portuguese (Portugal), Turkish and Simplified Chinese.
+- Languages: 12. English (US, GB, CA), Chinese (Simplified), French, German, Hungarian, Italian, Japanese, Korean, Polish, Portuguese (PT), Spanish and Turkish.
 - Schools and organizations: free in Apple School Manager and Apple Business Manager for managed iPhone, iPad and Mac devices.
 
 ## On iPhone and iPad
@@ -67,12 +67,13 @@ Blankie isn't the right answer for:
 - [Blankie on CarPlay](https://blankie.rest/guides/blankie-carplay/): ambient sounds while you drive.
 - [Blankie on iPhone Duo](https://blankie.rest/guides/blankie-iphone-duo/): how Blankie adapts to each pose.
 - [Blankie on Apple HomeView](https://blankie.rest/guides/blankie-homeview/): your presets and sounds on HomeView, played from your iPhone.
+- [Kaleidoscopes](https://blankie.rest/guides/kaleidoscopes/): 16 ever-changing soundscapes that never repeat, and a visual that moves with the sound.
 - [Spatial Audio Mixing in Blankie](https://blankie.rest/guides/spatial-audio-mixing/): place sounds around you on headphones.
 - [Import Your Own Sounds on iPhone & iPad](https://blankie.rest/guides/import-sounds-iphone-ipad/): add audio from the Files app or iCloud Drive.
 - [Turn Voice Memos Into Ambient Sounds](https://blankie.rest/guides/import-voice-memos/): loop your own recordings.
 - [Import Your Own Sounds on Mac](https://blankie.rest/guides/import-sounds-mac/): add audio files on macOS.
 - [Convert Audio Files for Blankie](https://blankie.rest/guides/convert-audio-files/): convert WMA and other unsupported formats, or pull the audio from a video, so it imports.
-- [Custom Sound Settings: Loop, Sound Check & Credits](https://blankie.rest/guides/custom-sound-settings/): looping, fades, music tags, Preset Use Only, loudness matching and credits for imported sounds.
+- [Custom Sound Settings: Loop, Sound Check & Credits](https://blankie.rest/guides/custom-sound-settings/): looping, fades, music tags, Preset Use Only, loudness matching, the equalizer and credits for imported sounds.
 - [Share Presets with Friends](https://blankie.rest/guides/share-presets/): export a preset as a .blankie file.
 - [Where to Find Free Ambient Sounds](https://blankie.rest/guides/find-free-ambient-sounds/): legal sources for free sounds and field recordings.
 - [Download Sounds from Freesound](https://blankie.rest/guides/download-sounds-from-freesound/): find, download and import Creative Commons sounds from Freesound.org.
