@@ -1,4 +1,4 @@
-// Writes a Markdown twin of every built page (/faq/ gets /faq.md) so agents can
+// Writes a Markdown copy of every built page (/faq/ gets /faq.md) so agents can
 // read clean text instead of parsing HTML, plus llms-full.txt with every page
 // in one file.
 
@@ -49,7 +49,7 @@ export default function markdownPages(): AstroIntegration {
           `# Blankie\n\n> Every page of ${site} in one file. The index is ${site}/llms.txt.\n\n${paths.map((p) => bodies.get(p)).join("\n---\n\n")}`,
         );
         logger.info(
-          `Wrote ${bodies.size} Markdown page twins and llms-full.txt`,
+          `Wrote ${bodies.size} Markdown page copies and llms-full.txt`,
         );
       },
     },

@@ -1,9 +1,9 @@
 // Serves the built site from Workers static assets. Agents that ask for
-// Markdown (Accept: text/markdown or ?mode=agent) get each page's .md twin,
+// Markdown (Accept: text/markdown or ?mode=agent) get each page's .md copy,
 // including a Markdown body for 404s, and the homepage with ?mode=agent gets
 // llms.txt. HTML pages carry Vary: Accept so caches keep the two
 // representations apart, and Link headers that point agents at the Markdown
-// twin, llms.txt and the sitemap. Files too large for static assets (the press kit
+// copy, llms.txt and the sitemap. Files too large for static assets (the press kit
 // zip) are served from the blankie-assets R2 bucket. Each request is logged
 // with network- and bot-level fields only, never anything about the visitor.
 
@@ -152,6 +152,19 @@ async function serve(request: Request, env: Env): Promise<Response> {
     });
   }
 
+  // Every page has a Markdown copy (sleep-timer/ has sleep-timer.md). When
+  // someone opens a copy's .md URL, tell search engines the web page is the
+  // real one, so they don't index the copy as a duplicate.
+  if (readable && url.pathname.endsWith(".md")) {
+    const copy = await env.ASSETS.fetch(request);
+    if (!copy.ok) return copy;
+    const path = url.pathname.slice(0, -3);
+    const page = new URL(path === "/index" ? "/" : path, url);
+    return withHeaders(copy, {
+      Link: `<${canonicalFor(page)}>; rel="canonical"`,
+    });
+  }
+
   if (!readable || !isPage(url.pathname)) return env.ASSETS.fetch(request);
 
   const agentMode = url.searchParams.get("mode") === "agent";
@@ -163,11 +176,11 @@ async function serve(request: Request, env: Env): Promise<Response> {
   }
 
   if (agentMode || prefersMarkdown(request.headers.get("Accept"))) {
-    const twin = await env.ASSETS.fetch(
+    const copy = await env.ASSETS.fetch(
       new URL(`/${markdownPathFor(url.pathname)}`, url),
     );
-    if (!twin.ok) return markdownNotFound(url);
-    return withHeaders(twin, {
+    if (!copy.ok) return markdownNotFound(url);
+    return withHeaders(copy, {
       "Content-Type": MARKDOWN,
       Vary: "Accept",
       Link: canonical,

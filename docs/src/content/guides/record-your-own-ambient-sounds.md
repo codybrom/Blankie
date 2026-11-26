@@ -4,7 +4,7 @@ description: "Field recording basics for anyone who loves ambient sound. Capture
 category: "find"
 order: 14
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 The very best ambient sounds transport you to places you feel safe to relax and focus: rain on *your* roof, *your* crackling fireplace, *your* favorite café. Capturing your own versions of these ambient classics doesn't even require a fancy recording setup. The phone in your hand can pick up ambient sounds far better than you'd guess.

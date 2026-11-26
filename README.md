@@ -32,7 +32,7 @@
 
 ## About
 
-Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 24 high-quality sounds to create your ideal environment for work, study or rest.
+Blankie helps you focus, wind down and sleep better by creating ambient soundscapes. Mix and match 40 high-quality sounds to create your ideal environment for work, study or rest.
 
 **Why choose Blankie?**
 
@@ -44,7 +44,7 @@ Blankie helps you focus, wind down and sleep better by creating ambient soundsca
 ## Features
 
 - **Universal app** for Mac, iPad and iPhone with CarPlay and HomeView support
-- **24 high-quality ambient sounds** including rain, waves, fireplace and more
+- **40 high-quality ambient sounds** including rain, waves, fireplace and musical soundscapes
 - **Import your own sounds** with automatic loudness matching
 - **Mix multiple sounds** with individual volume controls
 - **Customizable presets** with colors, artwork and layouts that you can export and share with friends

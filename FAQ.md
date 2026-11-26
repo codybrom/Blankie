@@ -155,10 +155,10 @@ Blankie is currently available in the following languages:
 - Italiano (it)
 - Magyar (hu)
 - Polski (pl)
-- 日本語 (ja)
-- 한국어 (ko)
 - Português (pt-PT)
 - Türkçe (tr)
+- 日本語 (ja)
+- 한국어 (ko)
 - 简体中文 (zh-Hans)
 
 We're actively working on translations for more languages, and you can help! If you'd like to contribute translations for your language, visit our [translation page](https://blankie.rest/i18n) to see the current status and download a translation template.

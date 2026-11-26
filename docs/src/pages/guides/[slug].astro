@@ -266,6 +266,77 @@ const jsonLd = ldGraph(
 
   <Lightbox />
 
+  <script>
+    // Guide audio players: swap the native controls for the play button and a
+    // progress slider that seeks by click or arrow keys.
+    document.querySelectorAll<HTMLElement>("[data-guide-audio]").forEach((player) => {
+      const audio = player.querySelector("audio");
+      const button = player.querySelector<HTMLButtonElement>(".guide-audio-play");
+      const track = player.querySelector<HTMLElement>(".guide-audio-track");
+      const fill = player.querySelector<HTMLElement>(".guide-audio-fill");
+      if (!audio || !button || !track || !fill) return;
+      const label = button.getAttribute("aria-label") ?? "";
+      audio.controls = false;
+      audio.hidden = true;
+      button.hidden = false;
+      track.hidden = false;
+      const sync = () => {
+        player.classList.toggle("is-playing", !audio.paused);
+        button.setAttribute("aria-label", audio.paused ? label : label.replace(/^Play/, "Pause"));
+      };
+      button.addEventListener("click", () => {
+        if (audio.paused) void audio.play();
+        else audio.pause();
+      });
+      audio.addEventListener("play", sync);
+      audio.addEventListener("pause", sync);
+      audio.addEventListener("ended", () => {
+        audio.currentTime = 0;
+        fill.style.width = "0";
+      });
+      const clock = (seconds: number) =>
+        `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
+      const progress = () => {
+        if (!audio.duration) return;
+        fill.style.width = `${(audio.currentTime / audio.duration) * 100}%`;
+        track.setAttribute("aria-valuemax", String(Math.round(audio.duration)));
+        track.setAttribute("aria-valuenow", String(Math.round(audio.currentTime)));
+        track.setAttribute("aria-valuetext", `${clock(audio.currentTime)} of ${clock(audio.duration)}`);
+      };
+      audio.addEventListener("loadedmetadata", progress);
+      audio.addEventListener("timeupdate", progress);
+      track.addEventListener("click", (event) => {
+        if (!audio.duration) return;
+        const box = track.getBoundingClientRect();
+        audio.currentTime = ((event.clientX - box.left) / box.width) * audio.duration;
+      });
+      track.addEventListener("keydown", (event) => {
+        if (!audio.duration) return;
+        const step = { ArrowLeft: -5, ArrowDown: -5, ArrowRight: 5, ArrowUp: 5 }[event.key];
+        if (step !== undefined) {
+          audio.currentTime = Math.min(Math.max(audio.currentTime + step, 0), audio.duration);
+        } else if (event.key === "Home") {
+          audio.currentTime = 0;
+        } else if (event.key === "End") {
+          audio.currentTime = audio.duration;
+        } else {
+          return;
+        }
+        event.preventDefault();
+      });
+    });
+  </script>
+
+  <script>
+    // Framed guide videos hold their first frame when the OS asks to reduce motion.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.querySelectorAll<HTMLVideoElement>("video[data-guide-loop]").forEach((v) => {
+        v.autoplay = false;
+        v.pause();
+      });
+    }
+  </script>
+
   <script
     is:inline
     type="application/ld+json"

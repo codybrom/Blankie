@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+    <defs>
+        <linearGradient id="slope-bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#cf9672" />
+            <stop offset="1" stop-color="#a16147" />
+        </linearGradient>
+        <linearGradient id="slope-haze" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" />
+            <stop offset="1" stop-color="#efe3d4" />
+        </linearGradient>
+        <clipPath id="slope-sun">
+            <circle cx="32" cy="32" r="22" />
+        </clipPath>
+    </defs>
+    <rect width="64" height="64" fill="url(#slope-bg)" />
+    <circle cx="32" cy="32" r="22" fill="#fff" />
+    <g clip-path="url(#slope-sun)">
+        <g transform="rotate(26 32 40)">
+            <rect x="-8" y="27" width="80" height="10.2" fill="url(#slope-haze)" />
+            <rect x="-8" y="37.2" width="80" height="14" fill="#e2ceb8" />
+            <path d="M-8 37.2h80v.8h-80zM-8 39.3h80v1.2h-80zM-8 41.5h80v1.7h-80zM-8 43.9h80v2h-80zM-8 46.6h80v2.2h-80zM-8 49.4h80v24h-80z" fill="#0b1a1c" />
+        </g>
+    </g>
+    <g fill="none" stroke="#758083" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M30.6 35.2L42.2 40.8Q43.9 41.6 44.9 40.2" stroke-width="1.2" />
+        <path d="M37.7 24.1L45.9 20.5Q47.5 19.8 47.3 18.2" stroke-width="1.2" />
+        <path d="M18.4 22.8L14.2 27" stroke-width="0.8" />
+        <ellipse cx="15.04" cy="26.16" rx="1.35" ry="0.85" transform="rotate(45 15.04 26.16)" stroke-width="0.6" />
+        <path d="M28.4 15.6L34.4 10.8" stroke-width="0.8" />
+        <path d="M28.4 15.6L29.81 14.48" stroke-width="1.4" />
+        <ellipse cx="33.32" cy="11.66" rx="1.35" ry="0.85" transform="rotate(51.34 33.32 11.66)" stroke-width="0.6" />
+    </g>
+    <g fill="none" stroke="#0b1a1c" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M31.2 30.6L35.43 32.42L36.5 36.9M31.2 30.6L39.48 27.09" stroke-width="2.6" />
+        <path d="M30.6 29.7L26.6 23.6" stroke-width="3.6" />
+        <path d="M26.6 23.6L30.4 20.6L33.6 17.2M26.6 23.6L21.4 24.9L17.8 22.2" stroke-width="2.2" />
+    </g>
+    <circle cx="24.8" cy="20.85" r="3.1" fill="#0b1a1c" />
+</svg>

@@ -43,7 +43,7 @@ A lot of people's efforts have contributed to Blankie, from photographers and so
 
 ## Reaching more people is the payoff
 
-I know I'm leaving money on the table, but I'd just rather there be more seats at this table. People tell me I'm crazy for not charging, and I still think the fact that more people can and will try Blankie makes it worth it. Blankie has been downloaded more than 25,000 times, and that's way cooler to me than whatever money it might have made.
+I know I'm leaving money on the table, but I'd just rather there be more seats at this table. People tell me I'm crazy for not charging, and I still think the fact that more people can and will try Blankie makes it worth it. Blankie has been downloaded more than 28,000 times, and that's way cooler to me than whatever money it might have made.
 
 Seeing the reviews flood in from all over the world is such a gift. The other day I saw an educational institution in Belgium had installed Blankie across a bunch of devices, and that blew my mind. I fell in love with Apple computers at school as a kid, and now, seeing that some kids might use Blankie and play around with it on their school computers means the world to me.
 

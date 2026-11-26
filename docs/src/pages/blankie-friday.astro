@@ -12,8 +12,8 @@ import heroDevices from "../assets/hero-devices.png";
 import icon from "../assets/brand/blankie-icon-v2.png";
 import card from "../assets/cards/blankie-friday.jpg";
 import shotSounds from "../assets/devices/mac-window-v2.png";
-import lockScreenLoop from "../assets/devices/iphone-lockscreen.mp4?url";
-import lockScreenPoster from "../assets/devices/iphone-lockscreen-poster.jpg?url";
+import kaleidoscopeLoop from "../assets/devices/kaleidoscope-loop.mp4?url";
+import kaleidoscopePoster from "../assets/devices/kaleidoscope-loop-poster.jpg?url";
 import shotTimer from "../assets/devices/iphone-timer.png";
 import shotWidget from "../assets/guides/control-blankie-anywhere/iphone-quick-mix-widget.png";
 import shotCarPlay from "../assets/devices/carplay-mockup.jpg";
@@ -37,17 +37,16 @@ const burst = `polygon(${Array.from({ length: 28 }, (_, i) => {
 
 const doorbusters = [
   {
-    name: "All 24 sounds",
+    name: "All 40 sounds",
     note: "Rain, waves, fans, four kinds of noise and more",
     img: shotSounds,
     alt: "Blankie on Mac with a mix of sound tiles playing",
   },
   {
-    name: "Animated Lock Screen art",
-    note: "Looping video while your mix plays",
-    video: { src: lockScreenLoop, poster: lockScreenPoster },
-    crop: "object-top",
-    alt: "An iPhone Lock Screen with rain running down a window as animated artwork",
+    name: "Musical Kaleidoscopes",
+    note: "16 of them, new in 2.2 and already marked down",
+    video: { src: kaleidoscopeLoop, poster: kaleidoscopePoster },
+    alt: "The Radiance Kaleidoscope visual in teal, gold and white, slowly moving",
   },
   {
     name: "Sleep timer",
@@ -268,8 +267,8 @@ const defaultPlatform = platforms[2];
                       src={item.video.src}
                       poster={item.video.poster}
                       aria-label={item.alt}
-                      width="540"
-                      height="1104"
+                      width="640"
+                      height="560"
                       autoplay
                       muted
                       loop
@@ -504,7 +503,7 @@ const defaultPlatform = platforms[2];
   </div>
 
   <script>
-    // The Lock Screen clip stays on its poster frame when the OS asks to reduce motion.
+    // The Kaleidoscope clip stays on its poster frame when the OS asks to reduce motion.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       document.querySelectorAll<HTMLVideoElement>("video[data-bf-video]").forEach((v) => {
         v.autoplay = false;
@@ -534,6 +533,7 @@ const defaultPlatform = platforms[2];
       "just mixed Waves with Warm Piano",
       "is listening to Train for the cat",
       "is listening to Fan in a room with a real fan",
+      "has been staring at a Kaleidoscope for a while",
       "is listening to Summer Night in the middle of winter",
       "just set a sleep timer and ignored it",
       "is listening to Laundry Room instead of doing laundry",

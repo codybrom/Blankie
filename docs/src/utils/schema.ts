@@ -58,9 +58,9 @@ export function articleLd(opts: {
 }
 
 /**
- * Blankie's App Store rating as of Oct. 25, 2026
+ * Blankie's App Store rating as of Nov. 25, 2026 (iPhone and iPad 5.0 from 28, Mac 4.9 from 73)
  */
-export const APP_RATING = { value: 4.9, count: 70 };
+export const APP_RATING = { value: 4.9, count: 101 };
 
 /** Blankie itself, for pages whose subject is the app. */
 export function softwareAppLd(opts?: {

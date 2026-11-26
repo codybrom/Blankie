@@ -3,7 +3,7 @@ title: "Looking for Blanket on Mac? Meet Blankie"
 description: "Blanket is a Linux app with no official Mac version, but Blankie is a free, open-source Mac app inspired by it, with many of the same sounds and features."
 category: "basics"
 order: 47
-updated: 2026-10-28
+updated: 2026-11-25
 author: "Cody Bromley"
 platforms: "Mac"
 cover: "../../assets/guides/blanket-for-mac/mac-cover.jpg"
@@ -20,11 +20,11 @@ A few years ago, I moved from Linux to a Mac, and I missed Blanket so much I dec
 
 Blankie is fully independent and unaffiliated with the Blanket project, but it's free and open source, just like Blanket, and it's designed to work in much the same way: turn on a few sounds and set each one to its own volume.
 
-Every one of Blanket's 14 sounds has a match in Blankie with the same name: Birds, Boat, City, Coffee Shop, Fireplace, Pink Noise, Rain, Storm, Stream, Summer Night, Train, Waves, White Noise and Wind. Some use the same openly licensed recordings while others are using new, longer loops.
+Every one of Blanket's 14 original sounds have a match in Blankie under the same name: Birds, Boat, City, Coffee Shop, Fireplace, Pink Noise, Rain, Storm, Stream, Summer Night, Train, Waves, White Noise and Wind. Several  use the same openly licensed recordings but others are still similar but use new, longer loops.
 
-Blankie has 10 more sounds on top of those: Brown Noise, Green Noise, Fan, Forest, Airplane, Laundry Room, Ambient Synth, Gentle Guitar, Warm Piano and Lo-Fi Beats. Every built-in sound is also hand-tuned for a perfect loop with a normalized volume so they blend seamlessly when mixed together.
+As of version 2.2, Blankie includes 26 more sounds on top of what comes with Blanket. In addition to 10 regular loops like what comes with Blanket (Brown Noise, Green Noise, Fan, Forest, Airplane, Laundry Room, Ambient Synth, Gentle Guitar, Warm Piano and Lo-Fi Beats), Blankie also includes 16 [Kaleidoscopes](/guides/kaleidoscopes/), ever-changing soundscapes that play endlessly. Every sound is hand-tuned to play at a normalized volume, and every looping sound has a perfect loop, so everything can blend together easily when mixed.
 
-<!-- image-todo: Blankie on Mac with All Blankie Sounds open, showing the Blanket-named tiles (Rain, Storm, Wind, Waves, Stream, Birds, Summer Night, Train, Boat, City, Coffee Shop, Fireplace, Pink Noise, White Noise) -->
+![Blankie on Mac with All Blankie Sounds open and Rain, Waves, Stream and Fireplace playing, next to the other Blanket-named sounds like Storm, Wind, Birds, Summer Night, Train, Boat, City, Coffee Shop, Pink Noise and White Noise.](../../assets/guides/blanket-for-mac/mac-all-blankie-sounds.png)
 
 ## Rebuilding your Blanket mix
 

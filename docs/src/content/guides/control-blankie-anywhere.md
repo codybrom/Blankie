@@ -4,7 +4,7 @@ description: "Control Blankie with widgets, Siri, Shortcuts, Spotlight, the Mac 
 category: "basics"
 order: 41
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 cover: "../../assets/guides/control-blankie-anywhere/control-cover.jpg"
 coverAlt: "The Mac menu bar player, a Quick Mix widget on iPhone, and a Bedtime shortcut in front"
 ---

@@ -4,7 +4,7 @@ description: "What CC0, CC BY, BY-NC and other licenses mean and how to track at
 category: "find"
 order: 12
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 Building your perfect soundscape sometimes requires adding sounds you found online. Next to the download button, most free sound sites will either display or link the "license" associated with using it. A license is the creator's terms for how their work can be used, copied and shared. Many free sounds are covered by some form of a Creative Commons license, but some sites and libraries have their own royalty-free terms.

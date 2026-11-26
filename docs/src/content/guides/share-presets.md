@@ -4,7 +4,7 @@ description: "Export any Blankie preset as a .blankie file and share it. Sounds,
 category: "presets"
 order: 22
 updated: 2026-10-25
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 Mixed something worth passing along? Blankie saves any preset you've made as a single **.blankie** file. AirDrop it, message it or email it to anyone else running Blankie.
