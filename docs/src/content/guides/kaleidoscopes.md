@@ -46,7 +46,7 @@ Each Kaleidoscope has its own shapes and colors, and that same picture is its ar
 
 ## Mix Kaleidoscopes with other sounds
 
-Playing a Kaleidoscope on its own? Tap **+** to add another sound and hear them together. For example, *Gentleness* and *Forest* mix really well together. Save the mix as a [preset](/guides/create-and-manage-presets/), or just let  it go when you're done.
+Playing a Kaleidoscope on its own? Tap **+** to add another sound and hear them together. For example, *Gentleness* and *Forest* mix really well together. Save the mix as a [preset](/guides/create-and-manage-presets/), or just let it go when you're done.
 
 A Kaleidoscope, like every other sound, can also be added to any of your presets with two things to keep in mind:
 
@@ -57,7 +57,7 @@ Also, keep in mind that the visual kaleidoscope only appears when a Kaleidoscope
 
 ## Where the sounds come from
 
-Blankie's Kaleidoscopes were remixed from ambient recordings by Matio888 on Freesound. These recordings are shared under a Creative Commons Attribution license. You can find links to the original recordings in a Kaleidoscope's sound settings under the **Remixed From** heading, or find them linked on the Credits page.
+Fifteen of Blankie's Kaleidoscopes were remixed from ambient recordings by Matio888 on Freesound. These recordings are shared under a Creative Commons Attribution license. *Beginnings* is built from original recordings made for Blankie. You can find links to the original recordings in a Kaleidoscope's sound settings under the **Remixed From** heading, or find them linked on the Credits page.
 
 ## Related guides
 

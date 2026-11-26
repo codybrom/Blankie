@@ -90,6 +90,12 @@ enum Highlights {
       platforms: [.mac]
     ),
     HighlightItem(
+      systemImage: "hand.draw", title: "A visual kaleidoscope to play with too",
+      detail:
+        "Listen to a Kaleidoscope on its own and experience an interactive kaleidoscope that moves in time with the sound. Drag to move it yourself.",
+      platforms: [.iPad]
+    ),
+    HighlightItem(
       systemImage: "slider.vertical.3", title: "An equalizer for every sound",
       detail:
         "Is a sound a little too sharp or bassy for your taste? Open the sound's editor and tap Equalizer. Pick a preset like Reduce Treble or Next Room, or drag the seven bands yourself and hear the change as it plays."
