@@ -97,7 +97,7 @@ struct SoundGraphicEQ: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       HStack {
-        SoundPreviewButton(isPreviewing: $isPreviewing, turnsRedWhilePlaying: false)
+        previewButton
         Spacer()
         presetMenu
       }
@@ -134,6 +134,24 @@ struct SoundGraphicEQ: View {
       sound.setEqualizer(gains: gains)
     }
     .sensoryFeedback(.selection, trigger: gains.map { Int($0.rounded()) })
+  }
+
+  /// Plays the sound so the curve can be heard. Styled like the preset menu
+  /// across from it.
+  private var previewButton: some View {
+    Button {
+      isPreviewing.toggle()
+    } label: {
+      Label(
+        isPreviewing ? "Stop" : "Play",
+        systemImage: isPreviewing ? "stop.fill" : "play.fill"
+      )
+      .contentTransition(.symbolEffect(.replace))
+    }
+    .buttonStyle(.bordered)
+    .buttonBorderShape(.capsule)
+    .fixedSize()
+    .accessibilityLabel(isPreviewing ? Text("Stop Preview") : Text("Play Preview"))
   }
 
   /// A standard pop-up button. It names the current preset, or Custom after a
@@ -225,7 +243,8 @@ struct SoundGraphicEQ: View {
       .accessibilityValue(Text(verbatim: Self.decibelText(gains[index])))
     }
     #if os(macOS)
-      .focusable()
+      // Joins keyboard focus only with Keyboard navigation on, like a native slider.
+      .focusable(interactions: .activate)
       .onMoveCommand { direction in
         switch direction {
         case .up: setGain(gains[index] + Self.keyStep, at: index)

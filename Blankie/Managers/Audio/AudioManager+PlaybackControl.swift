@@ -265,8 +265,8 @@ extension AudioManager {
 
   func updatePlayingSounds() {
     // Stop deselected sounds still playing. Skip ones mid fade-out (.paused), so
-    // the crossfade finishes.
-    for sound in sounds {
+    // the crossfade finishes, and the sound a sheet is previewing.
+    for sound in sounds where sound !== previewModeSound {
       if !sound.isSelected, sound.isPlaying, sound.playbackState == .playing {
         Logger.audio.debug(
           "AudioManager: Stopping deselected sound '\(sound.fileName)' that was still playing")

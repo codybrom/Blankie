@@ -229,8 +229,6 @@ extension SoundSheetForm {
 /// The round play and stop button that previews a sound in its editor.
 struct SoundPreviewButton: View {
   @Binding var isPreviewing: Bool
-  /// Red while playing. Off next to the equalizer's meters, where red reads as recording.
-  var turnsRedWhilePlaying = true
 
   var body: some View {
     Button {
@@ -238,13 +236,13 @@ struct SoundPreviewButton: View {
     } label: {
       ZStack {
         Circle()
-          .fill(isRed ? Color.red.opacity(0.1) : Color.secondary.opacity(0.1))
+          .fill(isPreviewing ? Color.red.opacity(0.1) : Color.secondary.opacity(0.1))
           .frame(width: 44, height: 44)
           .accessibilityHidden(true)
 
         Image(systemName: isPreviewing ? "stop.fill" : "play.fill")
           .font(.system(size: 18, weight: .medium))
-          .foregroundStyle(isRed ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
+          .foregroundStyle(isPreviewing ? AnyShapeStyle(.red) : AnyShapeStyle(.tint))
           .contentTransition(
             .symbolEffect(.replace.magic(fallback: .downUp.byLayer), options: .nonRepeating))
       }
@@ -254,6 +252,4 @@ struct SoundPreviewButton: View {
     .scaleEffect(isPreviewing ? 1.1 : 1.0)
     .animation(.easeInOut(duration: 0.15), value: isPreviewing)
   }
-
-  private var isRed: Bool { isPreviewing && turnsRedWhilePlaying }
 }
