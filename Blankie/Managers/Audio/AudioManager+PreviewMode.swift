@@ -67,7 +67,9 @@ extension AudioManager {
 
     let previewSoundWasPlaying =
       previewModeOriginalStates[previewSound.fileName]?.isPlaying ?? false
-    if !previewSoundWasPlaying {
+    // A deselected sound isn't in the mix, so it stops here even if it read as
+    // playing (a single sound the preview stepped out of is mid fade-out then).
+    if !previewSoundWasPlaying || !previewSound.isSelected {
       previewSound.pause(fadeDuration: pauseFadeDuration)
     }
 
