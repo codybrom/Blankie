@@ -7,7 +7,7 @@ import parodyClam from "../assets/parody/clam.svg";
 import parodyWorseSleep from "../assets/parody/worse-sleep.svg";
 import parodySpendel from "../assets/parody/spendel.svg";
 import parodyDarkPattern from "../assets/parody/dark-pattern.svg";
-import parodyNosey from "../assets/parody/nosey.svg";
+import parodySlope from "../assets/parody/slope.svg";
 import parodyAdNoiseLite from "../assets/parody/ad-noise-lite.svg";
 
 interface Props {
@@ -17,8 +17,8 @@ const { heading = "Don't rent your relaxation." } = Astro.props;
 
 const blankieIncluded = [
   {
-    title: "All 24 built-in sounds",
-    sub: "Including classic sounds like rain and waves, four kinds of noise and music loops",
+    title: "All 40 built-in sounds",
+    sub: "Including classic sounds like rain and waves, four kinds of noise and ambient music",
   },
   {
     title: "Unlimited adjustable layers",
@@ -94,10 +94,13 @@ const parodyApps = [
     badges: [{ kind: "price", label: "$" }],
   },
   {
-    id: "nosey",
-    name: "Nosey",
-    src: parodyNosey,
-    badges: [{ kind: "tracking", label: "" }],
+    id: "slope",
+    name: "Slōp",
+    src: parodySlope,
+    badges: [
+      { kind: "price", label: "$" },
+      { kind: "tracking", label: "" },
+    ],
   },
   {
     id: "ad-noise-lite",
@@ -115,7 +118,7 @@ const badgeStyles: Record<string, string> = {
 };
 // Each line is generic (true of at least two of the apps) and lists the parody
 // apps it applies to. Every claim comes from the apps' own App Store listings,
-// privacy labels and privacy policies, checked Oct. 2026.
+// privacy labels and privacy policies, checked Oct.–Nov. 2026.
 const typicalAppLimits = [
   {
     text: "Limit what you can listen to or do until you pay",
@@ -124,7 +127,7 @@ const typicalAppLimits = [
       "worse-sleep",
       "spendel",
       "dark-pattern",
-      "nosey",
+      "slope",
       "ad-noise-lite",
     ],
   },
@@ -136,21 +139,21 @@ const typicalAppLimits = [
       "worse-sleep",
       "spendel",
       "dark-pattern",
-      "nosey",
+      "slope",
       "ad-noise-lite",
     ],
   },
   {
     text: "Can track your location",
-    apps: ["worse-sleep", "spendel", "ad-noise-lite"],
+    apps: ["worse-sleep", "spendel", "slope", "ad-noise-lite"],
   },
   {
     text: "Can track you across other apps and the web",
-    apps: ["clam", "worse-sleep", "spendel", "nosey", "ad-noise-lite"],
+    apps: ["clam", "worse-sleep", "spendel", "slope", "ad-noise-lite"],
   },
   {
     text: "Have free trials that start charging you automatically",
-    apps: ["clam", "worse-sleep", "spendel", "dark-pattern"],
+    apps: ["clam", "worse-sleep", "spendel", "dark-pattern", "slope"],
   },
   {
     text: "Don't have a CarPlay app",
@@ -159,17 +162,17 @@ const typicalAppLimits = [
       "worse-sleep",
       "spendel",
       "dark-pattern",
-      "nosey",
+      "slope",
       "ad-noise-lite",
     ],
   },
   {
     text: "Collect your personal information",
-    apps: ["clam", "worse-sleep", "spendel"],
+    apps: ["clam", "worse-sleep", "spendel", "slope"],
   },
   {
     text: "Can share your data with third-party advertisers",
-    apps: ["clam", "spendel", "nosey", "ad-noise-lite"],
+    apps: ["clam", "spendel", "slope", "ad-noise-lite"],
   },
 ];
 ---
@@ -282,7 +285,7 @@ const typicalAppLimits = [
                       i % 2 === 0 ? "-rotate-6" : "rotate-6",
                     ]}
                   >
-                    <Image src={app.src} alt="" width={64} height={64} class="size-full rounded-[22.37%]" />
+                    <Image src={app.src} alt="" width={64} height={64} densities={[1, 2, 3]} class="size-full rounded-[22.37%]" />
                     <span class="absolute inset-0 rounded-[22.37%] bg-linear-to-b from-white/20 via-white/0 to-black/10 shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.22)]" />
                     <span class="absolute -top-2 -right-3 z-10 flex items-center -space-x-px">
                       {app.badges.map((badge, j) => (
@@ -343,16 +346,21 @@ const typicalAppLimits = [
   };
   // Mouse: hover highlights. Touch: a tap toggles the highlight, and it stays
   // until another tap, so it doesn't flicker on and off as the finger lifts.
+  // iOS Safari labels a tap's click (and the mouse events it emulates after
+  // it) as "mouse", so touch is detected from the pointerdown instead.
+  const TOUCH_WINDOW_MS = 800;
+  let lastTouch = -Infinity;
+  const fromTouch = (e: Event) => e.timeStamp - lastTouch < TOUCH_WINDOW_MS;
   let tapped: string | null = null;
   parodyApps.forEach((el) => {
     el.addEventListener("pointerenter", (e) => {
-      if (e.pointerType === "mouse") showParody(el.dataset.app ?? null);
+      if (e.pointerType === "mouse" && !fromTouch(e)) showParody(el.dataset.app ?? null);
     });
     el.addEventListener("pointerleave", (e) => {
-      if (e.pointerType === "mouse") showParody(null);
+      if (e.pointerType === "mouse" && !fromTouch(e)) showParody(null);
     });
     el.addEventListener("click", (e) => {
-      if ((e as PointerEvent).pointerType === "mouse") return;
+      if (!fromTouch(e)) return;
       tapped = tapped === el.dataset.app ? null : (el.dataset.app ?? null);
       showParody(tapped);
     });
@@ -363,10 +371,16 @@ const typicalAppLimits = [
       if (!tapped) showParody(null);
     });
   });
-  document.addEventListener("click", (e) => {
-    if (tapped && !(e.target as Element).closest(".parody-app")) {
-      tapped = null;
-      showParody(null);
-    }
-  });
+  // pointerdown, not click: iOS sends no click for taps on non-clickable elements.
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.pointerType !== "mouse") lastTouch = e.timeStamp;
+      if (tapped && !(e.target as Element).closest(".parody-app")) {
+        tapped = null;
+        showParody(null);
+      }
+    },
+    { capture: true },
+  );
 </script>

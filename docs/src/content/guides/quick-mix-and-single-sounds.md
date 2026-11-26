@@ -4,7 +4,7 @@ description: "How Blankie's presets, Quick Mix soundboard and single-sound playb
 category: "basics"
 order: 35
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 cover: "../../assets/guides/quick-mix-and-single-sounds/quick-mix-cover.jpg"
 coverAlt: "Quick Mix on CarPlay, in the Quick Mix widget and in the app on iPhone"
 ---
@@ -22,7 +22,7 @@ Blankie also comes with a default preset called **All Blankie Sounds**, which in
 
 ## Quick Mix
 
-If you want to turn on rain and a fan quickly without editing a saved preset or scrolling through all 24 sounds, use **Quick Mix** on iPhone, iPad or CarPlay. It gives you a simple board of up to eight built-in or imported sounds:
+If you want to turn on rain and a fan quickly without editing a saved preset or scrolling through all 40 sounds, use **Quick Mix** on iPhone, iPad or CarPlay. It gives you a simple board of up to eight built-in or imported sounds:
 
 - Tap **Quick Mix** at the top of **Presets** in your Library (or in the [CarPlay](/guides/blankie-carplay/) tab bar) and tap any tile to toggle it on or off.
 - Quick Mix always opens straight to its tiles. When you switch back to a saved preset later, that preset is still the way you left it.

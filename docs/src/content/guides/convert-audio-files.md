@@ -4,7 +4,7 @@ description: "Convert WMA and other unsupported audio formats, or pull the audio
 category: "import"
 order: 5
 updated: 2026-10-27
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 Blankie works with the most common audio formats on its own: M4A, MP3, WAV, FLAC, AIFF, OGG, CAF, AAC and AU. Two things still need a step first: a video you only want the sound from and a Windows Media (WMA) file. Here's how to handle each.

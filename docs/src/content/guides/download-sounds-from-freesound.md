@@ -4,7 +4,7 @@ description: "Find, download and import Creative Commons sounds from Freesound.o
 category: "find"
 order: 11
 updated: 2026-10-26
-platforms: "All Platforms"
+platforms: "All Devices"
 ---
 
 [Freesound](https://freesound.org) is a community library of hundreds of thousands of Creative Commons recordings and one of the best places to find new sounds for Blankie. A lot of Blankie's built-in sounds started life there.
